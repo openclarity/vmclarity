@@ -1,24 +1,5 @@
 package types
 
-type Tag struct {
-	Key string
-	Val string
-}
-
-type SecurityGroup struct {
-	ID string
-}
-
-type VPC struct {
-	ID             string
-	SecurityGroups []SecurityGroup
-}
-
-type Region struct {
-	ID   string
-	VPCs []VPC
-}
-
 type ScanScope struct {
 	All         bool
 	Regions     []Region
@@ -39,27 +20,47 @@ const (
 )
 
 type ScanProgress struct {
-	ImagesToScan          uint32
-	ImagesStartedToScan   uint32
-	ImagesCompletedToScan uint32
-	Status                Status
+	InstancesToScan          uint32
+	InstancesStartedToScan   uint32
+	InstancesCompletedToScan uint32
+	Status                   Status
 }
 
 func (s *ScanProgress) SetStatus(status Status) {
 	s.Status = status
 }
 
-type VMScanResult struct {
-	// VM data
-	VMID string
+type InstanceScanResult struct {
+	// Instance data
+	Instances Instance
 	// Scan results
-	Vulnerabilities []string
+	Vulnerabilities []string // TODO define vulnerabilities struct
 	Success         bool
+	ScanErrors      []*ScanError
 }
 
 type ScanResults struct {
-	ImageScanResults []*VMScanResult
-	Progress         ScanProgress
+	InstanceScanResults []*InstanceScanResult
+	Progress            ScanProgress
+}
+
+type Tag struct {
+	Key string
+	Val string
+}
+
+type SecurityGroup struct {
+	ID string
+}
+
+type VPC struct {
+	ID             string
+	SecurityGroups []SecurityGroup
+}
+
+type Region struct {
+	ID   string
+	VPCs []VPC
 }
 
 type Job struct {

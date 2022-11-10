@@ -23,35 +23,38 @@ import (
 
 	_config "github.com/openclarity/vmclarity/runtime_scan/pkg/config"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
-	aws2 "github.com/openclarity/vmclarity/runtime_scan/pkg/provider/aws"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider/aws"
 	_scanner "github.com/openclarity/vmclarity/runtime_scan/pkg/scanner"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
 )
 
 type Orchestrator struct {
 	scanner        *_scanner.Scanner
 	config         *_config.Config
 	providerClient provider.Client
+	// server *rest.Server
 	sync.Mutex
 }
 
-//go:generate $GOPATH/bin/mockgen -destination=./mock_orchestrator.go -package=orchestrator github.com/openclarity/kubeclarity/runtime_scan/pkg/orchestrator VulnerabilitiesScanner
+//go:generate $GOPATH/bin/mockgen -destination=./mock_orchestrator.go -package=orchestrator github.com/openclarity/vmclarity/runtime_scan/pkg/orchestrator VulnerabilitiesScanner
 type VulnerabilitiesScanner interface {
 	Start(errChan chan struct{})
 	Scan(scanConfig *_config.ScanConfig, scanDone chan struct{}) error
-	//ScanProgress() types.ScanProgress
-	///Results() *types.ScanResults
-	//Clear()
+	ScanProgress() types.ScanProgress
+	Results() *types.ScanResults
+	Clear()
 	Stop()
 }
 
 func Create(config *_config.Config) (*Orchestrator, error) {
 	// for now will statically create aws client here (until we support more cloud providers)
-	awsClient, err := aws2.Create()
+	awsClient, err := aws.Create()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create aws client: %v", err)
 	}
 
 	orc := &Orchestrator{
+		scanner: _scanner.CreateScanner(config, awsClient),
 		config:         config,
 		providerClient: awsClient,
 		Mutex:          sync.Mutex{},
@@ -63,10 +66,14 @@ func Create(config *_config.Config) (*Orchestrator, error) {
 func (o *Orchestrator) Start(errChan chan struct{}) {
 	// Start result server
 	log.Infof("Starting Orchestrator server")
+	// o.server.Start(errChan)
 }
 
 func (o *Orchestrator) Stop() {
+	o.Clear()
+
 	log.Infof("Stopping Orchestrator server")
+	//o.server.Stop()
 }
 
 func (o *Orchestrator) Scan(scanConfig *_config.ScanConfig, scanDone chan struct{}) error {
@@ -83,23 +90,25 @@ func (o *Orchestrator) Scan(scanConfig *_config.ScanConfig, scanDone chan struct
 	return nil
 }
 
-//
-//func (o *Orchestrator) ScanProgress() types.ScanProgress {
-//	return o.getScanner().ScanProgress()
-//}
-//
-//func (o *Orchestrator) Results() *types.ScanResults {
-//	return o.getScanner().Results()
-//}
 
-//func (o *Orchestrator) Clear() {
-//	o.Lock()
-//	defer o.Unlock()
-//
-//	log.Infof("Clearing Orchestrator")
-//	o.scanner.Clear()
-//	//o.scanner = _scanner.CreateScanner(o.config, o.clientset)
-//}
+func (o *Orchestrator) ScanProgress() types.ScanProgress {
+	return o.getScanner().ScanProgress()
+}
+
+func (o *Orchestrator) Results() *types.ScanResults {
+	return nil
+	// TODO
+	//return o.getScanner().Results()
+}
+
+func (o *Orchestrator) Clear() {
+	o.Lock()
+	defer o.Unlock()
+
+	log.Infof("Clearing Orchestrator")
+	o.scanner.Clear()
+	o.scanner = _scanner.CreateScanner(o.config, o.providerClient)
+}
 
 func (o *Orchestrator) getScanner() *_scanner.Scanner {
 	o.Lock()

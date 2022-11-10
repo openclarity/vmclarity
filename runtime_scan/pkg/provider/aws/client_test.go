@@ -2,12 +2,16 @@ package aws
 
 import (
 	"context"
+	"reflect"
+	"sort"
 	"testing"
 
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 )
 
 func TestClient_ListAllRegions(t *testing.T) {
@@ -52,4 +56,469 @@ func TestClient_ListAllRegions(t *testing.T) {
 	}
 
 	t.Logf("res: %v", launchedInstance.ID)
+}
+
+func Test_createVPCFilters(t *testing.T) {
+	var (
+		vpcID = "vpc-1"
+		sgID1 = "sg-1"
+		sgID2 = "sg-2"
+
+		vpcIDFilterName = vpcIDFilterName
+		sgIDFilterName  = sgIDFilterName
+	)
+
+	type args struct {
+		vpc types.VPC
+	}
+	tests := []struct {
+		name string
+		args args
+		want []ec2types.Filter
+	}{
+		{
+			name: "vpc with no security group",
+			args: args{
+				vpc: types.VPC{
+					ID:             vpcID,
+					SecurityGroups: nil,
+				},
+			},
+			want: []ec2types.Filter{
+				{
+					Name:   &vpcIDFilterName,
+					Values: []string{vpcID},
+				},
+			},
+		},
+		{
+			name: "vpc with one security group",
+			args: args{
+				vpc: types.VPC{
+					ID: vpcID,
+					SecurityGroups: []types.SecurityGroup{
+						{
+							ID: sgID1,
+						},
+					},
+				},
+			},
+			want: []ec2types.Filter{
+				{
+					Name:   &vpcIDFilterName,
+					Values: []string{vpcID},
+				},
+				{
+					Name:   &sgIDFilterName,
+					Values: []string{sgID1},
+				},
+			},
+		},
+		{
+			name: "vpc with two security groups",
+			args: args{
+				vpc: types.VPC{
+					ID: vpcID,
+					SecurityGroups: []types.SecurityGroup{
+						{
+							ID: sgID1,
+						},
+						{
+							ID: sgID2,
+						},
+					},
+				},
+			},
+			want: []ec2types.Filter{
+				{
+					Name:   &vpcIDFilterName,
+					Values: []string{vpcID},
+				},
+				{
+					Name:   &sgIDFilterName,
+					Values: []string{sgID1, sgID2},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := createVPCFilters(tt.args.vpc); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("createVPCFilters() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_findRegionByID(t *testing.T) {
+	type args struct {
+		regions  []types.Region
+		regionID string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    types.Region
+		wantErr bool
+	}{
+		{
+			name: "found",
+			args: args{
+				regions: []types.Region{
+					{
+						ID:   "region-2",
+						VPCs: nil,
+					},
+					{
+						ID:   "region-1",
+						VPCs: nil,
+					},
+				},
+				regionID: "region-1",
+			},
+			want: types.Region{
+				ID:   "region-1",
+				VPCs: nil,
+			},
+			wantErr: false,
+		},
+		{
+			name: "not found",
+			args: args{
+				regions: []types.Region{
+					{
+						ID:   "region-1",
+						VPCs: nil,
+					},
+				},
+				regionID: "region-2",
+			},
+			want:    types.Region{},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := findRegionByID(tt.args.regions, tt.args.regionID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("findRegionByID() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("findRegionByID() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_createInclusionTagsFilters(t *testing.T) {
+	var (
+		tagName       = "foo"
+		filterTagName = "tag:" + tagName
+		tagVal        = "bar"
+	)
+
+	type args struct {
+		tags []*types.Tag
+	}
+	tests := []struct {
+		name string
+		args args
+		want []ec2types.Filter
+	}{
+		{
+			name: "no tags",
+			args: args{
+				tags: nil,
+			},
+			want: nil,
+		},
+		{
+			name: "1 tag",
+			args: args{
+				tags: []*types.Tag{
+					{
+						Key: tagName,
+						Val: tagVal,
+					},
+				},
+			},
+			want: []ec2types.Filter{
+				{
+					Name:   &filterTagName,
+					Values: []string{tagVal},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := createInclusionTagsFilters(tt.args.tags); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("createInclusionTagsFilters() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_hasExcludedTags(t *testing.T) {
+	var (
+		tagName1 = "foo1"
+		tagName2 = "foo2"
+		tagVal1  = "bar1"
+		tagVal2  = "bar2"
+	)
+
+	type args struct {
+		excludeTags  []*types.Tag
+		instanceTags []ec2types.Tag
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "instance has no tags",
+			args: args{
+				excludeTags: []*types.Tag{
+					{
+						Key: tagName1,
+						Val: tagVal1,
+					},
+					{
+						Key: "stam1",
+						Val: "stam2",
+					},
+				},
+				instanceTags: nil,
+			},
+			want: false,
+		},
+		{
+			name: "empty excluded tags",
+			args: args{
+				excludeTags: nil,
+				instanceTags: []ec2types.Tag{
+					{
+						Key:   &tagName1,
+						Value: &tagVal1,
+					},
+					{
+						Key:   &tagName2,
+						Value: &tagVal2,
+					},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "instance has excluded tags",
+			args: args{
+				excludeTags: []*types.Tag{
+					{
+						Key: tagName1,
+						Val: tagVal1,
+					},
+					{
+						Key: "stam1",
+						Val: "stam2",
+					},
+				},
+				instanceTags: []ec2types.Tag{
+					{
+						Key:   &tagName1,
+						Value: &tagVal1,
+					},
+					{
+						Key:   &tagName2,
+						Value: &tagVal2,
+					},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "instance does not have excluded tags",
+			args: args{
+				excludeTags: []*types.Tag{
+					{
+						Key: "stam1",
+						Val: "stam2",
+					},
+					{
+						Key: "stam3",
+						Val: "stam4",
+					},
+				},
+				instanceTags: []ec2types.Tag{
+					{
+						Key:   &tagName1,
+						Value: &tagVal1,
+					},
+					{
+						Key:   &tagName2,
+						Value: &tagVal2,
+					},
+				},
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := hasExcludeTags(tt.args.excludeTags, tt.args.instanceTags); got != tt.want {
+				t.Errorf("hasExcludeTags() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_getInstancesFromDescribeInstancesOutput(t *testing.T) {
+	type args struct {
+		result      *ec2.DescribeInstancesOutput
+		excludeTags []*types.Tag
+		regionID    string
+	}
+	tests := []struct {
+		name string
+		args args
+		want []types.Instance
+	}{
+		{
+			name: "no reservations found",
+			args: args{
+				result: &ec2.DescribeInstancesOutput{
+					Reservations: []ec2types.Reservation{},
+				},
+				excludeTags: nil,
+				regionID:    "region-1",
+			},
+			want: nil,
+		},
+		{
+			name: "no excluded tags",
+			args: args{
+				result: &ec2.DescribeInstancesOutput{
+					Reservations: []ec2types.Reservation{
+						{
+							Instances: []ec2types.Instance{
+								{
+									InstanceId: utils.StringPtr("instance-1"),
+									Tags: []ec2types.Tag{
+										{
+											Key:   utils.StringPtr("key-1"),
+											Value: utils.StringPtr("val-1"),
+										},
+									},
+								},
+								{
+									InstanceId: utils.StringPtr("instance-2"),
+									Tags: []ec2types.Tag{
+										{
+											Key:   utils.StringPtr("key-2"),
+											Value: utils.StringPtr("val-2"),
+										},
+									},
+								},
+							},
+						},
+						{
+							Instances: []ec2types.Instance{
+								{
+									InstanceId: utils.StringPtr("instance-3"),
+								},
+							},
+						},
+					},
+				},
+				excludeTags: nil,
+				regionID:    "region-1",
+			},
+			want: []types.Instance{
+				{
+					ID:     "instance-1",
+					Region: "region-1",
+				},
+				{
+					ID:     "instance-2",
+					Region: "region-1",
+				},
+				{
+					ID:     "instance-3",
+					Region: "region-1",
+				},
+			},
+		},
+		{
+			name: "one excluded instance",
+			args: args{
+				result: &ec2.DescribeInstancesOutput{
+					Reservations: []ec2types.Reservation{
+						{
+							Instances: []ec2types.Instance{
+								{
+									InstanceId: utils.StringPtr("instance-1"),
+									Tags: []ec2types.Tag{
+										{
+											Key:   utils.StringPtr("key-1"),
+											Value: utils.StringPtr("val-1"),
+										},
+									},
+								},
+								{
+									InstanceId: utils.StringPtr("instance-2"),
+									Tags: []ec2types.Tag{
+										{
+											Key:   utils.StringPtr("key-2"),
+											Value: utils.StringPtr("val-2"),
+										},
+									},
+								},
+							},
+						},
+						{
+							Instances: []ec2types.Instance{
+								{
+									InstanceId: utils.StringPtr("instance-3"),
+								},
+							},
+						},
+					},
+				},
+				excludeTags: []*types.Tag{
+					{
+						Key: "key-1",
+						Val: "val-1",
+					},
+				},
+				regionID: "region-1",
+			},
+			want: []types.Instance{
+				{
+					ID:     "instance-2",
+					Region: "region-1",
+				},
+				{
+					ID:     "instance-3",
+					Region: "region-1",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := getInstancesFromDescribeInstancesOutput(tt.args.result, tt.args.excludeTags, tt.args.regionID)
+
+			sort.Slice(got, func(i, j int) bool {
+				return got[i].ID > got[j].ID
+			})
+			sort.Slice(tt.want, func(i, j int) bool {
+				return tt.want[i].ID > tt.want[j].ID
+			})
+
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getInstancesFromDescribeInstancesOutput() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

@@ -17,43 +17,31 @@ package config
 
 import (
 	"github.com/spf13/viper"
-	"k8s.io/client-go/kubernetes"
 )
 
 const (
 	ScannerJobResultListenPort           = "SCANNER_JOB_RESULT_LISTEN_PORT"
-	CredsSecretNamespace                 = "CREDS_SECRET_NAMESPACE" // nolint: gosec
-	ScannerJobTemplateConfigMapName      = "SCANNER_JOB_TEMPLATE_CONFIG_MAP_NAME"
-	ScannerJobTemplateConfigMapNamespace = "SCANNER_JOB_TEMPLATE_CONFIG_MAP_NAMESPACE"
 	defaultScannerJobResultListenPort    = 8888
 )
 
 type Config struct {
 	ScannerJobResultListenPort int
-	CredsSecretNamespace       string
 	Region string
-	VpcID string
-	SubnetID string
 	AmiID string
 }
 
 func setConfigDefaults() {
-	viper.SetDefault(CredsSecretNamespace, "kubeclarity")
-	viper.SetDefault(ScannerJobTemplateConfigMapName, "")
-	viper.SetDefault(ScannerJobTemplateConfigMapNamespace, "kubeclarity")
+	// TODO defaults for region and ami ID
 	viper.SetDefault(ScannerJobResultListenPort, defaultScannerJobResultListenPort)
 
 	viper.AutomaticEnv()
 }
 
-func LoadConfig(clientset kubernetes.Interface) (*Config, error) {
+func LoadConfig() (*Config, error) {
 	setConfigDefaults()
-
-
 
 	config := &Config{
 		ScannerJobResultListenPort: viper.GetInt(ScannerJobResultListenPort),
-		CredsSecretNamespace:       viper.GetString(CredsSecretNamespace),
 	}
 
 	return config, nil

@@ -9,9 +9,15 @@ import (
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 )
+
+type Client struct {
+	ec2Client *ec2.Client
+}
 
 var (
 	snapshotDescription = "VMClarity snapshot"
@@ -24,10 +30,6 @@ var (
 		},
 	}
 )
-
-type Client struct {
-	ec2Client *ec2.Client
-}
 
 func Create() (*Client, error) {
 	var awsClient Client
@@ -44,6 +46,7 @@ func Create() (*Client, error) {
 
 func (c *Client) Discover(scope *types.ScanScope) ([]types.Instance, error) {
 	var ret []types.Instance
+	var filters []ec2types.Filter
 
 	regions, err := c.getRegionsToScan(scope)
 	if err != nil {
@@ -52,32 +55,69 @@ func (c *Client) Discover(scope *types.ScanScope) ([]types.Instance, error) {
 	if len(regions) == 0 {
 		return nil, fmt.Errorf("no regions to scan")
 	}
+	filters = append(filters, createInclusionTagsFilters(scope.IncludeTags)...)
+	filters = append(filters, createInstanceStateFilters(scope.ScanStopped)...)
 
-	for _, region := range regions {
-		describeFilters := createDescribeFilters(scope, region)
+	for _, regionID := range regions {
+		region, err := findRegionByID(scope.Regions, regionID)
+		if err != nil {
+			log.Errorf("failed to find region by ID: %v", err)
+			continue
+		}
 
-		out, err := c.ec2Client.DescribeInstances(context.TODO(), &ec2.DescribeInstancesInput{
-			Filters:    describeFilters,
-			MaxResults: nil, // TODO
-			NextToken:  nil, // TODO
+		// if no vpcs, that mean that we don't need any vpc filters
+		if len(region.VPCs) == 0 {
+			instances, err := c.GetInstances(filters, scope.ExcludeTags, regionID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get instances: %v", err)
+			}
+			ret = append(ret, instances...)
+			continue
+		}
+
+		// need to do a per vpc call for DescribeInstances
+		for _, vpc := range region.VPCs {
+			filters = append(filters, createVPCFilters(vpc)...)
+
+			instances, err := c.GetInstances(filters, scope.ExcludeTags, regionID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get instances: %v", err)
+			}
+			ret = append(ret, instances...)
+		}
+	}
+	return ret, nil
+}
+
+func (c *Client) GetInstances(filters []ec2types.Filter, excludeTags []*types.Tag, regionID string) ([]types.Instance, error) {
+	var ret []types.Instance
+
+	out, err := c.ec2Client.DescribeInstances(context.TODO(), &ec2.DescribeInstancesInput{
+		Filters:    filters,
+		MaxResults: utils.Int32Ptr(50), // TODO what will be a good number?
+	}, func(options *ec2.Options) {
+		options.Region = regionID
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to describe instances: %v", err)
+	}
+	ret = append(ret, getInstancesFromDescribeInstancesOutput(out, excludeTags, regionID)...)
+
+	// use pagination
+	for out.NextToken != nil {
+		out, err = c.ec2Client.DescribeInstances(context.TODO(), &ec2.DescribeInstancesInput{
+			Filters:    filters,
+			MaxResults: utils.Int32Ptr(50),
+			NextToken:  out.NextToken,
 		}, func(options *ec2.Options) {
-			options.Region = region
+			options.Region = regionID
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to describe instances: %v", err)
 		}
-		// get all returned instances:
-		for _, reservation := range out.Reservations {
-			for _, instance := range reservation.Instances {
-				if instance.InstanceId != nil {
-					ret = append(ret, types.Instance{
-						ID:     *instance.InstanceId,
-						Region: region,
-					})
-				}
-			}
-		}
+		ret = append(ret, getInstancesFromDescribeInstancesOutput(out, excludeTags, regionID)...)
 	}
+
 	return ret, nil
 }
 
@@ -105,9 +145,9 @@ func (c *Client) CreateSnapshot(volume types.Volume) (types.Snapshot, error) {
 }
 
 func (c *Client) WaitForSnapshotReady(snapshot types.Snapshot) error {
-	ticker := time.NewTicker(2 * time.Second)
+	ticker := time.NewTicker(3 * time.Second)
 	defer ticker.Stop()
-	timeout := time.After(2 * time.Minute)
+	timeout := time.After(3 * time.Minute)
 
 	for {
 		select {
@@ -118,7 +158,10 @@ func (c *Client) WaitForSnapshotReady(snapshot types.Snapshot) error {
 				options.Region = snapshot.Region
 			})
 			if err != nil {
-				return fmt.Errorf("failed to descrive snapshot: %v", err)
+				return fmt.Errorf("failed to describe snapshot: %v", err)
+			}
+			if len(out.Snapshots) != 1 {
+				return fmt.Errorf("got unexcpected number of snapshots (%v) with snapshot id %v. excpecting 1", len(out.Snapshots), snapshot.ID)
 			}
 			if out.Snapshots[0].State == ec2types.SnapshotStateCompleted {
 				return nil
@@ -131,9 +174,9 @@ func (c *Client) WaitForSnapshotReady(snapshot types.Snapshot) error {
 
 func (c *Client) CopySnapshot(snapshot types.Snapshot, dstRegion string) (types.Snapshot, error) {
 	snap, err := c.ec2Client.CopySnapshot(context.TODO(), &ec2.CopySnapshotInput{
-		SourceRegion:      &snapshot.Region,
-		SourceSnapshotId:  &snapshot.ID,
-		Description:       &snapshotDescription,
+		SourceRegion:     &snapshot.Region,
+		SourceSnapshotId: &snapshot.ID,
+		Description:      &snapshotDescription,
 		TagSpecifications: []ec2types.TagSpecification{
 			{
 				ResourceType: ec2types.ResourceTypeSnapshot,
@@ -179,6 +222,7 @@ func (c *Client) GetInstanceRootVolume(instance types.Instance) (types.Volume, e
 	outInstance := out.Reservations[0].Instances[0]
 	rootDeviceName := *outInstance.RootDeviceName
 
+	// find root volume of the instance
 	for _, blkDevice := range outInstance.BlockDeviceMappings {
 		if strings.Compare(*blkDevice.DeviceName, rootDeviceName) == 0 {
 			return types.Volume{
@@ -192,31 +236,33 @@ func (c *Client) GetInstanceRootVolume(instance types.Instance) (types.Volume, e
 }
 
 func (c *Client) LaunchInstance(ami, deviceName string, snapshot types.Snapshot) (types.Instance, error) {
-	var max = int32(1)
-	var min = int32(1)
-
 	out, err := c.ec2Client.RunInstances(context.TODO(), &ec2.RunInstancesInput{
-		MaxCount: &max,
-		MinCount: &min,
+		MaxCount: utils.Int32Ptr(1),
+		MinCount: utils.Int32Ptr(1),
 		ImageId:  &ami,
 		BlockDeviceMappings: []ec2types.BlockDeviceMapping{
 			{
+				// attach the snapshot to the instance at launch (a new volume will be created)
 				DeviceName: &deviceName,
 				Ebs: &ec2types.EbsBlockDevice{
-					DeleteOnTermination: nil, // ?
+					DeleteOnTermination: utils.BoolPtr(true),
 					Encrypted:           nil, // ?
 					SnapshotId:          &snapshot.ID,
 					VolumeSize:          nil,                    // default is snapshot size
-					VolumeType:          ec2types.VolumeTypeGp2, // ?
+					VolumeType:          ec2types.VolumeTypeGp2, // TODO need to decide volume type
 				},
 			},
 		},
-		InstanceType:      ec2types.InstanceTypeT2Large,
-		MetadataOptions:   nil, // ?
-		SecurityGroups:    nil, // use default for now
-		SubnetId:          nil, // use default for now
-		TagSpecifications: nil, // need to specify tags
-		UserData:          nil, // put launch script here
+		InstanceType:   ec2types.InstanceTypeT2Large, // TODO need to decide instance type
+		SecurityGroups: nil,                          // use default for now
+		SubnetId:       nil,                          // use default for now
+		TagSpecifications: []ec2types.TagSpecification{
+			{
+				ResourceType: ec2types.ResourceTypeInstance,
+				Tags:         vmclarityTags,
+			},
+		},
+		UserData: nil, // TODO put launch script here
 	}, func(options *ec2.Options) {
 		options.Region = snapshot.Region
 	})
@@ -256,61 +302,90 @@ func (c *Client) DeleteSnapshot(snapshot types.Snapshot) error {
 	return nil
 }
 
-func findRegionByID(regions []types.Region, regionID string) types.Region {
-	for _, region := range regions {
-		if strings.Compare(region.ID, regionID) == 0 {
-			return region
-		}
-	}
-	return types.Region{}
-}
+func getInstancesFromDescribeInstancesOutput(result *ec2.DescribeInstancesOutput, excludeTags []*types.Tag, regionID string) []types.Instance {
+	var ret []types.Instance
 
-func getRegionVPCsAndSecurityGroups(region types.Region) (vpcs []string, sgs []string) {
-	for _, vpc := range region.VPCs {
-		vpcs = append(vpcs, vpc.ID)
-		for _, sc := range vpc.SecurityGroups {
-			sgs = append(sgs, sc.ID)
-		}
-	}
-	return
-}
-
-func createDescribeFilters(scopes *types.ScanScope, regionID string) []ec2types.Filter {
-	var ret []ec2types.Filter
-	var vpcs []string
-	var sgs []string
-
-	if !scopes.All {
-		region := findRegionByID(scopes.Regions, regionID)
-		vpcs, sgs = getRegionVPCsAndSecurityGroups(region)
-	}
-
-	vpcID := "vpc-id"
-	sgID := "instance.group-id" // TODO
-
-	if len(sgs) > 0 {
-		ret = append(ret, ec2types.Filter{
-			Name:   &sgID,
-			Values: sgs,
-		})
-	} else if len(vpcs) > 0 {
-		ret = append(ret, ec2types.Filter{
-			Name:   &vpcID,
-			Values: vpcs,
-		})
-	}
-
-	if len(scopes.IncludeTags) > 0 {
-		for _, tag := range scopes.IncludeTags {
-			name := "tag:" + tag.Key
-			ret = append(ret, ec2types.Filter{
-				Name:   &name,
-				Values: []string{tag.Val},
+	for _, reservation := range result.Reservations {
+		for _, instance := range reservation.Instances {
+			if hasExcludeTags(excludeTags, instance.Tags) {
+				continue
+			}
+			ret = append(ret, types.Instance{
+				ID:     *instance.InstanceId,
+				Region: regionID,
 			})
 		}
 	}
+	return ret
+}
+
+func findRegionByID(regions []types.Region, regionID string) (types.Region, error) {
+	for _, region := range regions {
+		if strings.Compare(region.ID, regionID) == 0 {
+			return region, nil
+		}
+	}
+	return types.Region{}, fmt.Errorf("region %v not found in regions list", regionID)
+}
+
+func getVPCSecurityGroups(vpc types.VPC) []string {
+	var sgs []string
+	for _, sg := range vpc.SecurityGroups {
+		sgs = append(sgs, sg.ID)
+	}
+	return sgs
+}
+
+const (
+	vpcIDFilterName         = "vpc-id"
+	sgIDFilterName          = "instance.group-id" // TODO is this the right one?
+	instanceStateFilterName = "instance-state-name"
+)
+
+func createVPCFilters(vpc types.VPC) []ec2types.Filter {
+	var ret = make([]ec2types.Filter, 0)
+	var sgs []string
+
+	// create per vpc filters
+	ret = append(ret, ec2types.Filter{
+		Name:   utils.StringPtr(vpcIDFilterName),
+		Values: []string{vpc.ID},
+	})
+	sgs = getVPCSecurityGroups(vpc)
+	if len(sgs) > 0 {
+		ret = append(ret, ec2types.Filter{
+			Name:   utils.StringPtr(sgIDFilterName),
+			Values: sgs,
+		})
+	}
+
+	log.Infof("VPC filter created: %+v", ret)
 
 	return ret
+}
+
+func createInstanceStateFilters(scanStopped bool) []ec2types.Filter {
+	var filters []ec2types.Filter
+	if scanStopped {
+		filters = append(filters, ec2types.Filter{
+			Name:   utils.StringPtr(instanceStateFilterName),
+			Values: nil,
+		})
+	}
+	return filters
+}
+
+func createInclusionTagsFilters(tags []*types.Tag) []ec2types.Filter {
+	var filters []ec2types.Filter
+
+	for _, tag := range tags {
+		filters = append(filters, ec2types.Filter{
+			Name:   utils.StringPtr("tag:" + tag.Key),
+			Values: []string{tag.Val},
+		})
+	}
+
+	return filters
 }
 
 func (c *Client) getRegionsToScan(scope *types.ScanScope) ([]string, error) {
@@ -328,12 +403,30 @@ func (c *Client) getRegionsToScan(scope *types.ScanScope) ([]string, error) {
 
 func (c *Client) ListAllRegions() ([]string, error) {
 	var ret []string
-	out, err := c.ec2Client.DescribeRegions(context.TODO(), &ec2.DescribeRegionsInput{})
+	out, err := c.ec2Client.DescribeRegions(context.TODO(), &ec2.DescribeRegionsInput{
+		AllRegions: nil, // display also disabled regions?
+	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to describe regions: %v", err)
 	}
 	for _, region := range out.Regions {
 		ret = append(ret, *region.RegionName)
 	}
 	return ret, nil
+}
+
+func hasExcludeTags(excludeTags []*types.Tag, instanceTags []ec2types.Tag) bool {
+	var excludedTagsMap = make(map[string]string)
+
+	for _, tag := range excludeTags {
+		excludedTagsMap[tag.Key] = tag.Val
+	}
+	for _, tag := range instanceTags {
+		if val, ok := excludedTagsMap[*tag.Key]; ok {
+			if strings.Compare(val, *tag.Value) == 0 {
+				return true
+			}
+		}
+	}
+	return false
 }

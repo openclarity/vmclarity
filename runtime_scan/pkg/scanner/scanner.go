@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"go/scanner"
 	"sync"
+	"sync/atomic"
 
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
@@ -36,31 +37,25 @@ type Scanner struct {
 	progress             types.ScanProgress
 	logFields            log.Fields
 
-	region   string
-	vpcID    string
-	subnetID string
-	amiID    string
+	region string
+	jobAMI string
 
 	sync.Mutex
 }
 
 type scanData struct {
-	instance types.Instance
-	//contexts                     []*imagePodContext // All the pods that contain this image hash
+	instance              types.Instance
 	scanUUID              string
 	vulnerabilitiesResult vulnerabilitiesScanResult
-	//cisDockerBenchmarkResult     cisDockerBenchmarkScanResult
-	//shouldScanCISDockerBenchmark bool
-	resultChan                   chan bool
-	success                      bool
-	completed                    bool
-	timeout                      bool
-	scanErr                      *types.ScanError
+	resultChan            chan bool
+	success               bool
+	completed             bool
+	timeout               bool
+	scanErr               *types.ScanError
 }
 
 type vulnerabilitiesScanResult struct {
-	result []string
-	//layerCommands []*models.ResourceLayerCommand
+	result    []string
 	success   bool
 	completed bool
 	error     *scanner.Error
@@ -75,9 +70,7 @@ func CreateScanner(config *_config.Config, providerClient provider.Client) *Scan
 		progress:             types.ScanProgress{},
 		logFields:            nil,
 		region:               config.Region,
-		vpcID:                config.VpcID,
-		subnetID:             config.SubnetID,
-		amiID:                config.AmiID,
+		jobAMI:               config.AmiID,
 		Mutex:                sync.Mutex{},
 	}
 
@@ -87,85 +80,27 @@ func CreateScanner(config *_config.Config, providerClient provider.Client) *Scan
 // initScan Calculate properties of scan targets
 // nolint:cyclop
 func (s *Scanner) initScan() error {
-	//// Get all target pods
-	//for _, namespace := range s.scanConfig.Instances {
-	//	podList, err := s.clientset.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
-	//	if err != nil {
-	//		return fmt.Errorf("failed to list pods. namespace=%s: %v", namespace, err)
-	//	}
-	//	podsToScan = append(podsToScan, podList.Items...)
-	//	if namespace == corev1.NamespaceAll {
-	//		break
-	//	}
-	//}
-
 	imageIDToScanData := make(map[string]*scanData)
 
-	// Populate the image to scanData map from all target pods
+	// Populate the instance to scanData map
 	for _, instance := range s.scanConfig.Instances {
-		//if s.shouldIgnorePod(&podsToScan[i]) {
-		//	continue
-		//}
-
-		// TODO: (idanf) verify if we need to read pod image pull secrets or just mount it to the scanner job
-		//secrets := k8sutils.GetPodImagePullSecrets(s.clientset, pod)
-
-		// Due to scenarios where image name in the `pod.Status.ContainerStatuses` is different
-		// from image name in the `pod.Spec.Containers` we will take only image id from `pod.Status.ContainerStatuses`.
-		//containerNameToImageID := make(map[string]string)
-		//for _, container := range append(pod.Status.ContainerStatuses, pod.Status.InitContainerStatuses...) {
-		//	containerNameToImageID[container.Name] = k8sutils.NormalizeImageID(container.ImageID)
-		//}
-
-		//containers := append(pod.Spec.Containers, pod.Spec.InitContainers...)
-
-		//for _, container := range containers {
-			//imageID, ok := containerNameToImageID[container.Name]
-			//if !ok {
-			//	log.Warnf("Image id is missing. pod=%v, namepspace=%v, container=%v ,image=%v",
-			//		pod.GetName(), pod.GetNamespace(), container.Name, container.Image)
-			//	continue
-			//}
-			//imageHash := k8sutils.ParseImageHash(imageID)
-			//if imageHash == "" {
-			//	log.WithFields(s.logFields).Warnf("Failed to get image hash - ignoring image. "+
-			//		"pod=%v, namepspace=%v, image name=%v", pod.GetName(), pod.GetNamespace(), container.Image)
-			//	continue
-			//}
-			//// Create pod context
-			//podContext := &imagePodContext{
-			//	containerName:   container.Name,
-			//	podName:         pod.GetName(),
-			//	namespace:       pod.GetNamespace(),
-			//	imagePullSecret: k8sutils.GetMatchingSecretName(secrets, container.Image),
-			//	imageName:       container.Image,
-			//	podUID:          string(pod.GetUID()),
-			//	podLabels:       labels.Set(pod.GetLabels()),
-			//}
-			//if data, ok := instanceIDToScanData[imageID]; !ok {
-				// Image added for the first time, create scan data and append pod context
-				imageIDToScanData[instance.ID] = &scanData{
-					instance:                     instance,
-					scanUUID:                     uuid.NewV4().String(),
-					vulnerabilitiesResult:        vulnerabilitiesScanResult{},
-					//shouldScanCISDockerBenchmark: s.scanConfig.ShouldScanCISDockerBenchmark,
-					resultChan:                   make(chan bool),
-					success:                      false,
-					completed:                    false,
-					timeout:                      false,
-					scanErr:                      nil,
-				}
-			//} else {
-				// Image already exist in map, just append the pod context
-				//data.contexts = append(data.contexts, podContext)
-			//}
+		imageIDToScanData[instance.ID] = &scanData{
+			instance:              instance,
+			scanUUID:              uuid.NewV4().String(),
+			vulnerabilitiesResult: vulnerabilitiesScanResult{},
+			//shouldScanCISDockerBenchmark: s.scanConfig.ShouldScanCISDockerBenchmark,
+			resultChan: make(chan bool),
+			success:    false,
+			completed:  false,
+			timeout:    false,
+			scanErr:    nil,
 		}
-	//}
+	}
 
 	s.instanceIDToScanData = imageIDToScanData
-	s.progress.ImagesToScan = uint32(len(imageIDToScanData))
+	s.progress.InstancesToScan = uint32(len(imageIDToScanData))
 
-	log.WithFields(s.logFields).Infof("Total %d unique images to scan", s.progress.ImagesToScan)
+	log.WithFields(s.logFields).Infof("Total %d unique images to scan", s.progress.InstancesToScan)
 
 	return nil
 }
@@ -185,7 +120,7 @@ func (s *Scanner) Scan(scanConfig *_config.ScanConfig, scanDone chan struct{}) e
 		return fmt.Errorf("failed to initiate scan: %v", err)
 	}
 
-	if s.progress.ImagesToScan == 0 {
+	if s.progress.InstancesToScan == 0 {
 		log.WithFields(s.logFields).Info("Nothing to scan")
 		s.progress.SetStatus(types.NothingToScan)
 		nonBlockingNotification(scanDone)
@@ -201,6 +136,46 @@ func (s *Scanner) Scan(scanConfig *_config.ScanConfig, scanDone chan struct{}) e
 		s.Unlock()
 	}()
 
-
 	return nil
+}
+
+func (s *Scanner) ScanProgress() types.ScanProgress {
+	return types.ScanProgress{
+		InstancesToScan:          s.progress.InstancesToScan,
+		InstancesStartedToScan:   atomic.LoadUint32(&s.progress.InstancesStartedToScan),
+		InstancesCompletedToScan: atomic.LoadUint32(&s.progress.InstancesCompletedToScan),
+		Status:                   s.progress.Status,
+	}
+}
+
+func (s *Scanner) Results() *types.ScanResults {
+	s.Lock()
+	defer s.Unlock()
+
+	var instanceScanResults []*types.InstanceScanResult
+
+	for _, scanD := range s.instanceIDToScanData {
+		if !scanD.completed {
+			continue
+		}
+		instanceScanResults = append(instanceScanResults, &types.InstanceScanResult{
+			Instances:       scanD.instance,
+			Vulnerabilities: scanD.vulnerabilitiesResult.result,
+			Success:         scanD.success,
+			//ScanErrors:      scanD.getScanErrors(),
+		})
+	}
+
+	return &types.ScanResults{
+		InstanceScanResults: instanceScanResults,
+		Progress:            s.ScanProgress(),
+	}
+}
+
+func (s *Scanner) Clear() {
+	s.Lock()
+	defer s.Unlock()
+
+	log.WithFields(s.logFields).Infof("Clearing...")
+	close(s.killSignal)
 }
