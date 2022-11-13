@@ -490,12 +490,7 @@ func (c *Client) getRegionsToScan(scope *types.ScanScope) ([]types.Region, error
 		return c.ListAllRegions()
 	}
 
-	var ret []types.Region
-	for _, region := range scope.Regions {
-		ret = append(ret, region)
-	}
-
-	return ret, nil
+	return scope.Regions, nil
 }
 
 func (c *Client) ListAllRegions() ([]types.Region, error) {
