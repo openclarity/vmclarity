@@ -430,7 +430,7 @@ func getVPCSecurityGroupsIDs(vpc types.VPC) []string {
 
 const (
 	vpcIDFilterName         = "vpc-id"
-	sgIDFilterName          = "instance.group-id" // TODO is this the right one?
+	sgIDFilterName          = "instance.group-id"
 	instanceStateFilterName = "instance-state-name"
 )
 
