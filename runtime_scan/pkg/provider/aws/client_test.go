@@ -525,3 +525,165 @@ func Test_getInstancesFromDescribeInstancesOutput(t *testing.T) {
 		})
 	}
 }
+
+func Test_createInstanceStateFilters(t *testing.T) {
+	type args struct {
+		scanStopped bool
+	}
+	tests := []struct {
+		name string
+		args args
+		want []ec2types.Filter
+	}{
+		{
+			name: "should scan stopped",
+			args: args{
+				scanStopped: true,
+			},
+			want: []ec2types.Filter{
+				{
+					Name:   utils.StringPtr(instanceStateFilterName),
+					Values: []string{"running", "stopped"},
+				},
+			},
+		},
+		{
+			name: "should not scan stopped",
+			args: args{
+				scanStopped: false,
+			},
+			want: []ec2types.Filter{
+				{
+					Name:   utils.StringPtr(instanceStateFilterName),
+					Values: []string{"running"},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := createInstanceStateFilters(tt.args.scanStopped); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("createInstanceStateFilters() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_getInstanceState(t *testing.T) {
+	type args struct {
+		result     *ec2.DescribeInstancesOutput
+		instanceID string
+	}
+	tests := []struct {
+		name string
+		args args
+		want ec2types.InstanceStateName
+	}{
+		{
+			name: "state running",
+			args: args{
+				result: &ec2.DescribeInstancesOutput{
+					Reservations: []ec2types.Reservation{
+						{
+							Instances: []ec2types.Instance{
+								{
+									InstanceId: utils.StringPtr("instance-1"),
+								},
+								{
+									InstanceId: utils.StringPtr("instance-2"),
+								},
+							},
+						},
+						{
+							Instances: []ec2types.Instance{
+								{
+									InstanceId: utils.StringPtr("instance-3"),
+									State: &ec2types.InstanceState{
+										Name: ec2types.InstanceStateNameRunning,
+									},
+								},
+							},
+						},
+					},
+				},
+				instanceID: "instance-3",
+			},
+			want: ec2types.InstanceStateNameRunning,
+		},
+		{
+			name: "state pending",
+			args: args{
+				result: &ec2.DescribeInstancesOutput{
+					Reservations: []ec2types.Reservation{
+						{
+							Instances: []ec2types.Instance{
+								{
+									InstanceId: utils.StringPtr("instance-1"),
+								},
+								{
+									InstanceId: utils.StringPtr("instance-2"),
+									State: &ec2types.InstanceState{
+										Name: ec2types.InstanceStateNamePending,
+									},
+								},
+							},
+						},
+						{
+							Instances: []ec2types.Instance{
+								{
+									InstanceId: utils.StringPtr("instance-3"),
+									State: &ec2types.InstanceState{
+										Name: ec2types.InstanceStateNameRunning,
+									},
+								},
+							},
+						},
+					},
+				},
+				instanceID: "instance-2",
+			},
+			want: ec2types.InstanceStateNamePending,
+		},
+		{
+			name: "instance id not found",
+			args: args{
+				result: &ec2.DescribeInstancesOutput{
+					Reservations: []ec2types.Reservation{
+						{
+							Instances: []ec2types.Instance{
+								{
+									InstanceId: utils.StringPtr("instance-1"),
+								},
+								{
+									InstanceId: utils.StringPtr("instance-2"),
+									State: &ec2types.InstanceState{
+										Name: ec2types.InstanceStateNamePending,
+									},
+								},
+							},
+						},
+						{
+							Instances: []ec2types.Instance{
+								{
+									InstanceId: utils.StringPtr("instance-3"),
+									State: &ec2types.InstanceState{
+										Name: ec2types.InstanceStateNameRunning,
+									},
+								},
+							},
+						},
+					},
+				},
+				instanceID: "instance-4",
+			},
+			want: ec2types.InstanceStateNamePending,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getInstanceState(tt.args.result, tt.args.instanceID); got != tt.want {
+				t.Errorf("getInstanceState() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
