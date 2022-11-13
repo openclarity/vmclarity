@@ -440,7 +440,7 @@ func (c *Client) ListAllRegions() ([]types.Region, error) {
 	}
 	for _, region := range out.Regions {
 		ret = append(ret, types.Region{
-			ID:    *region.RegionName,
+			ID: *region.RegionName,
 		})
 	}
 	return ret, nil

@@ -47,7 +47,7 @@ func (s *Scanner) jobBatchManagement(scanDone chan struct{}) {
 		go s.worker(q, i, done, s.killSignal)
 	}
 
-	// wait until scan of all images is done - non blocking. once all done, notify on fullScanDone chan
+	// wait until scan of all instances is done - non blocking. once all done, notify on fullScanDone chan
 	go func() {
 		for c := 0; c < len(instanceIDToScanData); c++ {
 			select {
@@ -113,7 +113,7 @@ func (s *Scanner) worker(queue chan *scanData, workNumber int, done, ks chan boo
 			select {
 			case done <- true:
 			case <-ks:
-				log.WithFields(s.logFields).Infof("Image scan was canceled. imageID=%v", data.instance.ID)
+				log.WithFields(s.logFields).Infof("Instance scan was canceled. instanceID=%v", data.instance.ID)
 			}
 		case <-ks:
 			log.WithFields(s.logFields).Debugf("worker #%v halted", workNumber)

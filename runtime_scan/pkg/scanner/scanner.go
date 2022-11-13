@@ -82,11 +82,11 @@ func CreateScanner(config *_config.Config, providerClient provider.Client) *Scan
 // initScan Calculate properties of scan targets
 // nolint:cyclop
 func (s *Scanner) initScan() error {
-	imageIDToScanData := make(map[string]*scanData)
+	instanceIDToScanData := make(map[string]*scanData)
 
 	// Populate the instance to scanData map
 	for _, instance := range s.scanConfig.Instances {
-		imageIDToScanData[instance.ID] = &scanData{
+		instanceIDToScanData[instance.ID] = &scanData{
 			instance:              instance,
 			scanUUID:              uuid.NewV4().String(),
 			vulnerabilitiesResult: vulnerabilitiesScanResult{},
@@ -98,10 +98,10 @@ func (s *Scanner) initScan() error {
 		}
 	}
 
-	s.instanceIDToScanData = imageIDToScanData
-	s.progress.InstancesToScan = uint32(len(imageIDToScanData))
+	s.instanceIDToScanData = instanceIDToScanData
+	s.progress.InstancesToScan = uint32(len(instanceIDToScanData))
 
-	log.WithFields(s.logFields).Infof("Total %d unique images to scan", s.progress.InstancesToScan)
+	log.WithFields(s.logFields).Infof("Total %d unique instances to scan", s.progress.InstancesToScan)
 
 	return nil
 }
