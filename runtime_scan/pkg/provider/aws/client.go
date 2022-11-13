@@ -98,6 +98,59 @@ func (c *Client) Discover(scope *types.ScanScope) ([]types.Instance, error) {
 	return ret, nil
 }
 
+func (c *Client) RunScanningJob(config types.JobConfig) (types.Job, error) {
+	rootVolume, err := c.GetInstanceRootVolume(config.InstanceToScan)
+	if err != nil {
+		return types.Job{}, fmt.Errorf("failed to get instance root volume. instance id=%v: %v", config.InstanceToScan.ID, err)
+	}
+
+	// create a snapshot of the root volume
+	srcSnapshot, err := c.CreateSnapshot(rootVolume)
+	if err != nil {
+		return types.Job{}, fmt.Errorf("failed to create snapshot: %v", err)
+	}
+	if err := c.WaitForSnapshotReady(srcSnapshot); err != nil {
+		return types.Job{}, fmt.Errorf("failed to wait for snapshot to be ready: %v", err)
+	}
+
+	//copy the snapshot to the scanner region
+	// TODO check if scanner region is same as snapshot region?
+	cpySnapshot, err := c.CopySnapshot(srcSnapshot, config.Region)
+	if err != nil {
+		return types.Job{}, fmt.Errorf("failed to copy snapshot: %v", err)
+	}
+	if err := c.WaitForSnapshotReady(cpySnapshot); err != nil {
+		return types.Job{}, fmt.Errorf("failed to wait for snapshot to be ready: %v", err)
+	}
+
+	// create the scanner job (vm) with a boot script
+	launchedInstance, err := c.LaunchInstance(config.ImageID, config.DeviceName, config.SubnetID, cpySnapshot)
+	if err != nil {
+		return types.Job{}, fmt.Errorf("failed to launch instance: %v", err)
+	}
+	if err := c.WaitForInstanceReady(launchedInstance); err != nil {
+		return types.Job{}, fmt.Errorf("failed to wait for instance to be ready: %v", err)
+	}
+
+	return types.Job{
+		Instance:    launchedInstance,
+		SrcSnapshot: srcSnapshot,
+		DstSnapshot: cpySnapshot,
+	}, nil
+}
+
+func (c *Client) DeleteJob(job types.Job) {
+	if err := c.DeleteInstance(job.Instance); err != nil {
+		log.Errorf("failed to delete instance: %v", err)
+	}
+	if err := c.DeleteSnapshot(job.SrcSnapshot); err != nil {
+		log.Errorf("failed to delete source snapshot: %v", err)
+	}
+	if err := c.DeleteSnapshot(job.DstSnapshot); err != nil {
+		log.Errorf("failed to delete dest snapshot: %v", err)
+	}
+}
+
 func (c *Client) GetInstances(filters []ec2types.Filter, excludeTags []*types.Tag, regionID string) ([]types.Instance, error) {
 	var ret []types.Instance
 

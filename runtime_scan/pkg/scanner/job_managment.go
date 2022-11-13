@@ -147,44 +147,14 @@ func (s *Scanner) waitForResult(data *scanData, ks chan bool) {
 }
 
 func (s *Scanner) runJob(data *scanData) (types.Job, error) {
-	rootVolume, err := s.providerClient.GetInstanceRootVolume(data.instance)
-	if err != nil {
-		return types.Job{}, fmt.Errorf("failed to get instance root volume. instance id=%v: %v", data.instance.ID, err)
+	jobConfig := types.JobConfig{
+		InstanceToScan: data.instance,
+		Region:         s.region,
+		ImageID:        s.jobAMI,
+		DeviceName:     s.deviceName,
+		SubnetID:       s.subnetID,
 	}
-
-	// create a snapshot of the root volume
-	srcSnapshot, err := s.providerClient.CreateSnapshot(rootVolume)
-	if err != nil {
-		return types.Job{}, fmt.Errorf("failed to create snapshot: %v", err)
-	}
-	if err := s.providerClient.WaitForSnapshotReady(srcSnapshot); err != nil {
-		return types.Job{}, fmt.Errorf("failed to wait for snapshot to be ready: %v", err)
-	}
-
-	//copy the snapshot to the scanner region
-	// TODO check if scanner region is same as snapshot region?
-	cpySnapshot, err := s.providerClient.CopySnapshot(srcSnapshot, s.region)
-	if err != nil {
-		return types.Job{}, fmt.Errorf("failed to copy snapshot: %v", err)
-	}
-	if err := s.providerClient.WaitForSnapshotReady(cpySnapshot); err != nil {
-		return types.Job{}, fmt.Errorf("failed to wait for snapshot to be ready: %v", err)
-	}
-
-	// create the scanner job (vm) with a boot script
-	launchedInstance, err := s.providerClient.LaunchInstance(s.jobAMI, s.deviceName, s.subnetID, cpySnapshot)
-	if err != nil {
-		return types.Job{}, fmt.Errorf("failed to launch instance: %v", err)
-	}
-	if err := s.providerClient.WaitForInstanceReady(launchedInstance); err != nil {
-		return types.Job{}, fmt.Errorf("failed to wait for instance to be ready: %v", err)
-	}
-
-	return types.Job{
-		Instance:    launchedInstance,
-		SrcSnapshot: srcSnapshot,
-		DstSnapshot: cpySnapshot,
-	}, nil
+	return s.providerClient.RunScanningJob(jobConfig)
 }
 
 func (s *Scanner) deleteJobIfNeeded(job *types.Job, isSuccessfulJob, isCompletedJob bool) {
@@ -211,13 +181,5 @@ func (s *Scanner) deleteJobIfNeeded(job *types.Job, isSuccessfulJob, isCompleted
 }
 
 func (s *Scanner) deleteJob(job *types.Job) {
-	if err := s.providerClient.DeleteInstance(job.Instance); err != nil {
-		log.Errorf("failed to delete instance: %v", err)
-	}
-	if err := s.providerClient.DeleteSnapshot(job.SrcSnapshot); err != nil {
-		log.Errorf("failed to delete source snapshot: %v", err)
-	}
-	if err := s.providerClient.DeleteSnapshot(job.DstSnapshot); err != nil {
-		log.Errorf("failed to delete dest snapshot: %v", err)
-	}
+	s.providerClient.DeleteJob(*job)
 }

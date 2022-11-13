@@ -84,6 +84,14 @@ type Job struct {
 	DstSnapshot Snapshot
 }
 
+type JobConfig struct {
+	InstanceToScan Instance
+	Region         string
+	ImageID        string
+	DeviceName     string
+	SubnetID       string
+}
+
 type Instance struct {
 	ID     string
 	Region string
