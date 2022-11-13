@@ -34,7 +34,7 @@ type Client interface {
 	GetInstanceRootVolume(instance types2.Instance) (types2.Volume, error)
 	// LaunchInstance - launch an instance. the snapshot will be attached to the instance at launch.
 	// return the launched instance
-	LaunchInstance(ami, deviceName string, snapshot types2.Snapshot) (types2.Instance, error)
+	LaunchInstance(ami, deviceName, subnetID string, snapshot types2.Snapshot) (types2.Instance, error)
 	// DeleteInstance - delete an instance.
 	DeleteInstance(instance types2.Instance) error
 	// DeleteSnapshot - delete a snapshot.

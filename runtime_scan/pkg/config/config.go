@@ -35,6 +35,7 @@ type Config struct {
 	Region                     string // scanner region
 	AmiID                      string // image id of a scanner job
 	DeviceName                 string // the name of the block device to attach to the scanner instance (mounted snapshot)
+	SubnetID                   string // the scanner's subnet ID
 }
 
 func setConfigDefaults() {

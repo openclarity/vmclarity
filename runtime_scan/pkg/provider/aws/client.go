@@ -270,7 +270,7 @@ func (c *Client) GetInstanceRootVolume(instance types.Instance) (types.Volume, e
 	return types.Volume{}, fmt.Errorf("failed to find root device volume")
 }
 
-func (c *Client) LaunchInstance(ami, deviceName string, snapshot types.Snapshot) (types.Instance, error) {
+func (c *Client) LaunchInstance(ami, deviceName, subnetID string, snapshot types.Snapshot) (types.Instance, error) {
 	out, err := c.ec2Client.RunInstances(context.TODO(), &ec2.RunInstancesInput{
 		MaxCount: utils.Int32Ptr(1),
 		MinCount: utils.Int32Ptr(1),
@@ -290,7 +290,7 @@ func (c *Client) LaunchInstance(ami, deviceName string, snapshot types.Snapshot)
 		},
 		InstanceType:   ec2types.InstanceTypeT2Large, // TODO need to decide instance type
 		SecurityGroups: nil,                          // use default for now
-		SubnetId:       nil,                          // use default for now
+		SubnetId:       &subnetID,
 		TagSpecifications: []ec2types.TagSpecification{
 			{
 				ResourceType: ec2types.ResourceTypeInstance,

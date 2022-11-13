@@ -172,7 +172,7 @@ func (s *Scanner) runJob(data *scanData) (types.Job, error) {
 	}
 
 	// create the scanner job (vm) with a boot script
-	launchedInstance, err := s.providerClient.LaunchInstance(s.jobAMI, s.deviceName, cpySnapshot)
+	launchedInstance, err := s.providerClient.LaunchInstance(s.jobAMI, s.deviceName, s.subnetID, cpySnapshot)
 	if err != nil {
 		return types.Job{}, fmt.Errorf("failed to launch instance: %v", err)
 	}

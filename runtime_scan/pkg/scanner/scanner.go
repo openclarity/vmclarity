@@ -40,6 +40,7 @@ type Scanner struct {
 	region     string
 	jobAMI     string
 	deviceName string
+	subnetID   string
 
 	sync.Mutex
 }
@@ -67,13 +68,14 @@ func CreateScanner(config *_config.Config, providerClient provider.Client) *Scan
 		progress: types.ScanProgress{
 			Status: types.Idle,
 		},
-		killSignal:           make(chan bool),
-		providerClient:       providerClient,
-		logFields:            log.Fields{"scanner id": uuid.NewV4().String()},
-		region:               config.Region,
-		jobAMI:               config.AmiID,
-		deviceName:           config.DeviceName,
-		Mutex:                sync.Mutex{},
+		killSignal:     make(chan bool),
+		providerClient: providerClient,
+		logFields:      log.Fields{"scanner id": uuid.NewV4().String()},
+		region:         config.Region,
+		jobAMI:         config.AmiID,
+		deviceName:     config.DeviceName,
+		subnetID:       config.SubnetID,
+		Mutex:          sync.Mutex{},
 	}
 
 	return s
