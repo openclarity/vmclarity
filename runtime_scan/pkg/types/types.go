@@ -32,7 +32,7 @@ func (s *ScanProgress) SetStatus(status Status) {
 
 type InstanceScanResult struct {
 	// Instance data
-	Instances Instance
+	Instance Instance
 	// Scan results
 	Vulnerabilities []string // TODO define vulnerabilities struct
 	Success         bool

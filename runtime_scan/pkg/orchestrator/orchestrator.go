@@ -54,7 +54,7 @@ func Create(config *_config.Config) (*Orchestrator, error) {
 	}
 
 	orc := &Orchestrator{
-		scanner: _scanner.CreateScanner(config, awsClient),
+		scanner:        _scanner.CreateScanner(config, awsClient),
 		config:         config,
 		providerClient: awsClient,
 		Mutex:          sync.Mutex{},
@@ -77,7 +77,7 @@ func (o *Orchestrator) Stop() {
 }
 
 func (o *Orchestrator) Scan(scanConfig *_config.ScanConfig, scanDone chan struct{}) error {
-	instances, err := o.providerClient.Discover(&scanConfig.DiscoveryFilters)
+	instances, err := o.providerClient.Discover(&scanConfig.ScanScope)
 	if err != nil {
 		return err
 	}
@@ -89,7 +89,6 @@ func (o *Orchestrator) Scan(scanConfig *_config.ScanConfig, scanDone chan struct
 
 	return nil
 }
-
 
 func (o *Orchestrator) ScanProgress() types.ScanProgress {
 	return o.getScanner().ScanProgress()

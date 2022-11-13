@@ -31,14 +31,15 @@ import (
 
 type Scanner struct {
 	instanceIDToScanData map[string]*scanData
-	providerClient       provider.Client
+	progress             types.ScanProgress
 	scanConfig           *_config.ScanConfig
 	killSignal           chan bool
-	progress             types.ScanProgress
+	providerClient       provider.Client
 	logFields            log.Fields
 
-	region string
-	jobAMI string
+	region     string
+	jobAMI     string
+	deviceName string
 
 	sync.Mutex
 }
@@ -63,14 +64,15 @@ type vulnerabilitiesScanResult struct {
 
 func CreateScanner(config *_config.Config, providerClient provider.Client) *Scanner {
 	s := &Scanner{
-		instanceIDToScanData: nil,
+		progress: types.ScanProgress{
+			Status: types.Idle,
+		},
+		killSignal:           make(chan bool),
 		providerClient:       providerClient,
-		scanConfig:           nil,
-		killSignal:           nil,
-		progress:             types.ScanProgress{},
-		logFields:            nil,
+		logFields:            log.Fields{"scanner id": uuid.NewV4().String()},
 		region:               config.Region,
 		jobAMI:               config.AmiID,
+		deviceName:           config.DeviceName,
 		Mutex:                sync.Mutex{},
 	}
 
@@ -88,12 +90,11 @@ func (s *Scanner) initScan() error {
 			instance:              instance,
 			scanUUID:              uuid.NewV4().String(),
 			vulnerabilitiesResult: vulnerabilitiesScanResult{},
-			//shouldScanCISDockerBenchmark: s.scanConfig.ShouldScanCISDockerBenchmark,
-			resultChan: make(chan bool),
-			success:    false,
-			completed:  false,
-			timeout:    false,
-			scanErr:    nil,
+			resultChan:            make(chan bool),
+			success:               false,
+			completed:             false,
+			timeout:               false,
+			scanErr:               nil,
 		}
 	}
 
@@ -159,7 +160,7 @@ func (s *Scanner) Results() *types.ScanResults {
 			continue
 		}
 		instanceScanResults = append(instanceScanResults, &types.InstanceScanResult{
-			Instances:       scanD.instance,
+			Instance:        scanD.instance,
 			Vulnerabilities: scanD.vulnerabilitiesResult.result,
 			Success:         scanD.success,
 			//ScanErrors:      scanD.getScanErrors(),

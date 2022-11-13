@@ -13,6 +13,8 @@ type Client interface {
 	CopySnapshot(snapshot types2.Snapshot, dstRegion string) (types2.Snapshot, error)
 	// WaitForSnapshotReady - wait until snapshot state is 'completed'.
 	WaitForSnapshotReady(snapshot types2.Snapshot) error
+	// WaitForSnapshotReady - wait until instance state is 'running'.
+	WaitForInstanceReady(instance types2.Instance) error
 	// GetInstanceRootVolume - get the instance's root volume.
 	GetInstanceRootVolume(instance types2.Instance) (types2.Volume, error)
 	// LaunchInstance - launch an instance. the snapshot will be attached to the instance at launch.

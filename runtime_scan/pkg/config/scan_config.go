@@ -34,7 +34,7 @@ type ScanConfig struct {
 	MaxScanParallelism int
 	// instances to scan
 	Instances        []types.Instance
-	DiscoveryFilters types.ScanScope
+	ScanScope        types.ScanScope
 	JobResultTimeout time.Duration
 	DeleteJobPolicy  DeleteJobPolicyType
 }

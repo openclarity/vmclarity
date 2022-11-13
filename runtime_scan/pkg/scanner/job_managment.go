@@ -162,7 +162,6 @@ func (s *Scanner) runJob(data *scanData) (types.Job, error) {
 	}
 
 	//copy the snapshot to the scanner region
-	// TODO make sure we need this.
 	// TODO check if scanner region is same as snapshot region?
 	cpySnapshot, err := s.providerClient.CopySnapshot(srcSnapshot, s.region)
 	if err != nil {
@@ -173,9 +172,12 @@ func (s *Scanner) runJob(data *scanData) (types.Job, error) {
 	}
 
 	// create the scanner job (vm) with a boot script
-	launchedInstance, err := s.providerClient.LaunchInstance(s.jobAMI, "xvdh", cpySnapshot)
+	launchedInstance, err := s.providerClient.LaunchInstance(s.jobAMI, s.deviceName, cpySnapshot)
 	if err != nil {
 		return types.Job{}, fmt.Errorf("failed to launch instance: %v", err)
+	}
+	if err := s.providerClient.WaitForInstanceReady(launchedInstance); err != nil {
+		return types.Job{}, fmt.Errorf("failed to wait for instance to be ready: %v", err)
 	}
 
 	return types.Job{

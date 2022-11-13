@@ -20,19 +20,29 @@ import (
 )
 
 const (
-	ScannerJobResultListenPort           = "SCANNER_JOB_RESULT_LISTEN_PORT"
-	defaultScannerJobResultListenPort    = 8888
+	ScannerJobResultListenPort        = "SCANNER_JOB_RESULT_LISTEN_PORT"
+	ScannerRegion                     = "SCANNER_REGION"
+	defaultScannerRegion              = "us-east-1"
+	ScannerJobImageID                 = "SCANNER_JOB_IMAGE_ID"
+	defaultScannerJobImageID          = "ami-0568773882d492fc8" // ubuntu server 22.04 LTS (HVM), SSD volume type
+	ScannerAttachedVolumeDeviceName   = "SCANNER_ATTACHED_VOLUME_DEVICE_NAME"
+	defaultAttachedVolumeDeviceName   = "xvdh"
+	defaultScannerJobResultListenPort = 8888
 )
 
 type Config struct {
 	ScannerJobResultListenPort int
-	Region string
-	AmiID string
+	Region                     string // scanner region
+	AmiID                      string // image id of a scanner job
+	DeviceName                 string // the name of the block device to attach to the scanner instance (mounted snapshot)
 }
 
 func setConfigDefaults() {
 	// TODO defaults for region and ami ID
 	viper.SetDefault(ScannerJobResultListenPort, defaultScannerJobResultListenPort)
+	viper.SetDefault(ScannerRegion, defaultScannerRegion)
+	viper.SetDefault(ScannerJobImageID, defaultScannerJobImageID)
+	viper.SetDefault(ScannerAttachedVolumeDeviceName, defaultAttachedVolumeDeviceName)
 
 	viper.AutomaticEnv()
 }
@@ -42,6 +52,9 @@ func LoadConfig() (*Config, error) {
 
 	config := &Config{
 		ScannerJobResultListenPort: viper.GetInt(ScannerJobResultListenPort),
+		Region:                     viper.GetString(ScannerRegion),
+		AmiID:                      viper.GetString(ScannerJobImageID),
+		DeviceName:                 viper.GetString(ScannerAttachedVolumeDeviceName),
 	}
 
 	return config, nil

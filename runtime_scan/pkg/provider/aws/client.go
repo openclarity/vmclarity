@@ -58,16 +58,10 @@ func (c *Client) Discover(scope *types.ScanScope) ([]types.Instance, error) {
 	filters = append(filters, createInclusionTagsFilters(scope.IncludeTags)...)
 	filters = append(filters, createInstanceStateFilters(scope.ScanStopped)...)
 
-	for _, regionID := range regions {
-		region, err := findRegionByID(scope.Regions, regionID)
-		if err != nil {
-			log.Errorf("failed to find region by ID: %v", err)
-			continue
-		}
-
+	for _, region := range regions {
 		// if no vpcs, that mean that we don't need any vpc filters
 		if len(region.VPCs) == 0 {
-			instances, err := c.GetInstances(filters, scope.ExcludeTags, regionID)
+			instances, err := c.GetInstances(filters, scope.ExcludeTags, region.ID)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get instances: %v", err)
 			}
@@ -77,9 +71,9 @@ func (c *Client) Discover(scope *types.ScanScope) ([]types.Instance, error) {
 
 		// need to do a per vpc call for DescribeInstances
 		for _, vpc := range region.VPCs {
-			filters = append(filters, createVPCFilters(vpc)...)
+			vpcFilters := append(filters, createVPCFilters(vpc)...)
 
-			instances, err := c.GetInstances(filters, scope.ExcludeTags, regionID)
+			instances, err := c.GetInstances(vpcFilters, scope.ExcludeTags, region.ID)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get instances: %v", err)
 			}
@@ -158,12 +152,38 @@ func (c *Client) WaitForSnapshotReady(snapshot types.Snapshot) error {
 				options.Region = snapshot.Region
 			})
 			if err != nil {
-				return fmt.Errorf("failed to describe snapshot: %v", err)
+				return fmt.Errorf("failed to describe snapshot. snapshotID=%v: %v", snapshot.ID, err)
 			}
 			if len(out.Snapshots) != 1 {
 				return fmt.Errorf("got unexcpected number of snapshots (%v) with snapshot id %v. excpecting 1", len(out.Snapshots), snapshot.ID)
 			}
 			if out.Snapshots[0].State == ec2types.SnapshotStateCompleted {
+				return nil
+			}
+		case <-timeout:
+			return fmt.Errorf("timeout")
+		}
+	}
+}
+
+func (c *Client) WaitForInstanceReady(instance types.Instance) error {
+	ticker := time.NewTicker(3 * time.Second)
+	defer ticker.Stop()
+	timeout := time.After(3 * time.Minute)
+
+	for {
+		select {
+		case <-ticker.C:
+			out, err := c.ec2Client.DescribeInstances(context.TODO(), &ec2.DescribeInstancesInput{
+				InstanceIds: []string{instance.ID},
+			}, func(options *ec2.Options) {
+				options.Region = instance.Region
+			})
+			if err != nil {
+				return fmt.Errorf("failed to describe instance. instanceID=%v: %v", instance.ID, err)
+			}
+			state := getInstanceState(out, instance.ID)
+			if state == ec2types.InstanceStateNameRunning {
 				return nil
 			}
 		case <-timeout:
@@ -302,6 +322,19 @@ func (c *Client) DeleteSnapshot(snapshot types.Snapshot) error {
 	return nil
 }
 
+func getInstanceState(result *ec2.DescribeInstancesOutput, instanceID string) ec2types.InstanceStateName {
+	for _, reservation := range result.Reservations {
+		for _, instance := range reservation.Instances {
+			if strings.Compare(*instance.InstanceId, instanceID) == 0 {
+				if instance.State != nil {
+					return instance.State.Name
+				}
+			}
+		}
+	}
+	return ec2types.InstanceStateNamePending
+}
+
 func getInstancesFromDescribeInstancesOutput(result *ec2.DescribeInstancesOutput, excludeTags []*types.Tag, regionID string) []types.Instance {
 	var ret []types.Instance
 
@@ -319,16 +352,7 @@ func getInstancesFromDescribeInstancesOutput(result *ec2.DescribeInstancesOutput
 	return ret
 }
 
-func findRegionByID(regions []types.Region, regionID string) (types.Region, error) {
-	for _, region := range regions {
-		if strings.Compare(region.ID, regionID) == 0 {
-			return region, nil
-		}
-	}
-	return types.Region{}, fmt.Errorf("region %v not found in regions list", regionID)
-}
-
-func getVPCSecurityGroups(vpc types.VPC) []string {
+func getVPCSecurityGroupsIDs(vpc types.VPC) []string {
 	var sgs []string
 	for _, sg := range vpc.SecurityGroups {
 		sgs = append(sgs, sg.ID)
@@ -351,7 +375,7 @@ func createVPCFilters(vpc types.VPC) []ec2types.Filter {
 		Name:   utils.StringPtr(vpcIDFilterName),
 		Values: []string{vpc.ID},
 	})
-	sgs = getVPCSecurityGroups(vpc)
+	sgs = getVPCSecurityGroupsIDs(vpc)
 	if len(sgs) > 0 {
 		ret = append(ret, ec2types.Filter{
 			Name:   utils.StringPtr(sgIDFilterName),
@@ -366,12 +390,17 @@ func createVPCFilters(vpc types.VPC) []ec2types.Filter {
 
 func createInstanceStateFilters(scanStopped bool) []ec2types.Filter {
 	var filters []ec2types.Filter
+	var states = []string{"running"}
 	if scanStopped {
-		filters = append(filters, ec2types.Filter{
-			Name:   utils.StringPtr(instanceStateFilterName),
-			Values: nil,
-		})
+		states = append(states, "stopped")
 	}
+
+	// TODO these are the states: pending | running | shutting-down | terminated | stopping | stopped
+	// Do we want to scan any other state (other than running and stopped)
+	filters = append(filters, ec2types.Filter{
+		Name:   utils.StringPtr(instanceStateFilterName),
+		Values: states,
+	})
 	return filters
 }
 
@@ -388,21 +417,21 @@ func createInclusionTagsFilters(tags []*types.Tag) []ec2types.Filter {
 	return filters
 }
 
-func (c *Client) getRegionsToScan(scope *types.ScanScope) ([]string, error) {
+func (c *Client) getRegionsToScan(scope *types.ScanScope) ([]types.Region, error) {
 	if scope.All {
 		return c.ListAllRegions()
 	}
 
-	var ret []string
+	var ret []types.Region
 	for _, region := range scope.Regions {
-		ret = append(ret, region.ID)
+		ret = append(ret, region)
 	}
 
 	return ret, nil
 }
 
-func (c *Client) ListAllRegions() ([]string, error) {
-	var ret []string
+func (c *Client) ListAllRegions() ([]types.Region, error) {
+	var ret []types.Region
 	out, err := c.ec2Client.DescribeRegions(context.TODO(), &ec2.DescribeRegionsInput{
 		AllRegions: nil, // display also disabled regions?
 	})
@@ -410,7 +439,9 @@ func (c *Client) ListAllRegions() ([]string, error) {
 		return nil, fmt.Errorf("failed to describe regions: %v", err)
 	}
 	for _, region := range out.Regions {
-		ret = append(ret, *region.RegionName)
+		ret = append(ret, types.Region{
+			ID:    *region.RegionName,
+		})
 	}
 	return ret, nil
 }
@@ -421,9 +452,9 @@ func hasExcludeTags(excludeTags []*types.Tag, instanceTags []ec2types.Tag) bool 
 	for _, tag := range excludeTags {
 		excludedTagsMap[tag.Key] = tag.Val
 	}
-	for _, tag := range instanceTags {
-		if val, ok := excludedTagsMap[*tag.Key]; ok {
-			if strings.Compare(val, *tag.Value) == 0 {
+	for _, instanceTag := range instanceTags {
+		if val, ok := excludedTagsMap[*instanceTag.Key]; ok {
+			if strings.Compare(val, *instanceTag.Value) == 0 {
 				return true
 			}
 		}
