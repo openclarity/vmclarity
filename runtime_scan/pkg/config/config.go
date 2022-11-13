@@ -38,7 +38,6 @@ type Config struct {
 }
 
 func setConfigDefaults() {
-	// TODO defaults for region and ami ID
 	viper.SetDefault(ScannerJobResultListenPort, defaultScannerJobResultListenPort)
 	viper.SetDefault(ScannerRegion, defaultScannerRegion)
 	viper.SetDefault(ScannerJobImageID, defaultScannerJobImageID)
