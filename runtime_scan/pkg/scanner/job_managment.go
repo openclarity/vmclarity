@@ -16,6 +16,7 @@
 package scanner
 
 import (
+	"context"
 	"fmt"
 	"sync/atomic"
 	"time"
@@ -23,6 +24,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/config"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
 )
 
@@ -69,7 +71,7 @@ func (s *Scanner) jobBatchManagement(scanDone chan struct{}) {
 			case q <- data:
 				atomic.AddUint32(instancesStartedToScan, 1)
 			case <-ks:
-				log.WithFields(s.logFields).Debugf("Scan process was canceled. instanceID=%v, scanUUID=%v", data.instance.ID, data.scanUUID)
+				log.WithFields(s.logFields).Debugf("Scan process was canceled. instanceID=%v, scanUUID=%v", data.instance.GetID(), data.scanUUID)
 				return
 			}
 		}(data, s.killSignal)
@@ -91,7 +93,7 @@ func (s *Scanner) worker(queue chan *scanData, workNumber int, done, ks chan boo
 	for {
 		select {
 		case data := <-queue:
-			job, err := s.runJob(data)
+			job, err := s.runJob(context.TODO(), data)
 			if err != nil {
 				errMsg := fmt.Errorf("failed to run job: %v", err)
 				log.WithFields(s.logFields).Error(errMsg)
@@ -108,12 +110,12 @@ func (s *Scanner) worker(queue chan *scanData, workNumber int, done, ks chan boo
 				s.waitForResult(data, ks)
 			}
 
-			s.deleteJobIfNeeded(&job, data.success, data.completed)
+			s.deleteJobIfNeeded(context.TODO(), &job, data.success, data.completed)
 
 			select {
 			case done <- true:
 			case <-ks:
-				log.WithFields(s.logFields).Infof("Instance scan was canceled. instanceID=%v", data.instance.ID)
+				log.WithFields(s.logFields).Infof("Instance scan was canceled. instanceID=%v", data.instance.GetID())
 			}
 		case <-ks:
 			log.WithFields(s.logFields).Debugf("worker #%v halted", workNumber)
@@ -123,13 +125,13 @@ func (s *Scanner) worker(queue chan *scanData, workNumber int, done, ks chan boo
 }
 
 func (s *Scanner) waitForResult(data *scanData, ks chan bool) {
-	log.WithFields(s.logFields).Infof("Waiting for result. instanceID=%+v", data.instance.ID)
+	log.WithFields(s.logFields).Infof("Waiting for result. instanceID=%+v", data.instance.GetID())
 	ticker := time.NewTicker(s.scanConfig.JobResultTimeout)
 	select {
 	case <-data.resultChan:
-		log.WithFields(s.logFields).Infof("Instance scanned result has arrived. instanceID=%v", data.instance.ID)
+		log.WithFields(s.logFields).Infof("Instance scanned result has arrived. instanceID=%v", data.instance.GetID())
 	case <-ticker.C:
-		errMsg := fmt.Errorf("job has timed out. instanceID=%v", data.instance.ID)
+		errMsg := fmt.Errorf("job has timed out. instanceID=%v", data.instance.GetID())
 		log.WithFields(s.logFields).Warn(errMsg)
 		s.Lock()
 		data.success = false
@@ -142,29 +144,57 @@ func (s *Scanner) waitForResult(data *scanData, ks chan bool) {
 		data.completed = true
 		s.Unlock()
 	case <-ks:
-		log.WithFields(s.logFields).Infof("Instance scan was canceled. instanceID=%v", data.instance.ID)
+		log.WithFields(s.logFields).Infof("Instance scan was canceled. instanceID=%v", data.instance.GetID())
 	}
 }
 
-func (s *Scanner) runJob(data *scanData) (types.Job, error) {
-	jobConfig := types.JobConfig{
-		InstanceToScan: data.instance,
-		Region:         s.region,
-		ImageID:        s.jobAMI,
-		DeviceName:     s.deviceName,
-		SubnetID:       s.subnetID,
+func (s *Scanner) runJob(ctx context.Context, data *scanData) (provider.Job, error) {
+	instanceToScan := data.instance
+
+	volume, err := instanceToScan.GetRootVolume(ctx)
+	if err != nil {
+		return provider.Job{}, fmt.Errorf("failed to get root volume of an instance %v: %v", instanceToScan.GetID(), err)
 	}
-	return s.providerClient.RunScanningJob(jobConfig)
+
+	snapshot, err := volume.TakeSnapshot(ctx)
+	if err != nil {
+		return provider.Job{}, fmt.Errorf("failed to take snapshot of a volume: %v", err)
+
+	}
+	if err := snapshot.WaitForReady(ctx); err != nil {
+		return provider.Job{}, fmt.Errorf("failed to wait for snapshot %v ready: %v", snapshot.GetID(), err)
+
+	}
+
+	cpySnapshot, err := snapshot.Copy(ctx, s.region)
+	if err != nil {
+		return provider.Job{}, fmt.Errorf("failed to copy snapshot %v: %v", snapshot.GetID(), err)
+	}
+
+	if err := cpySnapshot.WaitForReady(ctx); err != nil {
+		return provider.Job{}, fmt.Errorf("failed wait for snapshot %v ready: %v", cpySnapshot.GetID(), err)
+	}
+
+	i, err := s.providerClient.LaunchInstance(ctx, cpySnapshot)
+	if err != nil {
+		return provider.Job{}, fmt.Errorf("failed to launch a new instance: %v", err)
+	}
+
+	return provider.Job{
+		Instance:    i,
+		SrcSnapshot: snapshot,
+		DstSnapshot: cpySnapshot,
+	}, nil
 }
 
-func (s *Scanner) deleteJobIfNeeded(job *types.Job, isSuccessfulJob, isCompletedJob bool) {
+func (s *Scanner) deleteJobIfNeeded(ctx context.Context, job *provider.Job, isSuccessfulJob, isCompletedJob bool) {
 	if job == nil {
 		return
 	}
 
 	// delete uncompleted jobs - scan process was canceled
 	if !isCompletedJob {
-		s.deleteJob(job)
+		s.deleteJob(ctx, job)
 		return
 	}
 
@@ -172,14 +202,22 @@ func (s *Scanner) deleteJobIfNeeded(job *types.Job, isSuccessfulJob, isCompleted
 	case config.DeleteJobPolicyNever:
 		// do nothing
 	case config.DeleteJobPolicyAll:
-		s.deleteJob(job)
+		s.deleteJob(ctx, job)
 	case config.DeleteJobPolicySuccessful:
 		if isSuccessfulJob {
-			s.deleteJob(job)
+			s.deleteJob(ctx, job)
 		}
 	}
 }
 
-func (s *Scanner) deleteJob(job *types.Job) {
-	s.providerClient.DeleteJob(*job)
+func (s *Scanner) deleteJob(ctx context.Context, job *provider.Job) {
+	if err := job.Instance.Delete(ctx); err != nil {
+		log.Errorf("failed to delete instance: %v", err)
+	}
+	if err := job.SrcSnapshot.Delete(ctx); err != nil {
+		log.Errorf("failed to delete source snapshot: %v", err)
+	}
+	if err := job.DstSnapshot.Delete(ctx); err != nil {
+		log.Errorf("failed to delete dest snapshot: %v", err)
+	}
 }

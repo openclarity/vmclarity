@@ -16,6 +16,7 @@
 package orchestrator
 
 import (
+	"context"
 	"fmt"
 	"sync"
 
@@ -23,7 +24,6 @@ import (
 
 	_config "github.com/openclarity/vmclarity/runtime_scan/pkg/config"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
-	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider/aws"
 	_scanner "github.com/openclarity/vmclarity/runtime_scan/pkg/scanner"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
 )
@@ -46,17 +46,11 @@ type VulnerabilitiesScanner interface {
 	Stop()
 }
 
-func Create(config *_config.Config) (*Orchestrator, error) {
-	// for now will statically create aws client here (until we support more cloud providers)
-	awsClient, err := aws.Create()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create aws client: %v", err)
-	}
-
+func Create(config *_config.Config, client provider.Client) (*Orchestrator, error) {
 	orc := &Orchestrator{
-		scanner:        _scanner.CreateScanner(config, awsClient),
+		scanner:        _scanner.CreateScanner(config, client),
 		config:         config,
-		providerClient: awsClient,
+		providerClient: client,
 		Mutex:          sync.Mutex{},
 	}
 
@@ -77,7 +71,7 @@ func (o *Orchestrator) Stop() {
 }
 
 func (o *Orchestrator) Scan(scanConfig *_config.ScanConfig, scanDone chan struct{}) error {
-	instances, err := o.providerClient.Discover(&scanConfig.ScanScope)
+	instances, err := o.providerClient.Discover(context.TODO(), &scanConfig.ScanScope)
 	if err != nil {
 		return err
 	}

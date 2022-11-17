@@ -21,6 +21,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
 )
 
@@ -33,15 +34,15 @@ const (
 type ScanConfig struct {
 	MaxScanParallelism int
 	// instances to scan
-	Instances        []types.Instance
+	Instances        []provider.Instance
 	ScanScope        types.ScanScope
 	JobResultTimeout time.Duration
 	DeleteJobPolicy  DeleteJobPolicyType
 }
 
 func setScanConfigDefaults() {
-	viper.SetDefault(MaxParallelism, "10")
-	viper.SetDefault(JobResultTimeout, "10m")
+	viper.SetDefault(MaxParallelism, "5")
+	viper.SetDefault(JobResultTimeout, "120m")
 	viper.SetDefault(DeleteJobPolicy, DeleteJobPolicySuccessful)
 
 	viper.AutomaticEnv()

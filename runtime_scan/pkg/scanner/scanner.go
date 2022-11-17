@@ -37,16 +37,13 @@ type Scanner struct {
 	providerClient       provider.Client
 	logFields            log.Fields
 
-	region     string
-	jobAMI     string
-	deviceName string
-	subnetID   string
+	region string
 
 	sync.Mutex
 }
 
 type scanData struct {
-	instance              types.Instance
+	instance              provider.Instance
 	scanUUID              string
 	vulnerabilitiesResult vulnerabilitiesScanResult
 	resultChan            chan bool
@@ -72,9 +69,6 @@ func CreateScanner(config *_config.Config, providerClient provider.Client) *Scan
 		providerClient: providerClient,
 		logFields:      log.Fields{"scanner id": uuid.NewV4().String()},
 		region:         config.Region,
-		jobAMI:         config.AmiID,
-		deviceName:     config.DeviceName,
-		subnetID:       config.SubnetID,
 		Mutex:          sync.Mutex{},
 	}
 
@@ -88,7 +82,7 @@ func (s *Scanner) initScan() error {
 
 	// Populate the instance to scanData map
 	for _, instance := range s.scanConfig.Instances {
-		instanceIDToScanData[instance.ID] = &scanData{
+		instanceIDToScanData[instance.GetID()] = &scanData{
 			instance:              instance,
 			scanUUID:              uuid.NewV4().String(),
 			vulnerabilitiesResult: vulnerabilitiesScanResult{},

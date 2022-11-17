@@ -17,32 +17,26 @@ package config
 
 import (
 	"github.com/spf13/viper"
+
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/config/aws"
 )
 
 const (
+	ScannerAWSRegion                   = "SCANNER_AWS_REGION"
+	defaultScannerAWSRegion            = "us-east-1"
 	ScannerJobResultListenPort        = "SCANNER_JOB_RESULT_LISTEN_PORT"
-	ScannerRegion                     = "SCANNER_REGION"
-	defaultScannerRegion              = "us-east-1"
-	ScannerJobImageID                 = "SCANNER_JOB_IMAGE_ID"
-	defaultScannerJobImageID          = "ami-0568773882d492fc8" // ubuntu server 22.04 LTS (HVM), SSD volume type
-	ScannerAttachedVolumeDeviceName   = "SCANNER_ATTACHED_VOLUME_DEVICE_NAME"
-	defaultAttachedVolumeDeviceName   = "xvdh"
 	defaultScannerJobResultListenPort = 8888
 )
 
 type Config struct {
 	ScannerJobResultListenPort int
-	Region                     string // scanner region
-	AmiID                      string // image id of a scanner job
-	DeviceName                 string // the name of the block device to attach to the scanner instance (mounted snapshot)
-	SubnetID                   string // the scanner's subnet ID
+	Region     string // scanner region
+	AWSConfig                  *aws.Config
 }
 
 func setConfigDefaults() {
+	viper.SetDefault(ScannerAWSRegion, defaultScannerAWSRegion)
 	viper.SetDefault(ScannerJobResultListenPort, defaultScannerJobResultListenPort)
-	viper.SetDefault(ScannerRegion, defaultScannerRegion)
-	viper.SetDefault(ScannerJobImageID, defaultScannerJobImageID)
-	viper.SetDefault(ScannerAttachedVolumeDeviceName, defaultAttachedVolumeDeviceName)
 
 	viper.AutomaticEnv()
 }
@@ -52,9 +46,8 @@ func LoadConfig() (*Config, error) {
 
 	config := &Config{
 		ScannerJobResultListenPort: viper.GetInt(ScannerJobResultListenPort),
-		Region:                     viper.GetString(ScannerRegion),
-		AmiID:                      viper.GetString(ScannerJobImageID),
-		DeviceName:                 viper.GetString(ScannerAttachedVolumeDeviceName),
+		Region:     viper.GetString(ScannerAWSRegion),
+		AWSConfig:                  aws.LoadConfig(),
 	}
 
 	return config, nil

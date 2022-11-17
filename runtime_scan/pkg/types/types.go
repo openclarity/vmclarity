@@ -15,12 +15,14 @@
 
 package types
 
+import "github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
+
 type ScanScope struct {
 	All         bool
-	Regions     []Region
+	Regions     []provider.Region
 	ScanStopped bool
-	IncludeTags []*Tag
-	ExcludeTags []*Tag
+	IncludeTags []*provider.Tag
+	ExcludeTags []*provider.Tag
 }
 
 type Status string
@@ -47,7 +49,7 @@ func (s *ScanProgress) SetStatus(status Status) {
 
 type InstanceScanResult struct {
 	// Instance data
-	Instance Instance
+	Instance provider.Instance
 	// Scan results
 	Vulnerabilities []string // TODO define vulnerabilities struct
 	Success         bool
@@ -57,53 +59,4 @@ type InstanceScanResult struct {
 type ScanResults struct {
 	InstanceScanResults []*InstanceScanResult
 	Progress            ScanProgress
-}
-
-type Tag struct {
-	Key string
-	Val string
-}
-
-type SecurityGroup struct {
-	ID string
-}
-
-type VPC struct {
-	ID             string
-	SecurityGroups []SecurityGroup
-}
-
-type Region struct {
-	ID   string
-	VPCs []VPC
-}
-
-type Job struct {
-	Instance    Instance
-	SrcSnapshot Snapshot
-	DstSnapshot Snapshot
-}
-
-type JobConfig struct {
-	InstanceToScan Instance
-	Region         string
-	ImageID        string
-	DeviceName     string
-	SubnetID       string
-}
-
-type Instance struct {
-	ID     string
-	Region string
-}
-
-type Snapshot struct {
-	ID     string
-	Region string
-}
-
-type Volume struct {
-	ID     string
-	Name   string
-	Region string
 }
