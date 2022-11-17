@@ -27,12 +27,10 @@ import (
 	_config "github.com/openclarity/vmclarity/backend/pkg/config"
 )
 
-type Backend struct {
-}
+type Backend struct{}
 
 func CreateBackend() *Backend {
-	return &Backend{
-	}
+	return &Backend{}
 }
 
 const defaultChanSize = 100
