@@ -22,15 +22,15 @@ import (
 )
 
 const (
-	ScannerAWSRegion                   = "SCANNER_AWS_REGION"
-	defaultScannerAWSRegion            = "us-east-1"
+	ScannerAWSRegion                  = "SCANNER_AWS_REGION"
+	defaultScannerAWSRegion           = "us-east-1"
 	ScannerJobResultListenPort        = "SCANNER_JOB_RESULT_LISTEN_PORT"
 	defaultScannerJobResultListenPort = 8888
 )
 
 type Config struct {
 	ScannerJobResultListenPort int
-	Region     string // scanner region
+	Region                     string // scanner region
 	AWSConfig                  *aws.Config
 }
 
@@ -46,7 +46,7 @@ func LoadConfig() (*Config, error) {
 
 	config := &Config{
 		ScannerJobResultListenPort: viper.GetInt(ScannerJobResultListenPort),
-		Region:     viper.GetString(ScannerAWSRegion),
+		Region:                     viper.GetString(ScannerAWSRegion),
 		AWSConfig:                  aws.LoadConfig(),
 	}
 
