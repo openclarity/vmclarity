@@ -56,7 +56,7 @@ func Run() {
 	log.Info("VMClarity backend is running")
 
 	healthServer.SetIsReady(true)
-	log.Info("KubeClarity backend is ready")
+	log.Info("VMClarity backend is ready")
 
 	// Wait for deactivation
 	sig := make(chan os.Signal, 1)
