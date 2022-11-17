@@ -23,8 +23,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: make license-check
 
-#      - name: Run verification
-#        run: make check
+      - name: Run verification
+        run: make check
 
   build:
     needs: verification

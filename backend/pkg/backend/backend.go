@@ -50,22 +50,10 @@ func Run() {
 
 	healthServer.SetIsReady(false)
 
-	// globalCtx, globalCancel := context.WithCancel(context.Background())
 	_, globalCancel := context.WithCancel(context.Background())
 	defer globalCancel()
 
 	log.Info("VMClarity backend is running")
-
-	//var providerClient provider.Client
-	//providerClient, err = aws.Create()
-	//if err != nil {
-	//	log.Fatalf("Failed to create provider client: %v", err)
-	//}
-
-	//_, err = createRuntimeScanOrchestrator(config, providerClient)
-	//if err != nil {
-	//	log.Fatalf("Failed to create runtime scan orchestrator: %v", err)
-	//}
 
 	healthServer.SetIsReady(true)
 	log.Info("KubeClarity backend is ready")
@@ -81,17 +69,3 @@ func Run() {
 		log.Warningf("Received a termination signal: %v", s)
 	}
 }
-//
-//func createRuntimeScanOrchestrator(config *_config.Config, providerClient provider.Client) (orchestrator.VulnerabilitiesScanner, error) {
-//	orcConfig, err := runtime_scan_config.LoadConfig()
-//	if err != nil {
-//		return nil, fmt.Errorf("failed to load runtime scan orchestrator config: %v", err)
-//	}
-//
-//	orc, err := orchestrator.Create(orcConfig, providerClient)
-//	if err != nil {
-//		return nil, fmt.Errorf("failed to create runtime scan orchestrator: %v", err)
-//	}
-//
-//	return orc, nil
-//}
