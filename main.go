@@ -17,10 +17,15 @@ package main
 
 import (
 	"fmt"
+	"log"
 
+	"github.com/openclarity/vmclarity/pkg/scanner"
 	"github.com/openclarity/vmclarity/pkg/version"
 )
 
 func main() {
 	fmt.Println("Hello VMClarity", version.Version)
+	if err := scanner.GenerateCloudConfig(); err != nil {
+		log.Fatalf("Failed to generate cloud-config; %v", err)
+	}
 }

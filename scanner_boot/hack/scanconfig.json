@@ -29,7 +29,7 @@
             }
         }
     },
-    "malewre_scan": {
+    "malware_scan": {
         "clamav": {
             "config": {
                 "someconfig": "clamav"
