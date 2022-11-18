@@ -157,7 +157,7 @@ write_files:
   - path: /root/scanconfig.json
     permissions: "0644"
     content: |
-{{ .Config }}
+      {{ .Config }}
   - path: /etc/systemd/system/vmclarity-scanner.service
     permissions: "0644"
     content: |

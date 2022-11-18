@@ -19,23 +19,23 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"os"
+	"text/template"
 )
 
 type ScannerJobConfig struct {
 	DirectoryToScan   string            `json:"directory_to_scan"`
 	ServerToReport    string            `json:"server_to_report"`
-	VulnerabilityScan VulnerabilityScan `json:"vulnerability_scan"`
-	RootkitScan       RootkitScan       `json:"rootkit_scan"`
-	MisconfigScan     MisconfigScan     `json:"misconfig_scan"`
-	SecretScan        SecretScan        `json:"secret_scan"`
-	MalewareScan      MalwareScan       `json:"malawre_scan"`
-	ExploitCheck      ExploitCheck      `json:"exploit_check"`
+	VulnerabilityScan VulnerabilityScan `json:"vulnerability_scan,omitempty"`
+	RootkitScan       RootkitScan       `json:"rootkit_scan,omitempty"`
+	MisconfigScan     MisconfigScan     `json:"misconfig_scan,omitempty"`
+	SecretScan        SecretScan        `json:"secret_scan,omitempty"`
+	MalewareScan      MalwareScan       `json:"malawre_scan,omitempty"`
+	ExploitCheck      ExploitCheck      `json:"exploit_check,omitempty"`
 }
 
 type VulnerabilityScan struct {
-	Vuls Vuls `json:"vuls"`
+	Vuls Vuls `json:"vuls,omitempty"`
 }
 
 type RootkitScan struct {
@@ -55,11 +55,11 @@ type MalwareScan struct {
 }
 
 type ExploitCheck struct {
-	Vuls Vuls `json:"vuls"`
+	Vuls Vuls `json:"vuls,omitempty"`
 }
 
 type Vuls struct {
-	Config Config `json:"config"`
+	Config Config `json:"config,omitempty"`
 }
 
 type Chkrootkit struct {
@@ -79,7 +79,7 @@ type Clamav struct {
 }
 
 type Config struct {
-	Someconfig string `json:"someconfig"`
+	Someconfig string `json:"someconfig,omitempty"`
 }
 
 func GenerateCloudConfig() error {
@@ -141,7 +141,7 @@ func createScannerConfig() ([]byte, error) {
 		},
 	}
 
-	scannerConfigB, err := json.MarshalIndent(config, "", "  ")
+	scannerConfigB, err := json.Marshal(config)
 	if err != nil {
 		return nil, fmt.Errorf("falied to mashal config: %v", err)
 	}
