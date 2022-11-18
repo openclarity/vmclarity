@@ -34,7 +34,7 @@ vulscan=$(echo ${SCANCONFIG} | jq .vulnerability_scan.vuls)
 rkscan=$(echo ${SCANCONFIG} | jq .rootkit_scan.chkrootkit)
 misconfigscan=$(echo ${SCANCONFIG} | jq .misconfig_scan.lynis)
 secretscan=$(echo ${SCANCONFIG} | jq .secret_scan.trufflehog)
-malwarescan=$(echo ${SCANCONFIG} | jq .malewre_scan.clamav)
+malwarescan=$(echo ${SCANCONFIG} | jq .malware_scan.clamav)
 expcheck=$(echo ${SCANCONFIG} | jq .exploit_check.vuls)
 
 install_vuls() {
