@@ -22,7 +22,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 
-	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
 )
 
 type VolumeImpl struct {
@@ -32,7 +32,7 @@ type VolumeImpl struct {
 	region    string
 }
 
-func (v *VolumeImpl) TakeSnapshot(ctx context.Context) (provider.Snapshot, error) {
+func (v *VolumeImpl) TakeSnapshot(ctx context.Context) (types.Snapshot, error) {
 	params := ec2.CreateSnapshotInput{
 		VolumeId:    &v.id,
 		Description: &snapshotDescription,

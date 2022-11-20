@@ -43,7 +43,7 @@ type Scanner struct {
 }
 
 type scanData struct {
-	instance              provider.Instance
+	instance              types.Instance
 	scanUUID              string
 	vulnerabilitiesResult vulnerabilitiesScanResult
 	resultChan            chan bool

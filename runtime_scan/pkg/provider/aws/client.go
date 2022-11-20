@@ -26,7 +26,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/config/aws"
-	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 )
@@ -63,9 +62,15 @@ func Create(ctx context.Context, config *aws.Config) (*Client, error) {
 	return &awsClient, nil
 }
 
-func (c *Client) Discover(ctx context.Context, scope *types.ScanScope) ([]provider.Instance, error) {
-	var ret []provider.Instance
+func (c *Client) Discover(ctx context.Context, scanScope interface{}) ([]types.Instance, error) {
+	var ret []types.Instance
 	var filters []ec2types.Filter
+	var scope *ScanScope
+	var ok bool
+
+	if scope, ok = scanScope.(*ScanScope); !ok {
+		return nil, fmt.Errorf("failed to assert scope type")
+	}
 
 	regions, err := c.getRegionsToScan(ctx, scope)
 	if err != nil {
@@ -79,8 +84,8 @@ func (c *Client) Discover(ctx context.Context, scope *types.ScanScope) ([]provid
 
 	for _, region := range regions {
 		// if no vpcs, that mean that we don't need any vpc filters
-		if len(region.VPCs) == 0 {
-			instances, err := c.GetInstances(ctx, filters, scope.ExcludeTags, region.ID)
+		if len(region.vpcs) == 0 {
+			instances, err := c.GetInstances(ctx, filters, scope.ExcludeTags, region.Id)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get instances: %v", err)
 			}
@@ -89,10 +94,10 @@ func (c *Client) Discover(ctx context.Context, scope *types.ScanScope) ([]provid
 		}
 
 		// need to do a per vpc call for DescribeInstances
-		for _, vpc := range region.VPCs {
+		for _, vpc := range region.vpcs {
 			vpcFilters := append(filters, createVPCFilters(vpc)...)
 
-			instances, err := c.GetInstances(ctx, vpcFilters, scope.ExcludeTags, region.ID)
+			instances, err := c.GetInstances(ctx, vpcFilters, scope.ExcludeTags, region.Id)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get instances: %v", err)
 			}
@@ -102,7 +107,7 @@ func (c *Client) Discover(ctx context.Context, scope *types.ScanScope) ([]provid
 	return ret, nil
 }
 
-func (c *Client) LaunchInstance(ctx context.Context, snapshot provider.Snapshot) (provider.Instance, error) {
+func (c *Client) LaunchInstance(ctx context.Context, snapshot types.Snapshot) (types.Instance, error) {
 	out, err := c.ec2Client.RunInstances(ctx, &ec2.RunInstancesInput{
 		MaxCount: utils.Int32Ptr(1),
 		MinCount: utils.Int32Ptr(1),
@@ -144,8 +149,8 @@ func (c *Client) LaunchInstance(ctx context.Context, snapshot provider.Snapshot)
 	}, nil
 }
 
-func (c *Client) GetInstances(ctx context.Context, filters []ec2types.Filter, excludeTags []*provider.Tag, regionID string) ([]provider.Instance, error) {
-	var ret []provider.Instance
+func (c *Client) GetInstances(ctx context.Context, filters []ec2types.Filter, excludeTags []Tag, regionID string) ([]types.Instance, error) {
+	var ret []types.Instance
 
 	out, err := c.ec2Client.DescribeInstances(ctx, &ec2.DescribeInstancesInput{
 		Filters:    filters,
@@ -159,6 +164,7 @@ func (c *Client) GetInstances(ctx context.Context, filters []ec2types.Filter, ex
 	ret = append(ret, c.getInstancesFromDescribeInstancesOutput(out, excludeTags, regionID)...)
 
 	// use pagination
+	// TODO we can make it better by not saving all results in memory. See https://github.com/openclarity/vmclarity/pull/3#discussion_r1021656861
 	for out.NextToken != nil {
 		out, err = c.ec2Client.DescribeInstances(ctx, &ec2.DescribeInstancesInput{
 			Filters:    filters,
@@ -189,8 +195,8 @@ func getInstanceState(result *ec2.DescribeInstancesOutput, instanceID string) ec
 	return ec2types.InstanceStateNamePending
 }
 
-func (c *Client) getInstancesFromDescribeInstancesOutput(result *ec2.DescribeInstancesOutput, excludeTags []*provider.Tag, regionID string) []provider.Instance {
-	var ret []provider.Instance
+func (c *Client) getInstancesFromDescribeInstancesOutput(result *ec2.DescribeInstancesOutput, excludeTags []Tag, regionID string) []types.Instance {
+	var ret []types.Instance
 
 	for _, reservation := range result.Reservations {
 		for _, instance := range reservation.Instances {
@@ -207,10 +213,10 @@ func (c *Client) getInstancesFromDescribeInstancesOutput(result *ec2.DescribeIns
 	return ret
 }
 
-func getVPCSecurityGroupsIDs(vpc provider.VPC) []string {
+func getVPCSecurityGroupsIDs(vpc VPC) []string {
 	var sgs []string
-	for _, sg := range vpc.SecurityGroups {
-		sgs = append(sgs, sg.ID)
+	for _, sg := range vpc.securityGroups {
+		sgs = append(sgs, sg.id)
 	}
 	return sgs
 }
@@ -221,14 +227,14 @@ const (
 	instanceStateFilterName = "instance-state-name"
 )
 
-func createVPCFilters(vpc provider.VPC) []ec2types.Filter {
+func createVPCFilters(vpc VPC) []ec2types.Filter {
 	var ret = make([]ec2types.Filter, 0)
 	var sgs []string
 
 	// create per vpc filters
 	ret = append(ret, ec2types.Filter{
 		Name:   utils.StringPtr(vpcIDFilterName),
-		Values: []string{vpc.ID},
+		Values: []string{vpc.Id},
 	})
 	sgs = getVPCSecurityGroupsIDs(vpc)
 	if len(sgs) > 0 {
@@ -259,20 +265,20 @@ func createInstanceStateFilters(scanStopped bool) []ec2types.Filter {
 	return filters
 }
 
-func createInclusionTagsFilters(tags []*provider.Tag) []ec2types.Filter {
+func createInclusionTagsFilters(tags []Tag) []ec2types.Filter {
 	var filters []ec2types.Filter
 
 	for _, tag := range tags {
 		filters = append(filters, ec2types.Filter{
-			Name:   utils.StringPtr("tag:" + tag.Key),
-			Values: []string{tag.Val},
+			Name:   utils.StringPtr("tag:" + tag.key),
+			Values: []string{tag.val},
 		})
 	}
 
 	return filters
 }
 
-func (c *Client) getRegionsToScan(ctx context.Context, scope *types.ScanScope) ([]provider.Region, error) {
+func (c *Client) getRegionsToScan(ctx context.Context, scope *ScanScope) ([]Region, error) {
 	if scope.All {
 		return c.ListAllRegions(ctx)
 	}
@@ -280,8 +286,8 @@ func (c *Client) getRegionsToScan(ctx context.Context, scope *types.ScanScope) (
 	return scope.Regions, nil
 }
 
-func (c *Client) ListAllRegions(ctx context.Context) ([]provider.Region, error) {
-	var ret []provider.Region
+func (c *Client) ListAllRegions(ctx context.Context) ([]Region, error) {
+	var ret []Region
 	out, err := c.ec2Client.DescribeRegions(ctx, &ec2.DescribeRegionsInput{
 		AllRegions: nil, // display also disabled regions?
 	})
@@ -289,18 +295,18 @@ func (c *Client) ListAllRegions(ctx context.Context) ([]provider.Region, error) 
 		return nil, fmt.Errorf("failed to describe regions: %v", err)
 	}
 	for _, region := range out.Regions {
-		ret = append(ret, provider.Region{
-			ID: *region.RegionName,
+		ret = append(ret, Region{
+			Id: *region.RegionName,
 		})
 	}
 	return ret, nil
 }
 
-func hasExcludeTags(excludeTags []*provider.Tag, instanceTags []ec2types.Tag) bool {
+func hasExcludeTags(excludeTags []Tag, instanceTags []ec2types.Tag) bool {
 	var excludedTagsMap = make(map[string]string)
 
 	for _, tag := range excludeTags {
-		excludedTagsMap[tag.Key] = tag.Val
+		excludedTagsMap[tag.key] = tag.val
 	}
 	for _, instanceTag := range instanceTags {
 		if val, ok := excludedTagsMap[*instanceTag.Key]; ok {

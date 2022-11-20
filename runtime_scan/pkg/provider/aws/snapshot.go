@@ -23,7 +23,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 
-	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
 )
 
 type SnapshotImpl struct {
@@ -40,7 +40,7 @@ func (s *SnapshotImpl) GetRegion() string {
 	return s.region
 }
 
-func (s *SnapshotImpl) Copy(ctx context.Context, dstRegion string) (provider.Snapshot, error) {
+func (s *SnapshotImpl) Copy(ctx context.Context, dstRegion string) (types.Snapshot, error) {
 	snap, err := s.ec2Client.CopySnapshot(ctx, &ec2.CopySnapshotInput{
 		SourceRegion:     &s.region,
 		SourceSnapshotId: &s.id,
@@ -66,6 +66,10 @@ func (s *SnapshotImpl) Copy(ctx context.Context, dstRegion string) (provider.Sna
 }
 
 func (s *SnapshotImpl) Delete(ctx context.Context) error {
+	if s == nil {
+		return nil
+	}
+
 	_, err := s.ec2Client.DeleteSnapshot(ctx, &ec2.DeleteSnapshotInput{
 		SnapshotId: &s.id,
 	}, func(options *ec2.Options) {

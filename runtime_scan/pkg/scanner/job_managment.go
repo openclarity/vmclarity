@@ -24,9 +24,10 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/config"
-	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
 )
+
+// TODO this code is taken from KubeClarity, we can make improvements base on the discussions here: https://github.com/openclarity/vmclarity/pull/3
 
 // run jobs.
 func (s *Scanner) jobBatchManagement(scanDone chan struct{}) {
@@ -148,46 +149,52 @@ func (s *Scanner) waitForResult(data *scanData, ks chan bool) {
 	}
 }
 
-func (s *Scanner) runJob(ctx context.Context, data *scanData) (provider.Job, error) {
+func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error) {
 	instanceToScan := data.instance
+	var launchSnapshot types.Snapshot
+	var cpySnapshot types.Snapshot
 
 	volume, err := instanceToScan.GetRootVolume(ctx)
 	if err != nil {
-		return provider.Job{}, fmt.Errorf("failed to get root volume of an instance %v: %v", instanceToScan.GetID(), err)
+		return types.Job{}, fmt.Errorf("failed to get root volume of an instance %v: %v", instanceToScan.GetID(), err)
 	}
 
 	snapshot, err := volume.TakeSnapshot(ctx)
 	if err != nil {
-		return provider.Job{}, fmt.Errorf("failed to take snapshot of a volume: %v", err)
+		return types.Job{}, fmt.Errorf("failed to take snapshot of a volume: %v", err)
 
 	}
 	if err := snapshot.WaitForReady(ctx); err != nil {
-		return provider.Job{}, fmt.Errorf("failed to wait for snapshot %v ready: %v", snapshot.GetID(), err)
+		return types.Job{}, fmt.Errorf("failed to wait for snapshot %v ready: %v", snapshot.GetID(), err)
 
 	}
+	launchSnapshot = snapshot
 
-	cpySnapshot, err := snapshot.Copy(ctx, s.region)
+	if s.region != snapshot.GetRegion() {
+		cpySnapshot, err = snapshot.Copy(ctx, s.region)
+		if err != nil {
+			return types.Job{}, fmt.Errorf("failed to copy snapshot %v: %v", snapshot.GetID(), err)
+		}
+
+		if err := cpySnapshot.WaitForReady(ctx); err != nil {
+			return types.Job{}, fmt.Errorf("failed wait for snapshot %v ready: %v", cpySnapshot.GetID(), err)
+		}
+		launchSnapshot = cpySnapshot
+	}
+
+	i, err := s.providerClient.LaunchInstance(ctx, launchSnapshot)
 	if err != nil {
-		return provider.Job{}, fmt.Errorf("failed to copy snapshot %v: %v", snapshot.GetID(), err)
+		return types.Job{}, fmt.Errorf("failed to launch a new instance: %v", err)
 	}
 
-	if err := cpySnapshot.WaitForReady(ctx); err != nil {
-		return provider.Job{}, fmt.Errorf("failed wait for snapshot %v ready: %v", cpySnapshot.GetID(), err)
-	}
-
-	i, err := s.providerClient.LaunchInstance(ctx, cpySnapshot)
-	if err != nil {
-		return provider.Job{}, fmt.Errorf("failed to launch a new instance: %v", err)
-	}
-
-	return provider.Job{
+	return types.Job{
 		Instance:    i,
 		SrcSnapshot: snapshot,
 		DstSnapshot: cpySnapshot,
 	}, nil
 }
 
-func (s *Scanner) deleteJobIfNeeded(ctx context.Context, job *provider.Job, isSuccessfulJob, isCompletedJob bool) {
+func (s *Scanner) deleteJobIfNeeded(ctx context.Context, job *types.Job, isSuccessfulJob, isCompletedJob bool) {
 	if job == nil {
 		return
 	}
@@ -210,7 +217,7 @@ func (s *Scanner) deleteJobIfNeeded(ctx context.Context, job *provider.Job, isSu
 	}
 }
 
-func (s *Scanner) deleteJob(ctx context.Context, job *provider.Job) {
+func (s *Scanner) deleteJob(ctx context.Context, job *types.Job) {
 	if err := job.Instance.Delete(ctx); err != nil {
 		log.Errorf("failed to delete instance: %v", err)
 	}

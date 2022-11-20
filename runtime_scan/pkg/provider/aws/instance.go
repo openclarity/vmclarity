@@ -24,7 +24,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 
-	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
 )
 
 type InstanceImpl struct {
@@ -37,7 +37,7 @@ func (i *InstanceImpl) GetID() string {
 	return i.id
 }
 
-func (i *InstanceImpl) GetRootVolume(ctx context.Context) (provider.Volume, error) {
+func (i *InstanceImpl) GetRootVolume(ctx context.Context) (types.Volume, error) {
 	out, err := i.ec2Client.DescribeInstances(ctx, &ec2.DescribeInstancesInput{
 		InstanceIds: []string{i.id},
 	}, func(options *ec2.Options) {
@@ -102,6 +102,10 @@ func (i *InstanceImpl) WaitForReady(ctx context.Context) error {
 }
 
 func (i *InstanceImpl) Delete(ctx context.Context) error {
+	if i == nil {
+		return nil
+	}
+
 	_, err := i.ec2Client.TerminateInstances(ctx, &ec2.TerminateInstancesInput{
 		InstanceIds: []string{i.id},
 	}, func(options *ec2.Options) {

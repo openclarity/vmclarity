@@ -21,7 +21,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
-	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
 )
 
@@ -34,8 +33,8 @@ const (
 type ScanConfig struct {
 	MaxScanParallelism int
 	// instances to scan
-	Instances        []provider.Instance
-	ScanScope        types.ScanScope
+	Instances        []types.Instance
+	ScanScope        interface{}
 	JobResultTimeout time.Duration
 	DeleteJobPolicy  DeleteJobPolicyType
 }
