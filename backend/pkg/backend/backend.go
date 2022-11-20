@@ -82,8 +82,10 @@ func Run() {
 
 	select {
 	case <-errChan:
+		globalCancel()
 		log.Errorf("Received an error - shutting down")
 	case s := <-sig:
+		globalCancel()
 		log.Warningf("Received a termination signal: %v", s)
 	}
 }
