@@ -23,7 +23,7 @@ import (
 
 type Client interface {
 	// Discover - list VM instances in the account according to the scan scope.
-	Discover(context.Context, interface{}) ([]types.Instance, error)
+	Discover(ctx context.Context, scanScope types.ScanScope) ([]types.Instance, error)
 	// RunScanningJob - run a scanning job
 	LaunchInstance(ctx context.Context, snapshot types.Snapshot) (types.Instance, error)
 }

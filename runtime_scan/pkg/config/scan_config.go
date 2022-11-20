@@ -33,8 +33,9 @@ const (
 type ScanConfig struct {
 	MaxScanParallelism int
 	// instances to scan
-	Instances        []types.Instance
-	ScanScope        interface{}
+	Instances []types.Instance
+	// per provider scan scope
+	ScanScope        types.ScanScope
 	JobResultTimeout time.Duration
 	DeleteJobPolicy  DeleteJobPolicyType
 }

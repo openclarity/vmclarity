@@ -26,101 +26,6 @@ import (
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 )
 
-//
-//func TestClient_ListAllRegions(t *testing.T) {
-//	//cfg, err := awsconfig.LoadDefaultConfig(context.TODO())
-//	//if err != nil {
-//	//	t.Fatalf("%v", err)
-//	//}
-//	//ec2Client := ec2.NewFromConfig(cfg)
-//
-//	c, err := Create()
-//	if err != nil {
-//		t.Fatalf("%v", err)
-//	}
-//	//instance := types.Instance {
-//	//	ID:     "i-0f70b335ea12b2853",
-//	//	Region: "us-east-1",
-//	//}
-//	scope := types.ScanScope{
-//		All:         false,
-//		Regions:     []types.Region{
-//			{
-//				ID:   "us-east-2",
-//				vpcs: []types.VPC{
-//					{
-//						ID:             "vpc-32ea7c59",
-//						securityGroups: []types.SecurityGroup{
-//							{
-//								ID: "sg-4d6b853a",
-//							},
-//						},
-//					},
-//				},
-//			},
-//			{
-//				ID:   "us-east-1",
-//				vpcs: []types.VPC{
-//					{
-//						ID:             "vpc-0c41450ba658eed00",
-//						securityGroups: nil,
-//					},
-//					{
-//						ID:             "vpc-9ca32ce1",
-//						securityGroups: []types.SecurityGroup{
-//							{
-//								ID: "sg-030918e8e73254d42",
-//							},
-//						},
-//					},
-//				},
-//			},
-//		},
-//		ScanStopped: true,
-//		TagSelector: []*types.Tag{
-//			{
-//				key: "Name",
-//				val: "diff-vpc",
-//			},
-//		},
-//		ExcludeTags: nil,
-//	}
-//	instances, err := c.Discover(&scope)
-//	if err != nil {
-//		t.Fatalf("%v", err)
-//	}
-//
-//	instance := instances[0]
-//
-//	rootVolume, err := c.GetInstanceRootVolume(instance)
-//	if err != nil {
-//		t.Fatalf("%v", err)
-//	}
-//	// create a snapshot of that vm
-//	srcSnapshot, err := c.CreateSnapshot(rootVolume)
-//	if err != nil {
-//		t.Fatalf("%v", err)
-//	}
-//	if err := c.WaitForSnapshotReady(srcSnapshot); err != nil {
-//		t.Fatalf("%v", err)
-//	}
-//	//copy the snapshot to the scanner region
-//	cpySnapshot, err := c.CopySnapshot(srcSnapshot, "us-east-2")
-//	if err != nil {
-//		t.Fatalf("%v", err)
-//	}
-//	if err := c.WaitForSnapshotReady(cpySnapshot); err != nil {
-//		t.Fatalf("%v", err)
-//	}
-//	// create the scanner job (vm) with a boot script
-//	launchedInstance, err := c.LaunchInstance("ami-0568773882d492fc8", "xvdh", cpySnapshot)
-//	if err != nil {
-//		t.Fatalf("%v", err)
-//	}
-//
-//	t.Logf("res: %v", launchedInstance.ID)
-//}
-
 func Test_createVPCFilters(t *testing.T) {
 	var (
 		vpcID = "vpc-1"
@@ -143,7 +48,7 @@ func Test_createVPCFilters(t *testing.T) {
 			name: "vpc with no security group",
 			args: args{
 				vpc: VPC{
-					Id:             vpcID,
+					id:             vpcID,
 					securityGroups: nil,
 				},
 			},
@@ -158,7 +63,7 @@ func Test_createVPCFilters(t *testing.T) {
 			name: "vpc with one security group",
 			args: args{
 				vpc: VPC{
-					Id: vpcID,
+					id: vpcID,
 					securityGroups: []SecurityGroup{
 						{
 							id: sgID1,
@@ -181,7 +86,7 @@ func Test_createVPCFilters(t *testing.T) {
 			name: "vpc with two security groups",
 			args: args{
 				vpc: VPC{
-					Id: vpcID,
+					id: vpcID,
 					securityGroups: []SecurityGroup{
 						{
 							id: sgID1,
@@ -314,7 +219,7 @@ func Test_hasExcludedTags(t *testing.T) {
 			want: false,
 		},
 		{
-			name: "instance does not have ALL the excluded tags",
+			name: "instance does not have ALL the excluded tags (partial matching)",
 			args: args{
 				excludeTags: []Tag{
 					{

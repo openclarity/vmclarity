@@ -62,7 +62,7 @@ func Create(ctx context.Context, config *aws.Config) (*Client, error) {
 	return &awsClient, nil
 }
 
-func (c *Client) Discover(ctx context.Context, scanScope interface{}) ([]types.Instance, error) {
+func (c *Client) Discover(ctx context.Context, scanScope types.ScanScope) ([]types.Instance, error) {
 	var ret []types.Instance
 	var filters []ec2types.Filter
 	var scope *ScanScope
@@ -85,7 +85,7 @@ func (c *Client) Discover(ctx context.Context, scanScope interface{}) ([]types.I
 	for _, region := range regions {
 		// if no vpcs, that mean that we don't need any vpc filters
 		if len(region.vpcs) == 0 {
-			instances, err := c.GetInstances(ctx, filters, scope.ExcludeTags, region.Id)
+			instances, err := c.GetInstances(ctx, filters, scope.ExcludeTags, region.id)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get instances: %v", err)
 			}
@@ -97,7 +97,7 @@ func (c *Client) Discover(ctx context.Context, scanScope interface{}) ([]types.I
 		for _, vpc := range region.vpcs {
 			vpcFilters := append(filters, createVPCFilters(vpc)...)
 
-			instances, err := c.GetInstances(ctx, vpcFilters, scope.ExcludeTags, region.Id)
+			instances, err := c.GetInstances(ctx, vpcFilters, scope.ExcludeTags, region.id)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get instances: %v", err)
 			}
@@ -234,7 +234,7 @@ func createVPCFilters(vpc VPC) []ec2types.Filter {
 	// create per vpc filters
 	ret = append(ret, ec2types.Filter{
 		Name:   utils.StringPtr(vpcIDFilterName),
-		Values: []string{vpc.Id},
+		Values: []string{vpc.id},
 	})
 	sgs = getVPCSecurityGroupsIDs(vpc)
 	if len(sgs) > 0 {
@@ -298,14 +298,14 @@ func (c *Client) ListAllRegions(ctx context.Context) ([]Region, error) {
 	}
 	for _, region := range out.Regions {
 		ret = append(ret, Region{
-			Id: *region.RegionName,
+			id: *region.RegionName,
 		})
 	}
 	return ret, nil
 }
 
 // AND logic - if excludeTags = {tag1:val1, tag2:val2},
-// then instance will be excluded only if he have ALL this tags ({tag1:val1, tag2:val2})
+// then an instance will be excluded only if it has ALL these tags ({tag1:val1, tag2:val2})
 func hasExcludeTags(excludeTags []Tag, instanceTags []ec2types.Tag) bool {
 	var instanceTagsMap = make(map[string]string)
 

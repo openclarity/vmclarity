@@ -43,11 +43,11 @@ type SecurityGroup struct {
 }
 
 type VPC struct {
-	Id             string
+	id             string
 	securityGroups []SecurityGroup
 }
 
 type Region struct {
-	Id   string
+	id   string
 	vpcs []VPC
 }
