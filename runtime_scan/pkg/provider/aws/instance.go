@@ -28,9 +28,9 @@ import (
 )
 
 type InstanceImpl struct {
-	ec2Client  *ec2.Client
-	id         string
-	region     string
+	ec2Client *ec2.Client
+	id        string
+	region    string
 }
 
 func (i *InstanceImpl) GetID() string {

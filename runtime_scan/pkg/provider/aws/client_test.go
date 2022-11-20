@@ -538,7 +538,7 @@ func Test_getInstanceState(t *testing.T) {
 }
 
 func TestClient_getInstancesFromDescribeInstancesOutput(t *testing.T) {
-	type fields struct {}
+	type fields struct{}
 	type args struct {
 		result      *ec2.DescribeInstancesOutput
 		excludeTags []Tag

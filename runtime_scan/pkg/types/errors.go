@@ -31,5 +31,5 @@ const (
 type ScanErrorSource string
 
 const (
-	ScanErrSourceJob    ScanErrorSource = "ScanErrSourceJob"
+	ScanErrSourceJob ScanErrorSource = "ScanErrSourceJob"
 )

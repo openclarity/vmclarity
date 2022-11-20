@@ -84,5 +84,3 @@ type Snapshot interface {
 	Delete(ctx context.Context) error
 	WaitForReady(ctx context.Context) error
 }
-
-
