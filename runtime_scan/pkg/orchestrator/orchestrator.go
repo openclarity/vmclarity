@@ -60,7 +60,6 @@ func Create(config *_config.Config, client provider.Client) (*Orchestrator, erro
 func (o *Orchestrator) Start(errChan chan struct{}) {
 	// Start result server
 	log.Infof("Starting Orchestrator server")
-	// o.server.Start(errChan)
 }
 
 func (o *Orchestrator) Stop() {

@@ -148,7 +148,7 @@ func (s *Scanner) Results() *types.ScanResults {
 	s.Lock()
 	defer s.Unlock()
 
-	var instanceScanResults = make([]*types.InstanceScanResult, 0)
+	instanceScanResults := make([]*types.InstanceScanResult, 0)
 
 	for _, scanD := range s.instanceIDToScanData {
 		if !scanD.completed {
