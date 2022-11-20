@@ -314,7 +314,7 @@ func Test_hasExcludedTags(t *testing.T) {
 			want: false,
 		},
 		{
-			name: "instance has excluded tags",
+			name: "instance does not have ALL the excluded tags",
 			args: args{
 				excludeTags: []Tag{
 					{
@@ -337,10 +337,40 @@ func Test_hasExcludedTags(t *testing.T) {
 					},
 				},
 			},
+			want: false,
+		},
+		{
+			name: "instance has ALL excluded tags",
+			args: args{
+				excludeTags: []Tag{
+					{
+						key: tagName1,
+						val: tagVal1,
+					},
+					{
+						key: tagName2,
+						val: tagVal2,
+					},
+				},
+				instanceTags: []ec2types.Tag{
+					{
+						Key:   &tagName1,
+						Value: &tagVal1,
+					},
+					{
+						Key:   &tagName2,
+						Value: &tagVal2,
+					},
+					{
+						Key:   utils.StringPtr("stam"),
+						Value: utils.StringPtr("stam"),
+					},
+				},
+			},
 			want: true,
 		},
 		{
-			name: "instance does not have excluded tags",
+			name: "instance does not have excluded tags at all",
 			args: args{
 				excludeTags: []Tag{
 					{

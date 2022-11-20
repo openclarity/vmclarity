@@ -28,7 +28,7 @@ type ScanScope struct {
 	// Only targets that have these tags will be selected for scanning within the selected scan scope.
 	// Multiple tags will be treated as an AND operator.
 	TagSelector []Tag
-	// Targets that have these tags will be excluded from the scan, even match the tag selector.
+	// Targets that have these tags will be excluded from the scan, even if they match the tag selector.
 	// Multiple tags will be treated as an AND operator.
 	ExcludeTags []Tag
 }

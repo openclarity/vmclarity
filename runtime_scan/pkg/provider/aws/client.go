@@ -304,18 +304,30 @@ func (c *Client) ListAllRegions(ctx context.Context) ([]Region, error) {
 	return ret, nil
 }
 
+// AND logic - if excludeTags = {tag1:val1, tag2:val2},
+// then instance will be excluded only if he have ALL this tags ({tag1:val1, tag2:val2})
 func hasExcludeTags(excludeTags []Tag, instanceTags []ec2types.Tag) bool {
-	var excludedTagsMap = make(map[string]string)
+	var instanceTagsMap = make(map[string]string)
+
+	if len(excludeTags) == 0 {
+		return false
+	}
+	if len(instanceTags) == 0 {
+		return false
+	}
+
+	for _, tag := range instanceTags {
+		instanceTagsMap[*tag.Key] = *tag.Value
+	}
 
 	for _, tag := range excludeTags {
-		excludedTagsMap[tag.key] = tag.val
-	}
-	for _, instanceTag := range instanceTags {
-		if val, ok := excludedTagsMap[*instanceTag.Key]; ok {
-			if strings.Compare(val, *instanceTag.Value) == 0 {
-				return true
-			}
+		val, ok := instanceTagsMap[tag.key]
+		if !ok {
+			return false
+		}
+		if !(strings.Compare(val, tag.val) == 0) {
+			return false
 		}
 	}
-	return false
+	return true
 }
