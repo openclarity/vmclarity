@@ -89,7 +89,7 @@ func (o *Orchestrator) ScanProgress() types.ScanProgress {
 func (o *Orchestrator) Results() *types.ScanResults {
 	return nil
 	// TODO
-	//return o.getScanner().Results()
+	// return o.getScanner().Results()
 }
 
 func (o *Orchestrator) Clear() {

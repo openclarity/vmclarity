@@ -216,8 +216,8 @@ func (c *Client) getInstancesFromDescribeInstancesOutput(result *ec2.DescribeIns
 
 func getVPCSecurityGroupsIDs(vpc VPC) []string {
 	sgs := make([]string, len(vpc.securityGroups))
-	for _, sg := range vpc.securityGroups {
-		sgs = append(sgs, sg.id)
+	for i, sg := range vpc.securityGroups {
+		sgs[i] = sg.id
 	}
 	return sgs
 }
@@ -266,7 +266,8 @@ func createInstanceStateFilters(scanStopped bool) []ec2types.Filter {
 }
 
 func createInclusionTagsFilters(tags []Tag) []ec2types.Filter {
-	filters := make([]ec2types.Filter, 0)
+	// nolint:prealloc
+	var filters []ec2types.Filter
 
 	// If you specify multiple filters, the filters are joined with an AND, and the request returns
 	// only results that match all of the specified filters.
