@@ -48,7 +48,7 @@ var (
 )
 
 func Create(ctx context.Context, config *aws.Config) (*Client, error) {
-	var awsClient = Client{
+	var awsClient = Client {
 		awsConfig: config,
 	}
 
@@ -57,6 +57,7 @@ func Create(ctx context.Context, config *aws.Config) (*Client, error) {
 		return nil, fmt.Errorf("failed to load aws config: %v", err)
 	}
 
+	// nolint:contextcheck
 	awsClient.ec2Client = ec2.NewFromConfig(cfg)
 
 	return &awsClient, nil
@@ -214,7 +215,7 @@ func (c *Client) getInstancesFromDescribeInstancesOutput(result *ec2.DescribeIns
 }
 
 func getVPCSecurityGroupsIDs(vpc VPC) []string {
-	var sgs []string
+	var sgs = make([]string, len(vpc.securityGroups))
 	for _, sg := range vpc.securityGroups {
 		sgs = append(sgs, sg.id)
 	}
@@ -229,14 +230,13 @@ const (
 
 func createVPCFilters(vpc VPC) []ec2types.Filter {
 	var ret = make([]ec2types.Filter, 0)
-	var sgs = make([]string, 0)
 
 	// create per vpc filters
 	ret = append(ret, ec2types.Filter{
 		Name:   utils.StringPtr(vpcIDFilterName),
 		Values: []string{vpc.id},
 	})
-	sgs = getVPCSecurityGroupsIDs(vpc)
+	sgs := getVPCSecurityGroupsIDs(vpc)
 	if len(sgs) > 0 {
 		ret = append(ret, ec2types.Filter{
 			Name:   utils.StringPtr(sgIDFilterName),
@@ -266,7 +266,7 @@ func createInstanceStateFilters(scanStopped bool) []ec2types.Filter {
 }
 
 func createInclusionTagsFilters(tags []Tag) []ec2types.Filter {
-	var filters []ec2types.Filter
+	var filters = make([]ec2types.Filter, 0)
 
 	// If you specify multiple filters, the filters are joined with an AND, and the request returns
 	// only results that match all of the specified filters.
@@ -289,7 +289,7 @@ func (c *Client) getRegionsToScan(ctx context.Context, scope *ScanScope) ([]Regi
 }
 
 func (c *Client) ListAllRegions(ctx context.Context) ([]Region, error) {
-	var ret []Region
+	var ret = make([]Region, 0)
 	out, err := c.ec2Client.DescribeRegions(ctx, &ec2.DescribeRegionsInput{
 		AllRegions: nil, // display also disabled regions?
 	})
@@ -305,7 +305,7 @@ func (c *Client) ListAllRegions(ctx context.Context) ([]Region, error) {
 }
 
 // AND logic - if excludeTags = {tag1:val1, tag2:val2},
-// then an instance will be excluded only if it has ALL these tags ({tag1:val1, tag2:val2})
+// then an instance will be excluded only if it has ALL these tags ({tag1:val1, tag2:val2}).
 func hasExcludeTags(excludeTags []Tag, instanceTags []ec2types.Tag) bool {
 	var instanceTagsMap = make(map[string]string)
 

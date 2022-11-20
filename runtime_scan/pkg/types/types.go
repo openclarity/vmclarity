@@ -28,7 +28,7 @@ const (
 	DoneScanning    Status = "DoneScanning"
 )
 
-type ScanScope interface {}
+type ScanScope interface{}
 
 type ScanProgress struct {
 	InstancesToScan          uint32

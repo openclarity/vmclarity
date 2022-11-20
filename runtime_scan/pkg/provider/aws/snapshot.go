@@ -83,6 +83,7 @@ func (s *SnapshotImpl) Delete(ctx context.Context) error {
 }
 
 func (s *SnapshotImpl) WaitForReady(ctx context.Context) error {
+	// nolint:govet
 	ctxWithTimeout, _ := context.WithTimeout(context.Background(), waitTimeout*time.Minute)
 
 	for {

@@ -78,6 +78,7 @@ func (i *InstanceImpl) GetRootVolume(ctx context.Context) (types.Volume, error) 
 }
 
 func (i *InstanceImpl) WaitForReady(ctx context.Context) error {
+	// nolint:govet
 	ctxWithTimeout, _ := context.WithTimeout(context.Background(), waitTimeout*time.Minute)
 
 	for {

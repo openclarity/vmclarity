@@ -67,7 +67,6 @@ func (o *Orchestrator) Stop() {
 	o.Clear()
 
 	log.Infof("Stopping Orchestrator server")
-	//o.server.Stop()
 }
 
 func (o *Orchestrator) Scan(scanConfig *_config.ScanConfig, scanDone chan struct{}) error {

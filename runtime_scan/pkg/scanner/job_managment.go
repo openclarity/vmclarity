@@ -163,11 +163,9 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 	snapshot, err := volume.TakeSnapshot(ctx)
 	if err != nil {
 		return types.Job{}, fmt.Errorf("failed to take snapshot of a volume: %v", err)
-
 	}
 	if err := snapshot.WaitForReady(ctx); err != nil {
 		return types.Job{}, fmt.Errorf("failed to wait for snapshot %v ready: %v", snapshot.GetID(), err)
-
 	}
 	launchSnapshot = snapshot
 

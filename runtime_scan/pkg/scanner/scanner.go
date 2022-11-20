@@ -17,7 +17,6 @@ package scanner
 
 import (
 	"fmt"
-	"go/scanner"
 	"sync"
 	"sync/atomic"
 
@@ -54,10 +53,10 @@ type scanData struct {
 }
 
 type vulnerabilitiesScanResult struct {
-	result    []string
-	success   bool
-	completed bool
-	error     *scanner.Error
+	result []string
+	// success   bool
+	// completed bool
+	// error *scanner.Error
 }
 
 func CreateScanner(config *_config.Config, providerClient provider.Client) *Scanner {
@@ -76,7 +75,7 @@ func CreateScanner(config *_config.Config, providerClient provider.Client) *Scan
 }
 
 // initScan Calculate properties of scan targets
-// nolint:cyclop
+// nolint:cyclop,unparam
 func (s *Scanner) initScan() error {
 	instanceIDToScanData := make(map[string]*scanData)
 
@@ -159,7 +158,6 @@ func (s *Scanner) Results() *types.ScanResults {
 			Instance:        scanD.instance,
 			Vulnerabilities: scanD.vulnerabilitiesResult.result,
 			Success:         scanD.success,
-			//ScanErrors:      scanD.getScanErrors(),
 		})
 	}
 
