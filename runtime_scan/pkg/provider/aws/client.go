@@ -79,7 +79,7 @@ func (c *Client) Discover(ctx context.Context, scanScope interface{}) ([]types.I
 	if len(regions) == 0 {
 		return nil, fmt.Errorf("no regions to scan")
 	}
-	filters = append(filters, createInclusionTagsFilters(scope.IncludeTags)...)
+	filters = append(filters, createInclusionTagsFilters(scope.TagSelector)...)
 	filters = append(filters, createInstanceStateFilters(scope.ScanStopped)...)
 
 	for _, region := range regions {
@@ -150,11 +150,11 @@ func (c *Client) LaunchInstance(ctx context.Context, snapshot types.Snapshot) (t
 }
 
 func (c *Client) GetInstances(ctx context.Context, filters []ec2types.Filter, excludeTags []Tag, regionID string) ([]types.Instance, error) {
-	var ret []types.Instance
+	var ret = make([]types.Instance, 0)
 
 	out, err := c.ec2Client.DescribeInstances(ctx, &ec2.DescribeInstancesInput{
 		Filters:    filters,
-		MaxResults: utils.Int32Ptr(50), // TODO what will be a good number?
+		MaxResults: utils.Int32Ptr(maxResults), // TODO what will be a good number?
 	}, func(options *ec2.Options) {
 		options.Region = regionID
 	})
@@ -168,7 +168,7 @@ func (c *Client) GetInstances(ctx context.Context, filters []ec2types.Filter, ex
 	for out.NextToken != nil {
 		out, err = c.ec2Client.DescribeInstances(ctx, &ec2.DescribeInstancesInput{
 			Filters:    filters,
-			MaxResults: utils.Int32Ptr(50),
+			MaxResults: utils.Int32Ptr(maxResults),
 			NextToken:  out.NextToken,
 		}, func(options *ec2.Options) {
 			options.Region = regionID
@@ -229,7 +229,7 @@ const (
 
 func createVPCFilters(vpc VPC) []ec2types.Filter {
 	var ret = make([]ec2types.Filter, 0)
-	var sgs []string
+	var sgs = make([]string, 0)
 
 	// create per vpc filters
 	ret = append(ret, ec2types.Filter{
@@ -250,7 +250,7 @@ func createVPCFilters(vpc VPC) []ec2types.Filter {
 }
 
 func createInstanceStateFilters(scanStopped bool) []ec2types.Filter {
-	var filters []ec2types.Filter
+	var filters = make([]ec2types.Filter, 0)
 	var states = []string{"running"}
 	if scanStopped {
 		states = append(states, "stopped")
@@ -268,6 +268,8 @@ func createInstanceStateFilters(scanStopped bool) []ec2types.Filter {
 func createInclusionTagsFilters(tags []Tag) []ec2types.Filter {
 	var filters []ec2types.Filter
 
+	// If you specify multiple filters, the filters are joined with an AND, and the request returns
+	// only results that match all of the specified filters.
 	for _, tag := range tags {
 		filters = append(filters, ec2types.Filter{
 			Name:   utils.StringPtr("tag:" + tag.key),

@@ -149,6 +149,7 @@ func (s *Scanner) waitForResult(data *scanData, ks chan bool) {
 	}
 }
 
+// TODO need to clean all the created resources in case of a failure.
 func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error) {
 	instanceToScan := data.instance
 	var launchSnapshot types.Snapshot

@@ -83,11 +83,11 @@ func (s *SnapshotImpl) Delete(ctx context.Context) error {
 }
 
 func (s *SnapshotImpl) WaitForReady(ctx context.Context) error {
-	ctxWithTimeout, _ := context.WithTimeout(context.Background(), 3*time.Minute)
+	ctxWithTimeout, _ := context.WithTimeout(context.Background(), waitTimeout*time.Minute)
 
 	for {
 		select {
-		case <-time.After(3 * time.Second):
+		case <-time.After(checkInterval * time.Second):
 			out, err := s.ec2Client.DescribeSnapshots(ctx, &ec2.DescribeSnapshotsInput{
 				SnapshotIds: []string{s.id},
 			}, func(options *ec2.Options) {
@@ -103,7 +103,7 @@ func (s *SnapshotImpl) WaitForReady(ctx context.Context) error {
 				return nil
 			}
 		case <-ctxWithTimeout.Done():
-			return ctxWithTimeout.Err()
+			return fmt.Errorf("timeout: %v", ctxWithTimeout.Err())
 		}
 	}
 }

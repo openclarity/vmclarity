@@ -78,11 +78,11 @@ func (i *InstanceImpl) GetRootVolume(ctx context.Context) (types.Volume, error) 
 }
 
 func (i *InstanceImpl) WaitForReady(ctx context.Context) error {
-	ctxWithTimeout, _ := context.WithTimeout(context.Background(), 3*time.Minute)
+	ctxWithTimeout, _ := context.WithTimeout(context.Background(), waitTimeout*time.Minute)
 
 	for {
 		select {
-		case <-time.After(3 * time.Second):
+		case <-time.After(checkInterval * time.Second):
 			out, err := i.ec2Client.DescribeInstances(ctx, &ec2.DescribeInstancesInput{
 				InstanceIds: []string{i.id},
 			}, func(options *ec2.Options) {
@@ -96,7 +96,7 @@ func (i *InstanceImpl) WaitForReady(ctx context.Context) error {
 				return nil
 			}
 		case <-ctxWithTimeout.Done():
-			return ctxWithTimeout.Err()
+			return fmt.Errorf("timeout: %v", ctxWithTimeout.Err())
 		}
 	}
 }

@@ -77,7 +77,7 @@ import (
 //			},
 //		},
 //		ScanStopped: true,
-//		IncludeTags: []*types.Tag{
+//		TagSelector: []*types.Tag{
 //			{
 //				key: "Name",
 //				val: "diff-vpc",
