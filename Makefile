@@ -21,11 +21,10 @@ help: ## This help.
 .DEFAULT_GOAL := help
 
 .PHONY: build
-build: ## Build VMClarity
-	@(echo "Building VMClarity" )
-	@(go build -ldflags="-s -w \
-           -X 'github.com/openclarity/vmclarity/pkg/version.Version=${VERSION}'" -o bin/${BINARY_NAME} ./main.go \
-           && ls -lh bin/${BINARY_NAME})
+build: build-all-go ## Build All
+
+.PHONY: build-all-go
+build-all-go: backend ## Build All GO executables
 
 .PHONY: backend
 backend: ## Build Backend
@@ -73,7 +72,6 @@ bin/golangci-lint-${GOLANGCI_VERSION}:
 
 .PHONY: lint
 lint: bin/golangci-lint ## Run linter
-	./bin/golangci-lint run
 	cd backend && ../bin/golangci-lint run
 	cd runtime_scan && ../bin/golangci-lint run
 
