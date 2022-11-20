@@ -17,11 +17,17 @@ package backend
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/Portshift/go-utils/healthz"
+	runtime_scan_config "github.com/openclarity/vmclarity/runtime_scan/pkg/config"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/orchestrator"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider/aws"
+
 	log "github.com/sirupsen/logrus"
 
 	_config "github.com/openclarity/vmclarity/backend/pkg/config"
@@ -48,10 +54,24 @@ func Run() {
 
 	healthServer.SetIsReady(false)
 
-	_, globalCancel := context.WithCancel(context.Background())
+	globalCtx, globalCancel := context.WithCancel(context.Background())
 	defer globalCancel()
 
 	log.Info("VMClarity backend is running")
+
+	runtimeScanConfig, err := runtime_scan_config.LoadConfig()
+	if err != nil {
+		log.Fatalf("Failed to load runtime scan orchestrator config: %v", err)
+	}
+	providerClient, err := aws.Create(globalCtx, runtimeScanConfig.AWSConfig)
+	if err != nil {
+		log.Fatalf("Failed to create provider client: %v", err)
+	}
+	orc, err := createRuntimeScanOrchestrator(providerClient, runtimeScanConfig)
+	if err != nil {
+		log.Fatalf("Failed to create runtime scan orchestrator: %v", err)
+	}
+	orc.Start(errChan)
 
 	healthServer.SetIsReady(true)
 	log.Info("VMClarity backend is ready")
@@ -66,4 +86,13 @@ func Run() {
 	case s := <-sig:
 		log.Warningf("Received a termination signal: %v", s)
 	}
+}
+
+func createRuntimeScanOrchestrator(client provider.Client, config *runtime_scan_config.Config) (orchestrator.VulnerabilitiesScanner, error) {
+	orc, err := orchestrator.Create(config, client)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create runtime scan orchestrator: %v", err)
+	}
+
+	return orc, nil
 }

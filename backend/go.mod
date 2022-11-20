@@ -7,6 +7,7 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/viper v1.14.0
 	github.com/urfave/cli v1.22.10
+	github.com/openclarity/vmclarity/runtime_scan v0.0.0
 )
 
 require (
@@ -32,3 +33,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
+replace (
+	github.com/openclarity/vmclarity/runtime_scan v0.0.0 => ./../runtime_scan
+)
