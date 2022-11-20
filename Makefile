@@ -52,7 +52,6 @@ push-docker-backend: docker-backend ## Build and Push Backend Docker image
 
 .PHONY: test
 test: ## Run Unit Tests
-	@(CGO_ENABLED=0 go test ./...)
 	@(cd backend && go test ./...)
 	@(cd runtime_scan && go test ./...)
 

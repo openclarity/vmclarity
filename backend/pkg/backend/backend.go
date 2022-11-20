@@ -22,12 +22,12 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/Portshift/go-utils/healthz"
 	runtime_scan_config "github.com/openclarity/vmclarity/runtime_scan/pkg/config"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/orchestrator"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider/aws"
 
+	"github.com/Portshift/go-utils/healthz"
 	log "github.com/sirupsen/logrus"
 
 	_config "github.com/openclarity/vmclarity/backend/pkg/config"
