@@ -16,11 +16,9 @@
 package database
 
 import (
-	"fmt"
 	"os"
 
 	log "github.com/sirupsen/logrus"
-	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -31,7 +29,6 @@ const (
 )
 
 const (
-	DBDriverTypePostgres = "POSTGRES"
 	DBDriverTypeLocal    = "LOCAL"
 )
 
@@ -94,8 +91,6 @@ func initDataBase(config *DBConfig) *gorm.DB {
 func initDB(config *DBConfig, dbDriver string, dbLogger logger.Interface) *gorm.DB {
 	var db *gorm.DB
 	switch dbDriver {
-	case DBDriverTypePostgres:
-		db = initPostgres(config, dbLogger)
 	case DBDriverTypeLocal:
 		db = initSqlite(dbLogger)
 	default:
@@ -109,20 +104,6 @@ func createAllViews(db *gorm.DB) {
 }
 
 func dropAllViews(db *gorm.DB) {
-}
-
-func initPostgres(config *DBConfig, dbLogger logger.Interface) *gorm.DB {
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
-		config.DBHost, config.DBUser, config.DBPassword, config.DBName, config.DBPort)
-
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: dbLogger,
-	})
-	if err != nil {
-		log.Fatalf("Failed to open %s db: %v", config.DBName, err)
-	}
-
-	return db
 }
 
 func initSqlite(dbLogger logger.Interface) *gorm.DB {
