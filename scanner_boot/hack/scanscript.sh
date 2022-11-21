@@ -11,8 +11,8 @@ fi
 
 SCANCONFIG=$(cat ${configjson})
 
-DIR=$(echo ${SCANCONFIG} | jq .directory_to_scan ${configjson})
-SERVER=$(echo ${SCANCONFIG} | jq .server_to_report ${configjson})
+DIR=$(echo ${SCANCONFIG} | jq .directory_to_scan)
+SERVER=$(echo ${SCANCONFIG} | jq .server_to_report)
 
 validate_config() {
     if [[ ${SERVER} == null ]]; then
