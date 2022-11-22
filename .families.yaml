@@ -1,0 +1,41 @@
+sbom:
+  enabled: true
+  analyzers_list:
+    - "syft"
+    - "gomod"
+    - "registry" # fetch sbom from image registry
+  inputs:
+    - input: "image:tag"
+      input_type: "image"
+    - input: "image2:tag"
+      input_type: "image"
+  merge_with:
+    - sbom_path: "sbom.dex"
+  syft_config:
+    scope: "squashed"
+
+vulnerabilities:
+  enabled: true
+  scanners_list:
+    - "grype"
+  inputs:
+    - input: "image:tag"
+      input_type: "image"
+  input_from_family:
+   - family_type: "sbom"
+  grype_config:
+    scope: "squashed"
+
+secrets:
+  enabled: true
+  scanners_list:
+    - "gitleaks"
+  inputs:
+    - input: "/dir"
+      input_type: "dir"
+    - input: "/rootfs"
+      input_type: "rootfs"
+  gitleaks_config:
+    foo: "bar"
+
+
