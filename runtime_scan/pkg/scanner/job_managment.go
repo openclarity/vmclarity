@@ -166,8 +166,8 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 		}
 	}()
 
-	volume, err2 := instanceToScan.GetRootVolume(ctx)
-	if err2 != nil {
+	volume, err := instanceToScan.GetRootVolume(ctx)
+	if err != nil {
 		return types.Job{}, fmt.Errorf("failed to get root volume of an instance %v: %v", instanceToScan.GetID(), err)
 	}
 
@@ -178,18 +178,18 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 	job.SrcSnapshot = snapshot
 	launchSnapshot = snapshot
 	if err = snapshot.WaitForReady(ctx); err != nil {
-		return types.Job{}, fmt.Errorf("failed to wait for snapshot %v ready: %v", snapshot.GetID(), err)
+		return types.Job{}, fmt.Errorf("failed to wait for snapshot to be ready. snapshotID=%v: %v", snapshot.GetID(), err)
 	}
 
 	if s.region != snapshot.GetRegion() {
 		cpySnapshot, err = snapshot.Copy(ctx, s.region)
 		if err != nil {
-			return types.Job{}, fmt.Errorf("failed to copy snapshot %v: %v", snapshot.GetID(), err)
+			return types.Job{}, fmt.Errorf("failed to copy snapshot. snapshotID=%v: %v", snapshot.GetID(), err)
 		}
 		job.DstSnapshot = cpySnapshot
 		launchSnapshot = cpySnapshot
 		if err = cpySnapshot.WaitForReady(ctx); err != nil {
-			return types.Job{}, fmt.Errorf("failed wait for snapshot %v ready: %v", cpySnapshot.GetID(), err)
+			return types.Job{}, fmt.Errorf("failed to wait for snapshot to be ready. snapshotID=%v: %v", cpySnapshot.GetID(), err)
 		}
 	}
 
@@ -228,17 +228,17 @@ func (s *Scanner) deleteJobIfNeeded(ctx context.Context, job *types.Job, isSucce
 func (s *Scanner) deleteJob(ctx context.Context, job *types.Job) {
 	if job.Instance != nil {
 		if err := job.Instance.Delete(ctx); err != nil {
-			log.Errorf("failed to delete instance: %v", err)
+			log.Errorf("Failed to delete instance. instanceID=%v: %v", job.Instance.GetID(), err)
 		}
 	}
 	if job.SrcSnapshot != nil {
 		if err := job.SrcSnapshot.Delete(ctx); err != nil {
-			log.Errorf("failed to delete source snapshot: %v", err)
+			log.Errorf("Failed to delete source snapshot. snapshotID=%v: %v", job.SrcSnapshot.GetID(), err)
 		}
 	}
 	if job.DstSnapshot != nil {
 		if err := job.DstSnapshot.Delete(ctx); err != nil {
-			log.Errorf("failed to delete dest snapshot: %v", err)
+			log.Errorf("Failed to delete destination snapshot. snapshotID=%v: %v", job.DstSnapshot.GetID(), err)
 		}
 	}
 }
