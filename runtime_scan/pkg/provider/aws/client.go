@@ -112,7 +112,7 @@ func (c *Client) Discover(ctx context.Context, scanScope types.ScanScope) ([]typ
 func (c *Client) RunScanningJob(ctx context.Context, snapshot types.Snapshot, scannerConfig *types.ScannerConfig) (types.Instance, error) {
 	userData, err := cloudinit.GenerateCloudInit(scannerConfig)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate user-data: %v", err)
+		return nil, fmt.Errorf("failed to generate cloud-init: %v", err)
 	}
 	out, err := c.ec2Client.RunInstances(ctx, &ec2.RunInstancesInput{
 		MaxCount: utils.Int32Ptr(1),
@@ -140,7 +140,7 @@ func (c *Client) RunScanningJob(ctx context.Context, snapshot types.Snapshot, sc
 				Tags:         vmclarityTags,
 			},
 		},
-		UserData: userData, // TODO put launch script here
+		UserData: userData,
 	}, func(options *ec2.Options) {
 		options.Region = snapshot.GetRegion()
 	})
