@@ -40,7 +40,7 @@ func GenerateCloudInit(scannerConfig *types.ScannerConfig) (*string, error) {
 	vars["Config"] = bytes.NewBuffer(scannerConfigB).String()
 	var tmplExB bytes.Buffer
 	if err := tmpl.Execute(&tmplExB, vars); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to execute cloud-init template: %v", err)
 	}
 
 	cloudInit := tmplExB.String()

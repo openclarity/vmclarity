@@ -15,7 +15,7 @@
 
 package cloudinit
 
-// TODO example scanner script, needs to be updated
+// TODO example scanner script, needs to be updated.
 const cloudInitTmpl string = `#cloud-config
 package_upgrade: true
 packages:

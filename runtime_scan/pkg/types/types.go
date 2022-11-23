@@ -89,7 +89,7 @@ type Snapshot interface {
 	WaitForReady(ctx context.Context) error
 }
 
-// TODO example ScannerConfig, needs to be defined
+// TODO example ScannerConfig, needs to be defined.
 type ScannerConfig struct {
 	DirectoryToScan   string            `json:"directory_to_scan"`
 	ServerToReport    string            `json:"server_to_report"`
