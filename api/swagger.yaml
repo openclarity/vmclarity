@@ -1,0 +1,57 @@
+swagger: "2.0"
+info:
+  version: "1.0.0"
+  title: "VMClarity APIs"
+
+basePath: /api
+
+schemes:
+  - http
+  #- https
+
+consumes: [ "application/json" ]
+produces: [ "application/json" ]
+
+definitions:
+  ApiResponse:
+    description: 'An object that is returned in all cases of failures.'
+    type: 'object'
+    properties:
+      message:
+        type: 'string'
+
+  SuccessResponse:
+    description: 'An object that is returned in cases of success that returns nothing.'
+    type: 'object'
+    properties:
+      message:
+        type: 'string'
+
+  test:
+    description: 'test def'
+    type: 'object'
+    properties:
+      message:
+        type: 'string'
+
+paths:
+  /test:
+    get:
+      summary: 'test'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/test'
+        default:
+          $ref: '#/responses/UnknownError'
+
+responses:
+  UnknownError:
+    description: 'unknown error'
+    schema:
+      $ref: '#/definitions/ApiResponse'
+  Success:
+    description: 'success message'
+    schema:
+      $ref: '#/definitions/SuccessResponse'
