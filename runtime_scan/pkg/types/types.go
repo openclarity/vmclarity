@@ -15,7 +15,9 @@
 
 package types
 
-import "context"
+import (
+	"context"
+)
 
 type Status string
 
@@ -29,6 +31,8 @@ const (
 )
 
 type ScanScope interface{}
+
+type ScannerConfig struct{}
 
 type ScanProgress struct {
 	InstancesToScan          uint32

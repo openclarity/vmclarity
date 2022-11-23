@@ -13,17 +13,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package provider
+package cloudinit
 
 import (
-	"context"
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"text/template"
 
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
 )
 
-type Client interface {
-	// Discover - list VM instances in the account according to the scan scope.
-	Discover(ctx context.Context, scanScope types.ScanScope) ([]types.Instance, error)
-	// RunScanningJob - run a scanning job
-	RunScanningJob(ctx context.Context, snapshot types.Snapshot, scannerConfig *types.ScannerConfig) (types.Instance, error)
+func GenerateCloudInit(scannerConfig *types.ScannerConfig) (*string, error) {
+	vars := make(map[string]interface{})
+	// parse the template
+	tmpl, _ := template.New("cloud-init").Parse(cloudInitTmpl)
+
+	scannerConfigB, err := json.Marshal(scannerConfig)
+	if err != nil {
+		return nil, fmt.Errorf("falied to marshal config: %v", err)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	vars["Config"] = bytes.NewBuffer(scannerConfigB).String()
+	var tpl bytes.Buffer
+	if err := tmpl.Execute(&tpl, vars); err != nil {
+		return nil, err
+	}
+
+	cloudInit := tpl.String()
+	return &cloudInit, nil
 }
