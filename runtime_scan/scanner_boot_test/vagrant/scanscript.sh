@@ -26,7 +26,7 @@ validate_config() {
     fi
     if [[ ! -d "${DIR}" ]]; then
         echo "${DIR} not exists."
-        #exit 1
+        exit 1
     fi
 }
 

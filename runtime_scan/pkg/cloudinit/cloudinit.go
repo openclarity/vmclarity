@@ -26,23 +26,23 @@ import (
 
 func GenerateCloudInit(scannerConfig *types.ScannerConfig) (*string, error) {
 	vars := make(map[string]interface{})
-	// parse the template
-	tmpl, _ := template.New("cloud-init").Parse(cloudInitTmpl)
+	// parse cloud-init template
+	tmpl, err := template.New("cloud-init").Parse(cloudInitTmpl)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse cloud-init template: %v", err)
+	}
 
 	scannerConfigB, err := json.Marshal(scannerConfig)
 	if err != nil {
-		return nil, fmt.Errorf("falied to marshal config: %v", err)
+		return nil, fmt.Errorf("failed to marshal config: %v", err)
 	}
 
-	if err != nil {
-		return nil, err
-	}
 	vars["Config"] = bytes.NewBuffer(scannerConfigB).String()
-	var tpl bytes.Buffer
-	if err := tmpl.Execute(&tpl, vars); err != nil {
+	var tmplExB bytes.Buffer
+	if err := tmpl.Execute(&tmplExB, vars); err != nil {
 		return nil, err
 	}
 
-	cloudInit := tpl.String()
+	cloudInit := tmplExB.String()
 	return &cloudInit, nil
 }

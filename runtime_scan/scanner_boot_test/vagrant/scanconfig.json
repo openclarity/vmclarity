@@ -1,5 +1,5 @@
 {
-    "directory_to_scan": "/mountd/snapshot",
+    "directory_to_scan": "/tmp",
     "server_to_report": "127.0.0.1",
     "vulnerability_scan": {
         "vuls": {

@@ -32,8 +32,6 @@ const (
 
 type ScanScope interface{}
 
-type ScannerConfig struct{}
-
 type ScanProgress struct {
 	InstancesToScan          uint32
 	InstancesStartedToScan   uint32
@@ -89,4 +87,64 @@ type Snapshot interface {
 	Copy(ctx context.Context, dstRegion string) (Snapshot, error)
 	Delete(ctx context.Context) error
 	WaitForReady(ctx context.Context) error
+}
+
+// TODO example ScannerConfig, needs to be defined
+type ScannerConfig struct {
+	DirectoryToScan   string            `json:"directory_to_scan"`
+	ServerToReport    string            `json:"server_to_report"`
+	VulnerabilityScan VulnerabilityScan `json:"vulnerability_scan,omitempty"`
+	RootkitScan       RootkitScan       `json:"rootkit_scan,omitempty"`
+	MisconfigScan     MisconfigScan     `json:"misconfig_scan,omitempty"`
+	SecretScan        SecretScan        `json:"secret_scan,omitempty"`
+	MalewareScan      MalwareScan       `json:"malawre_scan,omitempty"`
+	ExploitCheck      ExploitCheck      `json:"exploit_check,omitempty"`
+}
+
+type VulnerabilityScan struct {
+	Vuls Vuls `json:"vuls,omitempty"`
+}
+
+type RootkitScan struct {
+	Chkrootkit Chkrootkit `json:"chkrootkit,omitempty"`
+}
+
+type MisconfigScan struct {
+	Lynis Lynis `json:"lynis,omitempty"`
+}
+
+type SecretScan struct {
+	Trufflehog Trufflehog `json:"trufflehog,omitempty"`
+}
+
+type MalwareScan struct {
+	Clamav Clamav `json:"clamav,omitempty"`
+}
+
+type ExploitCheck struct {
+	Vuls Vuls `json:"vuls,omitempty"`
+}
+
+type Vuls struct {
+	Config Config `json:"config,omitempty"`
+}
+
+type Chkrootkit struct {
+	Config Config `json:"config,omitempty"`
+}
+
+type Lynis struct {
+	Config Config `json:"config,omitempty"`
+}
+
+type Trufflehog struct {
+	Config Config `json:"config,omitempty"`
+}
+
+type Clamav struct {
+	Config Config `json:"config,omitempty"`
+}
+
+type Config struct {
+	Someconfig string `json:"someconfig,omitempty"`
 }

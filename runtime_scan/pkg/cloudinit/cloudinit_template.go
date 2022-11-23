@@ -15,6 +15,7 @@
 
 package cloudinit
 
+// TODO example scanner script, needs to be updated
 const cloudInitTmpl string = `#cloud-config
 package_upgrade: true
 packages:
@@ -51,7 +52,7 @@ write_files:
           fi
           if [[ ! -d "${DIR}" ]]; then
               echo "${DIR} not exists."
-              #exit 1
+              exit 1
           fi
       }
 
