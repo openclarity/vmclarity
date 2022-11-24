@@ -29,7 +29,7 @@ const (
 )
 
 const (
-	DBDriverTypeLocal    = "LOCAL"
+	DBDriverTypeLocal = "LOCAL"
 )
 
 // nolint:interfacebloat
@@ -88,7 +88,7 @@ func initDataBase(config *DBConfig) *gorm.DB {
 	return db
 }
 
-func initDB(config *DBConfig, dbDriver string, dbLogger logger.Interface) *gorm.DB {
+func initDB(_ *DBConfig, dbDriver string, dbLogger logger.Interface) *gorm.DB {
 	var db *gorm.DB
 	switch dbDriver {
 	case DBDriverTypeLocal:
