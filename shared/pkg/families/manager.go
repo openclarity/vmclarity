@@ -1,6 +1,8 @@
 package families
 
 import (
+	log "github.com/sirupsen/logrus"
+
 	"github.com/openclarity/vmclarity/shared/pkg/families/exploits"
 	_interface "github.com/openclarity/vmclarity/shared/pkg/families/interface"
 	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
@@ -19,7 +21,7 @@ type Manager struct {
 	enrichers map[types.FamilyType]_interface.Family
 }
 
-func New(config *Config) *Manager {
+func New(logger *log.Entry, config *Config) *Manager {
 	manager := &Manager{
 		config:    config,
 		analyzers: make(map[types.FamilyType]_interface.Family),
@@ -29,29 +31,29 @@ func New(config *Config) *Manager {
 
 	// Analyzers
 	if config.SBOM.Enabled {
-		manager.analyzers[types.SBOM] = sbom.New(config.SBOM)
+		manager.analyzers[types.SBOM] = sbom.New(logger, config.SBOM)
 	}
 
 	// Scanners
 	if config.Vulnerabilities.Enabled {
-		manager.scanners[types.Vulnerabilities] = vulnerabilities.New(config.Vulnerabilities)
+		manager.scanners[types.Vulnerabilities] = vulnerabilities.New(logger, config.Vulnerabilities)
 	}
 	if config.Secrets.Enabled {
-		manager.scanners[types.Secrets] = secrets.New(config.Secrets)
+		manager.scanners[types.Secrets] = secrets.New(logger, config.Secrets)
 	}
 	if config.Rootkits.Enabled {
-		manager.scanners[types.Rootkits] = rootkits.New(config.Rootkits)
+		manager.scanners[types.Rootkits] = rootkits.New(logger, config.Rootkits)
 	}
 	if config.Malware.Enabled {
-		manager.scanners[types.Malware] = malware.New(config.Malware)
+		manager.scanners[types.Malware] = malware.New(logger, config.Malware)
 	}
 	if config.Misconfiguration.Enabled {
-		manager.scanners[types.Misconfiguration] = misconfiguration.New(config.Misconfiguration)
+		manager.scanners[types.Misconfiguration] = misconfiguration.New(logger, config.Misconfiguration)
 	}
 
 	// Enrichers
 	if config.Exploits.Enabled {
-		manager.enrichers[types.Exploits] = exploits.New(config.Exploits)
+		manager.enrichers[types.Exploits] = exploits.New(logger, config.Exploits)
 	}
 
 	return manager

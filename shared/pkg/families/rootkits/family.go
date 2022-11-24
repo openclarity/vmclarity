@@ -19,7 +19,7 @@ func (r Rootkits) Run(getter _interface.ResultsGetter) (_interface.IsResults, er
 // ensure types implement the requisite interfaces
 var _ _interface.Family = &Rootkits{}
 
-func New(conf Config) *Rootkits {
+func New(logger *log.Entry, conf Config) *Rootkits {
 	return &Rootkits{
 		conf: conf,
 	}

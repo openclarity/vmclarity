@@ -1,9 +1,10 @@
 package sbom
 
-import cdx "github.com/CycloneDX/cyclonedx-go"
-
 type Results struct {
-	BOM cdx.BOM
+	// TODO: Do we want to keep it cdx or []byte & Format?
+	Format string
+	SBOM   []byte
+	//BOM cdx.BOM
 }
 
 func (*Results) IsResults() {}

@@ -1,13 +1,15 @@
 package sbom
 
+import "github.com/openclarity/kubeclarity/shared/pkg/config"
+
 func (*Config) IsConfig() {}
 
 type Config struct {
-	Enabled       bool        `yaml:"enabled" mapstructure:"enabled"`
-	AnalyzersList []string    `yaml:"analyzers_list" mapstructure:"analyzers_list"`
-	Inputs        []Inputs    `yaml:"inputs" mapstructure:"inputs"`
-	MergeWith     []MergeWith `yaml:"merge_with" mapstructure:"merge_with"`
-	SyftConfig    SyftConfig  `yaml:"syft_config" mapstructure:"syft_config"`
+	Enabled         bool          `yaml:"enabled" mapstructure:"enabled"`
+	AnalyzersList   []string      `yaml:"analyzers_list" mapstructure:"analyzers_list"`
+	Inputs          []Inputs      `yaml:"inputs" mapstructure:"inputs"`
+	MergeWith       []MergeWith   `yaml:"merge_with" mapstructure:"merge_with"`
+	AnalyzersConfig config.Config `yaml:"analyzers_config" mapstructure:"analyzers_config"`
 }
 
 type Inputs struct {
@@ -17,8 +19,4 @@ type Inputs struct {
 
 type MergeWith struct {
 	SbomPath string `yaml:"sbom_path" mapstructure:"sbom_path"`
-}
-
-type SyftConfig struct {
-	Scope string `yaml:"scope" mapstructure:"scope"`
 }

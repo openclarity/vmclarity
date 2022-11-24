@@ -19,7 +19,7 @@ func (m Misconfiguration) Run(getter _interface.ResultsGetter) (_interface.IsRes
 // ensure types implement the requisite interfaces
 var _ _interface.Family = &Misconfiguration{}
 
-func New(conf Config) *Misconfiguration {
+func New(logger *log.Entry, conf Config) *Misconfiguration {
 	return &Misconfiguration{
 		conf: conf,
 	}

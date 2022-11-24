@@ -16,6 +16,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"os"
 
 	"github.com/sirupsen/logrus"
@@ -23,6 +24,8 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/openclarity/vmclarity/shared/pkg/families"
+	"github.com/openclarity/vmclarity/shared/pkg/families/sbom"
+	"github.com/openclarity/vmclarity/shared/pkg/families/vulnerabilities"
 )
 
 var (
@@ -38,11 +41,15 @@ var rootCmd = &cobra.Command{
 	Long:  `VMClarity`,
 	//Version: pkg.GitRevision,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logrus.Infof("Running...")
-		_, err := families.New(config).Run()
+		logger.Infof("Running...")
+		res, err := families.New(logger, config).Run()
 		if err != nil {
 			return err
 		}
+
+		logger.Infof("SBOM Results: %s", string(res.SBOM.(*sbom.Results).SBOM))
+		bytes, _ := json.Marshal(res.Vulnerabilities.(*vulnerabilities.Results).MergedResults)
+		logger.Infof("Vulnerabilities Results: %s", string(bytes))
 
 		return nil
 	},

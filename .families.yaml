@@ -3,28 +3,58 @@ sbom:
   analyzers_list:
     - "syft"
     - "gomod"
-    - "registry" # fetch sbom from image registry
   inputs:
-    - input: "image:tag"
+    - input: "nginx:1.11"
       input_type: "image"
-    - input: "image2:tag"
+    - input: "nginx:1.10"
       input_type: "image"
-  merge_with:
-    - sbom_path: "sbom.dex"
-  syft_config:
-    scope: "squashed"
+#  merge_with:
+#    - sbom_path: "sbom.dex"
+  analyzers_config:
+    analyzer:
+      output_format: "cyclonedx-json"
+      scope: "Squashed"
+      trivy_config:
+        timeout: 300
+    registry:
+      skip-verify-tls: false
+      use-http: false
+      auths:
+        authority: "authority"
+        username: "username"
+        password: "password"
+        token: "token"
 
 vulnerabilities:
   enabled: true
   scanners_list:
     - "grype"
   inputs:
-    - input: "image:tag"
+    - input: "nginx:1.12"
       input_type: "image"
-  input_from_family:
-   - family_type: "sbom"
-  grype_config:
-    scope: "squashed"
+    - input: "nginx:1.13"
+      input_type: "image"
+  input_from_sbom: true
+  scanners_config:
+    scanner:
+      grype_config:
+        mode: "LOCAL"
+        local_grype_config:
+          update_db: true
+          db_root_dir: "/tmp/"
+          listing_url: "https://toolbox-data.anchore.io/grype/databases/listing.json"
+          scope: "squashed"
+        remote_grype_config:
+          grype_server_address: ""
+          grype_server_timeout: "2m"
+    registry:
+      skip-verify-tls: false
+      use-http: false
+      auths:
+        authority: "authority"
+        username: "username"
+        password: "password"
+        token: "token"
 
 secrets:
   enabled: true

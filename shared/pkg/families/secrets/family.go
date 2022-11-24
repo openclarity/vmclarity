@@ -19,7 +19,7 @@ func (s Secrets) Run(getter _interface.ResultsGetter) (_interface.IsResults, err
 // ensure types implement the requisite interfaces
 var _ _interface.Family = &Secrets{}
 
-func New(conf Config) *Secrets {
+func New(logger *log.Entry, conf Config) *Secrets {
 	return &Secrets{
 		conf: conf,
 	}
