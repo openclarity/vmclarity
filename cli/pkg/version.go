@@ -13,9 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package rootkits
+package pkg
 
-type Results struct {
-}
-
-func (*Results) IsResults() {}
+var GitRevision string

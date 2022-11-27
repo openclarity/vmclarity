@@ -3,7 +3,6 @@ module github.com/openclarity/vmclarity
 go 1.19
 
 require (
-	github.com/hashicorp/go-multierror v1.1.1
 	github.com/openclarity/kubeclarity/cli v0.0.0-00010101000000-000000000000
 	github.com/openclarity/kubeclarity/shared v0.0.0
 	github.com/sirupsen/logrus v1.9.0
@@ -216,6 +215,7 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-getter v1.6.2 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.1 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
@@ -457,11 +457,12 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-replace github.com/openclarity/kubeclarity/shared => ../kubeclarity/shared
-
-replace github.com/openclarity/kubeclarity/cli => ../kubeclarity/cli
-
-replace github.com/openclarity/kubeclarity/api => ../kubeclarity/api
+// github.com/openclarity/kubeclarity job-manager-changes
+replace (
+	github.com/openclarity/kubeclarity/api => github.com/openclarity/kubeclarity/api v0.0.0-20221127112232-6135e5f8a2e5
+	github.com/openclarity/kubeclarity/cli => github.com/openclarity/kubeclarity/cli v0.0.0-20221127112232-6135e5f8a2e5
+	github.com/openclarity/kubeclarity/shared => github.com/openclarity/kubeclarity/shared v0.0.0-20221127112232-6135e5f8a2e5
+)
 
 // Replace these for trivy
 replace (

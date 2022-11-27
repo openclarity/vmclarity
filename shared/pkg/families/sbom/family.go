@@ -1,3 +1,18 @@
+// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package sbom
 
 import (
@@ -42,7 +57,7 @@ func (s SBOM) Run(_ _interface.ResultsGetter) (_interface.IsResults, error) {
 	for _, input := range s.conf.Inputs {
 		results, err := manager.Run(utils.SourceType(input.InputType), input.Input)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to analyzer input %q: %v", s.conf.Inputs[0].Input, err)
 		}
 
 		// Merge results.
@@ -52,14 +67,15 @@ func (s SBOM) Run(_ _interface.ResultsGetter) (_interface.IsResults, error) {
 		}
 	}
 
-	MergeWithResults := make(map[string]job_manager.Result)
 	for i, with := range s.conf.MergeWith {
 		name := fmt.Sprintf("merge_with_%d", i)
 		cdxBOMBytes, err := cliutils.ConvertInputSBOMIfNeeded(with.SbomPath, outputFormat)
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert merged with SBOM. path=%s: %v", with.SbomPath, err)
 		}
-		MergeWithResults[name] = sharedanalyzer.CreateResults(cdxBOMBytes, name, with.SbomPath, utils.SBOM)
+		results := sharedanalyzer.CreateResults(cdxBOMBytes, name, with.SbomPath, utils.SBOM)
+		s.logger.Infof("Merging result from %q", with.SbomPath)
+		mergedResults = mergedResults.Merge(results, outputFormat)
 	}
 
 	mergedSBOMBytes, err := mergedResults.CreateMergedSBOMBytes(outputFormat, pkg.GitRevision)

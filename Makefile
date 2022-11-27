@@ -34,7 +34,7 @@ backend: ## Build Backend
 .PHONY: cli
 cli: ## Build CLI
 	@(echo "Building CLI ..." )
-	@(cd cli && go build -o bin/vmclarity main.go && ls -l bin/)
+	@(cd cli && go build -ldflags="-X 'github.com/openclarity/vmclarity/cli/pkg.GitRevision=${VERSION}'" -o bin/vmclarity main.go && ls -l bin/)
 
 .PHONY: docker
 docker: docker-backend ## Build All Docker images
