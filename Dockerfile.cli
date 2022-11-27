@@ -7,7 +7,7 @@ RUN apk add build-base
 
 WORKDIR /build
 
-# Copy cli go.mod & go.sum
+# Copy go.mod & go.sum
 WORKDIR /build
 COPY go.* ./
 RUN go mod download
@@ -17,9 +17,8 @@ WORKDIR /build/shared
 COPY shared .
 
 # Copy and build cli code
-WORKDIR /build
-COPY cli .
 WORKDIR /build/cli
+COPY cli .
 RUN CGO_ENABLED=0 go build -ldflags="-s -w \
      -X 'github.com/openclarity/vmclarity/cli/pkg.GitRevision=${COMMIT_HASH}'" -o cli ./main.go
 
