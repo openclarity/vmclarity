@@ -50,6 +50,6 @@ write_files:
       WantedBy=multi-user.target
 runcmd:
   - [ /root/scanner_family_download.sh ]
-  - [ systemctl, daemon-reaload ]
+  - [ systemctl, daemon-reload ]
   - [ systemctl, start, vmclarity-scanner.service ]
 `
