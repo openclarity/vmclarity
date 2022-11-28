@@ -12,7 +12,7 @@ ignored = [
 ]
 
 [header]
-ignorePaths = []
+ignorePaths = ["api"]
 ignoreFiles = []
 template = """// Copyright © :YEAR: Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
