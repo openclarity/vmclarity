@@ -37,9 +37,84 @@ func configureAPI(api *operations.VMClarityAPIsAPI) http.Handler {
 
 	api.JSONProducer = runtime.JSONProducer()
 
-	if api.GetTestHandler == nil {
-		api.GetTestHandler = operations.GetTestHandlerFunc(func(params operations.GetTestParams) middleware.Responder {
-			return middleware.NotImplemented("operation operations.GetTest has not yet been implemented")
+	if api.DeleteInstancesIDHandler == nil {
+		api.DeleteInstancesIDHandler = operations.DeleteInstancesIDHandlerFunc(func(params operations.DeleteInstancesIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation operations.DeleteInstancesID has not yet been implemented")
+		})
+	}
+	if api.GetInstancesHandler == nil {
+		api.GetInstancesHandler = operations.GetInstancesHandlerFunc(func(params operations.GetInstancesParams) middleware.Responder {
+			return middleware.NotImplemented("operation operations.GetInstances has not yet been implemented")
+		})
+	}
+	if api.GetInstancesIDHandler == nil {
+		api.GetInstancesIDHandler = operations.GetInstancesIDHandlerFunc(func(params operations.GetInstancesIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation operations.GetInstancesID has not yet been implemented")
+		})
+	}
+	if api.GetPackagesHandler == nil {
+		api.GetPackagesHandler = operations.GetPackagesHandlerFunc(func(params operations.GetPackagesParams) middleware.Responder {
+			return middleware.NotImplemented("operation operations.GetPackages has not yet been implemented")
+		})
+	}
+	if api.GetPackagesIDHandler == nil {
+		api.GetPackagesIDHandler = operations.GetPackagesIDHandlerFunc(func(params operations.GetPackagesIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation operations.GetPackagesID has not yet been implemented")
+		})
+	}
+	if api.GetVulnerabilitiesHandler == nil {
+		api.GetVulnerabilitiesHandler = operations.GetVulnerabilitiesHandlerFunc(func(params operations.GetVulnerabilitiesParams) middleware.Responder {
+			return middleware.NotImplemented("operation operations.GetVulnerabilities has not yet been implemented")
+		})
+	}
+	if api.GetVulnerabilitiesVulIDPkgIDHandler == nil {
+		api.GetVulnerabilitiesVulIDPkgIDHandler = operations.GetVulnerabilitiesVulIDPkgIDHandlerFunc(func(params operations.GetVulnerabilitiesVulIDPkgIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation operations.GetVulnerabilitiesVulIDPkgID has not yet been implemented")
+		})
+	}
+	if api.PostInstancesHandler == nil {
+		api.PostInstancesHandler = operations.PostInstancesHandlerFunc(func(params operations.PostInstancesParams) middleware.Responder {
+			return middleware.NotImplemented("operation operations.PostInstances has not yet been implemented")
+		})
+	}
+	if api.PostInstancesContentAnalysisIDHandler == nil {
+		api.PostInstancesContentAnalysisIDHandler = operations.PostInstancesContentAnalysisIDHandlerFunc(func(params operations.PostInstancesContentAnalysisIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation operations.PostInstancesContentAnalysisID has not yet been implemented")
+		})
+	}
+	if api.PostInstancesExploitScanIDHandler == nil {
+		api.PostInstancesExploitScanIDHandler = operations.PostInstancesExploitScanIDHandlerFunc(func(params operations.PostInstancesExploitScanIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation operations.PostInstancesExploitScanID has not yet been implemented")
+		})
+	}
+	if api.PostInstancesMalewareScanIDHandler == nil {
+		api.PostInstancesMalewareScanIDHandler = operations.PostInstancesMalewareScanIDHandlerFunc(func(params operations.PostInstancesMalewareScanIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation operations.PostInstancesMalewareScanID has not yet been implemented")
+		})
+	}
+	if api.PostInstancesMisconfigurationScanIDHandler == nil {
+		api.PostInstancesMisconfigurationScanIDHandler = operations.PostInstancesMisconfigurationScanIDHandlerFunc(func(params operations.PostInstancesMisconfigurationScanIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation operations.PostInstancesMisconfigurationScanID has not yet been implemented")
+		})
+	}
+	if api.PostInstancesRootkitScanIDHandler == nil {
+		api.PostInstancesRootkitScanIDHandler = operations.PostInstancesRootkitScanIDHandlerFunc(func(params operations.PostInstancesRootkitScanIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation operations.PostInstancesRootkitScanID has not yet been implemented")
+		})
+	}
+	if api.PostInstancesSecretScanIDHandler == nil {
+		api.PostInstancesSecretScanIDHandler = operations.PostInstancesSecretScanIDHandlerFunc(func(params operations.PostInstancesSecretScanIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation operations.PostInstancesSecretScanID has not yet been implemented")
+		})
+	}
+	if api.PostInstancesVulnerabilityScanIDHandler == nil {
+		api.PostInstancesVulnerabilityScanIDHandler = operations.PostInstancesVulnerabilityScanIDHandlerFunc(func(params operations.PostInstancesVulnerabilityScanIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation operations.PostInstancesVulnerabilityScanID has not yet been implemented")
+		})
+	}
+	if api.PutInstancesIDHandler == nil {
+		api.PutInstancesIDHandler = operations.PutInstancesIDHandlerFunc(func(params operations.PutInstancesIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation operations.PutInstancesID has not yet been implemented")
 		})
 	}
 

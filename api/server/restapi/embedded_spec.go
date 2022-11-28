@@ -34,14 +34,478 @@ func init() {
   },
   "basePath": "/api",
   "paths": {
-    "/test": {
+    "/instances": {
       "get": {
-        "summary": "test",
+        "summary": "Get instances",
+        "parameters": [
+          {
+            "$ref": "#/parameters/page"
+          },
+          {
+            "$ref": "#/parameters/pageSize"
+          },
+          {
+            "$ref": "#/parameters/instancesSortKey"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Success",
             "schema": {
-              "$ref": "#/definitions/test"
+              "type": "object",
+              "required": [
+                "total"
+              ],
+              "properties": {
+                "items": {
+                  "description": "List of instances in the given filters and page. List length must be lower or equal to pageSize.",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Instance"
+                  }
+                },
+                "total": {
+                  "description": "Total instances count under the given filters",
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create instance",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/InstanceInfo"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "New instance was created.",
+            "schema": {
+              "$ref": "#/definitions/InstanceInfo"
+            }
+          },
+          "409": {
+            "description": "Instance already exist.",
+            "schema": {
+              "$ref": "#/definitions/InstanceInfo"
+            }
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      }
+    },
+    "/instances/contentAnalysis/{id}": {
+      "post": {
+        "summary": "Report a content analysis for a specific instance",
+        "parameters": [
+          {
+            "$ref": "#/parameters/id"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/InstanceContentAnalysis"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Instance content analysis successfully reported."
+          },
+          "404": {
+            "description": "Instance not found."
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      }
+    },
+    "/instances/exploitScan/{id}": {
+      "post": {
+        "summary": "Report an exploit scan for a specific instance",
+        "parameters": [
+          {
+            "$ref": "#/parameters/id"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/InstanceRootkitScan"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Instance exploit scan successfully reported."
+          },
+          "404": {
+            "description": "Instance not found."
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      }
+    },
+    "/instances/malewareScan/{id}": {
+      "post": {
+        "summary": "Report a malware scan for a specific instance",
+        "parameters": [
+          {
+            "$ref": "#/parameters/id"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/InstanceMalwareScan"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Instance rootkit scan successfully reported."
+          },
+          "404": {
+            "description": "Instance not found."
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      }
+    },
+    "/instances/misconfigurationScan/{id}": {
+      "post": {
+        "summary": "Report a misconfiguration scan for a specific instance",
+        "parameters": [
+          {
+            "$ref": "#/parameters/id"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/InstanceMisconfigurationScan"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Instance misconfiguration scan successfully reported."
+          },
+          "404": {
+            "description": "Instance not found."
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      }
+    },
+    "/instances/rootkitScan/{id}": {
+      "post": {
+        "summary": "Report a rootkit scan for a specific instance",
+        "parameters": [
+          {
+            "$ref": "#/parameters/id"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/InstanceRootkitScan"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Instance rootkit scan successfully reported."
+          },
+          "404": {
+            "description": "Instance not found."
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      }
+    },
+    "/instances/secretScan/{id}": {
+      "post": {
+        "summary": "Report a secret scan for a specific instance",
+        "parameters": [
+          {
+            "$ref": "#/parameters/id"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/InstanceSecretScan"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Instance secret scan successfully reported."
+          },
+          "404": {
+            "description": "Instance not found."
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      }
+    },
+    "/instances/vulnerabilityScan/{id}": {
+      "post": {
+        "summary": "Report a vulnerability scan for a specific instance",
+        "parameters": [
+          {
+            "$ref": "#/parameters/id"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/InstanceVulnerabilityScan"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Instance vulnerability scan successfully reported."
+          },
+          "404": {
+            "description": "Instance not found."
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      }
+    },
+    "/instances/{id}": {
+      "get": {
+        "summary": "Get instance.",
+        "parameters": [
+          {
+            "$ref": "#/parameters/id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/InstanceInfo"
+            }
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update Application.",
+        "parameters": [
+          {
+            "$ref": "#/parameters/id"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/InstanceInfo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Update Instance successful.",
+            "schema": {
+              "$ref": "#/definitions/InstanceInfo"
+            }
+          },
+          "404": {
+            "description": "Instance not found."
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Instance.",
+        "parameters": [
+          {
+            "$ref": "#/parameters/id"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          },
+          "404": {
+            "description": "Instance not found."
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      }
+    },
+    "/packages": {
+      "get": {
+        "summary": "Get packages",
+        "parameters": [
+          {
+            "$ref": "#/parameters/page"
+          },
+          {
+            "$ref": "#/parameters/pageSize"
+          },
+          {
+            "$ref": "#/parameters/packagesSortKey"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "object",
+              "required": [
+                "total"
+              ],
+              "properties": {
+                "items": {
+                  "description": "List of packages in the given filters and page. List length must be lower or equal to pageSize",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Package"
+                  }
+                },
+                "total": {
+                  "description": "Total packages count under the given filters",
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      }
+    },
+    "/packages/{id}": {
+      "get": {
+        "summary": "Get Package.",
+        "parameters": [
+          {
+            "$ref": "#/parameters/id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Package"
+            }
+          },
+          "404": {
+            "description": "Package ID not found."
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      }
+    },
+    "/vulnerabilities": {
+      "get": {
+        "summary": "Get vulnerabilities",
+        "parameters": [
+          {
+            "$ref": "#/parameters/page"
+          },
+          {
+            "$ref": "#/parameters/pageSize"
+          },
+          {
+            "$ref": "#/parameters/vulnerabilitiesSortKey"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "object",
+              "required": [
+                "total"
+              ],
+              "properties": {
+                "items": {
+                  "description": "List of vulnerabilities in the given filters and page. List length must be lower or equal to pageSize",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Vulnerability"
+                  }
+                },
+                "total": {
+                  "description": "Total vulnerabilities count under the given filters",
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      }
+    },
+    "/vulnerabilities/{vul_id}/{pkg_id}": {
+      "get": {
+        "summary": "Get a vulnerability of a specific package",
+        "parameters": [
+          {
+            "$ref": "#/parameters/vul_id"
+          },
+          {
+            "$ref": "#/parameters/pkg_id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/VulnerabilityEx"
             }
           },
           "default": {
@@ -61,6 +525,509 @@ func init() {
         }
       }
     },
+    "AttackComplexity": {
+      "type": "string",
+      "enum": [
+        "LOW",
+        "HIGH"
+      ]
+    },
+    "AttackVector": {
+      "type": "string",
+      "enum": [
+        "NETWORK",
+        "ADJACENT",
+        "LOCAL",
+        "PHYSICAL"
+      ]
+    },
+    "Availability": {
+      "type": "string",
+      "enum": [
+        "NONE",
+        "LOW",
+        "HIGH"
+      ]
+    },
+    "CVSS": {
+      "type": "object",
+      "properties": {
+        "cvssV3Metrics": {
+          "$ref": "#/definitions/CVSSV3Metrics"
+        },
+        "cvssV3Vector": {
+          "$ref": "#/definitions/CVSSV3Vector"
+        }
+      }
+    },
+    "CVSSV3Metrics": {
+      "type": "object",
+      "properties": {
+        "baseScore": {
+          "type": "number"
+        },
+        "exploitabilityScore": {
+          "type": "number"
+        },
+        "impactScore": {
+          "type": "number"
+        },
+        "severity": {
+          "$ref": "#/definitions/VulnerabilitySeverity"
+        }
+      }
+    },
+    "CVSSV3Vector": {
+      "type": "object",
+      "properties": {
+        "attackComplexity": {
+          "$ref": "#/definitions/AttackComplexity"
+        },
+        "attackVector": {
+          "$ref": "#/definitions/AttackVector"
+        },
+        "availability": {
+          "$ref": "#/definitions/Availability"
+        },
+        "confidentiality": {
+          "$ref": "#/definitions/Confidentiality"
+        },
+        "integrity": {
+          "$ref": "#/definitions/Integrity"
+        },
+        "privilegesRequired": {
+          "$ref": "#/definitions/PrivilegesRequired"
+        },
+        "scope": {
+          "$ref": "#/definitions/Scope"
+        },
+        "userInteraction": {
+          "$ref": "#/definitions/UserInteraction"
+        },
+        "vector": {
+          "type": "string"
+        }
+      }
+    },
+    "CloudProvider": {
+      "type": "string",
+      "enum": [
+        "AWS"
+      ]
+    },
+    "Confidentiality": {
+      "type": "string",
+      "enum": [
+        "NONE",
+        "LOW",
+        "HIGH"
+      ]
+    },
+    "ExploitInfo": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "vulnerabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Instance": {
+      "type": "object",
+      "properties": {
+        "exploits": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "id": {
+          "type": "string"
+        },
+        "instanceID": {
+          "type": "string"
+        },
+        "instanceName": {
+          "type": "string"
+        },
+        "instanceProvider": {
+          "$ref": "#/definitions/CloudProvider"
+        },
+        "instanceRegion": {
+          "type": "string"
+        },
+        "malwares": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "misconfigurations": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "packages": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "rootkits": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "secrets": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "vulnerabilities": {
+          "description": "vulnerability count per severity",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VulnerabilityCount"
+          }
+        }
+      }
+    },
+    "InstanceContentAnalysis": {
+      "type": "object",
+      "properties": {
+        "packages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PackageContentAnalysis"
+          }
+        },
+        "resource": {
+          "$ref": "#/definitions/InstanceInfo"
+        }
+      }
+    },
+    "InstanceExploitScan": {
+      "type": "object",
+      "properties": {
+        "packages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExploitInfo"
+          }
+        },
+        "resource": {
+          "$ref": "#/definitions/InstanceInfo"
+        }
+      }
+    },
+    "InstanceInfo": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "instanceID": {
+          "type": "string"
+        },
+        "instanceName": {
+          "type": "string"
+        },
+        "instanceProvider": {
+          "$ref": "#/definitions/CloudProvider"
+        },
+        "instanceRegion": {
+          "type": "string"
+        }
+      }
+    },
+    "InstanceMalwareScan": {
+      "type": "object",
+      "properties": {
+        "packages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MalwareInfo"
+          }
+        },
+        "resource": {
+          "$ref": "#/definitions/InstanceInfo"
+        }
+      }
+    },
+    "InstanceMisconfigurationScan": {
+      "type": "object",
+      "properties": {
+        "packages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MisconfigurationInfo"
+          }
+        },
+        "resource": {
+          "$ref": "#/definitions/InstanceInfo"
+        }
+      }
+    },
+    "InstanceRootkitScan": {
+      "type": "object",
+      "properties": {
+        "packages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RootkitInfo"
+          }
+        },
+        "resource": {
+          "$ref": "#/definitions/InstanceInfo"
+        }
+      }
+    },
+    "InstanceSecretScan": {
+      "type": "object",
+      "properties": {
+        "packages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SecretInfo"
+          }
+        },
+        "resource": {
+          "$ref": "#/definitions/InstanceInfo"
+        }
+      }
+    },
+    "InstanceVulnerabilityScan": {
+      "type": "object",
+      "properties": {
+        "packageVulnerabilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PackageVulnerabilityScan"
+          }
+        },
+        "resource": {
+          "$ref": "#/definitions/InstanceInfo"
+        }
+      }
+    },
+    "InstancesSortKey": {
+      "type": "string",
+      "enum": [
+        "instanceName",
+        "instanceProvider",
+        "instanceRegion",
+        "instanceID"
+      ]
+    },
+    "Integrity": {
+      "type": "string",
+      "enum": [
+        "NONE",
+        "LOW",
+        "HIGH"
+      ]
+    },
+    "MalwareInfo": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "malwareName": {
+          "type": "string"
+        },
+        "malwareType": {
+          "$ref": "#/definitions/MalwareType"
+        },
+        "path": {
+          "description": "Path of the file that contains malware",
+          "type": "string"
+        }
+      }
+    },
+    "MalwareType": {
+      "type": "string",
+      "enum": [
+        "ADWARE",
+        "VIRUS",
+        "TROJAN",
+        "WORM",
+        "SPYWARE",
+        "RANSOMWARE"
+      ]
+    },
+    "MisconfigurationInfo": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "misconfigurationType": {
+          "$ref": "#/definitions/MisconfigurationType"
+        },
+        "path": {
+          "description": "Path of the file that contains misconfigurations",
+          "type": "string"
+        }
+      }
+    },
+    "MisconfigurationType": {
+      "type": "string",
+      "enum": [
+        "DEFAULT_PASSWORD"
+      ]
+    },
+    "Package": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "instances": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "language": {
+          "type": "string"
+        },
+        "license": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "vulnerabilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VulnerabilityCount"
+          }
+        }
+      }
+    },
+    "PackageContentAnalysis": {
+      "type": "object",
+      "properties": {
+        "package": {
+          "$ref": "#/definitions/PackageInfo"
+        }
+      }
+    },
+    "PackageInfo": {
+      "type": "object",
+      "properties": {
+        "language": {
+          "type": "string"
+        },
+        "license": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    },
+    "PackageVulnerabilityScan": {
+      "type": "object",
+      "properties": {
+        "cvss": {
+          "$ref": "#/definitions/CVSS"
+        },
+        "description": {
+          "type": "string"
+        },
+        "fixVersion": {
+          "type": "string"
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "package": {
+          "$ref": "#/definitions/PackageInfo"
+        },
+        "severity": {
+          "$ref": "#/definitions/VulnerabilitySeverity"
+        },
+        "vulnerabilityName": {
+          "type": "string"
+        }
+      }
+    },
+    "PackagesSortKey": {
+      "type": "string",
+      "enum": [
+        "packageName",
+        "instances",
+        "language",
+        "vulnerabilities",
+        "version",
+        "license"
+      ]
+    },
+    "PrivilegesRequired": {
+      "type": "string",
+      "enum": [
+        "NONE",
+        "LOW",
+        "HIGH"
+      ]
+    },
+    "RootkitInfo": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "description": "Path of the file that contains rootkit",
+          "type": "string"
+        },
+        "rootkitName": {
+          "type": "string"
+        },
+        "rootkitType": {
+          "$ref": "#/definitions/RootkitType"
+        }
+      }
+    },
+    "RootkitType": {
+      "type": "string",
+      "enum": [
+        "MEMORY",
+        "KERNEL",
+        "APPLICATION",
+        "FIRMWARE"
+      ]
+    },
+    "Scope": {
+      "type": "string",
+      "enum": [
+        "UNCHANGED",
+        "CHANGED"
+      ]
+    },
+    "SecretInfo": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "description": "Path of the file that contains secrets",
+          "type": "string"
+        }
+      }
+    },
     "SuccessResponse": {
       "description": "An object that is returned in cases of success that returns nothing.",
       "type": "object",
@@ -70,14 +1037,190 @@ func init() {
         }
       }
     },
-    "test": {
-      "description": "test def",
+    "UserInteraction": {
+      "type": "string",
+      "enum": [
+        "NONE",
+        "REQUIRED"
+      ]
+    },
+    "VulnerabilitiesSortKey": {
+      "type": "string",
+      "enum": [
+        "vulnerabilityName",
+        "packageName",
+        "packageVersion",
+        "severity",
+        "instances",
+        "fixVersion",
+        "source"
+      ]
+    },
+    "Vulnerability": {
       "type": "object",
       "properties": {
-        "message": {
+        "cvssBaseScore": {
+          "type": "number"
+        },
+        "cvssSeverity": {
+          "$ref": "#/definitions/VulnerabilitySeverity"
+        },
+        "fixVersion": {
+          "type": "string"
+        },
+        "id": {
+          "description": "Unique ID for the vulnerabilityID and packageID combination.",
+          "type": "string"
+        },
+        "instances": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "packageID": {
+          "type": "string"
+        },
+        "packageName": {
+          "type": "string"
+        },
+        "packageVersion": {
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/definitions/VulnerabilitySeverity"
+        },
+        "vulnerabilityID": {
+          "type": "string"
+        },
+        "vulnerabilityName": {
           "type": "string"
         }
       }
+    },
+    "VulnerabilityCount": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "severity": {
+          "$ref": "#/definitions/VulnerabilitySeverity"
+        }
+      }
+    },
+    "VulnerabilityEx": {
+      "type": "object",
+      "properties": {
+        "cvss": {
+          "$ref": "#/definitions/CVSS"
+        },
+        "description": {
+          "type": "string"
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "scanDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "vulnerability": {
+          "$ref": "#/definitions/Vulnerability"
+        }
+      }
+    },
+    "VulnerabilitySeverity": {
+      "type": "string",
+      "enum": [
+        "CRITICAL",
+        "HIGH",
+        "MEDIUM",
+        "LOW",
+        "NEGLIGIBLE"
+      ]
+    }
+  },
+  "parameters": {
+    "id": {
+      "type": "string",
+      "name": "id",
+      "in": "path",
+      "required": true
+    },
+    "instancesSortKey": {
+      "enum": [
+        "instanceName",
+        "instanceProvider",
+        "instanceRegion",
+        "instanceID"
+      ],
+      "type": "string",
+      "description": "Sort key",
+      "name": "sortKey",
+      "in": "query",
+      "required": true
+    },
+    "packagesSortKey": {
+      "enum": [
+        "packageName",
+        "instances",
+        "language",
+        "vulnerabilities",
+        "version",
+        "license"
+      ],
+      "type": "string",
+      "description": "Sort key",
+      "name": "sortKey",
+      "in": "query",
+      "required": true
+    },
+    "page": {
+      "type": "integer",
+      "description": "Page number of the query",
+      "name": "page",
+      "in": "query",
+      "required": true
+    },
+    "pageSize": {
+      "maximum": 50,
+      "minimum": 1,
+      "type": "integer",
+      "description": "Maximum items to return",
+      "name": "pageSize",
+      "in": "query",
+      "required": true
+    },
+    "pkg_id": {
+      "type": "string",
+      "name": "pkg_id",
+      "in": "path",
+      "required": true
+    },
+    "vul_id": {
+      "type": "string",
+      "name": "vul_id",
+      "in": "path",
+      "required": true
+    },
+    "vulnerabilitiesSortKey": {
+      "enum": [
+        "vulnerabilityName",
+        "packageName",
+        "packageVersion",
+        "severity",
+        "instances",
+        "fixVersion",
+        "source"
+      ],
+      "type": "string",
+      "description": "Sort key",
+      "name": "sortKey",
+      "in": "query",
+      "required": true
     }
   },
   "responses": {
@@ -112,14 +1255,627 @@ func init() {
   },
   "basePath": "/api",
   "paths": {
-    "/test": {
+    "/instances": {
       "get": {
-        "summary": "test",
+        "summary": "Get instances",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "Page number of the query",
+            "name": "page",
+            "in": "query",
+            "required": true
+          },
+          {
+            "maximum": 50,
+            "minimum": 1,
+            "type": "integer",
+            "description": "Maximum items to return",
+            "name": "pageSize",
+            "in": "query",
+            "required": true
+          },
+          {
+            "enum": [
+              "instanceName",
+              "instanceProvider",
+              "instanceRegion",
+              "instanceID"
+            ],
+            "type": "string",
+            "description": "Sort key",
+            "name": "sortKey",
+            "in": "query",
+            "required": true
+          }
+        ],
         "responses": {
           "200": {
             "description": "Success",
             "schema": {
-              "$ref": "#/definitions/test"
+              "type": "object",
+              "required": [
+                "total"
+              ],
+              "properties": {
+                "items": {
+                  "description": "List of instances in the given filters and page. List length must be lower or equal to pageSize.",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Instance"
+                  }
+                },
+                "total": {
+                  "description": "Total instances count under the given filters",
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create instance",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/InstanceInfo"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "New instance was created.",
+            "schema": {
+              "$ref": "#/definitions/InstanceInfo"
+            }
+          },
+          "409": {
+            "description": "Instance already exist.",
+            "schema": {
+              "$ref": "#/definitions/InstanceInfo"
+            }
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/instances/contentAnalysis/{id}": {
+      "post": {
+        "summary": "Report a content analysis for a specific instance",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/InstanceContentAnalysis"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Instance content analysis successfully reported."
+          },
+          "404": {
+            "description": "Instance not found."
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/instances/exploitScan/{id}": {
+      "post": {
+        "summary": "Report an exploit scan for a specific instance",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/InstanceRootkitScan"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Instance exploit scan successfully reported."
+          },
+          "404": {
+            "description": "Instance not found."
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/instances/malewareScan/{id}": {
+      "post": {
+        "summary": "Report a malware scan for a specific instance",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/InstanceMalwareScan"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Instance rootkit scan successfully reported."
+          },
+          "404": {
+            "description": "Instance not found."
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/instances/misconfigurationScan/{id}": {
+      "post": {
+        "summary": "Report a misconfiguration scan for a specific instance",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/InstanceMisconfigurationScan"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Instance misconfiguration scan successfully reported."
+          },
+          "404": {
+            "description": "Instance not found."
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/instances/rootkitScan/{id}": {
+      "post": {
+        "summary": "Report a rootkit scan for a specific instance",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/InstanceRootkitScan"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Instance rootkit scan successfully reported."
+          },
+          "404": {
+            "description": "Instance not found."
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/instances/secretScan/{id}": {
+      "post": {
+        "summary": "Report a secret scan for a specific instance",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/InstanceSecretScan"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Instance secret scan successfully reported."
+          },
+          "404": {
+            "description": "Instance not found."
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/instances/vulnerabilityScan/{id}": {
+      "post": {
+        "summary": "Report a vulnerability scan for a specific instance",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/InstanceVulnerabilityScan"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Instance vulnerability scan successfully reported."
+          },
+          "404": {
+            "description": "Instance not found."
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/instances/{id}": {
+      "get": {
+        "summary": "Get instance.",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/InstanceInfo"
+            }
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update Application.",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/InstanceInfo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Update Instance successful.",
+            "schema": {
+              "$ref": "#/definitions/InstanceInfo"
+            }
+          },
+          "404": {
+            "description": "Instance not found."
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Instance.",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          },
+          "404": {
+            "description": "Instance not found."
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/packages": {
+      "get": {
+        "summary": "Get packages",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "Page number of the query",
+            "name": "page",
+            "in": "query",
+            "required": true
+          },
+          {
+            "maximum": 50,
+            "minimum": 1,
+            "type": "integer",
+            "description": "Maximum items to return",
+            "name": "pageSize",
+            "in": "query",
+            "required": true
+          },
+          {
+            "enum": [
+              "packageName",
+              "instances",
+              "language",
+              "vulnerabilities",
+              "version",
+              "license"
+            ],
+            "type": "string",
+            "description": "Sort key",
+            "name": "sortKey",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "object",
+              "required": [
+                "total"
+              ],
+              "properties": {
+                "items": {
+                  "description": "List of packages in the given filters and page. List length must be lower or equal to pageSize",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Package"
+                  }
+                },
+                "total": {
+                  "description": "Total packages count under the given filters",
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/packages/{id}": {
+      "get": {
+        "summary": "Get Package.",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Package"
+            }
+          },
+          "404": {
+            "description": "Package ID not found."
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/vulnerabilities": {
+      "get": {
+        "summary": "Get vulnerabilities",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "Page number of the query",
+            "name": "page",
+            "in": "query",
+            "required": true
+          },
+          {
+            "maximum": 50,
+            "minimum": 1,
+            "type": "integer",
+            "description": "Maximum items to return",
+            "name": "pageSize",
+            "in": "query",
+            "required": true
+          },
+          {
+            "enum": [
+              "vulnerabilityName",
+              "packageName",
+              "packageVersion",
+              "severity",
+              "instances",
+              "fixVersion",
+              "source"
+            ],
+            "type": "string",
+            "description": "Sort key",
+            "name": "sortKey",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "object",
+              "required": [
+                "total"
+              ],
+              "properties": {
+                "items": {
+                  "description": "List of vulnerabilities in the given filters and page. List length must be lower or equal to pageSize",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Vulnerability"
+                  }
+                },
+                "total": {
+                  "description": "Total vulnerabilities count under the given filters",
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/vulnerabilities/{vul_id}/{pkg_id}": {
+      "get": {
+        "summary": "Get a vulnerability of a specific package",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "vul_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "name": "pkg_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/VulnerabilityEx"
             }
           },
           "default": {
@@ -142,6 +1898,509 @@ func init() {
         }
       }
     },
+    "AttackComplexity": {
+      "type": "string",
+      "enum": [
+        "LOW",
+        "HIGH"
+      ]
+    },
+    "AttackVector": {
+      "type": "string",
+      "enum": [
+        "NETWORK",
+        "ADJACENT",
+        "LOCAL",
+        "PHYSICAL"
+      ]
+    },
+    "Availability": {
+      "type": "string",
+      "enum": [
+        "NONE",
+        "LOW",
+        "HIGH"
+      ]
+    },
+    "CVSS": {
+      "type": "object",
+      "properties": {
+        "cvssV3Metrics": {
+          "$ref": "#/definitions/CVSSV3Metrics"
+        },
+        "cvssV3Vector": {
+          "$ref": "#/definitions/CVSSV3Vector"
+        }
+      }
+    },
+    "CVSSV3Metrics": {
+      "type": "object",
+      "properties": {
+        "baseScore": {
+          "type": "number"
+        },
+        "exploitabilityScore": {
+          "type": "number"
+        },
+        "impactScore": {
+          "type": "number"
+        },
+        "severity": {
+          "$ref": "#/definitions/VulnerabilitySeverity"
+        }
+      }
+    },
+    "CVSSV3Vector": {
+      "type": "object",
+      "properties": {
+        "attackComplexity": {
+          "$ref": "#/definitions/AttackComplexity"
+        },
+        "attackVector": {
+          "$ref": "#/definitions/AttackVector"
+        },
+        "availability": {
+          "$ref": "#/definitions/Availability"
+        },
+        "confidentiality": {
+          "$ref": "#/definitions/Confidentiality"
+        },
+        "integrity": {
+          "$ref": "#/definitions/Integrity"
+        },
+        "privilegesRequired": {
+          "$ref": "#/definitions/PrivilegesRequired"
+        },
+        "scope": {
+          "$ref": "#/definitions/Scope"
+        },
+        "userInteraction": {
+          "$ref": "#/definitions/UserInteraction"
+        },
+        "vector": {
+          "type": "string"
+        }
+      }
+    },
+    "CloudProvider": {
+      "type": "string",
+      "enum": [
+        "AWS"
+      ]
+    },
+    "Confidentiality": {
+      "type": "string",
+      "enum": [
+        "NONE",
+        "LOW",
+        "HIGH"
+      ]
+    },
+    "ExploitInfo": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "vulnerabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Instance": {
+      "type": "object",
+      "properties": {
+        "exploits": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "id": {
+          "type": "string"
+        },
+        "instanceID": {
+          "type": "string"
+        },
+        "instanceName": {
+          "type": "string"
+        },
+        "instanceProvider": {
+          "$ref": "#/definitions/CloudProvider"
+        },
+        "instanceRegion": {
+          "type": "string"
+        },
+        "malwares": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "misconfigurations": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "packages": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "rootkits": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "secrets": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "vulnerabilities": {
+          "description": "vulnerability count per severity",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VulnerabilityCount"
+          }
+        }
+      }
+    },
+    "InstanceContentAnalysis": {
+      "type": "object",
+      "properties": {
+        "packages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PackageContentAnalysis"
+          }
+        },
+        "resource": {
+          "$ref": "#/definitions/InstanceInfo"
+        }
+      }
+    },
+    "InstanceExploitScan": {
+      "type": "object",
+      "properties": {
+        "packages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExploitInfo"
+          }
+        },
+        "resource": {
+          "$ref": "#/definitions/InstanceInfo"
+        }
+      }
+    },
+    "InstanceInfo": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "instanceID": {
+          "type": "string"
+        },
+        "instanceName": {
+          "type": "string"
+        },
+        "instanceProvider": {
+          "$ref": "#/definitions/CloudProvider"
+        },
+        "instanceRegion": {
+          "type": "string"
+        }
+      }
+    },
+    "InstanceMalwareScan": {
+      "type": "object",
+      "properties": {
+        "packages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MalwareInfo"
+          }
+        },
+        "resource": {
+          "$ref": "#/definitions/InstanceInfo"
+        }
+      }
+    },
+    "InstanceMisconfigurationScan": {
+      "type": "object",
+      "properties": {
+        "packages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MisconfigurationInfo"
+          }
+        },
+        "resource": {
+          "$ref": "#/definitions/InstanceInfo"
+        }
+      }
+    },
+    "InstanceRootkitScan": {
+      "type": "object",
+      "properties": {
+        "packages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RootkitInfo"
+          }
+        },
+        "resource": {
+          "$ref": "#/definitions/InstanceInfo"
+        }
+      }
+    },
+    "InstanceSecretScan": {
+      "type": "object",
+      "properties": {
+        "packages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SecretInfo"
+          }
+        },
+        "resource": {
+          "$ref": "#/definitions/InstanceInfo"
+        }
+      }
+    },
+    "InstanceVulnerabilityScan": {
+      "type": "object",
+      "properties": {
+        "packageVulnerabilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PackageVulnerabilityScan"
+          }
+        },
+        "resource": {
+          "$ref": "#/definitions/InstanceInfo"
+        }
+      }
+    },
+    "InstancesSortKey": {
+      "type": "string",
+      "enum": [
+        "instanceName",
+        "instanceProvider",
+        "instanceRegion",
+        "instanceID"
+      ]
+    },
+    "Integrity": {
+      "type": "string",
+      "enum": [
+        "NONE",
+        "LOW",
+        "HIGH"
+      ]
+    },
+    "MalwareInfo": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "malwareName": {
+          "type": "string"
+        },
+        "malwareType": {
+          "$ref": "#/definitions/MalwareType"
+        },
+        "path": {
+          "description": "Path of the file that contains malware",
+          "type": "string"
+        }
+      }
+    },
+    "MalwareType": {
+      "type": "string",
+      "enum": [
+        "ADWARE",
+        "VIRUS",
+        "TROJAN",
+        "WORM",
+        "SPYWARE",
+        "RANSOMWARE"
+      ]
+    },
+    "MisconfigurationInfo": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "misconfigurationType": {
+          "$ref": "#/definitions/MisconfigurationType"
+        },
+        "path": {
+          "description": "Path of the file that contains misconfigurations",
+          "type": "string"
+        }
+      }
+    },
+    "MisconfigurationType": {
+      "type": "string",
+      "enum": [
+        "DEFAULT_PASSWORD"
+      ]
+    },
+    "Package": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "instances": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "language": {
+          "type": "string"
+        },
+        "license": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "vulnerabilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VulnerabilityCount"
+          }
+        }
+      }
+    },
+    "PackageContentAnalysis": {
+      "type": "object",
+      "properties": {
+        "package": {
+          "$ref": "#/definitions/PackageInfo"
+        }
+      }
+    },
+    "PackageInfo": {
+      "type": "object",
+      "properties": {
+        "language": {
+          "type": "string"
+        },
+        "license": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    },
+    "PackageVulnerabilityScan": {
+      "type": "object",
+      "properties": {
+        "cvss": {
+          "$ref": "#/definitions/CVSS"
+        },
+        "description": {
+          "type": "string"
+        },
+        "fixVersion": {
+          "type": "string"
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "package": {
+          "$ref": "#/definitions/PackageInfo"
+        },
+        "severity": {
+          "$ref": "#/definitions/VulnerabilitySeverity"
+        },
+        "vulnerabilityName": {
+          "type": "string"
+        }
+      }
+    },
+    "PackagesSortKey": {
+      "type": "string",
+      "enum": [
+        "packageName",
+        "instances",
+        "language",
+        "vulnerabilities",
+        "version",
+        "license"
+      ]
+    },
+    "PrivilegesRequired": {
+      "type": "string",
+      "enum": [
+        "NONE",
+        "LOW",
+        "HIGH"
+      ]
+    },
+    "RootkitInfo": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "description": "Path of the file that contains rootkit",
+          "type": "string"
+        },
+        "rootkitName": {
+          "type": "string"
+        },
+        "rootkitType": {
+          "$ref": "#/definitions/RootkitType"
+        }
+      }
+    },
+    "RootkitType": {
+      "type": "string",
+      "enum": [
+        "MEMORY",
+        "KERNEL",
+        "APPLICATION",
+        "FIRMWARE"
+      ]
+    },
+    "Scope": {
+      "type": "string",
+      "enum": [
+        "UNCHANGED",
+        "CHANGED"
+      ]
+    },
+    "SecretInfo": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "description": "Path of the file that contains secrets",
+          "type": "string"
+        }
+      }
+    },
     "SuccessResponse": {
       "description": "An object that is returned in cases of success that returns nothing.",
       "type": "object",
@@ -151,14 +2410,190 @@ func init() {
         }
       }
     },
-    "test": {
-      "description": "test def",
+    "UserInteraction": {
+      "type": "string",
+      "enum": [
+        "NONE",
+        "REQUIRED"
+      ]
+    },
+    "VulnerabilitiesSortKey": {
+      "type": "string",
+      "enum": [
+        "vulnerabilityName",
+        "packageName",
+        "packageVersion",
+        "severity",
+        "instances",
+        "fixVersion",
+        "source"
+      ]
+    },
+    "Vulnerability": {
       "type": "object",
       "properties": {
-        "message": {
+        "cvssBaseScore": {
+          "type": "number"
+        },
+        "cvssSeverity": {
+          "$ref": "#/definitions/VulnerabilitySeverity"
+        },
+        "fixVersion": {
+          "type": "string"
+        },
+        "id": {
+          "description": "Unique ID for the vulnerabilityID and packageID combination.",
+          "type": "string"
+        },
+        "instances": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "packageID": {
+          "type": "string"
+        },
+        "packageName": {
+          "type": "string"
+        },
+        "packageVersion": {
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/definitions/VulnerabilitySeverity"
+        },
+        "vulnerabilityID": {
+          "type": "string"
+        },
+        "vulnerabilityName": {
           "type": "string"
         }
       }
+    },
+    "VulnerabilityCount": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "severity": {
+          "$ref": "#/definitions/VulnerabilitySeverity"
+        }
+      }
+    },
+    "VulnerabilityEx": {
+      "type": "object",
+      "properties": {
+        "cvss": {
+          "$ref": "#/definitions/CVSS"
+        },
+        "description": {
+          "type": "string"
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "scanDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "vulnerability": {
+          "$ref": "#/definitions/Vulnerability"
+        }
+      }
+    },
+    "VulnerabilitySeverity": {
+      "type": "string",
+      "enum": [
+        "CRITICAL",
+        "HIGH",
+        "MEDIUM",
+        "LOW",
+        "NEGLIGIBLE"
+      ]
+    }
+  },
+  "parameters": {
+    "id": {
+      "type": "string",
+      "name": "id",
+      "in": "path",
+      "required": true
+    },
+    "instancesSortKey": {
+      "enum": [
+        "instanceName",
+        "instanceProvider",
+        "instanceRegion",
+        "instanceID"
+      ],
+      "type": "string",
+      "description": "Sort key",
+      "name": "sortKey",
+      "in": "query",
+      "required": true
+    },
+    "packagesSortKey": {
+      "enum": [
+        "packageName",
+        "instances",
+        "language",
+        "vulnerabilities",
+        "version",
+        "license"
+      ],
+      "type": "string",
+      "description": "Sort key",
+      "name": "sortKey",
+      "in": "query",
+      "required": true
+    },
+    "page": {
+      "type": "integer",
+      "description": "Page number of the query",
+      "name": "page",
+      "in": "query",
+      "required": true
+    },
+    "pageSize": {
+      "maximum": 50,
+      "minimum": 1,
+      "type": "integer",
+      "description": "Maximum items to return",
+      "name": "pageSize",
+      "in": "query",
+      "required": true
+    },
+    "pkg_id": {
+      "type": "string",
+      "name": "pkg_id",
+      "in": "path",
+      "required": true
+    },
+    "vul_id": {
+      "type": "string",
+      "name": "vul_id",
+      "in": "path",
+      "required": true
+    },
+    "vulnerabilitiesSortKey": {
+      "enum": [
+        "vulnerabilityName",
+        "packageName",
+        "packageVersion",
+        "severity",
+        "instances",
+        "fixVersion",
+        "source"
+      ],
+      "type": "string",
+      "description": "Sort key",
+      "name": "sortKey",
+      "in": "query",
+      "required": true
     }
   },
   "responses": {

@@ -27,24 +27,815 @@ definitions:
       message:
         type: 'string'
 
-  test:
-    description: 'test def'
+  InstancesSortKey:
+    type: string
+    enum: &InstancesSortKey
+      - instanceName
+      - instanceProvider
+      - instanceRegion
+      - instanceID
+
+  PackagesSortKey:
+    type: string
+    enum: &PackagesSortKey
+      - packageName
+      - instances
+      - language
+      - vulnerabilities
+      - version
+      - license
+
+  VulnerabilitiesSortKey:
+    type: string
+    enum: &VulnerabilitiesSortKey
+      - vulnerabilityName
+      - packageName
+      - packageVersion
+      - severity
+      - instances
+      - fixVersion
+      - source
+
+  CloudProvider:
+    type: string
+    enum:
+      - AWS
+
+  InstanceInfo:
     type: 'object'
     properties:
-      message:
+      id:
+        type: 'string'
+      instanceName:
+        type: 'string'
+      instanceProvider:
+        $ref: '#/definitions/CloudProvider'
+      instanceRegion:
+        type: 'string'
+      instanceID:
         type: 'string'
 
+  Instance:
+    type: 'object'
+    properties:
+      id:
+        type: 'string'
+      instanceName:
+        type: 'string'
+      instanceProvider:
+        $ref: '#/definitions/CloudProvider'
+      instanceRegion:
+        type: 'string'
+      instanceID:
+        type: 'string'
+      vulnerabilities:
+        description: 'vulnerability count per severity'
+        type: 'array'
+        items:
+          $ref: '#/definitions/VulnerabilityCount'
+      packages:
+        type: 'integer'
+        format: 'uint32'
+      malwares:
+        type: 'integer'
+        format: 'uint32'
+      rootkits:
+        type: 'integer'
+        format: 'uint32'
+      misconfigurations:
+        type: 'integer'
+        format: 'uint32'
+      secrets:
+        type: 'integer'
+        format: 'uint32'
+      exploits:
+        type: 'integer'
+        format: 'uint32'
+
+  PackageInfo:
+    type: 'object'
+    properties:
+      name:
+        type: 'string'
+      language:
+        type: 'string'
+      version:
+        type: 'string'
+      license:
+        type: 'string'
+
+  Package:
+    type: 'object'
+    properties:
+      id:
+        type: 'string'
+      name:
+        type: 'string'
+      language:
+        type: 'string'
+      version:
+        type: 'string'
+      license:
+        type: 'string'
+      instances:
+        type: 'integer'
+        format: 'uint32'
+      vulnerabilities:
+        type: 'array'
+        items:
+          $ref: '#/definitions/VulnerabilityCount'
+
+  Vulnerability:
+    type: 'object'
+    properties:
+      id:
+        description: 'Unique ID for the vulnerabilityID and packageID combination.'
+        type: 'string'
+      vulnerabilityID:
+        type: 'string'
+      vulnerabilityName:
+        type: 'string'
+      packageName:
+        type: 'string'
+      packageVersion:
+        type: 'string'
+      packageID:
+        type: 'string'
+      severity:
+        $ref: '#/definitions/VulnerabilitySeverity'
+      cvssSeverity:
+        $ref: '#/definitions/VulnerabilitySeverity'
+      cvssBaseScore:
+        type: 'number'
+      fixVersion:
+        type: 'string'
+      instances:
+        type: 'integer'
+        format: 'uint32'
+
+  AttackVector:
+    type: string
+    enum:
+      - NETWORK
+      - ADJACENT
+      - LOCAL
+      - PHYSICAL
+
+  AttackComplexity:
+    type: string
+    enum:
+      - LOW
+      - HIGH
+
+  PrivilegesRequired:
+    type: string
+    enum:
+      - NONE
+      - LOW
+      - HIGH
+
+  UserInteraction:
+    type: string
+    enum:
+      - NONE
+      - REQUIRED
+
+  Scope:
+    type: string
+    enum:
+      - UNCHANGED
+      - CHANGED
+
+  Confidentiality:
+    type: string
+    enum:
+      - NONE
+      - LOW
+      - HIGH
+
+  Integrity:
+    type: string
+    enum:
+      - NONE
+      - LOW
+      - HIGH
+
+  Availability:
+    type: string
+    enum:
+      - NONE
+      - LOW
+      - HIGH
+
+  VulnerabilityCount:
+    type: object
+    properties:
+      severity:
+        $ref: '#/definitions/VulnerabilitySeverity'
+      count:
+        type: 'integer'
+        format: 'uint32'
+
+  VulnerabilitySeverity:
+    type: string
+    enum:
+      - CRITICAL
+      - HIGH
+      - MEDIUM
+      - LOW
+      - NEGLIGIBLE
+
+  CVSS:
+    type: 'object'
+    properties:
+      cvssV3Vector:
+        $ref: '#/definitions/CVSSV3Vector'
+      cvssV3Metrics:
+        $ref: '#/definitions/CVSSV3Metrics'
+
+  CVSSV3Metrics:
+    type: 'object'
+    properties:
+      severity:
+        $ref: '#/definitions/VulnerabilitySeverity'
+      baseScore:
+        type: 'number'
+      exploitabilityScore:
+        type: 'number'
+      impactScore:
+        type: 'number'
+
+  CVSSV3Vector:
+    type: 'object'
+    properties:
+      vector:
+        type: 'string'
+      attackVector:
+        $ref: '#/definitions/AttackVector'
+      attackComplexity:
+        $ref: '#/definitions/AttackComplexity'
+      privilegesRequired:
+        $ref: '#/definitions/PrivilegesRequired'
+      userInteraction:
+        $ref: '#/definitions/UserInteraction'
+      scope:
+        $ref: '#/definitions/Scope'
+      confidentiality:
+        $ref: '#/definitions/Confidentiality'
+      integrity:
+        $ref: '#/definitions/Integrity'
+      availability:
+        $ref: '#/definitions/Availability'
+
+  VulnerabilityEx:
+    type: 'object'
+    properties:
+      vulnerability:
+        $ref: '#/definitions/Vulnerability'
+      scanDate:
+        type: 'string'
+        format: 'date-time'
+      description:
+        type: 'string'
+      links:
+        type: 'array'
+        items:
+          type: 'string'
+      cvss:
+        $ref: '#/definitions/CVSS'
+
+  MalwareType:
+    type: string
+    enum:
+      - ADWARE
+      - VIRUS
+      - TROJAN
+      - WORM
+      - SPYWARE
+      - RANSOMWARE
+
+  MalwareInfo:
+    type: 'object'
+    properties:
+      id:
+        type: 'string'
+      malwareName:
+        type: 'string'
+      malwareType:
+        $ref: '#/definitions/MalwareType'
+      path:
+        description: 'Path of the file that contains malware'
+        type: 'string'
+
+  RootkitType:
+    type: string
+    enum:
+      - MEMORY
+      - KERNEL
+      - APPLICATION
+      - FIRMWARE
+
+  RootkitInfo:
+    type: 'object'
+    properties:
+      id:
+        type: 'string'
+      rootkitName:
+        type: 'string'
+      rootkitType:
+        $ref: '#/definitions/RootkitType'
+      path:
+        description: 'Path of the file that contains rootkit'
+        type: 'string'
+
+  MisconfigurationType:
+    type: string
+    enum:
+      - DEFAULT_PASSWORD
+
+  MisconfigurationInfo:
+    type: 'object'
+    properties:
+      id:
+        type: 'string'
+      misconfigurationType:
+        $ref: '#/definitions/MisconfigurationType'
+      path:
+        description: 'Path of the file that contains misconfigurations'
+        type: 'string'
+
+  SecretInfo:
+    type: 'object'
+    properties:
+      id:
+        type: 'string'
+      description:
+        type: 'string'
+      path:
+        description: 'Path of the file that contains secrets'
+        type: 'string'
+
+  ExploitInfo:
+    type: 'object'
+    properties:
+      id:
+        type: 'string'
+      description:
+        type: 'string'
+      vulnerabilities:
+        type: 'array'
+        items:
+          type: 'string'
+
+  InstanceContentAnalysis:
+    type: 'object'
+    properties:
+      resource:
+        $ref: '#/definitions/InstanceInfo'
+      packages:
+        type: 'array'
+        items:
+          $ref: '#/definitions/PackageContentAnalysis'
+
+  PackageContentAnalysis:
+    type: 'object'
+    properties:
+      package:
+        $ref: '#/definitions/PackageInfo'
+
+  InstanceVulnerabilityScan:
+    type: 'object'
+    properties:
+      resource:
+        $ref: '#/definitions/InstanceInfo'
+      packageVulnerabilities:
+        type: 'array'
+        items:
+          $ref: '#/definitions/PackageVulnerabilityScan'
+
+  PackageVulnerabilityScan:
+    type: 'object'
+    properties:
+      package:
+        $ref: '#/definitions/PackageInfo'
+      vulnerabilityName:
+        type: 'string'
+      severity:
+        $ref: '#/definitions/VulnerabilitySeverity'
+      fixVersion:
+        type: 'string'
+      description:
+        type: 'string'
+      links:
+        type: 'array'
+        items:
+          type: 'string'
+      cvss:
+        $ref: '#/definitions/CVSS'
+
+  InstanceMalwareScan:
+    type: 'object'
+    properties:
+      resource:
+        $ref: '#/definitions/InstanceInfo'
+      packages:
+        type: 'array'
+        items:
+          $ref: '#/definitions/MalwareInfo'
+
+  InstanceRootkitScan:
+    type: 'object'
+    properties:
+      resource:
+        $ref: '#/definitions/InstanceInfo'
+      packages:
+        type: 'array'
+        items:
+          $ref: '#/definitions/RootkitInfo'
+
+  InstanceSecretScan:
+    type: 'object'
+    properties:
+      resource:
+        $ref: '#/definitions/InstanceInfo'
+      packages:
+        type: 'array'
+        items:
+          $ref: '#/definitions/SecretInfo'
+
+  InstanceMisconfigurationScan:
+    type: 'object'
+    properties:
+      resource:
+        $ref: '#/definitions/InstanceInfo'
+      packages:
+        type: 'array'
+        items:
+          $ref: '#/definitions/MisconfigurationInfo'
+
+  InstanceExploitScan:
+    type: 'object'
+    properties:
+      resource:
+        $ref: '#/definitions/InstanceInfo'
+      packages:
+        type: 'array'
+        items:
+          $ref: '#/definitions/ExploitInfo'
+
 paths:
-  /test:
+  /instances:
     get:
-      summary: 'test'
+      summary: 'Get instances'
+      parameters:
+        - $ref: '#/parameters/page'
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/instancesSortKey'
       responses:
         '200':
           description: 'Success'
           schema:
-            $ref: '#/definitions/test'
+            type: 'object'
+            required:
+              - total
+            properties:
+              total:
+                type: 'integer'
+                description: 'Total instances count under the given filters'
+              items:
+                type: 'array'
+                description: 'List of instances in the given filters and page. List length must be lower or equal to pageSize.'
+                items:
+                  $ref: '#/definitions/Instance'
         default:
           $ref: '#/responses/UnknownError'
+    post:
+      summary: 'Create instance'
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/InstanceInfo"
+      responses:
+        '201':
+          description: 'New instance was created.'
+          schema:
+            $ref: '#/definitions/InstanceInfo'
+        '409':
+          description: 'Instance already exist.'
+          schema:
+            $ref: '#/definitions/InstanceInfo'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /instances/{id}:
+    get:
+      summary: 'Get instance.'
+      parameters:
+        - $ref: '#/parameters/id'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/InstanceInfo'
+        default:
+          $ref: '#/responses/UnknownError'
+    delete:
+      summary: 'Delete Instance.'
+      parameters:
+        - $ref: '#/parameters/id'
+      responses:
+        '204':
+          description: 'Success'
+        '404':
+          description: 'Instance not found.'
+        default:
+          $ref: '#/responses/UnknownError'
+    put:
+      summary: 'Update Application.'
+      parameters:
+        - $ref: '#/parameters/id'
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/InstanceInfo"
+      responses:
+        '200':
+          description: 'Update Instance successful.'
+          schema:
+            $ref: '#/definitions/InstanceInfo'
+        '404':
+          description: 'Instance not found.'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /packages:
+    get:
+      summary: 'Get packages'
+      parameters:
+        - $ref: '#/parameters/page'
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/packagesSortKey'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: 'object'
+            required:
+              - total
+            properties:
+              total:
+                type: 'integer'
+                description: 'Total packages count under the given filters'
+              items:
+                type: 'array'
+                description: 'List of packages in the given filters and page. List length must be lower or equal to pageSize'
+                items:
+                  $ref: '#/definitions/Package'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /packages/{id}:
+    get:
+      summary: 'Get Package.'
+      parameters:
+        - $ref: '#/parameters/id'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/Package'
+        '404':
+          description: 'Package ID not found.'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /vulnerabilities:
+    get:
+      summary: 'Get vulnerabilities'
+      parameters:
+        - $ref: '#/parameters/page'
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/vulnerabilitiesSortKey'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: 'object'
+            required:
+              - total
+            properties:
+              total:
+                type: 'integer'
+                description: 'Total vulnerabilities count under the given filters'
+              items:
+                type: 'array'
+                description: 'List of vulnerabilities in the given filters and page. List length must be lower or equal to pageSize'
+                items:
+                  $ref: '#/definitions/Vulnerability'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /vulnerabilities/{vul_id}/{pkg_id}:
+    get:
+      summary: 'Get a vulnerability of a specific package'
+      parameters:
+        - $ref: '#/parameters/vul_id'
+        - $ref: '#/parameters/pkg_id'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/VulnerabilityEx'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /instances/vulnerabilityScan/{id}:
+    post:
+      summary: 'Report a vulnerability scan for a specific instance'
+      parameters:
+        - $ref: '#/parameters/id'
+        - in: 'body'
+          name: 'body'
+          required: true
+          schema:
+            $ref: '#/definitions/InstanceVulnerabilityScan'
+      responses:
+        '201':
+          description: 'Instance vulnerability scan successfully reported.'
+        '404':
+          description: 'Instance not found.'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /instances/contentAnalysis/{id}:
+    post:
+      summary: 'Report a content analysis for a specific instance'
+      parameters:
+        - $ref: '#/parameters/id'
+        - in: 'body'
+          name: 'body'
+          required: true
+          schema:
+            $ref: '#/definitions/InstanceContentAnalysis'
+      responses:
+        '201':
+          description: 'Instance content analysis successfully reported.'
+        '404':
+          description: 'Instance not found.'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /instances/malewareScan/{id}:
+    post:
+      summary: 'Report a malware scan for a specific instance'
+      parameters:
+        - $ref: '#/parameters/id'
+        - in: 'body'
+          name: 'body'
+          required: true
+          schema:
+            $ref: '#/definitions/InstanceMalwareScan'
+      responses:
+        '201':
+          description: 'Instance rootkit scan successfully reported.'
+        '404':
+          description: 'Instance not found.'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /instances/rootkitScan/{id}:
+    post:
+      summary: 'Report a rootkit scan for a specific instance'
+      parameters:
+        - $ref: '#/parameters/id'
+        - in: 'body'
+          name: 'body'
+          required: true
+          schema:
+            $ref: '#/definitions/InstanceRootkitScan'
+      responses:
+        '201':
+          description: 'Instance rootkit scan successfully reported.'
+        '404':
+          description: 'Instance not found.'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /instances/secretScan/{id}:
+    post:
+      summary: 'Report a secret scan for a specific instance'
+      parameters:
+        - $ref: '#/parameters/id'
+        - in: 'body'
+          name: 'body'
+          required: true
+          schema:
+            $ref: '#/definitions/InstanceSecretScan'
+      responses:
+        '201':
+          description: 'Instance secret scan successfully reported.'
+        '404':
+          description: 'Instance not found.'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /instances/misconfigurationScan/{id}:
+    post:
+      summary: 'Report a misconfiguration scan for a specific instance'
+      parameters:
+        - $ref: '#/parameters/id'
+        - in: 'body'
+          name: 'body'
+          required: true
+          schema:
+            $ref: '#/definitions/InstanceMisconfigurationScan'
+      responses:
+        '201':
+          description: 'Instance misconfiguration scan successfully reported.'
+        '404':
+          description: 'Instance not found.'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /instances/exploitScan/{id}:
+    post:
+      summary: 'Report an exploit scan for a specific instance'
+      parameters:
+        - $ref: '#/parameters/id'
+        - in: 'body'
+          name: 'body'
+          required: true
+          schema:
+            $ref: '#/definitions/InstanceRootkitScan'
+      responses:
+        '201':
+          description: 'Instance exploit scan successfully reported.'
+        '404':
+          description: 'Instance not found.'
+        default:
+          $ref: '#/responses/UnknownError'
+
+parameters:
+  id:
+    name: 'id'
+    in: 'path'
+    type: 'string'
+    required: true
+
+  vul_id:
+    name: 'vul_id'
+    in: 'path'
+    type: 'string'
+    required: true
+
+  pkg_id:
+    name: 'pkg_id'
+    in: 'path'
+    type: 'string'
+    required: true
+
+  page:
+    name: 'page'
+    description: 'Page number of the query'
+    in: 'query'
+    type: 'integer'
+    required: true
+
+  pageSize:
+    name: 'pageSize'
+    description: 'Maximum items to return'
+    in: 'query'
+    type: 'integer'
+    required: true
+    minimum: 1
+    maximum: 50
+
+  instancesSortKey:
+    name: 'sortKey'
+    description: 'Sort key'
+    in: 'query'
+    type: 'string'
+    enum: *InstancesSortKey
+    required: true
+
+  packagesSortKey:
+    name: 'sortKey'
+    description: 'Sort key'
+    in: 'query'
+    type: 'string'
+    enum: *PackagesSortKey
+    required: true
+
+  vulnerabilitiesSortKey:
+    name: 'sortKey'
+    description: 'Sort key'
+    in: 'query'
+    type: 'string'
+    enum: *VulnerabilitiesSortKey
+    required: true
 
 responses:
   UnknownError:

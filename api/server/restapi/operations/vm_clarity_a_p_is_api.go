@@ -42,8 +42,53 @@ func NewVMClarityAPIsAPI(spec *loads.Document) *VMClarityAPIsAPI {
 
 		JSONProducer: runtime.JSONProducer(),
 
-		GetTestHandler: GetTestHandlerFunc(func(params GetTestParams) middleware.Responder {
-			return middleware.NotImplemented("operation GetTest has not yet been implemented")
+		DeleteInstancesIDHandler: DeleteInstancesIDHandlerFunc(func(params DeleteInstancesIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteInstancesID has not yet been implemented")
+		}),
+		GetInstancesHandler: GetInstancesHandlerFunc(func(params GetInstancesParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetInstances has not yet been implemented")
+		}),
+		GetInstancesIDHandler: GetInstancesIDHandlerFunc(func(params GetInstancesIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetInstancesID has not yet been implemented")
+		}),
+		GetPackagesHandler: GetPackagesHandlerFunc(func(params GetPackagesParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetPackages has not yet been implemented")
+		}),
+		GetPackagesIDHandler: GetPackagesIDHandlerFunc(func(params GetPackagesIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetPackagesID has not yet been implemented")
+		}),
+		GetVulnerabilitiesHandler: GetVulnerabilitiesHandlerFunc(func(params GetVulnerabilitiesParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetVulnerabilities has not yet been implemented")
+		}),
+		GetVulnerabilitiesVulIDPkgIDHandler: GetVulnerabilitiesVulIDPkgIDHandlerFunc(func(params GetVulnerabilitiesVulIDPkgIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetVulnerabilitiesVulIDPkgID has not yet been implemented")
+		}),
+		PostInstancesHandler: PostInstancesHandlerFunc(func(params PostInstancesParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostInstances has not yet been implemented")
+		}),
+		PostInstancesContentAnalysisIDHandler: PostInstancesContentAnalysisIDHandlerFunc(func(params PostInstancesContentAnalysisIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostInstancesContentAnalysisID has not yet been implemented")
+		}),
+		PostInstancesExploitScanIDHandler: PostInstancesExploitScanIDHandlerFunc(func(params PostInstancesExploitScanIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostInstancesExploitScanID has not yet been implemented")
+		}),
+		PostInstancesMalewareScanIDHandler: PostInstancesMalewareScanIDHandlerFunc(func(params PostInstancesMalewareScanIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostInstancesMalewareScanID has not yet been implemented")
+		}),
+		PostInstancesMisconfigurationScanIDHandler: PostInstancesMisconfigurationScanIDHandlerFunc(func(params PostInstancesMisconfigurationScanIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostInstancesMisconfigurationScanID has not yet been implemented")
+		}),
+		PostInstancesRootkitScanIDHandler: PostInstancesRootkitScanIDHandlerFunc(func(params PostInstancesRootkitScanIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostInstancesRootkitScanID has not yet been implemented")
+		}),
+		PostInstancesSecretScanIDHandler: PostInstancesSecretScanIDHandlerFunc(func(params PostInstancesSecretScanIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostInstancesSecretScanID has not yet been implemented")
+		}),
+		PostInstancesVulnerabilityScanIDHandler: PostInstancesVulnerabilityScanIDHandlerFunc(func(params PostInstancesVulnerabilityScanIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostInstancesVulnerabilityScanID has not yet been implemented")
+		}),
+		PutInstancesIDHandler: PutInstancesIDHandlerFunc(func(params PutInstancesIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation PutInstancesID has not yet been implemented")
 		}),
 	}
 }
@@ -81,8 +126,38 @@ type VMClarityAPIsAPI struct {
 	//   - application/json
 	JSONProducer runtime.Producer
 
-	// GetTestHandler sets the operation handler for the get test operation
-	GetTestHandler GetTestHandler
+	// DeleteInstancesIDHandler sets the operation handler for the delete instances ID operation
+	DeleteInstancesIDHandler DeleteInstancesIDHandler
+	// GetInstancesHandler sets the operation handler for the get instances operation
+	GetInstancesHandler GetInstancesHandler
+	// GetInstancesIDHandler sets the operation handler for the get instances ID operation
+	GetInstancesIDHandler GetInstancesIDHandler
+	// GetPackagesHandler sets the operation handler for the get packages operation
+	GetPackagesHandler GetPackagesHandler
+	// GetPackagesIDHandler sets the operation handler for the get packages ID operation
+	GetPackagesIDHandler GetPackagesIDHandler
+	// GetVulnerabilitiesHandler sets the operation handler for the get vulnerabilities operation
+	GetVulnerabilitiesHandler GetVulnerabilitiesHandler
+	// GetVulnerabilitiesVulIDPkgIDHandler sets the operation handler for the get vulnerabilities vul ID pkg ID operation
+	GetVulnerabilitiesVulIDPkgIDHandler GetVulnerabilitiesVulIDPkgIDHandler
+	// PostInstancesHandler sets the operation handler for the post instances operation
+	PostInstancesHandler PostInstancesHandler
+	// PostInstancesContentAnalysisIDHandler sets the operation handler for the post instances content analysis ID operation
+	PostInstancesContentAnalysisIDHandler PostInstancesContentAnalysisIDHandler
+	// PostInstancesExploitScanIDHandler sets the operation handler for the post instances exploit scan ID operation
+	PostInstancesExploitScanIDHandler PostInstancesExploitScanIDHandler
+	// PostInstancesMalewareScanIDHandler sets the operation handler for the post instances maleware scan ID operation
+	PostInstancesMalewareScanIDHandler PostInstancesMalewareScanIDHandler
+	// PostInstancesMisconfigurationScanIDHandler sets the operation handler for the post instances misconfiguration scan ID operation
+	PostInstancesMisconfigurationScanIDHandler PostInstancesMisconfigurationScanIDHandler
+	// PostInstancesRootkitScanIDHandler sets the operation handler for the post instances rootkit scan ID operation
+	PostInstancesRootkitScanIDHandler PostInstancesRootkitScanIDHandler
+	// PostInstancesSecretScanIDHandler sets the operation handler for the post instances secret scan ID operation
+	PostInstancesSecretScanIDHandler PostInstancesSecretScanIDHandler
+	// PostInstancesVulnerabilityScanIDHandler sets the operation handler for the post instances vulnerability scan ID operation
+	PostInstancesVulnerabilityScanIDHandler PostInstancesVulnerabilityScanIDHandler
+	// PutInstancesIDHandler sets the operation handler for the put instances ID operation
+	PutInstancesIDHandler PutInstancesIDHandler
 
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
@@ -160,8 +235,53 @@ func (o *VMClarityAPIsAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
-	if o.GetTestHandler == nil {
-		unregistered = append(unregistered, "GetTestHandler")
+	if o.DeleteInstancesIDHandler == nil {
+		unregistered = append(unregistered, "DeleteInstancesIDHandler")
+	}
+	if o.GetInstancesHandler == nil {
+		unregistered = append(unregistered, "GetInstancesHandler")
+	}
+	if o.GetInstancesIDHandler == nil {
+		unregistered = append(unregistered, "GetInstancesIDHandler")
+	}
+	if o.GetPackagesHandler == nil {
+		unregistered = append(unregistered, "GetPackagesHandler")
+	}
+	if o.GetPackagesIDHandler == nil {
+		unregistered = append(unregistered, "GetPackagesIDHandler")
+	}
+	if o.GetVulnerabilitiesHandler == nil {
+		unregistered = append(unregistered, "GetVulnerabilitiesHandler")
+	}
+	if o.GetVulnerabilitiesVulIDPkgIDHandler == nil {
+		unregistered = append(unregistered, "GetVulnerabilitiesVulIDPkgIDHandler")
+	}
+	if o.PostInstancesHandler == nil {
+		unregistered = append(unregistered, "PostInstancesHandler")
+	}
+	if o.PostInstancesContentAnalysisIDHandler == nil {
+		unregistered = append(unregistered, "PostInstancesContentAnalysisIDHandler")
+	}
+	if o.PostInstancesExploitScanIDHandler == nil {
+		unregistered = append(unregistered, "PostInstancesExploitScanIDHandler")
+	}
+	if o.PostInstancesMalewareScanIDHandler == nil {
+		unregistered = append(unregistered, "PostInstancesMalewareScanIDHandler")
+	}
+	if o.PostInstancesMisconfigurationScanIDHandler == nil {
+		unregistered = append(unregistered, "PostInstancesMisconfigurationScanIDHandler")
+	}
+	if o.PostInstancesRootkitScanIDHandler == nil {
+		unregistered = append(unregistered, "PostInstancesRootkitScanIDHandler")
+	}
+	if o.PostInstancesSecretScanIDHandler == nil {
+		unregistered = append(unregistered, "PostInstancesSecretScanIDHandler")
+	}
+	if o.PostInstancesVulnerabilityScanIDHandler == nil {
+		unregistered = append(unregistered, "PostInstancesVulnerabilityScanIDHandler")
+	}
+	if o.PutInstancesIDHandler == nil {
+		unregistered = append(unregistered, "PutInstancesIDHandler")
 	}
 
 	if len(unregistered) > 0 {
@@ -251,10 +371,70 @@ func (o *VMClarityAPIsAPI) initHandlerCache() {
 		o.handlers = make(map[string]map[string]http.Handler)
 	}
 
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/instances/{id}"] = NewDeleteInstancesID(o.context, o.DeleteInstancesIDHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/test"] = NewGetTest(o.context, o.GetTestHandler)
+	o.handlers["GET"]["/instances"] = NewGetInstances(o.context, o.GetInstancesHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/instances/{id}"] = NewGetInstancesID(o.context, o.GetInstancesIDHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/packages"] = NewGetPackages(o.context, o.GetPackagesHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/packages/{id}"] = NewGetPackagesID(o.context, o.GetPackagesIDHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/vulnerabilities"] = NewGetVulnerabilities(o.context, o.GetVulnerabilitiesHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/vulnerabilities/{vul_id}/{pkg_id}"] = NewGetVulnerabilitiesVulIDPkgID(o.context, o.GetVulnerabilitiesVulIDPkgIDHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/instances"] = NewPostInstances(o.context, o.PostInstancesHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/instances/contentAnalysis/{id}"] = NewPostInstancesContentAnalysisID(o.context, o.PostInstancesContentAnalysisIDHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/instances/exploitScan/{id}"] = NewPostInstancesExploitScanID(o.context, o.PostInstancesExploitScanIDHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/instances/malewareScan/{id}"] = NewPostInstancesMalewareScanID(o.context, o.PostInstancesMalewareScanIDHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/instances/misconfigurationScan/{id}"] = NewPostInstancesMisconfigurationScanID(o.context, o.PostInstancesMisconfigurationScanIDHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/instances/rootkitScan/{id}"] = NewPostInstancesRootkitScanID(o.context, o.PostInstancesRootkitScanIDHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/instances/secretScan/{id}"] = NewPostInstancesSecretScanID(o.context, o.PostInstancesSecretScanIDHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/instances/vulnerabilityScan/{id}"] = NewPostInstancesVulnerabilityScanID(o.context, o.PostInstancesVulnerabilityScanIDHandler)
+	if o.handlers["PUT"] == nil {
+		o.handlers["PUT"] = make(map[string]http.Handler)
+	}
+	o.handlers["PUT"]["/instances/{id}"] = NewPutInstancesID(o.context, o.PutInstancesIDHandler)
 }
 
 // Serve creates a http handler to serve the API over HTTP

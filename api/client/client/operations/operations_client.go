@@ -28,28 +28,58 @@ type ClientOption func(*runtime.ClientOperation)
 
 // ClientService is the interface for Client methods
 type ClientService interface {
-	GetTest(params *GetTestParams, opts ...ClientOption) (*GetTestOK, error)
+	DeleteInstancesID(params *DeleteInstancesIDParams, opts ...ClientOption) (*DeleteInstancesIDNoContent, error)
+
+	GetInstances(params *GetInstancesParams, opts ...ClientOption) (*GetInstancesOK, error)
+
+	GetInstancesID(params *GetInstancesIDParams, opts ...ClientOption) (*GetInstancesIDOK, error)
+
+	GetPackages(params *GetPackagesParams, opts ...ClientOption) (*GetPackagesOK, error)
+
+	GetPackagesID(params *GetPackagesIDParams, opts ...ClientOption) (*GetPackagesIDOK, error)
+
+	GetVulnerabilities(params *GetVulnerabilitiesParams, opts ...ClientOption) (*GetVulnerabilitiesOK, error)
+
+	GetVulnerabilitiesVulIDPkgID(params *GetVulnerabilitiesVulIDPkgIDParams, opts ...ClientOption) (*GetVulnerabilitiesVulIDPkgIDOK, error)
+
+	PostInstances(params *PostInstancesParams, opts ...ClientOption) (*PostInstancesCreated, error)
+
+	PostInstancesContentAnalysisID(params *PostInstancesContentAnalysisIDParams, opts ...ClientOption) (*PostInstancesContentAnalysisIDCreated, error)
+
+	PostInstancesExploitScanID(params *PostInstancesExploitScanIDParams, opts ...ClientOption) (*PostInstancesExploitScanIDCreated, error)
+
+	PostInstancesMalewareScanID(params *PostInstancesMalewareScanIDParams, opts ...ClientOption) (*PostInstancesMalewareScanIDCreated, error)
+
+	PostInstancesMisconfigurationScanID(params *PostInstancesMisconfigurationScanIDParams, opts ...ClientOption) (*PostInstancesMisconfigurationScanIDCreated, error)
+
+	PostInstancesRootkitScanID(params *PostInstancesRootkitScanIDParams, opts ...ClientOption) (*PostInstancesRootkitScanIDCreated, error)
+
+	PostInstancesSecretScanID(params *PostInstancesSecretScanIDParams, opts ...ClientOption) (*PostInstancesSecretScanIDCreated, error)
+
+	PostInstancesVulnerabilityScanID(params *PostInstancesVulnerabilityScanIDParams, opts ...ClientOption) (*PostInstancesVulnerabilityScanIDCreated, error)
+
+	PutInstancesID(params *PutInstancesIDParams, opts ...ClientOption) (*PutInstancesIDOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
 }
 
 /*
-  GetTest tests
+DeleteInstancesID deletes instance
 */
-func (a *Client) GetTest(params *GetTestParams, opts ...ClientOption) (*GetTestOK, error) {
+func (a *Client) DeleteInstancesID(params *DeleteInstancesIDParams, opts ...ClientOption) (*DeleteInstancesIDNoContent, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewGetTestParams()
+		params = NewDeleteInstancesIDParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "GetTest",
-		Method:             "GET",
-		PathPattern:        "/test",
+		ID:                 "DeleteInstancesID",
+		Method:             "DELETE",
+		PathPattern:        "/instances/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
-		Reader:             &GetTestReader{formats: a.formats},
+		Reader:             &DeleteInstancesIDReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -61,12 +91,567 @@ func (a *Client) GetTest(params *GetTestParams, opts ...ClientOption) (*GetTestO
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*GetTestOK)
+	success, ok := result.(*DeleteInstancesIDNoContent)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*GetTestDefault)
+	unexpectedSuccess := result.(*DeleteInstancesIDDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+GetInstances gets instances
+*/
+func (a *Client) GetInstances(params *GetInstancesParams, opts ...ClientOption) (*GetInstancesOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetInstancesParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "GetInstances",
+		Method:             "GET",
+		PathPattern:        "/instances",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetInstancesReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetInstancesOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*GetInstancesDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+GetInstancesID gets instance
+*/
+func (a *Client) GetInstancesID(params *GetInstancesIDParams, opts ...ClientOption) (*GetInstancesIDOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetInstancesIDParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "GetInstancesID",
+		Method:             "GET",
+		PathPattern:        "/instances/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetInstancesIDReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetInstancesIDOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*GetInstancesIDDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+GetPackages gets packages
+*/
+func (a *Client) GetPackages(params *GetPackagesParams, opts ...ClientOption) (*GetPackagesOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetPackagesParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "GetPackages",
+		Method:             "GET",
+		PathPattern:        "/packages",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetPackagesReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetPackagesOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*GetPackagesDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+GetPackagesID gets package
+*/
+func (a *Client) GetPackagesID(params *GetPackagesIDParams, opts ...ClientOption) (*GetPackagesIDOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetPackagesIDParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "GetPackagesID",
+		Method:             "GET",
+		PathPattern:        "/packages/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetPackagesIDReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetPackagesIDOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*GetPackagesIDDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+GetVulnerabilities gets vulnerabilities
+*/
+func (a *Client) GetVulnerabilities(params *GetVulnerabilitiesParams, opts ...ClientOption) (*GetVulnerabilitiesOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetVulnerabilitiesParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "GetVulnerabilities",
+		Method:             "GET",
+		PathPattern:        "/vulnerabilities",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetVulnerabilitiesReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetVulnerabilitiesOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*GetVulnerabilitiesDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+GetVulnerabilitiesVulIDPkgID gets a vulnerability of a specific package
+*/
+func (a *Client) GetVulnerabilitiesVulIDPkgID(params *GetVulnerabilitiesVulIDPkgIDParams, opts ...ClientOption) (*GetVulnerabilitiesVulIDPkgIDOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetVulnerabilitiesVulIDPkgIDParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "GetVulnerabilitiesVulIDPkgID",
+		Method:             "GET",
+		PathPattern:        "/vulnerabilities/{vul_id}/{pkg_id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetVulnerabilitiesVulIDPkgIDReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetVulnerabilitiesVulIDPkgIDOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*GetVulnerabilitiesVulIDPkgIDDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+PostInstances creates instance
+*/
+func (a *Client) PostInstances(params *PostInstancesParams, opts ...ClientOption) (*PostInstancesCreated, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewPostInstancesParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "PostInstances",
+		Method:             "POST",
+		PathPattern:        "/instances",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostInstancesReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*PostInstancesCreated)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*PostInstancesDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+PostInstancesContentAnalysisID reports a content analysis for a specific instance
+*/
+func (a *Client) PostInstancesContentAnalysisID(params *PostInstancesContentAnalysisIDParams, opts ...ClientOption) (*PostInstancesContentAnalysisIDCreated, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewPostInstancesContentAnalysisIDParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "PostInstancesContentAnalysisID",
+		Method:             "POST",
+		PathPattern:        "/instances/contentAnalysis/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostInstancesContentAnalysisIDReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*PostInstancesContentAnalysisIDCreated)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*PostInstancesContentAnalysisIDDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+PostInstancesExploitScanID reports an exploit scan for a specific instance
+*/
+func (a *Client) PostInstancesExploitScanID(params *PostInstancesExploitScanIDParams, opts ...ClientOption) (*PostInstancesExploitScanIDCreated, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewPostInstancesExploitScanIDParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "PostInstancesExploitScanID",
+		Method:             "POST",
+		PathPattern:        "/instances/exploitScan/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostInstancesExploitScanIDReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*PostInstancesExploitScanIDCreated)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*PostInstancesExploitScanIDDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+PostInstancesMalewareScanID reports a malware scan for a specific instance
+*/
+func (a *Client) PostInstancesMalewareScanID(params *PostInstancesMalewareScanIDParams, opts ...ClientOption) (*PostInstancesMalewareScanIDCreated, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewPostInstancesMalewareScanIDParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "PostInstancesMalewareScanID",
+		Method:             "POST",
+		PathPattern:        "/instances/malewareScan/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostInstancesMalewareScanIDReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*PostInstancesMalewareScanIDCreated)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*PostInstancesMalewareScanIDDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+PostInstancesMisconfigurationScanID reports a misconfiguration scan for a specific instance
+*/
+func (a *Client) PostInstancesMisconfigurationScanID(params *PostInstancesMisconfigurationScanIDParams, opts ...ClientOption) (*PostInstancesMisconfigurationScanIDCreated, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewPostInstancesMisconfigurationScanIDParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "PostInstancesMisconfigurationScanID",
+		Method:             "POST",
+		PathPattern:        "/instances/misconfigurationScan/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostInstancesMisconfigurationScanIDReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*PostInstancesMisconfigurationScanIDCreated)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*PostInstancesMisconfigurationScanIDDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+PostInstancesRootkitScanID reports a rootkit scan for a specific instance
+*/
+func (a *Client) PostInstancesRootkitScanID(params *PostInstancesRootkitScanIDParams, opts ...ClientOption) (*PostInstancesRootkitScanIDCreated, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewPostInstancesRootkitScanIDParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "PostInstancesRootkitScanID",
+		Method:             "POST",
+		PathPattern:        "/instances/rootkitScan/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostInstancesRootkitScanIDReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*PostInstancesRootkitScanIDCreated)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*PostInstancesRootkitScanIDDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+PostInstancesSecretScanID reports a secret scan for a specific instance
+*/
+func (a *Client) PostInstancesSecretScanID(params *PostInstancesSecretScanIDParams, opts ...ClientOption) (*PostInstancesSecretScanIDCreated, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewPostInstancesSecretScanIDParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "PostInstancesSecretScanID",
+		Method:             "POST",
+		PathPattern:        "/instances/secretScan/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostInstancesSecretScanIDReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*PostInstancesSecretScanIDCreated)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*PostInstancesSecretScanIDDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+PostInstancesVulnerabilityScanID reports a vulnerability scan for a specific instance
+*/
+func (a *Client) PostInstancesVulnerabilityScanID(params *PostInstancesVulnerabilityScanIDParams, opts ...ClientOption) (*PostInstancesVulnerabilityScanIDCreated, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewPostInstancesVulnerabilityScanIDParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "PostInstancesVulnerabilityScanID",
+		Method:             "POST",
+		PathPattern:        "/instances/vulnerabilityScan/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostInstancesVulnerabilityScanIDReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*PostInstancesVulnerabilityScanIDCreated)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*PostInstancesVulnerabilityScanIDDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+PutInstancesID updates application
+*/
+func (a *Client) PutInstancesID(params *PutInstancesIDParams, opts ...ClientOption) (*PutInstancesIDOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewPutInstancesIDParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "PutInstancesID",
+		Method:             "PUT",
+		PathPattern:        "/instances/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PutInstancesIDReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*PutInstancesIDOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*PutInstancesIDDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
