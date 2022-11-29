@@ -109,4 +109,4 @@ gomod-tidy:
 .PHONY: api
 api: ## Generating API code
 	@(echo "Generating API code ..." )
-	@(cd api; ./generate.sh)
+	@(cd api; go generate)

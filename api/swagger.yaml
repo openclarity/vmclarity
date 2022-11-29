@@ -1,848 +1,1077 @@
-swagger: "2.0"
+openapi: 3.0.1
+
 info:
-  version: "1.0.0"
-  title: "VMClarity APIs"
+  title: VMClarity APIs
+  version: 1.0.0
 
-basePath: /api
-
-schemes:
-  - http
-  #- https
-
-consumes: [ "application/json" ]
-produces: [ "application/json" ]
-
-definitions:
-  ApiResponse:
-    description: 'An object that is returned in all cases of failures.'
-    type: 'object'
-    properties:
-      message:
-        type: 'string'
-
-  SuccessResponse:
-    description: 'An object that is returned in cases of success that returns nothing.'
-    type: 'object'
-    properties:
-      message:
-        type: 'string'
-
-  InstancesSortKey:
-    type: string
-    enum: &InstancesSortKey
-      - instanceName
-      - instanceProvider
-      - instanceRegion
-      - instanceID
-
-  PackagesSortKey:
-    type: string
-    enum: &PackagesSortKey
-      - packageName
-      - instances
-      - language
-      - vulnerabilities
-      - version
-      - license
-
-  VulnerabilitiesSortKey:
-    type: string
-    enum: &VulnerabilitiesSortKey
-      - vulnerabilityName
-      - packageName
-      - packageVersion
-      - severity
-      - instances
-      - fixVersion
-      - source
-
-  CloudProvider:
-    type: string
-    enum:
-      - AWS
-
-  InstanceInfo:
-    type: 'object'
-    properties:
-      id:
-        type: 'string'
-      instanceName:
-        type: 'string'
-      instanceProvider:
-        $ref: '#/definitions/CloudProvider'
-      instanceRegion:
-        type: 'string'
-      instanceID:
-        type: 'string'
-
-  Instance:
-    type: 'object'
-    properties:
-      id:
-        type: 'string'
-      instanceName:
-        type: 'string'
-      instanceProvider:
-        $ref: '#/definitions/CloudProvider'
-      instanceRegion:
-        type: 'string'
-      instanceID:
-        type: 'string'
-      vulnerabilities:
-        description: 'vulnerability count per severity'
-        type: 'array'
-        items:
-          $ref: '#/definitions/VulnerabilityCount'
-      packages:
-        type: 'integer'
-        format: 'uint32'
-      malwares:
-        type: 'integer'
-        format: 'uint32'
-      rootkits:
-        type: 'integer'
-        format: 'uint32'
-      misconfigurations:
-        type: 'integer'
-        format: 'uint32'
-      secrets:
-        type: 'integer'
-        format: 'uint32'
-      exploits:
-        type: 'integer'
-        format: 'uint32'
-
-  PackageInfo:
-    type: 'object'
-    properties:
-      name:
-        type: 'string'
-      language:
-        type: 'string'
-      version:
-        type: 'string'
-      license:
-        type: 'string'
-
-  Package:
-    type: 'object'
-    properties:
-      id:
-        type: 'string'
-      name:
-        type: 'string'
-      language:
-        type: 'string'
-      version:
-        type: 'string'
-      license:
-        type: 'string'
-      instances:
-        type: 'integer'
-        format: 'uint32'
-      vulnerabilities:
-        type: 'array'
-        items:
-          $ref: '#/definitions/VulnerabilityCount'
-
-  Vulnerability:
-    type: 'object'
-    properties:
-      id:
-        description: 'Unique ID for the vulnerabilityID and packageID combination.'
-        type: 'string'
-      vulnerabilityID:
-        type: 'string'
-      vulnerabilityName:
-        type: 'string'
-      packageName:
-        type: 'string'
-      packageVersion:
-        type: 'string'
-      packageID:
-        type: 'string'
-      severity:
-        $ref: '#/definitions/VulnerabilitySeverity'
-      cvssSeverity:
-        $ref: '#/definitions/VulnerabilitySeverity'
-      cvssBaseScore:
-        type: 'number'
-      fixVersion:
-        type: 'string'
-      instances:
-        type: 'integer'
-        format: 'uint32'
-
-  AttackVector:
-    type: string
-    enum:
-      - NETWORK
-      - ADJACENT
-      - LOCAL
-      - PHYSICAL
-
-  AttackComplexity:
-    type: string
-    enum:
-      - LOW
-      - HIGH
-
-  PrivilegesRequired:
-    type: string
-    enum:
-      - NONE
-      - LOW
-      - HIGH
-
-  UserInteraction:
-    type: string
-    enum:
-      - NONE
-      - REQUIRED
-
-  Scope:
-    type: string
-    enum:
-      - UNCHANGED
-      - CHANGED
-
-  Confidentiality:
-    type: string
-    enum:
-      - NONE
-      - LOW
-      - HIGH
-
-  Integrity:
-    type: string
-    enum:
-      - NONE
-      - LOW
-      - HIGH
-
-  Availability:
-    type: string
-    enum:
-      - NONE
-      - LOW
-      - HIGH
-
-  VulnerabilityCount:
-    type: object
-    properties:
-      severity:
-        $ref: '#/definitions/VulnerabilitySeverity'
-      count:
-        type: 'integer'
-        format: 'uint32'
-
-  VulnerabilitySeverity:
-    type: string
-    enum:
-      - CRITICAL
-      - HIGH
-      - MEDIUM
-      - LOW
-      - NEGLIGIBLE
-
-  CVSS:
-    type: 'object'
-    properties:
-      cvssV3Vector:
-        $ref: '#/definitions/CVSSV3Vector'
-      cvssV3Metrics:
-        $ref: '#/definitions/CVSSV3Metrics'
-
-  CVSSV3Metrics:
-    type: 'object'
-    properties:
-      severity:
-        $ref: '#/definitions/VulnerabilitySeverity'
-      baseScore:
-        type: 'number'
-      exploitabilityScore:
-        type: 'number'
-      impactScore:
-        type: 'number'
-
-  CVSSV3Vector:
-    type: 'object'
-    properties:
-      vector:
-        type: 'string'
-      attackVector:
-        $ref: '#/definitions/AttackVector'
-      attackComplexity:
-        $ref: '#/definitions/AttackComplexity'
-      privilegesRequired:
-        $ref: '#/definitions/PrivilegesRequired'
-      userInteraction:
-        $ref: '#/definitions/UserInteraction'
-      scope:
-        $ref: '#/definitions/Scope'
-      confidentiality:
-        $ref: '#/definitions/Confidentiality'
-      integrity:
-        $ref: '#/definitions/Integrity'
-      availability:
-        $ref: '#/definitions/Availability'
-
-  VulnerabilityEx:
-    type: 'object'
-    properties:
-      vulnerability:
-        $ref: '#/definitions/Vulnerability'
-      scanDate:
-        type: 'string'
-        format: 'date-time'
-      description:
-        type: 'string'
-      links:
-        type: 'array'
-        items:
-          type: 'string'
-      cvss:
-        $ref: '#/definitions/CVSS'
-
-  MalwareType:
-    type: string
-    enum:
-      - ADWARE
-      - VIRUS
-      - TROJAN
-      - WORM
-      - SPYWARE
-      - RANSOMWARE
-
-  MalwareInfo:
-    type: 'object'
-    properties:
-      id:
-        type: 'string'
-      malwareName:
-        type: 'string'
-      malwareType:
-        $ref: '#/definitions/MalwareType'
-      path:
-        description: 'Path of the file that contains malware'
-        type: 'string'
-
-  RootkitType:
-    type: string
-    enum:
-      - MEMORY
-      - KERNEL
-      - APPLICATION
-      - FIRMWARE
-
-  RootkitInfo:
-    type: 'object'
-    properties:
-      id:
-        type: 'string'
-      rootkitName:
-        type: 'string'
-      rootkitType:
-        $ref: '#/definitions/RootkitType'
-      path:
-        description: 'Path of the file that contains rootkit'
-        type: 'string'
-
-  MisconfigurationType:
-    type: string
-    enum:
-      - DEFAULT_PASSWORD
-
-  MisconfigurationInfo:
-    type: 'object'
-    properties:
-      id:
-        type: 'string'
-      misconfigurationType:
-        $ref: '#/definitions/MisconfigurationType'
-      path:
-        description: 'Path of the file that contains misconfigurations'
-        type: 'string'
-
-  SecretInfo:
-    type: 'object'
-    properties:
-      id:
-        type: 'string'
-      description:
-        type: 'string'
-      path:
-        description: 'Path of the file that contains secrets'
-        type: 'string'
-
-  ExploitInfo:
-    type: 'object'
-    properties:
-      id:
-        type: 'string'
-      description:
-        type: 'string'
-      vulnerabilities:
-        type: 'array'
-        items:
-          type: 'string'
-
-  InstanceContentAnalysis:
-    type: 'object'
-    properties:
-      resource:
-        $ref: '#/definitions/InstanceInfo'
-      packages:
-        type: 'array'
-        items:
-          $ref: '#/definitions/PackageContentAnalysis'
-
-  PackageContentAnalysis:
-    type: 'object'
-    properties:
-      package:
-        $ref: '#/definitions/PackageInfo'
-
-  InstanceVulnerabilityScan:
-    type: 'object'
-    properties:
-      resource:
-        $ref: '#/definitions/InstanceInfo'
-      packageVulnerabilities:
-        type: 'array'
-        items:
-          $ref: '#/definitions/PackageVulnerabilityScan'
-
-  PackageVulnerabilityScan:
-    type: 'object'
-    properties:
-      package:
-        $ref: '#/definitions/PackageInfo'
-      vulnerabilityName:
-        type: 'string'
-      severity:
-        $ref: '#/definitions/VulnerabilitySeverity'
-      fixVersion:
-        type: 'string'
-      description:
-        type: 'string'
-      links:
-        type: 'array'
-        items:
-          type: 'string'
-      cvss:
-        $ref: '#/definitions/CVSS'
-
-  InstanceMalwareScan:
-    type: 'object'
-    properties:
-      resource:
-        $ref: '#/definitions/InstanceInfo'
-      packages:
-        type: 'array'
-        items:
-          $ref: '#/definitions/MalwareInfo'
-
-  InstanceRootkitScan:
-    type: 'object'
-    properties:
-      resource:
-        $ref: '#/definitions/InstanceInfo'
-      packages:
-        type: 'array'
-        items:
-          $ref: '#/definitions/RootkitInfo'
-
-  InstanceSecretScan:
-    type: 'object'
-    properties:
-      resource:
-        $ref: '#/definitions/InstanceInfo'
-      packages:
-        type: 'array'
-        items:
-          $ref: '#/definitions/SecretInfo'
-
-  InstanceMisconfigurationScan:
-    type: 'object'
-    properties:
-      resource:
-        $ref: '#/definitions/InstanceInfo'
-      packages:
-        type: 'array'
-        items:
-          $ref: '#/definitions/MisconfigurationInfo'
-
-  InstanceExploitScan:
-    type: 'object'
-    properties:
-      resource:
-        $ref: '#/definitions/InstanceInfo'
-      packages:
-        type: 'array'
-        items:
-          $ref: '#/definitions/ExploitInfo'
+servers:
+  - url: /api
 
 paths:
   /instances:
     get:
-      summary: 'Get instances'
+      summary: Get instances
       parameters:
-        - $ref: '#/parameters/page'
-        - $ref: '#/parameters/pageSize'
-        - $ref: '#/parameters/instancesSortKey'
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            type: 'object'
-            required:
-              - total
-            properties:
-              total:
-                type: 'integer'
-                description: 'Total instances count under the given filters'
-              items:
-                type: 'array'
-                description: 'List of instances in the given filters and page. List length must be lower or equal to pageSize.'
-                items:
-                  $ref: '#/definitions/Instance'
-        default:
-          $ref: '#/responses/UnknownError'
-    post:
-      summary: 'Create instance'
-      parameters:
-        - in: "body"
-          name: "body"
+        - name: page
+          in: query
+          description: Page number of the query
           required: true
           schema:
-            $ref: "#/definitions/InstanceInfo"
+            type: integer
+        - name: pageSize
+          in: query
+          description: Maximum items to return
+          required: true
+          schema:
+            maximum: 50
+            minimum: 1
+            type: integer
+        - name: sortKey
+          in: query
+          description: Sort key
+          required: true
+          schema:
+            type: string
       responses:
-        '201':
-          description: 'New instance was created.'
-          schema:
-            $ref: '#/definitions/InstanceInfo'
-        '409':
-          description: 'Instance already exist.'
-          schema:
-            $ref: '#/definitions/InstanceInfo'
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                required:
+                  - total
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    description: Total instances count under the given filters
+                  items:
+                    type: array
+                    description: List of instances in the given filters and page.
+                      List length must be lower or equal to pageSize.
+                    items:
+                      $ref: '#/components/schemas/Instance'
         default:
-          $ref: '#/responses/UnknownError'
+          description: unknown error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      summary: Create instance
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstanceInfo'
+        required: true
+      responses:
+        201:
+          description: New instance was created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstanceInfo'
+        409:
+          description: Instance already exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstanceInfo'
+        default:
+          description: unknown error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+      x-codegen-request-body-name: body
 
   /instances/{id}:
     get:
-      summary: 'Get instance.'
+      summary: Get instance.
       parameters:
-        - $ref: '#/parameters/id'
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            $ref: '#/definitions/InstanceInfo'
-        default:
-          $ref: '#/responses/UnknownError'
-    delete:
-      summary: 'Delete Instance.'
-      parameters:
-        - $ref: '#/parameters/id'
-      responses:
-        '204':
-          description: 'Success'
-        '404':
-          description: 'Instance not found.'
-        default:
-          $ref: '#/responses/UnknownError'
-    put:
-      summary: 'Update Application.'
-      parameters:
-        - $ref: '#/parameters/id'
-        - in: "body"
-          name: "body"
+        - name: id
+          in: path
           required: true
           schema:
-            $ref: "#/definitions/InstanceInfo"
+            type: string
       responses:
-        '200':
-          description: 'Update Instance successful.'
-          schema:
-            $ref: '#/definitions/InstanceInfo'
-        '404':
-          description: 'Instance not found.'
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstanceInfo'
         default:
-          $ref: '#/responses/UnknownError'
+          description: unknown error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    put:
+      summary: Update Application.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstanceInfo'
+        required: true
+      responses:
+        200:
+          description: Update Instance successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstanceInfo'
+        404:
+          description: Instance not found.
+          content: {}
+        default:
+          description: unknown error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+      x-codegen-request-body-name: body
+    delete:
+      summary: Delete Instance.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: Success
+          content: {}
+        404:
+          description: Instance not found.
+          content: {}
+        default:
+          description: unknown error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
 
   /packages:
     get:
-      summary: 'Get packages'
+      summary: Get packages
       parameters:
-        - $ref: '#/parameters/page'
-        - $ref: '#/parameters/pageSize'
-        - $ref: '#/parameters/packagesSortKey'
-      responses:
-        '200':
-          description: 'Success'
+        - name: page
+          in: query
+          description: Page number of the query
+          required: true
           schema:
-            type: 'object'
-            required:
-              - total
-            properties:
-              total:
-                type: 'integer'
-                description: 'Total packages count under the given filters'
-              items:
-                type: 'array'
-                description: 'List of packages in the given filters and page. List length must be lower or equal to pageSize'
-                items:
-                  $ref: '#/definitions/Package'
+            type: integer
+        - name: pageSize
+          in: query
+          description: Maximum items to return
+          required: true
+          schema:
+            maximum: 50
+            minimum: 1
+            type: integer
+        - name: sortKey
+          in: query
+          description: Sort key
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                required:
+                  - total
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    description: Total packages count under the given filters
+                  items:
+                    type: array
+                    description: List of packages in the given filters and page. List
+                      length must be lower or equal to pageSize
+                    items:
+                      $ref: '#/components/schemas/Package'
         default:
-          $ref: '#/responses/UnknownError'
+          description: unknown error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
 
   /packages/{id}:
     get:
-      summary: 'Get Package.'
+      summary: Get Package.
       parameters:
-        - $ref: '#/parameters/id'
-      responses:
-        '200':
-          description: 'Success'
+        - name: id
+          in: path
+          required: true
           schema:
-            $ref: '#/definitions/Package'
-        '404':
-          description: 'Package ID not found.'
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Package'
+        404:
+          description: Package ID not found.
+          content: {}
         default:
-          $ref: '#/responses/UnknownError'
+          description: unknown error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
 
   /vulnerabilities:
     get:
-      summary: 'Get vulnerabilities'
+      summary: Get vulnerabilities
       parameters:
-        - $ref: '#/parameters/page'
-        - $ref: '#/parameters/pageSize'
-        - $ref: '#/parameters/vulnerabilitiesSortKey'
-      responses:
-        '200':
-          description: 'Success'
+        - name: page
+          in: query
+          description: Page number of the query
+          required: true
           schema:
-            type: 'object'
-            required:
-              - total
-            properties:
-              total:
-                type: 'integer'
-                description: 'Total vulnerabilities count under the given filters'
-              items:
-                type: 'array'
-                description: 'List of vulnerabilities in the given filters and page. List length must be lower or equal to pageSize'
-                items:
-                  $ref: '#/definitions/Vulnerability'
+            type: integer
+        - name: pageSize
+          in: query
+          description: Maximum items to return
+          required: true
+          schema:
+            maximum: 50
+            minimum: 1
+            type: integer
+        - name: sortKey
+          in: query
+          description: Sort key
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                required:
+                  - total
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    description: Total vulnerabilities count under the given filters
+                  items:
+                    type: array
+                    description: List of vulnerabilities in the given filters and
+                      page. List length must be lower or equal to pageSize
+                    items:
+                      $ref: '#/components/schemas/Vulnerability'
         default:
-          $ref: '#/responses/UnknownError'
+          description: unknown error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
 
   /vulnerabilities/{vul_id}/{pkg_id}:
     get:
-      summary: 'Get a vulnerability of a specific package'
+      summary: Get a vulnerability of a specific package
       parameters:
-        - $ref: '#/parameters/vul_id'
-        - $ref: '#/parameters/pkg_id'
-      responses:
-        '200':
-          description: 'Success'
+        - name: vul_id
+          in: path
+          required: true
           schema:
-            $ref: '#/definitions/VulnerabilityEx'
+            type: string
+        - name: pkg_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VulnerabilityEx'
         default:
-          $ref: '#/responses/UnknownError'
+          description: unknown error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
 
   /instances/vulnerabilityScan/{id}:
     post:
-      summary: 'Report a vulnerability scan for a specific instance'
+      summary: Report a vulnerability scan for a specific instance
       parameters:
-        - $ref: '#/parameters/id'
-        - in: 'body'
-          name: 'body'
+        - name: id
+          in: path
           required: true
           schema:
-            $ref: '#/definitions/InstanceVulnerabilityScan'
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstanceVulnerabilityScan'
+        required: true
       responses:
-        '201':
-          description: 'Instance vulnerability scan successfully reported.'
-        '404':
-          description: 'Instance not found.'
+        201:
+          description: Instance vulnerability scan successfully reported.
+          content: {}
+        404:
+          description: Instance not found.
+          content: {}
         default:
-          $ref: '#/responses/UnknownError'
+          description: unknown error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+      x-codegen-request-body-name: body
 
   /instances/contentAnalysis/{id}:
     post:
-      summary: 'Report a content analysis for a specific instance'
+      summary: Report a content analysis for a specific instance
       parameters:
-        - $ref: '#/parameters/id'
-        - in: 'body'
-          name: 'body'
+        - name: id
+          in: path
           required: true
           schema:
-            $ref: '#/definitions/InstanceContentAnalysis'
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstanceContentAnalysis'
+        required: true
       responses:
-        '201':
-          description: 'Instance content analysis successfully reported.'
-        '404':
-          description: 'Instance not found.'
+        201:
+          description: Instance content analysis successfully reported.
+          content: {}
+        404:
+          description: Instance not found.
+          content: {}
         default:
-          $ref: '#/responses/UnknownError'
+          description: unknown error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+      x-codegen-request-body-name: body
 
   /instances/malewareScan/{id}:
     post:
-      summary: 'Report a malware scan for a specific instance'
+      summary: Report a malware scan for a specific instance
       parameters:
-        - $ref: '#/parameters/id'
-        - in: 'body'
-          name: 'body'
+        - name: id
+          in: path
           required: true
           schema:
-            $ref: '#/definitions/InstanceMalwareScan'
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstanceMalwareScan'
+        required: true
       responses:
-        '201':
-          description: 'Instance rootkit scan successfully reported.'
-        '404':
-          description: 'Instance not found.'
+        201:
+          description: Instance rootkit scan successfully reported.
+          content: {}
+        404:
+          description: Instance not found.
+          content: {}
         default:
-          $ref: '#/responses/UnknownError'
+          description: unknown error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+      x-codegen-request-body-name: body
 
   /instances/rootkitScan/{id}:
     post:
-      summary: 'Report a rootkit scan for a specific instance'
+      summary: Report a rootkit scan for a specific instance
       parameters:
-        - $ref: '#/parameters/id'
-        - in: 'body'
-          name: 'body'
+        - name: id
+          in: path
           required: true
           schema:
-            $ref: '#/definitions/InstanceRootkitScan'
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstanceRootkitScan'
+        required: true
       responses:
-        '201':
-          description: 'Instance rootkit scan successfully reported.'
-        '404':
-          description: 'Instance not found.'
+        201:
+          description: Instance rootkit scan successfully reported.
+          content: {}
+        404:
+          description: Instance not found.
+          content: {}
         default:
-          $ref: '#/responses/UnknownError'
+          description: unknown error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+      x-codegen-request-body-name: body
 
   /instances/secretScan/{id}:
     post:
-      summary: 'Report a secret scan for a specific instance'
+      summary: Report a secret scan for a specific instance
       parameters:
-        - $ref: '#/parameters/id'
-        - in: 'body'
-          name: 'body'
+        - name: id
+          in: path
           required: true
           schema:
-            $ref: '#/definitions/InstanceSecretScan'
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstanceSecretScan'
+        required: true
       responses:
-        '201':
-          description: 'Instance secret scan successfully reported.'
-        '404':
-          description: 'Instance not found.'
+        201:
+          description: Instance secret scan successfully reported.
+          content: {}
+        404:
+          description: Instance not found.
+          content: {}
         default:
-          $ref: '#/responses/UnknownError'
+          description: unknown error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+      x-codegen-request-body-name: body
 
   /instances/misconfigurationScan/{id}:
     post:
-      summary: 'Report a misconfiguration scan for a specific instance'
+      summary: Report a misconfiguration scan for a specific instance
       parameters:
-        - $ref: '#/parameters/id'
-        - in: 'body'
-          name: 'body'
+        - name: id
+          in: path
           required: true
           schema:
-            $ref: '#/definitions/InstanceMisconfigurationScan'
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstanceMisconfigurationScan'
+        required: true
       responses:
-        '201':
-          description: 'Instance misconfiguration scan successfully reported.'
-        '404':
-          description: 'Instance not found.'
+        201:
+          description: Instance misconfiguration scan successfully reported.
+          content: {}
+        404:
+          description: Instance not found.
+          content: {}
         default:
-          $ref: '#/responses/UnknownError'
+          description: unknown error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+      x-codegen-request-body-name: body
 
   /instances/exploitScan/{id}:
     post:
-      summary: 'Report an exploit scan for a specific instance'
+      summary: Report an exploit scan for a specific instance
       parameters:
-        - $ref: '#/parameters/id'
-        - in: 'body'
-          name: 'body'
+        - name: id
+          in: path
           required: true
           schema:
-            $ref: '#/definitions/InstanceRootkitScan'
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstanceRootkitScan'
+        required: true
       responses:
-        '201':
-          description: 'Instance exploit scan successfully reported.'
-        '404':
-          description: 'Instance not found.'
+        201:
+          description: Instance exploit scan successfully reported.
+          content: {}
+        404:
+          description: Instance not found.
+          content: {}
         default:
-          $ref: '#/responses/UnknownError'
+          description: unknown error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+      x-codegen-request-body-name: body
 
-parameters:
-  id:
-    name: 'id'
-    in: 'path'
-    type: 'string'
-    required: true
+components:
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      description: An object that is returned in all cases of failures.
 
-  vul_id:
-    name: 'vul_id'
-    in: 'path'
-    type: 'string'
-    required: true
+    SuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      description: An object that is returned in cases of success that returns nothing.
 
-  pkg_id:
-    name: 'pkg_id'
-    in: 'path'
-    type: 'string'
-    required: true
+    InstancesSortKey:
+      type: string
+      enum:
+        - instanceName
+        - instanceProvider
+        - instanceRegion
+        - instanceID
 
-  page:
-    name: 'page'
-    description: 'Page number of the query'
-    in: 'query'
-    type: 'integer'
-    required: true
+    PackagesSortKey:
+      type: string
+      enum:
+        - packageName
+        - instances
+        - language
+        - vulnerabilities
+        - version
+        - license
 
-  pageSize:
-    name: 'pageSize'
-    description: 'Maximum items to return'
-    in: 'query'
-    type: 'integer'
-    required: true
-    minimum: 1
-    maximum: 50
+    VulnerabilitiesSortKey:
+      type: string
+      enum:
+        - vulnerabilityName
+        - packageName
+        - packageVersion
+        - severity
+        - instances
+        - fixVersion
+        - source
 
-  instancesSortKey:
-    name: 'sortKey'
-    description: 'Sort key'
-    in: 'query'
-    type: 'string'
-    enum: *InstancesSortKey
-    required: true
+    CloudProvider:
+      type: string
+      enum:
+        - AWS
 
-  packagesSortKey:
-    name: 'sortKey'
-    description: 'Sort key'
-    in: 'query'
-    type: 'string'
-    enum: *PackagesSortKey
-    required: true
+    InstanceInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        instanceName:
+          type: string
+        instanceProvider:
+          $ref: '#/components/schemas/CloudProvider'
+        instanceRegion:
+          type: string
+        instanceID:
+          type: string
 
-  vulnerabilitiesSortKey:
-    name: 'sortKey'
-    description: 'Sort key'
-    in: 'query'
-    type: 'string'
-    enum: *VulnerabilitiesSortKey
-    required: true
+    Instance:
+      type: object
+      properties:
+        id:
+          type: string
+        instanceName:
+          type: string
+        instanceProvider:
+          $ref: '#/components/schemas/CloudProvider'
+        instanceRegion:
+          type: string
+        instanceID:
+          type: string
+        vulnerabilities:
+          type: array
+          description: vulnerability count per severity
+          items:
+            $ref: '#/components/schemas/VulnerabilityCount'
+        packages:
+          type: integer
+          format: uint32
+        malwares:
+          type: integer
+          format: uint32
+        rootkits:
+          type: integer
+          format: uint32
+        misconfigurations:
+          type: integer
+          format: uint32
+        secrets:
+          type: integer
+          format: uint32
+        exploits:
+          type: integer
+          format: uint32
 
-responses:
-  UnknownError:
-    description: 'unknown error'
-    schema:
-      $ref: '#/definitions/ApiResponse'
-  Success:
-    description: 'success message'
-    schema:
-      $ref: '#/definitions/SuccessResponse'
+    PackageInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        language:
+          type: string
+        version:
+          type: string
+        license:
+          type: string
+
+    Package:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        language:
+          type: string
+        version:
+          type: string
+        license:
+          type: string
+        instances:
+          type: integer
+          format: uint32
+        vulnerabilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/VulnerabilityCount'
+
+    Vulnerability:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique ID for the vulnerabilityID and packageID combination.
+        vulnerabilityID:
+          type: string
+        vulnerabilityName:
+          type: string
+        packageName:
+          type: string
+        packageVersion:
+          type: string
+        packageID:
+          type: string
+        severity:
+          $ref: '#/components/schemas/VulnerabilitySeverity'
+        cvssSeverity:
+          $ref: '#/components/schemas/VulnerabilitySeverity'
+        cvssBaseScore:
+          type: number
+        fixVersion:
+          type: string
+        instances:
+          type: integer
+          format: uint32
+
+    AttackVector:
+      type: string
+      enum:
+        - NETWORK
+        - ADJACENT
+        - LOCAL
+        - PHYSICAL
+
+    AttackComplexity:
+      type: string
+      enum:
+        - LOW
+        - HIGH
+
+    PrivilegesRequired:
+      type: string
+      enum:
+        - NONE
+        - LOW
+        - HIGH
+
+    UserInteraction:
+      type: string
+      enum:
+        - NONE
+        - REQUIRED
+
+    Scope:
+      type: string
+      enum:
+        - UNCHANGED
+        - CHANGED
+
+    Confidentiality:
+      type: string
+      enum:
+        - NONE
+        - LOW
+        - HIGH
+
+    Integrity:
+      type: string
+      enum:
+        - NONE
+        - LOW
+        - HIGH
+
+    Availability:
+      type: string
+      enum:
+        - NONE
+        - LOW
+        - HIGH
+
+    VulnerabilityCount:
+      type: object
+      properties:
+        severity:
+          $ref: '#/components/schemas/VulnerabilitySeverity'
+        count:
+          type: integer
+          format: uint32
+
+    VulnerabilitySeverity:
+      type: string
+      enum:
+        - CRITICAL
+        - HIGH
+        - MEDIUM
+        - LOW
+        - NEGLIGIBLE
+
+    CVSS:
+      type: object
+      properties:
+        cvssV3Vector:
+          $ref: '#/components/schemas/CVSSV3Vector'
+        cvssV3Metrics:
+          $ref: '#/components/schemas/CVSSV3Metrics'
+
+    CVSSV3Metrics:
+      type: object
+      properties:
+        severity:
+          $ref: '#/components/schemas/VulnerabilitySeverity'
+        baseScore:
+          type: number
+        exploitabilityScore:
+          type: number
+        impactScore:
+          type: number
+
+    CVSSV3Vector:
+      type: object
+      properties:
+        vector:
+          type: string
+        attackVector:
+          $ref: '#/components/schemas/AttackVector'
+        attackComplexity:
+          $ref: '#/components/schemas/AttackComplexity'
+        privilegesRequired:
+          $ref: '#/components/schemas/PrivilegesRequired'
+        userInteraction:
+          $ref: '#/components/schemas/UserInteraction'
+        scope:
+          $ref: '#/components/schemas/Scope'
+        confidentiality:
+          $ref: '#/components/schemas/Confidentiality'
+        integrity:
+          $ref: '#/components/schemas/Integrity'
+        availability:
+          $ref: '#/components/schemas/Availability'
+
+    VulnerabilityEx:
+      type: object
+      properties:
+        vulnerability:
+          $ref: '#/components/schemas/Vulnerability'
+        scanDate:
+          type: string
+          format: date-time
+        description:
+          type: string
+        links:
+          type: array
+          items:
+            type: string
+        cvss:
+          $ref: '#/components/schemas/CVSS'
+
+    MalwareType:
+      type: string
+      enum:
+        - ADWARE
+        - VIRUS
+        - TROJAN
+        - WORM
+        - SPYWARE
+        - RANSOMWARE
+
+    MalwareInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        malwareName:
+          type: string
+        malwareType:
+          $ref: '#/components/schemas/MalwareType'
+        path:
+          type: string
+          description: Path of the file that contains malware
+
+    RootkitType:
+      type: string
+      enum:
+        - MEMORY
+        - KERNEL
+        - APPLICATION
+        - FIRMWARE
+
+    RootkitInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        rootkitName:
+          type: string
+        rootkitType:
+          $ref: '#/components/schemas/RootkitType'
+        path:
+          type: string
+          description: Path of the file that contains rootkit
+
+    MisconfigurationType:
+      type: string
+      enum:
+        - DEFAULT_PASSWORD
+
+    MisconfigurationInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        misconfigurationType:
+          $ref: '#/components/schemas/MisconfigurationType'
+        path:
+          type: string
+          description: Path of the file that contains misconfigurations
+
+    SecretInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        description:
+          type: string
+        path:
+          type: string
+          description: Path of the file that contains secrets
+
+    ExploitInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        description:
+          type: string
+        vulnerabilities:
+          type: array
+          items:
+            type: string
+
+    InstanceContentAnalysis:
+      type: object
+      properties:
+        resource:
+          $ref: '#/components/schemas/InstanceInfo'
+        packages:
+          type: array
+          items:
+            $ref: '#/components/schemas/PackageContentAnalysis'
+
+    PackageContentAnalysis:
+      type: object
+      properties:
+        package:
+          $ref: '#/components/schemas/PackageInfo'
+
+    InstanceVulnerabilityScan:
+      type: object
+      properties:
+        resource:
+          $ref: '#/components/schemas/InstanceInfo'
+        packageVulnerabilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/PackageVulnerabilityScan'
+
+    PackageVulnerabilityScan:
+      type: object
+      properties:
+        package:
+          $ref: '#/components/schemas/PackageInfo'
+        vulnerabilityName:
+          type: string
+        severity:
+          $ref: '#/components/schemas/VulnerabilitySeverity'
+        fixVersion:
+          type: string
+        description:
+          type: string
+        links:
+          type: array
+          items:
+            type: string
+        cvss:
+          $ref: '#/components/schemas/CVSS'
+
+    InstanceMalwareScan:
+      type: object
+      properties:
+        resource:
+          $ref: '#/components/schemas/InstanceInfo'
+        packages:
+          type: array
+          items:
+            $ref: '#/components/schemas/MalwareInfo'
+
+    InstanceRootkitScan:
+      type: object
+      properties:
+        resource:
+          $ref: '#/components/schemas/InstanceInfo'
+        packages:
+          type: array
+          items:
+            $ref: '#/components/schemas/RootkitInfo'
+
+    InstanceSecretScan:
+      type: object
+      properties:
+        resource:
+          $ref: '#/components/schemas/InstanceInfo'
+        packages:
+          type: array
+          items:
+            $ref: '#/components/schemas/SecretInfo'
+
+    InstanceMisconfigurationScan:
+      type: object
+      properties:
+        resource:
+          $ref: '#/components/schemas/InstanceInfo'
+        packages:
+          type: array
+          items:
+            $ref: '#/components/schemas/MisconfigurationInfo'
+
+    InstanceExploitScan:
+      type: object
+      properties:
+        resource:
+          $ref: '#/components/schemas/InstanceInfo'
+        packages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExploitInfo'
+
+  responses:
+    Success:
+      description: success message
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SuccessResponse'
+
+    UnknownError:
+      description: unknown error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponse'
+
+  parameters:
+    id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+
+    vul_id:
+      name: vul_id
+      in: path
+      required: true
+      schema:
+        type: string
+
+    pkg_id:
+      name: pkg_id
+      in: path
+      required: true
+      schema:
+        type: string
+
+    page:
+      name: page
+      in: query
+      description: Page number of the query
+      required: true
+      schema:
+        type: integer
+
+    pageSize:
+      name: pageSize
+      in: query
+      description: Maximum items to return
+      required: true
+      schema:
+        maximum: 50
+        minimum: 1
+        type: integer
+
+    instancesSortKey:
+      name: sortKey
+      in: query
+      description: Sort key
+      required: true
+      schema:
+        type: string
+
+    packagesSortKey:
+      name: sortKey
+      in: query
+      description: Sort key
+      required: true
+      schema:
+        type: string
+
+    vulnerabilitiesSortKey:
+      name: sortKey
+      in: query
+      description: Sort key
+      required: true
+      schema:
+        type: string
