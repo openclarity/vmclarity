@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/ghodss/yaml"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -115,7 +116,11 @@ func initConfig() {
 	err = viper.Unmarshal(config)
 	cobra.CheckErr(err)
 
-	logrus.Infof("Using config file (%s): %+v", viper.ConfigFileUsed(), config)
+	if logrus.IsLevelEnabled(logrus.InfoLevel) {
+		configB, err := yaml.Marshal(config)
+		cobra.CheckErr(err)
+		logrus.Infof("Using config file (%s):\n%s", viper.ConfigFileUsed(), string(configB))
+	}
 }
 
 func initLogger() {
