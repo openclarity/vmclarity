@@ -93,9 +93,9 @@ type Snapshot interface {
 type ScannerConfig struct {
 	ScannerImage   string
 	ScannerCommand string
-	VolumeToScan   string
 	ScannerJobConfig
 }
+
 type ScannerJobConfig struct {
 	DirectoryToScan   string            `json:"directory_to_scan"`
 	ServerToReport    string            `json:"server_to_report"`
