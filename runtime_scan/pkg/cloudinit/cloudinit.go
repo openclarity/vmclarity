@@ -24,16 +24,17 @@ import (
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
 )
 
-func GenerateCloudInit(scannerConfig *types.ScannerConfig) (*string, error) {
+func GenerateCloudInit(scannerConfig *types.ScannerConfig, deviceName string) (*string, error) {
 	vars := make(map[string]interface{})
 	// parse cloud-init template
 	tmpl, err := template.New("cloud-init").Parse(cloudInitTmpl)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse cloud-init template: %v", err)
 	}
-	vars["Volume"] = scannerConfig.VolumeToScan
+	vars["Volume"] = deviceName
 	vars["ScannerImage"] = scannerConfig.ScannerImage
 	vars["ScannerCommand"] = scannerConfig.ScannerCommand
+	vars["DirToScan"] = scannerConfig.DirectoryToScan
 
 	scannerJobConfigB, err := json.Marshal(scannerConfig.ScannerJobConfig)
 	if err != nil {

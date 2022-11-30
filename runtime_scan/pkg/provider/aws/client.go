@@ -110,7 +110,7 @@ func (c *Client) Discover(ctx context.Context, scanScope types.ScanScope) ([]typ
 }
 
 func (c *Client) RunScanningJob(ctx context.Context, snapshot types.Snapshot, scannerConfig *types.ScannerConfig) (types.Instance, error) {
-	userData, err := cloudinit.GenerateCloudInit(scannerConfig)
+	userData, err := cloudinit.GenerateCloudInit(scannerConfig, c.awsConfig.DeviceName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate cloud-init: %v", err)
 	}

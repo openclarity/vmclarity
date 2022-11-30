@@ -36,7 +36,7 @@ write_files:
       Type=oneshot
       WorkingDirectory=/opt/vmclarity
       ExecStartPre=docker pull {{ .ScannerImage }}
-      ExecStart=docker run --rm --name %n -v /mnt/snapshot:/snapshot -v /opt/vmclarity:/vmclarity {{ .ScannerImage }} {{ .ScannerCommand }}
+      ExecStart=docker run --rm --name %n -v /mnt/snapshot:{{ .DirToScan }} -v /opt/vmclarity:/vmclarity {{ .ScannerImage }} {{ .ScannerCommand }}
 
       [Install]
       WantedBy=multi-user.target
