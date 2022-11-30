@@ -31,13 +31,15 @@ func GenerateCloudInit(scannerConfig *types.ScannerConfig) (*string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse cloud-init template: %v", err)
 	}
+	vars["Volume"] = scannerConfig.VolumeToScan
+	vars["ScannerImage"] = scannerConfig.ScannerImage
+	vars["ScannerComand"] = scannerConfig.ScannerCommand
 
-	scannerConfigB, err := json.Marshal(scannerConfig)
+	scannerJobConfigB, err := json.Marshal(scannerConfig.ScannerJobConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal config: %v", err)
 	}
-
-	vars["Config"] = bytes.NewBuffer(scannerConfigB).String()
+	vars["Config"] = bytes.NewBuffer(scannerJobConfigB).String()
 	var tmplExB bytes.Buffer
 	if err := tmpl.Execute(&tmplExB, vars); err != nil {
 		return nil, fmt.Errorf("failed to execute cloud-init template: %v", err)
