@@ -33,7 +33,7 @@ func GenerateCloudInit(scannerConfig *types.ScannerConfig) (*string, error) {
 	}
 	vars["Volume"] = scannerConfig.VolumeToScan
 	vars["ScannerImage"] = scannerConfig.ScannerImage
-	vars["ScannerComand"] = scannerConfig.ScannerCommand
+	vars["ScannerCommand"] = scannerConfig.ScannerCommand
 
 	scannerJobConfigB, err := json.Marshal(scannerConfig.ScannerJobConfig)
 	if err != nil {
