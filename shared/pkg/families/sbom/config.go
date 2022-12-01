@@ -17,8 +17,6 @@ package sbom
 
 import "github.com/openclarity/kubeclarity/shared/pkg/config"
 
-func (*Config) IsConfig() {}
-
 type Config struct {
 	Enabled         bool           `yaml:"enabled" mapstructure:"enabled"`
 	AnalyzersList   []string       `yaml:"analyzers_list" mapstructure:"analyzers_list"`

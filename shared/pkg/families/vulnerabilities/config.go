@@ -21,8 +21,6 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 )
 
-func (*Config) IsConfig() {}
-
 type Config struct {
 	Enabled        bool           `yaml:"enabled" mapstructure:"enabled"`
 	ScannersList   []string       `yaml:"scanners_list" mapstructure:"scanners_list"`
@@ -38,8 +36,4 @@ type Inputs struct {
 
 type InputFromFamily struct {
 	FamilyType types.FamilyType `yaml:"family_type" mapstructure:"family_type"`
-}
-
-type GrypeConfig struct {
-	Scope string `yaml:"scope" mapstructure:"scope"`
 }

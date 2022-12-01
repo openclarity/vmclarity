@@ -15,8 +15,6 @@
 
 package secrets
 
-func (*Config) IsConfig() {}
-
 type Config struct {
 	Enabled      bool     `yaml:"enabled" mapstructure:"enabled"`
 	ScannersList []string `yaml:"scanners_list" mapstructure:"scanners_list"`
