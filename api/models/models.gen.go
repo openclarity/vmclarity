@@ -48,21 +48,17 @@ type ExploitScan struct {
 
 // Instance defines model for Instance.
 type Instance struct {
-	Id               *string        `json:"id,omitempty"`
-	InstanceID       *string        `json:"instanceID,omitempty"`
-	InstanceName     *string        `json:"instanceName,omitempty"`
-	InstanceProvider *CloudProvider `json:"instanceProvider,omitempty"`
-	InstanceRegion   *string        `json:"instanceRegion,omitempty"`
-	ScanResults      *uint32        `json:"scanResults,omitempty"`
+	Id          *string       `json:"id,omitempty"`
+	Instance    *InstanceInfo `json:"instance,omitempty"`
+	ScanResults *uint32       `json:"scanResults,omitempty"`
 }
 
 // InstanceInfo defines model for InstanceInfo.
 type InstanceInfo struct {
 	Id               *string        `json:"id,omitempty"`
-	InstanceID       *string        `json:"instanceID,omitempty"`
 	InstanceName     *string        `json:"instanceName,omitempty"`
 	InstanceProvider *CloudProvider `json:"instanceProvider,omitempty"`
-	InstanceRegion   *string        `json:"instanceRegion,omitempty"`
+	Location         *string        `json:"location,omitempty"`
 }
 
 // MalwareInfo defines model for MalwareInfo.

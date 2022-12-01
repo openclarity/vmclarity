@@ -33,7 +33,7 @@ type ServerInterface interface {
 	// Get instance.
 	// (GET /instances/{instanceID})
 	GetInstancesInstanceID(ctx echo.Context, instanceID string) error
-	// Update Application.
+	// Update instance.
 	// (PUT /instances/{instanceID})
 	PutInstancesInstanceID(ctx echo.Context, instanceID string) error
 	// Get scan results for a specified instance
@@ -45,25 +45,25 @@ type ServerInterface interface {
 	// Report a specific scan result for a specific instance
 	// (GET /instances/{instanceID}/scanresults/{scanID})
 	GetInstancesInstanceIDScanresultsScanID(ctx echo.Context, instanceID string, scanID string) error
-	// Report a specific exploit scan result for a specific instance
+	// Get a specific exploit scan result for a specific instance
 	// (GET /instances/{instanceID}/scanresults/{scanID}/exploits)
 	GetInstancesInstanceIDScanresultsScanIDExploits(ctx echo.Context, instanceID string, scanID string) error
-	// Report a specific malware scan result for a specific instance
+	// Get a specific malware scan result for a specific instance
 	// (GET /instances/{instanceID}/scanresults/{scanID}/malwares)
 	GetInstancesInstanceIDScanresultsScanIDMalwares(ctx echo.Context, instanceID string, scanID string) error
-	// Report a specific misconfiguration scan result for a specific instance
+	// Get a specific misconfiguration scan result for a specific instance
 	// (GET /instances/{instanceID}/scanresults/{scanID}/misconfiguration)
 	GetInstancesInstanceIDScanresultsScanIDMisconfiguration(ctx echo.Context, instanceID string, scanID string) error
-	// Report a specific rootkit scan result for a specific instance
+	// Get a specific rootkit scan result for a specific instance
 	// (GET /instances/{instanceID}/scanresults/{scanID}/rootkits)
 	GetInstancesInstanceIDScanresultsScanIDRootkits(ctx echo.Context, instanceID string, scanID string) error
-	// Report a specific sbom scan result for a specific instance
+	// Get a specific sbom scan result for a specific instance
 	// (GET /instances/{instanceID}/scanresults/{scanID}/sbom)
 	GetInstancesInstanceIDScanresultsScanIDSbom(ctx echo.Context, instanceID string, scanID string) error
-	// Report a specific secret scan result for a specific instance
+	// Get a specific secret scan result for a specific instance
 	// (GET /instances/{instanceID}/scanresults/{scanID}/secrets)
 	GetInstancesInstanceIDScanresultsScanIDSecrets(ctx echo.Context, instanceID string, scanID string) error
-	// Report a specific vulnerabilities scan result for a specific instance
+	// Get a specific vulnerabilities scan result for a specific instance
 	// (GET /instances/{instanceID}/scanresults/{scanID}/vulnerabilities)
 	GetInstancesInstanceIDScanresultsScanIDVulnerabilities(ctx echo.Context, instanceID string, scanID string) error
 }
@@ -458,35 +458,36 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
+	"//8Q1Dk1CDsAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

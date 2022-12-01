@@ -109,7 +109,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
     put:
-      summary: Update Application.
+      summary: Update instance.
       parameters:
         - name: instanceID
           in: path
@@ -231,7 +231,7 @@ paths:
         required: true
       responses:
         201:
-          description: New instance was created.
+          description: New results was added to the instance.
           content:
             application/json:
               schema:
@@ -281,7 +281,7 @@ paths:
 
   /instances/{instanceID}/scanresults/{scanID}/sbom:
     get:
-      summary: Report a specific sbom scan result for a specific instance
+      summary: Get a specific sbom scan result for a specific instance
       parameters:
         - name: instanceID
           in: path
@@ -309,7 +309,7 @@ paths:
 
   /instances/{instanceID}/scanresults/{scanID}/vulnerabilities:
     get:
-      summary: Report a specific vulnerabilities scan result for a specific instance
+      summary: Get a specific vulnerabilities scan result for a specific instance
       parameters:
         - name: instanceID
           in: path
@@ -337,7 +337,7 @@ paths:
 
   /instances/{instanceID}/scanresults/{scanID}/malwares:
     get:
-      summary: Report a specific malware scan result for a specific instance
+      summary: Get a specific malware scan result for a specific instance
       parameters:
         - name: instanceID
           in: path
@@ -365,7 +365,7 @@ paths:
 
   /instances/{instanceID}/scanresults/{scanID}/secrets:
     get:
-      summary: Report a specific secret scan result for a specific instance
+      summary: Get a specific secret scan result for a specific instance
       parameters:
         - name: instanceID
           in: path
@@ -393,7 +393,7 @@ paths:
 
   /instances/{instanceID}/scanresults/{scanID}/rootkits:
     get:
-      summary: Report a specific rootkit scan result for a specific instance
+      summary: Get a specific rootkit scan result for a specific instance
       parameters:
         - name: instanceID
           in: path
@@ -421,7 +421,7 @@ paths:
 
   /instances/{instanceID}/scanresults/{scanID}/misconfiguration:
     get:
-      summary: Report a specific misconfiguration scan result for a specific instance
+      summary: Get a specific misconfiguration scan result for a specific instance
       parameters:
         - name: instanceID
           in: path
@@ -449,7 +449,7 @@ paths:
 
   /instances/{instanceID}/scanresults/{scanID}/exploits:
     get:
-      summary: Report a specific exploit scan result for a specific instance
+      summary: Get a specific exploit scan result for a specific instance
       parameters:
         - name: instanceID
           in: path
@@ -505,9 +505,7 @@ components:
           type: string
         instanceProvider:
           $ref: '#/components/schemas/CloudProvider'
-        instanceRegion:
-          type: string
-        instanceID:
+        location:
           type: string
 
     Instance:
@@ -515,14 +513,8 @@ components:
       properties:
         id:
           type: string
-        instanceName:
-          type: string
-        instanceProvider:
-          $ref: '#/components/schemas/CloudProvider'
-        instanceRegion:
-          type: string
-        instanceID:
-          type: string
+        instance:
+          $ref: '#/components/schemas/InstanceInfo'
         scanResults:
           type: integer
           format: uint32
