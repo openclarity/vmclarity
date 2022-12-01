@@ -1,4 +1,4 @@
-package: api
+package: server
 output: server/server.gen.go
 additional-imports:
   - package: github.com/vmclarity/api/models
