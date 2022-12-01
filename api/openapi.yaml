@@ -235,13 +235,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ScanResults'
+                $ref: '#/components/schemas/ScanResultsSummary'
         409:
           description: Scan results already exist.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ScanResults'
+                $ref: '#/components/schemas/ScanResultsSummary'
         default:
           description: unknown error
           content:

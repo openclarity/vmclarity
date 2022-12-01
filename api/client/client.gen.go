@@ -1365,8 +1365,8 @@ func (r GetInstancesInstanceIDScanresultsResponse) StatusCode() int {
 type PostInstancesInstanceIDScanresultsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON201      *ScanResults
-	JSON409      *ScanResults
+	JSON201      *ScanResultsSummary
+	JSON409      *ScanResultsSummary
 	JSONDefault  *ApiResponse
 }
 
@@ -1994,14 +1994,14 @@ func ParsePostInstancesInstanceIDScanresultsResponse(rsp *http.Response) (*PostI
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
-		var dest ScanResults
+		var dest ScanResultsSummary
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON201 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
-		var dest ScanResults
+		var dest ScanResultsSummary
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
