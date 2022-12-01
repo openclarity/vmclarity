@@ -26,50 +26,47 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/families/rootkits"
 	"github.com/openclarity/vmclarity/shared/pkg/families/sbom"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
-	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 	"github.com/openclarity/vmclarity/shared/pkg/families/vulnerabilities"
 )
 
 type Manager struct {
-	config    *Config
-	analyzers map[types.FamilyType]_interface.Family
-	scanners  map[types.FamilyType]_interface.Family
-	enrichers map[types.FamilyType]_interface.Family
+	config   *Config
+	families []_interface.Family
 }
 
 func New(logger *log.Entry, config *Config) *Manager {
 	manager := &Manager{
-		config:    config,
-		analyzers: make(map[types.FamilyType]_interface.Family),
-		scanners:  make(map[types.FamilyType]_interface.Family),
-		enrichers: make(map[types.FamilyType]_interface.Family),
+		config: config,
 	}
 
-	// Analyzers
+	// Analyzers.
+	// SBOM MUST come before vulnerabilities.
 	if config.SBOM.Enabled {
-		manager.analyzers[types.SBOM] = sbom.New(logger, config.SBOM)
+		manager.families = append(manager.families, sbom.New(logger, config.SBOM))
 	}
 
-	// Scanners
+	// Scanners.
+	// Vulnerabilities MUST be after SBOM to support the case it is configured to use the output from sbom.
 	if config.Vulnerabilities.Enabled {
-		manager.scanners[types.Vulnerabilities] = vulnerabilities.New(logger, config.Vulnerabilities)
+		manager.families = append(manager.families, vulnerabilities.New(logger, config.Vulnerabilities))
 	}
 	if config.Secrets.Enabled {
-		manager.scanners[types.Secrets] = secrets.New(logger, config.Secrets)
+		manager.families = append(manager.families, secrets.New(logger, config.Secrets))
 	}
 	if config.Rootkits.Enabled {
-		manager.scanners[types.Rootkits] = rootkits.New(logger, config.Rootkits)
+		manager.families = append(manager.families, rootkits.New(logger, config.Rootkits))
 	}
 	if config.Malware.Enabled {
-		manager.scanners[types.Malware] = malware.New(logger, config.Malware)
+		manager.families = append(manager.families, malware.New(logger, config.Malware))
 	}
 	if config.Misconfiguration.Enabled {
-		manager.scanners[types.Misconfiguration] = misconfiguration.New(logger, config.Misconfiguration)
+		manager.families = append(manager.families, misconfiguration.New(logger, config.Misconfiguration))
 	}
 
-	// Enrichers
+	// Enrichers.
+	// Exploits MUST be after Vulnerabilities to support the case it is configured to use the output from Vulnerabilities.
 	if config.Exploits.Enabled {
-		manager.enrichers[types.Exploits] = exploits.New(logger, config.Exploits)
+		manager.families = append(manager.families, exploits.New(logger, config.Exploits))
 	}
 
 	return manager
@@ -77,34 +74,13 @@ func New(logger *log.Entry, config *Config) *Manager {
 
 func (m *Manager) Run() (*results.Results, error) {
 	familiesResults := results.New()
-	if len(m.analyzers) > 0 {
-		for _, analyzer := range m.analyzers {
-			ret, err := analyzer.Run(familiesResults)
-			if err != nil {
-				return nil, err
-			}
-			familiesResults.SetResults(ret)
-		}
-	}
 
-	if len(m.scanners) > 0 {
-		for _, scanner := range m.scanners {
-			ret, err := scanner.Run(familiesResults)
-			if err != nil {
-				return nil, err
-			}
-			familiesResults.SetResults(ret)
+	for _, analyzer := range m.families {
+		ret, err := analyzer.Run(familiesResults)
+		if err != nil {
+			return nil, err
 		}
-	}
-
-	if len(m.enrichers) > 0 {
-		for _, enricher := range m.enrichers {
-			ret, err := enricher.Run(familiesResults)
-			if err != nil {
-				return nil, err
-			}
-			familiesResults.SetResults(ret)
-		}
+		familiesResults.SetResults(ret)
 	}
 
 	return familiesResults, nil

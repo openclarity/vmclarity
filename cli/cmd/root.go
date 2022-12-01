@@ -52,26 +52,30 @@ var rootCmd = &cobra.Command{
 			return fmt.Errorf("failed to run families: %v", err)
 		}
 
-		sbomResults, err := results.GetResult[*sbom.Results](res)
-		if err != nil {
-			return fmt.Errorf("failed to get sbom results: %v", err)
+		if config.SBOM.Enabled {
+			sbomResults, err := results.GetResult[*sbom.Results](res)
+			if err != nil {
+				return fmt.Errorf("failed to get sbom results: %v", err)
+			}
+
+			// TODO: Need to implement a better presenter
+			err = Output(sbomResults.SBOM, "sbom")
+			if err != nil {
+				return fmt.Errorf("failed to output sbom results: %v", err)
+			}
 		}
 
-		// TODO: Need to implement a better presenter
-		err = Output(sbomResults.SBOM, "sbom")
-		if err != nil {
-			return fmt.Errorf("failed to output sbom results: %v", err)
-		}
+		if config.Vulnerabilities.Enabled {
+			vulnerabilitiesResults, err := results.GetResult[*vulnerabilities.Results](res)
+			if err != nil {
+				return fmt.Errorf("failed to get sbom results: %v", err)
+			}
 
-		vulnerabilitiesResults, err := results.GetResult[*vulnerabilities.Results](res)
-		if err != nil {
-			return fmt.Errorf("failed to get sbom results: %v", err)
-		}
-
-		bytes, _ := json.Marshal(vulnerabilitiesResults.MergedResults)
-		err = Output(bytes, "vulnerabilities")
-		if err != nil {
-			return fmt.Errorf("failed to output vulnerabilities results: %v", err)
+			bytes, _ := json.Marshal(vulnerabilitiesResults.MergedResults)
+			err = Output(bytes, "vulnerabilities")
+			if err != nil {
+				return fmt.Errorf("failed to output vulnerabilities results: %v", err)
+			}
 		}
 
 		return nil
