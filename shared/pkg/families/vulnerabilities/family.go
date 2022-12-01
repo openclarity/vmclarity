@@ -44,7 +44,7 @@ type Vulnerabilities struct {
 func (v Vulnerabilities) Run(res *results.Results) (_interface.IsResults, error) {
 	v.logger.Info("Vulnerabilities Run...")
 
-	manager := job_manager.New(v.conf.ScannersList, v.conf.ScannersConfig, v.logger, job.CreateJob)
+	manager := job_manager.New(v.conf.ScannersList, v.conf.ScannersConfig, v.logger, job.Factory)
 	mergedResults := sharedscanner.NewMergedResults()
 
 	if v.conf.InputFromSbom {

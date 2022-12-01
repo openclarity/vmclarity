@@ -459,9 +459,9 @@ require (
 
 // github.com/openclarity/kubeclarity job-manager-changes
 replace (
-	github.com/openclarity/kubeclarity/api => github.com/openclarity/kubeclarity/api v0.0.0-20221129053017-0c2aa0b430fa
-	github.com/openclarity/kubeclarity/cli => github.com/openclarity/kubeclarity/cli v0.0.0-20221129053017-0c2aa0b430fa
-	github.com/openclarity/kubeclarity/shared => github.com/openclarity/kubeclarity/shared v0.0.0-20221129053017-0c2aa0b430fa
+	github.com/openclarity/kubeclarity/api => github.com/openclarity/kubeclarity/api v0.0.0-20221201144037-9be29528f45a
+	github.com/openclarity/kubeclarity/cli => github.com/openclarity/kubeclarity/cli v0.0.0-20221201144037-9be29528f45a
+	github.com/openclarity/kubeclarity/shared => github.com/openclarity/kubeclarity/shared v0.0.0-20221201144037-9be29528f45a
 )
 
 // Replace these for trivy

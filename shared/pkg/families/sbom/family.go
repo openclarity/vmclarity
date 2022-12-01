@@ -52,7 +52,7 @@ func (s SBOM) Run(res *results.Results) (_interface.IsResults, error) {
 		return nil, fmt.Errorf("failed to generate hash for source %s: %v", s.conf.Inputs[0].Input, err)
 	}
 
-	manager := job_manager.New(s.conf.AnalyzersList, s.conf.AnalyzersConfig, s.logger, job.CreateAnalyzerJob)
+	manager := job_manager.New(s.conf.AnalyzersList, s.conf.AnalyzersConfig, s.logger, job.Factory)
 	mergedResults := sharedanalyzer.NewMergedResults(utils.SourceType(s.conf.Inputs[0].InputType), hash)
 
 	for _, input := range s.conf.Inputs {
