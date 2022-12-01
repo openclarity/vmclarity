@@ -86,11 +86,11 @@ paths:
                 $ref: '#/components/schemas/ApiResponse'
       x-codegen-request-body-name: body
 
-  /instances/{id}:
+  /instances/{instanceID}:
     get:
       summary: Get instance.
       parameters:
-        - name: id
+        - name: instanceID
           in: path
           required: true
           schema:
@@ -111,7 +111,7 @@ paths:
     put:
       summary: Update Application.
       parameters:
-        - name: id
+        - name: instanceID
           in: path
           required: true
           schema:
@@ -142,7 +142,7 @@ paths:
     delete:
       summary: Delete Instance.
       parameters:
-        - name: id
+        - name: instanceID
           in: path
           required: true
           schema:
@@ -161,10 +161,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
 
-  /packages:
+  /instances/{instanceID}/scanresults:
     get:
-      summary: Get packages
+      summary: Get scan results for a specified instance
       parameters:
+        - name: instanceID
+          in: path
+          required: true
+          schema:
+            type: string
         - name: page
           in: query
           description: Page number of the query
@@ -197,25 +202,65 @@ paths:
                 properties:
                   total:
                     type: integer
-                    description: Total packages count under the given filters
+                    description: Total scan results count under the given filters
                   items:
                     type: array
-                    description: List of packages in the given filters and page. List
-                      length must be lower or equal to pageSize
+                    description: List of scan results for a specified instance in the given filters and page.
+                      List length must be lower or equal to pageSize.
                     items:
-                      $ref: '#/components/schemas/Package'
+                      $ref: '#/components/schemas/ScanResults'
         default:
           description: unknown error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
-
-  /packages/{id}:
-    get:
-      summary: Get Package.
+    post:
+      summary: Create scan result for a specified instance
       parameters:
-        - name: id
+        - name: instanceID
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScanResults'
+        required: true
+      responses:
+        201:
+          description: New instance was created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanResults'
+        409:
+          description: Scan results already exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanResults'
+        default:
+          description: unknown error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+      x-codegen-request-body-name: body
+
+
+  /instances/{instanceID}/scanresults/{scanID}:
+    get:
+      summary: Report a specific scan result for a specific instance
+      parameters:
+        - name: instanceID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: scanID
           in: path
           required: true
           schema:
@@ -226,10 +271,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Package'
-        404:
-          description: Package ID not found.
-          content: {}
+                $ref: '#/components/schemas/ScanResultsSummary'
         default:
           description: unknown error
           content:
@@ -237,66 +279,16 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
 
-  /vulnerabilities:
+  /instances/{instanceID}/scanresults/{scanID}/sbom:
     get:
-      summary: Get vulnerabilities
+      summary: Report a specific sbom scan result for a specific instance
       parameters:
-        - name: page
-          in: query
-          description: Page number of the query
-          required: true
-          schema:
-            type: integer
-        - name: pageSize
-          in: query
-          description: Maximum items to return
-          required: true
-          schema:
-            maximum: 50
-            minimum: 1
-            type: integer
-        - name: sortKey
-          in: query
-          description: Sort key
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                required:
-                  - total
-                type: object
-                properties:
-                  total:
-                    type: integer
-                    description: Total vulnerabilities count under the given filters
-                  items:
-                    type: array
-                    description: List of vulnerabilities in the given filters and
-                      page. List length must be lower or equal to pageSize
-                    items:
-                      $ref: '#/components/schemas/Vulnerability'
-        default:
-          description: unknown error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-
-  /vulnerabilities/{vul_id}/{pkg_id}:
-    get:
-      summary: Get a vulnerability of a specific package
-      parameters:
-        - name: vul_id
+        - name: instanceID
           in: path
           required: true
           schema:
             type: string
-        - name: pkg_id
+        - name: scanID
           in: path
           required: true
           schema:
@@ -307,7 +299,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VulnerabilityEx'
+                $ref: '#/components/schemas/SbomScan'
         default:
           description: unknown error
           content:
@@ -315,215 +307,173 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
 
-  /instances/vulnerabilityScan/{id}:
-    post:
-      summary: Report a vulnerability scan for a specific instance
+  /instances/{instanceID}/scanresults/{scanID}/vulnerabilities:
+    get:
+      summary: Report a specific vulnerabilities scan result for a specific instance
       parameters:
-        - name: id
+        - name: instanceID
           in: path
           required: true
           schema:
             type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InstanceVulnerabilityScan'
-        required: true
+        - name: scanID
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        201:
-          description: Instance vulnerability scan successfully reported.
-          content: {}
-        404:
-          description: Instance not found.
-          content: {}
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VulnerabilityScan'
         default:
           description: unknown error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
-      x-codegen-request-body-name: body
 
-  /instances/contentAnalysis/{id}:
-    post:
-      summary: Report a content analysis for a specific instance
+  /instances/{instanceID}/scanresults/{scanID}/malwares:
+    get:
+      summary: Report a specific malware scan result for a specific instance
       parameters:
-        - name: id
+        - name: instanceID
           in: path
           required: true
           schema:
             type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InstanceContentAnalysis'
-        required: true
+        - name: scanID
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        201:
-          description: Instance content analysis successfully reported.
-          content: {}
-        404:
-          description: Instance not found.
-          content: {}
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MalwareScan'
         default:
           description: unknown error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
-      x-codegen-request-body-name: body
 
-  /instances/malewareScan/{id}:
-    post:
-      summary: Report a malware scan for a specific instance
+  /instances/{instanceID}/scanresults/{scanID}/secrets:
+    get:
+      summary: Report a specific secret scan result for a specific instance
       parameters:
-        - name: id
+        - name: instanceID
           in: path
           required: true
           schema:
             type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InstanceMalwareScan'
-        required: true
+        - name: scanID
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        201:
-          description: Instance rootkit scan successfully reported.
-          content: {}
-        404:
-          description: Instance not found.
-          content: {}
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecretScan'
         default:
           description: unknown error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
-      x-codegen-request-body-name: body
 
-  /instances/rootkitScan/{id}:
-    post:
-      summary: Report a rootkit scan for a specific instance
+  /instances/{instanceID}/scanresults/{scanID}/rootkits:
+    get:
+      summary: Report a specific rootkit scan result for a specific instance
       parameters:
-        - name: id
+        - name: instanceID
           in: path
           required: true
           schema:
             type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InstanceRootkitScan'
-        required: true
+        - name: scanID
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        201:
-          description: Instance rootkit scan successfully reported.
-          content: {}
-        404:
-          description: Instance not found.
-          content: {}
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RootkitScan'
         default:
           description: unknown error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
-      x-codegen-request-body-name: body
 
-  /instances/secretScan/{id}:
-    post:
-      summary: Report a secret scan for a specific instance
+  /instances/{instanceID}/scanresults/{scanID}/misconfiguration:
+    get:
+      summary: Report a specific misconfiguration scan result for a specific instance
       parameters:
-        - name: id
+        - name: instanceID
           in: path
           required: true
           schema:
             type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InstanceSecretScan'
-        required: true
+        - name: scanID
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        201:
-          description: Instance secret scan successfully reported.
-          content: {}
-        404:
-          description: Instance not found.
-          content: {}
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MisconfigurationScan'
         default:
           description: unknown error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
-      x-codegen-request-body-name: body
 
-  /instances/misconfigurationScan/{id}:
-    post:
-      summary: Report a misconfiguration scan for a specific instance
+  /instances/{instanceID}/scanresults/{scanID}/exploits:
+    get:
+      summary: Report a specific exploit scan result for a specific instance
       parameters:
-        - name: id
+        - name: instanceID
           in: path
           required: true
           schema:
             type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InstanceMisconfigurationScan'
-        required: true
+        - name: scanID
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        201:
-          description: Instance misconfiguration scan successfully reported.
-          content: {}
-        404:
-          description: Instance not found.
-          content: {}
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExploitScan'
         default:
           description: unknown error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
-      x-codegen-request-body-name: body
-
-  /instances/exploitScan/{id}:
-    post:
-      summary: Report an exploit scan for a specific instance
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InstanceRootkitScan'
-        required: true
-      responses:
-        201:
-          description: Instance exploit scan successfully reported.
-          content: {}
-        404:
-          description: Instance not found.
-          content: {}
-        default:
-          description: unknown error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-      x-codegen-request-body-name: body
 
 components:
   schemas:
@@ -540,35 +490,6 @@ components:
         message:
           type: string
       description: An object that is returned in cases of success that returns nothing.
-
-    InstancesSortKey:
-      type: string
-      enum:
-        - instanceName
-        - instanceProvider
-        - instanceRegion
-        - instanceID
-
-    PackagesSortKey:
-      type: string
-      enum:
-        - packageName
-        - instances
-        - language
-        - vulnerabilities
-        - version
-        - license
-
-    VulnerabilitiesSortKey:
-      type: string
-      enum:
-        - vulnerabilityName
-        - packageName
-        - packageVersion
-        - severity
-        - instances
-        - fixVersion
-        - source
 
     CloudProvider:
       type: string
@@ -602,40 +523,62 @@ components:
           type: string
         instanceID:
           type: string
+        scanResults:
+          type: integer
+          format: uint32
+
+    ScanResults:
+      type: object
+      properties:
+        id:
+          type: string
+        sboms:
+          $ref: '#/components/schemas/SbomScan'
         vulnerabilities:
-          type: array
-          description: vulnerability count per severity
-          items:
-            $ref: '#/components/schemas/VulnerabilityCount'
-        packages:
-          type: integer
-          format: uint32
+          $ref: '#/components/schemas/VulnerabilityScan'
         malwares:
-          type: integer
-          format: uint32
-        rootkits:
-          type: integer
-          format: uint32
-        misconfigurations:
-          type: integer
-          format: uint32
+          $ref: '#/components/schemas/VulnerabilityScan'
         secrets:
-          type: integer
-          format: uint32
+          $ref: '#/components/schemas/SecretScan'
+        misconfigurations:
+          $ref: '#/components/schemas/MisconfigurationScan'
         exploits:
+          $ref: '#/components/schemas/ExploitScan'
+
+    ScanResultsSummary:
+      type: object
+      properties:
+        packagesCount:
           type: integer
-          format: uint32
+        vulnerabilitiesCount:
+          type: integer
+        malwaresCount:
+          type: integer
+        secretsCount:
+          type: integer
+        misconfigurationsCount:
+          type: integer
+        exploitsCount:
+          type: integer
 
     PackageInfo:
       type: object
       properties:
-        name:
+        id:
           type: string
-        language:
+        packageName:
           type: string
-        version:
+        packageVersion:
           type: string
-        license:
+
+    VulnerabilityInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        vulnerabilityName:
+          type: string
+        description:
           type: string
 
     Package:
@@ -643,190 +586,16 @@ components:
       properties:
         id:
           type: string
-        name:
-          type: string
-        language:
-          type: string
-        version:
-          type: string
-        license:
-          type: string
-        instances:
-          type: integer
-          format: uint32
-        vulnerabilities:
-          type: array
-          items:
-            $ref: '#/components/schemas/VulnerabilityCount'
+        packageInfo:
+          $ref: '#/components/schemas/PackageInfo'
 
     Vulnerability:
       type: object
       properties:
         id:
           type: string
-          description: Unique ID for the vulnerabilityID and packageID combination.
-        vulnerabilityID:
-          type: string
-        vulnerabilityName:
-          type: string
-        packageName:
-          type: string
-        packageVersion:
-          type: string
-        packageID:
-          type: string
-        severity:
-          $ref: '#/components/schemas/VulnerabilitySeverity'
-        cvssSeverity:
-          $ref: '#/components/schemas/VulnerabilitySeverity'
-        cvssBaseScore:
-          type: number
-        fixVersion:
-          type: string
-        instances:
-          type: integer
-          format: uint32
-
-    AttackVector:
-      type: string
-      enum:
-        - NETWORK
-        - ADJACENT
-        - LOCAL
-        - PHYSICAL
-
-    AttackComplexity:
-      type: string
-      enum:
-        - LOW
-        - HIGH
-
-    PrivilegesRequired:
-      type: string
-      enum:
-        - NONE
-        - LOW
-        - HIGH
-
-    UserInteraction:
-      type: string
-      enum:
-        - NONE
-        - REQUIRED
-
-    Scope:
-      type: string
-      enum:
-        - UNCHANGED
-        - CHANGED
-
-    Confidentiality:
-      type: string
-      enum:
-        - NONE
-        - LOW
-        - HIGH
-
-    Integrity:
-      type: string
-      enum:
-        - NONE
-        - LOW
-        - HIGH
-
-    Availability:
-      type: string
-      enum:
-        - NONE
-        - LOW
-        - HIGH
-
-    VulnerabilityCount:
-      type: object
-      properties:
-        severity:
-          $ref: '#/components/schemas/VulnerabilitySeverity'
-        count:
-          type: integer
-          format: uint32
-
-    VulnerabilitySeverity:
-      type: string
-      enum:
-        - CRITICAL
-        - HIGH
-        - MEDIUM
-        - LOW
-        - NEGLIGIBLE
-
-    CVSS:
-      type: object
-      properties:
-        cvssV3Vector:
-          $ref: '#/components/schemas/CVSSV3Vector'
-        cvssV3Metrics:
-          $ref: '#/components/schemas/CVSSV3Metrics'
-
-    CVSSV3Metrics:
-      type: object
-      properties:
-        severity:
-          $ref: '#/components/schemas/VulnerabilitySeverity'
-        baseScore:
-          type: number
-        exploitabilityScore:
-          type: number
-        impactScore:
-          type: number
-
-    CVSSV3Vector:
-      type: object
-      properties:
-        vector:
-          type: string
-        attackVector:
-          $ref: '#/components/schemas/AttackVector'
-        attackComplexity:
-          $ref: '#/components/schemas/AttackComplexity'
-        privilegesRequired:
-          $ref: '#/components/schemas/PrivilegesRequired'
-        userInteraction:
-          $ref: '#/components/schemas/UserInteraction'
-        scope:
-          $ref: '#/components/schemas/Scope'
-        confidentiality:
-          $ref: '#/components/schemas/Confidentiality'
-        integrity:
-          $ref: '#/components/schemas/Integrity'
-        availability:
-          $ref: '#/components/schemas/Availability'
-
-    VulnerabilityEx:
-      type: object
-      properties:
-        vulnerability:
-          $ref: '#/components/schemas/Vulnerability'
-        scanDate:
-          type: string
-          format: date-time
-        description:
-          type: string
-        links:
-          type: array
-          items:
-            type: string
-        cvss:
-          $ref: '#/components/schemas/CVSS'
-
-    MalwareType:
-      type: string
-      enum:
-        - ADWARE
-        - VIRUS
-        - TROJAN
-        - WORM
-        - SPYWARE
-        - RANSOMWARE
+        packageInfo:
+          $ref: '#/components/schemas/VulnerabilityInfo'
 
     MalwareInfo:
       type: object
@@ -841,14 +610,6 @@ components:
           type: string
           description: Path of the file that contains malware
 
-    RootkitType:
-      type: string
-      enum:
-        - MEMORY
-        - KERNEL
-        - APPLICATION
-        - FIRMWARE
-
     RootkitInfo:
       type: object
       properties:
@@ -862,18 +623,13 @@ components:
           type: string
           description: Path of the file that contains rootkit
 
-    MisconfigurationType:
-      type: string
-      enum:
-        - DEFAULT_PASSWORD
-
     MisconfigurationInfo:
       type: object
       properties:
         id:
           type: string
-        misconfigurationType:
-          $ref: '#/components/schemas/MisconfigurationType'
+        description:
+          type: string
         path:
           type: string
           description: Path of the file that contains misconfigurations
@@ -901,101 +657,79 @@ components:
           items:
             type: string
 
-    InstanceContentAnalysis:
+    SbomScan:
       type: object
       properties:
-        resource:
-          $ref: '#/components/schemas/InstanceInfo'
         packages:
           type: array
           items:
-            $ref: '#/components/schemas/PackageContentAnalysis'
+            $ref: '#/components/schemas/Package'
 
-    PackageContentAnalysis:
+    VulnerabilityScan:
       type: object
       properties:
-        package:
-          $ref: '#/components/schemas/PackageInfo'
-
-    InstanceVulnerabilityScan:
-      type: object
-      properties:
-        resource:
-          $ref: '#/components/schemas/InstanceInfo'
-        packageVulnerabilities:
+        vulnerabilities:
           type: array
           items:
-            $ref: '#/components/schemas/PackageVulnerabilityScan'
+            $ref: '#/components/schemas/Vulnerability'
 
-    PackageVulnerabilityScan:
+    MalwareScan:
       type: object
       properties:
-        package:
-          $ref: '#/components/schemas/PackageInfo'
-        vulnerabilityName:
-          type: string
-        severity:
-          $ref: '#/components/schemas/VulnerabilitySeverity'
-        fixVersion:
-          type: string
-        description:
-          type: string
-        links:
-          type: array
-          items:
-            type: string
-        cvss:
-          $ref: '#/components/schemas/CVSS'
-
-    InstanceMalwareScan:
-      type: object
-      properties:
-        resource:
-          $ref: '#/components/schemas/InstanceInfo'
         packages:
           type: array
           items:
             $ref: '#/components/schemas/MalwareInfo'
 
-    InstanceRootkitScan:
+    RootkitScan:
       type: object
       properties:
-        resource:
-          $ref: '#/components/schemas/InstanceInfo'
         packages:
           type: array
           items:
             $ref: '#/components/schemas/RootkitInfo'
 
-    InstanceSecretScan:
+    SecretScan:
       type: object
       properties:
-        resource:
-          $ref: '#/components/schemas/InstanceInfo'
         packages:
           type: array
           items:
             $ref: '#/components/schemas/SecretInfo'
 
-    InstanceMisconfigurationScan:
+    MisconfigurationScan:
       type: object
       properties:
-        resource:
-          $ref: '#/components/schemas/InstanceInfo'
         packages:
           type: array
           items:
             $ref: '#/components/schemas/MisconfigurationInfo'
 
-    InstanceExploitScan:
+    ExploitScan:
       type: object
       properties:
-        resource:
-          $ref: '#/components/schemas/InstanceInfo'
         packages:
           type: array
           items:
             $ref: '#/components/schemas/ExploitInfo'
+
+    MalwareType:
+      type: string
+      enum:
+        - ADWARE
+        - VIRUS
+        - TROJAN
+        - WORM
+        - SPYWARE
+        - RANSOMWARE
+
+    RootkitType:
+      type: string
+      enum:
+        - MEMORY
+        - KERNEL
+        - APPLICATION
+        - FIRMWARE
 
   responses:
     Success:
@@ -1013,22 +747,15 @@ components:
             $ref: '#/components/schemas/ApiResponse'
 
   parameters:
-    id:
-      name: id
+    instanceID:
+      name: instanceID
       in: path
       required: true
       schema:
         type: string
 
-    vul_id:
-      name: vul_id
-      in: path
-      required: true
-      schema:
-        type: string
-
-    pkg_id:
-      name: pkg_id
+    scanID:
+      name: scanID
       in: path
       required: true
       schema:
@@ -1051,27 +778,3 @@ components:
         maximum: 50
         minimum: 1
         type: integer
-
-    instancesSortKey:
-      name: sortKey
-      in: query
-      description: Sort key
-      required: true
-      schema:
-        type: string
-
-    packagesSortKey:
-      name: sortKey
-      in: query
-      description: Sort key
-      required: true
-      schema:
-        type: string
-
-    vulnerabilitiesSortKey:
-      name: sortKey
-      in: query
-      description: Sort key
-      required: true
-      schema:
-        type: string
