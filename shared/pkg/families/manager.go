@@ -22,6 +22,7 @@ import (
 	_interface "github.com/openclarity/vmclarity/shared/pkg/families/interface"
 	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 	"github.com/openclarity/vmclarity/shared/pkg/families/misconfiguration"
+	"github.com/openclarity/vmclarity/shared/pkg/families/results"
 	"github.com/openclarity/vmclarity/shared/pkg/families/rootkits"
 	"github.com/openclarity/vmclarity/shared/pkg/families/sbom"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
@@ -74,37 +75,37 @@ func New(logger *log.Entry, config *Config) *Manager {
 	return manager
 }
 
-func (m *Manager) Run() (*Results, error) {
-	results := &Results{}
+func (m *Manager) Run() (*results.Results, error) {
+	familiesResults := results.New()
 	if len(m.analyzers) > 0 {
-		for typ, analyzer := range m.analyzers {
-			ret, err := analyzer.Run(results)
+		for _, analyzer := range m.analyzers {
+			ret, err := analyzer.Run(familiesResults)
 			if err != nil {
 				return nil, err
 			}
-			results.SetResults(typ, ret)
+			familiesResults.SetResults(ret)
 		}
 	}
 
 	if len(m.scanners) > 0 {
-		for typ, scanner := range m.scanners {
-			ret, err := scanner.Run(results)
+		for _, scanner := range m.scanners {
+			ret, err := scanner.Run(familiesResults)
 			if err != nil {
 				return nil, err
 			}
-			results.SetResults(typ, ret)
+			familiesResults.SetResults(ret)
 		}
 	}
 
 	if len(m.enrichers) > 0 {
-		for typ, enricher := range m.enrichers {
-			ret, err := enricher.Run(results)
+		for _, enricher := range m.enrichers {
+			ret, err := enricher.Run(familiesResults)
 			if err != nil {
 				return nil, err
 			}
-			results.SetResults(typ, ret)
+			familiesResults.SetResults(ret)
 		}
 	}
 
-	return results, nil
+	return familiesResults, nil
 }

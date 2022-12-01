@@ -19,6 +19,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	_interface "github.com/openclarity/vmclarity/shared/pkg/families/interface"
+	"github.com/openclarity/vmclarity/shared/pkg/families/results"
 )
 
 type Rootkits struct {
@@ -26,7 +27,7 @@ type Rootkits struct {
 	logger *log.Entry
 }
 
-func (r Rootkits) Run(getter _interface.ResultsGetter) (_interface.IsResults, error) {
+func (r Rootkits) Run(res *results.Results) (_interface.IsResults, error) {
 	//TODO implement me
 	r.logger.Info("Rootkits Run...")
 	r.logger.Info("Rootkits Done...")

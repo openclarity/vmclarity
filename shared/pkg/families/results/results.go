@@ -13,33 +13,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package secrets
+package results
 
 import (
-	log "github.com/sirupsen/logrus"
-
-	_interface "github.com/openclarity/vmclarity/shared/pkg/families/interface"
-	"github.com/openclarity/vmclarity/shared/pkg/families/results"
+	"fmt"
 )
 
-type Secrets struct {
-	conf   Config
-	logger *log.Entry
+// Results store slice of results from all families.
+type Results struct {
+	results []any
 }
 
-func (s Secrets) Run(res *results.Results) (_interface.IsResults, error) {
-	//TODO implement me
-	s.logger.Info("Secrets Run...")
-	s.logger.Info("Secrets Done...")
-	return &Results{}, nil
+func New() *Results {
+	return &Results{}
 }
 
-// ensure types implement the requisite interfaces
-var _ _interface.Family = &Secrets{}
+func (r *Results) SetResults(result any) {
+	r.results = append(r.results, result)
+}
 
-func New(logger *log.Entry, conf Config) *Secrets {
-	return &Secrets{
-		conf:   conf,
-		logger: logger.Dup().WithField("family", "secrets"),
+// GetResult returns results for a specific family from the given results slice.
+func GetResult[familyType any](r *Results) (retResult familyType, e error) {
+	for _, result := range r.results {
+		res, ok := result.(familyType)
+		if ok {
+			return res, nil
+		}
 	}
+	return retResult, fmt.Errorf("missing result")
 }

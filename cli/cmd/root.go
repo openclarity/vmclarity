@@ -27,6 +27,7 @@ import (
 
 	"github.com/openclarity/vmclarity/cli/pkg"
 	"github.com/openclarity/vmclarity/shared/pkg/families"
+	"github.com/openclarity/vmclarity/shared/pkg/families/results"
 	"github.com/openclarity/vmclarity/shared/pkg/families/sbom"
 	"github.com/openclarity/vmclarity/shared/pkg/families/vulnerabilities"
 )
@@ -51,13 +52,23 @@ var rootCmd = &cobra.Command{
 			return fmt.Errorf("failed to run families: %v", err)
 		}
 
+		sbomResults, err := results.GetResult[*sbom.Results](res)
+		if err != nil {
+			return fmt.Errorf("failed to get sbom results: %v", err)
+		}
+
 		// TODO: Need to implement a better presenter
-		err = Output(res.SBOM.(*sbom.Results).SBOM, "sbom")
+		err = Output(sbomResults.SBOM, "sbom")
 		if err != nil {
 			return fmt.Errorf("failed to output sbom results: %v", err)
 		}
 
-		bytes, _ := json.Marshal(res.Vulnerabilities.(*vulnerabilities.Results).MergedResults)
+		vulnerabilitiesResults, err := results.GetResult[*vulnerabilities.Results](res)
+		if err != nil {
+			return fmt.Errorf("failed to get sbom results: %v", err)
+		}
+
+		bytes, _ := json.Marshal(vulnerabilitiesResults.MergedResults)
 		err = Output(bytes, "vulnerabilities")
 		if err != nil {
 			return fmt.Errorf("failed to output vulnerabilities results: %v", err)

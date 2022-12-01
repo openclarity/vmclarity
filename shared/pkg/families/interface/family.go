@@ -15,6 +15,8 @@
 
 package _interface
 
+import "github.com/openclarity/vmclarity/shared/pkg/families/results"
+
 type Family interface {
-	Run(ResultsGetter) (IsResults, error)
+	Run(results *results.Results) (IsResults, error)
 }

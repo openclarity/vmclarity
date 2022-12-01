@@ -27,8 +27,8 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	_interface "github.com/openclarity/vmclarity/shared/pkg/families/interface"
+	"github.com/openclarity/vmclarity/shared/pkg/families/results"
 	"github.com/openclarity/vmclarity/shared/pkg/families/sbom"
-	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 )
 
 const (
@@ -41,32 +41,21 @@ type Vulnerabilities struct {
 	ScannersConfig config.Config
 }
 
-func (v Vulnerabilities) Run(getter _interface.ResultsGetter) (_interface.IsResults, error) {
+func (v Vulnerabilities) Run(res *results.Results) (_interface.IsResults, error) {
 	v.logger.Info("Vulnerabilities Run...")
 
 	manager := job_manager.New(v.conf.ScannersList, v.conf.ScannersConfig, v.logger, job.CreateJob)
 	mergedResults := sharedscanner.NewMergedResults()
 
 	if v.conf.InputFromSbom {
-		results := getter.GetResults(types.SBOM)
-		sbomResults, ok := results.(*sbom.Results)
-		if !ok {
-			return nil, fmt.Errorf("failed to cast sbom results")
+		sbomResults, err := results.GetResult[*sbom.Results](res)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get sbom results: %v", err)
 		}
+
 		v.logger.Infof("Using input from SBOM results")
 
 		// TODO: need to avoid writing sbom to file
-		//
-		//dx := formatter.New(sbomResults.Format, sbomResults.SBOM)
-		//err := dx.SetSBOM(sbomResults.BOM)
-		//if err != nil {
-		//	return nil, err
-		//}
-		//err = dx.Encode(formatter.CycloneDXFormat)
-		//if err != nil {
-		//	return nil, err
-		//}
-
 		if err := os.WriteFile(sbomTempFilePath, sbomResults.SBOM, 0600 /* read & write */); err != nil { // nolint:gomnd,gofumpt
 			return nil, fmt.Errorf("failed to write sbom to file: %v", err)
 		}
@@ -82,13 +71,13 @@ func (v Vulnerabilities) Run(getter _interface.ResultsGetter) (_interface.IsResu
 	}
 
 	for _, input := range v.conf.Inputs {
-		results, err := manager.Run(utils.SourceType(input.InputType), input.Input)
+		runResults, err := manager.Run(utils.SourceType(input.InputType), input.Input)
 		if err != nil {
 			return nil, err
 		}
 
 		// Merge results.
-		for name, result := range results {
+		for name, result := range runResults {
 			v.logger.Infof("Merging result from %q", name)
 			mergedResults = mergedResults.Merge(result.(*sharedscanner.Results)) // nolint:forcetypeassert
 		}
