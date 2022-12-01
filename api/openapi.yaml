@@ -250,7 +250,6 @@ paths:
                 $ref: '#/components/schemas/ApiResponse'
       x-codegen-request-body-name: body
 
-
   /instances/{instanceID}/scanresults/{scanID}:
     get:
       summary: Report a specific scan result for a specific instance
@@ -278,6 +277,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+    put:
+      summary: Update scan results.
+      parameters:
+        - name: instanceID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: scanID
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScanResults'
+        required: true
+      responses:
+        200:
+          description: Update scan results successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanResultsSummary'
+        404:
+          description: Scan ID not found.
+          content: {}
+        default:
+          description: unknown error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+      x-codegen-request-body-name: body
 
   /instances/{instanceID}/scanresults/{scanID}/sbom:
     get:

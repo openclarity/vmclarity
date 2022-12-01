@@ -237,3 +237,6 @@ type PutInstancesInstanceIDJSONRequestBody = InstanceInfo
 
 // PostInstancesInstanceIDScanresultsJSONRequestBody defines body for PostInstancesInstanceIDScanresults for application/json ContentType.
 type PostInstancesInstanceIDScanresultsJSONRequestBody = ScanResults
+
+// PutInstancesInstanceIDScanresultsScanIDJSONRequestBody defines body for PutInstancesInstanceIDScanresultsScanID for application/json ContentType.
+type PutInstancesInstanceIDScanresultsScanIDJSONRequestBody = ScanResults

@@ -120,6 +120,11 @@ type ClientInterface interface {
 	// GetInstancesInstanceIDScanresultsScanID request
 	GetInstancesInstanceIDScanresultsScanID(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// PutInstancesInstanceIDScanresultsScanID request with any body
+	PutInstancesInstanceIDScanresultsScanIDWithBody(ctx context.Context, instanceID string, scanID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PutInstancesInstanceIDScanresultsScanID(ctx context.Context, instanceID string, scanID string, body PutInstancesInstanceIDScanresultsScanIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetInstancesInstanceIDScanresultsScanIDExploits request
 	GetInstancesInstanceIDScanresultsScanIDExploits(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -264,6 +269,30 @@ func (c *Client) PostInstancesInstanceIDScanresults(ctx context.Context, instanc
 
 func (c *Client) GetInstancesInstanceIDScanresultsScanID(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetInstancesInstanceIDScanresultsScanIDRequest(c.Server, instanceID, scanID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutInstancesInstanceIDScanresultsScanIDWithBody(ctx context.Context, instanceID string, scanID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutInstancesInstanceIDScanresultsScanIDRequestWithBody(c.Server, instanceID, scanID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutInstancesInstanceIDScanresultsScanID(ctx context.Context, instanceID string, scanID string, body PutInstancesInstanceIDScanresultsScanIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutInstancesInstanceIDScanresultsScanIDRequest(c.Server, instanceID, scanID, body)
 	if err != nil {
 		return nil, err
 	}
@@ -742,6 +771,60 @@ func NewGetInstancesInstanceIDScanresultsScanIDRequest(server string, instanceID
 	return req, nil
 }
 
+// NewPutInstancesInstanceIDScanresultsScanIDRequest calls the generic PutInstancesInstanceIDScanresultsScanID builder with application/json body
+func NewPutInstancesInstanceIDScanresultsScanIDRequest(server string, instanceID string, scanID string, body PutInstancesInstanceIDScanresultsScanIDJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutInstancesInstanceIDScanresultsScanIDRequestWithBody(server, instanceID, scanID, "application/json", bodyReader)
+}
+
+// NewPutInstancesInstanceIDScanresultsScanIDRequestWithBody generates requests for PutInstancesInstanceIDScanresultsScanID with any type of body
+func NewPutInstancesInstanceIDScanresultsScanIDRequestWithBody(server string, instanceID string, scanID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, instanceID)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "scanID", runtime.ParamLocationPath, scanID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/instances/%s/scanresults/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetInstancesInstanceIDScanresultsScanIDExploitsRequest generates requests for GetInstancesInstanceIDScanresultsScanIDExploits
 func NewGetInstancesInstanceIDScanresultsScanIDExploitsRequest(server string, instanceID string, scanID string) (*http.Request, error) {
 	var err error
@@ -1102,6 +1185,11 @@ type ClientWithResponsesInterface interface {
 	// GetInstancesInstanceIDScanresultsScanID request
 	GetInstancesInstanceIDScanresultsScanIDWithResponse(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*GetInstancesInstanceIDScanresultsScanIDResponse, error)
 
+	// PutInstancesInstanceIDScanresultsScanID request with any body
+	PutInstancesInstanceIDScanresultsScanIDWithBodyWithResponse(ctx context.Context, instanceID string, scanID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutInstancesInstanceIDScanresultsScanIDResponse, error)
+
+	PutInstancesInstanceIDScanresultsScanIDWithResponse(ctx context.Context, instanceID string, scanID string, body PutInstancesInstanceIDScanresultsScanIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PutInstancesInstanceIDScanresultsScanIDResponse, error)
+
 	// GetInstancesInstanceIDScanresultsScanIDExploits request
 	GetInstancesInstanceIDScanresultsScanIDExploitsWithResponse(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*GetInstancesInstanceIDScanresultsScanIDExploitsResponse, error)
 
@@ -1315,6 +1403,29 @@ func (r GetInstancesInstanceIDScanresultsScanIDResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetInstancesInstanceIDScanresultsScanIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PutInstancesInstanceIDScanresultsScanIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ScanResultsSummary
+	JSONDefault  *ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PutInstancesInstanceIDScanresultsScanIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutInstancesInstanceIDScanresultsScanIDResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -1576,6 +1687,23 @@ func (c *ClientWithResponses) GetInstancesInstanceIDScanresultsScanIDWithRespons
 		return nil, err
 	}
 	return ParseGetInstancesInstanceIDScanresultsScanIDResponse(rsp)
+}
+
+// PutInstancesInstanceIDScanresultsScanIDWithBodyWithResponse request with arbitrary body returning *PutInstancesInstanceIDScanresultsScanIDResponse
+func (c *ClientWithResponses) PutInstancesInstanceIDScanresultsScanIDWithBodyWithResponse(ctx context.Context, instanceID string, scanID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutInstancesInstanceIDScanresultsScanIDResponse, error) {
+	rsp, err := c.PutInstancesInstanceIDScanresultsScanIDWithBody(ctx, instanceID, scanID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutInstancesInstanceIDScanresultsScanIDResponse(rsp)
+}
+
+func (c *ClientWithResponses) PutInstancesInstanceIDScanresultsScanIDWithResponse(ctx context.Context, instanceID string, scanID string, body PutInstancesInstanceIDScanresultsScanIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PutInstancesInstanceIDScanresultsScanIDResponse, error) {
+	rsp, err := c.PutInstancesInstanceIDScanresultsScanID(ctx, instanceID, scanID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutInstancesInstanceIDScanresultsScanIDResponse(rsp)
 }
 
 // GetInstancesInstanceIDScanresultsScanIDExploitsWithResponse request returning *GetInstancesInstanceIDScanresultsScanIDExploitsResponse
@@ -1900,6 +2028,39 @@ func ParseGetInstancesInstanceIDScanresultsScanIDResponse(rsp *http.Response) (*
 	}
 
 	response := &GetInstancesInstanceIDScanresultsScanIDResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ScanResultsSummary
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutInstancesInstanceIDScanresultsScanIDResponse parses an HTTP response from a PutInstancesInstanceIDScanresultsScanIDWithResponse call
+func ParsePutInstancesInstanceIDScanresultsScanIDResponse(rsp *http.Response) (*PutInstancesInstanceIDScanresultsScanIDResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutInstancesInstanceIDScanresultsScanIDResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
