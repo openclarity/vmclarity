@@ -179,7 +179,7 @@ paths:
           content:
             application/json:
               schema:
-                anyOf:
+                oneOf:
                   - $ref: '#/components/schemas/ScanResultsSummary'
                   - $ref: '#/components/schemas/SbomScan'
                   - $ref: '#/components/schemas/VulnerabilityScan'
