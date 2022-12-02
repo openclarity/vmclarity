@@ -90,65 +90,44 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
-	// GetInstances request
-	GetInstances(ctx context.Context, params *GetInstancesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// DeleteTargetTargetID request
+	DeleteTargetTargetID(ctx context.Context, targetID TargetID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostInstances request with any body
-	PostInstancesWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTargetTargetID request
+	GetTargetTargetID(ctx context.Context, targetID TargetID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostInstances(ctx context.Context, body PostInstancesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PutTargetTargetID request with any body
+	PutTargetTargetIDWithBody(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// DeleteInstancesInstanceID request
-	DeleteInstancesInstanceID(ctx context.Context, instanceID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PutTargetTargetID(ctx context.Context, targetID TargetID, body PutTargetTargetIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetInstancesInstanceID request
-	GetInstancesInstanceID(ctx context.Context, instanceID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTargets request
+	GetTargets(ctx context.Context, params *GetTargetsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PutInstancesInstanceID request with any body
-	PutInstancesInstanceIDWithBody(ctx context.Context, instanceID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostTargets request with any body
+	PostTargetsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PutInstancesInstanceID(ctx context.Context, instanceID string, body PutInstancesInstanceIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostTargets(ctx context.Context, body PostTargetsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetInstancesInstanceIDScanresults request
-	GetInstancesInstanceIDScanresults(ctx context.Context, instanceID string, params *GetInstancesInstanceIDScanresultsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTargetsTargetIDScanresults request
+	GetTargetsTargetIDScanresults(ctx context.Context, targetID TargetID, params *GetTargetsTargetIDScanresultsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostInstancesInstanceIDScanresults request with any body
-	PostInstancesInstanceIDScanresultsWithBody(ctx context.Context, instanceID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostTargetsTargetIDScanresults request with any body
+	PostTargetsTargetIDScanresultsWithBody(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostInstancesInstanceIDScanresults(ctx context.Context, instanceID string, body PostInstancesInstanceIDScanresultsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostTargetsTargetIDScanresults(ctx context.Context, targetID TargetID, body PostTargetsTargetIDScanresultsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetInstancesInstanceIDScanresultsScanID request
-	GetInstancesInstanceIDScanresultsScanID(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTargetsTargetIDScanresultsScanID request
+	GetTargetsTargetIDScanresultsScanID(ctx context.Context, targetID TargetID, scanID ScanID, params *GetTargetsTargetIDScanresultsScanIDParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PutInstancesInstanceIDScanresultsScanID request with any body
-	PutInstancesInstanceIDScanresultsScanIDWithBody(ctx context.Context, instanceID string, scanID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PutTargetsTargetIDScanresultsScanID request with any body
+	PutTargetsTargetIDScanresultsScanIDWithBody(ctx context.Context, targetID TargetID, scanID ScanID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PutInstancesInstanceIDScanresultsScanID(ctx context.Context, instanceID string, scanID string, body PutInstancesInstanceIDScanresultsScanIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetInstancesInstanceIDScanresultsScanIDExploits request
-	GetInstancesInstanceIDScanresultsScanIDExploits(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetInstancesInstanceIDScanresultsScanIDMalwares request
-	GetInstancesInstanceIDScanresultsScanIDMalwares(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetInstancesInstanceIDScanresultsScanIDMisconfiguration request
-	GetInstancesInstanceIDScanresultsScanIDMisconfiguration(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetInstancesInstanceIDScanresultsScanIDRootkits request
-	GetInstancesInstanceIDScanresultsScanIDRootkits(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetInstancesInstanceIDScanresultsScanIDSbom request
-	GetInstancesInstanceIDScanresultsScanIDSbom(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetInstancesInstanceIDScanresultsScanIDSecrets request
-	GetInstancesInstanceIDScanresultsScanIDSecrets(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetInstancesInstanceIDScanresultsScanIDVulnerabilities request
-	GetInstancesInstanceIDScanresultsScanIDVulnerabilities(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PutTargetsTargetIDScanresultsScanID(ctx context.Context, targetID TargetID, scanID ScanID, body PutTargetsTargetIDScanresultsScanIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) GetInstances(ctx context.Context, params *GetInstancesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetInstancesRequest(c.Server, params)
+func (c *Client) DeleteTargetTargetID(ctx context.Context, targetID TargetID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteTargetTargetIDRequest(c.Server, targetID)
 	if err != nil {
 		return nil, err
 	}
@@ -159,8 +138,8 @@ func (c *Client) GetInstances(ctx context.Context, params *GetInstancesParams, r
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostInstancesWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostInstancesRequestWithBody(c.Server, contentType, body)
+func (c *Client) GetTargetTargetID(ctx context.Context, targetID TargetID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTargetTargetIDRequest(c.Server, targetID)
 	if err != nil {
 		return nil, err
 	}
@@ -171,8 +150,8 @@ func (c *Client) PostInstancesWithBody(ctx context.Context, contentType string, 
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostInstances(ctx context.Context, body PostInstancesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostInstancesRequest(c.Server, body)
+func (c *Client) PutTargetTargetIDWithBody(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutTargetTargetIDRequestWithBody(c.Server, targetID, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -183,8 +162,8 @@ func (c *Client) PostInstances(ctx context.Context, body PostInstancesJSONReques
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteInstancesInstanceID(ctx context.Context, instanceID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteInstancesInstanceIDRequest(c.Server, instanceID)
+func (c *Client) PutTargetTargetID(ctx context.Context, targetID TargetID, body PutTargetTargetIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutTargetTargetIDRequest(c.Server, targetID, body)
 	if err != nil {
 		return nil, err
 	}
@@ -195,8 +174,8 @@ func (c *Client) DeleteInstancesInstanceID(ctx context.Context, instanceID strin
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetInstancesInstanceID(ctx context.Context, instanceID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetInstancesInstanceIDRequest(c.Server, instanceID)
+func (c *Client) GetTargets(ctx context.Context, params *GetTargetsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTargetsRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -207,8 +186,8 @@ func (c *Client) GetInstancesInstanceID(ctx context.Context, instanceID string, 
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutInstancesInstanceIDWithBody(ctx context.Context, instanceID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutInstancesInstanceIDRequestWithBody(c.Server, instanceID, contentType, body)
+func (c *Client) PostTargetsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTargetsRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -219,8 +198,8 @@ func (c *Client) PutInstancesInstanceIDWithBody(ctx context.Context, instanceID 
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutInstancesInstanceID(ctx context.Context, instanceID string, body PutInstancesInstanceIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutInstancesInstanceIDRequest(c.Server, instanceID, body)
+func (c *Client) PostTargets(ctx context.Context, body PostTargetsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTargetsRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -231,8 +210,8 @@ func (c *Client) PutInstancesInstanceID(ctx context.Context, instanceID string, 
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetInstancesInstanceIDScanresults(ctx context.Context, instanceID string, params *GetInstancesInstanceIDScanresultsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetInstancesInstanceIDScanresultsRequest(c.Server, instanceID, params)
+func (c *Client) GetTargetsTargetIDScanresults(ctx context.Context, targetID TargetID, params *GetTargetsTargetIDScanresultsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTargetsTargetIDScanresultsRequest(c.Server, targetID, params)
 	if err != nil {
 		return nil, err
 	}
@@ -243,8 +222,8 @@ func (c *Client) GetInstancesInstanceIDScanresults(ctx context.Context, instance
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostInstancesInstanceIDScanresultsWithBody(ctx context.Context, instanceID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostInstancesInstanceIDScanresultsRequestWithBody(c.Server, instanceID, contentType, body)
+func (c *Client) PostTargetsTargetIDScanresultsWithBody(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTargetsTargetIDScanresultsRequestWithBody(c.Server, targetID, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -255,8 +234,8 @@ func (c *Client) PostInstancesInstanceIDScanresultsWithBody(ctx context.Context,
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostInstancesInstanceIDScanresults(ctx context.Context, instanceID string, body PostInstancesInstanceIDScanresultsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostInstancesInstanceIDScanresultsRequest(c.Server, instanceID, body)
+func (c *Client) PostTargetsTargetIDScanresults(ctx context.Context, targetID TargetID, body PostTargetsTargetIDScanresultsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTargetsTargetIDScanresultsRequest(c.Server, targetID, body)
 	if err != nil {
 		return nil, err
 	}
@@ -267,8 +246,8 @@ func (c *Client) PostInstancesInstanceIDScanresults(ctx context.Context, instanc
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetInstancesInstanceIDScanresultsScanID(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetInstancesInstanceIDScanresultsScanIDRequest(c.Server, instanceID, scanID)
+func (c *Client) GetTargetsTargetIDScanresultsScanID(ctx context.Context, targetID TargetID, scanID ScanID, params *GetTargetsTargetIDScanresultsScanIDParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTargetsTargetIDScanresultsScanIDRequest(c.Server, targetID, scanID, params)
 	if err != nil {
 		return nil, err
 	}
@@ -279,8 +258,8 @@ func (c *Client) GetInstancesInstanceIDScanresultsScanID(ctx context.Context, in
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutInstancesInstanceIDScanresultsScanIDWithBody(ctx context.Context, instanceID string, scanID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutInstancesInstanceIDScanresultsScanIDRequestWithBody(c.Server, instanceID, scanID, contentType, body)
+func (c *Client) PutTargetsTargetIDScanresultsScanIDWithBody(ctx context.Context, targetID TargetID, scanID ScanID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutTargetsTargetIDScanresultsScanIDRequestWithBody(c.Server, targetID, scanID, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -291,8 +270,8 @@ func (c *Client) PutInstancesInstanceIDScanresultsScanIDWithBody(ctx context.Con
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutInstancesInstanceIDScanresultsScanID(ctx context.Context, instanceID string, scanID string, body PutInstancesInstanceIDScanresultsScanIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutInstancesInstanceIDScanresultsScanIDRequest(c.Server, instanceID, scanID, body)
+func (c *Client) PutTargetsTargetIDScanresultsScanID(ctx context.Context, targetID TargetID, scanID ScanID, body PutTargetsTargetIDScanresultsScanIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutTargetsTargetIDScanresultsScanIDRequest(c.Server, targetID, scanID, body)
 	if err != nil {
 		return nil, err
 	}
@@ -303,204 +282,13 @@ func (c *Client) PutInstancesInstanceIDScanresultsScanID(ctx context.Context, in
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetInstancesInstanceIDScanresultsScanIDExploits(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetInstancesInstanceIDScanresultsScanIDExploitsRequest(c.Server, instanceID, scanID)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetInstancesInstanceIDScanresultsScanIDMalwares(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetInstancesInstanceIDScanresultsScanIDMalwaresRequest(c.Server, instanceID, scanID)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetInstancesInstanceIDScanresultsScanIDMisconfiguration(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetInstancesInstanceIDScanresultsScanIDMisconfigurationRequest(c.Server, instanceID, scanID)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetInstancesInstanceIDScanresultsScanIDRootkits(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetInstancesInstanceIDScanresultsScanIDRootkitsRequest(c.Server, instanceID, scanID)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetInstancesInstanceIDScanresultsScanIDSbom(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetInstancesInstanceIDScanresultsScanIDSbomRequest(c.Server, instanceID, scanID)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetInstancesInstanceIDScanresultsScanIDSecrets(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetInstancesInstanceIDScanresultsScanIDSecretsRequest(c.Server, instanceID, scanID)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetInstancesInstanceIDScanresultsScanIDVulnerabilities(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetInstancesInstanceIDScanresultsScanIDVulnerabilitiesRequest(c.Server, instanceID, scanID)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// NewGetInstancesRequest generates requests for GetInstances
-func NewGetInstancesRequest(server string, params *GetInstancesParams) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/instances")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	queryValues := queryURL.Query()
-
-	if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, params.Page); err != nil {
-		return nil, err
-	} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-		return nil, err
-	} else {
-		for k, v := range parsed {
-			for _, v2 := range v {
-				queryValues.Add(k, v2)
-			}
-		}
-	}
-
-	if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageSize", runtime.ParamLocationQuery, params.PageSize); err != nil {
-		return nil, err
-	} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-		return nil, err
-	} else {
-		for k, v := range parsed {
-			for _, v2 := range v {
-				queryValues.Add(k, v2)
-			}
-		}
-	}
-
-	if queryFrag, err := runtime.StyleParamWithLocation("form", true, "sortKey", runtime.ParamLocationQuery, params.SortKey); err != nil {
-		return nil, err
-	} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-		return nil, err
-	} else {
-		for k, v := range parsed {
-			for _, v2 := range v {
-				queryValues.Add(k, v2)
-			}
-		}
-	}
-
-	queryURL.RawQuery = queryValues.Encode()
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewPostInstancesRequest calls the generic PostInstances builder with application/json body
-func NewPostInstancesRequest(server string, body PostInstancesJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostInstancesRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewPostInstancesRequestWithBody generates requests for PostInstances with any type of body
-func NewPostInstancesRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/instances")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewDeleteInstancesInstanceIDRequest generates requests for DeleteInstancesInstanceID
-func NewDeleteInstancesInstanceIDRequest(server string, instanceID string) (*http.Request, error) {
+// NewDeleteTargetTargetIDRequest generates requests for DeleteTargetTargetID
+func NewDeleteTargetTargetIDRequest(server string, targetID TargetID) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
 
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, instanceID)
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "targetID", runtime.ParamLocationPath, targetID)
 	if err != nil {
 		return nil, err
 	}
@@ -510,7 +298,7 @@ func NewDeleteInstancesInstanceIDRequest(server string, instanceID string) (*htt
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/instances/%s", pathParam0)
+	operationPath := fmt.Sprintf("/target/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -528,13 +316,13 @@ func NewDeleteInstancesInstanceIDRequest(server string, instanceID string) (*htt
 	return req, nil
 }
 
-// NewGetInstancesInstanceIDRequest generates requests for GetInstancesInstanceID
-func NewGetInstancesInstanceIDRequest(server string, instanceID string) (*http.Request, error) {
+// NewGetTargetTargetIDRequest generates requests for GetTargetTargetID
+func NewGetTargetTargetIDRequest(server string, targetID TargetID) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
 
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, instanceID)
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "targetID", runtime.ParamLocationPath, targetID)
 	if err != nil {
 		return nil, err
 	}
@@ -544,7 +332,7 @@ func NewGetInstancesInstanceIDRequest(server string, instanceID string) (*http.R
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/instances/%s", pathParam0)
+	operationPath := fmt.Sprintf("/target/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -562,24 +350,24 @@ func NewGetInstancesInstanceIDRequest(server string, instanceID string) (*http.R
 	return req, nil
 }
 
-// NewPutInstancesInstanceIDRequest calls the generic PutInstancesInstanceID builder with application/json body
-func NewPutInstancesInstanceIDRequest(server string, instanceID string, body PutInstancesInstanceIDJSONRequestBody) (*http.Request, error) {
+// NewPutTargetTargetIDRequest calls the generic PutTargetTargetID builder with application/json body
+func NewPutTargetTargetIDRequest(server string, targetID TargetID, body PutTargetTargetIDJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPutInstancesInstanceIDRequestWithBody(server, instanceID, "application/json", bodyReader)
+	return NewPutTargetTargetIDRequestWithBody(server, targetID, "application/json", bodyReader)
 }
 
-// NewPutInstancesInstanceIDRequestWithBody generates requests for PutInstancesInstanceID with any type of body
-func NewPutInstancesInstanceIDRequestWithBody(server string, instanceID string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPutTargetTargetIDRequestWithBody generates requests for PutTargetTargetID with any type of body
+func NewPutTargetTargetIDRequestWithBody(server string, targetID TargetID, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
 
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, instanceID)
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "targetID", runtime.ParamLocationPath, targetID)
 	if err != nil {
 		return nil, err
 	}
@@ -589,7 +377,7 @@ func NewPutInstancesInstanceIDRequestWithBody(server string, instanceID string, 
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/instances/%s", pathParam0)
+	operationPath := fmt.Sprintf("/target/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -609,23 +397,16 @@ func NewPutInstancesInstanceIDRequestWithBody(server string, instanceID string, 
 	return req, nil
 }
 
-// NewGetInstancesInstanceIDScanresultsRequest generates requests for GetInstancesInstanceIDScanresults
-func NewGetInstancesInstanceIDScanresultsRequest(server string, instanceID string, params *GetInstancesInstanceIDScanresultsParams) (*http.Request, error) {
+// NewGetTargetsRequest generates requests for GetTargets
+func NewGetTargetsRequest(server string, params *GetTargetsParams) (*http.Request, error) {
 	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, instanceID)
-	if err != nil {
-		return nil, err
-	}
 
 	serverURL, err := url.Parse(server)
 	if err != nil {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/instances/%s/scanresults", pathParam0)
+	operationPath := fmt.Sprintf("/targets")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -661,7 +442,97 @@ func NewGetInstancesInstanceIDScanresultsRequest(server string, instanceID strin
 		}
 	}
 
-	if queryFrag, err := runtime.StyleParamWithLocation("form", true, "sortKey", runtime.ParamLocationQuery, params.SortKey); err != nil {
+	queryURL.RawQuery = queryValues.Encode()
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostTargetsRequest calls the generic PostTargets builder with application/json body
+func NewPostTargetsRequest(server string, body PostTargetsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostTargetsRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostTargetsRequestWithBody generates requests for PostTargets with any type of body
+func NewPostTargetsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/targets")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetTargetsTargetIDScanresultsRequest generates requests for GetTargetsTargetIDScanresults
+func NewGetTargetsTargetIDScanresultsRequest(server string, targetID TargetID, params *GetTargetsTargetIDScanresultsParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "targetID", runtime.ParamLocationPath, targetID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/targets/%s/scanresults", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	queryValues := queryURL.Query()
+
+	if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, params.Page); err != nil {
+		return nil, err
+	} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+		return nil, err
+	} else {
+		for k, v := range parsed {
+			for _, v2 := range v {
+				queryValues.Add(k, v2)
+			}
+		}
+	}
+
+	if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageSize", runtime.ParamLocationQuery, params.PageSize); err != nil {
 		return nil, err
 	} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 		return nil, err
@@ -683,24 +554,24 @@ func NewGetInstancesInstanceIDScanresultsRequest(server string, instanceID strin
 	return req, nil
 }
 
-// NewPostInstancesInstanceIDScanresultsRequest calls the generic PostInstancesInstanceIDScanresults builder with application/json body
-func NewPostInstancesInstanceIDScanresultsRequest(server string, instanceID string, body PostInstancesInstanceIDScanresultsJSONRequestBody) (*http.Request, error) {
+// NewPostTargetsTargetIDScanresultsRequest calls the generic PostTargetsTargetIDScanresults builder with application/json body
+func NewPostTargetsTargetIDScanresultsRequest(server string, targetID TargetID, body PostTargetsTargetIDScanresultsJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostInstancesInstanceIDScanresultsRequestWithBody(server, instanceID, "application/json", bodyReader)
+	return NewPostTargetsTargetIDScanresultsRequestWithBody(server, targetID, "application/json", bodyReader)
 }
 
-// NewPostInstancesInstanceIDScanresultsRequestWithBody generates requests for PostInstancesInstanceIDScanresults with any type of body
-func NewPostInstancesInstanceIDScanresultsRequestWithBody(server string, instanceID string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostTargetsTargetIDScanresultsRequestWithBody generates requests for PostTargetsTargetIDScanresults with any type of body
+func NewPostTargetsTargetIDScanresultsRequestWithBody(server string, targetID TargetID, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
 
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, instanceID)
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "targetID", runtime.ParamLocationPath, targetID)
 	if err != nil {
 		return nil, err
 	}
@@ -710,7 +581,7 @@ func NewPostInstancesInstanceIDScanresultsRequestWithBody(server string, instanc
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/instances/%s/scanresults", pathParam0)
+	operationPath := fmt.Sprintf("/targets/%s/scanresults", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -730,13 +601,13 @@ func NewPostInstancesInstanceIDScanresultsRequestWithBody(server string, instanc
 	return req, nil
 }
 
-// NewGetInstancesInstanceIDScanresultsScanIDRequest generates requests for GetInstancesInstanceIDScanresultsScanID
-func NewGetInstancesInstanceIDScanresultsScanIDRequest(server string, instanceID string, scanID string) (*http.Request, error) {
+// NewGetTargetsTargetIDScanresultsScanIDRequest generates requests for GetTargetsTargetIDScanresultsScanID
+func NewGetTargetsTargetIDScanresultsScanIDRequest(server string, targetID TargetID, scanID ScanID, params *GetTargetsTargetIDScanresultsScanIDParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
 
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, instanceID)
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "targetID", runtime.ParamLocationPath, targetID)
 	if err != nil {
 		return nil, err
 	}
@@ -753,7 +624,7 @@ func NewGetInstancesInstanceIDScanresultsScanIDRequest(server string, instanceID
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/instances/%s/scanresults/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/targets/%s/scanresults/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -763,6 +634,26 @@ func NewGetInstancesInstanceIDScanresultsScanIDRequest(server string, instanceID
 		return nil, err
 	}
 
+	queryValues := queryURL.Query()
+
+	if params.ScanType != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "scanType", runtime.ParamLocationQuery, *params.ScanType); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
+
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
@@ -771,24 +662,24 @@ func NewGetInstancesInstanceIDScanresultsScanIDRequest(server string, instanceID
 	return req, nil
 }
 
-// NewPutInstancesInstanceIDScanresultsScanIDRequest calls the generic PutInstancesInstanceIDScanresultsScanID builder with application/json body
-func NewPutInstancesInstanceIDScanresultsScanIDRequest(server string, instanceID string, scanID string, body PutInstancesInstanceIDScanresultsScanIDJSONRequestBody) (*http.Request, error) {
+// NewPutTargetsTargetIDScanresultsScanIDRequest calls the generic PutTargetsTargetIDScanresultsScanID builder with application/json body
+func NewPutTargetsTargetIDScanresultsScanIDRequest(server string, targetID TargetID, scanID ScanID, body PutTargetsTargetIDScanresultsScanIDJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPutInstancesInstanceIDScanresultsScanIDRequestWithBody(server, instanceID, scanID, "application/json", bodyReader)
+	return NewPutTargetsTargetIDScanresultsScanIDRequestWithBody(server, targetID, scanID, "application/json", bodyReader)
 }
 
-// NewPutInstancesInstanceIDScanresultsScanIDRequestWithBody generates requests for PutInstancesInstanceIDScanresultsScanID with any type of body
-func NewPutInstancesInstanceIDScanresultsScanIDRequestWithBody(server string, instanceID string, scanID string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPutTargetsTargetIDScanresultsScanIDRequestWithBody generates requests for PutTargetsTargetIDScanresultsScanID with any type of body
+func NewPutTargetsTargetIDScanresultsScanIDRequestWithBody(server string, targetID TargetID, scanID ScanID, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
 
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, instanceID)
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "targetID", runtime.ParamLocationPath, targetID)
 	if err != nil {
 		return nil, err
 	}
@@ -805,7 +696,7 @@ func NewPutInstancesInstanceIDScanresultsScanIDRequestWithBody(server string, in
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/instances/%s/scanresults/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/targets/%s/scanresults/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -821,293 +712,6 @@ func NewPutInstancesInstanceIDScanresultsScanIDRequestWithBody(server string, in
 	}
 
 	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewGetInstancesInstanceIDScanresultsScanIDExploitsRequest generates requests for GetInstancesInstanceIDScanresultsScanIDExploits
-func NewGetInstancesInstanceIDScanresultsScanIDExploitsRequest(server string, instanceID string, scanID string) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, instanceID)
-	if err != nil {
-		return nil, err
-	}
-
-	var pathParam1 string
-
-	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "scanID", runtime.ParamLocationPath, scanID)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/instances/%s/scanresults/%s/exploits", pathParam0, pathParam1)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGetInstancesInstanceIDScanresultsScanIDMalwaresRequest generates requests for GetInstancesInstanceIDScanresultsScanIDMalwares
-func NewGetInstancesInstanceIDScanresultsScanIDMalwaresRequest(server string, instanceID string, scanID string) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, instanceID)
-	if err != nil {
-		return nil, err
-	}
-
-	var pathParam1 string
-
-	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "scanID", runtime.ParamLocationPath, scanID)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/instances/%s/scanresults/%s/malwares", pathParam0, pathParam1)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGetInstancesInstanceIDScanresultsScanIDMisconfigurationRequest generates requests for GetInstancesInstanceIDScanresultsScanIDMisconfiguration
-func NewGetInstancesInstanceIDScanresultsScanIDMisconfigurationRequest(server string, instanceID string, scanID string) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, instanceID)
-	if err != nil {
-		return nil, err
-	}
-
-	var pathParam1 string
-
-	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "scanID", runtime.ParamLocationPath, scanID)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/instances/%s/scanresults/%s/misconfiguration", pathParam0, pathParam1)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGetInstancesInstanceIDScanresultsScanIDRootkitsRequest generates requests for GetInstancesInstanceIDScanresultsScanIDRootkits
-func NewGetInstancesInstanceIDScanresultsScanIDRootkitsRequest(server string, instanceID string, scanID string) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, instanceID)
-	if err != nil {
-		return nil, err
-	}
-
-	var pathParam1 string
-
-	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "scanID", runtime.ParamLocationPath, scanID)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/instances/%s/scanresults/%s/rootkits", pathParam0, pathParam1)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGetInstancesInstanceIDScanresultsScanIDSbomRequest generates requests for GetInstancesInstanceIDScanresultsScanIDSbom
-func NewGetInstancesInstanceIDScanresultsScanIDSbomRequest(server string, instanceID string, scanID string) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, instanceID)
-	if err != nil {
-		return nil, err
-	}
-
-	var pathParam1 string
-
-	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "scanID", runtime.ParamLocationPath, scanID)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/instances/%s/scanresults/%s/sbom", pathParam0, pathParam1)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGetInstancesInstanceIDScanresultsScanIDSecretsRequest generates requests for GetInstancesInstanceIDScanresultsScanIDSecrets
-func NewGetInstancesInstanceIDScanresultsScanIDSecretsRequest(server string, instanceID string, scanID string) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, instanceID)
-	if err != nil {
-		return nil, err
-	}
-
-	var pathParam1 string
-
-	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "scanID", runtime.ParamLocationPath, scanID)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/instances/%s/scanresults/%s/secrets", pathParam0, pathParam1)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGetInstancesInstanceIDScanresultsScanIDVulnerabilitiesRequest generates requests for GetInstancesInstanceIDScanresultsScanIDVulnerabilities
-func NewGetInstancesInstanceIDScanresultsScanIDVulnerabilitiesRequest(server string, instanceID string, scanID string) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, instanceID)
-	if err != nil {
-		return nil, err
-	}
-
-	var pathParam1 string
-
-	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "scanID", runtime.ParamLocationPath, scanID)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/instances/%s/scanresults/%s/vulnerabilities", pathParam0, pathParam1)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
 
 	return req, nil
 }
@@ -1155,78 +759,126 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
-	// GetInstances request
-	GetInstancesWithResponse(ctx context.Context, params *GetInstancesParams, reqEditors ...RequestEditorFn) (*GetInstancesResponse, error)
+	// DeleteTargetTargetID request
+	DeleteTargetTargetIDWithResponse(ctx context.Context, targetID TargetID, reqEditors ...RequestEditorFn) (*DeleteTargetTargetIDResponse, error)
 
-	// PostInstances request with any body
-	PostInstancesWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostInstancesResponse, error)
+	// GetTargetTargetID request
+	GetTargetTargetIDWithResponse(ctx context.Context, targetID TargetID, reqEditors ...RequestEditorFn) (*GetTargetTargetIDResponse, error)
 
-	PostInstancesWithResponse(ctx context.Context, body PostInstancesJSONRequestBody, reqEditors ...RequestEditorFn) (*PostInstancesResponse, error)
+	// PutTargetTargetID request with any body
+	PutTargetTargetIDWithBodyWithResponse(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutTargetTargetIDResponse, error)
 
-	// DeleteInstancesInstanceID request
-	DeleteInstancesInstanceIDWithResponse(ctx context.Context, instanceID string, reqEditors ...RequestEditorFn) (*DeleteInstancesInstanceIDResponse, error)
+	PutTargetTargetIDWithResponse(ctx context.Context, targetID TargetID, body PutTargetTargetIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PutTargetTargetIDResponse, error)
 
-	// GetInstancesInstanceID request
-	GetInstancesInstanceIDWithResponse(ctx context.Context, instanceID string, reqEditors ...RequestEditorFn) (*GetInstancesInstanceIDResponse, error)
+	// GetTargets request
+	GetTargetsWithResponse(ctx context.Context, params *GetTargetsParams, reqEditors ...RequestEditorFn) (*GetTargetsResponse, error)
 
-	// PutInstancesInstanceID request with any body
-	PutInstancesInstanceIDWithBodyWithResponse(ctx context.Context, instanceID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutInstancesInstanceIDResponse, error)
+	// PostTargets request with any body
+	PostTargetsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTargetsResponse, error)
 
-	PutInstancesInstanceIDWithResponse(ctx context.Context, instanceID string, body PutInstancesInstanceIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PutInstancesInstanceIDResponse, error)
+	PostTargetsWithResponse(ctx context.Context, body PostTargetsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTargetsResponse, error)
 
-	// GetInstancesInstanceIDScanresults request
-	GetInstancesInstanceIDScanresultsWithResponse(ctx context.Context, instanceID string, params *GetInstancesInstanceIDScanresultsParams, reqEditors ...RequestEditorFn) (*GetInstancesInstanceIDScanresultsResponse, error)
+	// GetTargetsTargetIDScanresults request
+	GetTargetsTargetIDScanresultsWithResponse(ctx context.Context, targetID TargetID, params *GetTargetsTargetIDScanresultsParams, reqEditors ...RequestEditorFn) (*GetTargetsTargetIDScanresultsResponse, error)
 
-	// PostInstancesInstanceIDScanresults request with any body
-	PostInstancesInstanceIDScanresultsWithBodyWithResponse(ctx context.Context, instanceID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostInstancesInstanceIDScanresultsResponse, error)
+	// PostTargetsTargetIDScanresults request with any body
+	PostTargetsTargetIDScanresultsWithBodyWithResponse(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTargetsTargetIDScanresultsResponse, error)
 
-	PostInstancesInstanceIDScanresultsWithResponse(ctx context.Context, instanceID string, body PostInstancesInstanceIDScanresultsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostInstancesInstanceIDScanresultsResponse, error)
+	PostTargetsTargetIDScanresultsWithResponse(ctx context.Context, targetID TargetID, body PostTargetsTargetIDScanresultsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTargetsTargetIDScanresultsResponse, error)
 
-	// GetInstancesInstanceIDScanresultsScanID request
-	GetInstancesInstanceIDScanresultsScanIDWithResponse(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*GetInstancesInstanceIDScanresultsScanIDResponse, error)
+	// GetTargetsTargetIDScanresultsScanID request
+	GetTargetsTargetIDScanresultsScanIDWithResponse(ctx context.Context, targetID TargetID, scanID ScanID, params *GetTargetsTargetIDScanresultsScanIDParams, reqEditors ...RequestEditorFn) (*GetTargetsTargetIDScanresultsScanIDResponse, error)
 
-	// PutInstancesInstanceIDScanresultsScanID request with any body
-	PutInstancesInstanceIDScanresultsScanIDWithBodyWithResponse(ctx context.Context, instanceID string, scanID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutInstancesInstanceIDScanresultsScanIDResponse, error)
+	// PutTargetsTargetIDScanresultsScanID request with any body
+	PutTargetsTargetIDScanresultsScanIDWithBodyWithResponse(ctx context.Context, targetID TargetID, scanID ScanID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutTargetsTargetIDScanresultsScanIDResponse, error)
 
-	PutInstancesInstanceIDScanresultsScanIDWithResponse(ctx context.Context, instanceID string, scanID string, body PutInstancesInstanceIDScanresultsScanIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PutInstancesInstanceIDScanresultsScanIDResponse, error)
-
-	// GetInstancesInstanceIDScanresultsScanIDExploits request
-	GetInstancesInstanceIDScanresultsScanIDExploitsWithResponse(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*GetInstancesInstanceIDScanresultsScanIDExploitsResponse, error)
-
-	// GetInstancesInstanceIDScanresultsScanIDMalwares request
-	GetInstancesInstanceIDScanresultsScanIDMalwaresWithResponse(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*GetInstancesInstanceIDScanresultsScanIDMalwaresResponse, error)
-
-	// GetInstancesInstanceIDScanresultsScanIDMisconfiguration request
-	GetInstancesInstanceIDScanresultsScanIDMisconfigurationWithResponse(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*GetInstancesInstanceIDScanresultsScanIDMisconfigurationResponse, error)
-
-	// GetInstancesInstanceIDScanresultsScanIDRootkits request
-	GetInstancesInstanceIDScanresultsScanIDRootkitsWithResponse(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*GetInstancesInstanceIDScanresultsScanIDRootkitsResponse, error)
-
-	// GetInstancesInstanceIDScanresultsScanIDSbom request
-	GetInstancesInstanceIDScanresultsScanIDSbomWithResponse(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*GetInstancesInstanceIDScanresultsScanIDSbomResponse, error)
-
-	// GetInstancesInstanceIDScanresultsScanIDSecrets request
-	GetInstancesInstanceIDScanresultsScanIDSecretsWithResponse(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*GetInstancesInstanceIDScanresultsScanIDSecretsResponse, error)
-
-	// GetInstancesInstanceIDScanresultsScanIDVulnerabilities request
-	GetInstancesInstanceIDScanresultsScanIDVulnerabilitiesWithResponse(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*GetInstancesInstanceIDScanresultsScanIDVulnerabilitiesResponse, error)
+	PutTargetsTargetIDScanresultsScanIDWithResponse(ctx context.Context, targetID TargetID, scanID ScanID, body PutTargetsTargetIDScanresultsScanIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PutTargetsTargetIDScanresultsScanIDResponse, error)
 }
 
-type GetInstancesResponse struct {
+type DeleteTargetTargetIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON204      *SuccessResponse
+	JSONDefault  *ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteTargetTargetIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteTargetTargetIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetTargetTargetIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Target
+	JSONDefault  *ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetTargetTargetIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetTargetTargetIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PutTargetTargetIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Target
+	JSONDefault  *ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PutTargetTargetIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutTargetTargetIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetTargetsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *struct {
-		// Items List of instances in the given filters and page. List length must be lower or equal to pageSize.
-		Items *[]Instance `json:"items,omitempty"`
+		// Items List of targets in the given filters and page. List length must be lower or equal to pageSize.
+		Items *[]Target `json:"items,omitempty"`
 
-		// Total Total instances count under the given filters
+		// Total Total targets count under the given filters
 		Total int `json:"total"`
 	}
 	JSONDefault *ApiResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r GetInstancesResponse) Status() string {
+func (r GetTargetsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -1234,23 +886,23 @@ func (r GetInstancesResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetInstancesResponse) StatusCode() int {
+func (r GetTargetsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type PostInstancesResponse struct {
+type PostTargetsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON201      *InstanceInfo
-	JSON409      *InstanceInfo
+	JSON201      *Target
+	JSON409      *Target
 	JSONDefault  *ApiResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r PostInstancesResponse) Status() string {
+func (r PostTargetsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -1258,86 +910,18 @@ func (r PostInstancesResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostInstancesResponse) StatusCode() int {
+func (r PostTargetsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type DeleteInstancesInstanceIDResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSONDefault  *ApiResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r DeleteInstancesInstanceIDResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r DeleteInstancesInstanceIDResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetInstancesInstanceIDResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *InstanceInfo
-	JSONDefault  *ApiResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r GetInstancesInstanceIDResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetInstancesInstanceIDResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PutInstancesInstanceIDResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *InstanceInfo
-	JSONDefault  *ApiResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r PutInstancesInstanceIDResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PutInstancesInstanceIDResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetInstancesInstanceIDScanresultsResponse struct {
+type GetTargetsTargetIDScanresultsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *struct {
-		// Items List of scan results for a specified instance in the given filters and page. List length must be lower or equal to pageSize.
+		// Items List of scan results for a specified target in the given filters and page. List length must be lower or equal to pageSize.
 		Items *[]ScanResults `json:"items,omitempty"`
 
 		// Total Total scan results count under the given filters
@@ -1347,7 +931,7 @@ type GetInstancesInstanceIDScanresultsResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetInstancesInstanceIDScanresultsResponse) Status() string {
+func (r GetTargetsTargetIDScanresultsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -1355,14 +939,14 @@ func (r GetInstancesInstanceIDScanresultsResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetInstancesInstanceIDScanresultsResponse) StatusCode() int {
+func (r GetTargetsTargetIDScanresultsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type PostInstancesInstanceIDScanresultsResponse struct {
+type PostTargetsTargetIDScanresultsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON201      *ScanResultsSummary
@@ -1371,7 +955,7 @@ type PostInstancesInstanceIDScanresultsResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PostInstancesInstanceIDScanresultsResponse) Status() string {
+func (r PostTargetsTargetIDScanresultsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -1379,14 +963,39 @@ func (r PostInstancesInstanceIDScanresultsResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostInstancesInstanceIDScanresultsResponse) StatusCode() int {
+func (r PostTargetsTargetIDScanresultsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type GetInstancesInstanceIDScanresultsScanIDResponse struct {
+type GetTargetsTargetIDScanresultsScanIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		union json.RawMessage
+	}
+	JSONDefault *ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetTargetsTargetIDScanresultsScanIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetTargetsTargetIDScanresultsScanIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PutTargetsTargetIDScanresultsScanIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ScanResultsSummary
@@ -1394,7 +1003,7 @@ type GetInstancesInstanceIDScanresultsScanIDResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetInstancesInstanceIDScanresultsScanIDResponse) Status() string {
+func (r PutTargetsTargetIDScanresultsScanIDResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -1402,382 +1011,234 @@ func (r GetInstancesInstanceIDScanresultsScanIDResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetInstancesInstanceIDScanresultsScanIDResponse) StatusCode() int {
+func (r PutTargetsTargetIDScanresultsScanIDResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type PutInstancesInstanceIDScanresultsScanIDResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *ScanResultsSummary
-	JSONDefault  *ApiResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r PutInstancesInstanceIDScanresultsScanIDResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PutInstancesInstanceIDScanresultsScanIDResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetInstancesInstanceIDScanresultsScanIDExploitsResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *ExploitScan
-	JSONDefault  *ApiResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r GetInstancesInstanceIDScanresultsScanIDExploitsResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetInstancesInstanceIDScanresultsScanIDExploitsResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetInstancesInstanceIDScanresultsScanIDMalwaresResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *MalwareScan
-	JSONDefault  *ApiResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r GetInstancesInstanceIDScanresultsScanIDMalwaresResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetInstancesInstanceIDScanresultsScanIDMalwaresResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetInstancesInstanceIDScanresultsScanIDMisconfigurationResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *MisconfigurationScan
-	JSONDefault  *ApiResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r GetInstancesInstanceIDScanresultsScanIDMisconfigurationResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetInstancesInstanceIDScanresultsScanIDMisconfigurationResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetInstancesInstanceIDScanresultsScanIDRootkitsResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *RootkitScan
-	JSONDefault  *ApiResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r GetInstancesInstanceIDScanresultsScanIDRootkitsResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetInstancesInstanceIDScanresultsScanIDRootkitsResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetInstancesInstanceIDScanresultsScanIDSbomResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *SbomScan
-	JSONDefault  *ApiResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r GetInstancesInstanceIDScanresultsScanIDSbomResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetInstancesInstanceIDScanresultsScanIDSbomResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetInstancesInstanceIDScanresultsScanIDSecretsResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *SecretScan
-	JSONDefault  *ApiResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r GetInstancesInstanceIDScanresultsScanIDSecretsResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetInstancesInstanceIDScanresultsScanIDSecretsResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetInstancesInstanceIDScanresultsScanIDVulnerabilitiesResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *VulnerabilityScan
-	JSONDefault  *ApiResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r GetInstancesInstanceIDScanresultsScanIDVulnerabilitiesResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetInstancesInstanceIDScanresultsScanIDVulnerabilitiesResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// GetInstancesWithResponse request returning *GetInstancesResponse
-func (c *ClientWithResponses) GetInstancesWithResponse(ctx context.Context, params *GetInstancesParams, reqEditors ...RequestEditorFn) (*GetInstancesResponse, error) {
-	rsp, err := c.GetInstances(ctx, params, reqEditors...)
+// DeleteTargetTargetIDWithResponse request returning *DeleteTargetTargetIDResponse
+func (c *ClientWithResponses) DeleteTargetTargetIDWithResponse(ctx context.Context, targetID TargetID, reqEditors ...RequestEditorFn) (*DeleteTargetTargetIDResponse, error) {
+	rsp, err := c.DeleteTargetTargetID(ctx, targetID, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetInstancesResponse(rsp)
+	return ParseDeleteTargetTargetIDResponse(rsp)
 }
 
-// PostInstancesWithBodyWithResponse request with arbitrary body returning *PostInstancesResponse
-func (c *ClientWithResponses) PostInstancesWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostInstancesResponse, error) {
-	rsp, err := c.PostInstancesWithBody(ctx, contentType, body, reqEditors...)
+// GetTargetTargetIDWithResponse request returning *GetTargetTargetIDResponse
+func (c *ClientWithResponses) GetTargetTargetIDWithResponse(ctx context.Context, targetID TargetID, reqEditors ...RequestEditorFn) (*GetTargetTargetIDResponse, error) {
+	rsp, err := c.GetTargetTargetID(ctx, targetID, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostInstancesResponse(rsp)
+	return ParseGetTargetTargetIDResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostInstancesWithResponse(ctx context.Context, body PostInstancesJSONRequestBody, reqEditors ...RequestEditorFn) (*PostInstancesResponse, error) {
-	rsp, err := c.PostInstances(ctx, body, reqEditors...)
+// PutTargetTargetIDWithBodyWithResponse request with arbitrary body returning *PutTargetTargetIDResponse
+func (c *ClientWithResponses) PutTargetTargetIDWithBodyWithResponse(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutTargetTargetIDResponse, error) {
+	rsp, err := c.PutTargetTargetIDWithBody(ctx, targetID, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostInstancesResponse(rsp)
+	return ParsePutTargetTargetIDResponse(rsp)
 }
 
-// DeleteInstancesInstanceIDWithResponse request returning *DeleteInstancesInstanceIDResponse
-func (c *ClientWithResponses) DeleteInstancesInstanceIDWithResponse(ctx context.Context, instanceID string, reqEditors ...RequestEditorFn) (*DeleteInstancesInstanceIDResponse, error) {
-	rsp, err := c.DeleteInstancesInstanceID(ctx, instanceID, reqEditors...)
+func (c *ClientWithResponses) PutTargetTargetIDWithResponse(ctx context.Context, targetID TargetID, body PutTargetTargetIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PutTargetTargetIDResponse, error) {
+	rsp, err := c.PutTargetTargetID(ctx, targetID, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseDeleteInstancesInstanceIDResponse(rsp)
+	return ParsePutTargetTargetIDResponse(rsp)
 }
 
-// GetInstancesInstanceIDWithResponse request returning *GetInstancesInstanceIDResponse
-func (c *ClientWithResponses) GetInstancesInstanceIDWithResponse(ctx context.Context, instanceID string, reqEditors ...RequestEditorFn) (*GetInstancesInstanceIDResponse, error) {
-	rsp, err := c.GetInstancesInstanceID(ctx, instanceID, reqEditors...)
+// GetTargetsWithResponse request returning *GetTargetsResponse
+func (c *ClientWithResponses) GetTargetsWithResponse(ctx context.Context, params *GetTargetsParams, reqEditors ...RequestEditorFn) (*GetTargetsResponse, error) {
+	rsp, err := c.GetTargets(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetInstancesInstanceIDResponse(rsp)
+	return ParseGetTargetsResponse(rsp)
 }
 
-// PutInstancesInstanceIDWithBodyWithResponse request with arbitrary body returning *PutInstancesInstanceIDResponse
-func (c *ClientWithResponses) PutInstancesInstanceIDWithBodyWithResponse(ctx context.Context, instanceID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutInstancesInstanceIDResponse, error) {
-	rsp, err := c.PutInstancesInstanceIDWithBody(ctx, instanceID, contentType, body, reqEditors...)
+// PostTargetsWithBodyWithResponse request with arbitrary body returning *PostTargetsResponse
+func (c *ClientWithResponses) PostTargetsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTargetsResponse, error) {
+	rsp, err := c.PostTargetsWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePutInstancesInstanceIDResponse(rsp)
+	return ParsePostTargetsResponse(rsp)
 }
 
-func (c *ClientWithResponses) PutInstancesInstanceIDWithResponse(ctx context.Context, instanceID string, body PutInstancesInstanceIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PutInstancesInstanceIDResponse, error) {
-	rsp, err := c.PutInstancesInstanceID(ctx, instanceID, body, reqEditors...)
+func (c *ClientWithResponses) PostTargetsWithResponse(ctx context.Context, body PostTargetsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTargetsResponse, error) {
+	rsp, err := c.PostTargets(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePutInstancesInstanceIDResponse(rsp)
+	return ParsePostTargetsResponse(rsp)
 }
 
-// GetInstancesInstanceIDScanresultsWithResponse request returning *GetInstancesInstanceIDScanresultsResponse
-func (c *ClientWithResponses) GetInstancesInstanceIDScanresultsWithResponse(ctx context.Context, instanceID string, params *GetInstancesInstanceIDScanresultsParams, reqEditors ...RequestEditorFn) (*GetInstancesInstanceIDScanresultsResponse, error) {
-	rsp, err := c.GetInstancesInstanceIDScanresults(ctx, instanceID, params, reqEditors...)
+// GetTargetsTargetIDScanresultsWithResponse request returning *GetTargetsTargetIDScanresultsResponse
+func (c *ClientWithResponses) GetTargetsTargetIDScanresultsWithResponse(ctx context.Context, targetID TargetID, params *GetTargetsTargetIDScanresultsParams, reqEditors ...RequestEditorFn) (*GetTargetsTargetIDScanresultsResponse, error) {
+	rsp, err := c.GetTargetsTargetIDScanresults(ctx, targetID, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetInstancesInstanceIDScanresultsResponse(rsp)
+	return ParseGetTargetsTargetIDScanresultsResponse(rsp)
 }
 
-// PostInstancesInstanceIDScanresultsWithBodyWithResponse request with arbitrary body returning *PostInstancesInstanceIDScanresultsResponse
-func (c *ClientWithResponses) PostInstancesInstanceIDScanresultsWithBodyWithResponse(ctx context.Context, instanceID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostInstancesInstanceIDScanresultsResponse, error) {
-	rsp, err := c.PostInstancesInstanceIDScanresultsWithBody(ctx, instanceID, contentType, body, reqEditors...)
+// PostTargetsTargetIDScanresultsWithBodyWithResponse request with arbitrary body returning *PostTargetsTargetIDScanresultsResponse
+func (c *ClientWithResponses) PostTargetsTargetIDScanresultsWithBodyWithResponse(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTargetsTargetIDScanresultsResponse, error) {
+	rsp, err := c.PostTargetsTargetIDScanresultsWithBody(ctx, targetID, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostInstancesInstanceIDScanresultsResponse(rsp)
+	return ParsePostTargetsTargetIDScanresultsResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostInstancesInstanceIDScanresultsWithResponse(ctx context.Context, instanceID string, body PostInstancesInstanceIDScanresultsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostInstancesInstanceIDScanresultsResponse, error) {
-	rsp, err := c.PostInstancesInstanceIDScanresults(ctx, instanceID, body, reqEditors...)
+func (c *ClientWithResponses) PostTargetsTargetIDScanresultsWithResponse(ctx context.Context, targetID TargetID, body PostTargetsTargetIDScanresultsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTargetsTargetIDScanresultsResponse, error) {
+	rsp, err := c.PostTargetsTargetIDScanresults(ctx, targetID, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostInstancesInstanceIDScanresultsResponse(rsp)
+	return ParsePostTargetsTargetIDScanresultsResponse(rsp)
 }
 
-// GetInstancesInstanceIDScanresultsScanIDWithResponse request returning *GetInstancesInstanceIDScanresultsScanIDResponse
-func (c *ClientWithResponses) GetInstancesInstanceIDScanresultsScanIDWithResponse(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*GetInstancesInstanceIDScanresultsScanIDResponse, error) {
-	rsp, err := c.GetInstancesInstanceIDScanresultsScanID(ctx, instanceID, scanID, reqEditors...)
+// GetTargetsTargetIDScanresultsScanIDWithResponse request returning *GetTargetsTargetIDScanresultsScanIDResponse
+func (c *ClientWithResponses) GetTargetsTargetIDScanresultsScanIDWithResponse(ctx context.Context, targetID TargetID, scanID ScanID, params *GetTargetsTargetIDScanresultsScanIDParams, reqEditors ...RequestEditorFn) (*GetTargetsTargetIDScanresultsScanIDResponse, error) {
+	rsp, err := c.GetTargetsTargetIDScanresultsScanID(ctx, targetID, scanID, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetInstancesInstanceIDScanresultsScanIDResponse(rsp)
+	return ParseGetTargetsTargetIDScanresultsScanIDResponse(rsp)
 }
 
-// PutInstancesInstanceIDScanresultsScanIDWithBodyWithResponse request with arbitrary body returning *PutInstancesInstanceIDScanresultsScanIDResponse
-func (c *ClientWithResponses) PutInstancesInstanceIDScanresultsScanIDWithBodyWithResponse(ctx context.Context, instanceID string, scanID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutInstancesInstanceIDScanresultsScanIDResponse, error) {
-	rsp, err := c.PutInstancesInstanceIDScanresultsScanIDWithBody(ctx, instanceID, scanID, contentType, body, reqEditors...)
+// PutTargetsTargetIDScanresultsScanIDWithBodyWithResponse request with arbitrary body returning *PutTargetsTargetIDScanresultsScanIDResponse
+func (c *ClientWithResponses) PutTargetsTargetIDScanresultsScanIDWithBodyWithResponse(ctx context.Context, targetID TargetID, scanID ScanID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutTargetsTargetIDScanresultsScanIDResponse, error) {
+	rsp, err := c.PutTargetsTargetIDScanresultsScanIDWithBody(ctx, targetID, scanID, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePutInstancesInstanceIDScanresultsScanIDResponse(rsp)
+	return ParsePutTargetsTargetIDScanresultsScanIDResponse(rsp)
 }
 
-func (c *ClientWithResponses) PutInstancesInstanceIDScanresultsScanIDWithResponse(ctx context.Context, instanceID string, scanID string, body PutInstancesInstanceIDScanresultsScanIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PutInstancesInstanceIDScanresultsScanIDResponse, error) {
-	rsp, err := c.PutInstancesInstanceIDScanresultsScanID(ctx, instanceID, scanID, body, reqEditors...)
+func (c *ClientWithResponses) PutTargetsTargetIDScanresultsScanIDWithResponse(ctx context.Context, targetID TargetID, scanID ScanID, body PutTargetsTargetIDScanresultsScanIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PutTargetsTargetIDScanresultsScanIDResponse, error) {
+	rsp, err := c.PutTargetsTargetIDScanresultsScanID(ctx, targetID, scanID, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePutInstancesInstanceIDScanresultsScanIDResponse(rsp)
+	return ParsePutTargetsTargetIDScanresultsScanIDResponse(rsp)
 }
 
-// GetInstancesInstanceIDScanresultsScanIDExploitsWithResponse request returning *GetInstancesInstanceIDScanresultsScanIDExploitsResponse
-func (c *ClientWithResponses) GetInstancesInstanceIDScanresultsScanIDExploitsWithResponse(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*GetInstancesInstanceIDScanresultsScanIDExploitsResponse, error) {
-	rsp, err := c.GetInstancesInstanceIDScanresultsScanIDExploits(ctx, instanceID, scanID, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetInstancesInstanceIDScanresultsScanIDExploitsResponse(rsp)
-}
-
-// GetInstancesInstanceIDScanresultsScanIDMalwaresWithResponse request returning *GetInstancesInstanceIDScanresultsScanIDMalwaresResponse
-func (c *ClientWithResponses) GetInstancesInstanceIDScanresultsScanIDMalwaresWithResponse(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*GetInstancesInstanceIDScanresultsScanIDMalwaresResponse, error) {
-	rsp, err := c.GetInstancesInstanceIDScanresultsScanIDMalwares(ctx, instanceID, scanID, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetInstancesInstanceIDScanresultsScanIDMalwaresResponse(rsp)
-}
-
-// GetInstancesInstanceIDScanresultsScanIDMisconfigurationWithResponse request returning *GetInstancesInstanceIDScanresultsScanIDMisconfigurationResponse
-func (c *ClientWithResponses) GetInstancesInstanceIDScanresultsScanIDMisconfigurationWithResponse(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*GetInstancesInstanceIDScanresultsScanIDMisconfigurationResponse, error) {
-	rsp, err := c.GetInstancesInstanceIDScanresultsScanIDMisconfiguration(ctx, instanceID, scanID, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetInstancesInstanceIDScanresultsScanIDMisconfigurationResponse(rsp)
-}
-
-// GetInstancesInstanceIDScanresultsScanIDRootkitsWithResponse request returning *GetInstancesInstanceIDScanresultsScanIDRootkitsResponse
-func (c *ClientWithResponses) GetInstancesInstanceIDScanresultsScanIDRootkitsWithResponse(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*GetInstancesInstanceIDScanresultsScanIDRootkitsResponse, error) {
-	rsp, err := c.GetInstancesInstanceIDScanresultsScanIDRootkits(ctx, instanceID, scanID, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetInstancesInstanceIDScanresultsScanIDRootkitsResponse(rsp)
-}
-
-// GetInstancesInstanceIDScanresultsScanIDSbomWithResponse request returning *GetInstancesInstanceIDScanresultsScanIDSbomResponse
-func (c *ClientWithResponses) GetInstancesInstanceIDScanresultsScanIDSbomWithResponse(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*GetInstancesInstanceIDScanresultsScanIDSbomResponse, error) {
-	rsp, err := c.GetInstancesInstanceIDScanresultsScanIDSbom(ctx, instanceID, scanID, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetInstancesInstanceIDScanresultsScanIDSbomResponse(rsp)
-}
-
-// GetInstancesInstanceIDScanresultsScanIDSecretsWithResponse request returning *GetInstancesInstanceIDScanresultsScanIDSecretsResponse
-func (c *ClientWithResponses) GetInstancesInstanceIDScanresultsScanIDSecretsWithResponse(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*GetInstancesInstanceIDScanresultsScanIDSecretsResponse, error) {
-	rsp, err := c.GetInstancesInstanceIDScanresultsScanIDSecrets(ctx, instanceID, scanID, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetInstancesInstanceIDScanresultsScanIDSecretsResponse(rsp)
-}
-
-// GetInstancesInstanceIDScanresultsScanIDVulnerabilitiesWithResponse request returning *GetInstancesInstanceIDScanresultsScanIDVulnerabilitiesResponse
-func (c *ClientWithResponses) GetInstancesInstanceIDScanresultsScanIDVulnerabilitiesWithResponse(ctx context.Context, instanceID string, scanID string, reqEditors ...RequestEditorFn) (*GetInstancesInstanceIDScanresultsScanIDVulnerabilitiesResponse, error) {
-	rsp, err := c.GetInstancesInstanceIDScanresultsScanIDVulnerabilities(ctx, instanceID, scanID, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetInstancesInstanceIDScanresultsScanIDVulnerabilitiesResponse(rsp)
-}
-
-// ParseGetInstancesResponse parses an HTTP response from a GetInstancesWithResponse call
-func ParseGetInstancesResponse(rsp *http.Response) (*GetInstancesResponse, error) {
+// ParseDeleteTargetTargetIDResponse parses an HTTP response from a DeleteTargetTargetIDWithResponse call
+func ParseDeleteTargetTargetIDResponse(rsp *http.Response) (*DeleteTargetTargetIDResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetInstancesResponse{
+	response := &DeleteTargetTargetIDResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 204:
+		var dest SuccessResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON204 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetTargetTargetIDResponse parses an HTTP response from a GetTargetTargetIDWithResponse call
+func ParseGetTargetTargetIDResponse(rsp *http.Response) (*GetTargetTargetIDResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetTargetTargetIDResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Target
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutTargetTargetIDResponse parses an HTTP response from a PutTargetTargetIDWithResponse call
+func ParsePutTargetTargetIDResponse(rsp *http.Response) (*PutTargetTargetIDResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutTargetTargetIDResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Target
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetTargetsResponse parses an HTTP response from a GetTargetsWithResponse call
+func ParseGetTargetsResponse(rsp *http.Response) (*GetTargetsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetTargetsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -1785,10 +1246,10 @@ func ParseGetInstancesResponse(rsp *http.Response) (*GetInstancesResponse, error
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest struct {
-			// Items List of instances in the given filters and page. List length must be lower or equal to pageSize.
-			Items *[]Instance `json:"items,omitempty"`
+			// Items List of targets in the given filters and page. List length must be lower or equal to pageSize.
+			Items *[]Target `json:"items,omitempty"`
 
-			// Total Total instances count under the given filters
+			// Total Total targets count under the given filters
 			Total int `json:"total"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -1808,29 +1269,29 @@ func ParseGetInstancesResponse(rsp *http.Response) (*GetInstancesResponse, error
 	return response, nil
 }
 
-// ParsePostInstancesResponse parses an HTTP response from a PostInstancesWithResponse call
-func ParsePostInstancesResponse(rsp *http.Response) (*PostInstancesResponse, error) {
+// ParsePostTargetsResponse parses an HTTP response from a PostTargetsWithResponse call
+func ParsePostTargetsResponse(rsp *http.Response) (*PostTargetsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostInstancesResponse{
+	response := &PostTargetsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
-		var dest InstanceInfo
+		var dest Target
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON201 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
-		var dest InstanceInfo
+		var dest Target
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1848,107 +1309,15 @@ func ParsePostInstancesResponse(rsp *http.Response) (*PostInstancesResponse, err
 	return response, nil
 }
 
-// ParseDeleteInstancesInstanceIDResponse parses an HTTP response from a DeleteInstancesInstanceIDWithResponse call
-func ParseDeleteInstancesInstanceIDResponse(rsp *http.Response) (*DeleteInstancesInstanceIDResponse, error) {
+// ParseGetTargetsTargetIDScanresultsResponse parses an HTTP response from a GetTargetsTargetIDScanresultsWithResponse call
+func ParseGetTargetsTargetIDScanresultsResponse(rsp *http.Response) (*GetTargetsTargetIDScanresultsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &DeleteInstancesInstanceIDResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetInstancesInstanceIDResponse parses an HTTP response from a GetInstancesInstanceIDWithResponse call
-func ParseGetInstancesInstanceIDResponse(rsp *http.Response) (*GetInstancesInstanceIDResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetInstancesInstanceIDResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest InstanceInfo
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePutInstancesInstanceIDResponse parses an HTTP response from a PutInstancesInstanceIDWithResponse call
-func ParsePutInstancesInstanceIDResponse(rsp *http.Response) (*PutInstancesInstanceIDResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PutInstancesInstanceIDResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest InstanceInfo
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetInstancesInstanceIDScanresultsResponse parses an HTTP response from a GetInstancesInstanceIDScanresultsWithResponse call
-func ParseGetInstancesInstanceIDScanresultsResponse(rsp *http.Response) (*GetInstancesInstanceIDScanresultsResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetInstancesInstanceIDScanresultsResponse{
+	response := &GetTargetsTargetIDScanresultsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -1956,7 +1325,7 @@ func ParseGetInstancesInstanceIDScanresultsResponse(rsp *http.Response) (*GetIns
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest struct {
-			// Items List of scan results for a specified instance in the given filters and page. List length must be lower or equal to pageSize.
+			// Items List of scan results for a specified target in the given filters and page. List length must be lower or equal to pageSize.
 			Items *[]ScanResults `json:"items,omitempty"`
 
 			// Total Total scan results count under the given filters
@@ -1979,15 +1348,15 @@ func ParseGetInstancesInstanceIDScanresultsResponse(rsp *http.Response) (*GetIns
 	return response, nil
 }
 
-// ParsePostInstancesInstanceIDScanresultsResponse parses an HTTP response from a PostInstancesInstanceIDScanresultsWithResponse call
-func ParsePostInstancesInstanceIDScanresultsResponse(rsp *http.Response) (*PostInstancesInstanceIDScanresultsResponse, error) {
+// ParsePostTargetsTargetIDScanresultsResponse parses an HTTP response from a PostTargetsTargetIDScanresultsWithResponse call
+func ParsePostTargetsTargetIDScanresultsResponse(rsp *http.Response) (*PostTargetsTargetIDScanresultsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostInstancesInstanceIDScanresultsResponse{
+	response := &PostTargetsTargetIDScanresultsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -2019,15 +1388,50 @@ func ParsePostInstancesInstanceIDScanresultsResponse(rsp *http.Response) (*PostI
 	return response, nil
 }
 
-// ParseGetInstancesInstanceIDScanresultsScanIDResponse parses an HTTP response from a GetInstancesInstanceIDScanresultsScanIDWithResponse call
-func ParseGetInstancesInstanceIDScanresultsScanIDResponse(rsp *http.Response) (*GetInstancesInstanceIDScanresultsScanIDResponse, error) {
+// ParseGetTargetsTargetIDScanresultsScanIDResponse parses an HTTP response from a GetTargetsTargetIDScanresultsScanIDWithResponse call
+func ParseGetTargetsTargetIDScanresultsScanIDResponse(rsp *http.Response) (*GetTargetsTargetIDScanresultsScanIDResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetInstancesInstanceIDScanresultsScanIDResponse{
+	response := &GetTargetsTargetIDScanresultsScanIDResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			union json.RawMessage
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutTargetsTargetIDScanresultsScanIDResponse parses an HTTP response from a PutTargetsTargetIDScanresultsScanIDWithResponse call
+func ParsePutTargetsTargetIDScanresultsScanIDResponse(rsp *http.Response) (*PutTargetsTargetIDScanresultsScanIDResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutTargetsTargetIDScanresultsScanIDResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -2035,270 +1439,6 @@ func ParseGetInstancesInstanceIDScanresultsScanIDResponse(rsp *http.Response) (*
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest ScanResultsSummary
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePutInstancesInstanceIDScanresultsScanIDResponse parses an HTTP response from a PutInstancesInstanceIDScanresultsScanIDWithResponse call
-func ParsePutInstancesInstanceIDScanresultsScanIDResponse(rsp *http.Response) (*PutInstancesInstanceIDScanresultsScanIDResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PutInstancesInstanceIDScanresultsScanIDResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ScanResultsSummary
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetInstancesInstanceIDScanresultsScanIDExploitsResponse parses an HTTP response from a GetInstancesInstanceIDScanresultsScanIDExploitsWithResponse call
-func ParseGetInstancesInstanceIDScanresultsScanIDExploitsResponse(rsp *http.Response) (*GetInstancesInstanceIDScanresultsScanIDExploitsResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetInstancesInstanceIDScanresultsScanIDExploitsResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ExploitScan
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetInstancesInstanceIDScanresultsScanIDMalwaresResponse parses an HTTP response from a GetInstancesInstanceIDScanresultsScanIDMalwaresWithResponse call
-func ParseGetInstancesInstanceIDScanresultsScanIDMalwaresResponse(rsp *http.Response) (*GetInstancesInstanceIDScanresultsScanIDMalwaresResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetInstancesInstanceIDScanresultsScanIDMalwaresResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest MalwareScan
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetInstancesInstanceIDScanresultsScanIDMisconfigurationResponse parses an HTTP response from a GetInstancesInstanceIDScanresultsScanIDMisconfigurationWithResponse call
-func ParseGetInstancesInstanceIDScanresultsScanIDMisconfigurationResponse(rsp *http.Response) (*GetInstancesInstanceIDScanresultsScanIDMisconfigurationResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetInstancesInstanceIDScanresultsScanIDMisconfigurationResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest MisconfigurationScan
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetInstancesInstanceIDScanresultsScanIDRootkitsResponse parses an HTTP response from a GetInstancesInstanceIDScanresultsScanIDRootkitsWithResponse call
-func ParseGetInstancesInstanceIDScanresultsScanIDRootkitsResponse(rsp *http.Response) (*GetInstancesInstanceIDScanresultsScanIDRootkitsResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetInstancesInstanceIDScanresultsScanIDRootkitsResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest RootkitScan
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetInstancesInstanceIDScanresultsScanIDSbomResponse parses an HTTP response from a GetInstancesInstanceIDScanresultsScanIDSbomWithResponse call
-func ParseGetInstancesInstanceIDScanresultsScanIDSbomResponse(rsp *http.Response) (*GetInstancesInstanceIDScanresultsScanIDSbomResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetInstancesInstanceIDScanresultsScanIDSbomResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest SbomScan
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetInstancesInstanceIDScanresultsScanIDSecretsResponse parses an HTTP response from a GetInstancesInstanceIDScanresultsScanIDSecretsWithResponse call
-func ParseGetInstancesInstanceIDScanresultsScanIDSecretsResponse(rsp *http.Response) (*GetInstancesInstanceIDScanresultsScanIDSecretsResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetInstancesInstanceIDScanresultsScanIDSecretsResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest SecretScan
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetInstancesInstanceIDScanresultsScanIDVulnerabilitiesResponse parses an HTTP response from a GetInstancesInstanceIDScanresultsScanIDVulnerabilitiesWithResponse call
-func ParseGetInstancesInstanceIDScanresultsScanIDVulnerabilitiesResponse(rsp *http.Response) (*GetInstancesInstanceIDScanresultsScanIDVulnerabilitiesResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetInstancesInstanceIDScanresultsScanIDVulnerabilitiesResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest VulnerabilityScan
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

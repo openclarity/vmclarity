@@ -8,30 +8,12 @@ servers:
   - url: /api
 
 paths:
-  /instances:
+  /targets:
     get:
-      summary: Get instances
+      summary: Get targets
       parameters:
-        - name: page
-          in: query
-          description: Page number of the query
-          required: true
-          schema:
-            type: integer
-        - name: pageSize
-          in: query
-          description: Maximum items to return
-          required: true
-          schema:
-            maximum: 50
-            minimum: 1
-            type: integer
-        - name: sortKey
-          in: query
-          description: Sort key
-          required: true
-          schema:
-            type: string
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/pageSize'
       responses:
         200:
           description: Success
@@ -44,152 +26,98 @@ paths:
                 properties:
                   total:
                     type: integer
-                    description: Total instances count under the given filters
+                    description: Total targets count under the given filters
                   items:
                     type: array
-                    description: List of instances in the given filters and page.
+                    description: List of targets in the given filters and page.
                       List length must be lower or equal to pageSize.
                     items:
-                      $ref: '#/components/schemas/Instance'
+                      $ref: '#/components/schemas/Target'
         default:
-          description: unknown error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
+          $ref: '#/components/responses/UnknownError'
     post:
-      summary: Create instance
+      summary: Create target
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/InstanceInfo'
+              $ref: '#/components/schemas/Target'
         required: true
       responses:
         201:
-          description: New instance was created.
+          description: New target was created.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InstanceInfo'
+                $ref: '#/components/schemas/Target'
         409:
-          description: Instance already exist.
+          description: target already exist.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InstanceInfo'
+                $ref: '#/components/schemas/Target'
         default:
-          description: unknown error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
+          $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
 
-  /instances/{instanceID}:
+  /target/{targetID}:
     get:
-      summary: Get instance.
+      summary: Get target.
       parameters:
-        - name: instanceID
-          in: path
-          required: true
-          schema:
-            type: string
+        - $ref: '#/components/parameters/targetID'
       responses:
         200:
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InstanceInfo'
+                $ref: '#/components/schemas/Target'
         default:
-          description: unknown error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
+          $ref: '#/components/responses/UnknownError'
     put:
-      summary: Update instance.
+      summary: Update target.
       parameters:
-        - name: instanceID
-          in: path
-          required: true
-          schema:
-            type: string
+        - $ref: '#/components/parameters/targetID'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/InstanceInfo'
+              $ref: '#/components/schemas/Target'
         required: true
       responses:
         200:
-          description: Update Instance successful.
+          description: Update target successful.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InstanceInfo'
+                $ref: '#/components/schemas/Target'
         404:
-          description: Instance not found.
+          description: target not found.
           content: {}
         default:
-          description: unknown error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
+          $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
     delete:
-      summary: Delete Instance.
+      summary: Delete target.
       parameters:
-        - name: instanceID
-          in: path
-          required: true
-          schema:
-            type: string
+        - $ref: '#/components/parameters/targetID'
       responses:
         204:
-          description: Success
-          content: {}
+          $ref: '#/components/responses/Success'
         404:
-          description: Instance not found.
+          description: target not found.
           content: {}
         default:
-          description: unknown error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
+          $ref: '#/components/responses/UnknownError'
 
-  /instances/{instanceID}/scanresults:
+
+  /targets/{targetID}/scanresults:
     get:
-      summary: Get scan results for a specified instance
+      summary: Get scan results for a specified target
       parameters:
-        - name: instanceID
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: page
-          in: query
-          description: Page number of the query
-          required: true
-          schema:
-            type: integer
-        - name: pageSize
-          in: query
-          description: Maximum items to return
-          required: true
-          schema:
-            maximum: 50
-            minimum: 1
-            type: integer
-        - name: sortKey
-          in: query
-          description: Sort key
-          required: true
-          schema:
-            type: string
+        - $ref: '#/components/parameters/targetID'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/pageSize'
       responses:
         200:
           description: Success
@@ -205,24 +133,16 @@ paths:
                     description: Total scan results count under the given filters
                   items:
                     type: array
-                    description: List of scan results for a specified instance in the given filters and page.
+                    description: List of scan results for a specified target in the given filters and page.
                       List length must be lower or equal to pageSize.
                     items:
                       $ref: '#/components/schemas/ScanResults'
         default:
-          description: unknown error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
+          $ref: '#/components/responses/UnknownError'
     post:
-      summary: Create scan result for a specified instance
+      summary: Create scan result for a specified target
       parameters:
-        - name: instanceID
-          in: path
-          required: true
-          schema:
-            type: string
+        - $ref: '#/components/parameters/targetID'
       requestBody:
         content:
           application/json:
@@ -231,7 +151,7 @@ paths:
         required: true
       responses:
         201:
-          description: New results was added to the instance.
+          description: New results was added to the target.
           content:
             application/json:
               schema:
@@ -243,53 +163,38 @@ paths:
               schema:
                 $ref: '#/components/schemas/ScanResultsSummary'
         default:
-          description: unknown error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
+          $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
 
-  /instances/{instanceID}/scanresults/{scanID}:
+  /targets/{targetID}/scanresults/{scanID}:
     get:
-      summary: Report a specific scan result for a specific instance
+      summary: Report a specific scan result for a specific target
       parameters:
-        - name: instanceID
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: scanID
-          in: path
-          required: true
-          schema:
-            type: string
+        - $ref: '#/components/parameters/targetID'
+        - $ref: '#/components/parameters/scanID'
+        - $ref: '#/components/parameters/scanTypeParam'
       responses:
         200:
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ScanResultsSummary'
+                anyOf:
+                  - $ref: '#/components/schemas/ScanResultsSummary'
+                  - $ref: '#/components/schemas/SbomScan'
+                  - $ref: '#/components/schemas/VulnerabilityScan'
+                  - $ref: '#/components/schemas/MalwareScan'
+                  - $ref: '#/components/schemas/RootkitScan'
+                  - $ref: '#/components/schemas/SecretScan'
+                  - $ref: '#/components/schemas/MisconfigurationScan'
+                  - $ref: '#/components/schemas/ExploitScan'
         default:
-          description: unknown error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
+          $ref: '#/components/responses/UnknownError'
     put:
       summary: Update scan results.
       parameters:
-        - name: instanceID
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: scanID
-          in: path
-          required: true
-          schema:
-            type: string
+        - $ref: '#/components/parameters/targetID'
+        - $ref: '#/components/parameters/scanID'
       requestBody:
         content:
           application/json:
@@ -307,208 +212,8 @@ paths:
           description: Scan ID not found.
           content: {}
         default:
-          description: unknown error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
+          $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
-
-  /instances/{instanceID}/scanresults/{scanID}/sbom:
-    get:
-      summary: Get a specific sbom scan result for a specific instance
-      parameters:
-        - name: instanceID
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: scanID
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SbomScan'
-        default:
-          description: unknown error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-
-  /instances/{instanceID}/scanresults/{scanID}/vulnerabilities:
-    get:
-      summary: Get a specific vulnerabilities scan result for a specific instance
-      parameters:
-        - name: instanceID
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: scanID
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VulnerabilityScan'
-        default:
-          description: unknown error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-
-  /instances/{instanceID}/scanresults/{scanID}/malwares:
-    get:
-      summary: Get a specific malware scan result for a specific instance
-      parameters:
-        - name: instanceID
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: scanID
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MalwareScan'
-        default:
-          description: unknown error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-
-  /instances/{instanceID}/scanresults/{scanID}/secrets:
-    get:
-      summary: Get a specific secret scan result for a specific instance
-      parameters:
-        - name: instanceID
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: scanID
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SecretScan'
-        default:
-          description: unknown error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-
-  /instances/{instanceID}/scanresults/{scanID}/rootkits:
-    get:
-      summary: Get a specific rootkit scan result for a specific instance
-      parameters:
-        - name: instanceID
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: scanID
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RootkitScan'
-        default:
-          description: unknown error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-
-  /instances/{instanceID}/scanresults/{scanID}/misconfiguration:
-    get:
-      summary: Get a specific misconfiguration scan result for a specific instance
-      parameters:
-        - name: instanceID
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: scanID
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MisconfigurationScan'
-        default:
-          description: unknown error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-
-  /instances/{instanceID}/scanresults/{scanID}/exploits:
-    get:
-      summary: Get a specific exploit scan result for a specific instance
-      parameters:
-        - name: instanceID
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: scanID
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExploitScan'
-        default:
-          description: unknown error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
 
 components:
   schemas:
@@ -531,11 +236,9 @@ components:
       enum:
         - AWS
 
-    InstanceInfo:
+    VMInfo:
       type: object
       properties:
-        id:
-          type: string
         instanceName:
           type: string
         instanceProvider:
@@ -543,13 +246,41 @@ components:
         location:
           type: string
 
-    Instance:
+    PodInfo:
+      type: object
+      properties:
+        podName:
+          type: string
+        location:
+          type: string
+
+    DirInfo:
+      type: object
+      properties:
+        dirName:
+          type: string
+        location:
+          type: string
+
+    TargetType:
+      type: string
+      enum:
+        - VM
+        - POD
+        - DIR
+
+    Target:
       type: object
       properties:
         id:
           type: string
-        instance:
-          $ref: '#/components/schemas/InstanceInfo'
+        targetType:
+          $ref: '#/components/schemas/TargetType'
+        targetInfo:
+          oneOf:
+            - $ref: '#/components/schemas/VMInfo'
+            - $ref: '#/components/schemas/PodInfo'
+            - $ref: '#/components/schemas/DirInfo'
         scanResults:
           type: integer
           format: uint32
@@ -758,6 +489,17 @@ components:
         - APPLICATION
         - FIRMWARE
 
+    ScanType:
+      type: string
+      enum:
+        - SBOM
+        - VULNERABILITY
+        - MALWARE
+        - SECRET
+        - MISCONFIGURATION
+        - ROOTKIT
+        - EXPLOIT
+
   responses:
     Success:
       description: success message
@@ -774,8 +516,8 @@ components:
             $ref: '#/components/schemas/ApiResponse'
 
   parameters:
-    instanceID:
-      name: instanceID
+    targetID:
+      name: targetID
       in: path
       required: true
       schema:
@@ -787,6 +529,13 @@ components:
       required: true
       schema:
         type: string
+
+    scanTypeParam:
+      name: scanType
+      in: query
+      required: false
+      schema:
+        $ref: '#/components/schemas/ScanType'
 
     page:
       name: page

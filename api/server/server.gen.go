@@ -21,54 +21,33 @@ import (
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// Get instances
-	// (GET /instances)
-	GetInstances(ctx echo.Context, params GetInstancesParams) error
-	// Create instance
-	// (POST /instances)
-	PostInstances(ctx echo.Context) error
-	// Delete Instance.
-	// (DELETE /instances/{instanceID})
-	DeleteInstancesInstanceID(ctx echo.Context, instanceID string) error
-	// Get instance.
-	// (GET /instances/{instanceID})
-	GetInstancesInstanceID(ctx echo.Context, instanceID string) error
-	// Update instance.
-	// (PUT /instances/{instanceID})
-	PutInstancesInstanceID(ctx echo.Context, instanceID string) error
-	// Get scan results for a specified instance
-	// (GET /instances/{instanceID}/scanresults)
-	GetInstancesInstanceIDScanresults(ctx echo.Context, instanceID string, params GetInstancesInstanceIDScanresultsParams) error
-	// Create scan result for a specified instance
-	// (POST /instances/{instanceID}/scanresults)
-	PostInstancesInstanceIDScanresults(ctx echo.Context, instanceID string) error
-	// Report a specific scan result for a specific instance
-	// (GET /instances/{instanceID}/scanresults/{scanID})
-	GetInstancesInstanceIDScanresultsScanID(ctx echo.Context, instanceID string, scanID string) error
+	// Delete target.
+	// (DELETE /target/{targetID})
+	DeleteTargetTargetID(ctx echo.Context, targetID TargetID) error
+	// Get target.
+	// (GET /target/{targetID})
+	GetTargetTargetID(ctx echo.Context, targetID TargetID) error
+	// Update target.
+	// (PUT /target/{targetID})
+	PutTargetTargetID(ctx echo.Context, targetID TargetID) error
+	// Get targets
+	// (GET /targets)
+	GetTargets(ctx echo.Context, params GetTargetsParams) error
+	// Create target
+	// (POST /targets)
+	PostTargets(ctx echo.Context) error
+	// Get scan results for a specified target
+	// (GET /targets/{targetID}/scanresults)
+	GetTargetsTargetIDScanresults(ctx echo.Context, targetID TargetID, params GetTargetsTargetIDScanresultsParams) error
+	// Create scan result for a specified target
+	// (POST /targets/{targetID}/scanresults)
+	PostTargetsTargetIDScanresults(ctx echo.Context, targetID TargetID) error
+	// Report a specific scan result for a specific target
+	// (GET /targets/{targetID}/scanresults/{scanID})
+	GetTargetsTargetIDScanresultsScanID(ctx echo.Context, targetID TargetID, scanID ScanID, params GetTargetsTargetIDScanresultsScanIDParams) error
 	// Update scan results.
-	// (PUT /instances/{instanceID}/scanresults/{scanID})
-	PutInstancesInstanceIDScanresultsScanID(ctx echo.Context, instanceID string, scanID string) error
-	// Get a specific exploit scan result for a specific instance
-	// (GET /instances/{instanceID}/scanresults/{scanID}/exploits)
-	GetInstancesInstanceIDScanresultsScanIDExploits(ctx echo.Context, instanceID string, scanID string) error
-	// Get a specific malware scan result for a specific instance
-	// (GET /instances/{instanceID}/scanresults/{scanID}/malwares)
-	GetInstancesInstanceIDScanresultsScanIDMalwares(ctx echo.Context, instanceID string, scanID string) error
-	// Get a specific misconfiguration scan result for a specific instance
-	// (GET /instances/{instanceID}/scanresults/{scanID}/misconfiguration)
-	GetInstancesInstanceIDScanresultsScanIDMisconfiguration(ctx echo.Context, instanceID string, scanID string) error
-	// Get a specific rootkit scan result for a specific instance
-	// (GET /instances/{instanceID}/scanresults/{scanID}/rootkits)
-	GetInstancesInstanceIDScanresultsScanIDRootkits(ctx echo.Context, instanceID string, scanID string) error
-	// Get a specific sbom scan result for a specific instance
-	// (GET /instances/{instanceID}/scanresults/{scanID}/sbom)
-	GetInstancesInstanceIDScanresultsScanIDSbom(ctx echo.Context, instanceID string, scanID string) error
-	// Get a specific secret scan result for a specific instance
-	// (GET /instances/{instanceID}/scanresults/{scanID}/secrets)
-	GetInstancesInstanceIDScanresultsScanIDSecrets(ctx echo.Context, instanceID string, scanID string) error
-	// Get a specific vulnerabilities scan result for a specific instance
-	// (GET /instances/{instanceID}/scanresults/{scanID}/vulnerabilities)
-	GetInstancesInstanceIDScanresultsScanIDVulnerabilities(ctx echo.Context, instanceID string, scanID string) error
+	// (PUT /targets/{targetID}/scanresults/{scanID})
+	PutTargetsTargetIDScanresultsScanID(ctx echo.Context, targetID TargetID, scanID ScanID) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -76,12 +55,60 @@ type ServerInterfaceWrapper struct {
 	Handler ServerInterface
 }
 
-// GetInstances converts echo context to params.
-func (w *ServerInterfaceWrapper) GetInstances(ctx echo.Context) error {
+// DeleteTargetTargetID converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteTargetTargetID(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "targetID" -------------
+	var targetID TargetID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "targetID", runtime.ParamLocationPath, ctx.Param("targetID"), &targetID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter targetID: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.DeleteTargetTargetID(ctx, targetID)
+	return err
+}
+
+// GetTargetTargetID converts echo context to params.
+func (w *ServerInterfaceWrapper) GetTargetTargetID(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "targetID" -------------
+	var targetID TargetID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "targetID", runtime.ParamLocationPath, ctx.Param("targetID"), &targetID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter targetID: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.GetTargetTargetID(ctx, targetID)
+	return err
+}
+
+// PutTargetTargetID converts echo context to params.
+func (w *ServerInterfaceWrapper) PutTargetTargetID(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "targetID" -------------
+	var targetID TargetID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "targetID", runtime.ParamLocationPath, ctx.Param("targetID"), &targetID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter targetID: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.PutTargetTargetID(ctx, targetID)
+	return err
+}
+
+// GetTargets converts echo context to params.
+func (w *ServerInterfaceWrapper) GetTargets(ctx echo.Context) error {
 	var err error
 
 	// Parameter object where we will unmarshal all parameters from the context
-	var params GetInstancesParams
+	var params GetTargetsParams
 	// ------------- Required query parameter "page" -------------
 
 	err = runtime.BindQueryParameter("form", true, true, "page", ctx.QueryParams(), &params.Page)
@@ -96,88 +123,33 @@ func (w *ServerInterfaceWrapper) GetInstances(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter pageSize: %s", err))
 	}
 
-	// ------------- Required query parameter "sortKey" -------------
-
-	err = runtime.BindQueryParameter("form", true, true, "sortKey", ctx.QueryParams(), &params.SortKey)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter sortKey: %s", err))
-	}
-
 	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.GetInstances(ctx, params)
+	err = w.Handler.GetTargets(ctx, params)
 	return err
 }
 
-// PostInstances converts echo context to params.
-func (w *ServerInterfaceWrapper) PostInstances(ctx echo.Context) error {
+// PostTargets converts echo context to params.
+func (w *ServerInterfaceWrapper) PostTargets(ctx echo.Context) error {
 	var err error
 
 	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.PostInstances(ctx)
+	err = w.Handler.PostTargets(ctx)
 	return err
 }
 
-// DeleteInstancesInstanceID converts echo context to params.
-func (w *ServerInterfaceWrapper) DeleteInstancesInstanceID(ctx echo.Context) error {
+// GetTargetsTargetIDScanresults converts echo context to params.
+func (w *ServerInterfaceWrapper) GetTargetsTargetIDScanresults(ctx echo.Context) error {
 	var err error
-	// ------------- Path parameter "instanceID" -------------
-	var instanceID string
+	// ------------- Path parameter "targetID" -------------
+	var targetID TargetID
 
-	err = runtime.BindStyledParameterWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, ctx.Param("instanceID"), &instanceID)
+	err = runtime.BindStyledParameterWithLocation("simple", false, "targetID", runtime.ParamLocationPath, ctx.Param("targetID"), &targetID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter instanceID: %s", err))
-	}
-
-	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.DeleteInstancesInstanceID(ctx, instanceID)
-	return err
-}
-
-// GetInstancesInstanceID converts echo context to params.
-func (w *ServerInterfaceWrapper) GetInstancesInstanceID(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "instanceID" -------------
-	var instanceID string
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, ctx.Param("instanceID"), &instanceID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter instanceID: %s", err))
-	}
-
-	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.GetInstancesInstanceID(ctx, instanceID)
-	return err
-}
-
-// PutInstancesInstanceID converts echo context to params.
-func (w *ServerInterfaceWrapper) PutInstancesInstanceID(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "instanceID" -------------
-	var instanceID string
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, ctx.Param("instanceID"), &instanceID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter instanceID: %s", err))
-	}
-
-	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.PutInstancesInstanceID(ctx, instanceID)
-	return err
-}
-
-// GetInstancesInstanceIDScanresults converts echo context to params.
-func (w *ServerInterfaceWrapper) GetInstancesInstanceIDScanresults(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "instanceID" -------------
-	var instanceID string
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, ctx.Param("instanceID"), &instanceID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter instanceID: %s", err))
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter targetID: %s", err))
 	}
 
 	// Parameter object where we will unmarshal all parameters from the context
-	var params GetInstancesInstanceIDScanresultsParams
+	var params GetTargetsTargetIDScanresultsParams
 	// ------------- Required query parameter "page" -------------
 
 	err = runtime.BindQueryParameter("form", true, true, "page", ctx.QueryParams(), &params.Page)
@@ -192,47 +164,73 @@ func (w *ServerInterfaceWrapper) GetInstancesInstanceIDScanresults(ctx echo.Cont
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter pageSize: %s", err))
 	}
 
-	// ------------- Required query parameter "sortKey" -------------
-
-	err = runtime.BindQueryParameter("form", true, true, "sortKey", ctx.QueryParams(), &params.SortKey)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter sortKey: %s", err))
-	}
-
 	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.GetInstancesInstanceIDScanresults(ctx, instanceID, params)
+	err = w.Handler.GetTargetsTargetIDScanresults(ctx, targetID, params)
 	return err
 }
 
-// PostInstancesInstanceIDScanresults converts echo context to params.
-func (w *ServerInterfaceWrapper) PostInstancesInstanceIDScanresults(ctx echo.Context) error {
+// PostTargetsTargetIDScanresults converts echo context to params.
+func (w *ServerInterfaceWrapper) PostTargetsTargetIDScanresults(ctx echo.Context) error {
 	var err error
-	// ------------- Path parameter "instanceID" -------------
-	var instanceID string
+	// ------------- Path parameter "targetID" -------------
+	var targetID TargetID
 
-	err = runtime.BindStyledParameterWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, ctx.Param("instanceID"), &instanceID)
+	err = runtime.BindStyledParameterWithLocation("simple", false, "targetID", runtime.ParamLocationPath, ctx.Param("targetID"), &targetID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter instanceID: %s", err))
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter targetID: %s", err))
 	}
 
 	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.PostInstancesInstanceIDScanresults(ctx, instanceID)
+	err = w.Handler.PostTargetsTargetIDScanresults(ctx, targetID)
 	return err
 }
 
-// GetInstancesInstanceIDScanresultsScanID converts echo context to params.
-func (w *ServerInterfaceWrapper) GetInstancesInstanceIDScanresultsScanID(ctx echo.Context) error {
+// GetTargetsTargetIDScanresultsScanID converts echo context to params.
+func (w *ServerInterfaceWrapper) GetTargetsTargetIDScanresultsScanID(ctx echo.Context) error {
 	var err error
-	// ------------- Path parameter "instanceID" -------------
-	var instanceID string
+	// ------------- Path parameter "targetID" -------------
+	var targetID TargetID
 
-	err = runtime.BindStyledParameterWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, ctx.Param("instanceID"), &instanceID)
+	err = runtime.BindStyledParameterWithLocation("simple", false, "targetID", runtime.ParamLocationPath, ctx.Param("targetID"), &targetID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter instanceID: %s", err))
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter targetID: %s", err))
 	}
 
 	// ------------- Path parameter "scanID" -------------
-	var scanID string
+	var scanID ScanID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "scanID", runtime.ParamLocationPath, ctx.Param("scanID"), &scanID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter scanID: %s", err))
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetTargetsTargetIDScanresultsScanIDParams
+	// ------------- Optional query parameter "scanType" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "scanType", ctx.QueryParams(), &params.ScanType)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter scanType: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.GetTargetsTargetIDScanresultsScanID(ctx, targetID, scanID, params)
+	return err
+}
+
+// PutTargetsTargetIDScanresultsScanID converts echo context to params.
+func (w *ServerInterfaceWrapper) PutTargetsTargetIDScanresultsScanID(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "targetID" -------------
+	var targetID TargetID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "targetID", runtime.ParamLocationPath, ctx.Param("targetID"), &targetID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter targetID: %s", err))
+	}
+
+	// ------------- Path parameter "scanID" -------------
+	var scanID ScanID
 
 	err = runtime.BindStyledParameterWithLocation("simple", false, "scanID", runtime.ParamLocationPath, ctx.Param("scanID"), &scanID)
 	if err != nil {
@@ -240,199 +238,7 @@ func (w *ServerInterfaceWrapper) GetInstancesInstanceIDScanresultsScanID(ctx ech
 	}
 
 	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.GetInstancesInstanceIDScanresultsScanID(ctx, instanceID, scanID)
-	return err
-}
-
-// PutInstancesInstanceIDScanresultsScanID converts echo context to params.
-func (w *ServerInterfaceWrapper) PutInstancesInstanceIDScanresultsScanID(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "instanceID" -------------
-	var instanceID string
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, ctx.Param("instanceID"), &instanceID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter instanceID: %s", err))
-	}
-
-	// ------------- Path parameter "scanID" -------------
-	var scanID string
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "scanID", runtime.ParamLocationPath, ctx.Param("scanID"), &scanID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter scanID: %s", err))
-	}
-
-	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.PutInstancesInstanceIDScanresultsScanID(ctx, instanceID, scanID)
-	return err
-}
-
-// GetInstancesInstanceIDScanresultsScanIDExploits converts echo context to params.
-func (w *ServerInterfaceWrapper) GetInstancesInstanceIDScanresultsScanIDExploits(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "instanceID" -------------
-	var instanceID string
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, ctx.Param("instanceID"), &instanceID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter instanceID: %s", err))
-	}
-
-	// ------------- Path parameter "scanID" -------------
-	var scanID string
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "scanID", runtime.ParamLocationPath, ctx.Param("scanID"), &scanID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter scanID: %s", err))
-	}
-
-	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.GetInstancesInstanceIDScanresultsScanIDExploits(ctx, instanceID, scanID)
-	return err
-}
-
-// GetInstancesInstanceIDScanresultsScanIDMalwares converts echo context to params.
-func (w *ServerInterfaceWrapper) GetInstancesInstanceIDScanresultsScanIDMalwares(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "instanceID" -------------
-	var instanceID string
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, ctx.Param("instanceID"), &instanceID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter instanceID: %s", err))
-	}
-
-	// ------------- Path parameter "scanID" -------------
-	var scanID string
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "scanID", runtime.ParamLocationPath, ctx.Param("scanID"), &scanID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter scanID: %s", err))
-	}
-
-	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.GetInstancesInstanceIDScanresultsScanIDMalwares(ctx, instanceID, scanID)
-	return err
-}
-
-// GetInstancesInstanceIDScanresultsScanIDMisconfiguration converts echo context to params.
-func (w *ServerInterfaceWrapper) GetInstancesInstanceIDScanresultsScanIDMisconfiguration(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "instanceID" -------------
-	var instanceID string
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, ctx.Param("instanceID"), &instanceID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter instanceID: %s", err))
-	}
-
-	// ------------- Path parameter "scanID" -------------
-	var scanID string
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "scanID", runtime.ParamLocationPath, ctx.Param("scanID"), &scanID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter scanID: %s", err))
-	}
-
-	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.GetInstancesInstanceIDScanresultsScanIDMisconfiguration(ctx, instanceID, scanID)
-	return err
-}
-
-// GetInstancesInstanceIDScanresultsScanIDRootkits converts echo context to params.
-func (w *ServerInterfaceWrapper) GetInstancesInstanceIDScanresultsScanIDRootkits(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "instanceID" -------------
-	var instanceID string
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, ctx.Param("instanceID"), &instanceID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter instanceID: %s", err))
-	}
-
-	// ------------- Path parameter "scanID" -------------
-	var scanID string
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "scanID", runtime.ParamLocationPath, ctx.Param("scanID"), &scanID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter scanID: %s", err))
-	}
-
-	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.GetInstancesInstanceIDScanresultsScanIDRootkits(ctx, instanceID, scanID)
-	return err
-}
-
-// GetInstancesInstanceIDScanresultsScanIDSbom converts echo context to params.
-func (w *ServerInterfaceWrapper) GetInstancesInstanceIDScanresultsScanIDSbom(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "instanceID" -------------
-	var instanceID string
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, ctx.Param("instanceID"), &instanceID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter instanceID: %s", err))
-	}
-
-	// ------------- Path parameter "scanID" -------------
-	var scanID string
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "scanID", runtime.ParamLocationPath, ctx.Param("scanID"), &scanID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter scanID: %s", err))
-	}
-
-	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.GetInstancesInstanceIDScanresultsScanIDSbom(ctx, instanceID, scanID)
-	return err
-}
-
-// GetInstancesInstanceIDScanresultsScanIDSecrets converts echo context to params.
-func (w *ServerInterfaceWrapper) GetInstancesInstanceIDScanresultsScanIDSecrets(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "instanceID" -------------
-	var instanceID string
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, ctx.Param("instanceID"), &instanceID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter instanceID: %s", err))
-	}
-
-	// ------------- Path parameter "scanID" -------------
-	var scanID string
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "scanID", runtime.ParamLocationPath, ctx.Param("scanID"), &scanID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter scanID: %s", err))
-	}
-
-	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.GetInstancesInstanceIDScanresultsScanIDSecrets(ctx, instanceID, scanID)
-	return err
-}
-
-// GetInstancesInstanceIDScanresultsScanIDVulnerabilities converts echo context to params.
-func (w *ServerInterfaceWrapper) GetInstancesInstanceIDScanresultsScanIDVulnerabilities(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "instanceID" -------------
-	var instanceID string
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "instanceID", runtime.ParamLocationPath, ctx.Param("instanceID"), &instanceID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter instanceID: %s", err))
-	}
-
-	// ------------- Path parameter "scanID" -------------
-	var scanID string
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "scanID", runtime.ParamLocationPath, ctx.Param("scanID"), &scanID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter scanID: %s", err))
-	}
-
-	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.GetInstancesInstanceIDScanresultsScanIDVulnerabilities(ctx, instanceID, scanID)
+	err = w.Handler.PutTargetsTargetIDScanresultsScanID(ctx, targetID, scanID)
 	return err
 }
 
@@ -464,58 +270,51 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/instances", wrapper.GetInstances)
-	router.POST(baseURL+"/instances", wrapper.PostInstances)
-	router.DELETE(baseURL+"/instances/:instanceID", wrapper.DeleteInstancesInstanceID)
-	router.GET(baseURL+"/instances/:instanceID", wrapper.GetInstancesInstanceID)
-	router.PUT(baseURL+"/instances/:instanceID", wrapper.PutInstancesInstanceID)
-	router.GET(baseURL+"/instances/:instanceID/scanresults", wrapper.GetInstancesInstanceIDScanresults)
-	router.POST(baseURL+"/instances/:instanceID/scanresults", wrapper.PostInstancesInstanceIDScanresults)
-	router.GET(baseURL+"/instances/:instanceID/scanresults/:scanID", wrapper.GetInstancesInstanceIDScanresultsScanID)
-	router.PUT(baseURL+"/instances/:instanceID/scanresults/:scanID", wrapper.PutInstancesInstanceIDScanresultsScanID)
-	router.GET(baseURL+"/instances/:instanceID/scanresults/:scanID/exploits", wrapper.GetInstancesInstanceIDScanresultsScanIDExploits)
-	router.GET(baseURL+"/instances/:instanceID/scanresults/:scanID/malwares", wrapper.GetInstancesInstanceIDScanresultsScanIDMalwares)
-	router.GET(baseURL+"/instances/:instanceID/scanresults/:scanID/misconfiguration", wrapper.GetInstancesInstanceIDScanresultsScanIDMisconfiguration)
-	router.GET(baseURL+"/instances/:instanceID/scanresults/:scanID/rootkits", wrapper.GetInstancesInstanceIDScanresultsScanIDRootkits)
-	router.GET(baseURL+"/instances/:instanceID/scanresults/:scanID/sbom", wrapper.GetInstancesInstanceIDScanresultsScanIDSbom)
-	router.GET(baseURL+"/instances/:instanceID/scanresults/:scanID/secrets", wrapper.GetInstancesInstanceIDScanresultsScanIDSecrets)
-	router.GET(baseURL+"/instances/:instanceID/scanresults/:scanID/vulnerabilities", wrapper.GetInstancesInstanceIDScanresultsScanIDVulnerabilities)
+	router.DELETE(baseURL+"/target/:targetID", wrapper.DeleteTargetTargetID)
+	router.GET(baseURL+"/target/:targetID", wrapper.GetTargetTargetID)
+	router.PUT(baseURL+"/target/:targetID", wrapper.PutTargetTargetID)
+	router.GET(baseURL+"/targets", wrapper.GetTargets)
+	router.POST(baseURL+"/targets", wrapper.PostTargets)
+	router.GET(baseURL+"/targets/:targetID/scanresults", wrapper.GetTargetsTargetIDScanresults)
+	router.POST(baseURL+"/targets/:targetID/scanresults", wrapper.PostTargetsTargetIDScanresults)
+	router.GET(baseURL+"/targets/:targetID/scanresults/:scanID", wrapper.GetTargetsTargetIDScanresultsScanID)
+	router.PUT(baseURL+"/targets/:targetID/scanresults/:scanID", wrapper.PutTargetsTargetIDScanresultsScanID)
 
 }
 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
