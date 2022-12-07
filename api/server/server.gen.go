@@ -21,21 +21,21 @@ import (
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// Delete target.
-	// (DELETE /target/{targetID})
-	DeleteTargetTargetID(ctx echo.Context, targetID TargetID) error
-	// Get target.
-	// (GET /target/{targetID})
-	GetTargetTargetID(ctx echo.Context, targetID TargetID) error
-	// Update target.
-	// (PUT /target/{targetID})
-	PutTargetTargetID(ctx echo.Context, targetID TargetID) error
 	// Get targets
 	// (GET /targets)
 	GetTargets(ctx echo.Context, params GetTargetsParams) error
 	// Create target
 	// (POST /targets)
 	PostTargets(ctx echo.Context) error
+	// Delete target.
+	// (DELETE /targets/{targetID})
+	DeleteTargetsTargetID(ctx echo.Context, targetID TargetID) error
+	// Get target.
+	// (GET /targets/{targetID})
+	GetTargetsTargetID(ctx echo.Context, targetID TargetID) error
+	// Update target.
+	// (PUT /targets/{targetID})
+	PutTargetsTargetID(ctx echo.Context, targetID TargetID) error
 	// Get scan results for a specified target
 	// (GET /targets/{targetID}/scanresults)
 	GetTargetsTargetIDScanresults(ctx echo.Context, targetID TargetID, params GetTargetsTargetIDScanresultsParams) error
@@ -53,54 +53,6 @@ type ServerInterface interface {
 // ServerInterfaceWrapper converts echo contexts to parameters.
 type ServerInterfaceWrapper struct {
 	Handler ServerInterface
-}
-
-// DeleteTargetTargetID converts echo context to params.
-func (w *ServerInterfaceWrapper) DeleteTargetTargetID(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "targetID" -------------
-	var targetID TargetID
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "targetID", runtime.ParamLocationPath, ctx.Param("targetID"), &targetID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter targetID: %s", err))
-	}
-
-	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.DeleteTargetTargetID(ctx, targetID)
-	return err
-}
-
-// GetTargetTargetID converts echo context to params.
-func (w *ServerInterfaceWrapper) GetTargetTargetID(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "targetID" -------------
-	var targetID TargetID
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "targetID", runtime.ParamLocationPath, ctx.Param("targetID"), &targetID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter targetID: %s", err))
-	}
-
-	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.GetTargetTargetID(ctx, targetID)
-	return err
-}
-
-// PutTargetTargetID converts echo context to params.
-func (w *ServerInterfaceWrapper) PutTargetTargetID(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "targetID" -------------
-	var targetID TargetID
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "targetID", runtime.ParamLocationPath, ctx.Param("targetID"), &targetID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter targetID: %s", err))
-	}
-
-	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.PutTargetTargetID(ctx, targetID)
-	return err
 }
 
 // GetTargets converts echo context to params.
@@ -134,6 +86,54 @@ func (w *ServerInterfaceWrapper) PostTargets(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.PostTargets(ctx)
+	return err
+}
+
+// DeleteTargetsTargetID converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteTargetsTargetID(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "targetID" -------------
+	var targetID TargetID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "targetID", runtime.ParamLocationPath, ctx.Param("targetID"), &targetID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter targetID: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.DeleteTargetsTargetID(ctx, targetID)
+	return err
+}
+
+// GetTargetsTargetID converts echo context to params.
+func (w *ServerInterfaceWrapper) GetTargetsTargetID(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "targetID" -------------
+	var targetID TargetID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "targetID", runtime.ParamLocationPath, ctx.Param("targetID"), &targetID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter targetID: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.GetTargetsTargetID(ctx, targetID)
+	return err
+}
+
+// PutTargetsTargetID converts echo context to params.
+func (w *ServerInterfaceWrapper) PutTargetsTargetID(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "targetID" -------------
+	var targetID TargetID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "targetID", runtime.ParamLocationPath, ctx.Param("targetID"), &targetID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter targetID: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.PutTargetsTargetID(ctx, targetID)
 	return err
 }
 
@@ -270,11 +270,11 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.DELETE(baseURL+"/target/:targetID", wrapper.DeleteTargetTargetID)
-	router.GET(baseURL+"/target/:targetID", wrapper.GetTargetTargetID)
-	router.PUT(baseURL+"/target/:targetID", wrapper.PutTargetTargetID)
 	router.GET(baseURL+"/targets", wrapper.GetTargets)
 	router.POST(baseURL+"/targets", wrapper.PostTargets)
+	router.DELETE(baseURL+"/targets/:targetID", wrapper.DeleteTargetsTargetID)
+	router.GET(baseURL+"/targets/:targetID", wrapper.GetTargetsTargetID)
+	router.PUT(baseURL+"/targets/:targetID", wrapper.PutTargetsTargetID)
 	router.GET(baseURL+"/targets/:targetID/scanresults", wrapper.GetTargetsTargetIDScanresults)
 	router.POST(baseURL+"/targets/:targetID/scanresults", wrapper.PostTargetsTargetIDScanresults)
 	router.GET(baseURL+"/targets/:targetID/scanresults/:scanID", wrapper.GetTargetsTargetIDScanresultsScanID)
@@ -285,36 +285,37 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
+	"H3dJRnVd/D8AAP//V/OBkbEqAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

@@ -73,7 +73,7 @@ type ExploitInfo struct {
 
 // ExploitScan defines model for ExploitScan.
 type ExploitScan struct {
-	Packages *[]ExploitInfo `json:"packages,omitempty"`
+	Exploits *[]ExploitInfo `json:"exploits,omitempty"`
 }
 
 // MalwareInfo defines model for MalwareInfo.
@@ -88,7 +88,7 @@ type MalwareInfo struct {
 
 // MalwareScan defines model for MalwareScan.
 type MalwareScan struct {
-	Packages *[]MalwareInfo `json:"packages,omitempty"`
+	Malwares *[]MalwareInfo `json:"malwares,omitempty"`
 }
 
 // MalwareType defines model for MalwareType.
@@ -105,7 +105,7 @@ type MisconfigurationInfo struct {
 
 // MisconfigurationScan defines model for MisconfigurationScan.
 type MisconfigurationScan struct {
-	Packages *[]MisconfigurationInfo `json:"packages,omitempty"`
+	Misconfigurations *[]MisconfigurationInfo `json:"misconfigurations,omitempty"`
 }
 
 // Package defines model for Package.
@@ -139,7 +139,7 @@ type RootkitInfo struct {
 
 // RootkitScan defines model for RootkitScan.
 type RootkitScan struct {
-	Packages *[]RootkitInfo `json:"packages,omitempty"`
+	Rootkits *[]RootkitInfo `json:"rootkits,omitempty"`
 }
 
 // RootkitType defines model for RootkitType.
@@ -154,8 +154,9 @@ type SbomScan struct {
 type ScanResults struct {
 	Exploits          *ExploitScan          `json:"exploits,omitempty"`
 	Id                *string               `json:"id,omitempty"`
-	Malwares          *VulnerabilityScan    `json:"malwares,omitempty"`
+	Malwares          *MalwareScan          `json:"malwares,omitempty"`
 	Misconfigurations *MisconfigurationScan `json:"misconfigurations,omitempty"`
+	Rootkits          *RootkitScan          `json:"rootkits,omitempty"`
 	Sboms             *SbomScan             `json:"sboms,omitempty"`
 	Secrets           *SecretScan           `json:"secrets,omitempty"`
 	Vulnerabilities   *VulnerabilityScan    `json:"vulnerabilities,omitempty"`
@@ -167,6 +168,7 @@ type ScanResultsSummary struct {
 	MalwaresCount          *int `json:"malwaresCount,omitempty"`
 	MisconfigurationsCount *int `json:"misconfigurationsCount,omitempty"`
 	PackagesCount          *int `json:"packagesCount,omitempty"`
+	RootkitsCount          *int `json:"rootkitsCount,omitempty"`
 	SecretsCount           *int `json:"secretsCount,omitempty"`
 	VulnerabilitiesCount   *int `json:"vulnerabilitiesCount,omitempty"`
 }
@@ -185,7 +187,7 @@ type SecretInfo struct {
 
 // SecretScan defines model for SecretScan.
 type SecretScan struct {
-	Packages *[]SecretInfo `json:"packages,omitempty"`
+	Secrets *[]SecretInfo `json:"secrets,omitempty"`
 }
 
 // SuccessResponse An object that is returned in cases of success that returns nothing.
@@ -278,11 +280,11 @@ type GetTargetsTargetIDScanresultsScanIDParams struct {
 	ScanType *ScanTypeParam `form:"scanType,omitempty" json:"scanType,omitempty"`
 }
 
-// PutTargetTargetIDJSONRequestBody defines body for PutTargetTargetID for application/json ContentType.
-type PutTargetTargetIDJSONRequestBody = Target
-
 // PostTargetsJSONRequestBody defines body for PostTargets for application/json ContentType.
 type PostTargetsJSONRequestBody = Target
+
+// PutTargetsTargetIDJSONRequestBody defines body for PutTargetsTargetID for application/json ContentType.
+type PutTargetsTargetIDJSONRequestBody = Target
 
 // PostTargetsTargetIDScanresultsJSONRequestBody defines body for PostTargetsTargetIDScanresults for application/json ContentType.
 type PostTargetsTargetIDScanresultsJSONRequestBody = ScanResults
