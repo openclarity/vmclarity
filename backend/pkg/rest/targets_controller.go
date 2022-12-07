@@ -21,38 +21,79 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/backend/pkg/database"
 )
 
-func (s *ServerImpl) DeleteTargetTargetID(
-	ctx echo.Context,
-	targetID models.TargetID,
-) error {
-	return nil
+func (s *ServerImpl) GetTargets(ctx echo.Context, params models.GetTargetsParams) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	targets, err := s.dbHandler.TargetTable().List(params)
+	if err != nil {
+		// TODO check errors and for status code
+		return ctx.JSON(http.StatusNotFound, &models.ApiResponse{Message: &oopsMsg})
+	}
+	return ctx.JSON(http.StatusOK, targets)
 }
 
-func (s *ServerImpl) GetTargetTargetID(
-	ctx echo.Context,
-	targetID models.TargetID,
-) error {
-	return nil
+func (s *ServerImpl) PostTargets(ctx echo.Context) error {
+	var target models.Target
+	err := ctx.Bind(&target)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, "Invalid format for target")
+	}
+
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	newTarget := database.CreateTarget(&target)
+	target, err = s.dbHandler.TargetTable().Create(newTarget)
+	if err != nil {
+		// TODO check errors and for status code
+		return ctx.JSON(http.StatusConflict, &models.ApiResponse{Message: &oopsMsg})
+	}
+	return ctx.JSON(http.StatusCreated, target)
 }
 
-func (s *ServerImpl) PutTargetTargetID(
-	ctx echo.Context,
-	targetID models.TargetID,
-) error {
-	return nil
+func (s *ServerImpl) GetTargetsTargetID(ctx echo.Context, targetID models.TargetID) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	targets, err := s.dbHandler.TargetTable().Get(targetID)
+	if err != nil {
+		// TODO check errors and for status code
+		return ctx.JSON(http.StatusNotFound, &models.ApiResponse{Message: &oopsMsg})
+	}
+	return ctx.JSON(http.StatusOK, targets)
 }
 
-func (s *ServerImpl) GetTargets(
-	ctx echo.Context,
-	params models.GetTargetsParams,
-) error {
-	return ctx.JSON(http.StatusOK, []models.Target{})
+func (s *ServerImpl) PutTargetsTargetID(ctx echo.Context, targetID models.TargetID) error {
+	var target models.Target
+	err := ctx.Bind(&target)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, "Invalid format for target")
+	}
+
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	newTarget := database.CreateTarget(&target)
+	target, err = s.dbHandler.TargetTable().Update(newTarget, targetID)
+	if err != nil {
+		// TODO check errors and for status code
+		return ctx.JSON(http.StatusInternalServerError, &models.ApiResponse{Message: &oopsMsg})
+	}
+	return ctx.JSON(http.StatusOK, target)
 }
 
-func (s *ServerImpl) PostTargets(
-	ctx echo.Context,
-) error {
-	return nil
+func (s *ServerImpl) DeleteTargetsTargetID(ctx echo.Context, targetID models.TargetID) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	err := s.dbHandler.TargetTable().Delete(targetID)
+	if err != nil {
+		// TODO check errors and for status code
+		return ctx.JSON(http.StatusNotFound, &models.ApiResponse{Message: &oopsMsg})
+	}
+	return ctx.JSON(http.StatusNoContent, "deleted")
 }

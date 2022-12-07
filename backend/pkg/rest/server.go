@@ -19,6 +19,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/deepmap/oapi-codegen/pkg/middleware"
@@ -27,17 +28,21 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/api/server"
+	"github.com/openclarity/vmclarity/backend/pkg/database"
 
 	"github.com/openclarity/vmclarity/backend/pkg/common"
-	"github.com/openclarity/vmclarity/backend/pkg/database"
 )
 
-type ServerImpl struct{}
+var oopsMsg = "oops"
+
+type ServerImpl struct {
+	dbHandler database.Database
+	lock      sync.RWMutex
+}
 
 type Server struct {
 	port       int
 	echoServer *echo.Echo
-	dbHandler  database.Database
 }
 
 func CreateRESTServer(port int) (*Server, error) {
@@ -57,13 +62,19 @@ func CreateRESTServer(port int) (*Server, error) {
 	// OpenAPI schema.
 	e.Use(middleware.OapiRequestValidator(swagger))
 
-	// Register server above as the handler for the interface
-	server.RegisterHandlers(e, &ServerImpl{})
-
 	return &Server{
 		port:       port,
 		echoServer: e,
 	}, nil
+}
+
+func (s *Server) RegisterHandlers(dbHandler database.Database) {
+	serverImpl := &ServerImpl{
+		dbHandler: dbHandler,
+	}
+
+	// Register server above as the handler for the interface
+	server.RegisterHandlers(s.echoServer, serverImpl)
 }
 
 func (s *Server) Start(errChan chan struct{}) {

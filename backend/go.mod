@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/Portshift/go-utils v0.0.0-20220421083203-89265d8a6487
 	github.com/deepmap/oapi-codegen v1.12.3
+	github.com/golang/mock v1.5.0
 	github.com/labstack/echo/v4 v4.9.1
 	github.com/openclarity/vmclarity/api v0.0.0
 	github.com/openclarity/vmclarity/runtime_scan v0.0.0

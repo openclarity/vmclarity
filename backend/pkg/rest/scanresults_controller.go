@@ -16,9 +16,12 @@
 package rest
 
 import (
+	"net/http"
+
 	"github.com/labstack/echo/v4"
 
 	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/backend/pkg/database"
 )
 
 func (s *ServerImpl) GetTargetsTargetIDScanresults(
@@ -26,14 +29,37 @@ func (s *ServerImpl) GetTargetsTargetIDScanresults(
 	targetID models.TargetID,
 	params models.GetTargetsTargetIDScanresultsParams,
 ) error {
-	return nil
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	targets, err := s.dbHandler.ScanResultsTable().List(targetID, params)
+	if err != nil {
+		// TODO check errors and for status code
+		return ctx.JSON(http.StatusNotFound, &models.ApiResponse{Message: &oopsMsg})
+	}
+	return ctx.JSON(http.StatusOK, targets)
 }
 
 func (s *ServerImpl) PostTargetsTargetIDScanresults(
 	ctx echo.Context,
 	targetID models.TargetID,
 ) error {
-	return nil
+	var scanResults models.ScanResults
+	err := ctx.Bind(&scanResults)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, "Invalid format for target")
+	}
+
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	newScanResults := database.CreateScanResults(&scanResults)
+	scanResultsSummary, err := s.dbHandler.ScanResultsTable().Create(targetID, newScanResults)
+	if err != nil {
+		// TODO check errors and for status code
+		return ctx.JSON(http.StatusConflict, &models.ApiResponse{Message: &oopsMsg})
+	}
+	return ctx.JSON(http.StatusCreated, scanResultsSummary)
 }
 
 func (s *ServerImpl) GetTargetsTargetIDScanresultsScanID(
@@ -42,7 +68,15 @@ func (s *ServerImpl) GetTargetsTargetIDScanresultsScanID(
 	scanID models.ScanID,
 	params models.GetTargetsTargetIDScanresultsScanIDParams,
 ) error {
-	return nil
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	targets, err := s.dbHandler.ScanResultsTable().Get(targetID, scanID, params)
+	if err != nil {
+		// TODO check errors and for status code
+		return ctx.JSON(http.StatusNotFound, &models.ApiResponse{Message: &oopsMsg})
+	}
+	return ctx.JSON(http.StatusOK, targets)
 }
 
 func (s *ServerImpl) PutTargetsTargetIDScanresultsScanID(
@@ -50,5 +84,20 @@ func (s *ServerImpl) PutTargetsTargetIDScanresultsScanID(
 	targetID models.TargetID,
 	scanID models.ScanID,
 ) error {
-	return nil
+	var scanResults models.ScanResults
+	err := ctx.Bind(&scanResults)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, "Invalid format for target")
+	}
+
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	newScanResults := database.CreateScanResults(&scanResults)
+	scanResultsSummary, err := s.dbHandler.ScanResultsTable().Update(targetID, scanID, newScanResults)
+	if err != nil {
+		// TODO check errors and for status code
+		return ctx.JSON(http.StatusConflict, &models.ApiResponse{Message: &oopsMsg})
+	}
+	return ctx.JSON(http.StatusOK, scanResultsSummary)
 }
