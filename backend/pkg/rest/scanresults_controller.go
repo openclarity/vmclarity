@@ -35,9 +35,9 @@ func (s *ServerImpl) GetTargetsTargetIDScanresults(
 	targets, err := s.dbHandler.ScanResultsTable().List(targetID, params)
 	if err != nil {
 		// TODO check errors and for status code
-		return ctx.JSON(http.StatusNotFound, &models.ApiResponse{Message: &oopsMsg})
+		return sendError(ctx, http.StatusNotFound, oopsMsg)
 	}
-	return ctx.JSON(http.StatusOK, targets)
+	return sendResponse(ctx, http.StatusOK, targets)
 }
 
 func (s *ServerImpl) PostTargetsTargetIDScanresults(
@@ -47,7 +47,7 @@ func (s *ServerImpl) PostTargetsTargetIDScanresults(
 	var scanResults models.ScanResults
 	err := ctx.Bind(&scanResults)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, "Invalid format for target")
+		return sendError(ctx, http.StatusBadRequest, "Invalid format for target")
 	}
 
 	s.lock.Lock()
@@ -57,9 +57,9 @@ func (s *ServerImpl) PostTargetsTargetIDScanresults(
 	scanResultsSummary, err := s.dbHandler.ScanResultsTable().Create(targetID, newScanResults)
 	if err != nil {
 		// TODO check errors and for status code
-		return ctx.JSON(http.StatusConflict, &models.ApiResponse{Message: &oopsMsg})
+		return sendError(ctx, http.StatusConflict, oopsMsg)
 	}
-	return ctx.JSON(http.StatusCreated, scanResultsSummary)
+	return sendResponse(ctx, http.StatusCreated, scanResultsSummary)
 }
 
 func (s *ServerImpl) GetTargetsTargetIDScanresultsScanID(
@@ -74,9 +74,9 @@ func (s *ServerImpl) GetTargetsTargetIDScanresultsScanID(
 	targets, err := s.dbHandler.ScanResultsTable().Get(targetID, scanID, params)
 	if err != nil {
 		// TODO check errors and for status code
-		return ctx.JSON(http.StatusNotFound, &models.ApiResponse{Message: &oopsMsg})
+		return sendError(ctx, http.StatusNotFound, oopsMsg)
 	}
-	return ctx.JSON(http.StatusOK, targets)
+	return sendResponse(ctx, http.StatusOK, targets)
 }
 
 func (s *ServerImpl) PutTargetsTargetIDScanresultsScanID(
@@ -87,7 +87,7 @@ func (s *ServerImpl) PutTargetsTargetIDScanresultsScanID(
 	var scanResults models.ScanResults
 	err := ctx.Bind(&scanResults)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, "Invalid format for target")
+		return sendError(ctx, http.StatusBadRequest, "Invalid format for target")
 	}
 
 	s.lock.Lock()
@@ -97,7 +97,7 @@ func (s *ServerImpl) PutTargetsTargetIDScanresultsScanID(
 	scanResultsSummary, err := s.dbHandler.ScanResultsTable().Update(targetID, scanID, newScanResults)
 	if err != nil {
 		// TODO check errors and for status code
-		return ctx.JSON(http.StatusConflict, &models.ApiResponse{Message: &oopsMsg})
+		return sendError(ctx, http.StatusConflict, oopsMsg)
 	}
-	return ctx.JSON(http.StatusOK, scanResultsSummary)
+	return sendResponse(ctx, http.StatusOK, scanResultsSummary)
 }

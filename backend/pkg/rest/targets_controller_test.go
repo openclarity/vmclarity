@@ -21,24 +21,14 @@ import (
 
 	"github.com/deepmap/oapi-codegen/pkg/testutil"
 	"github.com/golang/mock/gomock"
-	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/backend/pkg/database"
 )
 
-func createTestRestServer() *Server {
-	restServer, err := CreateRESTServer(8080)
-	if err != nil {
-		log.Fatalf("Failed to create REST server: %v", err)
-	}
-
-	return restServer
-}
-
 func TestGetTargets(t *testing.T) {
-	restServer := createTestRestServer()
+	restServer := createTestRestServer(t)
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -54,7 +44,7 @@ func TestGetTargets(t *testing.T) {
 }
 
 func TestPostTargets(t *testing.T) {
-	restServer := createTestRestServer()
+	restServer := createTestRestServer(t)
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -65,7 +55,7 @@ func TestPostTargets(t *testing.T) {
 	mockTargetTable.EXPECT().Create(gomock.Any()).Return(models.Target{}, nil)
 	restServer.RegisterHandlers(mockHandler)
 
-	targetID := "testID"
+	targetID := testID
 	targetType := models.TargetType("VM")
 	scanResults := uint32(1)
 	instanceName := "instance"
@@ -77,7 +67,9 @@ func TestPostTargets(t *testing.T) {
 		Location:         &location,
 	}
 	targetInfo := &models.Target_TargetInfo{}
-	targetInfo.FromVMInfo(vmInfo)
+	if err := targetInfo.FromVMInfo(vmInfo); err != nil {
+		t.Errorf("failed to create target info")
+	}
 
 	newTarget := models.Target{
 		Id:          &targetID,
@@ -90,7 +82,7 @@ func TestPostTargets(t *testing.T) {
 }
 
 func TestGetTargetTargetID(t *testing.T) {
-	restServer := createTestRestServer()
+	restServer := createTestRestServer(t)
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -106,7 +98,7 @@ func TestGetTargetTargetID(t *testing.T) {
 }
 
 func TestPutTargetTargetID(t *testing.T) {
-	restServer := createTestRestServer()
+	restServer := createTestRestServer(t)
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -117,7 +109,7 @@ func TestPutTargetTargetID(t *testing.T) {
 	mockTargetTable.EXPECT().Update(gomock.Any(), gomock.Any()).Return(models.Target{}, nil)
 	restServer.RegisterHandlers(mockHandler)
 
-	targetID := "testID"
+	targetID := testID
 	targetType := models.TargetType("VM")
 	scanResults := uint32(1)
 	instanceName := "instance"
@@ -129,7 +121,9 @@ func TestPutTargetTargetID(t *testing.T) {
 		Location:         &location,
 	}
 	targetInfo := &models.Target_TargetInfo{}
-	targetInfo.FromVMInfo(vmInfo)
+	if err := targetInfo.FromVMInfo(vmInfo); err != nil {
+		t.Errorf("failed to create target info")
+	}
 
 	newTarget := models.Target{
 		Id:          &targetID,
@@ -142,7 +136,7 @@ func TestPutTargetTargetID(t *testing.T) {
 }
 
 func TestDeleteTargetTargetID(t *testing.T) {
-	restServer := createTestRestServer()
+	restServer := createTestRestServer(t)
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()

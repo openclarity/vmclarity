@@ -33,6 +33,8 @@ import (
 	"github.com/openclarity/vmclarity/backend/pkg/common"
 )
 
+const timeOutSeconds = 10
+
 var oopsMsg = "oops"
 
 type ServerImpl struct {
@@ -86,13 +88,12 @@ func (s *Server) Start(errChan chan struct{}) {
 		}
 	}()
 	log.Infof("REST server is running")
-
 }
 
 func (s *Server) Stop() {
 	log.Infof("Stopping REST server")
 	if s.echoServer != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), timeOutSeconds*time.Second)
 		defer cancel()
 		if err := s.echoServer.Shutdown(ctx); err != nil {
 			log.Errorf("Failed to shutdown REST server: %v", err)

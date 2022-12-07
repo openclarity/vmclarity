@@ -23,7 +23,7 @@ import (
 	"github.com/openclarity/vmclarity/api/models"
 )
 
-// TODO after db design
+// TODO after db design.
 type Target struct {
 	ID string
 }
@@ -67,7 +67,7 @@ func (t *TargetTableHandler) Delete(targetID models.TargetID) error {
 	return fmt.Errorf("not implemented")
 }
 
-// TODO after db design
+// TODO after db design.
 func CreateTarget(target *models.Target) *Target {
 	return &Target{
 		ID: *target.Id,

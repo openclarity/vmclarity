@@ -31,16 +31,16 @@ func (s *ServerImpl) GetTargets(ctx echo.Context, params models.GetTargetsParams
 	targets, err := s.dbHandler.TargetTable().List(params)
 	if err != nil {
 		// TODO check errors and for status code
-		return ctx.JSON(http.StatusNotFound, &models.ApiResponse{Message: &oopsMsg})
+		return sendError(ctx, http.StatusNotFound, oopsMsg)
 	}
-	return ctx.JSON(http.StatusOK, targets)
+	return sendResponse(ctx, http.StatusOK, targets)
 }
 
 func (s *ServerImpl) PostTargets(ctx echo.Context) error {
 	var target models.Target
 	err := ctx.Bind(&target)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, "Invalid format for target")
+		return sendError(ctx, http.StatusBadRequest, "Invalid format for target")
 	}
 
 	s.lock.Lock()
@@ -50,9 +50,9 @@ func (s *ServerImpl) PostTargets(ctx echo.Context) error {
 	target, err = s.dbHandler.TargetTable().Create(newTarget)
 	if err != nil {
 		// TODO check errors and for status code
-		return ctx.JSON(http.StatusConflict, &models.ApiResponse{Message: &oopsMsg})
+		return sendError(ctx, http.StatusConflict, oopsMsg)
 	}
-	return ctx.JSON(http.StatusCreated, target)
+	return sendResponse(ctx, http.StatusCreated, target)
 }
 
 func (s *ServerImpl) GetTargetsTargetID(ctx echo.Context, targetID models.TargetID) error {
@@ -62,16 +62,16 @@ func (s *ServerImpl) GetTargetsTargetID(ctx echo.Context, targetID models.Target
 	targets, err := s.dbHandler.TargetTable().Get(targetID)
 	if err != nil {
 		// TODO check errors and for status code
-		return ctx.JSON(http.StatusNotFound, &models.ApiResponse{Message: &oopsMsg})
+		return sendError(ctx, http.StatusNotFound, oopsMsg)
 	}
-	return ctx.JSON(http.StatusOK, targets)
+	return sendResponse(ctx, http.StatusOK, targets)
 }
 
 func (s *ServerImpl) PutTargetsTargetID(ctx echo.Context, targetID models.TargetID) error {
 	var target models.Target
 	err := ctx.Bind(&target)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, "Invalid format for target")
+		return sendError(ctx, http.StatusBadRequest, "Invalid format for target")
 	}
 
 	s.lock.Lock()
@@ -81,9 +81,9 @@ func (s *ServerImpl) PutTargetsTargetID(ctx echo.Context, targetID models.Target
 	target, err = s.dbHandler.TargetTable().Update(newTarget, targetID)
 	if err != nil {
 		// TODO check errors and for status code
-		return ctx.JSON(http.StatusInternalServerError, &models.ApiResponse{Message: &oopsMsg})
+		return sendError(ctx, http.StatusInternalServerError, oopsMsg)
 	}
-	return ctx.JSON(http.StatusOK, target)
+	return sendResponse(ctx, http.StatusOK, target)
 }
 
 func (s *ServerImpl) DeleteTargetsTargetID(ctx echo.Context, targetID models.TargetID) error {
@@ -93,7 +93,7 @@ func (s *ServerImpl) DeleteTargetsTargetID(ctx echo.Context, targetID models.Tar
 	err := s.dbHandler.TargetTable().Delete(targetID)
 	if err != nil {
 		// TODO check errors and for status code
-		return ctx.JSON(http.StatusNotFound, &models.ApiResponse{Message: &oopsMsg})
+		return sendError(ctx, http.StatusNotFound, oopsMsg)
 	}
-	return ctx.JSON(http.StatusNoContent, "deleted")
+	return sendResponse(ctx, http.StatusNoContent, "deleted")
 }

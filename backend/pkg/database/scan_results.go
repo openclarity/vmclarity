@@ -25,7 +25,7 @@ import (
 
 type ScanResultsInt interface{}
 
-// TODO after db design
+// TODO after db design.
 type ScanResults struct {
 	ID               string
 	Sbom             SbomScanResults
@@ -37,7 +37,7 @@ type ScanResults struct {
 	Exploit          ExploitScanResults
 }
 
-// TODO after db design
+// TODO after db design.
 type SbomScanResults struct {
 	ID string
 }
@@ -110,7 +110,7 @@ func (s *ScanResultsTableHandler) Update(
 	return models.ScanResultsSummary{}, fmt.Errorf("not implemented")
 }
 
-// TODO after db design
+// TODO after db design.
 func CreateScanResults(scanResults *models.ScanResults) *ScanResults {
 	return &ScanResults{
 		ID: *scanResults.Id,

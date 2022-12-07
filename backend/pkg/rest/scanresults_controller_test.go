@@ -28,7 +28,7 @@ import (
 )
 
 func TestGetTargetsTargetIDScanresults(t *testing.T) {
-	restServer := createTestRestServer()
+	restServer := createTestRestServer(t)
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -44,7 +44,7 @@ func TestGetTargetsTargetIDScanresults(t *testing.T) {
 }
 
 func TestPostTargetsTargetIDScanresults(t *testing.T) {
-	restServer := createTestRestServer()
+	restServer := createTestRestServer(t)
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -55,7 +55,7 @@ func TestPostTargetsTargetIDScanresults(t *testing.T) {
 	mockScanResultsTable.EXPECT().Create(gomock.Any(), gomock.Any()).Return(models.ScanResultsSummary{}, nil)
 	restServer.RegisterHandlers(mockHandler)
 
-	scanResID := "testID"
+	scanResID := testID
 	newScanResults := models.ScanResults{
 		Id: &scanResID,
 		Sboms: &models.SbomScan{
@@ -85,7 +85,7 @@ func TestPostTargetsTargetIDScanresults(t *testing.T) {
 }
 
 func TestGetTargetsTargetIDScanresultsScanID(t *testing.T) {
-	restServer := createTestRestServer()
+	restServer := createTestRestServer(t)
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -101,7 +101,7 @@ func TestGetTargetsTargetIDScanresultsScanID(t *testing.T) {
 }
 
 func TestPutTargetsTargetIDScanresultsScanID(t *testing.T) {
-	restServer := createTestRestServer()
+	restServer := createTestRestServer(t)
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -112,7 +112,7 @@ func TestPutTargetsTargetIDScanresultsScanID(t *testing.T) {
 	mockScanResultsTable.EXPECT().Update(gomock.Any(), gomock.Any(), gomock.Any()).Return(models.ScanResultsSummary{}, nil)
 	restServer.RegisterHandlers(mockHandler)
 
-	scanResID := "testID"
+	scanResID := testID
 	newScanResults := models.ScanResults{
 		Id: &scanResID,
 		Sboms: &models.SbomScan{
