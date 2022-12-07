@@ -24,12 +24,10 @@ import (
 // nolint:wrapcheck
 func sendError(ctx echo.Context, code int, message string) error {
 	response := &models.ApiResponse{Message: &message}
-	err := ctx.JSON(code, response)
-	return err
+	return ctx.JSON(code, response)
 }
 
 // nolint:wrapcheck
 func sendResponse(ctx echo.Context, code int, object interface{}) error {
-	err := ctx.JSON(code, object)
-	return err
+	return ctx.JSON(code, object)
 }
