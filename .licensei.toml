@@ -10,36 +10,7 @@ approved = [
 ignored = [
     "github.com/ghodss/yaml", # MIT - https://github.com/ghodss/yaml/blob/master/LICENSE
     "github.com/russross/blackfriday/v2", # Simplified BSD License - https://github.com/russross/blackfriday/blob/master/LICENSE.txt
-    "golang.org/x/sys", # BSD-3-Clause - https://pkg.go.dev/golang.org/x/sys?tab=licenses
-    "github.com/golang/mock", # Apache-2.0 - https://github.com/golang/mock/blob/main/LICENSE
-    "github.com/apapsch/go-jsonmerge/v2", # MIT - https://github.com/apapsch/go-jsonmerge/blob/master/LICENSE
-    "github.com/google/uuid", # BSD-3-Clause - https://github.com/google/uuid/blob/master/LICENSE
-    "github.com/deepmap/oapi-codegen", # Apache-2.0 - https://github.com/deepmap/oapi-codegen/blob/master/LICENSE
-    "github.com/openclarity/vmclarity/api", # Apache-2.0 - https://github.com/openclarity/vmclarity/blob/main/LICENSE
-    "github.com/mattn/go-sqlite3", # MIT - https://github.com/mattn/go-sqlite3/blob/master/LICENSE
-    "gorm.io/gorm", # MIT - https://github.com/go-gorm/gorm/blob/master/License
-    "github.com/jinzhu/inflection", # MIT - https://github.com/jinzhu/inflection/blob/master/LICENSE
-    "github.com/jinzhu/now", # MIT - https://github.com/jinzhu/now/blob/master/License
-    "gorm.io/driver/sqlite", # MIT - https://github.com/go-gorm/sqlite/blob/master/License
-    "github.com/getkin/kin-openapi", # MIT - https://github.com/getkin/kin-openapi/blob/master/LICENSE
-    "github.com/josharian/intern", # MIT - https://github.com/josharian/intern/blob/master/LICENSE.md
-    "github.com/mailru/easyjson", # MIT - https://github.com/mailru/easyjson/blob/master/LICENSE
-    "gopkg.in/yaml.v2", # Apache-2.0, MIT - https://github.com/go-yaml/yaml/blob/v3/LICENSE
-    "github.com/go-openapi/swag", # Apache-2.0 - https://github.com/go-openapi/swag/blob/master/LICENSE
-    "github.com/go-openapi/jsonpointer", # Apache-2.0 - https://github.com/go-openapi/jsonpointer/blob/master/LICENSE
     "github.com/invopop/yaml", # MIT - https://github.com/invopop/yaml/blob/main/LICENSE
-    "github.com/mohae/deepcopy", # MIT - https://github.com/mohae/deepcopy/blob/master/LICENSE
-    "github.com/gorilla/mux", # BSD-3-Clause - https://github.com/gorilla/mux/blob/master/LICENSE
-    "github.com/mattn/go-isatty", # MIT - https://github.com/mattn/go-isatty/blob/master/LICENSE
-    "github.com/mattn/go-colorable", # MIT - https://github.com/mattn/go-colorable/blob/master/LICENSE
-    "github.com/labstack/gommon", # MIT - https://github.com/labstack/gommon/blob/master/LICENSE
-    "github.com/valyala/bytebufferpool", # MIT - https://github.com/valyala/bytebufferpool/blob/master/LICENSE
-    "github.com/valyala/fasttemplate", # MIT - https://github.com/valyala/fasttemplate/blob/master/LICENSE
-    "golang.org/x/crypto", # BSD-3-Clause - https://pkg.go.dev/golang.org/x/crypto?tab=licenses
-    "golang.org/x/net", # BSD-3-Clause - https://pkg.go.dev/golang.org/x/net?tab=licenses
-    "github.com/labstack/echo/v4", # MIT - https://github.com/labstack/echo/blob/master/LICENSE
-    "github.com/golang-jwt/jwt", # MIT - https://github.com/golang-jwt/jwt/blob/main/LICENSE
-    "golang.org/x/time", # BSD-3-Clause - https://pkg.go.dev/golang.org/x/time?tab=licenses
 ]
 
 [header]
