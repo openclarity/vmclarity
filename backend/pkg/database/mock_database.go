@@ -46,16 +46,16 @@ func (mr *MockDatabaseMockRecorder) ScanResultsTable() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ScanResultsTable", reflect.TypeOf((*MockDatabase)(nil).ScanResultsTable))
 }
 
-// TargetTable mocks base method
-func (m *MockDatabase) TargetTable() TargetTable {
+// TargetsTable mocks base method
+func (m *MockDatabase) TargetsTable() TargetsTable {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "TargetTable")
-	ret0, _ := ret[0].(TargetTable)
+	ret := m.ctrl.Call(m, "TargetsTable")
+	ret0, _ := ret[0].(TargetsTable)
 	return ret0
 }
 
-// TargetTable indicates an expected call of TargetTable
-func (mr *MockDatabaseMockRecorder) TargetTable() *gomock.Call {
+// TargetsTable indicates an expected call of TargetsTable
+func (mr *MockDatabaseMockRecorder) TargetsTable() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TargetTable", reflect.TypeOf((*MockDatabase)(nil).TargetTable))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TargetsTable", reflect.TypeOf((*MockDatabase)(nil).TargetsTable))
 }

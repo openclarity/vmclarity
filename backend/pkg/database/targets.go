@@ -28,8 +28,8 @@ type Target struct {
 	ID string
 }
 
-//go:generate $GOPATH/bin/mockgen --build_flags=--mod=mod -destination=./mock_target.go -package=database github.com/openclarity/vmclarity/backend/pkg/database TargetTable
-type TargetTable interface {
+//go:generate $GOPATH/bin/mockgen --build_flags=--mod=mod -destination=./mock_targets.go -package=database github.com/openclarity/vmclarity/backend/pkg/database TargetsTable
+type TargetsTable interface {
 	List(params models.GetTargetsParams) ([]models.Target, error)
 	Get(targetID models.TargetID) (models.Target, error)
 	Create(target *Target) (models.Target, error)
@@ -37,33 +37,33 @@ type TargetTable interface {
 	Delete(targetID models.TargetID) error
 }
 
-type TargetTableHandler struct {
+type TargetsTableHandler struct {
 	db *gorm.DB
 }
 
-func (db *Handler) TargetTable() TargetTable {
-	return &TargetTableHandler{
+func (db *Handler) TargetsTable() TargetsTable {
+	return &TargetsTableHandler{
 		db: db.DB,
 	}
 }
 
-func (t *TargetTableHandler) List(params models.GetTargetsParams) ([]models.Target, error) {
+func (t *TargetsTableHandler) List(params models.GetTargetsParams) ([]models.Target, error) {
 	return []models.Target{}, fmt.Errorf("not implemented")
 }
 
-func (t *TargetTableHandler) Get(targetID models.TargetID) (models.Target, error) {
+func (t *TargetsTableHandler) Get(targetID models.TargetID) (models.Target, error) {
 	return models.Target{}, fmt.Errorf("not implemented")
 }
 
-func (t *TargetTableHandler) Create(target *Target) (models.Target, error) {
+func (t *TargetsTableHandler) Create(target *Target) (models.Target, error) {
 	return models.Target{}, fmt.Errorf("not implemented")
 }
 
-func (t *TargetTableHandler) Update(target *Target, targetID models.TargetID) (models.Target, error) {
+func (t *TargetsTableHandler) Update(target *Target, targetID models.TargetID) (models.Target, error) {
 	return models.Target{}, fmt.Errorf("not implemented")
 }
 
-func (t *TargetTableHandler) Delete(targetID models.TargetID) error {
+func (t *TargetsTableHandler) Delete(targetID models.TargetID) error {
 	return fmt.Errorf("not implemented")
 }
 

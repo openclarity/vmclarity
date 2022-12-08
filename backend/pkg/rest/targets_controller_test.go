@@ -34,8 +34,8 @@ func TestGetTargets(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockHandler := database.NewMockDatabase(mockCtrl)
-	mockTargetTable := database.NewMockTargetTable(mockCtrl)
-	mockHandler.EXPECT().TargetTable().Return(mockTargetTable)
+	mockTargetTable := database.NewMockTargetsTable(mockCtrl)
+	mockHandler.EXPECT().TargetsTable().Return(mockTargetTable)
 	mockTargetTable.EXPECT().List(gomock.Any()).Return([]models.Target{}, nil)
 	restServer.RegisterHandlers(mockHandler)
 
@@ -50,8 +50,8 @@ func TestPostTargets(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockHandler := database.NewMockDatabase(mockCtrl)
-	mockTargetTable := database.NewMockTargetTable(mockCtrl)
-	mockHandler.EXPECT().TargetTable().Return(mockTargetTable)
+	mockTargetTable := database.NewMockTargetsTable(mockCtrl)
+	mockHandler.EXPECT().TargetsTable().Return(mockTargetTable)
 	mockTargetTable.EXPECT().Create(gomock.Any()).Return(models.Target{}, nil)
 	restServer.RegisterHandlers(mockHandler)
 
@@ -88,8 +88,8 @@ func TestGetTargetTargetID(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockHandler := database.NewMockDatabase(mockCtrl)
-	mockTargetTable := database.NewMockTargetTable(mockCtrl)
-	mockHandler.EXPECT().TargetTable().Return(mockTargetTable)
+	mockTargetTable := database.NewMockTargetsTable(mockCtrl)
+	mockHandler.EXPECT().TargetsTable().Return(mockTargetTable)
 	mockTargetTable.EXPECT().Get(gomock.Any()).Return(models.Target{}, nil)
 	restServer.RegisterHandlers(mockHandler)
 
@@ -104,8 +104,8 @@ func TestPutTargetTargetID(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockHandler := database.NewMockDatabase(mockCtrl)
-	mockTargetTable := database.NewMockTargetTable(mockCtrl)
-	mockHandler.EXPECT().TargetTable().Return(mockTargetTable)
+	mockTargetTable := database.NewMockTargetsTable(mockCtrl)
+	mockHandler.EXPECT().TargetsTable().Return(mockTargetTable)
 	mockTargetTable.EXPECT().Update(gomock.Any(), gomock.Any()).Return(models.Target{}, nil)
 	restServer.RegisterHandlers(mockHandler)
 
@@ -142,8 +142,8 @@ func TestDeleteTargetTargetID(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockHandler := database.NewMockDatabase(mockCtrl)
-	mockTargetTable := database.NewMockTargetTable(mockCtrl)
-	mockHandler.EXPECT().TargetTable().Return(mockTargetTable)
+	mockTargetTable := database.NewMockTargetsTable(mockCtrl)
+	mockHandler.EXPECT().TargetsTable().Return(mockTargetTable)
 	mockTargetTable.EXPECT().Delete(gomock.Any()).Return(nil)
 	restServer.RegisterHandlers(mockHandler)
 

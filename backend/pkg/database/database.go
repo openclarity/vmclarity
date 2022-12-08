@@ -34,7 +34,7 @@ const (
 
 //go:generate $GOPATH/bin/mockgen --build_flags=--mod=mod -destination=./mock_database.go -package=database github.com/openclarity/vmclarity/backend/pkg/database Database
 type Database interface {
-	TargetTable() TargetTable
+	TargetsTable() TargetsTable
 	ScanResultsTable() ScanResultsTable
 }
 
