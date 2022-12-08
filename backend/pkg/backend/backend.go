@@ -32,6 +32,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	_config "github.com/openclarity/vmclarity/backend/pkg/config"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
 )
 
 type Backend struct {
@@ -97,6 +98,42 @@ func Run() {
 
 	healthServer.SetIsReady(true)
 	log.Info("VMClarity backend is ready")
+
+	go func() {
+		scanConfig := runtime_scan_config.LoadScanConfig()
+		scanConfig.ScanScope = &aws.ScanScope{
+			All:         true,
+			ScanStopped: false,
+			TagSelector: []aws.Tag{
+				{Key: "Name", Val: "sambetts-test-server"},
+			},
+		}
+		scanConfig.ScannerConfig = &types.ScannerConfig{
+			ScannerImage:   "busybox:latest",
+			ScannerCommand: "",
+			ScannerJobConfig: types.ScannerJobConfig{
+				DirectoryToScan:   "/mnt/snapshot",
+				ServerToReport:    "",
+				VulnerabilityScan: types.VulnerabilityScan{},
+				RootkitScan:       types.RootkitScan{},
+				MisconfigScan:     types.MisconfigScan{},
+				SecretScan:        types.SecretScan{},
+				MalewareScan:      types.MalwareScan{},
+				ExploitCheck:      types.ExploitCheck{},
+			},
+		}
+
+		scanDone := make(chan struct{}, 1)
+		err := orc.Scan(scanConfig, scanDone)
+		if err != nil {
+			log.Errorf("Failed to scan: %v", err)
+			return
+		}
+
+		log.Infof("Demo scan started successfully")
+		<-scanDone
+		log.Infof("Demo scan completed successfully")
+	}()
 
 	// Wait for deactivation
 	sig := make(chan os.Signal, 1)

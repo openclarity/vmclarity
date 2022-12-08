@@ -108,6 +108,12 @@ func (s *Scanner) worker(queue chan *scanData, workNumber int, done, ks chan boo
 				data.completed = true
 				s.Unlock()
 			} else {
+				// Fake the job completion until we've got that
+				// implemented
+				go func() {
+					time.Sleep(2 * time.Minute)
+					data.resultChan <- true
+				}()
 				s.waitForResult(data, ks)
 			}
 
