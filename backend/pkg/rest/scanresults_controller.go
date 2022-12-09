@@ -62,6 +62,7 @@ func (s *ServerImpl) PostTargetsTargetIDScanResults(
 	return sendResponse(ctx, http.StatusCreated, scanResultsSummary)
 }
 
+//nolint:cyclop
 func (s *ServerImpl) GetTargetsTargetIDScanResultsScanID(
 	ctx echo.Context,
 	targetID models.TargetID,

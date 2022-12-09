@@ -64,6 +64,7 @@ type ExploitScanResults struct {
 	ID string
 }
 
+//nolint:interfacebloat
 //go:generate $GOPATH/bin/mockgen --build_flags=--mod=mod -destination=./mock_scan_results.go -package=database github.com/openclarity/vmclarity/backend/pkg/database ScanResultsTable
 type ScanResultsTable interface {
 	List(targetID models.TargetID, params models.GetTargetsTargetIDScanResultsParams) (*[]models.ScanResults, error)
