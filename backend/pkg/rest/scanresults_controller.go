@@ -24,13 +24,13 @@ import (
 	"github.com/openclarity/vmclarity/backend/pkg/database"
 )
 
-func (s *ServerImpl) GetTargetsTargetIDScanresults(
+func (s *ServerImpl) GetTargetsTargetIDScanResults(
 	ctx echo.Context,
 	targetID models.TargetID,
-	params models.GetTargetsTargetIDScanresultsParams,
+	params models.GetTargetsTargetIDScanResultsParams,
 ) error {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	s.lock.RLock()
+	defer s.lock.RUnlock()
 
 	targets, err := s.dbHandler.ScanResultsTable().List(targetID, params)
 	if err != nil {
@@ -40,7 +40,7 @@ func (s *ServerImpl) GetTargetsTargetIDScanresults(
 	return sendResponse(ctx, http.StatusOK, targets)
 }
 
-func (s *ServerImpl) PostTargetsTargetIDScanresults(
+func (s *ServerImpl) PostTargetsTargetIDScanResults(
 	ctx echo.Context,
 	targetID models.TargetID,
 ) error {
@@ -62,14 +62,14 @@ func (s *ServerImpl) PostTargetsTargetIDScanresults(
 	return sendResponse(ctx, http.StatusCreated, scanResultsSummary)
 }
 
-func (s *ServerImpl) GetTargetsTargetIDScanresultsScanID(
+func (s *ServerImpl) GetTargetsTargetIDScanResultsScanID(
 	ctx echo.Context,
 	targetID models.TargetID,
 	scanID models.ScanID,
-	params models.GetTargetsTargetIDScanresultsScanIDParams,
+	params models.GetTargetsTargetIDScanResultsScanIDParams,
 ) error {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	s.lock.RLock()
+	defer s.lock.RUnlock()
 
 	targets, err := s.dbHandler.ScanResultsTable().Get(targetID, scanID, params)
 	if err != nil {
@@ -79,7 +79,7 @@ func (s *ServerImpl) GetTargetsTargetIDScanresultsScanID(
 	return sendResponse(ctx, http.StatusOK, targets)
 }
 
-func (s *ServerImpl) PutTargetsTargetIDScanresultsScanID(
+func (s *ServerImpl) PutTargetsTargetIDScanResultsScanID(
 	ctx echo.Context,
 	targetID models.TargetID,
 	scanID models.ScanID,
@@ -87,7 +87,7 @@ func (s *ServerImpl) PutTargetsTargetIDScanresultsScanID(
 	var scanResults models.ScanResults
 	err := ctx.Bind(&scanResults)
 	if err != nil {
-		return sendError(ctx, http.StatusBadRequest, "Invalid format for target")
+		return sendError(ctx, http.StatusBadRequest, err.Error())
 	}
 
 	s.lock.Lock()

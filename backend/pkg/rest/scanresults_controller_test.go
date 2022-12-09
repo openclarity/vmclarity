@@ -16,6 +16,7 @@
 package rest
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -27,7 +28,9 @@ import (
 	"github.com/openclarity/vmclarity/backend/pkg/database"
 )
 
-func TestGetTargetsTargetIDScanresults(t *testing.T) {
+var scanResultsPath = fmt.Sprintf("%s/targets/1/scanResults", baseURL)
+
+func TestGetTargetsTargetIDScanResults(t *testing.T) {
 	restServer := createTestRestServer(t)
 
 	mockCtrl := gomock.NewController(t)
@@ -36,14 +39,17 @@ func TestGetTargetsTargetIDScanresults(t *testing.T) {
 	mockHandler := database.NewMockDatabase(mockCtrl)
 	mockScanResultsTable := database.NewMockScanResultsTable(mockCtrl)
 	mockHandler.EXPECT().ScanResultsTable().Return(mockScanResultsTable)
-	mockScanResultsTable.EXPECT().List(gomock.Any(), gomock.Any()).Return([]models.ScanResults{}, nil)
+	mockScanResultsTable.EXPECT().List(gomock.Any(), gomock.Any()).Return(&[]models.ScanResults{}, nil)
 	restServer.RegisterHandlers(mockHandler)
 
-	result := testutil.NewRequest().Get("/targets/1/scanresults?page=1&pageSize=1").Go(t, restServer.echoServer)
+	result := testutil.NewRequest().Get(fmt.Sprintf("%s?page=1&pageSize=1", scanResultsPath)).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusOK, result.Code())
+	var resultTarget []models.ScanResults
+	result.UnmarshalJsonToObject(&resultTarget)
+	assert.Equal(t, []models.ScanResults{}, resultTarget)
 }
 
-func TestPostTargetsTargetIDScanresults(t *testing.T) {
+func TestPostTargetsTargetIDScanResults(t *testing.T) {
 	restServer := createTestRestServer(t)
 
 	mockCtrl := gomock.NewController(t)
@@ -52,7 +58,7 @@ func TestPostTargetsTargetIDScanresults(t *testing.T) {
 	mockHandler := database.NewMockDatabase(mockCtrl)
 	mockScanResultsTable := database.NewMockScanResultsTable(mockCtrl)
 	mockHandler.EXPECT().ScanResultsTable().Return(mockScanResultsTable)
-	mockScanResultsTable.EXPECT().Create(gomock.Any(), gomock.Any()).Return(models.ScanResultsSummary{}, nil)
+	mockScanResultsTable.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&models.ScanResultsSummary{}, nil)
 	restServer.RegisterHandlers(mockHandler)
 
 	scanResID := testID
@@ -80,11 +86,14 @@ func TestPostTargetsTargetIDScanresults(t *testing.T) {
 			Exploits: &[]models.ExploitInfo{},
 		},
 	}
-	result := testutil.NewRequest().Post("/targets/1/scanresults").WithJsonBody(newScanResults).Go(t, restServer.echoServer)
+	result := testutil.NewRequest().Post(scanResultsPath).WithJsonBody(newScanResults).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusCreated, result.Code())
+	var resultTarget models.ScanResults
+	result.UnmarshalJsonToObject(&resultTarget)
+	assert.Equal(t, models.ScanResults{}, resultTarget)
 }
 
-func TestGetTargetsTargetIDScanresultsScanID(t *testing.T) {
+func TestGetTargetsTargetIDScanResultsScanID(t *testing.T) {
 	restServer := createTestRestServer(t)
 
 	mockCtrl := gomock.NewController(t)
@@ -96,11 +105,14 @@ func TestGetTargetsTargetIDScanresultsScanID(t *testing.T) {
 	mockScanResultsTable.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(models.ScanResultsSummary{}, nil)
 	restServer.RegisterHandlers(mockHandler)
 
-	result := testutil.NewRequest().Get("/targets/1/scanresults/1").Go(t, restServer.echoServer)
+	result := testutil.NewRequest().Get(fmt.Sprintf("%s/1", scanResultsPath)).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusOK, result.Code())
+	var resultTarget models.ScanResults
+	result.UnmarshalJsonToObject(&resultTarget)
+	assert.Equal(t, models.ScanResults{}, resultTarget)
 }
 
-func TestPutTargetsTargetIDScanresultsScanID(t *testing.T) {
+func TestPutTargetsTargetIDScanResultsScanID(t *testing.T) {
 	restServer := createTestRestServer(t)
 
 	mockCtrl := gomock.NewController(t)
@@ -109,7 +121,7 @@ func TestPutTargetsTargetIDScanresultsScanID(t *testing.T) {
 	mockHandler := database.NewMockDatabase(mockCtrl)
 	mockScanResultsTable := database.NewMockScanResultsTable(mockCtrl)
 	mockHandler.EXPECT().ScanResultsTable().Return(mockScanResultsTable)
-	mockScanResultsTable.EXPECT().Update(gomock.Any(), gomock.Any(), gomock.Any()).Return(models.ScanResultsSummary{}, nil)
+	mockScanResultsTable.EXPECT().Update(gomock.Any(), gomock.Any(), gomock.Any()).Return(&models.ScanResultsSummary{}, nil)
 	restServer.RegisterHandlers(mockHandler)
 
 	scanResID := testID
@@ -137,6 +149,9 @@ func TestPutTargetsTargetIDScanresultsScanID(t *testing.T) {
 			Exploits: &[]models.ExploitInfo{},
 		},
 	}
-	result := testutil.NewRequest().Put("/targets/1/scanresults/1").WithJsonBody(newScanResults).Go(t, restServer.echoServer)
+	result := testutil.NewRequest().Put(fmt.Sprintf("%s/1", scanResultsPath)).WithJsonBody(newScanResults).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusOK, result.Code())
+	var resultTarget models.ScanResults
+	result.UnmarshalJsonToObject(&resultTarget)
+	assert.Equal(t, models.ScanResults{}, resultTarget)
 }

@@ -30,10 +30,10 @@ type Target struct {
 
 //go:generate $GOPATH/bin/mockgen --build_flags=--mod=mod -destination=./mock_targets.go -package=database github.com/openclarity/vmclarity/backend/pkg/database TargetsTable
 type TargetsTable interface {
-	List(params models.GetTargetsParams) ([]models.Target, error)
-	Get(targetID models.TargetID) (models.Target, error)
-	Create(target *Target) (models.Target, error)
-	Update(target *Target, targetID models.TargetID) (models.Target, error)
+	List(params models.GetTargetsParams) (*[]models.Target, error)
+	Get(targetID models.TargetID) (*models.Target, error)
+	Create(target *Target) (*models.Target, error)
+	Update(target *Target, targetID models.TargetID) (*models.Target, error)
 	Delete(targetID models.TargetID) error
 }
 
@@ -47,20 +47,20 @@ func (db *Handler) TargetsTable() TargetsTable {
 	}
 }
 
-func (t *TargetsTableHandler) List(params models.GetTargetsParams) ([]models.Target, error) {
-	return []models.Target{}, fmt.Errorf("not implemented")
+func (t *TargetsTableHandler) List(params models.GetTargetsParams) (*[]models.Target, error) {
+	return &[]models.Target{}, fmt.Errorf("not implemented")
 }
 
-func (t *TargetsTableHandler) Get(targetID models.TargetID) (models.Target, error) {
-	return models.Target{}, fmt.Errorf("not implemented")
+func (t *TargetsTableHandler) Get(targetID models.TargetID) (*models.Target, error) {
+	return &models.Target{}, fmt.Errorf("not implemented")
 }
 
-func (t *TargetsTableHandler) Create(target *Target) (models.Target, error) {
-	return models.Target{}, fmt.Errorf("not implemented")
+func (t *TargetsTableHandler) Create(target *Target) (*models.Target, error) {
+	return &models.Target{}, fmt.Errorf("not implemented")
 }
 
-func (t *TargetsTableHandler) Update(target *Target, targetID models.TargetID) (models.Target, error) {
-	return models.Target{}, fmt.Errorf("not implemented")
+func (t *TargetsTableHandler) Update(target *Target, targetID models.TargetID) (*models.Target, error) {
+	return &models.Target{}, fmt.Errorf("not implemented")
 }
 
 func (t *TargetsTableHandler) Delete(targetID models.TargetID) error {

@@ -109,21 +109,21 @@ type ClientInterface interface {
 
 	PutTargetsTargetID(ctx context.Context, targetID TargetID, body PutTargetsTargetIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetTargetsTargetIDScanresults request
-	GetTargetsTargetIDScanresults(ctx context.Context, targetID TargetID, params *GetTargetsTargetIDScanresultsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTargetsTargetIDScanResults request
+	GetTargetsTargetIDScanResults(ctx context.Context, targetID TargetID, params *GetTargetsTargetIDScanResultsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostTargetsTargetIDScanresults request with any body
-	PostTargetsTargetIDScanresultsWithBody(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostTargetsTargetIDScanResults request with any body
+	PostTargetsTargetIDScanResultsWithBody(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostTargetsTargetIDScanresults(ctx context.Context, targetID TargetID, body PostTargetsTargetIDScanresultsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostTargetsTargetIDScanResults(ctx context.Context, targetID TargetID, body PostTargetsTargetIDScanResultsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetTargetsTargetIDScanresultsScanID request
-	GetTargetsTargetIDScanresultsScanID(ctx context.Context, targetID TargetID, scanID ScanID, params *GetTargetsTargetIDScanresultsScanIDParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTargetsTargetIDScanResultsScanID request
+	GetTargetsTargetIDScanResultsScanID(ctx context.Context, targetID TargetID, scanID ScanID, params *GetTargetsTargetIDScanResultsScanIDParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PutTargetsTargetIDScanresultsScanID request with any body
-	PutTargetsTargetIDScanresultsScanIDWithBody(ctx context.Context, targetID TargetID, scanID ScanID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PutTargetsTargetIDScanResultsScanID request with any body
+	PutTargetsTargetIDScanResultsScanIDWithBody(ctx context.Context, targetID TargetID, scanID ScanID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PutTargetsTargetIDScanresultsScanID(ctx context.Context, targetID TargetID, scanID ScanID, body PutTargetsTargetIDScanresultsScanIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PutTargetsTargetIDScanResultsScanID(ctx context.Context, targetID TargetID, scanID ScanID, body PutTargetsTargetIDScanResultsScanIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) GetTargets(ctx context.Context, params *GetTargetsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -210,8 +210,8 @@ func (c *Client) PutTargetsTargetID(ctx context.Context, targetID TargetID, body
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetTargetsTargetIDScanresults(ctx context.Context, targetID TargetID, params *GetTargetsTargetIDScanresultsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetTargetsTargetIDScanresultsRequest(c.Server, targetID, params)
+func (c *Client) GetTargetsTargetIDScanResults(ctx context.Context, targetID TargetID, params *GetTargetsTargetIDScanResultsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTargetsTargetIDScanResultsRequest(c.Server, targetID, params)
 	if err != nil {
 		return nil, err
 	}
@@ -222,8 +222,8 @@ func (c *Client) GetTargetsTargetIDScanresults(ctx context.Context, targetID Tar
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostTargetsTargetIDScanresultsWithBody(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostTargetsTargetIDScanresultsRequestWithBody(c.Server, targetID, contentType, body)
+func (c *Client) PostTargetsTargetIDScanResultsWithBody(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTargetsTargetIDScanResultsRequestWithBody(c.Server, targetID, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -234,8 +234,8 @@ func (c *Client) PostTargetsTargetIDScanresultsWithBody(ctx context.Context, tar
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostTargetsTargetIDScanresults(ctx context.Context, targetID TargetID, body PostTargetsTargetIDScanresultsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostTargetsTargetIDScanresultsRequest(c.Server, targetID, body)
+func (c *Client) PostTargetsTargetIDScanResults(ctx context.Context, targetID TargetID, body PostTargetsTargetIDScanResultsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTargetsTargetIDScanResultsRequest(c.Server, targetID, body)
 	if err != nil {
 		return nil, err
 	}
@@ -246,8 +246,8 @@ func (c *Client) PostTargetsTargetIDScanresults(ctx context.Context, targetID Ta
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetTargetsTargetIDScanresultsScanID(ctx context.Context, targetID TargetID, scanID ScanID, params *GetTargetsTargetIDScanresultsScanIDParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetTargetsTargetIDScanresultsScanIDRequest(c.Server, targetID, scanID, params)
+func (c *Client) GetTargetsTargetIDScanResultsScanID(ctx context.Context, targetID TargetID, scanID ScanID, params *GetTargetsTargetIDScanResultsScanIDParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTargetsTargetIDScanResultsScanIDRequest(c.Server, targetID, scanID, params)
 	if err != nil {
 		return nil, err
 	}
@@ -258,8 +258,8 @@ func (c *Client) GetTargetsTargetIDScanresultsScanID(ctx context.Context, target
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutTargetsTargetIDScanresultsScanIDWithBody(ctx context.Context, targetID TargetID, scanID ScanID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutTargetsTargetIDScanresultsScanIDRequestWithBody(c.Server, targetID, scanID, contentType, body)
+func (c *Client) PutTargetsTargetIDScanResultsScanIDWithBody(ctx context.Context, targetID TargetID, scanID ScanID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutTargetsTargetIDScanResultsScanIDRequestWithBody(c.Server, targetID, scanID, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -270,8 +270,8 @@ func (c *Client) PutTargetsTargetIDScanresultsScanIDWithBody(ctx context.Context
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutTargetsTargetIDScanresultsScanID(ctx context.Context, targetID TargetID, scanID ScanID, body PutTargetsTargetIDScanresultsScanIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutTargetsTargetIDScanresultsScanIDRequest(c.Server, targetID, scanID, body)
+func (c *Client) PutTargetsTargetIDScanResultsScanID(ctx context.Context, targetID TargetID, scanID ScanID, body PutTargetsTargetIDScanResultsScanIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutTargetsTargetIDScanResultsScanIDRequest(c.Server, targetID, scanID, body)
 	if err != nil {
 		return nil, err
 	}
@@ -492,8 +492,8 @@ func NewPutTargetsTargetIDRequestWithBody(server string, targetID TargetID, cont
 	return req, nil
 }
 
-// NewGetTargetsTargetIDScanresultsRequest generates requests for GetTargetsTargetIDScanresults
-func NewGetTargetsTargetIDScanresultsRequest(server string, targetID TargetID, params *GetTargetsTargetIDScanresultsParams) (*http.Request, error) {
+// NewGetTargetsTargetIDScanResultsRequest generates requests for GetTargetsTargetIDScanResults
+func NewGetTargetsTargetIDScanResultsRequest(server string, targetID TargetID, params *GetTargetsTargetIDScanResultsParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -508,7 +508,7 @@ func NewGetTargetsTargetIDScanresultsRequest(server string, targetID TargetID, p
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/targets/%s/scanresults", pathParam0)
+	operationPath := fmt.Sprintf("/targets/%s/scanResults", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -554,19 +554,19 @@ func NewGetTargetsTargetIDScanresultsRequest(server string, targetID TargetID, p
 	return req, nil
 }
 
-// NewPostTargetsTargetIDScanresultsRequest calls the generic PostTargetsTargetIDScanresults builder with application/json body
-func NewPostTargetsTargetIDScanresultsRequest(server string, targetID TargetID, body PostTargetsTargetIDScanresultsJSONRequestBody) (*http.Request, error) {
+// NewPostTargetsTargetIDScanResultsRequest calls the generic PostTargetsTargetIDScanResults builder with application/json body
+func NewPostTargetsTargetIDScanResultsRequest(server string, targetID TargetID, body PostTargetsTargetIDScanResultsJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostTargetsTargetIDScanresultsRequestWithBody(server, targetID, "application/json", bodyReader)
+	return NewPostTargetsTargetIDScanResultsRequestWithBody(server, targetID, "application/json", bodyReader)
 }
 
-// NewPostTargetsTargetIDScanresultsRequestWithBody generates requests for PostTargetsTargetIDScanresults with any type of body
-func NewPostTargetsTargetIDScanresultsRequestWithBody(server string, targetID TargetID, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostTargetsTargetIDScanResultsRequestWithBody generates requests for PostTargetsTargetIDScanResults with any type of body
+func NewPostTargetsTargetIDScanResultsRequestWithBody(server string, targetID TargetID, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -581,7 +581,7 @@ func NewPostTargetsTargetIDScanresultsRequestWithBody(server string, targetID Ta
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/targets/%s/scanresults", pathParam0)
+	operationPath := fmt.Sprintf("/targets/%s/scanResults", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -601,8 +601,8 @@ func NewPostTargetsTargetIDScanresultsRequestWithBody(server string, targetID Ta
 	return req, nil
 }
 
-// NewGetTargetsTargetIDScanresultsScanIDRequest generates requests for GetTargetsTargetIDScanresultsScanID
-func NewGetTargetsTargetIDScanresultsScanIDRequest(server string, targetID TargetID, scanID ScanID, params *GetTargetsTargetIDScanresultsScanIDParams) (*http.Request, error) {
+// NewGetTargetsTargetIDScanResultsScanIDRequest generates requests for GetTargetsTargetIDScanResultsScanID
+func NewGetTargetsTargetIDScanResultsScanIDRequest(server string, targetID TargetID, scanID ScanID, params *GetTargetsTargetIDScanResultsScanIDParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -624,7 +624,7 @@ func NewGetTargetsTargetIDScanresultsScanIDRequest(server string, targetID Targe
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/targets/%s/scanresults/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/targets/%s/scanResults/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -662,19 +662,19 @@ func NewGetTargetsTargetIDScanresultsScanIDRequest(server string, targetID Targe
 	return req, nil
 }
 
-// NewPutTargetsTargetIDScanresultsScanIDRequest calls the generic PutTargetsTargetIDScanresultsScanID builder with application/json body
-func NewPutTargetsTargetIDScanresultsScanIDRequest(server string, targetID TargetID, scanID ScanID, body PutTargetsTargetIDScanresultsScanIDJSONRequestBody) (*http.Request, error) {
+// NewPutTargetsTargetIDScanResultsScanIDRequest calls the generic PutTargetsTargetIDScanResultsScanID builder with application/json body
+func NewPutTargetsTargetIDScanResultsScanIDRequest(server string, targetID TargetID, scanID ScanID, body PutTargetsTargetIDScanResultsScanIDJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPutTargetsTargetIDScanresultsScanIDRequestWithBody(server, targetID, scanID, "application/json", bodyReader)
+	return NewPutTargetsTargetIDScanResultsScanIDRequestWithBody(server, targetID, scanID, "application/json", bodyReader)
 }
 
-// NewPutTargetsTargetIDScanresultsScanIDRequestWithBody generates requests for PutTargetsTargetIDScanresultsScanID with any type of body
-func NewPutTargetsTargetIDScanresultsScanIDRequestWithBody(server string, targetID TargetID, scanID ScanID, contentType string, body io.Reader) (*http.Request, error) {
+// NewPutTargetsTargetIDScanResultsScanIDRequestWithBody generates requests for PutTargetsTargetIDScanResultsScanID with any type of body
+func NewPutTargetsTargetIDScanResultsScanIDRequestWithBody(server string, targetID TargetID, scanID ScanID, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -696,7 +696,7 @@ func NewPutTargetsTargetIDScanresultsScanIDRequestWithBody(server string, target
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/targets/%s/scanresults/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/targets/%s/scanResults/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -778,21 +778,21 @@ type ClientWithResponsesInterface interface {
 
 	PutTargetsTargetIDWithResponse(ctx context.Context, targetID TargetID, body PutTargetsTargetIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PutTargetsTargetIDResponse, error)
 
-	// GetTargetsTargetIDScanresults request
-	GetTargetsTargetIDScanresultsWithResponse(ctx context.Context, targetID TargetID, params *GetTargetsTargetIDScanresultsParams, reqEditors ...RequestEditorFn) (*GetTargetsTargetIDScanresultsResponse, error)
+	// GetTargetsTargetIDScanResults request
+	GetTargetsTargetIDScanResultsWithResponse(ctx context.Context, targetID TargetID, params *GetTargetsTargetIDScanResultsParams, reqEditors ...RequestEditorFn) (*GetTargetsTargetIDScanResultsResponse, error)
 
-	// PostTargetsTargetIDScanresults request with any body
-	PostTargetsTargetIDScanresultsWithBodyWithResponse(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTargetsTargetIDScanresultsResponse, error)
+	// PostTargetsTargetIDScanResults request with any body
+	PostTargetsTargetIDScanResultsWithBodyWithResponse(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTargetsTargetIDScanResultsResponse, error)
 
-	PostTargetsTargetIDScanresultsWithResponse(ctx context.Context, targetID TargetID, body PostTargetsTargetIDScanresultsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTargetsTargetIDScanresultsResponse, error)
+	PostTargetsTargetIDScanResultsWithResponse(ctx context.Context, targetID TargetID, body PostTargetsTargetIDScanResultsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTargetsTargetIDScanResultsResponse, error)
 
-	// GetTargetsTargetIDScanresultsScanID request
-	GetTargetsTargetIDScanresultsScanIDWithResponse(ctx context.Context, targetID TargetID, scanID ScanID, params *GetTargetsTargetIDScanresultsScanIDParams, reqEditors ...RequestEditorFn) (*GetTargetsTargetIDScanresultsScanIDResponse, error)
+	// GetTargetsTargetIDScanResultsScanID request
+	GetTargetsTargetIDScanResultsScanIDWithResponse(ctx context.Context, targetID TargetID, scanID ScanID, params *GetTargetsTargetIDScanResultsScanIDParams, reqEditors ...RequestEditorFn) (*GetTargetsTargetIDScanResultsScanIDResponse, error)
 
-	// PutTargetsTargetIDScanresultsScanID request with any body
-	PutTargetsTargetIDScanresultsScanIDWithBodyWithResponse(ctx context.Context, targetID TargetID, scanID ScanID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutTargetsTargetIDScanresultsScanIDResponse, error)
+	// PutTargetsTargetIDScanResultsScanID request with any body
+	PutTargetsTargetIDScanResultsScanIDWithBodyWithResponse(ctx context.Context, targetID TargetID, scanID ScanID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutTargetsTargetIDScanResultsScanIDResponse, error)
 
-	PutTargetsTargetIDScanresultsScanIDWithResponse(ctx context.Context, targetID TargetID, scanID ScanID, body PutTargetsTargetIDScanresultsScanIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PutTargetsTargetIDScanresultsScanIDResponse, error)
+	PutTargetsTargetIDScanResultsScanIDWithResponse(ctx context.Context, targetID TargetID, scanID ScanID, body PutTargetsTargetIDScanResultsScanIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PutTargetsTargetIDScanResultsScanIDResponse, error)
 }
 
 type GetTargetsResponse struct {
@@ -917,7 +917,7 @@ func (r PutTargetsTargetIDResponse) StatusCode() int {
 	return 0
 }
 
-type GetTargetsTargetIDScanresultsResponse struct {
+type GetTargetsTargetIDScanResultsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *struct {
@@ -931,7 +931,7 @@ type GetTargetsTargetIDScanresultsResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetTargetsTargetIDScanresultsResponse) Status() string {
+func (r GetTargetsTargetIDScanResultsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -939,14 +939,14 @@ func (r GetTargetsTargetIDScanresultsResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetTargetsTargetIDScanresultsResponse) StatusCode() int {
+func (r GetTargetsTargetIDScanResultsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type PostTargetsTargetIDScanresultsResponse struct {
+type PostTargetsTargetIDScanResultsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON201      *ScanResultsSummary
@@ -955,7 +955,7 @@ type PostTargetsTargetIDScanresultsResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PostTargetsTargetIDScanresultsResponse) Status() string {
+func (r PostTargetsTargetIDScanResultsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -963,14 +963,14 @@ func (r PostTargetsTargetIDScanresultsResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostTargetsTargetIDScanresultsResponse) StatusCode() int {
+func (r PostTargetsTargetIDScanResultsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type GetTargetsTargetIDScanresultsScanIDResponse struct {
+type GetTargetsTargetIDScanResultsScanIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *struct {
@@ -980,7 +980,7 @@ type GetTargetsTargetIDScanresultsScanIDResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetTargetsTargetIDScanresultsScanIDResponse) Status() string {
+func (r GetTargetsTargetIDScanResultsScanIDResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -988,14 +988,14 @@ func (r GetTargetsTargetIDScanresultsScanIDResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetTargetsTargetIDScanresultsScanIDResponse) StatusCode() int {
+func (r GetTargetsTargetIDScanResultsScanIDResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type PutTargetsTargetIDScanresultsScanIDResponse struct {
+type PutTargetsTargetIDScanResultsScanIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ScanResultsSummary
@@ -1003,7 +1003,7 @@ type PutTargetsTargetIDScanresultsScanIDResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PutTargetsTargetIDScanresultsScanIDResponse) Status() string {
+func (r PutTargetsTargetIDScanResultsScanIDResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -1011,7 +1011,7 @@ func (r PutTargetsTargetIDScanresultsScanIDResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PutTargetsTargetIDScanresultsScanIDResponse) StatusCode() int {
+func (r PutTargetsTargetIDScanResultsScanIDResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -1079,56 +1079,56 @@ func (c *ClientWithResponses) PutTargetsTargetIDWithResponse(ctx context.Context
 	return ParsePutTargetsTargetIDResponse(rsp)
 }
 
-// GetTargetsTargetIDScanresultsWithResponse request returning *GetTargetsTargetIDScanresultsResponse
-func (c *ClientWithResponses) GetTargetsTargetIDScanresultsWithResponse(ctx context.Context, targetID TargetID, params *GetTargetsTargetIDScanresultsParams, reqEditors ...RequestEditorFn) (*GetTargetsTargetIDScanresultsResponse, error) {
-	rsp, err := c.GetTargetsTargetIDScanresults(ctx, targetID, params, reqEditors...)
+// GetTargetsTargetIDScanResultsWithResponse request returning *GetTargetsTargetIDScanResultsResponse
+func (c *ClientWithResponses) GetTargetsTargetIDScanResultsWithResponse(ctx context.Context, targetID TargetID, params *GetTargetsTargetIDScanResultsParams, reqEditors ...RequestEditorFn) (*GetTargetsTargetIDScanResultsResponse, error) {
+	rsp, err := c.GetTargetsTargetIDScanResults(ctx, targetID, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetTargetsTargetIDScanresultsResponse(rsp)
+	return ParseGetTargetsTargetIDScanResultsResponse(rsp)
 }
 
-// PostTargetsTargetIDScanresultsWithBodyWithResponse request with arbitrary body returning *PostTargetsTargetIDScanresultsResponse
-func (c *ClientWithResponses) PostTargetsTargetIDScanresultsWithBodyWithResponse(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTargetsTargetIDScanresultsResponse, error) {
-	rsp, err := c.PostTargetsTargetIDScanresultsWithBody(ctx, targetID, contentType, body, reqEditors...)
+// PostTargetsTargetIDScanResultsWithBodyWithResponse request with arbitrary body returning *PostTargetsTargetIDScanResultsResponse
+func (c *ClientWithResponses) PostTargetsTargetIDScanResultsWithBodyWithResponse(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTargetsTargetIDScanResultsResponse, error) {
+	rsp, err := c.PostTargetsTargetIDScanResultsWithBody(ctx, targetID, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostTargetsTargetIDScanresultsResponse(rsp)
+	return ParsePostTargetsTargetIDScanResultsResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostTargetsTargetIDScanresultsWithResponse(ctx context.Context, targetID TargetID, body PostTargetsTargetIDScanresultsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTargetsTargetIDScanresultsResponse, error) {
-	rsp, err := c.PostTargetsTargetIDScanresults(ctx, targetID, body, reqEditors...)
+func (c *ClientWithResponses) PostTargetsTargetIDScanResultsWithResponse(ctx context.Context, targetID TargetID, body PostTargetsTargetIDScanResultsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTargetsTargetIDScanResultsResponse, error) {
+	rsp, err := c.PostTargetsTargetIDScanResults(ctx, targetID, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostTargetsTargetIDScanresultsResponse(rsp)
+	return ParsePostTargetsTargetIDScanResultsResponse(rsp)
 }
 
-// GetTargetsTargetIDScanresultsScanIDWithResponse request returning *GetTargetsTargetIDScanresultsScanIDResponse
-func (c *ClientWithResponses) GetTargetsTargetIDScanresultsScanIDWithResponse(ctx context.Context, targetID TargetID, scanID ScanID, params *GetTargetsTargetIDScanresultsScanIDParams, reqEditors ...RequestEditorFn) (*GetTargetsTargetIDScanresultsScanIDResponse, error) {
-	rsp, err := c.GetTargetsTargetIDScanresultsScanID(ctx, targetID, scanID, params, reqEditors...)
+// GetTargetsTargetIDScanResultsScanIDWithResponse request returning *GetTargetsTargetIDScanResultsScanIDResponse
+func (c *ClientWithResponses) GetTargetsTargetIDScanResultsScanIDWithResponse(ctx context.Context, targetID TargetID, scanID ScanID, params *GetTargetsTargetIDScanResultsScanIDParams, reqEditors ...RequestEditorFn) (*GetTargetsTargetIDScanResultsScanIDResponse, error) {
+	rsp, err := c.GetTargetsTargetIDScanResultsScanID(ctx, targetID, scanID, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetTargetsTargetIDScanresultsScanIDResponse(rsp)
+	return ParseGetTargetsTargetIDScanResultsScanIDResponse(rsp)
 }
 
-// PutTargetsTargetIDScanresultsScanIDWithBodyWithResponse request with arbitrary body returning *PutTargetsTargetIDScanresultsScanIDResponse
-func (c *ClientWithResponses) PutTargetsTargetIDScanresultsScanIDWithBodyWithResponse(ctx context.Context, targetID TargetID, scanID ScanID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutTargetsTargetIDScanresultsScanIDResponse, error) {
-	rsp, err := c.PutTargetsTargetIDScanresultsScanIDWithBody(ctx, targetID, scanID, contentType, body, reqEditors...)
+// PutTargetsTargetIDScanResultsScanIDWithBodyWithResponse request with arbitrary body returning *PutTargetsTargetIDScanResultsScanIDResponse
+func (c *ClientWithResponses) PutTargetsTargetIDScanResultsScanIDWithBodyWithResponse(ctx context.Context, targetID TargetID, scanID ScanID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutTargetsTargetIDScanResultsScanIDResponse, error) {
+	rsp, err := c.PutTargetsTargetIDScanResultsScanIDWithBody(ctx, targetID, scanID, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePutTargetsTargetIDScanresultsScanIDResponse(rsp)
+	return ParsePutTargetsTargetIDScanResultsScanIDResponse(rsp)
 }
 
-func (c *ClientWithResponses) PutTargetsTargetIDScanresultsScanIDWithResponse(ctx context.Context, targetID TargetID, scanID ScanID, body PutTargetsTargetIDScanresultsScanIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PutTargetsTargetIDScanresultsScanIDResponse, error) {
-	rsp, err := c.PutTargetsTargetIDScanresultsScanID(ctx, targetID, scanID, body, reqEditors...)
+func (c *ClientWithResponses) PutTargetsTargetIDScanResultsScanIDWithResponse(ctx context.Context, targetID TargetID, scanID ScanID, body PutTargetsTargetIDScanResultsScanIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PutTargetsTargetIDScanResultsScanIDResponse, error) {
+	rsp, err := c.PutTargetsTargetIDScanResultsScanID(ctx, targetID, scanID, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePutTargetsTargetIDScanresultsScanIDResponse(rsp)
+	return ParsePutTargetsTargetIDScanResultsScanIDResponse(rsp)
 }
 
 // ParseGetTargetsResponse parses an HTTP response from a GetTargetsWithResponse call
@@ -1309,15 +1309,15 @@ func ParsePutTargetsTargetIDResponse(rsp *http.Response) (*PutTargetsTargetIDRes
 	return response, nil
 }
 
-// ParseGetTargetsTargetIDScanresultsResponse parses an HTTP response from a GetTargetsTargetIDScanresultsWithResponse call
-func ParseGetTargetsTargetIDScanresultsResponse(rsp *http.Response) (*GetTargetsTargetIDScanresultsResponse, error) {
+// ParseGetTargetsTargetIDScanResultsResponse parses an HTTP response from a GetTargetsTargetIDScanResultsWithResponse call
+func ParseGetTargetsTargetIDScanResultsResponse(rsp *http.Response) (*GetTargetsTargetIDScanResultsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetTargetsTargetIDScanresultsResponse{
+	response := &GetTargetsTargetIDScanResultsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -1348,15 +1348,15 @@ func ParseGetTargetsTargetIDScanresultsResponse(rsp *http.Response) (*GetTargets
 	return response, nil
 }
 
-// ParsePostTargetsTargetIDScanresultsResponse parses an HTTP response from a PostTargetsTargetIDScanresultsWithResponse call
-func ParsePostTargetsTargetIDScanresultsResponse(rsp *http.Response) (*PostTargetsTargetIDScanresultsResponse, error) {
+// ParsePostTargetsTargetIDScanResultsResponse parses an HTTP response from a PostTargetsTargetIDScanResultsWithResponse call
+func ParsePostTargetsTargetIDScanResultsResponse(rsp *http.Response) (*PostTargetsTargetIDScanResultsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostTargetsTargetIDScanresultsResponse{
+	response := &PostTargetsTargetIDScanResultsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -1388,15 +1388,15 @@ func ParsePostTargetsTargetIDScanresultsResponse(rsp *http.Response) (*PostTarge
 	return response, nil
 }
 
-// ParseGetTargetsTargetIDScanresultsScanIDResponse parses an HTTP response from a GetTargetsTargetIDScanresultsScanIDWithResponse call
-func ParseGetTargetsTargetIDScanresultsScanIDResponse(rsp *http.Response) (*GetTargetsTargetIDScanresultsScanIDResponse, error) {
+// ParseGetTargetsTargetIDScanResultsScanIDResponse parses an HTTP response from a GetTargetsTargetIDScanResultsScanIDWithResponse call
+func ParseGetTargetsTargetIDScanResultsScanIDResponse(rsp *http.Response) (*GetTargetsTargetIDScanResultsScanIDResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetTargetsTargetIDScanresultsScanIDResponse{
+	response := &GetTargetsTargetIDScanResultsScanIDResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -1423,15 +1423,15 @@ func ParseGetTargetsTargetIDScanresultsScanIDResponse(rsp *http.Response) (*GetT
 	return response, nil
 }
 
-// ParsePutTargetsTargetIDScanresultsScanIDResponse parses an HTTP response from a PutTargetsTargetIDScanresultsScanIDWithResponse call
-func ParsePutTargetsTargetIDScanresultsScanIDResponse(rsp *http.Response) (*PutTargetsTargetIDScanresultsScanIDResponse, error) {
+// ParsePutTargetsTargetIDScanResultsScanIDResponse parses an HTTP response from a PutTargetsTargetIDScanResultsScanIDWithResponse call
+func ParsePutTargetsTargetIDScanResultsScanIDResponse(rsp *http.Response) (*PutTargetsTargetIDScanResultsScanIDResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PutTargetsTargetIDScanresultsScanIDResponse{
+	response := &PutTargetsTargetIDScanResultsScanIDResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

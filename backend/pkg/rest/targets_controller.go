@@ -25,8 +25,8 @@ import (
 )
 
 func (s *ServerImpl) GetTargets(ctx echo.Context, params models.GetTargetsParams) error {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	s.lock.RLock()
+	defer s.lock.RUnlock()
 
 	targets, err := s.dbHandler.TargetsTable().List(params)
 	if err != nil {
@@ -47,17 +47,17 @@ func (s *ServerImpl) PostTargets(ctx echo.Context) error {
 	defer s.lock.Unlock()
 
 	newTarget := database.CreateTarget(&target)
-	target, err = s.dbHandler.TargetsTable().Create(newTarget)
+	createdTarget, err := s.dbHandler.TargetsTable().Create(newTarget)
 	if err != nil {
 		// TODO check errors and for status code
 		return sendError(ctx, http.StatusConflict, oopsMsg)
 	}
-	return sendResponse(ctx, http.StatusCreated, target)
+	return sendResponse(ctx, http.StatusCreated, createdTarget)
 }
 
 func (s *ServerImpl) GetTargetsTargetID(ctx echo.Context, targetID models.TargetID) error {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	s.lock.RLock()
+	defer s.lock.RUnlock()
 
 	targets, err := s.dbHandler.TargetsTable().Get(targetID)
 	if err != nil {
@@ -71,19 +71,19 @@ func (s *ServerImpl) PutTargetsTargetID(ctx echo.Context, targetID models.Target
 	var target models.Target
 	err := ctx.Bind(&target)
 	if err != nil {
-		return sendError(ctx, http.StatusBadRequest, "Invalid format for target")
+		return sendError(ctx, http.StatusBadRequest, err.Error())
 	}
 
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	newTarget := database.CreateTarget(&target)
-	target, err = s.dbHandler.TargetsTable().Update(newTarget, targetID)
+	updatedTarget, err := s.dbHandler.TargetsTable().Update(newTarget, targetID)
 	if err != nil {
 		// TODO check errors and for status code
 		return sendError(ctx, http.StatusInternalServerError, oopsMsg)
 	}
-	return sendResponse(ctx, http.StatusOK, target)
+	return sendResponse(ctx, http.StatusOK, updatedTarget)
 }
 
 func (s *ServerImpl) DeleteTargetsTargetID(ctx echo.Context, targetID models.TargetID) error {

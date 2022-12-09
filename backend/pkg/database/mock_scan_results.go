@@ -34,10 +34,10 @@ func (m *MockScanResultsTable) EXPECT() *MockScanResultsTableMockRecorder {
 }
 
 // Create mocks base method
-func (m *MockScanResultsTable) Create(arg0 string, arg1 *ScanResults) (models.ScanResultsSummary, error) {
+func (m *MockScanResultsTable) Create(arg0 string, arg1 *ScanResults) (*models.ScanResultsSummary, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1)
-	ret0, _ := ret[0].(models.ScanResultsSummary)
+	ret0, _ := ret[0].(*models.ScanResultsSummary)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -49,7 +49,7 @@ func (mr *MockScanResultsTableMockRecorder) Create(arg0, arg1 interface{}) *gomo
 }
 
 // Get mocks base method
-func (m *MockScanResultsTable) Get(arg0, arg1 string, arg2 models.GetTargetsTargetIDScanresultsScanIDParams) (ScanResultsInt, error) {
+func (m *MockScanResultsTable) Get(arg0, arg1 string, arg2 models.GetTargetsTargetIDScanResultsScanIDParams) (ScanResultsInt, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0, arg1, arg2)
 	ret0, _ := ret[0].(ScanResultsInt)
@@ -64,10 +64,10 @@ func (mr *MockScanResultsTableMockRecorder) Get(arg0, arg1, arg2 interface{}) *g
 }
 
 // List mocks base method
-func (m *MockScanResultsTable) List(arg0 string, arg1 models.GetTargetsTargetIDScanresultsParams) ([]models.ScanResults, error) {
+func (m *MockScanResultsTable) List(arg0 string, arg1 models.GetTargetsTargetIDScanResultsParams) (*[]models.ScanResults, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1)
-	ret0, _ := ret[0].([]models.ScanResults)
+	ret0, _ := ret[0].(*[]models.ScanResults)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -79,10 +79,10 @@ func (mr *MockScanResultsTableMockRecorder) List(arg0, arg1 interface{}) *gomock
 }
 
 // Update mocks base method
-func (m *MockScanResultsTable) Update(arg0, arg1 string, arg2 *ScanResults) (models.ScanResultsSummary, error) {
+func (m *MockScanResultsTable) Update(arg0, arg1 string, arg2 *ScanResults) (*models.ScanResultsSummary, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", arg0, arg1, arg2)
-	ret0, _ := ret[0].(models.ScanResultsSummary)
+	ret0, _ := ret[0].(*models.ScanResultsSummary)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -68,10 +68,10 @@ type ExploitScanResults struct {
 
 //go:generate $GOPATH/bin/mockgen --build_flags=--mod=mod -destination=./mock_scan_results.go -package=database github.com/openclarity/vmclarity/backend/pkg/database ScanResultsTable
 type ScanResultsTable interface {
-	List(targetID models.TargetID, params models.GetTargetsTargetIDScanresultsParams) ([]models.ScanResults, error)
-	Create(targetID models.TargetID, scanResults *ScanResults) (models.ScanResultsSummary, error)
-	Get(targetID models.TargetID, scanID models.ScanID, params models.GetTargetsTargetIDScanresultsScanIDParams) (ScanResultsInt, error)
-	Update(targetID models.TargetID, scanID models.ScanID, scanResults *ScanResults) (models.ScanResultsSummary, error)
+	List(targetID models.TargetID, params models.GetTargetsTargetIDScanResultsParams) (*[]models.ScanResults, error)
+	Create(targetID models.TargetID, scanResults *ScanResults) (*models.ScanResultsSummary, error)
+	Get(targetID models.TargetID, scanID models.ScanID, params models.GetTargetsTargetIDScanResultsScanIDParams) (ScanResultsInt, error)
+	Update(targetID models.TargetID, scanID models.ScanID, scanResults *ScanResults) (*models.ScanResultsSummary, error)
 }
 
 type ScanResultsTableHandler struct {
@@ -84,20 +84,20 @@ func (db *Handler) ScanResultsTable() ScanResultsTable {
 	}
 }
 
-func (s *ScanResultsTableHandler) List(targetID models.TargetID, params models.GetTargetsTargetIDScanresultsParams,
-) ([]models.ScanResults, error) {
-	return []models.ScanResults{}, fmt.Errorf("not implemented")
+func (s *ScanResultsTableHandler) List(targetID models.TargetID, params models.GetTargetsTargetIDScanResultsParams,
+) (*[]models.ScanResults, error) {
+	return &[]models.ScanResults{}, fmt.Errorf("not implemented")
 }
 
 func (s *ScanResultsTableHandler) Create(targetID models.TargetID, scanResults *ScanResults,
-) (models.ScanResultsSummary, error) {
-	return models.ScanResultsSummary{}, fmt.Errorf("not implemented")
+) (*models.ScanResultsSummary, error) {
+	return &models.ScanResultsSummary{}, fmt.Errorf("not implemented")
 }
 
 func (s *ScanResultsTableHandler) Get(
 	targetID models.TargetID,
 	scanID models.ScanID,
-	params models.GetTargetsTargetIDScanresultsScanIDParams,
+	params models.GetTargetsTargetIDScanResultsScanIDParams,
 ) (ScanResultsInt, error) {
 	return nil, fmt.Errorf("not implemented")
 }
@@ -106,8 +106,8 @@ func (s *ScanResultsTableHandler) Update(
 	targetID models.TargetID,
 	scanID models.ScanID,
 	scanResults *ScanResults,
-) (models.ScanResultsSummary, error) {
-	return models.ScanResultsSummary{}, fmt.Errorf("not implemented")
+) (*models.ScanResultsSummary, error) {
+	return &models.ScanResultsSummary{}, fmt.Errorf("not implemented")
 }
 
 // TODO after db design.

@@ -37,17 +37,17 @@ type ServerInterface interface {
 	// (PUT /targets/{targetID})
 	PutTargetsTargetID(ctx echo.Context, targetID TargetID) error
 	// Get scan results for a specified target
-	// (GET /targets/{targetID}/scanresults)
-	GetTargetsTargetIDScanresults(ctx echo.Context, targetID TargetID, params GetTargetsTargetIDScanresultsParams) error
+	// (GET /targets/{targetID}/scanResults)
+	GetTargetsTargetIDScanResults(ctx echo.Context, targetID TargetID, params GetTargetsTargetIDScanResultsParams) error
 	// Create scan result for a specified target
-	// (POST /targets/{targetID}/scanresults)
-	PostTargetsTargetIDScanresults(ctx echo.Context, targetID TargetID) error
+	// (POST /targets/{targetID}/scanResults)
+	PostTargetsTargetIDScanResults(ctx echo.Context, targetID TargetID) error
 	// Report a specific scan result for a specific target
-	// (GET /targets/{targetID}/scanresults/{scanID})
-	GetTargetsTargetIDScanresultsScanID(ctx echo.Context, targetID TargetID, scanID ScanID, params GetTargetsTargetIDScanresultsScanIDParams) error
+	// (GET /targets/{targetID}/scanResults/{scanID})
+	GetTargetsTargetIDScanResultsScanID(ctx echo.Context, targetID TargetID, scanID ScanID, params GetTargetsTargetIDScanResultsScanIDParams) error
 	// Update scan results.
-	// (PUT /targets/{targetID}/scanresults/{scanID})
-	PutTargetsTargetIDScanresultsScanID(ctx echo.Context, targetID TargetID, scanID ScanID) error
+	// (PUT /targets/{targetID}/scanResults/{scanID})
+	PutTargetsTargetIDScanResultsScanID(ctx echo.Context, targetID TargetID, scanID ScanID) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -137,8 +137,8 @@ func (w *ServerInterfaceWrapper) PutTargetsTargetID(ctx echo.Context) error {
 	return err
 }
 
-// GetTargetsTargetIDScanresults converts echo context to params.
-func (w *ServerInterfaceWrapper) GetTargetsTargetIDScanresults(ctx echo.Context) error {
+// GetTargetsTargetIDScanResults converts echo context to params.
+func (w *ServerInterfaceWrapper) GetTargetsTargetIDScanResults(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "targetID" -------------
 	var targetID TargetID
@@ -149,7 +149,7 @@ func (w *ServerInterfaceWrapper) GetTargetsTargetIDScanresults(ctx echo.Context)
 	}
 
 	// Parameter object where we will unmarshal all parameters from the context
-	var params GetTargetsTargetIDScanresultsParams
+	var params GetTargetsTargetIDScanResultsParams
 	// ------------- Required query parameter "page" -------------
 
 	err = runtime.BindQueryParameter("form", true, true, "page", ctx.QueryParams(), &params.Page)
@@ -165,12 +165,12 @@ func (w *ServerInterfaceWrapper) GetTargetsTargetIDScanresults(ctx echo.Context)
 	}
 
 	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.GetTargetsTargetIDScanresults(ctx, targetID, params)
+	err = w.Handler.GetTargetsTargetIDScanResults(ctx, targetID, params)
 	return err
 }
 
-// PostTargetsTargetIDScanresults converts echo context to params.
-func (w *ServerInterfaceWrapper) PostTargetsTargetIDScanresults(ctx echo.Context) error {
+// PostTargetsTargetIDScanResults converts echo context to params.
+func (w *ServerInterfaceWrapper) PostTargetsTargetIDScanResults(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "targetID" -------------
 	var targetID TargetID
@@ -181,12 +181,12 @@ func (w *ServerInterfaceWrapper) PostTargetsTargetIDScanresults(ctx echo.Context
 	}
 
 	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.PostTargetsTargetIDScanresults(ctx, targetID)
+	err = w.Handler.PostTargetsTargetIDScanResults(ctx, targetID)
 	return err
 }
 
-// GetTargetsTargetIDScanresultsScanID converts echo context to params.
-func (w *ServerInterfaceWrapper) GetTargetsTargetIDScanresultsScanID(ctx echo.Context) error {
+// GetTargetsTargetIDScanResultsScanID converts echo context to params.
+func (w *ServerInterfaceWrapper) GetTargetsTargetIDScanResultsScanID(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "targetID" -------------
 	var targetID TargetID
@@ -205,7 +205,7 @@ func (w *ServerInterfaceWrapper) GetTargetsTargetIDScanresultsScanID(ctx echo.Co
 	}
 
 	// Parameter object where we will unmarshal all parameters from the context
-	var params GetTargetsTargetIDScanresultsScanIDParams
+	var params GetTargetsTargetIDScanResultsScanIDParams
 	// ------------- Optional query parameter "scanType" -------------
 
 	err = runtime.BindQueryParameter("form", true, false, "scanType", ctx.QueryParams(), &params.ScanType)
@@ -214,12 +214,12 @@ func (w *ServerInterfaceWrapper) GetTargetsTargetIDScanresultsScanID(ctx echo.Co
 	}
 
 	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.GetTargetsTargetIDScanresultsScanID(ctx, targetID, scanID, params)
+	err = w.Handler.GetTargetsTargetIDScanResultsScanID(ctx, targetID, scanID, params)
 	return err
 }
 
-// PutTargetsTargetIDScanresultsScanID converts echo context to params.
-func (w *ServerInterfaceWrapper) PutTargetsTargetIDScanresultsScanID(ctx echo.Context) error {
+// PutTargetsTargetIDScanResultsScanID converts echo context to params.
+func (w *ServerInterfaceWrapper) PutTargetsTargetIDScanResultsScanID(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "targetID" -------------
 	var targetID TargetID
@@ -238,7 +238,7 @@ func (w *ServerInterfaceWrapper) PutTargetsTargetIDScanresultsScanID(ctx echo.Co
 	}
 
 	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.PutTargetsTargetIDScanresultsScanID(ctx, targetID, scanID)
+	err = w.Handler.PutTargetsTargetIDScanResultsScanID(ctx, targetID, scanID)
 	return err
 }
 
@@ -275,10 +275,10 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.DELETE(baseURL+"/targets/:targetID", wrapper.DeleteTargetsTargetID)
 	router.GET(baseURL+"/targets/:targetID", wrapper.GetTargetsTargetID)
 	router.PUT(baseURL+"/targets/:targetID", wrapper.PutTargetsTargetID)
-	router.GET(baseURL+"/targets/:targetID/scanresults", wrapper.GetTargetsTargetIDScanresults)
-	router.POST(baseURL+"/targets/:targetID/scanresults", wrapper.PostTargetsTargetIDScanresults)
-	router.GET(baseURL+"/targets/:targetID/scanresults/:scanID", wrapper.GetTargetsTargetIDScanresultsScanID)
-	router.PUT(baseURL+"/targets/:targetID/scanresults/:scanID", wrapper.PutTargetsTargetIDScanresultsScanID)
+	router.GET(baseURL+"/targets/:targetID/scanResults", wrapper.GetTargetsTargetIDScanResults)
+	router.POST(baseURL+"/targets/:targetID/scanResults", wrapper.PostTargetsTargetIDScanResults)
+	router.GET(baseURL+"/targets/:targetID/scanResults/:scanID", wrapper.GetTargetsTargetIDScanResultsScanID)
+	router.PUT(baseURL+"/targets/:targetID/scanResults/:scanID", wrapper.PutTargetsTargetIDScanResultsScanID)
 
 }
 
@@ -311,11 +311,11 @@ var swaggerSpec = []string{
 	"BDptN0j1kcfrs93luuhX46JEDpsDCL6/iNZqlG/h2YYFPROJIgFEQdzRIfrQ+/crGGCVk0QAidcIvlGp",
 	"OudK+pVxxzqIA/ztXcRjWAJ7Z3P77pHH63f2HUL/bxZw3NR9cU8Tm6IsElBwiJpr873FzXz3mHEaaW1f",
 	"QWrI6MPxKJTK5UMhXxtnxhVa8JzFZ4tx4b2NsVn1CJ1fJEK9V4DqxRjJRC3L6wgpP3fU3pbSXiNNd1m8",
-	"K3p3tFnkSef1a6NiSueHCKirD0ZidzDyLLJZadb3Iyf42VsuHTxk44AWXCCCZAYRXVCIHVLeph0rX0Ge",
-	"2pNVvPqZGzOP9Hg1bedF/YX4spLx1+0Da25EG3pClwzdFJI41mngBlalHeucDaKfZbMyTi7aMpYQ2QTI",
-	"c7F596X43c7m+2h95n70czlyt78r8pTc/ZjohzmeM/C4y6vDTuD9YnHyU0NwygPOKY8tJ7yYfNcb0AnP",
-	"WA+X5/0QMi7UrrCi5pqLynuAX5v8NgXyd9kxeq/My7bPrWzjPo234fPR9eU677JF3v23eV4TTw4nuUhw",
-	"H3dJRnVd/D8AAP//V/OBkbEqAAA=",
+	"K3p3tFnkSef1a6NiSueHCKi7dzDyLLLyDdf3Iyf42VsuHTwkijigBReIIJlBRBcUYoeUt2nHygk6tSer",
+	"ePUzN2Ye6fFq2s6L+gvxZSXjr9sH1tyINvSELhm6KSRxrNPADaxKO9Y5G0Q/y2ZlnFy0ZSwhsgmQ52Lz",
+	"7kvxu53N99H6zP3o53Lkbn9X5Cm5+zHRD3M8Z+Bxl1eHncD7xeLkp4bglAecUx5bTngx+a43oBOesR4u",
+	"z/shZFyoXWFFzTUXlfcAvzb5bQrk77Jj9F6Zl22fW9nGfRpvw+ej68t13mWLvPtv87wmnhxOcpHgPu6S",
+	"jOq6+H8AAAD///V0aYuxKgAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

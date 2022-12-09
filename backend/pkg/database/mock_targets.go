@@ -34,10 +34,10 @@ func (m *MockTargetsTable) EXPECT() *MockTargetsTableMockRecorder {
 }
 
 // Create mocks base method
-func (m *MockTargetsTable) Create(arg0 *Target) (models.Target, error) {
+func (m *MockTargetsTable) Create(arg0 *Target) (*models.Target, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0)
-	ret0, _ := ret[0].(models.Target)
+	ret0, _ := ret[0].(*models.Target)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -63,10 +63,10 @@ func (mr *MockTargetsTableMockRecorder) Delete(arg0 interface{}) *gomock.Call {
 }
 
 // Get mocks base method
-func (m *MockTargetsTable) Get(arg0 string) (models.Target, error) {
+func (m *MockTargetsTable) Get(arg0 string) (*models.Target, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0)
-	ret0, _ := ret[0].(models.Target)
+	ret0, _ := ret[0].(*models.Target)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -78,10 +78,10 @@ func (mr *MockTargetsTableMockRecorder) Get(arg0 interface{}) *gomock.Call {
 }
 
 // List mocks base method
-func (m *MockTargetsTable) List(arg0 models.GetTargetsParams) ([]models.Target, error) {
+func (m *MockTargetsTable) List(arg0 models.GetTargetsParams) (*[]models.Target, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0)
-	ret0, _ := ret[0].([]models.Target)
+	ret0, _ := ret[0].(*[]models.Target)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -93,10 +93,10 @@ func (mr *MockTargetsTableMockRecorder) List(arg0 interface{}) *gomock.Call {
 }
 
 // Update mocks base method
-func (m *MockTargetsTable) Update(arg0 *Target, arg1 string) (models.Target, error) {
+func (m *MockTargetsTable) Update(arg0 *Target, arg1 string) (*models.Target, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", arg0, arg1)
-	ret0, _ := ret[0].(models.Target)
+	ret0, _ := ret[0].(*models.Target)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

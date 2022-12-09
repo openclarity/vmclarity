@@ -33,7 +33,10 @@ import (
 	"github.com/openclarity/vmclarity/backend/pkg/common"
 )
 
-const timeOutSeconds = 10
+const (
+	shutdownTimeout = 10
+	baseURL         = "/api"
+)
 
 var oopsMsg = "oops"
 
@@ -51,7 +54,7 @@ func CreateRESTServer(port int) (*Server, error) {
 	swagger, err := server.GetSwagger()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error loading swagger spec: %v", err)
-		os.Exit(1)
+		return nil, fmt.Errorf("failed to start rest server: %v", err)
 	}
 	// Clear out the servers array in the swagger spec, that skips validating
 	// that server names match. We don't know how this thing will be run.
@@ -60,9 +63,11 @@ func CreateRESTServer(port int) (*Server, error) {
 	e := echo.New()
 	// Log all requests
 	e.Use(echomiddleware.Logger())
-	// Use oapi-codegen validation middleware to check all requests against the
-	// OpenAPI schema.
-	e.Use(middleware.OapiRequestValidator(swagger))
+	// Create a router group for baseURL
+	g := e.Group(baseURL)
+	// Use oapi-codegen validation middleware to validate
+	// the base URL router group against the OpenAPI schema.
+	g.Use(middleware.OapiRequestValidator(swagger))
 
 	return &Server{
 		port:       port,
@@ -76,7 +81,7 @@ func (s *Server) RegisterHandlers(dbHandler database.Database) {
 	}
 
 	// Register server above as the handler for the interface
-	server.RegisterHandlers(s.echoServer, serverImpl)
+	server.RegisterHandlersWithBaseURL(s.echoServer, serverImpl, baseURL)
 }
 
 func (s *Server) Start(errChan chan struct{}) {
@@ -93,7 +98,7 @@ func (s *Server) Start(errChan chan struct{}) {
 func (s *Server) Stop() {
 	log.Infof("Stopping REST server")
 	if s.echoServer != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), timeOutSeconds*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout*time.Second)
 		defer cancel()
 		if err := s.echoServer.Shutdown(ctx); err != nil {
 			log.Errorf("Failed to shutdown REST server: %v", err)

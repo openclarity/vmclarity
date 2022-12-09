@@ -266,8 +266,8 @@ type GetTargetsParams struct {
 	PageSize PageSize `form:"pageSize" json:"pageSize"`
 }
 
-// GetTargetsTargetIDScanresultsParams defines parameters for GetTargetsTargetIDScanresults.
-type GetTargetsTargetIDScanresultsParams struct {
+// GetTargetsTargetIDScanResultsParams defines parameters for GetTargetsTargetIDScanResults.
+type GetTargetsTargetIDScanResultsParams struct {
 	// Page Page number of the query
 	Page Page `form:"page" json:"page"`
 
@@ -275,8 +275,8 @@ type GetTargetsTargetIDScanresultsParams struct {
 	PageSize PageSize `form:"pageSize" json:"pageSize"`
 }
 
-// GetTargetsTargetIDScanresultsScanIDParams defines parameters for GetTargetsTargetIDScanresultsScanID.
-type GetTargetsTargetIDScanresultsScanIDParams struct {
+// GetTargetsTargetIDScanResultsScanIDParams defines parameters for GetTargetsTargetIDScanResultsScanID.
+type GetTargetsTargetIDScanResultsScanIDParams struct {
 	ScanType *ScanTypeParam `form:"scanType,omitempty" json:"scanType,omitempty"`
 }
 
@@ -286,11 +286,11 @@ type PostTargetsJSONRequestBody = Target
 // PutTargetsTargetIDJSONRequestBody defines body for PutTargetsTargetID for application/json ContentType.
 type PutTargetsTargetIDJSONRequestBody = Target
 
-// PostTargetsTargetIDScanresultsJSONRequestBody defines body for PostTargetsTargetIDScanresults for application/json ContentType.
-type PostTargetsTargetIDScanresultsJSONRequestBody = ScanResults
+// PostTargetsTargetIDScanResultsJSONRequestBody defines body for PostTargetsTargetIDScanResults for application/json ContentType.
+type PostTargetsTargetIDScanResultsJSONRequestBody = ScanResults
 
-// PutTargetsTargetIDScanresultsScanIDJSONRequestBody defines body for PutTargetsTargetIDScanresultsScanID for application/json ContentType.
-type PutTargetsTargetIDScanresultsScanIDJSONRequestBody = ScanResults
+// PutTargetsTargetIDScanResultsScanIDJSONRequestBody defines body for PutTargetsTargetIDScanResultsScanID for application/json ContentType.
+type PutTargetsTargetIDScanResultsScanIDJSONRequestBody = ScanResults
 
 // AsVMInfo returns the union data inside the Target_TargetInfo as a VMInfo
 func (t Target_TargetInfo) AsVMInfo() (VMInfo, error) {

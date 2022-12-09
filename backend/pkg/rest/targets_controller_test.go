@@ -16,6 +16,7 @@
 package rest
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -36,11 +37,15 @@ func TestGetTargets(t *testing.T) {
 	mockHandler := database.NewMockDatabase(mockCtrl)
 	mockTargetTable := database.NewMockTargetsTable(mockCtrl)
 	mockHandler.EXPECT().TargetsTable().Return(mockTargetTable)
-	mockTargetTable.EXPECT().List(gomock.Any()).Return([]models.Target{}, nil)
+	mockTargetTable.EXPECT().List(gomock.Any()).Return(&[]models.Target{}, nil)
 	restServer.RegisterHandlers(mockHandler)
 
-	result := testutil.NewRequest().Get("/targets?page=1&pageSize=1").Go(t, restServer.echoServer)
+	result := testutil.NewRequest().Get(fmt.Sprintf("%s/targets?page=1&pageSize=1", baseURL)).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusOK, result.Code())
+	var resultTarget []models.Target
+	result.UnmarshalJsonToObject(&resultTarget)
+	assert.Equal(t, []models.Target{}, resultTarget)
+
 }
 
 func TestPostTargets(t *testing.T) {
@@ -52,7 +57,7 @@ func TestPostTargets(t *testing.T) {
 	mockHandler := database.NewMockDatabase(mockCtrl)
 	mockTargetTable := database.NewMockTargetsTable(mockCtrl)
 	mockHandler.EXPECT().TargetsTable().Return(mockTargetTable)
-	mockTargetTable.EXPECT().Create(gomock.Any()).Return(models.Target{}, nil)
+	mockTargetTable.EXPECT().Create(gomock.Any()).Return(&models.Target{}, nil)
 	restServer.RegisterHandlers(mockHandler)
 
 	targetID := testID
@@ -77,8 +82,11 @@ func TestPostTargets(t *testing.T) {
 		TargetType:  &targetType,
 		TargetInfo:  targetInfo,
 	}
-	result := testutil.NewRequest().Post("/targets").WithJsonBody(newTarget).Go(t, restServer.echoServer)
+	result := testutil.NewRequest().Post(fmt.Sprintf("%s/targets", baseURL)).WithJsonBody(newTarget).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusCreated, result.Code())
+	var resultTarget models.Target
+	result.UnmarshalJsonToObject(&resultTarget)
+	assert.Equal(t, models.Target{}, resultTarget)
 }
 
 func TestGetTargetTargetID(t *testing.T) {
@@ -90,11 +98,14 @@ func TestGetTargetTargetID(t *testing.T) {
 	mockHandler := database.NewMockDatabase(mockCtrl)
 	mockTargetTable := database.NewMockTargetsTable(mockCtrl)
 	mockHandler.EXPECT().TargetsTable().Return(mockTargetTable)
-	mockTargetTable.EXPECT().Get(gomock.Any()).Return(models.Target{}, nil)
+	mockTargetTable.EXPECT().Get(gomock.Any()).Return(&models.Target{}, nil)
 	restServer.RegisterHandlers(mockHandler)
 
-	result := testutil.NewRequest().Get("/targets/1").Go(t, restServer.echoServer)
+	result := testutil.NewRequest().Get(fmt.Sprintf("%s/targets/1", baseURL)).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusOK, result.Code())
+	var resultTarget models.Target
+	result.UnmarshalJsonToObject(&resultTarget)
+	assert.Equal(t, models.Target{}, resultTarget)
 }
 
 func TestPutTargetTargetID(t *testing.T) {
@@ -106,7 +117,7 @@ func TestPutTargetTargetID(t *testing.T) {
 	mockHandler := database.NewMockDatabase(mockCtrl)
 	mockTargetTable := database.NewMockTargetsTable(mockCtrl)
 	mockHandler.EXPECT().TargetsTable().Return(mockTargetTable)
-	mockTargetTable.EXPECT().Update(gomock.Any(), gomock.Any()).Return(models.Target{}, nil)
+	mockTargetTable.EXPECT().Update(gomock.Any(), gomock.Any()).Return(&models.Target{}, nil)
 	restServer.RegisterHandlers(mockHandler)
 
 	targetID := testID
@@ -131,8 +142,11 @@ func TestPutTargetTargetID(t *testing.T) {
 		TargetType:  &targetType,
 		TargetInfo:  targetInfo,
 	}
-	result := testutil.NewRequest().Put("/targets/1").WithJsonBody(newTarget).Go(t, restServer.echoServer)
+	result := testutil.NewRequest().Put(fmt.Sprintf("%s/targets/1", baseURL)).WithJsonBody(newTarget).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusOK, result.Code())
+	var resultTarget models.Target
+	result.UnmarshalJsonToObject(&resultTarget)
+	assert.Equal(t, models.Target{}, resultTarget)
 }
 
 func TestDeleteTargetTargetID(t *testing.T) {
@@ -147,6 +161,6 @@ func TestDeleteTargetTargetID(t *testing.T) {
 	mockTargetTable.EXPECT().Delete(gomock.Any()).Return(nil)
 	restServer.RegisterHandlers(mockHandler)
 
-	result := testutil.NewRequest().Delete("/targets/1").Go(t, restServer.echoServer)
+	result := testutil.NewRequest().Delete(fmt.Sprintf("%s/targets/1", baseURL)).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusNoContent, result.Code())
 }
