@@ -40,7 +40,7 @@ func (s *ServerImpl) PostTargets(ctx echo.Context) error {
 	var target models.Target
 	err := ctx.Bind(&target)
 	if err != nil {
-		return sendError(ctx, http.StatusBadRequest, "Invalid format for target")
+		return sendError(ctx, http.StatusBadRequest, err.Error())
 	}
 
 	s.lock.Lock()

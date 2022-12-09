@@ -220,8 +220,8 @@ type VMInfo struct {
 
 // Vulnerability defines model for Vulnerability.
 type Vulnerability struct {
-	Id          *string            `json:"id,omitempty"`
-	PackageInfo *VulnerabilityInfo `json:"packageInfo,omitempty"`
+	VulnerabilityInfo *VulnerabilityInfo `json:"VulnerabilityInfo,omitempty"`
+	Id                *string            `json:"id,omitempty"`
 }
 
 // VulnerabilityInfo defines model for VulnerabilityInfo.

@@ -356,7 +356,7 @@ components:
       properties:
         id:
           type: string
-        packageInfo:
+        VulnerabilityInfo:
           $ref: '#/components/schemas/VulnerabilityInfo'
 
     MalwareInfo:

@@ -23,8 +23,6 @@ import (
 	"github.com/openclarity/vmclarity/api/models"
 )
 
-type ScanResultsInt interface{}
-
 // TODO after db design.
 type ScanResults struct {
 	ID               string
@@ -70,7 +68,14 @@ type ExploitScanResults struct {
 type ScanResultsTable interface {
 	List(targetID models.TargetID, params models.GetTargetsTargetIDScanResultsParams) (*[]models.ScanResults, error)
 	Create(targetID models.TargetID, scanResults *ScanResults) (*models.ScanResultsSummary, error)
-	Get(targetID models.TargetID, scanID models.ScanID, params models.GetTargetsTargetIDScanResultsScanIDParams) (ScanResultsInt, error)
+	GetSummary(targetID models.TargetID, scanID models.ScanID) (*models.ScanResultsSummary, error)
+	GetSBOM(targetID models.TargetID, scanID models.ScanID) (*models.SbomScan, error)
+	GetVulnerabilities(targetID models.TargetID, scanID models.ScanID) (*models.VulnerabilityScan, error)
+	GetMalwares(targetID models.TargetID, scanID models.ScanID) (*models.MalwareScan, error)
+	GetRootkits(targetID models.TargetID, scanID models.ScanID) (*models.RootkitScan, error)
+	GetSecrets(targetID models.TargetID, scanID models.ScanID) (*models.SecretScan, error)
+	GetMisconfigurations(targetID models.TargetID, scanID models.ScanID) (*models.MisconfigurationScan, error)
+	GetExploits(targetID models.TargetID, scanID models.ScanID) (*models.ExploitScan, error)
 	Update(targetID models.TargetID, scanID models.ScanID, scanResults *ScanResults) (*models.ScanResultsSummary, error)
 }
 
@@ -94,11 +99,35 @@ func (s *ScanResultsTableHandler) Create(targetID models.TargetID, scanResults *
 	return &models.ScanResultsSummary{}, fmt.Errorf("not implemented")
 }
 
-func (s *ScanResultsTableHandler) Get(
-	targetID models.TargetID,
-	scanID models.ScanID,
-	params models.GetTargetsTargetIDScanResultsScanIDParams,
-) (ScanResultsInt, error) {
+func (s *ScanResultsTableHandler) GetSummary(targetID models.TargetID, scanID models.ScanID) (*models.ScanResultsSummary, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (s *ScanResultsTableHandler) GetSBOM(targetID models.TargetID, scanID models.ScanID) (*models.SbomScan, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (s *ScanResultsTableHandler) GetVulnerabilities(targetID models.TargetID, scanID models.ScanID) (*models.VulnerabilityScan, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (s *ScanResultsTableHandler) GetMalwares(targetID models.TargetID, scanID models.ScanID) (*models.MalwareScan, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (s *ScanResultsTableHandler) GetRootkits(targetID models.TargetID, scanID models.ScanID) (*models.RootkitScan, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (s *ScanResultsTableHandler) GetSecrets(targetID models.TargetID, scanID models.ScanID) (*models.SecretScan, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (s *ScanResultsTableHandler) GetMisconfigurations(targetID models.TargetID, scanID models.ScanID) (*models.MisconfigurationScan, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (s *ScanResultsTableHandler) GetExploits(targetID models.TargetID, scanID models.ScanID) (*models.ExploitScan, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 

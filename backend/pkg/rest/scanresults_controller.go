@@ -47,7 +47,7 @@ func (s *ServerImpl) PostTargetsTargetIDScanResults(
 	var scanResults models.ScanResults
 	err := ctx.Bind(&scanResults)
 	if err != nil {
-		return sendError(ctx, http.StatusBadRequest, "Invalid format for target")
+		return sendError(ctx, http.StatusBadRequest, err.Error())
 	}
 
 	s.lock.Lock()
@@ -71,12 +71,64 @@ func (s *ServerImpl) GetTargetsTargetIDScanResultsScanID(
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 
-	targets, err := s.dbHandler.ScanResultsTable().Get(targetID, scanID, params)
-	if err != nil {
-		// TODO check errors and for status code
-		return sendError(ctx, http.StatusNotFound, oopsMsg)
+	var result interface{}
+	var err error
+
+	if params.ScanType == nil {
+		result, err = s.dbHandler.ScanResultsTable().GetSummary(targetID, scanID)
+		if err != nil {
+			// TODO check errors and for status code
+			return sendError(ctx, http.StatusNotFound, oopsMsg)
+		}
+		return sendResponse(ctx, http.StatusOK, result)
 	}
-	return sendResponse(ctx, http.StatusOK, targets)
+	switch *params.ScanType {
+	case models.SBOM:
+		result, err = s.dbHandler.ScanResultsTable().GetSBOM(targetID, scanID)
+		if err != nil {
+			// TODO check errors and for status code
+			return sendError(ctx, http.StatusNotFound, oopsMsg)
+		}
+	case models.VULNERABILITY:
+		result, err = s.dbHandler.ScanResultsTable().GetVulnerabilities(targetID, scanID)
+		if err != nil {
+			// TODO check errors and for status code
+			return sendError(ctx, http.StatusNotFound, oopsMsg)
+		}
+	case models.MALWARE:
+		result, err = s.dbHandler.ScanResultsTable().GetMalwares(targetID, scanID)
+		if err != nil {
+			// TODO check errors and for status code
+			return sendError(ctx, http.StatusNotFound, oopsMsg)
+		}
+	case models.ROOTKIT:
+		result, err = s.dbHandler.ScanResultsTable().GetRootkits(targetID, scanID)
+		if err != nil {
+			// TODO check errors and for status code
+			return sendError(ctx, http.StatusNotFound, oopsMsg)
+		}
+	case models.SECRET:
+		result, err = s.dbHandler.ScanResultsTable().GetSecrets(targetID, scanID)
+		if err != nil {
+			// TODO check errors and for status code
+			return sendError(ctx, http.StatusNotFound, oopsMsg)
+		}
+	case models.MISCONFIGURATION:
+		result, err = s.dbHandler.ScanResultsTable().GetMisconfigurations(targetID, scanID)
+		if err != nil {
+			// TODO check errors and for status code
+			return sendError(ctx, http.StatusNotFound, oopsMsg)
+		}
+	case models.EXPLOIT:
+		result, err = s.dbHandler.ScanResultsTable().GetExploits(targetID, scanID)
+		if err != nil {
+			// TODO check errors and for status code
+			return sendError(ctx, http.StatusNotFound, oopsMsg)
+		}
+	default:
+		return sendError(ctx, http.StatusBadRequest, oopsMsg)
+	}
+	return sendResponse(ctx, http.StatusOK, result)
 }
 
 func (s *ServerImpl) PutTargetsTargetIDScanResultsScanID(
