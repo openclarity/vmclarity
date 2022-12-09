@@ -98,16 +98,14 @@ func TestGetTargetsTargetIDScanResultsScanID(t *testing.T) {
 	mockHandler.EXPECT().ScanResultsTable().Return(mockScanResultsTable).AnyTimes()
 	restServer.RegisterHandlers(mockHandler)
 
-	gomock.InOrder(
-		mockScanResultsTable.EXPECT().GetSummary(gomock.Any(), gomock.Any()).Return(&models.ScanResultsSummary{}, nil),
-		mockScanResultsTable.EXPECT().GetSBOM(gomock.Any(), gomock.Any()).Return(&models.SbomScan{}, nil),
-		mockScanResultsTable.EXPECT().GetVulnerabilities(gomock.Any(), gomock.Any()).Return(&models.VulnerabilityScan{}, nil),
-		mockScanResultsTable.EXPECT().GetMalwares(gomock.Any(), gomock.Any()).Return(&models.MalwareScan{}, nil),
-		mockScanResultsTable.EXPECT().GetRootkits(gomock.Any(), gomock.Any()).Return(&models.RootkitScan{}, nil),
-		mockScanResultsTable.EXPECT().GetSecrets(gomock.Any(), gomock.Any()).Return(&models.SecretScan{}, nil),
-		mockScanResultsTable.EXPECT().GetMisconfigurations(gomock.Any(), gomock.Any()).Return(&models.MisconfigurationScan{}, nil),
-		mockScanResultsTable.EXPECT().GetExploits(gomock.Any(), gomock.Any()).Return(&models.ExploitScan{}, nil),
-	)
+	mockScanResultsTable.EXPECT().GetSummary(gomock.Any(), gomock.Any()).Return(&models.ScanResultsSummary{}, nil)
+	mockScanResultsTable.EXPECT().GetSBOM(gomock.Any(), gomock.Any()).Return(&models.SbomScan{}, nil)
+	mockScanResultsTable.EXPECT().GetVulnerabilities(gomock.Any(), gomock.Any()).Return(&models.VulnerabilityScan{}, nil)
+	mockScanResultsTable.EXPECT().GetMalwares(gomock.Any(), gomock.Any()).Return(&models.MalwareScan{}, nil)
+	mockScanResultsTable.EXPECT().GetRootkits(gomock.Any(), gomock.Any()).Return(&models.RootkitScan{}, nil)
+	mockScanResultsTable.EXPECT().GetSecrets(gomock.Any(), gomock.Any()).Return(&models.SecretScan{}, nil)
+	mockScanResultsTable.EXPECT().GetMisconfigurations(gomock.Any(), gomock.Any()).Return(&models.MisconfigurationScan{}, nil)
+	mockScanResultsTable.EXPECT().GetExploits(gomock.Any(), gomock.Any()).Return(&models.ExploitScan{}, nil)
 
 	result := testutil.NewRequest().Get(fmt.Sprintf("%s/1", scanResultsPath)).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusOK, result.Code())
