@@ -134,11 +134,6 @@ func TestPutTargetTargetID(t *testing.T) {
 	}
 	result := testutil.NewRequest().Put(fmt.Sprintf("%s/targets/1", baseURL)).WithJsonBody(newTarget).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusOK, result.Code())
-
-	// TODO update when the TargetsTableHandler functions are implemented
-	var resultTarget models.Target
-	result.UnmarshalJsonToObject(&resultTarget)
-	assert.Equal(t, models.Target{}, resultTarget)
 }
 
 func TestDeleteTargetTargetID(t *testing.T) {
