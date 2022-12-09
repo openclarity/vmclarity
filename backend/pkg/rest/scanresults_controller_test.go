@@ -44,11 +44,6 @@ func TestGetTargetsTargetIDScanResults(t *testing.T) {
 
 	result := testutil.NewRequest().Get(fmt.Sprintf("%s?page=1&pageSize=1", scanResultsPath)).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusOK, result.Code())
-
-	// TODO update when the ScanResultsTableHandler functions are implemented
-	var resultTarget []models.ScanResults
-	result.UnmarshalJsonToObject(&resultTarget)
-	assert.Equal(t, []models.ScanResults{}, resultTarget)
 }
 
 func TestPostTargetsTargetIDScanResults(t *testing.T) {
@@ -90,11 +85,6 @@ func TestPostTargetsTargetIDScanResults(t *testing.T) {
 	}
 	result := testutil.NewRequest().Post(scanResultsPath).WithJsonBody(newScanResults).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusCreated, result.Code())
-
-	// TODO update when the ScanResultsTableHandler functions are implemented
-	var resultTarget models.ScanResults
-	result.UnmarshalJsonToObject(&resultTarget)
-	assert.Equal(t, models.ScanResults{}, resultTarget)
 }
 
 func TestGetTargetsTargetIDScanResultsScanID(t *testing.T) {
@@ -111,11 +101,6 @@ func TestGetTargetsTargetIDScanResultsScanID(t *testing.T) {
 
 	result := testutil.NewRequest().Get(fmt.Sprintf("%s/1", scanResultsPath)).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusOK, result.Code())
-
-	// TODO update when the ScanResultsTableHandler functions are implemented
-	var resultTarget models.ScanResults
-	result.UnmarshalJsonToObject(&resultTarget)
-	assert.Equal(t, models.ScanResults{}, resultTarget)
 }
 
 func TestPutTargetsTargetIDScanResultsScanID(t *testing.T) {
@@ -157,9 +142,4 @@ func TestPutTargetsTargetIDScanResultsScanID(t *testing.T) {
 	}
 	result := testutil.NewRequest().Put(fmt.Sprintf("%s/1", scanResultsPath)).WithJsonBody(newScanResults).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusOK, result.Code())
-
-	// TODO update when the ScanResultsTableHandler functions are implemented
-	var resultTarget models.ScanResults
-	result.UnmarshalJsonToObject(&resultTarget)
-	assert.Equal(t, models.ScanResults{}, resultTarget)
 }

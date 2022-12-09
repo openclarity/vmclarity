@@ -42,12 +42,6 @@ func TestGetTargets(t *testing.T) {
 
 	result := testutil.NewRequest().Get(fmt.Sprintf("%s/targets?page=1&pageSize=1", baseURL)).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusOK, result.Code())
-
-	// TODO update when the TargetsTableHandler functions are implemented
-	var resultTarget []models.Target
-	result.UnmarshalJsonToObject(&resultTarget)
-	assert.Equal(t, []models.Target{}, resultTarget)
-
 }
 
 func TestPostTargets(t *testing.T) {
@@ -86,11 +80,6 @@ func TestPostTargets(t *testing.T) {
 	}
 	result := testutil.NewRequest().Post(fmt.Sprintf("%s/targets", baseURL)).WithJsonBody(newTarget).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusCreated, result.Code())
-
-	// TODO update when the TargetsTableHandler functions are implemented
-	var resultTarget models.Target
-	result.UnmarshalJsonToObject(&resultTarget)
-	assert.Equal(t, models.Target{}, resultTarget)
 }
 
 func TestGetTargetTargetID(t *testing.T) {
@@ -107,11 +96,6 @@ func TestGetTargetTargetID(t *testing.T) {
 
 	result := testutil.NewRequest().Get(fmt.Sprintf("%s/targets/1", baseURL)).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusOK, result.Code())
-
-	// TODO update when the TargetsTableHandler functions are implemented
-	var resultTarget models.Target
-	result.UnmarshalJsonToObject(&resultTarget)
-	assert.Equal(t, models.Target{}, resultTarget)
 }
 
 func TestPutTargetTargetID(t *testing.T) {
