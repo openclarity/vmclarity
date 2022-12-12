@@ -32,7 +32,7 @@ func (s *ServerImpl) GetTargetsTargetIDScanResults(
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 
-	targets, err := s.dbHandler.ScanResultsTable().List(targetID, params)
+	targets, err := s.dbHandler.ScanResultsTable().ListScanResults(targetID, params)
 	if err != nil {
 		// TODO check errors and for status code
 		return sendError(ctx, http.StatusNotFound, oopsMsg)
@@ -53,8 +53,8 @@ func (s *ServerImpl) PostTargetsTargetIDScanResults(
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	newScanResults := database.CreateScanResults(&scanResults)
-	scanResultsSummary, err := s.dbHandler.ScanResultsTable().Create(targetID, newScanResults)
+	newScanResults := database.CreateDBScanResultsFromModel(&scanResults)
+	scanResultsSummary, err := s.dbHandler.ScanResultsTable().CreateScanResults(targetID, newScanResults)
 	if err != nil {
 		// TODO check errors and for status code
 		return sendError(ctx, http.StatusConflict, oopsMsg)
@@ -76,7 +76,7 @@ func (s *ServerImpl) GetTargetsTargetIDScanResultsScanID(
 	var err error
 
 	if params.ScanType == nil {
-		result, err = s.dbHandler.ScanResultsTable().GetSummary(targetID, scanID)
+		result, err = s.dbHandler.ScanResultsTable().GetScanResultsSummary(targetID, scanID)
 		if err != nil {
 			// TODO check errors and for status code
 			return sendError(ctx, http.StatusNotFound, oopsMsg)
@@ -146,8 +146,8 @@ func (s *ServerImpl) PutTargetsTargetIDScanResultsScanID(
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	newScanResults := database.CreateScanResults(&scanResults)
-	scanResultsSummary, err := s.dbHandler.ScanResultsTable().Update(targetID, scanID, newScanResults)
+	newScanResults := database.CreateDBScanResultsFromModel(&scanResults)
+	scanResultsSummary, err := s.dbHandler.ScanResultsTable().UpdateScanResults(targetID, scanID, newScanResults)
 	if err != nil {
 		// TODO check errors and for status code
 		return sendError(ctx, http.StatusConflict, oopsMsg)

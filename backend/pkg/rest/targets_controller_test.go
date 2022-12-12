@@ -21,44 +21,21 @@ import (
 	"testing"
 
 	"github.com/deepmap/oapi-codegen/pkg/testutil"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/backend/pkg/database"
 )
 
-func TestGetTargets(t *testing.T) {
+func TestTargetsController(t *testing.T) {
 	restServer := createTestRestServer(t)
 
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	mockHandler := database.NewMockDatabase(mockCtrl)
-	mockTargetTable := database.NewMockTargetsTable(mockCtrl)
-	mockHandler.EXPECT().TargetsTable().Return(mockTargetTable)
-	mockTargetTable.EXPECT().List(gomock.Any()).Return(&[]models.Target{}, nil)
-	restServer.RegisterHandlers(mockHandler)
-
-	result := testutil.NewRequest().Get(fmt.Sprintf("%s/targets?page=1&pageSize=1", baseURL)).Go(t, restServer.echoServer)
-	assert.Equal(t, http.StatusOK, result.Code())
-}
-
-func TestPostTargets(t *testing.T) {
-	restServer := createTestRestServer(t)
-
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	mockHandler := database.NewMockDatabase(mockCtrl)
-	mockTargetTable := database.NewMockTargetsTable(mockCtrl)
-	mockHandler.EXPECT().TargetsTable().Return(mockTargetTable)
-	mockTargetTable.EXPECT().Create(gomock.Any()).Return(&models.Target{}, nil)
-	restServer.RegisterHandlers(mockHandler)
+	fakeHandler := database.NewFakeDatabase()
+	restServer.RegisterHandlers(fakeHandler)
 
 	targetID := testID
 	targetType := models.TargetType("VM")
-	scanResults := uint32(1)
+	scanResults := []string{}
 	instanceName := "instance"
 	instanceProvider := models.CloudProvider("AWS")
 	location := "eu-central2"
@@ -78,76 +55,70 @@ func TestPostTargets(t *testing.T) {
 		TargetType:  &targetType,
 		TargetInfo:  targetInfo,
 	}
+
+	// Create new target.
 	result := testutil.NewRequest().Post(fmt.Sprintf("%s/targets", baseURL)).WithJsonBody(newTarget).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusCreated, result.Code())
-}
+	got := models.Target{}
+	if err := result.UnmarshalBodyToObject(&got); err != nil {
+		t.Errorf("failed to unmarshal response body")
+	}
+	assert.Equal(t, newTarget, got)
 
-func TestGetTargetTargetID(t *testing.T) {
-	restServer := createTestRestServer(t)
-
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	mockHandler := database.NewMockDatabase(mockCtrl)
-	mockTargetTable := database.NewMockTargetsTable(mockCtrl)
-	mockHandler.EXPECT().TargetsTable().Return(mockTargetTable)
-	mockTargetTable.EXPECT().Get(gomock.Any()).Return(&models.Target{}, nil)
-	restServer.RegisterHandlers(mockHandler)
-
-	result := testutil.NewRequest().Get(fmt.Sprintf("%s/targets/1", baseURL)).Go(t, restServer.echoServer)
+	// List targets
+	result = testutil.NewRequest().Get(fmt.Sprintf("%s/targets?page=1&pageSize=1", baseURL)).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusOK, result.Code())
-}
-
-func TestPutTargetTargetID(t *testing.T) {
-	restServer := createTestRestServer(t)
-
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	mockHandler := database.NewMockDatabase(mockCtrl)
-	mockTargetTable := database.NewMockTargetsTable(mockCtrl)
-	mockHandler.EXPECT().TargetsTable().Return(mockTargetTable)
-	mockTargetTable.EXPECT().Update(gomock.Any(), gomock.Any()).Return(&models.Target{}, nil)
-	restServer.RegisterHandlers(mockHandler)
-
-	targetID := testID
-	targetType := models.TargetType("VM")
-	scanResults := uint32(1)
-	instanceName := "instance"
-	instanceProvider := models.CloudProvider("AWS")
-	location := "eu-central2"
-	vmInfo := models.VMInfo{
-		InstanceName:     &instanceName,
-		InstanceProvider: &instanceProvider,
-		Location:         &location,
+	var gotList []models.Target
+	if err := result.UnmarshalBodyToObject(&gotList); err != nil {
+		t.Errorf("failed to unmarshal response body")
 	}
-	targetInfo := &models.Target_TargetInfo{}
-	if err := targetInfo.FromVMInfo(vmInfo); err != nil {
-		t.Errorf("failed to create target info")
-	}
+	want := []models.Target{newTarget}
+	assert.Equal(t, want, gotList)
 
-	newTarget := models.Target{
-		Id:          &targetID,
-		ScanResults: &scanResults,
-		TargetType:  &targetType,
-		TargetInfo:  targetInfo,
-	}
-	result := testutil.NewRequest().Put(fmt.Sprintf("%s/targets/1", baseURL)).WithJsonBody(newTarget).Go(t, restServer.echoServer)
+	// Get target with ID
+	result = testutil.NewRequest().Get(fmt.Sprintf("%s/targets/%s", baseURL, testID)).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusOK, result.Code())
-}
+	if err := result.UnmarshalBodyToObject(&got); err != nil {
+		t.Errorf("failed to unmarshal response body")
+	}
+	assert.Equal(t, newTarget, got)
 
-func TestDeleteTargetTargetID(t *testing.T) {
-	restServer := createTestRestServer(t)
+	// Get target with wrong ID
+	result = testutil.NewRequest().Get(fmt.Sprintf("%s/targets/wrongID", baseURL)).Go(t, restServer.echoServer)
+	assert.Equal(t, http.StatusNotFound, result.Code())
 
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
+	updatedTarget := newTarget
+	updatedScanResults := []string{"1", "2"}
+	updatedTarget.ScanResults = &updatedScanResults
+	result = testutil.NewRequest().Put(fmt.Sprintf("%s/targets/%s", baseURL, testID)).WithJsonBody(updatedTarget).Go(t, restServer.echoServer)
+	assert.Equal(t, http.StatusOK, result.Code())
 
-	mockHandler := database.NewMockDatabase(mockCtrl)
-	mockTargetTable := database.NewMockTargetsTable(mockCtrl)
-	mockHandler.EXPECT().TargetsTable().Return(mockTargetTable)
-	mockTargetTable.EXPECT().Delete(gomock.Any()).Return(nil)
-	restServer.RegisterHandlers(mockHandler)
+	// Get target with ID after update
+	result = testutil.NewRequest().Get(fmt.Sprintf("%s/targets/%s", baseURL, testID)).Go(t, restServer.echoServer)
+	assert.Equal(t, http.StatusOK, result.Code())
+	if err := result.UnmarshalBodyToObject(&got); err != nil {
+		t.Errorf("failed to unmarshal response body")
+	}
+	assert.Equal(t, updatedTarget, got)
 
-	result := testutil.NewRequest().Delete(fmt.Sprintf("%s/targets/1", baseURL)).Go(t, restServer.echoServer)
+	// Delete target with wrong ID
+	result = testutil.NewRequest().Delete(fmt.Sprintf("%s/targets/wrongID", baseURL)).Go(t, restServer.echoServer)
+	assert.Equal(t, http.StatusNotFound, result.Code())
+
+	// Delete target
+	result = testutil.NewRequest().Delete(fmt.Sprintf("%s/targets/%s", baseURL, testID)).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusNoContent, result.Code())
+
+	// Get target with ID after delete
+	result = testutil.NewRequest().Get(fmt.Sprintf("%s/targets/%s", baseURL, testID)).Go(t, restServer.echoServer)
+	assert.Equal(t, http.StatusNotFound, result.Code())
+
+	// List targets after delete
+	result = testutil.NewRequest().Get(fmt.Sprintf("%s/targets?page=1&pageSize=1", baseURL)).Go(t, restServer.echoServer)
+	assert.Equal(t, http.StatusOK, result.Code())
+	if err := result.UnmarshalBodyToObject(&gotList); err != nil {
+		t.Errorf("failed to unmarshal response body")
+	}
+	want = []models.Target{}
+	assert.Equal(t, want, gotList)
 }

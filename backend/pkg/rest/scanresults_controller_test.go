@@ -21,134 +21,69 @@ import (
 	"testing"
 
 	"github.com/deepmap/oapi-codegen/pkg/testutil"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/backend/pkg/database"
 )
 
-var scanResultsPath = fmt.Sprintf("%s/targets/1/scanResults", baseURL)
+var scanResultsPath = fmt.Sprintf("%s/targets/%s/scanResults", baseURL, testID)
 
-func TestGetTargetsTargetIDScanResults(t *testing.T) {
+func TestScanResultsController(t *testing.T) {
 	restServer := createTestRestServer(t)
 
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
+	fakeHandler := database.NewFakeDatabase()
+	restServer.RegisterHandlers(fakeHandler)
 
-	mockHandler := database.NewMockDatabase(mockCtrl)
-	mockScanResultsTable := database.NewMockScanResultsTable(mockCtrl)
-	mockHandler.EXPECT().ScanResultsTable().Return(mockScanResultsTable)
-	mockScanResultsTable.EXPECT().List(gomock.Any(), gomock.Any()).Return(&[]models.ScanResults{}, nil)
-	restServer.RegisterHandlers(mockHandler)
-
-	result := testutil.NewRequest().Get(fmt.Sprintf("%s?page=1&pageSize=1", scanResultsPath)).Go(t, restServer.echoServer)
-	assert.Equal(t, http.StatusOK, result.Code())
-}
-
-func TestPostTargetsTargetIDScanResults(t *testing.T) {
-	restServer := createTestRestServer(t)
-
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	mockHandler := database.NewMockDatabase(mockCtrl)
-	mockScanResultsTable := database.NewMockScanResultsTable(mockCtrl)
-	mockHandler.EXPECT().ScanResultsTable().Return(mockScanResultsTable)
-	mockScanResultsTable.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&models.ScanResultsSummary{}, nil)
-	restServer.RegisterHandlers(mockHandler)
-
-	scanResID := testID
-	newScanResults := models.ScanResults{
-		Id: &scanResID,
-		Sboms: &models.SbomScan{
-			Packages: &[]models.Package{},
-		},
-		Vulnerabilities: &models.VulnerabilityScan{
-			Vulnerabilities: &[]models.Vulnerability{},
-		},
-		Malwares: &models.MalwareScan{
-			Malwares: &[]models.MalwareInfo{},
-		},
-		Misconfigurations: &models.MisconfigurationScan{
-			Misconfigurations: &[]models.MisconfigurationInfo{},
-		},
-		Secrets: &models.SecretScan{
-			Secrets: &[]models.SecretInfo{},
-		},
-		Rootkits: &models.RootkitScan{
-			Rootkits: &[]models.RootkitInfo{},
-		},
-		Exploits: &models.ExploitScan{
-			Exploits: &[]models.ExploitInfo{},
-		},
+	targetID := testID
+	targetType := models.TargetType("VM")
+	scanResults := []string{}
+	instanceName := "instance"
+	instanceProvider := models.CloudProvider("AWS")
+	location := "eu-central2"
+	vmInfo := models.VMInfo{
+		InstanceName:     &instanceName,
+		InstanceProvider: &instanceProvider,
+		Location:         &location,
 	}
-	result := testutil.NewRequest().Post(scanResultsPath).WithJsonBody(newScanResults).Go(t, restServer.echoServer)
+	targetInfo := &models.Target_TargetInfo{}
+	if err := targetInfo.FromVMInfo(vmInfo); err != nil {
+		t.Errorf("failed to create target info")
+	}
+
+	newTarget := models.Target{
+		Id:          &targetID,
+		ScanResults: &scanResults,
+		TargetType:  &targetType,
+		TargetInfo:  targetInfo,
+	}
+
+	// Create new target.
+	result := testutil.NewRequest().Post(fmt.Sprintf("%s/targets", baseURL)).WithJsonBody(newTarget).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusCreated, result.Code())
-}
+	target := models.Target{}
+	if err := result.UnmarshalBodyToObject(&target); err != nil {
+		t.Errorf("failed to unmarshal response body")
+	}
+	assert.Equal(t, newTarget, target)
 
-func TestGetTargetsTargetIDScanResultsScanID(t *testing.T) {
-	restServer := createTestRestServer(t)
-
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	mockHandler := database.NewMockDatabase(mockCtrl)
-	mockScanResultsTable := database.NewMockScanResultsTable(mockCtrl)
-	mockHandler.EXPECT().ScanResultsTable().Return(mockScanResultsTable).AnyTimes()
-	restServer.RegisterHandlers(mockHandler)
-
-	mockScanResultsTable.EXPECT().GetSummary(gomock.Any(), gomock.Any()).Return(&models.ScanResultsSummary{}, nil)
-	mockScanResultsTable.EXPECT().GetSBOM(gomock.Any(), gomock.Any()).Return(&models.SbomScan{}, nil)
-	mockScanResultsTable.EXPECT().GetVulnerabilities(gomock.Any(), gomock.Any()).Return(&models.VulnerabilityScan{}, nil)
-	mockScanResultsTable.EXPECT().GetMalwares(gomock.Any(), gomock.Any()).Return(&models.MalwareScan{}, nil)
-	mockScanResultsTable.EXPECT().GetRootkits(gomock.Any(), gomock.Any()).Return(&models.RootkitScan{}, nil)
-	mockScanResultsTable.EXPECT().GetSecrets(gomock.Any(), gomock.Any()).Return(&models.SecretScan{}, nil)
-	mockScanResultsTable.EXPECT().GetMisconfigurations(gomock.Any(), gomock.Any()).Return(&models.MisconfigurationScan{}, nil)
-	mockScanResultsTable.EXPECT().GetExploits(gomock.Any(), gomock.Any()).Return(&models.ExploitScan{}, nil)
-
-	result := testutil.NewRequest().Get(fmt.Sprintf("%s/1", scanResultsPath)).Go(t, restServer.echoServer)
-	assert.Equal(t, http.StatusOK, result.Code())
-
-	result = testutil.NewRequest().Get(fmt.Sprintf("%s/1?scanType=SBOM", scanResultsPath)).Go(t, restServer.echoServer)
-	assert.Equal(t, http.StatusOK, result.Code())
-
-	result = testutil.NewRequest().Get(fmt.Sprintf("%s/1?scanType=VULNERABILITY", scanResultsPath)).Go(t, restServer.echoServer)
-	assert.Equal(t, http.StatusOK, result.Code())
-
-	result = testutil.NewRequest().Get(fmt.Sprintf("%s/1?scanType=MALWARE", scanResultsPath)).Go(t, restServer.echoServer)
-	assert.Equal(t, http.StatusOK, result.Code())
-
-	result = testutil.NewRequest().Get(fmt.Sprintf("%s/1?scanType=ROOTKIT", scanResultsPath)).Go(t, restServer.echoServer)
-	assert.Equal(t, http.StatusOK, result.Code())
-
-	result = testutil.NewRequest().Get(fmt.Sprintf("%s/1?scanType=SECRET", scanResultsPath)).Go(t, restServer.echoServer)
-	assert.Equal(t, http.StatusOK, result.Code())
-
-	result = testutil.NewRequest().Get(fmt.Sprintf("%s/1?scanType=MISCONFIGURATION", scanResultsPath)).Go(t, restServer.echoServer)
-	assert.Equal(t, http.StatusOK, result.Code())
-
-	result = testutil.NewRequest().Get(fmt.Sprintf("%s/1?scanType=EXPLOIT", scanResultsPath)).Go(t, restServer.echoServer)
-	assert.Equal(t, http.StatusOK, result.Code())
-}
-
-func TestPutTargetsTargetIDScanResultsScanID(t *testing.T) {
-	restServer := createTestRestServer(t)
-
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	mockHandler := database.NewMockDatabase(mockCtrl)
-	mockScanResultsTable := database.NewMockScanResultsTable(mockCtrl)
-	mockHandler.EXPECT().ScanResultsTable().Return(mockScanResultsTable)
-	mockScanResultsTable.EXPECT().Update(gomock.Any(), gomock.Any(), gomock.Any()).Return(&models.ScanResultsSummary{}, nil)
-	restServer.RegisterHandlers(mockHandler)
-
+	packageID := "packageID"
+	packageName := "testPackage"
+	packageVersion := "testVersion"
 	scanResID := testID
 	newScanResults := models.ScanResults{
 		Id: &scanResID,
 		Sboms: &models.SbomScan{
-			Packages: &[]models.Package{},
+			Packages: &[]models.Package{
+				{
+					Id: &packageID,
+					PackageInfo: &models.PackageInfo{
+						Id:             &packageID,
+						PackageName:    &packageName,
+						PackageVersion: &packageVersion,
+					},
+				},
+			},
 		},
 		Vulnerabilities: &models.VulnerabilityScan{
 			Vulnerabilities: &[]models.Vulnerability{},
@@ -169,6 +104,74 @@ func TestPutTargetsTargetIDScanResultsScanID(t *testing.T) {
 			Exploits: &[]models.ExploitInfo{},
 		},
 	}
-	result := testutil.NewRequest().Put(fmt.Sprintf("%s/1", scanResultsPath)).WithJsonBody(newScanResults).Go(t, restServer.echoServer)
+
+	// POST new scan results to target
+	result = testutil.NewRequest().Post(scanResultsPath).WithJsonBody(newScanResults).Go(t, restServer.echoServer)
+	assert.Equal(t, http.StatusCreated, result.Code())
+	got := models.ScanResultsSummary{}
+	if err := result.UnmarshalBodyToObject(&got); err != nil {
+		t.Errorf("failed to unmarshal response body")
+	}
+	want := database.CreateModelScanResultsSummaryFromDB(database.CreateDBScanResultsFromModel(&newScanResults))
+	assert.Equal(t, *want, got)
+
+	// Get scan results summary with
+	result = testutil.NewRequest().Get(fmt.Sprintf("%s?page=1&pageSize=1", scanResultsPath)).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusOK, result.Code())
+	var gotList []models.ScanResults
+	if err := result.UnmarshalBodyToObject(&gotList); err != nil {
+		t.Errorf("failed to unmarshal response body")
+	}
+	wantList := []models.ScanResults{newScanResults}
+	assert.Equal(t, wantList, gotList)
+
+	// Get scanResultsSummary with ID success
+	result = testutil.NewRequest().Get(fmt.Sprintf("%s/%s", scanResultsPath, testID)).Go(t, restServer.echoServer)
+	assert.Equal(t, http.StatusOK, result.Code())
+	if err := result.UnmarshalBodyToObject(&got); err != nil {
+		t.Errorf("failed to unmarshal response body")
+	}
+	assert.Equal(t, *want, got)
+
+	// Get scanResultsSummary with wrong ID
+	result = testutil.NewRequest().Get(fmt.Sprintf("%s/wrongID", scanResultsPath)).Go(t, restServer.echoServer)
+	assert.Equal(t, http.StatusNotFound, result.Code())
+
+	// Get Sbom scan results
+	result = testutil.NewRequest().Get(fmt.Sprintf("%s/%s?scanType=SBOM", scanResultsPath, testID)).Go(t, restServer.echoServer)
+	assert.Equal(t, http.StatusOK, result.Code())
+	var sbomRes models.SbomScan
+	if err := result.UnmarshalBodyToObject(&sbomRes); err != nil {
+		t.Errorf("failed to unmarshal response body")
+	}
+	assert.Equal(t, *newScanResults.Sboms, sbomRes)
+
+	// Update scan results
+	vulnerabilityID := "vulnerabilityID"
+	vulnerabilityName := "testVulName"
+	vulnerabilityDesc := "Description"
+	updatedScanResults := newScanResults
+	updatedScanResults.Vulnerabilities = &models.VulnerabilityScan{
+		Vulnerabilities: &[]models.Vulnerability{
+			{
+				Id: &vulnerabilityID,
+				VulnerabilityInfo: &models.VulnerabilityInfo{
+					Id:                &vulnerabilityID,
+					VulnerabilityName: &vulnerabilityName,
+					Description:       &vulnerabilityDesc,
+				},
+			},
+		},
+	}
+	result = testutil.NewRequest().Put(fmt.Sprintf("%s/%s", scanResultsPath, testID)).WithJsonBody(updatedScanResults).Go(t, restServer.echoServer)
+	assert.Equal(t, http.StatusOK, result.Code())
+
+	// Get Vulnerability scan results
+	result = testutil.NewRequest().Get(fmt.Sprintf("%s/%s?scanType=VULNERABILITY", scanResultsPath, testID)).Go(t, restServer.echoServer)
+	assert.Equal(t, http.StatusOK, result.Code())
+	var vulRes models.VulnerabilityScan
+	if err := result.UnmarshalBodyToObject(&vulRes); err != nil {
+		t.Errorf("failed to unmarshal response body")
+	}
+	assert.Equal(t, *updatedScanResults.Vulnerabilities, vulRes)
 }

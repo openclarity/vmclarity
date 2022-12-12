@@ -282,8 +282,9 @@ components:
             - $ref: '#/components/schemas/PodInfo'
             - $ref: '#/components/schemas/DirInfo'
         scanResults:
-          type: integer
-          format: uint32
+          type: array
+          items:
+            type: string
 
     ScanResults:
       type: object

@@ -25,16 +25,18 @@ import (
 
 // TODO after db design.
 type Target struct {
-	ID string
+	ID          string
+	ScanResults []string
+	TargetInfo  *models.Target_TargetInfo
+	TargetType  models.TargetType
 }
 
-//go:generate $GOPATH/bin/mockgen --build_flags=--mod=mod -destination=./mock_targets.go -package=database github.com/openclarity/vmclarity/backend/pkg/database TargetsTable
 type TargetsTable interface {
-	List(params models.GetTargetsParams) (*[]models.Target, error)
-	Get(targetID models.TargetID) (*models.Target, error)
-	Create(target *Target) (*models.Target, error)
-	Update(target *Target, targetID models.TargetID) (*models.Target, error)
-	Delete(targetID models.TargetID) error
+	ListTargets(params models.GetTargetsParams) (*[]models.Target, error)
+	GetTarget(targetID models.TargetID) (*models.Target, error)
+	CreateTarget(target *Target) (*models.Target, error)
+	UpdateTarget(target *Target, targetID models.TargetID) (*models.Target, error)
+	DeleteTarget(targetID models.TargetID) error
 }
 
 type TargetsTableHandler struct {
@@ -47,29 +49,41 @@ func (db *Handler) TargetsTable() TargetsTable {
 	}
 }
 
-func (t *TargetsTableHandler) List(params models.GetTargetsParams) (*[]models.Target, error) {
+func (t *TargetsTableHandler) ListTargets(params models.GetTargetsParams) (*[]models.Target, error) {
 	return &[]models.Target{}, fmt.Errorf("not implemented")
 }
 
-func (t *TargetsTableHandler) Get(targetID models.TargetID) (*models.Target, error) {
+func (t *TargetsTableHandler) GetTarget(targetID models.TargetID) (*models.Target, error) {
 	return &models.Target{}, fmt.Errorf("not implemented")
 }
 
-func (t *TargetsTableHandler) Create(target *Target) (*models.Target, error) {
+func (t *TargetsTableHandler) CreateTarget(target *Target) (*models.Target, error) {
 	return &models.Target{}, fmt.Errorf("not implemented")
 }
 
-func (t *TargetsTableHandler) Update(target *Target, targetID models.TargetID) (*models.Target, error) {
+func (t *TargetsTableHandler) UpdateTarget(target *Target, targetID models.TargetID) (*models.Target, error) {
 	return &models.Target{}, fmt.Errorf("not implemented")
 }
 
-func (t *TargetsTableHandler) Delete(targetID models.TargetID) error {
+func (t *TargetsTableHandler) DeleteTarget(targetID models.TargetID) error {
 	return fmt.Errorf("not implemented")
 }
 
 // TODO after db design.
-func CreateTarget(target *models.Target) *Target {
+func CreateDBTargetFromModel(target *models.Target) *Target {
 	return &Target{
-		ID: *target.Id,
+		ID:          *target.Id,
+		ScanResults: *target.ScanResults,
+		TargetInfo:  target.TargetInfo,
+		TargetType:  *target.TargetType,
+	}
+}
+
+func CreateModelTargetFromDB(target *Target) *models.Target {
+	return &models.Target{
+		Id:          &target.ID,
+		ScanResults: &target.ScanResults,
+		TargetInfo:  target.TargetInfo,
+		TargetType:  &target.TargetType,
 	}
 }

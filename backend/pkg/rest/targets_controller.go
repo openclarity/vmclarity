@@ -28,7 +28,7 @@ func (s *ServerImpl) GetTargets(ctx echo.Context, params models.GetTargetsParams
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 
-	targets, err := s.dbHandler.TargetsTable().List(params)
+	targets, err := s.dbHandler.TargetsTable().ListTargets(params)
 	if err != nil {
 		// TODO check errors and for status code
 		return sendError(ctx, http.StatusNotFound, oopsMsg)
@@ -46,8 +46,8 @@ func (s *ServerImpl) PostTargets(ctx echo.Context) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	newTarget := database.CreateTarget(&target)
-	createdTarget, err := s.dbHandler.TargetsTable().Create(newTarget)
+	newTarget := database.CreateDBTargetFromModel(&target)
+	createdTarget, err := s.dbHandler.TargetsTable().CreateTarget(newTarget)
 	if err != nil {
 		// TODO check errors and for status code
 		return sendError(ctx, http.StatusConflict, oopsMsg)
@@ -59,7 +59,7 @@ func (s *ServerImpl) GetTargetsTargetID(ctx echo.Context, targetID models.Target
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 
-	targets, err := s.dbHandler.TargetsTable().Get(targetID)
+	targets, err := s.dbHandler.TargetsTable().GetTarget(targetID)
 	if err != nil {
 		// TODO check errors and for status code
 		return sendError(ctx, http.StatusNotFound, oopsMsg)
@@ -77,8 +77,8 @@ func (s *ServerImpl) PutTargetsTargetID(ctx echo.Context, targetID models.Target
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	newTarget := database.CreateTarget(&target)
-	updatedTarget, err := s.dbHandler.TargetsTable().Update(newTarget, targetID)
+	newTarget := database.CreateDBTargetFromModel(&target)
+	updatedTarget, err := s.dbHandler.TargetsTable().UpdateTarget(newTarget, targetID)
 	if err != nil {
 		// TODO check errors and for status code
 		return sendError(ctx, http.StatusInternalServerError, oopsMsg)
@@ -90,7 +90,7 @@ func (s *ServerImpl) DeleteTargetsTargetID(ctx echo.Context, targetID models.Tar
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	err := s.dbHandler.TargetsTable().Delete(targetID)
+	err := s.dbHandler.TargetsTable().DeleteTarget(targetID)
 	if err != nil {
 		// TODO check errors and for status code
 		return sendError(ctx, http.StatusNotFound, oopsMsg)
