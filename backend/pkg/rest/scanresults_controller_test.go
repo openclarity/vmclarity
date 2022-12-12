@@ -115,7 +115,7 @@ func TestScanResultsController(t *testing.T) {
 	want := database.CreateModelScanResultsSummaryFromDB(database.CreateDBScanResultsFromModel(&newScanResults))
 	assert.Equal(t, *want, got)
 
-	// Get scan results summary with
+	// Get scan results for specified target
 	result = testutil.NewRequest().Get(fmt.Sprintf("%s?page=1&pageSize=1", scanResultsPath)).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusOK, result.Code())
 	var gotList []models.ScanResults
@@ -125,7 +125,7 @@ func TestScanResultsController(t *testing.T) {
 	wantList := []models.ScanResults{newScanResults}
 	assert.Equal(t, wantList, gotList)
 
-	// Get scanResultsSummary with ID success
+	// Get scanResultsSummary with ID
 	result = testutil.NewRequest().Get(fmt.Sprintf("%s/%s", scanResultsPath, testID)).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusOK, result.Code())
 	if err := result.UnmarshalBodyToObject(&got); err != nil {
@@ -166,7 +166,7 @@ func TestScanResultsController(t *testing.T) {
 	result = testutil.NewRequest().Put(fmt.Sprintf("%s/%s", scanResultsPath, testID)).WithJsonBody(updatedScanResults).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusOK, result.Code())
 
-	// Get Vulnerability scan results
+	// Get specified Vulnerability scan results
 	result = testutil.NewRequest().Get(fmt.Sprintf("%s/%s?scanType=VULNERABILITY", scanResultsPath, testID)).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusOK, result.Code())
 	var vulRes models.VulnerabilityScan

@@ -48,7 +48,7 @@ func (ft *FakeTargetsTable) CreateTarget(target *Target) (*models.Target, error)
 func (ft *FakeTargetsTable) UpdateTarget(target *Target, targetID models.TargetID) (*models.Target, error) {
 	targets := *ft.targets
 	if _, ok := targets[targetID]; !ok {
-		return nil, fmt.Errorf("target not exists with ID: %s", targetID)
+		return nil, fmt.Errorf("target not exist with ID: %s", targetID)
 	}
 	targets[targetID] = target
 	ft.targets = &targets

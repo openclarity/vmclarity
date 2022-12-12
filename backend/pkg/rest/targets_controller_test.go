@@ -56,7 +56,7 @@ func TestTargetsController(t *testing.T) {
 		TargetInfo:  targetInfo,
 	}
 
-	// Create new target.
+	// Create new target
 	result := testutil.NewRequest().Post(fmt.Sprintf("%s/targets", baseURL)).WithJsonBody(newTarget).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusCreated, result.Code())
 	got := models.Target{}
