@@ -16,9 +16,16 @@
 package secrets
 
 type Config struct {
-	Enabled      bool     `yaml:"enabled" mapstructure:"enabled"`
-	ScannersList []string `yaml:"scanners_list" mapstructure:"scanners_list"`
-	Inputs       []Inputs `yaml:"inputs" mapstructure:"inputs"`
+	Enabled        bool            `yaml:"enabled" mapstructure:"enabled"`
+	ScannersList   []string        `yaml:"scanners_list" mapstructure:"scanners_list"`
+	Inputs         []Inputs        `yaml:"inputs" mapstructure:"inputs"`
+	GitleaksConfig *GitleaksConfig `yaml:"gitleaks_config" mapstructure:"gitleaks_config"`
+}
+
+type GitleaksConfig struct {
+	BinaryPath string `yaml:"binary_path" mapstructure:"binary_path"`
+	Source     string `yaml:"source" mapstructure:"source"`
+	ReportPath string `yaml:"report_path" mapstructure:"report_path"`
 }
 
 type Inputs struct {

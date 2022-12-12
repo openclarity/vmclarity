@@ -16,6 +16,13 @@
 package secrets
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"os"
+	"os/exec"
+
 	log "github.com/sirupsen/logrus"
 
 	_interface "github.com/openclarity/vmclarity/shared/pkg/families/interface"
@@ -28,10 +35,45 @@ type Secrets struct {
 }
 
 func (s Secrets) Run(res *results.Results) (_interface.IsResults, error) {
-	//TODO implement me
 	s.logger.Info("Secrets Run...")
+
+	// validate that gitleaks binary exists
+	if _, err := os.Stat(s.conf.GitleaksConfig.BinaryPath); err != nil {
+		return nil, fmt.Errorf("failed to find binary in %v: %v", s.conf.GitleaksConfig.BinaryPath, err)
+	}
+
+	// ./gitleaks detect -v --source=<source> --no-git -r <report-path> -f json --exit-code 0
+	cmd := exec.Command(s.conf.GitleaksConfig.BinaryPath, "detect", fmt.Sprintf("--source=%v", s.conf.GitleaksConfig.Source), "--no-git", "-r", s.conf.GitleaksConfig.ReportPath, "-f", "json", "--exit-code", "0")
+	_, err := runCommand(cmd)
+	if err != nil {
+		return nil, fmt.Errorf("failed to run gitleaks command: %v", err)
+	}
+	out, err := os.ReadFile(s.conf.GitleaksConfig.ReportPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read report file from path: %v. %v", s.conf.GitleaksConfig.ReportPath, err)
+	}
+
+	log.Infof("gitleaks results: %s", out)
+
+	var retResults Results
+	if err := json.Unmarshal(out, &retResults.Findings); err != nil {
+		return nil, err
+	}
+
 	s.logger.Info("Secrets Done...")
-	return &Results{}, nil
+	return &retResults, nil
+}
+
+func runCommand(cmd *exec.Cmd) ([]byte, error) {
+	//cmd := exec.Command(name, arg)
+	var outb, errb bytes.Buffer
+	cmd.Stdout = &outb
+	cmd.Stderr = &errb
+	if err := cmd.Run(); err != nil {
+		err = errors.New(fmt.Sprintf("%v. %v", err, errb.String()))
+		return nil, fmt.Errorf("failed to run command: %v. %v", cmd.String(), err)
+	}
+	return outb.Bytes(), nil
 }
 
 // ensure types implement the requisite interfaces

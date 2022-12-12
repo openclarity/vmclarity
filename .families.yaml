@@ -1,5 +1,5 @@
 sbom:
-  enabled: true
+  enabled: false
   analyzers_list:
     - "syft"
     - "gomod"
@@ -26,7 +26,7 @@ sbom:
         token: "token"
 
 vulnerabilities:
-  enabled: true
+  enabled: false
   scanners_list:
     - "grype"
   inputs:
@@ -63,9 +63,9 @@ secrets:
   inputs:
     - input: "/dir"
       input_type: "dir"
-    - input: "/rootfs"
-      input_type: "rootfs"
+#    - input: "/rootfs"
+#      input_type: "rootfs"
   gitleaks_config:
-    foo: "bar"
-
-
+    binary_path: "/usr/local/bin/gitleaks"
+    source: "/Users/erezf/go/src/wwwin-github.cisco.com/eti/agent"
+    report_path: "/tmp/report.json"
