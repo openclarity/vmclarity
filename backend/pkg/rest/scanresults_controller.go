@@ -69,9 +69,6 @@ func (s *ServerImpl) GetTargetsTargetIDScanResultsScanID(
 	scanID models.ScanID,
 	params models.GetTargetsTargetIDScanResultsScanIDParams,
 ) error {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
-
 	var result interface{}
 	var err error
 
@@ -142,9 +139,6 @@ func (s *ServerImpl) PutTargetsTargetIDScanResultsScanID(
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, err.Error())
 	}
-
-	s.lock.Lock()
-	defer s.lock.Unlock()
 
 	newScanResults := database.CreateDBScanResultsFromModel(&scanResults)
 	scanResultsSummary, err := s.dbHandler.ScanResultsTable().UpdateScanResults(targetID, scanID, newScanResults)

@@ -25,9 +25,6 @@ import (
 )
 
 func (s *ServerImpl) GetTargets(ctx echo.Context, params models.GetTargetsParams) error {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
-
 	targets, err := s.dbHandler.TargetsTable().ListTargets(params)
 	if err != nil {
 		// TODO check errors and for status code
@@ -43,9 +40,6 @@ func (s *ServerImpl) PostTargets(ctx echo.Context) error {
 		return sendError(ctx, http.StatusBadRequest, err.Error())
 	}
 
-	s.lock.Lock()
-	defer s.lock.Unlock()
-
 	newTarget := database.CreateDBTargetFromModel(&target)
 	createdTarget, err := s.dbHandler.TargetsTable().CreateTarget(newTarget)
 	if err != nil {
@@ -56,9 +50,6 @@ func (s *ServerImpl) PostTargets(ctx echo.Context) error {
 }
 
 func (s *ServerImpl) GetTargetsTargetID(ctx echo.Context, targetID models.TargetID) error {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
-
 	targets, err := s.dbHandler.TargetsTable().GetTarget(targetID)
 	if err != nil {
 		// TODO check errors and for status code
@@ -74,9 +65,6 @@ func (s *ServerImpl) PutTargetsTargetID(ctx echo.Context, targetID models.Target
 		return sendError(ctx, http.StatusBadRequest, err.Error())
 	}
 
-	s.lock.Lock()
-	defer s.lock.Unlock()
-
 	newTarget := database.CreateDBTargetFromModel(&target)
 	updatedTarget, err := s.dbHandler.TargetsTable().UpdateTarget(newTarget, targetID)
 	if err != nil {
@@ -87,9 +75,6 @@ func (s *ServerImpl) PutTargetsTargetID(ctx echo.Context, targetID models.Target
 }
 
 func (s *ServerImpl) DeleteTargetsTargetID(ctx echo.Context, targetID models.TargetID) error {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-
 	err := s.dbHandler.TargetsTable().DeleteTarget(targetID)
 	if err != nil {
 		// TODO check errors and for status code
