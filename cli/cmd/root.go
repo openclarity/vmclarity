@@ -19,8 +19,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/ghodss/yaml"
+	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -78,6 +80,19 @@ var rootCmd = &cobra.Command{
 			}
 		}
 
+		if config.Secrets.Enabled {
+			secretsResults, err := results.GetResult[*secrets.Results](res)
+			if err != nil {
+				return fmt.Errorf("failed to get secrets results: %v", err)
+			}
+
+			bytes, _ := json.Marshal(secretsResults)
+			err = Output(bytes, "secrets")
+			if err != nil {
+				return fmt.Errorf("failed to output secrets results: %v", err)
+			}
+		}
+
 		return nil
 	},
 }
@@ -111,13 +126,14 @@ func initConfig() {
 	} else {
 		// Find home directory.
 		home, err := os.UserHomeDir()
+		configPath := filepath.Join(home, ".vmclarity")
 		cobra.CheckErr(err)
 
 		// Search config in home directory OR current directory with name ".families" (without extension).
-		viper.AddConfigPath(home)
+		viper.AddConfigPath(configPath)
 		viper.AddConfigPath(".")
 		viper.SetConfigType("yaml")
-		viper.SetConfigName(".families")
+		viper.SetConfigName("config")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match

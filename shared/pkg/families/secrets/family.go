@@ -16,17 +16,16 @@
 package secrets
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"os"
-	"os/exec"
 
+	"github.com/openclarity/kubeclarity/shared/pkg/job_manager"
+	"github.com/openclarity/kubeclarity/shared/pkg/utils"
+	"github.com/openclarity/vmclarity/shared/pkg/families/secrets/common"
+	"github.com/openclarity/vmclarity/shared/pkg/families/secrets/job"
 	log "github.com/sirupsen/logrus"
 
 	_interface "github.com/openclarity/vmclarity/shared/pkg/families/interface"
-	"github.com/openclarity/vmclarity/shared/pkg/families/results"
+	familiesresults "github.com/openclarity/vmclarity/shared/pkg/families/results"
 )
 
 type Secrets struct {
@@ -34,46 +33,29 @@ type Secrets struct {
 	logger *log.Entry
 }
 
-func (s Secrets) Run(res *results.Results) (_interface.IsResults, error) {
+func (s Secrets) Run(res *familiesresults.Results) (_interface.IsResults, error) {
 	s.logger.Info("Secrets Run...")
 
-	// validate that gitleaks binary exists
-	if _, err := os.Stat(s.conf.GitleaksConfig.BinaryPath); err != nil {
-		return nil, fmt.Errorf("failed to find binary in %v: %v", s.conf.GitleaksConfig.BinaryPath, err)
-	}
+	manager := job_manager.New(s.conf.ScannersList, s.conf.SecretsConfig, s.logger, job.Factory)
+	mergedResults := NewMergedResults()
 
-	// ./gitleaks detect -v --source=<source> --no-git -r <report-path> -f json --exit-code 0
-	cmd := exec.Command(s.conf.GitleaksConfig.BinaryPath, "detect", fmt.Sprintf("--source=%v", s.conf.GitleaksConfig.Source), "--no-git", "-r", s.conf.GitleaksConfig.ReportPath, "-f", "json", "--exit-code", "0")
-	_, err := runCommand(cmd)
-	if err != nil {
-		return nil, fmt.Errorf("failed to run gitleaks command: %v", err)
-	}
-	out, err := os.ReadFile(s.conf.GitleaksConfig.ReportPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read report file from path: %v. %v", s.conf.GitleaksConfig.ReportPath, err)
-	}
+	for _, input := range s.conf.Inputs {
+		results, err := manager.Run(utils.SourceType(input.InputType), input.Input)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan input %q for secrets: %v", s.conf.Inputs[0].Input, err)
+		}
 
-	log.Infof("gitleaks results: %s", out)
-
-	var retResults Results
-	if err := json.Unmarshal(out, &retResults.Findings); err != nil {
-		return nil, err
+		// Merge results.
+		for name, result := range results {
+			s.logger.Infof("Merging result from %q", name)
+			mergedResults = mergedResults.Merge(result.(*common.Results)) // nolint:forcetypeassert
+		}
 	}
 
 	s.logger.Info("Secrets Done...")
-	return &retResults, nil
-}
-
-func runCommand(cmd *exec.Cmd) ([]byte, error) {
-	//cmd := exec.Command(name, arg)
-	var outb, errb bytes.Buffer
-	cmd.Stdout = &outb
-	cmd.Stderr = &errb
-	if err := cmd.Run(); err != nil {
-		err = errors.New(fmt.Sprintf("%v. %v", err, errb.String()))
-		return nil, fmt.Errorf("failed to run command: %v. %v", cmd.String(), err)
-	}
-	return outb.Bytes(), nil
+	return &Results{
+		MergedResults: mergedResults,
+	}, nil
 }
 
 // ensure types implement the requisite interfaces

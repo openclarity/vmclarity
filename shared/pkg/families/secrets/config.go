@@ -15,20 +15,22 @@
 
 package secrets
 
+import "github.com/openclarity/vmclarity/shared/pkg/families/secrets/gitleaks"
+
 type Config struct {
-	Enabled        bool            `yaml:"enabled" mapstructure:"enabled"`
-	ScannersList   []string        `yaml:"scanners_list" mapstructure:"scanners_list"`
-	Inputs         []Inputs        `yaml:"inputs" mapstructure:"inputs"`
-	GitleaksConfig *GitleaksConfig `yaml:"gitleaks_config" mapstructure:"gitleaks_config"`
+	Enabled       bool           `yaml:"enabled" mapstructure:"enabled"`
+	ScannersList  []string       `yaml:"scanners_list" mapstructure:"scanners_list"`
+	Inputs        []Inputs         `yaml:"inputs" mapstructure:"inputs"`
+	ScannersConfig *ScannersConfig `yaml:"scanners_config" mapstructure:"scanners_config"`
 }
 
-type GitleaksConfig struct {
-	BinaryPath string `yaml:"binary_path" mapstructure:"binary_path"`
-	Source     string `yaml:"source" mapstructure:"source"`
-	ReportPath string `yaml:"report_path" mapstructure:"report_path"`
+type ScannersConfig struct {
+	Gitleaks gitleaks.Config `yaml:"gitleaks" mapstructure:"gitleaks"`
 }
 
 type Inputs struct {
 	Input     string `yaml:"input" mapstructure:"input"`
 	InputType string `yaml:"input_type" mapstructure:"input_type"`
 }
+
+func (ScannersConfig) IsConfig() {}

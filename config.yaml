@@ -62,10 +62,7 @@ secrets:
     - "gitleaks"
   inputs:
     - input: "/dir"
-      input_type: "dir"
-#    - input: "/rootfs"
-#      input_type: "rootfs"
-  gitleaks_config:
-    binary_path: "/usr/local/bin/gitleaks"
-    source: "/Users/erezf/go/src/wwwin-github.cisco.com/eti/agent"
-    report_path: "/tmp/report.json"
+      input_type: ""
+  scanners_config:
+    gitleaks:
+      binary_path: "/usr/local/bin/gitleaks"
