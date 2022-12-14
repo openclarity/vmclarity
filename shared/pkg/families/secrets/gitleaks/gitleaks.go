@@ -1,12 +1,12 @@
 package gitleaks
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
 
+	sharedutils "github.com/openclarity/vmclarity/shared/pkg/utils"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/kubeclarity/shared/pkg/job_manager"
@@ -36,6 +36,9 @@ func New(c job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.
 }
 
 func (a *Scanner) Run(sourceType utils.SourceType, userInput string) error {
+	if sourceType != utils.DIR {
+		return fmt.Errorf("invalid source type for gitleaks: %v", sourceType)
+	}
 	go func() {
 		retResults := common.Results{
 			Source:      userInput,
@@ -50,7 +53,7 @@ func (a *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 		// ./gitleaks detect --source=<source> --no-git -r <report-path> -f json --exit-code 0
 		cmd := exec.Command(a.config.BinaryPath, "detect", fmt.Sprintf("--source=%v", userInput), "--no-git", "-r", reportPath, "-f", "json", "--exit-code", "0")
 		a.logger.Infof("running gitleaks command: %v", cmd.String())
-		_, err := runCommand(cmd)
+		_, err := sharedutils.RunCommand(cmd)
 		if err != nil {
 			a.sendResults(retResults, fmt.Errorf("failed to run gitleaks command: %v", err))
 			return
@@ -58,7 +61,7 @@ func (a *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 
 		out, err := os.ReadFile(reportPath)
 		if err != nil {
-			a.sendResults(retResults, fmt.Errorf("failed to read report file from path: %v. %v", reportPath, err))
+			a.sendResults(retResults, fmt.Errorf("failed to read report file from path %v: %v", reportPath, err))
 			return
 		}
 		defer func() {
@@ -85,14 +88,4 @@ func (a *Scanner) sendResults(results common.Results, err error) {
 	default:
 		a.logger.Error("Failed to send results on channel")
 	}
-}
-
-func runCommand(cmd *exec.Cmd) ([]byte, error) {
-	var outb, errb bytes.Buffer
-	cmd.Stdout = &outb
-	cmd.Stderr = &errb
-	if err := cmd.Run(); err != nil {
-		return nil, fmt.Errorf("failed to run command %v, error: %w, stdout: %v, stderr: %v", cmd.String(), err, outb.String(), errb.String())
-	}
-	return outb.Bytes(), nil
 }

@@ -16,7 +16,7 @@
 package secrets
 
 type Results struct {
-	MergedResults *MergedResults
+	MergedResults *MergedResults `yaml:"merged_results"`
 }
 
 func (*Results) IsResults() {}

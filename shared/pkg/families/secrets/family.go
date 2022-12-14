@@ -42,7 +42,7 @@ func (s Secrets) Run(res *familiesresults.Results) (familiesinterface.IsResults,
 	for _, input := range s.conf.Inputs {
 		results, err := manager.Run(utils.SourceType(input.InputType), input.Input)
 		if err != nil {
-			return nil, fmt.Errorf("failed to scan input %q for secrets: %v", s.conf.Inputs[0].Input, err)
+			return nil, fmt.Errorf("failed to scan input %q for secrets: %v", input.Input, err)
 		}
 
 		// Merge results.
