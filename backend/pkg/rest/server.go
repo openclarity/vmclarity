@@ -19,7 +19,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/deepmap/oapi-codegen/pkg/middleware"
@@ -42,7 +41,6 @@ var oopsMsg = "oops"
 
 type ServerImpl struct {
 	dbHandler database.Database
-	lock      sync.RWMutex
 }
 
 type Server struct {

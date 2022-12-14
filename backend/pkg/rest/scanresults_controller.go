@@ -29,9 +29,6 @@ func (s *ServerImpl) GetTargetsTargetIDScanResults(
 	targetID models.TargetID,
 	params models.GetTargetsTargetIDScanResultsParams,
 ) error {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
-
 	targets, err := s.dbHandler.ScanResultsTable().ListScanResults(targetID, params)
 	if err != nil {
 		// TODO check errors and for status code
@@ -49,9 +46,6 @@ func (s *ServerImpl) PostTargetsTargetIDScanResults(
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, err.Error())
 	}
-
-	s.lock.Lock()
-	defer s.lock.Unlock()
 
 	newScanResults := database.CreateDBScanResultsFromModel(&scanResults)
 	scanResultsSummary, err := s.dbHandler.ScanResultsTable().CreateScanResults(targetID, newScanResults)
