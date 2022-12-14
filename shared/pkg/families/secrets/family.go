@@ -18,14 +18,14 @@ package secrets
 import (
 	"fmt"
 
-	"github.com/openclarity/kubeclarity/shared/pkg/job_manager"
-	"github.com/openclarity/kubeclarity/shared/pkg/utils"
-	"github.com/openclarity/vmclarity/shared/pkg/families/secrets/common"
-	"github.com/openclarity/vmclarity/shared/pkg/families/secrets/job"
 	log "github.com/sirupsen/logrus"
 
-	_interface "github.com/openclarity/vmclarity/shared/pkg/families/interface"
+	"github.com/openclarity/kubeclarity/shared/pkg/job_manager"
+	"github.com/openclarity/kubeclarity/shared/pkg/utils"
+	familiesinterface "github.com/openclarity/vmclarity/shared/pkg/families/interface"
 	familiesresults "github.com/openclarity/vmclarity/shared/pkg/families/results"
+	"github.com/openclarity/vmclarity/shared/pkg/families/secrets/common"
+	"github.com/openclarity/vmclarity/shared/pkg/families/secrets/job"
 )
 
 type Secrets struct {
@@ -33,10 +33,10 @@ type Secrets struct {
 	logger *log.Entry
 }
 
-func (s Secrets) Run(res *familiesresults.Results) (_interface.IsResults, error) {
+func (s Secrets) Run(res *familiesresults.Results) (familiesinterface.IsResults, error) {
 	s.logger.Info("Secrets Run...")
 
-	manager := job_manager.New(s.conf.ScannersList, s.conf.SecretsConfig, s.logger, job.Factory)
+	manager := job_manager.New(s.conf.ScannersList, s.conf.ScannersConfig, s.logger, job.Factory)
 	mergedResults := NewMergedResults()
 
 	for _, input := range s.conf.Inputs {
@@ -59,7 +59,7 @@ func (s Secrets) Run(res *familiesresults.Results) (_interface.IsResults, error)
 }
 
 // ensure types implement the requisite interfaces
-var _ _interface.Family = &Secrets{}
+var _ familiesinterface.Family = &Secrets{}
 
 func New(logger *log.Entry, conf Config) *Secrets {
 	return &Secrets{
