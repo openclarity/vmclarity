@@ -61,64 +61,14 @@ func (s *ServerImpl) GetTargetsTargetIDScanResultsScanID(
 	ctx echo.Context,
 	targetID models.TargetID,
 	scanID models.ScanID,
-	params models.GetTargetsTargetIDScanResultsScanIDParams,
 ) error {
 	var result interface{}
 	var err error
 
-	if params.ScanType == nil {
-		result, err = s.dbHandler.ScanResultsTable().GetScanResultsSummary(targetID, scanID)
-		if err != nil {
-			// TODO check errors for status code
-			return sendError(ctx, http.StatusNotFound, err.Error())
-		}
-		return sendResponse(ctx, http.StatusOK, result)
-	}
-	switch *params.ScanType {
-	case models.SBOM:
-		result, err = s.dbHandler.ScanResultsTable().GetSBOM(targetID, scanID)
-		if err != nil {
-			// TODO check errors and for status code
-			return sendError(ctx, http.StatusNotFound, oopsMsg)
-		}
-	case models.VULNERABILITY:
-		result, err = s.dbHandler.ScanResultsTable().GetVulnerabilities(targetID, scanID)
-		if err != nil {
-			// TODO check errors and for status code
-			return sendError(ctx, http.StatusNotFound, oopsMsg)
-		}
-	case models.MALWARE:
-		result, err = s.dbHandler.ScanResultsTable().GetMalwares(targetID, scanID)
-		if err != nil {
-			// TODO check errors and for status code
-			return sendError(ctx, http.StatusNotFound, oopsMsg)
-		}
-	case models.ROOTKIT:
-		result, err = s.dbHandler.ScanResultsTable().GetRootkits(targetID, scanID)
-		if err != nil {
-			// TODO check errors and for status code
-			return sendError(ctx, http.StatusNotFound, oopsMsg)
-		}
-	case models.SECRET:
-		result, err = s.dbHandler.ScanResultsTable().GetSecrets(targetID, scanID)
-		if err != nil {
-			// TODO check errors and for status code
-			return sendError(ctx, http.StatusNotFound, oopsMsg)
-		}
-	case models.MISCONFIGURATION:
-		result, err = s.dbHandler.ScanResultsTable().GetMisconfigurations(targetID, scanID)
-		if err != nil {
-			// TODO check errors and for status code
-			return sendError(ctx, http.StatusNotFound, oopsMsg)
-		}
-	case models.EXPLOIT:
-		result, err = s.dbHandler.ScanResultsTable().GetExploits(targetID, scanID)
-		if err != nil {
-			// TODO check errors and for status code
-			return sendError(ctx, http.StatusNotFound, oopsMsg)
-		}
-	default:
-		return sendError(ctx, http.StatusBadRequest, oopsMsg)
+	result, err = s.dbHandler.ScanResultsTable().GetScanResults(targetID, scanID)
+	if err != nil {
+		// TODO check errors for status code
+		return sendError(ctx, http.StatusNotFound, err.Error())
 	}
 	return sendResponse(ctx, http.StatusOK, result)
 }

@@ -68,7 +68,7 @@ type ExploitScanResults struct {
 type ScanResultsTable interface {
 	ListScanResults(targetID models.TargetID, params models.GetTargetsTargetIDScanResultsParams) (*[]models.ScanResults, error)
 	CreateScanResults(targetID models.TargetID, scanResults *ScanResults) (*models.ScanResultsSummary, error)
-	GetScanResultsSummary(targetID models.TargetID, scanID models.ScanID) (*models.ScanResultsSummary, error)
+	GetScanResults(targetID models.TargetID, scanID models.ScanID) (*models.ScanResults, error)
 	GetSBOM(targetID models.TargetID, scanID models.ScanID) (*models.SbomScan, error)
 	GetVulnerabilities(targetID models.TargetID, scanID models.ScanID) (*models.VulnerabilityScan, error)
 	GetMalwares(targetID models.TargetID, scanID models.ScanID) (*models.MalwareScan, error)
@@ -99,7 +99,7 @@ func (s *ScanResultsTableHandler) CreateScanResults(targetID models.TargetID, sc
 	return &models.ScanResultsSummary{}, fmt.Errorf("not implemented")
 }
 
-func (s *ScanResultsTableHandler) GetScanResultsSummary(targetID models.TargetID, scanID models.ScanID) (*models.ScanResultsSummary, error) {
+func (s *ScanResultsTableHandler) GetScanResults(targetID models.TargetID, scanID models.ScanID) (*models.ScanResults, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 

@@ -277,11 +277,6 @@ type GetTargetsTargetIDScanResultsParams struct {
 	PageSize PageSize `form:"pageSize" json:"pageSize"`
 }
 
-// GetTargetsTargetIDScanResultsScanIDParams defines parameters for GetTargetsTargetIDScanResultsScanID.
-type GetTargetsTargetIDScanResultsScanIDParams struct {
-	ScanType *ScanTypeParam `form:"scanType,omitempty" json:"scanType,omitempty"`
-}
-
 // PostTargetsJSONRequestBody defines body for PostTargets for application/json ContentType.
 type PostTargetsJSONRequestBody = Target
 

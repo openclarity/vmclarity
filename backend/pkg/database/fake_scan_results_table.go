@@ -50,7 +50,7 @@ func (fs *FakeScanResultsTable) CreateScanResults(targetID models.TargetID, scan
 	return CreateModelScanResultsSummaryFromDB(scanResults), nil
 }
 
-func (fs *FakeScanResultsTable) GetScanResultsSummary(targetID models.TargetID, scanID models.ScanID) (*models.ScanResultsSummary, error) {
+func (fs *FakeScanResultsTable) GetScanResults(targetID models.TargetID, scanID models.ScanID) (*models.ScanResults, error) {
 	targets := *fs.targets
 	if _, ok := targets[targetID]; !ok {
 		return nil, fmt.Errorf("target not exists with ID: %s", targetID)
@@ -59,7 +59,7 @@ func (fs *FakeScanResultsTable) GetScanResultsSummary(targetID models.TargetID, 
 		return nil, fmt.Errorf("scanID %s not exists for target with ID: %s", scanID, targetID)
 	}
 	results := *fs.scanResults
-	return CreateModelScanResultsSummaryFromDB(results[scanID]), nil
+	return CreateModelScanResultsFromDB(results[scanID]), nil
 }
 
 func (fs *FakeScanResultsTable) GetSBOM(targetID models.TargetID, scanID models.ScanID) (*models.SbomScan, error) {

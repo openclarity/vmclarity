@@ -172,22 +172,13 @@ paths:
       parameters:
         - $ref: '#/components/parameters/targetID'
         - $ref: '#/components/parameters/scanID'
-        - $ref: '#/components/parameters/scanTypeParam'
       responses:
         200:
           description: Success
           content:
             application/json:
               schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ScanResultsSummary'
-                  - $ref: '#/components/schemas/SbomScan'
-                  - $ref: '#/components/schemas/VulnerabilityScan'
-                  - $ref: '#/components/schemas/MalwareScan'
-                  - $ref: '#/components/schemas/RootkitScan'
-                  - $ref: '#/components/schemas/SecretScan'
-                  - $ref: '#/components/schemas/MisconfigurationScan'
-                  - $ref: '#/components/schemas/ExploitScan'
+                $ref: '#/components/schemas/ScanResults'
         default:
           $ref: '#/components/responses/UnknownError'
     put:

@@ -125,26 +125,18 @@ func TestScanResultsController(t *testing.T) {
 	wantList := []models.ScanResults{newScanResults}
 	assert.Equal(t, wantList, gotList)
 
-	// Get scanResultsSummary with ID
+	// Get scanResults with ID
 	result = testutil.NewRequest().Get(fmt.Sprintf("%s/%s", scanResultsPath, testID)).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusOK, result.Code())
-	if err := result.UnmarshalBodyToObject(&got); err != nil {
+	scanRes := models.ScanResults{}
+	if err := result.UnmarshalBodyToObject(&scanRes); err != nil {
 		t.Errorf("failed to unmarshal response body")
 	}
-	assert.Equal(t, *want, got)
+	assert.Equal(t, newScanResults, scanRes)
 
-	// Get scanResultsSummary with wrong ID
+	// Get scanResults with wrong ID
 	result = testutil.NewRequest().Get(fmt.Sprintf("%s/wrongID", scanResultsPath)).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusNotFound, result.Code())
-
-	// Get Sbom scan results
-	result = testutil.NewRequest().Get(fmt.Sprintf("%s/%s?scanType=SBOM", scanResultsPath, testID)).Go(t, restServer.echoServer)
-	assert.Equal(t, http.StatusOK, result.Code())
-	var sbomRes models.SbomScan
-	if err := result.UnmarshalBodyToObject(&sbomRes); err != nil {
-		t.Errorf("failed to unmarshal response body")
-	}
-	assert.Equal(t, *newScanResults.Sboms, sbomRes)
 
 	// Update scan results
 	vulnerabilityID := "vulnerabilityID"
@@ -167,11 +159,11 @@ func TestScanResultsController(t *testing.T) {
 	assert.Equal(t, http.StatusOK, result.Code())
 
 	// Get specified Vulnerability scan results
-	result = testutil.NewRequest().Get(fmt.Sprintf("%s/%s?scanType=VULNERABILITY", scanResultsPath, testID)).Go(t, restServer.echoServer)
+	result = testutil.NewRequest().Get(fmt.Sprintf("%s/%s", scanResultsPath, testID)).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusOK, result.Code())
-	var vulRes models.VulnerabilityScan
-	if err := result.UnmarshalBodyToObject(&vulRes); err != nil {
+	var updatedRes models.ScanResults
+	if err := result.UnmarshalBodyToObject(&updatedRes); err != nil {
 		t.Errorf("failed to unmarshal response body")
 	}
-	assert.Equal(t, *updatedScanResults.Vulnerabilities, vulRes)
+	assert.Equal(t, updatedScanResults, updatedRes)
 }

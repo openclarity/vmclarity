@@ -118,7 +118,7 @@ type ClientInterface interface {
 	PostTargetsTargetIDScanResults(ctx context.Context, targetID TargetID, body PostTargetsTargetIDScanResultsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetTargetsTargetIDScanResultsScanID request
-	GetTargetsTargetIDScanResultsScanID(ctx context.Context, targetID TargetID, scanID ScanID, params *GetTargetsTargetIDScanResultsScanIDParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetTargetsTargetIDScanResultsScanID(ctx context.Context, targetID TargetID, scanID ScanID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PutTargetsTargetIDScanResultsScanID request with any body
 	PutTargetsTargetIDScanResultsScanIDWithBody(ctx context.Context, targetID TargetID, scanID ScanID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -246,8 +246,8 @@ func (c *Client) PostTargetsTargetIDScanResults(ctx context.Context, targetID Ta
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetTargetsTargetIDScanResultsScanID(ctx context.Context, targetID TargetID, scanID ScanID, params *GetTargetsTargetIDScanResultsScanIDParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetTargetsTargetIDScanResultsScanIDRequest(c.Server, targetID, scanID, params)
+func (c *Client) GetTargetsTargetIDScanResultsScanID(ctx context.Context, targetID TargetID, scanID ScanID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTargetsTargetIDScanResultsScanIDRequest(c.Server, targetID, scanID)
 	if err != nil {
 		return nil, err
 	}
@@ -602,7 +602,7 @@ func NewPostTargetsTargetIDScanResultsRequestWithBody(server string, targetID Ta
 }
 
 // NewGetTargetsTargetIDScanResultsScanIDRequest generates requests for GetTargetsTargetIDScanResultsScanID
-func NewGetTargetsTargetIDScanResultsScanIDRequest(server string, targetID TargetID, scanID ScanID, params *GetTargetsTargetIDScanResultsScanIDParams) (*http.Request, error) {
+func NewGetTargetsTargetIDScanResultsScanIDRequest(server string, targetID TargetID, scanID ScanID) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -633,26 +633,6 @@ func NewGetTargetsTargetIDScanResultsScanIDRequest(server string, targetID Targe
 	if err != nil {
 		return nil, err
 	}
-
-	queryValues := queryURL.Query()
-
-	if params.ScanType != nil {
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "scanType", runtime.ParamLocationQuery, *params.ScanType); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-	}
-
-	queryURL.RawQuery = queryValues.Encode()
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
 	if err != nil {
@@ -787,7 +767,7 @@ type ClientWithResponsesInterface interface {
 	PostTargetsTargetIDScanResultsWithResponse(ctx context.Context, targetID TargetID, body PostTargetsTargetIDScanResultsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTargetsTargetIDScanResultsResponse, error)
 
 	// GetTargetsTargetIDScanResultsScanID request
-	GetTargetsTargetIDScanResultsScanIDWithResponse(ctx context.Context, targetID TargetID, scanID ScanID, params *GetTargetsTargetIDScanResultsScanIDParams, reqEditors ...RequestEditorFn) (*GetTargetsTargetIDScanResultsScanIDResponse, error)
+	GetTargetsTargetIDScanResultsScanIDWithResponse(ctx context.Context, targetID TargetID, scanID ScanID, reqEditors ...RequestEditorFn) (*GetTargetsTargetIDScanResultsScanIDResponse, error)
 
 	// PutTargetsTargetIDScanResultsScanID request with any body
 	PutTargetsTargetIDScanResultsScanIDWithBodyWithResponse(ctx context.Context, targetID TargetID, scanID ScanID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutTargetsTargetIDScanResultsScanIDResponse, error)
@@ -973,10 +953,8 @@ func (r PostTargetsTargetIDScanResultsResponse) StatusCode() int {
 type GetTargetsTargetIDScanResultsScanIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *struct {
-		union json.RawMessage
-	}
-	JSONDefault *ApiResponse
+	JSON200      *ScanResults
+	JSONDefault  *ApiResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -1106,8 +1084,8 @@ func (c *ClientWithResponses) PostTargetsTargetIDScanResultsWithResponse(ctx con
 }
 
 // GetTargetsTargetIDScanResultsScanIDWithResponse request returning *GetTargetsTargetIDScanResultsScanIDResponse
-func (c *ClientWithResponses) GetTargetsTargetIDScanResultsScanIDWithResponse(ctx context.Context, targetID TargetID, scanID ScanID, params *GetTargetsTargetIDScanResultsScanIDParams, reqEditors ...RequestEditorFn) (*GetTargetsTargetIDScanResultsScanIDResponse, error) {
-	rsp, err := c.GetTargetsTargetIDScanResultsScanID(ctx, targetID, scanID, params, reqEditors...)
+func (c *ClientWithResponses) GetTargetsTargetIDScanResultsScanIDWithResponse(ctx context.Context, targetID TargetID, scanID ScanID, reqEditors ...RequestEditorFn) (*GetTargetsTargetIDScanResultsScanIDResponse, error) {
+	rsp, err := c.GetTargetsTargetIDScanResultsScanID(ctx, targetID, scanID, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -1403,9 +1381,7 @@ func ParseGetTargetsTargetIDScanResultsScanIDResponse(rsp *http.Response) (*GetT
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			union json.RawMessage
-		}
+		var dest ScanResults
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
