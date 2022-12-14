@@ -166,4 +166,15 @@ func TestScanResultsController(t *testing.T) {
 		t.Errorf("failed to unmarshal response body")
 	}
 	assert.Equal(t, updatedScanResults, updatedRes)
+
+	scanResultsWithoutID := newScanResults
+	scanResultsWithoutID.Id = nil
+	// Get scan results for specified target
+	result = testutil.NewRequest().Get(fmt.Sprintf("%s?page=1&pageSize=1", scanResultsPath)).Go(t, restServer.echoServer)
+	assert.Equal(t, http.StatusOK, result.Code())
+	if err := result.UnmarshalBodyToObject(&gotList); err != nil {
+		t.Errorf("failed to unmarshal response body")
+	}
+	wantList = []models.ScanResults{scanResultsWithoutID}
+	assert.Equal(t, wantList[0].Sboms, gotList[0].Sboms)
 }

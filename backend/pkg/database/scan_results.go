@@ -18,6 +18,7 @@ package database
 import (
 	"fmt"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 
 	"github.com/openclarity/vmclarity/api/models"
@@ -141,8 +142,14 @@ func (s *ScanResultsTableHandler) UpdateScanResults(
 
 // TODO after db design.
 func CreateDBScanResultsFromModel(scanResults *models.ScanResults) *ScanResults {
+	var scanResultID string
+	if scanResults.Id == nil || *scanResults.Id == "" {
+		scanResultID = generateScanResultsID()
+	} else {
+		scanResultID = *scanResults.Id
+	}
 	return &ScanResults{
-		ID: *scanResults.Id,
+		ID: scanResultID,
 		Sbom: &SbomScanResults{
 			Results: *scanResults.Sboms,
 		},
@@ -216,4 +223,8 @@ func CountScanResultsSummary(prevSummary, newSummary *models.ScanResultsSummary)
 		MisconfigurationsCount: &misconfigurationCount,
 		ExploitsCount:          &exploitsCount,
 	}
+}
+
+func generateScanResultsID() string {
+	return uuid.NewString()
 }
