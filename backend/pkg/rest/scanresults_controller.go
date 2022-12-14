@@ -31,8 +31,8 @@ func (s *ServerImpl) GetTargetsTargetIDScanResults(
 ) error {
 	targets, err := s.dbHandler.ScanResultsTable().ListScanResults(targetID, params)
 	if err != nil {
-		// TODO check errors and for status code
-		return sendError(ctx, http.StatusNotFound, oopsMsg)
+		// TODO check errors for status code
+		return sendError(ctx, http.StatusInternalServerError, err.Error())
 	}
 	return sendResponse(ctx, http.StatusOK, targets)
 }
@@ -50,8 +50,8 @@ func (s *ServerImpl) PostTargetsTargetIDScanResults(
 	newScanResults := database.CreateDBScanResultsFromModel(&scanResults)
 	scanResultsSummary, err := s.dbHandler.ScanResultsTable().CreateScanResults(targetID, newScanResults)
 	if err != nil {
-		// TODO check errors and for status code
-		return sendError(ctx, http.StatusConflict, oopsMsg)
+		// TODO check errors for status code
+		return sendError(ctx, http.StatusInternalServerError, err.Error())
 	}
 	return sendResponse(ctx, http.StatusCreated, scanResultsSummary)
 }
@@ -69,8 +69,8 @@ func (s *ServerImpl) GetTargetsTargetIDScanResultsScanID(
 	if params.ScanType == nil {
 		result, err = s.dbHandler.ScanResultsTable().GetScanResultsSummary(targetID, scanID)
 		if err != nil {
-			// TODO check errors and for status code
-			return sendError(ctx, http.StatusNotFound, oopsMsg)
+			// TODO check errors for status code
+			return sendError(ctx, http.StatusNotFound, err.Error())
 		}
 		return sendResponse(ctx, http.StatusOK, result)
 	}
@@ -137,8 +137,8 @@ func (s *ServerImpl) PutTargetsTargetIDScanResultsScanID(
 	newScanResults := database.CreateDBScanResultsFromModel(&scanResults)
 	scanResultsSummary, err := s.dbHandler.ScanResultsTable().UpdateScanResults(targetID, scanID, newScanResults)
 	if err != nil {
-		// TODO check errors and for status code
-		return sendError(ctx, http.StatusConflict, oopsMsg)
+		// TODO check errors for status code
+		return sendError(ctx, http.StatusInternalServerError, err.Error())
 	}
 	return sendResponse(ctx, http.StatusOK, scanResultsSummary)
 }

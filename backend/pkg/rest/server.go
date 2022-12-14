@@ -18,7 +18,6 @@ package rest
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/deepmap/oapi-codegen/pkg/middleware"
@@ -33,8 +32,8 @@ import (
 )
 
 const (
-	shutdownTimeout = 10
-	baseURL         = "/api"
+	shutdownTimeoutSec = 10
+	baseURL            = "/api"
 )
 
 var oopsMsg = "oops"
@@ -49,10 +48,20 @@ type Server struct {
 }
 
 func CreateRESTServer(port int) (*Server, error) {
+	e, err := createEchoServer()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create rest server: %v", err)
+	}
+	return &Server{
+		port:       port,
+		echoServer: e,
+	}, nil
+}
+
+func createEchoServer() (*echo.Echo, error) {
 	swagger, err := server.GetSwagger()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error loading swagger spec: %v", err)
-		return nil, fmt.Errorf("failed to start rest server: %v", err)
+		return nil, fmt.Errorf("failed to load swagger spec: %v", err)
 	}
 	// Clear out the servers array in the swagger spec, that skips validating
 	// that server names match. We don't know how this thing will be run.
@@ -67,10 +76,7 @@ func CreateRESTServer(port int) (*Server, error) {
 	// the base URL router group against the OpenAPI schema.
 	g.Use(middleware.OapiRequestValidator(swagger))
 
-	return &Server{
-		port:       port,
-		echoServer: e,
-	}, nil
+	return e, nil
 }
 
 func (s *Server) RegisterHandlers(dbHandler database.Database) {
@@ -86,7 +92,7 @@ func (s *Server) Start(errChan chan struct{}) {
 	log.Infof("Starting REST server")
 	go func() {
 		if err := s.echoServer.Start(fmt.Sprintf("0.0.0.0:%d", s.port)); err != nil {
-			log.Errorf("Failed to serve REST server: %v", err)
+			log.Errorf("Failed to start REST server: %v", err)
 			errChan <- common.Empty
 		}
 	}()
@@ -96,7 +102,7 @@ func (s *Server) Start(errChan chan struct{}) {
 func (s *Server) Stop() {
 	log.Infof("Stopping REST server")
 	if s.echoServer != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeoutSec*time.Second)
 		defer cancel()
 		if err := s.echoServer.Shutdown(ctx); err != nil {
 			log.Errorf("Failed to shutdown REST server: %v", err)

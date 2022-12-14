@@ -277,12 +277,13 @@ components:
         targetType:
           $ref: '#/components/schemas/TargetType'
         targetInfo:
-          anyOf:
+          anyOf: # now we are using anyOf instead of oneOf because of the issue: https://github.com/getkin/kin-openapi/issues/369
             - $ref: '#/components/schemas/VMInfo'
             - $ref: '#/components/schemas/PodInfo'
             - $ref: '#/components/schemas/DirInfo'
         scanResults:
           type: array
+          description: List of scan results ID
           items:
             type: string
 

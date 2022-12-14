@@ -197,7 +197,9 @@ type SuccessResponse struct {
 
 // Target defines model for Target.
 type Target struct {
-	Id          *string            `json:"id,omitempty"`
+	Id *string `json:"id,omitempty"`
+
+	// ScanResults List of scan results ID
 	ScanResults *[]string          `json:"scanResults,omitempty"`
 	TargetInfo  *Target_TargetInfo `json:"targetInfo,omitempty"`
 	TargetType  *TargetType        `json:"targetType,omitempty"`

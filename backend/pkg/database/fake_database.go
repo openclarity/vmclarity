@@ -21,7 +21,7 @@ import (
 
 type FakeTargets *map[models.TargetID]*Target
 
-type FakeScanResults *map[string]*ScanResults
+type FakeScanResults *map[models.ScanID]*ScanResults
 
 type FakeDatabase struct {
 	targets     FakeTargets
@@ -39,7 +39,7 @@ type FakeScanResultsTable struct {
 
 func NewFakeDatabase() Database {
 	targets := make(map[models.TargetID]*Target)
-	scanResults := make(map[string]*ScanResults)
+	scanResults := make(map[models.ScanID]*ScanResults)
 	return &FakeDatabase{
 		targets:     &targets,
 		scanResults: &scanResults,

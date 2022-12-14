@@ -27,8 +27,8 @@ import (
 func (s *ServerImpl) GetTargets(ctx echo.Context, params models.GetTargetsParams) error {
 	targets, err := s.dbHandler.TargetsTable().ListTargets(params)
 	if err != nil {
-		// TODO check errors and for status code
-		return sendError(ctx, http.StatusNotFound, oopsMsg)
+		// TODO check errors for status code
+		return sendError(ctx, http.StatusInternalServerError, err.Error())
 	}
 	return sendResponse(ctx, http.StatusOK, targets)
 }
@@ -43,8 +43,8 @@ func (s *ServerImpl) PostTargets(ctx echo.Context) error {
 	newTarget := database.CreateDBTargetFromModel(&target)
 	createdTarget, err := s.dbHandler.TargetsTable().CreateTarget(newTarget)
 	if err != nil {
-		// TODO check errors and for status code
-		return sendError(ctx, http.StatusConflict, oopsMsg)
+		// TODO check errors for status code
+		return sendError(ctx, http.StatusInternalServerError, err.Error())
 	}
 	return sendResponse(ctx, http.StatusCreated, createdTarget)
 }
@@ -52,8 +52,8 @@ func (s *ServerImpl) PostTargets(ctx echo.Context) error {
 func (s *ServerImpl) GetTargetsTargetID(ctx echo.Context, targetID models.TargetID) error {
 	targets, err := s.dbHandler.TargetsTable().GetTarget(targetID)
 	if err != nil {
-		// TODO check errors and for status code
-		return sendError(ctx, http.StatusNotFound, oopsMsg)
+		// TODO check errors for status code
+		return sendError(ctx, http.StatusNotFound, err.Error())
 	}
 	return sendResponse(ctx, http.StatusOK, targets)
 }
@@ -68,8 +68,8 @@ func (s *ServerImpl) PutTargetsTargetID(ctx echo.Context, targetID models.Target
 	newTarget := database.CreateDBTargetFromModel(&target)
 	updatedTarget, err := s.dbHandler.TargetsTable().UpdateTarget(newTarget, targetID)
 	if err != nil {
-		// TODO check errors and for status code
-		return sendError(ctx, http.StatusInternalServerError, oopsMsg)
+		// TODO check errors for status code
+		return sendError(ctx, http.StatusInternalServerError, err.Error())
 	}
 	return sendResponse(ctx, http.StatusOK, updatedTarget)
 }
@@ -77,8 +77,8 @@ func (s *ServerImpl) PutTargetsTargetID(ctx echo.Context, targetID models.Target
 func (s *ServerImpl) DeleteTargetsTargetID(ctx echo.Context, targetID models.TargetID) error {
 	err := s.dbHandler.TargetsTable().DeleteTarget(targetID)
 	if err != nil {
-		// TODO check errors and for status code
-		return sendError(ctx, http.StatusNotFound, oopsMsg)
+		// TODO check errors for status code
+		return sendError(ctx, http.StatusNotFound, err.Error())
 	}
 	return sendResponse(ctx, http.StatusNoContent, "deleted")
 }

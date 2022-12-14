@@ -18,16 +18,16 @@ package rest
 import "testing"
 
 const (
-	testID   = "testID"
-	restPort = 8080
+	testID = "testID"
 )
 
 func createTestRestServer(t *testing.T) *Server {
 	t.Helper()
-	restServer, err := CreateRESTServer(restPort)
+	e, err := createEchoServer()
 	if err != nil {
-		t.Fatalf("Failed to create REST server: %v", err)
+		t.Fatalf("Failed to create echo server: %v", err)
 	}
-
-	return restServer
+	return &Server{
+		echoServer: e,
+	}
 }
