@@ -36,8 +36,6 @@ const (
 	baseURL            = "/api"
 )
 
-var oopsMsg = "oops"
-
 type ServerImpl struct {
 	dbHandler database.Database
 }
