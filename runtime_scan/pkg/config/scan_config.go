@@ -35,10 +35,11 @@ type ScanConfig struct {
 	// instances to scan
 	Instances []types.Instance
 	// per provider scan scope
-	ScanScope        types.ScanScope
-	JobResultTimeout time.Duration
-	DeleteJobPolicy  DeleteJobPolicyType
-	ScannerConfig    *types.ScannerConfig
+	ScanScope              types.ScanScope
+	JobResultTimeout       time.Duration
+	ResultsPollingInterval time.Duration
+	DeleteJobPolicy        DeleteJobPolicyType
+	ScannerConfig          *types.ScannerConfig
 }
 
 func setScanConfigDefaults() {

@@ -16,12 +16,17 @@
 package scanner
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 	"sync"
 	"sync/atomic"
 
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/openclarity/vmclarity/api/client"
+	"github.com/openclarity/vmclarity/api/models"
 
 	_config "github.com/openclarity/vmclarity/runtime_scan/pkg/config"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
@@ -35,6 +40,7 @@ type Scanner struct {
 	killSignal           chan bool
 	providerClient       provider.Client
 	logFields            log.Fields
+	backendClient        *client.Client
 
 	region string
 
@@ -42,24 +48,24 @@ type Scanner struct {
 }
 
 type scanData struct {
-	instance              types.Instance
-	scanUUID              string
-	vulnerabilitiesResult vulnerabilitiesScanResult
-	resultChan            chan bool
-	success               bool
-	completed             bool
-	timeout               bool
-	scanErr               *types.ScanError
+	instance    types.Instance
+	scanUUID    string
+	scanResults scanResults
+	success     bool
+	completed   bool
+	timeout     bool
+	scanErr     *types.ScanError
+	ctx         context.Context
 }
 
-type vulnerabilitiesScanResult struct {
+type scanResults struct {
 	result []string
 	// success   bool
 	// completed bool
 	// error *scanner.Error
 }
 
-func CreateScanner(config *_config.Config, providerClient provider.Client) *Scanner {
+func CreateScanner(config *_config.Config, providerClient provider.Client, backendClient *client.Client) *Scanner {
 	s := &Scanner{
 		progress: types.ScanProgress{
 			Status: types.Idle,
@@ -69,6 +75,7 @@ func CreateScanner(config *_config.Config, providerClient provider.Client) *Scan
 		logFields:      log.Fields{"scanner id": uuid.NewV4().String()},
 		region:         config.Region,
 		Mutex:          sync.Mutex{},
+		backendClient:  backendClient,
 	}
 
 	return s
@@ -82,14 +89,13 @@ func (s *Scanner) initScan() error {
 	// Populate the instance to scanData map
 	for _, instance := range s.scanConfig.Instances {
 		instanceIDToScanData[instance.GetID()] = &scanData{
-			instance:              instance,
-			scanUUID:              uuid.NewV4().String(),
-			vulnerabilitiesResult: vulnerabilitiesScanResult{},
-			resultChan:            make(chan bool),
-			success:               false,
-			completed:             false,
-			timeout:               false,
-			scanErr:               nil,
+			instance:    instance,
+			scanUUID:    uuid.NewV4().String(),
+			scanResults: scanResults{},
+			success:     false,
+			completed:   false,
+			timeout:     false,
+			scanErr:     nil,
 		}
 	}
 
@@ -135,35 +141,30 @@ func (s *Scanner) Scan(scanConfig *_config.ScanConfig, scanDone chan struct{}) e
 	return nil
 }
 
+func (s *Scanner) GetResults(data *scanData) *types.ScanResults {
+	resp, err := s.backendClient.GetTargetsTargetIDScanResultsScanID(data.ctx, data.instance.GetID(), data.scanUUID, &models.GetTargetsTargetIDScanResultsScanIDParams{})
+	if err != nil {
+		// TODO error
+		return &types.ScanResults{
+			InstanceScanResults: []*types.InstanceScanResult{},
+			Progress: types.ScanProgress{},
+		}
+	}
+	if resp.StatusCode == http.StatusNotFound {
+		return &types.ScanResults{
+			InstanceScanResults: []*types.InstanceScanResult{},
+			Progress: types.ScanProgress{},
+		}
+	}
+	return nil
+}
+
 func (s *Scanner) ScanProgress() types.ScanProgress {
 	return types.ScanProgress{
 		InstancesToScan:          s.progress.InstancesToScan,
 		InstancesStartedToScan:   atomic.LoadUint32(&s.progress.InstancesStartedToScan),
 		InstancesCompletedToScan: atomic.LoadUint32(&s.progress.InstancesCompletedToScan),
 		Status:                   s.progress.Status,
-	}
-}
-
-func (s *Scanner) Results() *types.ScanResults {
-	s.Lock()
-	defer s.Unlock()
-
-	instanceScanResults := make([]*types.InstanceScanResult, 0)
-
-	for _, scanD := range s.instanceIDToScanData {
-		if !scanD.completed {
-			continue
-		}
-		instanceScanResults = append(instanceScanResults, &types.InstanceScanResult{
-			Instance:        scanD.instance,
-			Vulnerabilities: scanD.vulnerabilitiesResult.result,
-			Success:         scanD.success,
-		})
-	}
-
-	return &types.ScanResults{
-		InstanceScanResults: instanceScanResults,
-		Progress:            s.ScanProgress(),
 	}
 }
 

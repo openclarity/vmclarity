@@ -22,6 +22,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/openclarity/vmclarity/api/client"
 	_config "github.com/openclarity/vmclarity/runtime_scan/pkg/config"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 	_scanner "github.com/openclarity/vmclarity/runtime_scan/pkg/scanner"
@@ -32,6 +33,7 @@ type Orchestrator struct {
 	scanner        *_scanner.Scanner
 	config         *_config.Config
 	providerClient provider.Client
+	backendClient  *client.Client
 	// server *rest.Server
 	sync.Mutex
 }
@@ -46,19 +48,24 @@ type VulnerabilitiesScanner interface {
 	Stop()
 }
 
-func Create(config *_config.Config, client provider.Client) (*Orchestrator, error) {
+func Create(config *_config.Config, providerClient provider.Client) (*Orchestrator, error) {
+	backendClient, err := client.NewClient(fmt.Sprintf("%s:%d", config.BackendAddress, config.BackendRestPort))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create client for backend: %v", err)
+	}
 	orc := &Orchestrator{
-		scanner:        _scanner.CreateScanner(config, client),
+		scanner:        _scanner.CreateScanner(config, providerClient, backendClient),
 		config:         config,
-		providerClient: client,
+		providerClient: providerClient,
 		Mutex:          sync.Mutex{},
+		backendClient:  backendClient,
 	}
 
 	return orc, nil
 }
 
 func (o *Orchestrator) Start(errChan chan struct{}) {
-	// Start result server
+	// Start orchestrator server
 	log.Infof("Starting Orchestrator server")
 }
 
@@ -98,7 +105,7 @@ func (o *Orchestrator) Clear() {
 
 	log.Infof("Clearing Orchestrator")
 	o.scanner.Clear()
-	o.scanner = _scanner.CreateScanner(o.config, o.providerClient)
+	o.scanner = _scanner.CreateScanner(o.config, o.providerClient, o.backendClient)
 }
 
 func (o *Orchestrator) getScanner() *_scanner.Scanner {

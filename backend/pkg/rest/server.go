@@ -26,9 +26,8 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/api/server"
-	"github.com/openclarity/vmclarity/backend/pkg/database"
-
 	"github.com/openclarity/vmclarity/backend/pkg/common"
+	"github.com/openclarity/vmclarity/backend/pkg/database"
 )
 
 const (

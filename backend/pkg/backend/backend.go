@@ -90,6 +90,7 @@ func Run() {
 	if err != nil {
 		log.Fatalf("Failed to create provider client: %v", err)
 	}
+	// TODO orc pass to restserver
 	orc, err := createRuntimeScanOrchestrator(providerClient, runtimeScanConfig)
 	if err != nil {
 		log.Fatalf("Failed to create runtime scan orchestrator: %v", err)
