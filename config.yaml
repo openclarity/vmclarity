@@ -61,7 +61,7 @@ secrets:
   scanners_list:
     - "gitleaks"
   inputs:
-    - input: "/dir"
+    - input: "/Users/erezf/go/src/github.com/cisco-eti"
       input_type: "dir"
   scanners_config:
     gitleaks:

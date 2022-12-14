@@ -6,17 +6,16 @@ import (
 	"os"
 	"os/exec"
 
-	sharedutils "github.com/openclarity/vmclarity/shared/pkg/utils"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/kubeclarity/shared/pkg/job_manager"
 	"github.com/openclarity/kubeclarity/shared/pkg/utils"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets/common"
 	gitleaksconfig "github.com/openclarity/vmclarity/shared/pkg/families/secrets/gitleaks/config"
+	sharedutils "github.com/openclarity/vmclarity/shared/pkg/utils"
 )
 
 const ScannerName = "gitleaks"
-const reportPath = "/tmp/gitleaks.json"
 
 type Scanner struct {
 	name       string
@@ -36,13 +35,14 @@ func New(c job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.
 }
 
 func (a *Scanner) Run(sourceType utils.SourceType, userInput string) error {
-	if sourceType != utils.DIR {
-		return fmt.Errorf("invalid source type for gitleaks: %v", sourceType)
-	}
 	go func() {
 		retResults := common.Results{
 			Source:      userInput,
 			ScannerName: ScannerName,
+		}
+		if !a.isValidInputType(sourceType) {
+			a.sendResults(retResults, nil)
+			return
 		}
 		// validate that gitleaks binary exists
 		if _, err := os.Stat(a.config.BinaryPath); err != nil {
@@ -50,10 +50,20 @@ func (a *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 			return
 		}
 
+		file, err := os.CreateTemp("", "gitleaks")
+		if err != nil {
+			a.sendResults(retResults, fmt.Errorf("failed to create temp file. %v", err))
+			return
+		}
+		defer func() {
+			_ = os.Remove(file.Name())
+		}()
+		reportPath := file.Name()
+
 		// ./gitleaks detect --source=<source> --no-git -r <report-path> -f json --exit-code 0
 		cmd := exec.Command(a.config.BinaryPath, "detect", fmt.Sprintf("--source=%v", userInput), "--no-git", "-r", reportPath, "-f", "json", "--exit-code", "0")
 		a.logger.Infof("running gitleaks command: %v", cmd.String())
-		_, err := sharedutils.RunCommand(cmd)
+		_, err = sharedutils.RunCommand(cmd)
 		if err != nil {
 			a.sendResults(retResults, fmt.Errorf("failed to run gitleaks command: %v", err))
 			return
@@ -64,9 +74,6 @@ func (a *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 			a.sendResults(retResults, fmt.Errorf("failed to read report file from path %v: %v", reportPath, err))
 			return
 		}
-		defer func() {
-			_ = os.Remove(reportPath)
-		}()
 
 		if err := json.Unmarshal(out, &retResults.Findings); err != nil {
 			a.sendResults(retResults, fmt.Errorf("failed to unmarshal results. out: %s. err: %v", out, err))
@@ -76,6 +83,16 @@ func (a *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 	}()
 
 	return nil
+}
+
+func (a *Scanner) isValidInputType(sourceType utils.SourceType) bool {
+	switch sourceType {
+	case utils.DIR, utils.ROOTFS:
+		return true
+	default:
+		a.logger.Infof("source type %v is not supported for gitleaks, skipping.", sourceType)
+	}
+	return false
 }
 
 func (a *Scanner) sendResults(results common.Results, err error) {
