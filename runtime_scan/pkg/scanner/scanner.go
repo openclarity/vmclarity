@@ -146,7 +146,7 @@ func (s *Scanner) GetResults(data *scanData) *types.InstanceScanResult {
 		return &types.InstanceScanResult{
 			Instance: data.instance,
 			Success:  false,
-			Status:   types.DoneScanning,
+			Status:   types.Scanning,
 			// TODO use map for scan errors in the case of scan types later
 			ScanError: &types.ScanError{
 				ErrMsg:    err.Error(),
