@@ -53,14 +53,6 @@ type scanData struct {
 	completed   bool
 	timeout     bool
 	scanErr     *types.ScanError
-	ctx         context.Context
-}
-
-type scanResults struct {
-	result []string // list of expected results, (sbom, vulnerability, etc)
-	// success   bool
-	// completed bool
-	// error *scanner.Error
 }
 
 func CreateScanner(config *_config.Config, providerClient provider.Client, backendClient *client.Client) *Scanner {
@@ -140,7 +132,7 @@ func (s *Scanner) Scan(scanConfig *_config.ScanConfig, scanDone chan struct{}) e
 }
 
 func (s *Scanner) GetResults(data *scanData) *types.InstanceScanResult {
-	resp, err := s.backendClient.GetTargetsTargetIDScanResultsScanID(data.ctx, data.instance.GetID(), data.scanUUID)
+	resp, err := s.backendClient.GetTargetsTargetIDScanResultsScanID(context.TODO(), data.instance.GetID(), data.scanUUID)
 	if err != nil {
 		log.Errorf("Failed to get scan results for instance: %s", data.instance.GetID())
 		return &types.InstanceScanResult{
@@ -155,6 +147,7 @@ func (s *Scanner) GetResults(data *scanData) *types.InstanceScanResult {
 			},
 		}
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusNotFound {
 		log.Infof("Scan results don't exist for istance: %s waiting for results", data.instance.GetID())
 		return &types.InstanceScanResult{
