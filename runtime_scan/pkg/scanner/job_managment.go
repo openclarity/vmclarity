@@ -211,7 +211,7 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 		return types.Job{}, fmt.Errorf("failed to launch a new instance: %v", err)
 	}
 	job.Instance = launchInstance
-	data.scanUUID, err = s.createEmptyScanResultOnBackend(data.instance.GetID())
+	data.scanUUID, err = s.createEmptyScanResultOnBackend(ctx, data.instance.GetID())
 	if err != nil {
 		return types.Job{}, fmt.Errorf("failed to create empty scan results for target %s: %v", data.instance.GetID(), err)
 	}
@@ -260,8 +260,8 @@ func (s *Scanner) deleteJob(ctx context.Context, job *types.Job) {
 	}
 }
 
-func (s *Scanner) createEmptyScanResultOnBackend(targetID string) (string, error) {
-	resp, err := s.backendClient.PostTargetsTargetIDScanResults(context.TODO(), targetID, models.ScanResults{})
+func (s *Scanner) createEmptyScanResultOnBackend(ctx context.Context, targetID string) (string, error) {
+	resp, err := s.backendClient.PostTargetsTargetIDScanResults(ctx, targetID, models.ScanResults{})
 	if err != nil {
 		return "", fmt.Errorf("failed to post empty scanresults for target: %s", targetID)
 	}
