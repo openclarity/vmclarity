@@ -19,6 +19,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/backend/pkg/database"
@@ -28,7 +29,8 @@ func (s *ServerImpl) GetTargets(ctx echo.Context, params models.GetTargetsParams
 	targets, err := s.dbHandler.TargetsTable().ListTargets(params)
 	if err != nil {
 		// TODO check errors for status code
-		return sendError(ctx, http.StatusInternalServerError, err.Error())
+		log.Errorf("%v", err)
+		return sendError(ctx, http.StatusInternalServerError, oops)
 	}
 	return sendResponse(ctx, http.StatusOK, targets)
 }
@@ -44,7 +46,8 @@ func (s *ServerImpl) PostTargets(ctx echo.Context) error {
 	createdTarget, err := s.dbHandler.TargetsTable().CreateTarget(newTarget)
 	if err != nil {
 		// TODO check errors for status code
-		return sendError(ctx, http.StatusInternalServerError, err.Error())
+		log.Errorf("%v", err)
+		return sendError(ctx, http.StatusInternalServerError, oops)
 	}
 	return sendResponse(ctx, http.StatusCreated, createdTarget)
 }
@@ -53,7 +56,8 @@ func (s *ServerImpl) GetTargetsTargetID(ctx echo.Context, targetID models.Target
 	targets, err := s.dbHandler.TargetsTable().GetTarget(targetID)
 	if err != nil {
 		// TODO check errors for status code
-		return sendError(ctx, http.StatusNotFound, err.Error())
+		log.Errorf("%v", err)
+		return sendError(ctx, http.StatusNotFound, oops)
 	}
 	return sendResponse(ctx, http.StatusOK, targets)
 }
@@ -62,14 +66,16 @@ func (s *ServerImpl) PutTargetsTargetID(ctx echo.Context, targetID models.Target
 	var target models.Target
 	err := ctx.Bind(&target)
 	if err != nil {
-		return sendError(ctx, http.StatusBadRequest, err.Error())
+		log.Errorf("%v", err)
+		return sendError(ctx, http.StatusBadRequest, oops)
 	}
 
 	newTarget := database.CreateDBTargetFromModel(&target)
 	updatedTarget, err := s.dbHandler.TargetsTable().UpdateTarget(newTarget, targetID)
 	if err != nil {
 		// TODO check errors for status code
-		return sendError(ctx, http.StatusInternalServerError, err.Error())
+		log.Errorf("%v", err)
+		return sendError(ctx, http.StatusInternalServerError, oops)
 	}
 	return sendResponse(ctx, http.StatusOK, updatedTarget)
 }
@@ -78,7 +84,8 @@ func (s *ServerImpl) DeleteTargetsTargetID(ctx echo.Context, targetID models.Tar
 	err := s.dbHandler.TargetsTable().DeleteTarget(targetID)
 	if err != nil {
 		// TODO check errors for status code
-		return sendError(ctx, http.StatusNotFound, err.Error())
+		log.Errorf("%v", err)
+		return sendError(ctx, http.StatusNotFound, oops)
 	}
 	return sendResponse(ctx, http.StatusNoContent, "deleted")
 }

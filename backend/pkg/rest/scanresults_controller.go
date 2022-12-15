@@ -19,6 +19,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/backend/pkg/database"
@@ -32,7 +33,8 @@ func (s *ServerImpl) GetTargetsTargetIDScanResults(
 	targets, err := s.dbHandler.ScanResultsTable().ListScanResults(targetID, params)
 	if err != nil {
 		// TODO check errors for status code
-		return sendError(ctx, http.StatusInternalServerError, err.Error())
+		log.Errorf("%v", err)
+		return sendError(ctx, http.StatusInternalServerError, oops)
 	}
 	return sendResponse(ctx, http.StatusOK, targets)
 }
@@ -68,7 +70,8 @@ func (s *ServerImpl) GetTargetsTargetIDScanResultsScanID(
 	result, err = s.dbHandler.ScanResultsTable().GetScanResults(targetID, scanID)
 	if err != nil {
 		// TODO check errors for status code
-		return sendError(ctx, http.StatusNotFound, err.Error())
+		log.Errorf("%v", err)
+		return sendError(ctx, http.StatusNotFound, oops)
 	}
 	return sendResponse(ctx, http.StatusOK, result)
 }
@@ -81,14 +84,16 @@ func (s *ServerImpl) PutTargetsTargetIDScanResultsScanID(
 	var scanResults models.ScanResults
 	err := ctx.Bind(&scanResults)
 	if err != nil {
-		return sendError(ctx, http.StatusBadRequest, err.Error())
+		log.Errorf("%v", err)
+		return sendError(ctx, http.StatusBadRequest, oops)
 	}
 
 	newScanResults := database.CreateDBScanResultsFromModel(&scanResults)
 	scanResultsSummary, err := s.dbHandler.ScanResultsTable().UpdateScanResults(targetID, scanID, newScanResults)
 	if err != nil {
 		// TODO check errors for status code
-		return sendError(ctx, http.StatusInternalServerError, err.Error())
+		log.Errorf("%v", err)
+		return sendError(ctx, http.StatusInternalServerError, oops)
 	}
 	return sendResponse(ctx, http.StatusOK, scanResultsSummary)
 }
