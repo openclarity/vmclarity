@@ -206,25 +206,6 @@ func CreateModelScanResultsSummaryFromDB(scanResults *ScanResults) *models.ScanR
 	}
 }
 
-func CountScanResultsSummary(prevSummary, newSummary *models.ScanResultsSummary) *models.ScanResultsSummary {
-	packagesCount := *prevSummary.PackagesCount + *newSummary.PackagesCount
-	vulnerabilitiesCount := *prevSummary.VulnerabilitiesCount + *newSummary.VulnerabilitiesCount
-	malwareCount := *prevSummary.MalwaresCount + *newSummary.MalwaresCount
-	secretCount := *prevSummary.SecretsCount + *newSummary.SecretsCount
-	rootkitCount := *prevSummary.RootkitsCount + *newSummary.RootkitsCount
-	misconfigurationCount := *prevSummary.MisconfigurationsCount + *newSummary.MisconfigurationsCount
-	exploitsCount := *prevSummary.ExploitsCount + *newSummary.ExploitsCount
-	return &models.ScanResultsSummary{
-		PackagesCount:          &packagesCount,
-		VulnerabilitiesCount:   &vulnerabilitiesCount,
-		MalwaresCount:          &malwareCount,
-		SecretsCount:           &secretCount,
-		RootkitsCount:          &rootkitCount,
-		MisconfigurationsCount: &misconfigurationCount,
-		ExploitsCount:          &exploitsCount,
-	}
-}
-
 func generateScanResultsID() string {
 	return uuid.NewString()
 }
