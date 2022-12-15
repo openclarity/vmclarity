@@ -19,10 +19,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/ghodss/yaml"
-	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -31,6 +29,7 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/families"
 	"github.com/openclarity/vmclarity/shared/pkg/families/results"
 	"github.com/openclarity/vmclarity/shared/pkg/families/sbom"
+	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
 	"github.com/openclarity/vmclarity/shared/pkg/families/vulnerabilities"
 )
 
@@ -113,7 +112,7 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.vmclarity/config.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.vmclarity.yaml)")
 	rootCmd.PersistentFlags().StringVar(&output, "output", "", "set file path output (default: stdout)")
 }
 
@@ -126,14 +125,13 @@ func initConfig() {
 	} else {
 		// Find home directory.
 		home, err := os.UserHomeDir()
-		configPath := filepath.Join(home, ".vmclarity")
 		cobra.CheckErr(err)
 
 		// Search config in home directory OR current directory with name ".families" (without extension).
-		viper.AddConfigPath(configPath)
+		viper.AddConfigPath(home)
 		viper.AddConfigPath(".")
 		viper.SetConfigType("yaml")
-		viper.SetConfigName("config")
+		viper.SetConfigName(".families")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
