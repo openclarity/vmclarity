@@ -62,7 +62,7 @@ func createEchoServer() (*echo.Echo, error) {
 		return nil, fmt.Errorf("failed to load swagger spec: %v", err)
 	}
 	// Clear out the servers array in the swagger spec, that skips validating
-	// that server names match. We don't know how this thing will be run.
+	// that server names match.
 	swagger.Servers = nil
 
 	e := echo.New()
