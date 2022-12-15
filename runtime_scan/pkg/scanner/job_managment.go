@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"sync/atomic"
 	"time"
 
@@ -261,6 +262,10 @@ func (s *Scanner) deleteJob(ctx context.Context, job *types.Job) {
 }
 
 func (s *Scanner) createEmptyScanResultOnBackend(ctx context.Context, targetID string) (string, error) {
+	if err := s.createTargetOnBackendIfNotExist(ctx, targetID); err != nil {
+		return "", fmt.Errorf("failed to create target with ID %s: %v", targetID, err)
+	}
+
 	resp, err := s.backendClient.PostTargetsTargetIDScanResults(ctx, targetID, models.ScanResults{})
 	if err != nil {
 		return "", fmt.Errorf("failed to post empty scanresults for target: %s", targetID)
@@ -271,4 +276,15 @@ func (s *Scanner) createEmptyScanResultOnBackend(ctx context.Context, targetID s
 		return "", fmt.Errorf("failed to get scanresults ID from response: %s", targetID)
 	}
 	return *results.Id, nil
+}
+
+func (s *Scanner) createTargetOnBackendIfNotExist(ctx context.Context, targetID string) error {
+	resp, err := s.backendClient.PostTargets(ctx, models.Target{
+		Id: &targetID,
+	})
+	if err != nil && resp.StatusCode != http.StatusConflict {
+		return fmt.Errorf("failed to create target with ID: %s", targetID)
+	}
+	defer resp.Body.Close()
+	return nil
 }
