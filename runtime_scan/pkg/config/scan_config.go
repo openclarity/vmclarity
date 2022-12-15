@@ -25,9 +25,10 @@ import (
 )
 
 const (
-	JobResultTimeout = "JOB_RESULT_TIMEOUT"
-	MaxParallelism   = "MAX_PARALLELISM"
-	DeleteJobPolicy  = "DELETE_JOB_POLICY"
+	JobResultTimeout          = "JOB_RESULT_TIMEOUT"
+	JobResultsPollingInterval = "JOB_RESULT_POLIING_INTERVAL"
+	MaxParallelism            = "MAX_PARALLELISM"
+	DeleteJobPolicy           = "DELETE_JOB_POLICY"
 )
 
 type ScanConfig struct {
@@ -35,16 +36,17 @@ type ScanConfig struct {
 	// instances to scan
 	Instances []types.Instance
 	// per provider scan scope
-	ScanScope              types.ScanScope
-	JobResultTimeout       time.Duration
-	ResultsPollingInterval time.Duration
-	DeleteJobPolicy        DeleteJobPolicyType
-	ScannerConfig          *types.ScannerConfig
+	ScanScope                 types.ScanScope
+	JobResultTimeout          time.Duration
+	JobResultsPollingInterval time.Duration
+	DeleteJobPolicy           DeleteJobPolicyType
+	ScannerConfig             *types.ScannerConfig
 }
 
 func setScanConfigDefaults() {
 	viper.SetDefault(MaxParallelism, "5")
 	viper.SetDefault(JobResultTimeout, "120m")
+	viper.SetDefault(JobResultsPollingInterval, "1m")
 	viper.SetDefault(DeleteJobPolicy, DeleteJobPolicySuccessful)
 
 	viper.AutomaticEnv()
@@ -54,9 +56,10 @@ func LoadScanConfig() *ScanConfig {
 	setScanConfigDefaults()
 
 	return &ScanConfig{
-		MaxScanParallelism: viper.GetInt(MaxParallelism),
-		JobResultTimeout:   viper.GetDuration(JobResultTimeout),
-		DeleteJobPolicy:    getDeleteJobPolicyType(viper.GetString(DeleteJobPolicy)),
+		MaxScanParallelism:        viper.GetInt(MaxParallelism),
+		JobResultTimeout:          viper.GetDuration(JobResultTimeout),
+		JobResultsPollingInterval: viper.GetDuration(JobResultsPollingInterval),
+		DeleteJobPolicy:           getDeleteJobPolicyType(viper.GetString(DeleteJobPolicy)),
 	}
 }
 

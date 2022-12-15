@@ -127,13 +127,21 @@ func (s *Scanner) worker(queue chan *scanData, workNumber int, done, ks chan boo
 
 func (s *Scanner) waitForResult(data *scanData, ks chan bool) {
 	log.WithFields(s.logFields).Infof("Waiting for result. instanceID=%+v", data.instance.GetID())
-	ticker := time.NewTicker(s.scanConfig.ResultsPollingInterval)
+	ticker := time.NewTicker(s.scanConfig.JobResultsPollingInterval)
 	timeout := time.After(s.scanConfig.JobResultTimeout)
 	select {
 	case <-ticker.C:
 		log.WithFields(s.logFields).Infof("Polling scan results for instanceID=%v with scanID=%v", data.instance.GetID(), data.scanUUID)
-		// TODO get scan results
-		s.GetResults(data)
+		// Get scan results from backend
+		instanceScanResults := s.GetResults(data)
+		if instanceScanResults.Status == types.DoneScanning {
+			s.Lock()
+			data.success = instanceScanResults.Success
+			data.completed = true
+			data.scanErr = instanceScanResults.ScanError
+			s.Unlock()
+			return
+		}
 	case <-timeout:
 		errMsg := fmt.Errorf("job has timed out. instanceID=%v", data.instance.GetID())
 		log.WithFields(s.logFields).Warn(errMsg)

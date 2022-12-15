@@ -43,7 +43,6 @@ type VulnerabilitiesScanner interface {
 	Start(errChan chan struct{})
 	Scan(scanConfig *_config.ScanConfig, scanDone chan struct{}) error
 	ScanProgress() types.ScanProgress
-	Results() *types.ScanResults
 	Clear()
 	Stop()
 }
@@ -91,12 +90,6 @@ func (o *Orchestrator) Scan(scanConfig *_config.ScanConfig, scanDone chan struct
 
 func (o *Orchestrator) ScanProgress() types.ScanProgress {
 	return o.getScanner().ScanProgress()
-}
-
-func (o *Orchestrator) Results() *types.ScanResults {
-	return nil
-	// TODO
-	// return o.getScanner().Results()
 }
 
 func (o *Orchestrator) Clear() {

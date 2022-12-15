@@ -47,14 +47,9 @@ type InstanceScanResult struct {
 	// Instance data
 	Instance Instance
 	// Scan results
-	ScanResults []string // TODO define scanResults struct
-	Success     bool
-	ScanErrors  []*ScanError
-}
-
-type ScanResults struct {
-	InstanceScanResults []*InstanceScanResult
-	Progress            ScanProgress
+	Success   bool
+	Status    Status
+	ScanError *ScanError // TODO later map of errors for specified scan types
 }
 
 type Job struct {

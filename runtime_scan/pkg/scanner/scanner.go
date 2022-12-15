@@ -26,8 +26,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/api/client"
-	"github.com/openclarity/vmclarity/api/models"
-
 	_config "github.com/openclarity/vmclarity/runtime_scan/pkg/config"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
@@ -50,7 +48,7 @@ type Scanner struct {
 type scanData struct {
 	instance    types.Instance
 	scanUUID    string
-	scanResults scanResults
+	scanResults []string
 	success     bool
 	completed   bool
 	timeout     bool
@@ -59,7 +57,7 @@ type scanData struct {
 }
 
 type scanResults struct {
-	result []string
+	result []string // list of expected results, (sbom, vulnerability, etc)
 	// success   bool
 	// completed bool
 	// error *scanner.Error
@@ -91,7 +89,7 @@ func (s *Scanner) initScan() error {
 		instanceIDToScanData[instance.GetID()] = &scanData{
 			instance:    instance,
 			scanUUID:    uuid.NewV4().String(),
-			scanResults: scanResults{},
+			scanResults: nil, // list of expected scan results get from scanner job config implement later
 			success:     false,
 			completed:   false,
 			timeout:     false,
@@ -141,22 +139,36 @@ func (s *Scanner) Scan(scanConfig *_config.ScanConfig, scanDone chan struct{}) e
 	return nil
 }
 
-func (s *Scanner) GetResults(data *scanData) *types.ScanResults {
-	resp, err := s.backendClient.GetTargetsTargetIDScanResultsScanID(data.ctx, data.instance.GetID(), data.scanUUID, &models.GetTargetsTargetIDScanResultsScanIDParams{})
+func (s *Scanner) GetResults(data *scanData) *types.InstanceScanResult {
+	resp, err := s.backendClient.GetTargetsTargetIDScanResultsScanID(data.ctx, data.instance.GetID(), data.scanUUID)
 	if err != nil {
-		// TODO error
-		return &types.ScanResults{
-			InstanceScanResults: []*types.InstanceScanResult{},
-			Progress: types.ScanProgress{},
+		log.Errorf("Failed to get scan results for instance: %s", data.instance.GetID())
+		return &types.InstanceScanResult{
+			Instance: data.instance,
+			Success:  false,
+			Status:   types.DoneScanning,
+			// TODO use map for scan errors in the case of scan types later
+			ScanError: &types.ScanError{
+				ErrMsg:    err.Error(),
+				ErrType:   string(types.JobRun),
+				ErrSource: types.ScanErrSourceJob,
+			},
 		}
 	}
 	if resp.StatusCode == http.StatusNotFound {
-		return &types.ScanResults{
-			InstanceScanResults: []*types.InstanceScanResult{},
-			Progress: types.ScanProgress{},
+		log.Infof("Scan results don't exist for istance: %s waiting for results", data.instance.GetID())
+		return &types.InstanceScanResult{
+			Instance: data.instance,
+			Success:  false,
+			Status:   types.Scanning,
 		}
 	}
-	return nil
+	log.Infof("Scan results exist for istance: %s", data.instance.GetID())
+	return &types.InstanceScanResult{
+		Instance: data.instance,
+		Success:  true,
+		Status:   types.DoneScanning,
+	}
 }
 
 func (s *Scanner) ScanProgress() types.ScanProgress {
