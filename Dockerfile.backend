@@ -6,7 +6,6 @@ ARG VERSION
 ARG BUILD_TIMESTAMP
 ARG COMMIT_HASH
 
-
 # Copy api code
 WORKDIR /build
 COPY api ./api
