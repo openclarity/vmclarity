@@ -17,12 +17,14 @@ package scanner
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sync/atomic"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/config"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
 )
@@ -209,6 +211,10 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 		return types.Job{}, fmt.Errorf("failed to launch a new instance: %v", err)
 	}
 	job.Instance = launchInstance
+	data.scanUUID, err = s.createEmptyScanResultOnBackend(data.instance.GetID())
+	if err != nil {
+		return types.Job{}, fmt.Errorf("failed to create empty scan results for target %s: %v", data.instance.GetID(), err)
+	}
 
 	return job, nil
 }
@@ -252,4 +258,17 @@ func (s *Scanner) deleteJob(ctx context.Context, job *types.Job) {
 			log.Errorf("Failed to delete destination snapshot. snapshotID=%v: %v", job.DstSnapshot.GetID(), err)
 		}
 	}
+}
+
+func (s *Scanner) createEmptyScanResultOnBackend(targetID string) (string, error) {
+	resp, err := s.backendClient.PostTargetsTargetIDScanResults(context.TODO(), targetID, models.ScanResults{})
+	if err != nil {
+		return "", fmt.Errorf("failed to post empty scanresults for target: %s", targetID)
+	}
+	defer resp.Body.Close()
+	var results models.ScanResults
+	if err := json.NewDecoder(resp.Body).Decode(&results); err != nil {
+		return "", fmt.Errorf("failed to get scanresults ID from response: %s", targetID)
+	}
+	return *results.Id, nil
 }

@@ -48,7 +48,10 @@ type VulnerabilitiesScanner interface {
 }
 
 func Create(config *_config.Config, providerClient provider.Client) (*Orchestrator, error) {
-	backendClient, err := client.NewClient(fmt.Sprintf("%s:%d", config.BackendAddress, config.BackendRestPort))
+	backendClient, err := client.NewClient(
+		fmt.Sprintf("%s:%d", config.BackendAddress, config.BackendRestPort),
+		client.WithBaseURL(config.BackendBaseURL),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create client for backend: %v", err)
 	}

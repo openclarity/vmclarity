@@ -28,6 +28,8 @@ const (
 	defaultBackendRestAddress = "127.0.0.1"
 	BackendRestPort           = "BACKEND_REST_PORT"
 	defaultBackendRestPort    = 8080
+	BackendBaseURL            = "BACKEND_BASE_URL"
+	defaultBackendBaseURL     = "/api"
 )
 
 type Config struct {
@@ -36,12 +38,15 @@ type Config struct {
 	AWSConfig                  *aws.Config
 	BackendAddress             string
 	BackendRestPort            int
+	BackendBaseURL             string
 }
 
 func setConfigDefaults() {
 	viper.SetDefault(ScannerAWSRegion, defaultScannerAWSRegion)
 	viper.SetDefault(BackendRestPort, defaultBackendRestPort)
 	viper.SetDefault(BackendRestAddress, defaultBackendRestAddress)
+	viper.SetDefault(BackendBaseURL, defaultBackendBaseURL)
+
 	viper.AutomaticEnv()
 }
 
@@ -53,6 +58,7 @@ func LoadConfig() (*Config, error) {
 		AWSConfig:       aws.LoadConfig(),
 		BackendRestPort: viper.GetInt(BackendRestPort),
 		BackendAddress:  viper.GetString(BackendRestAddress),
+		BackendBaseURL:  viper.GetString(BackendBaseURL),
 	}
 
 	return config, nil
