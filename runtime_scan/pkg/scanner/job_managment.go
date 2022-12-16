@@ -17,7 +17,6 @@ package scanner
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"sync/atomic"
@@ -136,8 +135,8 @@ func (s *Scanner) waitForResult(data *scanData, ks chan bool) {
 	case <-ticker.C:
 		log.WithFields(s.logFields).Infof("Polling scan results for instanceID=%v with scanID=%v", data.instance.GetID(), data.scanUUID)
 		// Get scan results from backend
-		instanceScanResults := s.GetResults(data)
-		if instanceScanResults.Status == types.DoneScanning {
+		instanceScanResults := s.GetScanStatus(data)
+		if instanceScanResults.Status != types.Scanning {
 			s.Lock()
 			data.success = instanceScanResults.Success
 			data.completed = true
@@ -207,15 +206,15 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 		}
 	}
 
+	if err := s.createTargetOnBackendIfNotExist(ctx, instanceToScan.GetID()); err != nil {
+		return types.Job{}, fmt.Errorf("failed to create target with ID %s: %v", instanceToScan.GetID(), err)
+	}
+
 	launchInstance, err = s.providerClient.RunScanningJob(ctx, launchSnapshot, s.scanConfig.ScannerConfig)
 	if err != nil {
 		return types.Job{}, fmt.Errorf("failed to launch a new instance: %v", err)
 	}
 	job.Instance = launchInstance
-	data.scanUUID, err = s.createEmptyScanResultOnBackend(ctx, data.instance.GetID())
-	if err != nil {
-		return types.Job{}, fmt.Errorf("failed to create empty scan results for target %s: %v", data.instance.GetID(), err)
-	}
 
 	return job, nil
 }
@@ -259,23 +258,6 @@ func (s *Scanner) deleteJob(ctx context.Context, job *types.Job) {
 			log.Errorf("Failed to delete destination snapshot. snapshotID=%v: %v", job.DstSnapshot.GetID(), err)
 		}
 	}
-}
-
-func (s *Scanner) createEmptyScanResultOnBackend(ctx context.Context, targetID string) (string, error) {
-	if err := s.createTargetOnBackendIfNotExist(ctx, targetID); err != nil {
-		return "", fmt.Errorf("failed to create target with ID %s: %v", targetID, err)
-	}
-
-	resp, err := s.backendClient.PostTargetsTargetIDScanResults(ctx, targetID, models.ScanResults{})
-	if err != nil {
-		return "", fmt.Errorf("failed to post empty scanresults for target: %s", targetID)
-	}
-	defer resp.Body.Close()
-	var results models.ScanResults
-	if err := json.NewDecoder(resp.Body).Decode(&results); err != nil {
-		return "", fmt.Errorf("failed to get scanresults ID from response: %s", targetID)
-	}
-	return *results.Id, nil
 }
 
 func (s *Scanner) createTargetOnBackendIfNotExist(ctx context.Context, targetID string) error {

@@ -131,37 +131,42 @@ func (s *Scanner) Scan(scanConfig *_config.ScanConfig, scanDone chan struct{}) e
 	return nil
 }
 
-func (s *Scanner) GetResults(data *scanData) *types.InstanceScanResult {
+func (s *Scanner) GetScanStatus(data *scanData) *types.InstanceScanResult {
+	scanResult := &types.InstanceScanResult{
+		Instance: data.instance,
+		Success:  false,
+		Status:   types.Scanning,
+	}
 	resp, err := s.backendClient.GetTargetsTargetIDScanResultsScanID(context.TODO(), data.instance.GetID(), data.scanUUID)
 	if err != nil {
 		log.Errorf("Failed to get scan results for instance: %s", data.instance.GetID())
-		return &types.InstanceScanResult{
-			Instance: data.instance,
-			Success:  false,
-			Status:   types.DoneScanning,
-			// TODO use map for scan errors in the case of scan types later
-			ScanError: &types.ScanError{
-				ErrMsg:    err.Error(),
-				ErrType:   string(types.JobRun),
-				ErrSource: types.ScanErrSourceJob,
-			},
+		scanResult.Status = types.NothingToScan
+		// TODO use map for scan errors in the case of scan types later
+		scanResult.ScanError = &types.ScanError{
+			ErrMsg:    err.Error(),
+			ErrType:   string(types.JobRun),
+			ErrSource: types.ScanErrSourceJob,
 		}
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode == http.StatusNotFound {
-		log.Infof("Scan results don't exist for istance: %s waiting for results", data.instance.GetID())
-		return &types.InstanceScanResult{
-			Instance: data.instance,
-			Success:  false,
-			Status:   types.Scanning,
+	if resp.StatusCode == http.StatusOK {
+		log.Infof("Scan results %s exist for istance %s.", data.scanUUID, data.instance.GetID())
+		scanResult.Success = true
+		scanResult.Status = types.DoneScanning
+		return scanResult
+	}
+	if resp.StatusCode != http.StatusNotFound {
+		scanResult.Status = types.NothingToScan
+		// TODO use map for scan errors in the case of scan types later
+		scanResult.ScanError = &types.ScanError{
+			ErrMsg:    err.Error(),
+			ErrType:   string(types.JobRun),
+			ErrSource: types.ScanErrSourceJob,
 		}
 	}
-	log.Infof("Scan results exist for istance: %s", data.instance.GetID())
-	return &types.InstanceScanResult{
-		Instance: data.instance,
-		Success:  true,
-		Status:   types.DoneScanning,
-	}
+
+	log.Infof("Scan results %s not exist for istance %s. waiting for results...", data.scanUUID, data.instance.GetID())
+	return scanResult
 }
 
 func (s *Scanner) ScanProgress() types.ScanProgress {

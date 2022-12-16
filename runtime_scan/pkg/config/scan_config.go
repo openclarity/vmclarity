@@ -26,7 +26,7 @@ import (
 
 const (
 	JobResultTimeout          = "JOB_RESULT_TIMEOUT"
-	JobResultsPollingInterval = "JOB_RESULT_POLIING_INTERVAL"
+	JobResultsPollingInterval = "JOB_RESULT_POLLING_INTERVAL"
 	MaxParallelism            = "MAX_PARALLELISM"
 	DeleteJobPolicy           = "DELETE_JOB_POLICY"
 )
