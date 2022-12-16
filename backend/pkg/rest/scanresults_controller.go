@@ -37,7 +37,7 @@ func (s *ServerImpl) GetTargetsTargetIDScanResults(
 		return sendError(ctx, http.StatusInternalServerError, oops)
 	}
 	resultsModel := []models.ScanResults{}
-	for _, result := range *results {
+	for _, result := range results {
 		result := result
 		resultModel := database.CreateModelScanResultsFromDB(&result)
 		resultsModel = append(resultsModel, *resultModel)

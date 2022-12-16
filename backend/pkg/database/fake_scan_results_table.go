@@ -22,7 +22,7 @@ import (
 )
 
 func (fs *FakeScanResultsTable) ListScanResults(targetID models.TargetID, params models.GetTargetsTargetIDScanResultsParams,
-) (*[]ScanResults, error) {
+) ([]ScanResults, error) {
 	targets := *fs.targets
 	if _, ok := targets[targetID]; !ok {
 		return nil, fmt.Errorf("target not exists with ID: %s", targetID)
@@ -32,7 +32,7 @@ func (fs *FakeScanResultsTable) ListScanResults(targetID models.TargetID, params
 	for _, scanID := range targets[targetID].ScanResults {
 		scanResults = append(scanResults, *results[scanID])
 	}
-	return &scanResults, nil
+	return scanResults, nil
 }
 
 func (fs *FakeScanResultsTable) CreateScanResults(targetID models.TargetID, scanResults *ScanResults,
