@@ -175,7 +175,7 @@ func (s *Scanner) GetScanStatus(data *scanData) *types.InstanceScanResult {
 		}
 		return scanResult
 	}
-	if results.Sboms != nil {
+	if checkResults(results) {
 		log.WithFields(s.logFields).Infof("Scan results %s exist for target %s.", data.scanUUID, data.instance.GetID())
 		scanResult.Success = true
 		scanResult.Status = types.DoneScanning
@@ -201,4 +201,12 @@ func (s *Scanner) Clear() {
 
 	log.WithFields(s.logFields).Infof("Clearing...")
 	close(s.killSignal)
+}
+
+func checkResults(results models.ScanResults) bool {
+	// TODO the API returns empty sbom struct and []Packages
+	if results.Sboms != nil && results.Sboms.Packages != nil && len(*results.Sboms.Packages) > 0 {
+		return true
+	}
+	return false
 }
