@@ -18,6 +18,7 @@ package rest
 import (
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	log "github.com/sirupsen/logrus"
 
@@ -98,8 +99,14 @@ func (s *ServerImpl) DeleteTargetsTargetID(ctx echo.Context, targetID models.Tar
 
 // TODO after db design.
 func createDBTargetFromModel(target *models.Target) *database.Target {
+	var targetID string
+	if target.Id == nil || *target.Id == "" {
+		targetID = generateTargerID()
+	} else {
+		targetID = *target.Id
+	}
 	return &database.Target{
-		ID:          *target.Id,
+		ID:          targetID,
 		ScanResults: *target.ScanResults,
 		TargetInfo:  target.TargetInfo,
 		TargetType:  *target.TargetType,
@@ -113,4 +120,8 @@ func createModelTargetFromDB(target *database.Target) *models.Target {
 		TargetInfo:  target.TargetInfo,
 		TargetType:  &target.TargetType,
 	}
+}
+
+func generateTargerID() string {
+	return uuid.NewString()
 }
