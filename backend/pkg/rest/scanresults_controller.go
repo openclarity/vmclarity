@@ -30,13 +30,19 @@ func (s *ServerImpl) GetTargetsTargetIDScanResults(
 	targetID models.TargetID,
 	params models.GetTargetsTargetIDScanResultsParams,
 ) error {
-	targets, err := s.dbHandler.ScanResultsTable().ListScanResults(targetID, params)
+	results, err := s.dbHandler.ScanResultsTable().ListScanResults(targetID, params)
 	if err != nil {
 		// TODO check errors for status code
 		log.Errorf("%v", err)
 		return sendError(ctx, http.StatusInternalServerError, oops)
 	}
-	return sendResponse(ctx, http.StatusOK, targets)
+	resultsModel := []models.ScanResults{}
+	for _, result := range *results {
+		result := result
+		resultModel := database.CreateModelScanResultsFromDB(&result)
+		resultsModel = append(resultsModel, *resultModel)
+	}
+	return sendResponse(ctx, http.StatusOK, &resultsModel)
 }
 
 func (s *ServerImpl) PostTargetsTargetIDScanResults(
@@ -64,16 +70,13 @@ func (s *ServerImpl) GetTargetsTargetIDScanResultsScanID(
 	targetID models.TargetID,
 	scanID models.ScanID,
 ) error {
-	var result interface{}
-	var err error
-
-	result, err = s.dbHandler.ScanResultsTable().GetScanResults(targetID, scanID)
+	result, err := s.dbHandler.ScanResultsTable().GetScanResults(targetID, scanID)
 	if err != nil {
 		// TODO check errors for status code
 		log.Errorf("%v", err)
 		return sendError(ctx, http.StatusNotFound, oops)
 	}
-	return sendResponse(ctx, http.StatusOK, result)
+	return sendResponse(ctx, http.StatusOK, database.CreateModelScanResultsFromDB(result))
 }
 
 func (s *ServerImpl) PutTargetsTargetIDScanResultsScanID(

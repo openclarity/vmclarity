@@ -112,7 +112,8 @@ func TestScanResultsController(t *testing.T) {
 	if err := result.UnmarshalBodyToObject(&got); err != nil {
 		t.Errorf("failed to unmarshal response body")
 	}
-	want := database.CreateModelScanResultsSummaryFromDB(database.CreateDBScanResultsFromModel(&newScanResults))
+	scanResultSummary := database.CreateScanResultsSummary(database.CreateDBScanResultsFromModel(&newScanResults))
+	want := database.CreateModelScanResultsSummaryFromDB(*scanResultSummary)
 	assert.Equal(t, *want, got)
 
 	// Get scan results for specified target

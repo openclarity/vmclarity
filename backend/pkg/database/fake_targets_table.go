@@ -21,38 +21,37 @@ import (
 	"github.com/openclarity/vmclarity/api/models"
 )
 
-func (ft *FakeTargetsTable) ListTargets(params models.GetTargetsParams) (*[]models.Target, error) {
-	targets := make([]models.Target, 0)
+func (ft *FakeTargetsTable) ListTargets(params models.GetTargetsParams) (*[]Target, error) {
+	targets := make([]Target, 0)
 	for _, target := range *ft.targets {
-		targetModel := CreateModelTargetFromDB(target)
-		targets = append(targets, *targetModel)
+		targets = append(targets, *target)
 	}
 	return &targets, nil
 }
 
-func (ft *FakeTargetsTable) GetTarget(targetID models.TargetID) (*models.Target, error) {
+func (ft *FakeTargetsTable) GetTarget(targetID models.TargetID) (*Target, error) {
 	targets := *ft.targets
 	if _, ok := targets[targetID]; !ok {
 		return nil, fmt.Errorf("target not exists with ID: %s", targetID)
 	}
-	return CreateModelTargetFromDB(targets[targetID]), nil
+	return targets[targetID], nil
 }
 
-func (ft *FakeTargetsTable) CreateTarget(target *Target) (*models.Target, error) {
+func (ft *FakeTargetsTable) CreateTarget(target *Target) (*Target, error) {
 	targets := *ft.targets
 	targets[target.ID] = target
 	ft.targets = &targets
-	return CreateModelTargetFromDB(target), nil
+	return target, nil
 }
 
-func (ft *FakeTargetsTable) UpdateTarget(target *Target, targetID models.TargetID) (*models.Target, error) {
+func (ft *FakeTargetsTable) UpdateTarget(target *Target, targetID models.TargetID) (*Target, error) {
 	targets := *ft.targets
 	if _, ok := targets[targetID]; !ok {
 		return nil, fmt.Errorf("target not exist with ID: %s", targetID)
 	}
 	targets[targetID] = target
 	ft.targets = &targets
-	return CreateModelTargetFromDB(target), nil
+	return target, nil
 }
 
 func (ft *FakeTargetsTable) DeleteTarget(targetID models.TargetID) error {

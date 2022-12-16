@@ -32,7 +32,13 @@ func (s *ServerImpl) GetTargets(ctx echo.Context, params models.GetTargetsParams
 		log.Errorf("%v", err)
 		return sendError(ctx, http.StatusInternalServerError, oops)
 	}
-	return sendResponse(ctx, http.StatusOK, targets)
+	targetsModel := []models.Target{}
+	for _, target := range *targets {
+		target := target
+		targetModel := database.CreateModelTargetFromDB(&target)
+		targetsModel = append(targetsModel, *targetModel)
+	}
+	return sendResponse(ctx, http.StatusOK, &targetsModel)
 }
 
 func (s *ServerImpl) PostTargets(ctx echo.Context) error {
@@ -49,7 +55,7 @@ func (s *ServerImpl) PostTargets(ctx echo.Context) error {
 		log.Errorf("%v", err)
 		return sendError(ctx, http.StatusInternalServerError, oops)
 	}
-	return sendResponse(ctx, http.StatusCreated, createdTarget)
+	return sendResponse(ctx, http.StatusCreated, database.CreateModelTargetFromDB(createdTarget))
 }
 
 func (s *ServerImpl) GetTargetsTargetID(ctx echo.Context, targetID models.TargetID) error {
@@ -77,7 +83,7 @@ func (s *ServerImpl) PutTargetsTargetID(ctx echo.Context, targetID models.Target
 		log.Errorf("%v", err)
 		return sendError(ctx, http.StatusInternalServerError, oops)
 	}
-	return sendResponse(ctx, http.StatusOK, updatedTarget)
+	return sendResponse(ctx, http.StatusOK, database.CreateModelTargetFromDB(updatedTarget))
 }
 
 func (s *ServerImpl) DeleteTargetsTargetID(ctx echo.Context, targetID models.TargetID) error {

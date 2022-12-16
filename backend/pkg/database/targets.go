@@ -32,10 +32,10 @@ type Target struct {
 }
 
 type TargetsTable interface {
-	ListTargets(params models.GetTargetsParams) (*[]models.Target, error)
-	GetTarget(targetID models.TargetID) (*models.Target, error)
-	CreateTarget(target *Target) (*models.Target, error)
-	UpdateTarget(target *Target, targetID models.TargetID) (*models.Target, error)
+	ListTargets(params models.GetTargetsParams) (*[]Target, error)
+	GetTarget(targetID models.TargetID) (*Target, error)
+	CreateTarget(target *Target) (*Target, error)
+	UpdateTarget(target *Target, targetID models.TargetID) (*Target, error)
 	DeleteTarget(targetID models.TargetID) error
 }
 
@@ -49,20 +49,20 @@ func (db *Handler) TargetsTable() TargetsTable {
 	}
 }
 
-func (t *TargetsTableHandler) ListTargets(params models.GetTargetsParams) (*[]models.Target, error) {
-	return &[]models.Target{}, fmt.Errorf("not implemented")
+func (t *TargetsTableHandler) ListTargets(params models.GetTargetsParams) (*[]Target, error) {
+	return &[]Target{}, fmt.Errorf("not implemented")
 }
 
-func (t *TargetsTableHandler) GetTarget(targetID models.TargetID) (*models.Target, error) {
-	return &models.Target{}, fmt.Errorf("not implemented")
+func (t *TargetsTableHandler) GetTarget(targetID models.TargetID) (*Target, error) {
+	return &Target{}, fmt.Errorf("not implemented")
 }
 
-func (t *TargetsTableHandler) CreateTarget(target *Target) (*models.Target, error) {
-	return &models.Target{}, fmt.Errorf("not implemented")
+func (t *TargetsTableHandler) CreateTarget(target *Target) (*Target, error) {
+	return &Target{}, fmt.Errorf("not implemented")
 }
 
-func (t *TargetsTableHandler) UpdateTarget(target *Target, targetID models.TargetID) (*models.Target, error) {
-	return &models.Target{}, fmt.Errorf("not implemented")
+func (t *TargetsTableHandler) UpdateTarget(target *Target, targetID models.TargetID) (*Target, error) {
+	return &Target{}, fmt.Errorf("not implemented")
 }
 
 func (t *TargetsTableHandler) DeleteTarget(targetID models.TargetID) error {

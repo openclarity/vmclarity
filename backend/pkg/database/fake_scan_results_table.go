@@ -22,22 +22,21 @@ import (
 )
 
 func (fs *FakeScanResultsTable) ListScanResults(targetID models.TargetID, params models.GetTargetsTargetIDScanResultsParams,
-) (*[]models.ScanResults, error) {
+) (*[]ScanResults, error) {
 	targets := *fs.targets
 	if _, ok := targets[targetID]; !ok {
 		return nil, fmt.Errorf("target not exists with ID: %s", targetID)
 	}
-	scanResults := make([]models.ScanResults, 0)
+	scanResults := make([]ScanResults, 0)
 	results := *fs.scanResults
 	for _, res := range results {
-		scanResult := CreateModelScanResultsFromDB(res)
-		scanResults = append(scanResults, *scanResult)
+		scanResults = append(scanResults, *res)
 	}
 	return &scanResults, nil
 }
 
 func (fs *FakeScanResultsTable) CreateScanResults(targetID models.TargetID, scanResults *ScanResults,
-) (*models.ScanResultsSummary, error) {
+) (*ScanResultsSummary, error) {
 	targets := *fs.targets
 	if _, ok := targets[targetID]; !ok {
 		return nil, fmt.Errorf("target not exists with ID: %s", targetID)
@@ -47,10 +46,10 @@ func (fs *FakeScanResultsTable) CreateScanResults(targetID models.TargetID, scan
 	scanRes := *fs.scanResults
 	scanRes[scanResults.ID] = scanResults
 	fs.scanResults = &scanRes
-	return CreateModelScanResultsSummaryFromDB(scanResults), nil
+	return CreateScanResultsSummary(scanResults), nil
 }
 
-func (fs *FakeScanResultsTable) GetScanResults(targetID models.TargetID, scanID models.ScanID) (*models.ScanResults, error) {
+func (fs *FakeScanResultsTable) GetScanResults(targetID models.TargetID, scanID models.ScanID) (*ScanResults, error) {
 	targets := *fs.targets
 	if _, ok := targets[targetID]; !ok {
 		return nil, fmt.Errorf("target not exists with ID: %s", targetID)
@@ -59,10 +58,10 @@ func (fs *FakeScanResultsTable) GetScanResults(targetID models.TargetID, scanID 
 		return nil, fmt.Errorf("scanID %s not exists for target with ID: %s", scanID, targetID)
 	}
 	results := *fs.scanResults
-	return CreateModelScanResultsFromDB(results[scanID]), nil
+	return results[scanID], nil
 }
 
-func (fs *FakeScanResultsTable) GetSBOM(targetID models.TargetID, scanID models.ScanID) (*models.SbomScan, error) {
+func (fs *FakeScanResultsTable) GetSBOM(targetID models.TargetID, scanID models.ScanID) (*SbomScanResults, error) {
 	targets := *fs.targets
 	if _, ok := targets[targetID]; !ok {
 		return nil, fmt.Errorf("target not exists with ID: %s", targetID)
@@ -71,10 +70,10 @@ func (fs *FakeScanResultsTable) GetSBOM(targetID models.TargetID, scanID models.
 		return nil, fmt.Errorf("scanID %s not exists for target with ID: %s", scanID, targetID)
 	}
 	results := *fs.scanResults
-	return &results[scanID].Sbom.Results, nil
+	return results[scanID].Sbom, nil
 }
 
-func (fs *FakeScanResultsTable) GetVulnerabilities(targetID models.TargetID, scanID models.ScanID) (*models.VulnerabilityScan, error) {
+func (fs *FakeScanResultsTable) GetVulnerabilities(targetID models.TargetID, scanID models.ScanID) (*VulnerabilityScanResults, error) {
 	targets := *fs.targets
 	if _, ok := targets[targetID]; !ok {
 		return nil, fmt.Errorf("target not exists with ID: %s", targetID)
@@ -83,10 +82,10 @@ func (fs *FakeScanResultsTable) GetVulnerabilities(targetID models.TargetID, sca
 		return nil, fmt.Errorf("scanID %s not exists for target with ID: %s", scanID, targetID)
 	}
 	results := *fs.scanResults
-	return &results[scanID].Vulnerability.Results, nil
+	return results[scanID].Vulnerability, nil
 }
 
-func (fs *FakeScanResultsTable) GetMalwares(targetID models.TargetID, scanID models.ScanID) (*models.MalwareScan, error) {
+func (fs *FakeScanResultsTable) GetMalwares(targetID models.TargetID, scanID models.ScanID) (*MalwareScanResults, error) {
 	targets := *fs.targets
 	if _, ok := targets[targetID]; !ok {
 		return nil, fmt.Errorf("target not exists with ID: %s", targetID)
@@ -95,10 +94,10 @@ func (fs *FakeScanResultsTable) GetMalwares(targetID models.TargetID, scanID mod
 		return nil, fmt.Errorf("scanID %s not exists for target with ID: %s", scanID, targetID)
 	}
 	results := *fs.scanResults
-	return &results[scanID].Malware.Results, nil
+	return results[scanID].Malware, nil
 }
 
-func (fs *FakeScanResultsTable) GetRootkits(targetID models.TargetID, scanID models.ScanID) (*models.RootkitScan, error) {
+func (fs *FakeScanResultsTable) GetRootkits(targetID models.TargetID, scanID models.ScanID) (*RootkitScanScanResults, error) {
 	targets := *fs.targets
 	if _, ok := targets[targetID]; !ok {
 		return nil, fmt.Errorf("target not exists with ID: %s", targetID)
@@ -107,10 +106,10 @@ func (fs *FakeScanResultsTable) GetRootkits(targetID models.TargetID, scanID mod
 		return nil, fmt.Errorf("scanID %s not exists for target with ID: %s", scanID, targetID)
 	}
 	results := *fs.scanResults
-	return &results[scanID].Rootkit.Results, nil
+	return results[scanID].Rootkit, nil
 }
 
-func (fs *FakeScanResultsTable) GetSecrets(targetID models.TargetID, scanID models.ScanID) (*models.SecretScan, error) {
+func (fs *FakeScanResultsTable) GetSecrets(targetID models.TargetID, scanID models.ScanID) (*SecretScanResults, error) {
 	targets := *fs.targets
 	if _, ok := targets[targetID]; !ok {
 		return nil, fmt.Errorf("target not exists with ID: %s", targetID)
@@ -119,10 +118,10 @@ func (fs *FakeScanResultsTable) GetSecrets(targetID models.TargetID, scanID mode
 		return nil, fmt.Errorf("scanID %s not exists for target with ID: %s", scanID, targetID)
 	}
 	results := *fs.scanResults
-	return &results[scanID].Secret.Results, nil
+	return results[scanID].Secret, nil
 }
 
-func (fs *FakeScanResultsTable) GetMisconfigurations(targetID models.TargetID, scanID models.ScanID) (*models.MisconfigurationScan, error) {
+func (fs *FakeScanResultsTable) GetMisconfigurations(targetID models.TargetID, scanID models.ScanID) (*MisconfigurationScanResults, error) {
 	targets := *fs.targets
 	if _, ok := targets[targetID]; !ok {
 		return nil, fmt.Errorf("target not exists with ID: %s", targetID)
@@ -131,10 +130,10 @@ func (fs *FakeScanResultsTable) GetMisconfigurations(targetID models.TargetID, s
 		return nil, fmt.Errorf("scanID %s not exists for target with ID: %s", scanID, targetID)
 	}
 	results := *fs.scanResults
-	return &results[scanID].Misconfiguration.Results, nil
+	return results[scanID].Misconfiguration, nil
 }
 
-func (fs *FakeScanResultsTable) GetExploits(targetID models.TargetID, scanID models.ScanID) (*models.ExploitScan, error) {
+func (fs *FakeScanResultsTable) GetExploits(targetID models.TargetID, scanID models.ScanID) (*ExploitScanResults, error) {
 	targets := *fs.targets
 	if _, ok := targets[targetID]; !ok {
 		return nil, fmt.Errorf("target not exists with ID: %s", targetID)
@@ -143,14 +142,14 @@ func (fs *FakeScanResultsTable) GetExploits(targetID models.TargetID, scanID mod
 		return nil, fmt.Errorf("scanID %s not exists for target with ID: %s", scanID, targetID)
 	}
 	results := *fs.scanResults
-	return &results[scanID].Exploit.Results, nil
+	return results[scanID].Exploit, nil
 }
 
 func (fs *FakeScanResultsTable) UpdateScanResults(
 	targetID models.TargetID,
 	scanID models.ScanID,
 	scanResults *ScanResults,
-) (*models.ScanResultsSummary, error) {
+) (*ScanResultsSummary, error) {
 	targets := *fs.targets
 	if _, ok := targets[targetID]; !ok {
 		return nil, fmt.Errorf("target not exists with ID: %s", targetID)
@@ -161,7 +160,7 @@ func (fs *FakeScanResultsTable) UpdateScanResults(
 	results := *fs.scanResults
 	results[scanID] = scanResults
 	fs.scanResults = &results
-	return CreateModelScanResultsSummaryFromDB(results[scanID]), nil
+	return CreateScanResultsSummary(results[scanID]), nil
 }
 
 func contains(str string, slice []string) bool {
