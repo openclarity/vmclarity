@@ -206,10 +206,9 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 		}
 	}
 
-	if err := s.createTargetOnBackendIfNotExist(ctx, instanceToScan.GetID()); err != nil {
+	if err := s.createEmptyScanResultOnBackend(ctx, instanceToScan.GetID()); err != nil {
 		return types.Job{}, fmt.Errorf("failed to create target with ID %s: %v", instanceToScan.GetID(), err)
 	}
-
 	launchInstance, err = s.providerClient.RunScanningJob(ctx, launchSnapshot, s.scanConfig.ScannerConfig)
 	if err != nil {
 		return types.Job{}, fmt.Errorf("failed to launch a new instance: %v", err)
@@ -258,6 +257,20 @@ func (s *Scanner) deleteJob(ctx context.Context, job *types.Job) {
 			log.Errorf("Failed to delete destination snapshot. snapshotID=%v: %v", job.DstSnapshot.GetID(), err)
 		}
 	}
+}
+
+func (s *Scanner) createEmptyScanResultOnBackend(ctx context.Context, targetID string) error {
+	if err := s.createTargetOnBackendIfNotExist(ctx, targetID); err != nil {
+		return fmt.Errorf("failed to create target with ID %s: %v", targetID, err)
+	}
+
+	resp, err := s.backendClient.PostTargetsTargetIDScanResults(ctx, targetID, models.ScanResults{})
+	if err != nil {
+		return fmt.Errorf("failed to post empty scanresults for target: %s", targetID)
+	}
+	defer resp.Body.Close()
+
+	return nil
 }
 
 func (s *Scanner) createTargetOnBackendIfNotExist(ctx context.Context, targetID string) error {

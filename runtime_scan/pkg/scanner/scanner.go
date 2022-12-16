@@ -17,6 +17,7 @@ package scanner
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"sync"
@@ -26,6 +27,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/api/client"
+	"github.com/openclarity/vmclarity/api/models"
 	_config "github.com/openclarity/vmclarity/runtime_scan/pkg/config"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
@@ -147,15 +149,10 @@ func (s *Scanner) GetScanStatus(data *scanData) *types.InstanceScanResult {
 			ErrType:   string(types.JobRun),
 			ErrSource: types.ScanErrSourceJob,
 		}
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode == http.StatusOK {
-		log.WithFields(s.logFields).Infof("Scan results %s exist for target %s.", data.scanUUID, data.instance.GetID())
-		scanResult.Success = true
-		scanResult.Status = types.DoneScanning
 		return scanResult
 	}
-	if resp.StatusCode != http.StatusNotFound {
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
 		log.WithFields(s.logFields).Errorf("Failed to get scan results %s for target: %s", data.scanUUID, data.instance.GetID())
 		scanResult.Status = types.NothingToScan
 		// TODO use map for scan errors in the case of scan types later
@@ -164,6 +161,25 @@ func (s *Scanner) GetScanStatus(data *scanData) *types.InstanceScanResult {
 			ErrType:   string(types.JobRun),
 			ErrSource: types.ScanErrSourceJob,
 		}
+		return scanResult
+	}
+	var results models.ScanResults
+	if err := json.NewDecoder(resp.Body).Decode(&results); err != nil {
+		log.WithFields(s.logFields).Errorf("Failed to decode scan results %s for target: %s", data.scanUUID, data.instance.GetID())
+		scanResult.Status = types.NothingToScan
+		// TODO use map for scan errors in the case of scan types later
+		scanResult.ScanError = &types.ScanError{
+			ErrMsg:    err.Error(),
+			ErrType:   string(types.JobRun),
+			ErrSource: types.ScanErrSourceJob,
+		}
+		return scanResult
+	}
+	if results.Sboms != nil {
+		log.WithFields(s.logFields).Infof("Scan results %s exist for target %s.", data.scanUUID, data.instance.GetID())
+		scanResult.Success = true
+		scanResult.Status = types.DoneScanning
+		return scanResult
 	}
 
 	log.WithFields(s.logFields).Infof("Scan results %s not exist for target %s. waiting for results...", data.scanUUID, data.instance.GetID())
