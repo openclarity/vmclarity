@@ -17,7 +17,6 @@ package scanner
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"sync"
@@ -40,7 +39,7 @@ type Scanner struct {
 	killSignal           chan bool
 	providerClient       provider.Client
 	logFields            log.Fields
-	backendClient        *client.Client
+	backendClient        *client.ClientWithResponses
 
 	region string
 
@@ -57,7 +56,7 @@ type scanData struct {
 	scanErr     *types.ScanError
 }
 
-func CreateScanner(config *_config.Config, providerClient provider.Client, backendClient *client.Client) *Scanner {
+func CreateScanner(config *_config.Config, providerClient provider.Client, backendClient *client.ClientWithResponses) *Scanner {
 	s := &Scanner{
 		progress: types.ScanProgress{
 			Status: types.Idle,
@@ -139,7 +138,7 @@ func (s *Scanner) GetScanStatus(data *scanData) *types.InstanceScanResult {
 		Success:  false,
 		Status:   types.Scanning,
 	}
-	resp, err := s.backendClient.GetTargetsTargetIDScanResultsScanID(context.TODO(), data.instance.GetID(), data.scanUUID)
+	resp, err := s.backendClient.GetTargetsTargetIDScanResultsScanIDWithResponse(context.TODO(), data.instance.GetID(), data.scanUUID)
 	if err != nil {
 		log.WithFields(s.logFields).Errorf("Failed to get scan results %s for target: %s", data.scanUUID, data.instance.GetID())
 		scanResult.Status = types.NothingToScan
@@ -151,8 +150,7 @@ func (s *Scanner) GetScanStatus(data *scanData) *types.InstanceScanResult {
 		}
 		return scanResult
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
+	if resp.HTTPResponse.StatusCode != http.StatusOK {
 		log.WithFields(s.logFields).Errorf("Failed to get scan results %s for target: %s", data.scanUUID, data.instance.GetID())
 		scanResult.Status = types.NothingToScan
 		// TODO use map for scan errors in the case of scan types later
@@ -163,19 +161,7 @@ func (s *Scanner) GetScanStatus(data *scanData) *types.InstanceScanResult {
 		}
 		return scanResult
 	}
-	var results models.ScanResults
-	if err := json.NewDecoder(resp.Body).Decode(&results); err != nil {
-		log.WithFields(s.logFields).Errorf("Failed to decode scan results %s for target: %s", data.scanUUID, data.instance.GetID())
-		scanResult.Status = types.NothingToScan
-		// TODO use map for scan errors in the case of scan types later
-		scanResult.ScanError = &types.ScanError{
-			ErrMsg:    err.Error(),
-			ErrType:   string(types.JobRun),
-			ErrSource: types.ScanErrSourceJob,
-		}
-		return scanResult
-	}
-	if checkResults(results) {
+	if checkResults(resp.JSON200) {
 		log.WithFields(s.logFields).Infof("Scan results %s exist for target %s.", data.scanUUID, data.instance.GetID())
 		scanResult.Success = true
 		scanResult.Status = types.DoneScanning
@@ -203,7 +189,7 @@ func (s *Scanner) Clear() {
 	close(s.killSignal)
 }
 
-func checkResults(results models.ScanResults) bool {
+func checkResults(results *models.ScanResults) bool {
 	// TODO the API returns empty sbom struct and []Packages
 	if results.Sboms != nil && results.Sboms.Packages != nil && len(*results.Sboms.Packages) > 0 {
 		return true

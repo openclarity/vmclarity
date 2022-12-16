@@ -22,14 +22,8 @@ import (
 )
 
 const (
-	ScannerAWSRegion          = "SCANNER_AWS_REGION"
-	defaultScannerAWSRegion   = "us-east-1"
-	BackendRestAddress        = "BACKEND_REST_Address"
-	defaultBackendRestAddress = "127.0.0.1"
-	BackendRestPort           = "BACKEND_REST_PORT"
-	defaultBackendRestPort    = 8080
-	BackendBaseURL            = "BACKEND_BASE_URL"
-	defaultBackendBaseURL     = "/api"
+	ScannerAWSRegion        = "SCANNER_AWS_REGION"
+	defaultScannerAWSRegion = "us-east-1"
 )
 
 type Config struct {
@@ -43,22 +37,19 @@ type Config struct {
 
 func setConfigDefaults() {
 	viper.SetDefault(ScannerAWSRegion, defaultScannerAWSRegion)
-	viper.SetDefault(BackendRestPort, defaultBackendRestPort)
-	viper.SetDefault(BackendRestAddress, defaultBackendRestAddress)
-	viper.SetDefault(BackendBaseURL, defaultBackendBaseURL)
 
 	viper.AutomaticEnv()
 }
 
-func LoadConfig() (*Config, error) {
+func LoadConfig(backendPort int, backendAddress, baseURL string) (*Config, error) {
 	setConfigDefaults()
 
 	config := &Config{
 		Region:          viper.GetString(ScannerAWSRegion),
 		AWSConfig:       aws.LoadConfig(),
-		BackendRestPort: viper.GetInt(BackendRestPort),
-		BackendAddress:  viper.GetString(BackendRestAddress),
-		BackendBaseURL:  viper.GetString(BackendBaseURL),
+		BackendRestPort: backendPort,
+		BackendAddress:  backendAddress,
+		BackendBaseURL:  baseURL,
 	}
 
 	return config, nil

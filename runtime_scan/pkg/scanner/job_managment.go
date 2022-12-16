@@ -264,22 +264,20 @@ func (s *Scanner) createEmptyScanResultOnBackend(ctx context.Context, targetID s
 		return fmt.Errorf("failed to create target with ID %s: %v", targetID, err)
 	}
 
-	resp, err := s.backendClient.PostTargetsTargetIDScanResults(ctx, targetID, models.ScanResults{})
+	_, err := s.backendClient.PostTargetsTargetIDScanResultsWithResponse(ctx, targetID, models.ScanResults{})
 	if err != nil {
 		return fmt.Errorf("failed to post empty scanresults for target: %s", targetID)
 	}
-	defer resp.Body.Close()
 
 	return nil
 }
 
 func (s *Scanner) createTargetOnBackendIfNotExist(ctx context.Context, targetID string) error {
-	resp, err := s.backendClient.PostTargets(ctx, models.Target{
+	resp, err := s.backendClient.PostTargetsWithResponse(ctx, models.Target{
 		Id: &targetID,
 	})
-	if err != nil && resp.StatusCode != http.StatusConflict {
+	if err != nil && resp.HTTPResponse.StatusCode != http.StatusConflict {
 		return fmt.Errorf("failed to create target with ID: %s", targetID)
 	}
-	defer resp.Body.Close()
 	return nil
 }

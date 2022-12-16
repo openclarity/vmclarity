@@ -33,7 +33,7 @@ type Orchestrator struct {
 	scanner        *_scanner.Scanner
 	config         *_config.Config
 	providerClient provider.Client
-	backendClient  *client.Client
+	backendClient  *client.ClientWithResponses
 	// server *rest.Server
 	sync.Mutex
 }
@@ -48,9 +48,8 @@ type VulnerabilitiesScanner interface {
 }
 
 func Create(config *_config.Config, providerClient provider.Client) (*Orchestrator, error) {
-	backendClient, err := client.NewClient(
-		fmt.Sprintf("%s:%d", config.BackendAddress, config.BackendRestPort),
-		client.WithBaseURL(config.BackendBaseURL),
+	backendClient, err := client.NewClientWithResponses(
+		fmt.Sprintf("%s:%d/%s", config.BackendAddress, config.BackendRestPort, config.BackendBaseURL),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create client for backend: %v", err)

@@ -32,7 +32,7 @@ import (
 
 const (
 	shutdownTimeoutSec = 10
-	baseURL            = "/api"
+	BaseURL            = "/api"
 )
 
 var oops = "oops"
@@ -70,7 +70,7 @@ func createEchoServer() (*echo.Echo, error) {
 	// Log all requests
 	e.Use(echomiddleware.Logger())
 	// Create a router group for baseURL
-	g := e.Group(baseURL)
+	g := e.Group(BaseURL)
 	// Use oapi-codegen validation middleware to validate
 	// the base URL router group against the OpenAPI schema.
 	g.Use(middleware.OapiRequestValidator(swagger))
@@ -84,7 +84,7 @@ func (s *Server) RegisterHandlers(dbHandler database.Database) {
 	}
 
 	// Register server above as the handler for the interface
-	server.RegisterHandlersWithBaseURL(s.echoServer, serverImpl, baseURL)
+	server.RegisterHandlersWithBaseURL(s.echoServer, serverImpl, BaseURL)
 }
 
 func (s *Server) Start(errChan chan struct{}) {

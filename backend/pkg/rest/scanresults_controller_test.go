@@ -27,7 +27,7 @@ import (
 	"github.com/openclarity/vmclarity/backend/pkg/database"
 )
 
-var scanResultsPath = fmt.Sprintf("%s/targets/%s/scanResults", baseURL, testID)
+var scanResultsPath = fmt.Sprintf("%s/targets/%s/scanResults", BaseURL, testID)
 
 func TestScanResultsController(t *testing.T) {
 	restServer := createTestRestServer(t)
@@ -59,7 +59,7 @@ func TestScanResultsController(t *testing.T) {
 	}
 
 	// Create new target.
-	result := testutil.NewRequest().Post(fmt.Sprintf("%s/targets", baseURL)).WithJsonBody(newTarget).Go(t, restServer.echoServer)
+	result := testutil.NewRequest().Post(fmt.Sprintf("%s/targets", BaseURL)).WithJsonBody(newTarget).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusCreated, result.Code())
 	target := models.Target{}
 	if err := result.UnmarshalBodyToObject(&target); err != nil {
