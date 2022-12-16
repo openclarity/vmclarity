@@ -139,7 +139,7 @@ func (s *Scanner) GetScanStatus(data *scanData) *types.InstanceScanResult {
 	}
 	resp, err := s.backendClient.GetTargetsTargetIDScanResultsScanID(context.TODO(), data.instance.GetID(), data.scanUUID)
 	if err != nil {
-		log.Errorf("Failed to get scan results for instance: %s", data.instance.GetID())
+		log.WithFields(s.logFields).Errorf("Failed to get scan results %s for target: %s", data.scanUUID, data.instance.GetID())
 		scanResult.Status = types.NothingToScan
 		// TODO use map for scan errors in the case of scan types later
 		scanResult.ScanError = &types.ScanError{
@@ -150,12 +150,13 @@ func (s *Scanner) GetScanStatus(data *scanData) *types.InstanceScanResult {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusOK {
-		log.Infof("Scan results %s exist for istance %s.", data.scanUUID, data.instance.GetID())
+		log.WithFields(s.logFields).Infof("Scan results %s exist for target %s.", data.scanUUID, data.instance.GetID())
 		scanResult.Success = true
 		scanResult.Status = types.DoneScanning
 		return scanResult
 	}
 	if resp.StatusCode != http.StatusNotFound {
+		log.WithFields(s.logFields).Errorf("Failed to get scan results %s for target: %s", data.scanUUID, data.instance.GetID())
 		scanResult.Status = types.NothingToScan
 		// TODO use map for scan errors in the case of scan types later
 		scanResult.ScanError = &types.ScanError{
@@ -165,7 +166,7 @@ func (s *Scanner) GetScanStatus(data *scanData) *types.InstanceScanResult {
 		}
 	}
 
-	log.Infof("Scan results %s not exist for istance %s. waiting for results...", data.scanUUID, data.instance.GetID())
+	log.WithFields(s.logFields).Infof("Scan results %s not exist for target %s. waiting for results...", data.scanUUID, data.instance.GetID())
 	return scanResult
 }
 
