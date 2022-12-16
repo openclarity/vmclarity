@@ -18,11 +18,13 @@ package scanner
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"sync/atomic"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/config"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
 )
@@ -127,11 +129,22 @@ func (s *Scanner) worker(queue chan *scanData, workNumber int, done, ks chan boo
 
 func (s *Scanner) waitForResult(data *scanData, ks chan bool) {
 	log.WithFields(s.logFields).Infof("Waiting for result. instanceID=%+v", data.instance.GetID())
-	ticker := time.NewTicker(s.scanConfig.JobResultTimeout)
+	ticker := time.NewTicker(s.scanConfig.JobResultsPollingInterval)
+	timeout := time.After(s.scanConfig.JobResultTimeout)
 	select {
-	case <-data.resultChan:
-		log.WithFields(s.logFields).Infof("Instance scanned result has arrived. instanceID=%v", data.instance.GetID())
 	case <-ticker.C:
+		log.WithFields(s.logFields).Infof("Polling scan results for instanceID=%v with scanID=%v", data.instance.GetID(), data.scanUUID)
+		// Get scan results from backend
+		instanceScanResults := s.GetScanStatus(data)
+		if instanceScanResults.Status != types.Scanning {
+			s.Lock()
+			data.success = instanceScanResults.Success
+			data.completed = true
+			data.scanErr = instanceScanResults.ScanError
+			s.Unlock()
+			return
+		}
+	case <-timeout:
 		errMsg := fmt.Errorf("job has timed out. instanceID=%v", data.instance.GetID())
 		log.WithFields(s.logFields).Warn(errMsg)
 		s.Lock()
@@ -193,6 +206,9 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 		}
 	}
 
+	if err := s.createEmptyScanResultOnBackend(ctx, instanceToScan.GetID()); err != nil {
+		return types.Job{}, fmt.Errorf("failed to create target with ID %s: %v", instanceToScan.GetID(), err)
+	}
 	launchInstance, err = s.providerClient.RunScanningJob(ctx, launchSnapshot, s.scanConfig.ScannerConfig)
 	if err != nil {
 		return types.Job{}, fmt.Errorf("failed to launch a new instance: %v", err)
@@ -241,4 +257,27 @@ func (s *Scanner) deleteJob(ctx context.Context, job *types.Job) {
 			log.Errorf("Failed to delete destination snapshot. snapshotID=%v: %v", job.DstSnapshot.GetID(), err)
 		}
 	}
+}
+
+func (s *Scanner) createEmptyScanResultOnBackend(ctx context.Context, targetID string) error {
+	if err := s.createTargetOnBackendIfNotExist(ctx, targetID); err != nil {
+		return fmt.Errorf("failed to create target with ID %s: %v", targetID, err)
+	}
+
+	_, err := s.backendClient.PostTargetsTargetIDScanResultsWithResponse(ctx, targetID, models.ScanResults{})
+	if err != nil {
+		return fmt.Errorf("failed to post empty scanresults for target: %s", targetID)
+	}
+
+	return nil
+}
+
+func (s *Scanner) createTargetOnBackendIfNotExist(ctx context.Context, targetID string) error {
+	resp, err := s.backendClient.PostTargetsWithResponse(ctx, models.Target{
+		Id: &targetID,
+	})
+	if err != nil && resp.HTTPResponse.StatusCode != http.StatusConflict {
+		return fmt.Errorf("failed to create target with ID: %s", targetID)
+	}
+	return nil
 }

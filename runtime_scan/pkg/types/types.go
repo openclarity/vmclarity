@@ -47,15 +47,11 @@ type InstanceScanResult struct {
 	// Instance data
 	Instance Instance
 	// Scan results
-	Vulnerabilities []string // TODO define vulnerabilities struct
-	Success         bool
-	ScanErrors      []*ScanError
+	Success   bool
+	Status    Status
+	ScanError *ScanError // TODO later map of errors for specified scan types
 }
 
-type ScanResults struct {
-	InstanceScanResults []*InstanceScanResult
-	Progress            ScanProgress
-}
 type Job struct {
 	Instance    Instance
 	SrcSnapshot Snapshot

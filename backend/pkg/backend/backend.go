@@ -82,7 +82,7 @@ func Run() {
 
 	_ = CreateBackend(dbHandler)
 
-	runtimeScanConfig, err := runtime_scan_config.LoadConfig()
+	runtimeScanConfig, err := runtime_scan_config.LoadConfig(config.BackendRestPort, "127.0.0.1", rest.BaseURL)
 	if err != nil {
 		log.Fatalf("Failed to load runtime scan orchestrator config: %v", err)
 	}

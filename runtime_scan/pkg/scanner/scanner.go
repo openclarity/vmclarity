@@ -16,13 +16,17 @@
 package scanner
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 	"sync"
 	"sync/atomic"
 
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/openclarity/vmclarity/api/client"
+	"github.com/openclarity/vmclarity/api/models"
 	_config "github.com/openclarity/vmclarity/runtime_scan/pkg/config"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
@@ -35,6 +39,7 @@ type Scanner struct {
 	killSignal           chan bool
 	providerClient       provider.Client
 	logFields            log.Fields
+	backendClient        *client.ClientWithResponses
 
 	region string
 
@@ -42,24 +47,16 @@ type Scanner struct {
 }
 
 type scanData struct {
-	instance              types.Instance
-	scanUUID              string
-	vulnerabilitiesResult vulnerabilitiesScanResult
-	resultChan            chan bool
-	success               bool
-	completed             bool
-	timeout               bool
-	scanErr               *types.ScanError
+	instance    types.Instance
+	scanUUID    string
+	scanResults []string
+	success     bool
+	completed   bool
+	timeout     bool
+	scanErr     *types.ScanError
 }
 
-type vulnerabilitiesScanResult struct {
-	result []string
-	// success   bool
-	// completed bool
-	// error *scanner.Error
-}
-
-func CreateScanner(config *_config.Config, providerClient provider.Client) *Scanner {
+func CreateScanner(config *_config.Config, providerClient provider.Client, backendClient *client.ClientWithResponses) *Scanner {
 	s := &Scanner{
 		progress: types.ScanProgress{
 			Status: types.Idle,
@@ -69,6 +66,7 @@ func CreateScanner(config *_config.Config, providerClient provider.Client) *Scan
 		logFields:      log.Fields{"scanner id": uuid.NewV4().String()},
 		region:         config.Region,
 		Mutex:          sync.Mutex{},
+		backendClient:  backendClient,
 	}
 
 	return s
@@ -82,14 +80,13 @@ func (s *Scanner) initScan() error {
 	// Populate the instance to scanData map
 	for _, instance := range s.scanConfig.Instances {
 		instanceIDToScanData[instance.GetID()] = &scanData{
-			instance:              instance,
-			scanUUID:              uuid.NewV4().String(),
-			vulnerabilitiesResult: vulnerabilitiesScanResult{},
-			resultChan:            make(chan bool),
-			success:               false,
-			completed:             false,
-			timeout:               false,
-			scanErr:               nil,
+			instance:    instance,
+			scanUUID:    uuid.NewV4().String(),
+			scanResults: nil, // list of expected scan results get from scanner job config implement later
+			success:     false,
+			completed:   false,
+			timeout:     false,
+			scanErr:     nil,
 		}
 	}
 
@@ -135,6 +132,46 @@ func (s *Scanner) Scan(scanConfig *_config.ScanConfig, scanDone chan struct{}) e
 	return nil
 }
 
+func (s *Scanner) GetScanStatus(data *scanData) *types.InstanceScanResult {
+	scanResult := &types.InstanceScanResult{
+		Instance: data.instance,
+		Success:  false,
+		Status:   types.Scanning,
+	}
+	resp, err := s.backendClient.GetTargetsTargetIDScanResultsScanIDWithResponse(context.TODO(), data.instance.GetID(), data.scanUUID)
+	if err != nil {
+		log.WithFields(s.logFields).Errorf("Failed to get scan results %s for target: %s", data.scanUUID, data.instance.GetID())
+		scanResult.Status = types.NothingToScan
+		// TODO use map for scan errors in the case of scan types later
+		scanResult.ScanError = &types.ScanError{
+			ErrMsg:    err.Error(),
+			ErrType:   string(types.JobRun),
+			ErrSource: types.ScanErrSourceJob,
+		}
+		return scanResult
+	}
+	if resp.HTTPResponse.StatusCode != http.StatusOK {
+		log.WithFields(s.logFields).Errorf("Failed to get scan results %s for target: %s", data.scanUUID, data.instance.GetID())
+		scanResult.Status = types.NothingToScan
+		// TODO use map for scan errors in the case of scan types later
+		scanResult.ScanError = &types.ScanError{
+			ErrMsg:    err.Error(),
+			ErrType:   string(types.JobRun),
+			ErrSource: types.ScanErrSourceJob,
+		}
+		return scanResult
+	}
+	if checkResults(resp.JSON200) {
+		log.WithFields(s.logFields).Infof("Scan results %s exist for target %s.", data.scanUUID, data.instance.GetID())
+		scanResult.Success = true
+		scanResult.Status = types.DoneScanning
+		return scanResult
+	}
+
+	log.WithFields(s.logFields).Infof("Scan results %s not exist for target %s. waiting for results...", data.scanUUID, data.instance.GetID())
+	return scanResult
+}
+
 func (s *Scanner) ScanProgress() types.ScanProgress {
 	return types.ScanProgress{
 		InstancesToScan:          s.progress.InstancesToScan,
@@ -144,33 +181,18 @@ func (s *Scanner) ScanProgress() types.ScanProgress {
 	}
 }
 
-func (s *Scanner) Results() *types.ScanResults {
-	s.Lock()
-	defer s.Unlock()
-
-	instanceScanResults := make([]*types.InstanceScanResult, 0)
-
-	for _, scanD := range s.instanceIDToScanData {
-		if !scanD.completed {
-			continue
-		}
-		instanceScanResults = append(instanceScanResults, &types.InstanceScanResult{
-			Instance:        scanD.instance,
-			Vulnerabilities: scanD.vulnerabilitiesResult.result,
-			Success:         scanD.success,
-		})
-	}
-
-	return &types.ScanResults{
-		InstanceScanResults: instanceScanResults,
-		Progress:            s.ScanProgress(),
-	}
-}
-
 func (s *Scanner) Clear() {
 	s.Lock()
 	defer s.Unlock()
 
 	log.WithFields(s.logFields).Infof("Clearing...")
 	close(s.killSignal)
+}
+
+func checkResults(results *models.ScanResults) bool {
+	// TODO the API returns empty sbom struct and []Packages
+	if results.Sboms != nil && results.Sboms.Packages != nil && len(*results.Sboms.Packages) > 0 {
+		return true
+	}
+	return false
 }

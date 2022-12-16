@@ -155,13 +155,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ScanResultsSummary'
+                $ref: '#/components/schemas/ScanResults'
         409:
           description: Scan results already exist.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ScanResultsSummary'
+                $ref: '#/components/schemas/ScanResults'
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
@@ -198,7 +198,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ScanResultsSummary'
+                $ref: '#/components/schemas/ScanResults'
         404:
           description: Scan ID not found.
           content: {}
