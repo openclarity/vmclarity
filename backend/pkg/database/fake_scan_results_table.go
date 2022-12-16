@@ -29,8 +29,8 @@ func (fs *FakeScanResultsTable) ListScanResults(targetID models.TargetID, params
 	}
 	scanResults := make([]ScanResults, 0)
 	results := *fs.scanResults
-	for _, res := range results {
-		scanResults = append(scanResults, *res)
+	for _, scanID := range targets[targetID].ScanResults {
+		scanResults = append(scanResults, *results[scanID])
 	}
 	return &scanResults, nil
 }
