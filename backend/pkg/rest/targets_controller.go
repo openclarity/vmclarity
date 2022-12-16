@@ -33,7 +33,7 @@ func (s *ServerImpl) GetTargets(ctx echo.Context, params models.GetTargetsParams
 		return sendError(ctx, http.StatusInternalServerError, oops)
 	}
 	targetsModel := []models.Target{}
-	for _, target := range *targets {
+	for _, target := range targets {
 		target := target
 		targetModel := database.CreateModelTargetFromDB(&target)
 		targetsModel = append(targetsModel, *targetModel)

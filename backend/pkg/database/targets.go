@@ -32,7 +32,7 @@ type Target struct {
 }
 
 type TargetsTable interface {
-	ListTargets(params models.GetTargetsParams) (*[]Target, error)
+	ListTargets(params models.GetTargetsParams) ([]Target, error)
 	GetTarget(targetID models.TargetID) (*Target, error)
 	CreateTarget(target *Target) (*Target, error)
 	UpdateTarget(target *Target, targetID models.TargetID) (*Target, error)
@@ -49,8 +49,8 @@ func (db *Handler) TargetsTable() TargetsTable {
 	}
 }
 
-func (t *TargetsTableHandler) ListTargets(params models.GetTargetsParams) (*[]Target, error) {
-	return &[]Target{}, fmt.Errorf("not implemented")
+func (t *TargetsTableHandler) ListTargets(params models.GetTargetsParams) ([]Target, error) {
+	return []Target{}, fmt.Errorf("not implemented")
 }
 
 func (t *TargetsTableHandler) GetTarget(targetID models.TargetID) (*Target, error) {

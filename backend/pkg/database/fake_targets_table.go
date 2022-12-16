@@ -21,12 +21,12 @@ import (
 	"github.com/openclarity/vmclarity/api/models"
 )
 
-func (ft *FakeTargetsTable) ListTargets(params models.GetTargetsParams) (*[]Target, error) {
+func (ft *FakeTargetsTable) ListTargets(params models.GetTargetsParams) ([]Target, error) {
 	targets := make([]Target, 0)
 	for _, target := range *ft.targets {
 		targets = append(targets, *target)
 	}
-	return &targets, nil
+	return targets, nil
 }
 
 func (ft *FakeTargetsTable) GetTarget(targetID models.TargetID) (*Target, error) {
