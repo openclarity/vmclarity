@@ -56,12 +56,12 @@ func (s *ServerImpl) PostTargetsTargetIDScanResults(
 	}
 
 	newScanResults := database.CreateDBScanResultsFromModel(&scanResults)
-	scanResultsSummary, err := s.dbHandler.ScanResultsTable().CreateScanResults(targetID, newScanResults)
+	results, err := s.dbHandler.ScanResultsTable().CreateScanResults(targetID, newScanResults)
 	if err != nil {
 		// TODO check errors for status code
 		return sendError(ctx, http.StatusInternalServerError, err.Error())
 	}
-	return sendResponse(ctx, http.StatusCreated, scanResultsSummary)
+	return sendResponse(ctx, http.StatusCreated, database.CreateModelScanResultsFromDB(results))
 }
 
 //nolint:cyclop
@@ -92,11 +92,11 @@ func (s *ServerImpl) PutTargetsTargetIDScanResultsScanID(
 	}
 
 	newScanResults := database.CreateDBScanResultsFromModel(&scanResults)
-	scanResultsSummary, err := s.dbHandler.ScanResultsTable().UpdateScanResults(targetID, scanID, newScanResults)
+	results, err := s.dbHandler.ScanResultsTable().UpdateScanResults(targetID, scanID, newScanResults)
 	if err != nil {
 		// TODO check errors for status code
 		log.Errorf("%v", err)
 		return sendError(ctx, http.StatusInternalServerError, oops)
 	}
-	return sendResponse(ctx, http.StatusOK, scanResultsSummary)
+	return sendResponse(ctx, http.StatusOK, database.CreateModelScanResultsFromDB(results))
 }

@@ -65,20 +65,10 @@ type ExploitScanResults struct {
 	Results models.ExploitScan
 }
 
-type ScanResultsSummary struct {
-	PackagesCount          int
-	VulnerabilitiesCount   int
-	MalwaresCount          int
-	SecretsCount           int
-	RootkitsCount          int
-	MisconfigurationsCount int
-	ExploitsCount          int
-}
-
 //nolint:interfacebloat
 type ScanResultsTable interface {
 	ListScanResults(targetID models.TargetID, params models.GetTargetsTargetIDScanResultsParams) ([]ScanResults, error)
-	CreateScanResults(targetID models.TargetID, scanResults *ScanResults) (*ScanResultsSummary, error)
+	CreateScanResults(targetID models.TargetID, scanResults *ScanResults) (*ScanResults, error)
 	GetScanResults(targetID models.TargetID, scanID models.ScanID) (*ScanResults, error)
 	GetSBOM(targetID models.TargetID, scanID models.ScanID) (*SbomScanResults, error)
 	GetVulnerabilities(targetID models.TargetID, scanID models.ScanID) (*VulnerabilityScanResults, error)
@@ -87,7 +77,7 @@ type ScanResultsTable interface {
 	GetSecrets(targetID models.TargetID, scanID models.ScanID) (*SecretScanResults, error)
 	GetMisconfigurations(targetID models.TargetID, scanID models.ScanID) (*MisconfigurationScanResults, error)
 	GetExploits(targetID models.TargetID, scanID models.ScanID) (*ExploitScanResults, error)
-	UpdateScanResults(targetID models.TargetID, scanID models.ScanID, scanResults *ScanResults) (*ScanResultsSummary, error)
+	UpdateScanResults(targetID models.TargetID, scanID models.ScanID, scanResults *ScanResults) (*ScanResults, error)
 }
 
 type ScanResultsTableHandler struct {
@@ -106,8 +96,8 @@ func (s *ScanResultsTableHandler) ListScanResults(targetID models.TargetID, para
 }
 
 func (s *ScanResultsTableHandler) CreateScanResults(targetID models.TargetID, scanResults *ScanResults,
-) (*ScanResultsSummary, error) {
-	return &ScanResultsSummary{}, fmt.Errorf("not implemented")
+) (*ScanResults, error) {
+	return &ScanResults{}, fmt.Errorf("not implemented")
 }
 
 func (s *ScanResultsTableHandler) GetScanResults(targetID models.TargetID, scanID models.ScanID) (*ScanResults, error) {
@@ -146,8 +136,8 @@ func (s *ScanResultsTableHandler) UpdateScanResults(
 	targetID models.TargetID,
 	scanID models.ScanID,
 	scanResults *ScanResults,
-) (*ScanResultsSummary, error) {
-	return &ScanResultsSummary{}, fmt.Errorf("not implemented")
+) (*ScanResults, error) {
+	return &ScanResults{}, fmt.Errorf("not implemented")
 }
 
 // TODO after db design.
@@ -250,52 +240,6 @@ func CreateModelScanResultsFromDB(scanResults *ScanResults) *models.ScanResults 
 		Secrets:           &secretRes,
 		Misconfigurations: &misconfigRes,
 		Exploits:          &exploitRes,
-	}
-}
-
-func CreateScanResultsSummary(scanResults *ScanResults) *ScanResultsSummary {
-	var packagesCount, vulnerabilitiesCount, malwareCount, secretCount, rootkitCount, misconfigurationCount, exploitsCount int
-	if scanResults.Sbom != nil {
-		packagesCount = len(*scanResults.Sbom.Results.Packages)
-	}
-	if scanResults.Vulnerability != nil {
-		vulnerabilitiesCount = len(*scanResults.Vulnerability.Results.Vulnerabilities)
-	}
-	if scanResults.Malware != nil {
-		malwareCount = len(*scanResults.Malware.Results.Malwares)
-	}
-	if scanResults.Secret != nil {
-		secretCount = len(*scanResults.Secret.Results.Secrets)
-	}
-	if scanResults.Rootkit != nil {
-		rootkitCount = len(*scanResults.Rootkit.Results.Rootkits)
-	}
-	if scanResults.Misconfiguration != nil {
-		misconfigurationCount = len(*scanResults.Misconfiguration.Results.Misconfigurations)
-	}
-	if scanResults.Exploit != nil {
-		exploitsCount = len(*scanResults.Exploit.Results.Exploits)
-	}
-	return &ScanResultsSummary{
-		PackagesCount:          packagesCount,
-		VulnerabilitiesCount:   vulnerabilitiesCount,
-		MalwaresCount:          malwareCount,
-		SecretsCount:           secretCount,
-		RootkitsCount:          rootkitCount,
-		MisconfigurationsCount: misconfigurationCount,
-		ExploitsCount:          exploitsCount,
-	}
-}
-
-func CreateModelScanResultsSummaryFromDB(summary ScanResultsSummary) *models.ScanResultsSummary {
-	return &models.ScanResultsSummary{
-		PackagesCount:          &summary.PackagesCount,
-		VulnerabilitiesCount:   &summary.VulnerabilitiesCount,
-		MalwaresCount:          &summary.MalwaresCount,
-		SecretsCount:           &summary.SecretsCount,
-		RootkitsCount:          &summary.RootkitsCount,
-		MisconfigurationsCount: &summary.MisconfigurationsCount,
-		ExploitsCount:          &summary.ExploitsCount,
 	}
 }
 

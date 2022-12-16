@@ -36,7 +36,8 @@ func (fs *FakeScanResultsTable) ListScanResults(targetID models.TargetID, params
 }
 
 func (fs *FakeScanResultsTable) CreateScanResults(targetID models.TargetID, scanResults *ScanResults,
-) (*ScanResultsSummary, error) {
+) (*ScanResults, error) {
+	sr := scanResults
 	targets := *fs.targets
 	if _, ok := targets[targetID]; !ok {
 		return nil, fmt.Errorf("target not exists with ID: %s", targetID)
@@ -46,7 +47,7 @@ func (fs *FakeScanResultsTable) CreateScanResults(targetID models.TargetID, scan
 	scanRes := *fs.scanResults
 	scanRes[scanResults.ID] = scanResults
 	fs.scanResults = &scanRes
-	return CreateScanResultsSummary(scanResults), nil
+	return sr, nil
 }
 
 func (fs *FakeScanResultsTable) GetScanResults(targetID models.TargetID, scanID models.ScanID) (*ScanResults, error) {
@@ -149,7 +150,7 @@ func (fs *FakeScanResultsTable) UpdateScanResults(
 	targetID models.TargetID,
 	scanID models.ScanID,
 	scanResults *ScanResults,
-) (*ScanResultsSummary, error) {
+) (*ScanResults, error) {
 	targets := *fs.targets
 	if _, ok := targets[targetID]; !ok {
 		return nil, fmt.Errorf("target not exists with ID: %s", targetID)
@@ -160,7 +161,7 @@ func (fs *FakeScanResultsTable) UpdateScanResults(
 	results := *fs.scanResults
 	results[scanID] = scanResults
 	fs.scanResults = &results
-	return CreateScanResultsSummary(results[scanID]), nil
+	return results[scanID], nil
 }
 
 func contains(str string, slice []string) bool {

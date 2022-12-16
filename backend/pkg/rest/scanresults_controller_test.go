@@ -108,13 +108,12 @@ func TestScanResultsController(t *testing.T) {
 	// POST new scan results to target
 	result = testutil.NewRequest().Post(scanResultsPath).WithJsonBody(newScanResults).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusCreated, result.Code())
-	got := models.ScanResultsSummary{}
+	got := models.ScanResults{}
 	if err := result.UnmarshalBodyToObject(&got); err != nil {
 		t.Errorf("failed to unmarshal response body")
 	}
-	scanResultSummary := database.CreateScanResultsSummary(database.CreateDBScanResultsFromModel(&newScanResults))
-	want := database.CreateModelScanResultsSummaryFromDB(*scanResultSummary)
-	assert.Equal(t, *want, got)
+
+	assert.Equal(t, newScanResults, got)
 
 	// Get scan results for specified target
 	result = testutil.NewRequest().Get(fmt.Sprintf("%s?page=1&pageSize=1", scanResultsPath)).Go(t, restServer.echoServer)
