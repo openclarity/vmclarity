@@ -18,7 +18,6 @@ package database
 import (
 	"fmt"
 
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 
 	"github.com/openclarity/vmclarity/api/models"
@@ -138,111 +137,4 @@ func (s *ScanResultsTableHandler) UpdateScanResults(
 	scanResults *ScanResults,
 ) (*ScanResults, error) {
 	return &ScanResults{}, fmt.Errorf("not implemented")
-}
-
-// TODO after db design.
-func CreateDBScanResultsFromModel(scanResults *models.ScanResults) *ScanResults {
-	var scanResultID string
-	if scanResults.Id == nil || *scanResults.Id == "" {
-		scanResultID = generateScanResultsID()
-	} else {
-		scanResultID = *scanResults.Id
-	}
-	var sbomRes *SbomScanResults
-	if scanResults.Sboms != nil {
-		sbomRes = &SbomScanResults{
-			Results: *scanResults.Sboms,
-		}
-	}
-	var vulRs *VulnerabilityScanResults
-	if scanResults.Vulnerabilities != nil {
-		vulRs = &VulnerabilityScanResults{
-			Results: *scanResults.Vulnerabilities,
-		}
-	}
-	var malwareRes *MalwareScanResults
-	if scanResults.Malwares != nil {
-		malwareRes = &MalwareScanResults{
-			Results: *scanResults.Malwares,
-		}
-	}
-	var secretRes *SecretScanResults
-	if scanResults.Secrets != nil {
-		secretRes = &SecretScanResults{
-			Results: *scanResults.Secrets,
-		}
-	}
-	var rootkitRes *RootkitScanScanResults
-	if scanResults.Rootkits != nil {
-		rootkitRes = &RootkitScanScanResults{
-			Results: *scanResults.Rootkits,
-		}
-	}
-	var misconfigRes *MisconfigurationScanResults
-	if scanResults.Misconfigurations != nil {
-		misconfigRes = &MisconfigurationScanResults{
-			Results: *scanResults.Misconfigurations,
-		}
-	}
-	var exploitRes *ExploitScanResults
-	if scanResults.Exploits != nil {
-		exploitRes = &ExploitScanResults{
-			Results: *scanResults.Exploits,
-		}
-	}
-	return &ScanResults{
-		ID:               scanResultID,
-		Sbom:             sbomRes,
-		Vulnerability:    vulRs,
-		Malware:          malwareRes,
-		Rootkit:          rootkitRes,
-		Secret:           secretRes,
-		Misconfiguration: misconfigRes,
-		Exploit:          exploitRes,
-	}
-}
-
-func CreateModelScanResultsFromDB(scanResults *ScanResults) *models.ScanResults {
-	var sbomRes models.SbomScan
-	if scanResults.Sbom != nil {
-		sbomRes = scanResults.Sbom.Results
-	}
-	var vulRes models.VulnerabilityScan
-	if scanResults.Vulnerability != nil {
-		vulRes = scanResults.Vulnerability.Results
-	}
-	var malwareRes models.MalwareScan
-	if scanResults.Malware != nil {
-		malwareRes = scanResults.Malware.Results
-	}
-	var secretRes models.SecretScan
-	if scanResults.Secret != nil {
-		secretRes = scanResults.Secret.Results
-	}
-	var misconfigRes models.MisconfigurationScan
-	if scanResults.Misconfiguration != nil {
-		misconfigRes = scanResults.Misconfiguration.Results
-	}
-	var rootkitRes models.RootkitScan
-	if scanResults.Rootkit != nil {
-		rootkitRes = scanResults.Rootkit.Results
-	}
-	var exploitRes models.ExploitScan
-	if scanResults.Exploit != nil {
-		exploitRes = scanResults.Exploit.Results
-	}
-	return &models.ScanResults{
-		Id:                &scanResults.ID,
-		Sboms:             &sbomRes,
-		Vulnerabilities:   &vulRes,
-		Malwares:          &malwareRes,
-		Rootkits:          &rootkitRes,
-		Secrets:           &secretRes,
-		Misconfigurations: &misconfigRes,
-		Exploits:          &exploitRes,
-	}
-}
-
-func generateScanResultsID() string {
-	return uuid.NewString()
 }

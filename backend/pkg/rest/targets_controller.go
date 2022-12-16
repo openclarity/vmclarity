@@ -35,7 +35,7 @@ func (s *ServerImpl) GetTargets(ctx echo.Context, params models.GetTargetsParams
 	targetsModel := []models.Target{}
 	for _, target := range targets {
 		target := target
-		targetModel := database.CreateModelTargetFromDB(&target)
+		targetModel := createModelTargetFromDB(&target)
 		targetsModel = append(targetsModel, *targetModel)
 	}
 	return sendResponse(ctx, http.StatusOK, &targetsModel)
@@ -48,14 +48,14 @@ func (s *ServerImpl) PostTargets(ctx echo.Context) error {
 		return sendError(ctx, http.StatusBadRequest, err.Error())
 	}
 
-	newTarget := database.CreateDBTargetFromModel(&target)
+	newTarget := createDBTargetFromModel(&target)
 	createdTarget, err := s.dbHandler.TargetsTable().CreateTarget(newTarget)
 	if err != nil {
 		// TODO check errors for status code
 		log.Errorf("%v", err)
 		return sendError(ctx, http.StatusInternalServerError, oops)
 	}
-	return sendResponse(ctx, http.StatusCreated, database.CreateModelTargetFromDB(createdTarget))
+	return sendResponse(ctx, http.StatusCreated, createModelTargetFromDB(createdTarget))
 }
 
 func (s *ServerImpl) GetTargetsTargetID(ctx echo.Context, targetID models.TargetID) error {
@@ -76,14 +76,14 @@ func (s *ServerImpl) PutTargetsTargetID(ctx echo.Context, targetID models.Target
 		return sendError(ctx, http.StatusBadRequest, oops)
 	}
 
-	newTarget := database.CreateDBTargetFromModel(&target)
+	newTarget := createDBTargetFromModel(&target)
 	updatedTarget, err := s.dbHandler.TargetsTable().UpdateTarget(newTarget, targetID)
 	if err != nil {
 		// TODO check errors for status code
 		log.Errorf("%v", err)
 		return sendError(ctx, http.StatusInternalServerError, oops)
 	}
-	return sendResponse(ctx, http.StatusOK, database.CreateModelTargetFromDB(updatedTarget))
+	return sendResponse(ctx, http.StatusOK, createModelTargetFromDB(updatedTarget))
 }
 
 func (s *ServerImpl) DeleteTargetsTargetID(ctx echo.Context, targetID models.TargetID) error {
@@ -94,4 +94,23 @@ func (s *ServerImpl) DeleteTargetsTargetID(ctx echo.Context, targetID models.Tar
 		return sendError(ctx, http.StatusNotFound, oops)
 	}
 	return sendResponse(ctx, http.StatusNoContent, "deleted")
+}
+
+// TODO after db design.
+func createDBTargetFromModel(target *models.Target) *database.Target {
+	return &database.Target{
+		ID:          *target.Id,
+		ScanResults: *target.ScanResults,
+		TargetInfo:  target.TargetInfo,
+		TargetType:  *target.TargetType,
+	}
+}
+
+func createModelTargetFromDB(target *database.Target) *models.Target {
+	return &models.Target{
+		Id:          &target.ID,
+		ScanResults: &target.ScanResults,
+		TargetInfo:  target.TargetInfo,
+		TargetType:  &target.TargetType,
+	}
 }

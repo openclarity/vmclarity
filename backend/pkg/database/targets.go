@@ -68,22 +68,3 @@ func (t *TargetsTableHandler) UpdateTarget(target *Target, targetID models.Targe
 func (t *TargetsTableHandler) DeleteTarget(targetID models.TargetID) error {
 	return fmt.Errorf("not implemented")
 }
-
-// TODO after db design.
-func CreateDBTargetFromModel(target *models.Target) *Target {
-	return &Target{
-		ID:          *target.Id,
-		ScanResults: *target.ScanResults,
-		TargetInfo:  target.TargetInfo,
-		TargetType:  *target.TargetType,
-	}
-}
-
-func CreateModelTargetFromDB(target *Target) *models.Target {
-	return &models.Target{
-		Id:          &target.ID,
-		ScanResults: &target.ScanResults,
-		TargetInfo:  target.TargetInfo,
-		TargetType:  &target.TargetType,
-	}
-}

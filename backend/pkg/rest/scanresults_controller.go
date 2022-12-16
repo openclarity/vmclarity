@@ -18,6 +18,7 @@ package rest
 import (
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	log "github.com/sirupsen/logrus"
 
@@ -39,7 +40,7 @@ func (s *ServerImpl) GetTargetsTargetIDScanResults(
 	resultsModel := []models.ScanResults{}
 	for _, result := range results {
 		result := result
-		resultModel := database.CreateModelScanResultsFromDB(&result)
+		resultModel := createModelScanResultsFromDB(&result)
 		resultsModel = append(resultsModel, *resultModel)
 	}
 	return sendResponse(ctx, http.StatusOK, &resultsModel)
@@ -55,13 +56,13 @@ func (s *ServerImpl) PostTargetsTargetIDScanResults(
 		return sendError(ctx, http.StatusBadRequest, err.Error())
 	}
 
-	newScanResults := database.CreateDBScanResultsFromModel(&scanResults)
+	newScanResults := createDBScanResultsFromModel(&scanResults)
 	results, err := s.dbHandler.ScanResultsTable().CreateScanResults(targetID, newScanResults)
 	if err != nil {
 		// TODO check errors for status code
 		return sendError(ctx, http.StatusInternalServerError, err.Error())
 	}
-	return sendResponse(ctx, http.StatusCreated, database.CreateModelScanResultsFromDB(results))
+	return sendResponse(ctx, http.StatusCreated, createModelScanResultsFromDB(results))
 }
 
 //nolint:cyclop
@@ -76,7 +77,7 @@ func (s *ServerImpl) GetTargetsTargetIDScanResultsScanID(
 		log.Errorf("%v", err)
 		return sendError(ctx, http.StatusNotFound, oops)
 	}
-	return sendResponse(ctx, http.StatusOK, database.CreateModelScanResultsFromDB(result))
+	return sendResponse(ctx, http.StatusOK, createModelScanResultsFromDB(result))
 }
 
 func (s *ServerImpl) PutTargetsTargetIDScanResultsScanID(
@@ -91,12 +92,119 @@ func (s *ServerImpl) PutTargetsTargetIDScanResultsScanID(
 		return sendError(ctx, http.StatusBadRequest, oops)
 	}
 
-	newScanResults := database.CreateDBScanResultsFromModel(&scanResults)
+	newScanResults := createDBScanResultsFromModel(&scanResults)
 	results, err := s.dbHandler.ScanResultsTable().UpdateScanResults(targetID, scanID, newScanResults)
 	if err != nil {
 		// TODO check errors for status code
 		log.Errorf("%v", err)
 		return sendError(ctx, http.StatusInternalServerError, oops)
 	}
-	return sendResponse(ctx, http.StatusOK, database.CreateModelScanResultsFromDB(results))
+	return sendResponse(ctx, http.StatusOK, createModelScanResultsFromDB(results))
+}
+
+// TODO after db design.
+func createDBScanResultsFromModel(scanResults *models.ScanResults) *database.ScanResults {
+	var scanResultID string
+	if scanResults.Id == nil || *scanResults.Id == "" {
+		scanResultID = generateScanResultsID()
+	} else {
+		scanResultID = *scanResults.Id
+	}
+	var sbomRes *database.SbomScanResults
+	if scanResults.Sboms != nil {
+		sbomRes = &database.SbomScanResults{
+			Results: *scanResults.Sboms,
+		}
+	}
+	var vulRs *database.VulnerabilityScanResults
+	if scanResults.Vulnerabilities != nil {
+		vulRs = &database.VulnerabilityScanResults{
+			Results: *scanResults.Vulnerabilities,
+		}
+	}
+	var malwareRes *database.MalwareScanResults
+	if scanResults.Malwares != nil {
+		malwareRes = &database.MalwareScanResults{
+			Results: *scanResults.Malwares,
+		}
+	}
+	var secretRes *database.SecretScanResults
+	if scanResults.Secrets != nil {
+		secretRes = &database.SecretScanResults{
+			Results: *scanResults.Secrets,
+		}
+	}
+	var rootkitRes *database.RootkitScanScanResults
+	if scanResults.Rootkits != nil {
+		rootkitRes = &database.RootkitScanScanResults{
+			Results: *scanResults.Rootkits,
+		}
+	}
+	var misconfigRes *database.MisconfigurationScanResults
+	if scanResults.Misconfigurations != nil {
+		misconfigRes = &database.MisconfigurationScanResults{
+			Results: *scanResults.Misconfigurations,
+		}
+	}
+	var exploitRes *database.ExploitScanResults
+	if scanResults.Exploits != nil {
+		exploitRes = &database.ExploitScanResults{
+			Results: *scanResults.Exploits,
+		}
+	}
+	return &database.ScanResults{
+		ID:               scanResultID,
+		Sbom:             sbomRes,
+		Vulnerability:    vulRs,
+		Malware:          malwareRes,
+		Rootkit:          rootkitRes,
+		Secret:           secretRes,
+		Misconfiguration: misconfigRes,
+		Exploit:          exploitRes,
+	}
+}
+
+func createModelScanResultsFromDB(scanResults *database.ScanResults) *models.ScanResults {
+	var sbomRes models.SbomScan
+	if scanResults.Sbom != nil {
+		sbomRes = scanResults.Sbom.Results
+	}
+	var vulRes models.VulnerabilityScan
+	if scanResults.Vulnerability != nil {
+		vulRes = scanResults.Vulnerability.Results
+	}
+	var malwareRes models.MalwareScan
+	if scanResults.Malware != nil {
+		malwareRes = scanResults.Malware.Results
+	}
+	var secretRes models.SecretScan
+	if scanResults.Secret != nil {
+		secretRes = scanResults.Secret.Results
+	}
+	var misconfigRes models.MisconfigurationScan
+	if scanResults.Misconfiguration != nil {
+		misconfigRes = scanResults.Misconfiguration.Results
+	}
+	var rootkitRes models.RootkitScan
+	if scanResults.Rootkit != nil {
+		rootkitRes = scanResults.Rootkit.Results
+	}
+	var exploitRes models.ExploitScan
+	if scanResults.Exploit != nil {
+		exploitRes = scanResults.Exploit.Results
+	}
+	return &models.ScanResults{
+		Id:                &scanResults.ID,
+		Sboms:             &sbomRes,
+		Vulnerabilities:   &vulRes,
+		Malwares:          &malwareRes,
+		Rootkits:          &rootkitRes,
+		Secrets:           &secretRes,
+		Misconfigurations: &misconfigRes,
+		Exploits:          &exploitRes,
+	}
+}
+
+func generateScanResultsID() string {
+	return uuid.NewString()
 }
