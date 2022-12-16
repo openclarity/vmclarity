@@ -929,8 +929,8 @@ func (r GetTargetsTargetIDScanResultsResponse) StatusCode() int {
 type PostTargetsTargetIDScanResultsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON201      *ScanResultsSummary
-	JSON409      *ScanResultsSummary
+	JSON201      *ScanResults
+	JSON409      *ScanResults
 	JSONDefault  *ApiResponse
 }
 
@@ -976,7 +976,7 @@ func (r GetTargetsTargetIDScanResultsScanIDResponse) StatusCode() int {
 type PutTargetsTargetIDScanResultsScanIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ScanResultsSummary
+	JSON200      *ScanResults
 	JSONDefault  *ApiResponse
 }
 
@@ -1341,14 +1341,14 @@ func ParsePostTargetsTargetIDScanResultsResponse(rsp *http.Response) (*PostTarge
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
-		var dest ScanResultsSummary
+		var dest ScanResults
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON201 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
-		var dest ScanResultsSummary
+		var dest ScanResults
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1414,7 +1414,7 @@ func ParsePutTargetsTargetIDScanResultsScanIDResponse(rsp *http.Response) (*PutT
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ScanResultsSummary
+		var dest ScanResults
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
