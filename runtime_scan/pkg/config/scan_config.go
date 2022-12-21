@@ -33,8 +33,6 @@ const (
 
 type ScanConfig struct {
 	MaxScanParallelism int
-	// instances to scan
-	Instances []types.Instance
 	// per provider scan scope
 	ScanScope                 types.ScanScope
 	JobResultTimeout          time.Duration
@@ -46,7 +44,7 @@ type ScanConfig struct {
 func setScanConfigDefaults() {
 	viper.SetDefault(MaxParallelism, "5")
 	viper.SetDefault(JobResultTimeout, "120m")
-	viper.SetDefault(JobResultsPollingInterval, "1m")
+	viper.SetDefault(JobResultsPollingInterval, "30s")
 	viper.SetDefault(DeleteJobPolicy, DeleteJobPolicySuccessful)
 
 	viper.AutomaticEnv()

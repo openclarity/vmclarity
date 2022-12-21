@@ -42,7 +42,7 @@ type Orchestrator struct {
 //go:generate $GOPATH/bin/mockgen -destination=./mock_orchestrator.go -package=orchestrator github.com/openclarity/vmclarity/runtime_scan/pkg/orchestrator VulnerabilitiesScanner
 type VulnerabilitiesScanner interface {
 	Start(errChan chan struct{})
-	Scan(scanConfig *_config.ScanConfig, scanDone chan struct{}) error
+	Scan(ctx context.Context, scanConfig *_config.ScanConfig, scanDone chan struct{}) error
 	ScanProgress() types.ScanProgress
 	Clear()
 	Stop()
@@ -53,7 +53,7 @@ func Create(config *_config.Config, providerClient provider.Client) (*Orchestrat
 		fmt.Sprintf("%s:%d/%s", config.BackendAddress, config.BackendRestPort, config.BackendBaseURL),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create client for backend: %v", err)
+		return nil, fmt.Errorf("failed to create a backend client: %v", err)
 	}
 	orc := &Orchestrator{
 		scanner:        _scanner.CreateScanner(config, providerClient, backendClient),
@@ -77,14 +77,13 @@ func (o *Orchestrator) Stop() {
 	log.Infof("Stopping Orchestrator server")
 }
 
-func (o *Orchestrator) Scan(scanConfig *_config.ScanConfig, scanDone chan struct{}) error {
-	instances, err := o.providerClient.Discover(context.TODO(), scanConfig.ScanScope)
+func (o *Orchestrator) Scan(ctx context.Context, scanConfig *_config.ScanConfig, scanDone chan struct{}) error {
+	instances, err := o.providerClient.Discover(ctx, scanConfig.ScanScope)
 	if err != nil {
 		return fmt.Errorf("failed to discover instances to scan: %v", err)
 	}
-	scanConfig.Instances = instances
 
-	if err := o.getScanner().Scan(scanConfig, scanDone); err != nil {
+	if err := o.getScanner().Scan(ctx, scanConfig, instances, scanDone); err != nil {
 		return fmt.Errorf("failed to scan: %v", err)
 	}
 

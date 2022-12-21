@@ -19,15 +19,15 @@ import (
 	"context"
 )
 
-type Status string
+type ScanState string
 
 const (
-	Idle            Status = "Idle"
-	ScanInit        Status = "ScanInit"
-	ScanInitFailure Status = "ScanInitFailure"
-	NothingToScan   Status = "NothingToScan"
-	Scanning        Status = "Scanning"
-	DoneScanning    Status = "DoneScanning"
+	Idle            ScanState = "Idle"
+	ScanInit        ScanState = "ScanInit"
+	ScanInitFailure ScanState = "ScanInitFailure"
+	NothingToScan   ScanState = "NothingToScan"
+	Scanning        ScanState = "Scanning"
+	DoneScanning    ScanState = "DoneScanning"
 )
 
 type ScanScope interface{}
@@ -36,20 +36,11 @@ type ScanProgress struct {
 	InstancesToScan          uint32
 	InstancesStartedToScan   uint32
 	InstancesCompletedToScan uint32
-	Status                   Status
+	State                    ScanState
 }
 
-func (s *ScanProgress) SetStatus(status Status) {
-	s.Status = status
-}
-
-type InstanceScanResult struct {
-	// Instance data
-	Instance Instance
-	// Scan results
-	Success   bool
-	Status    Status
-	ScanError *ScanError // TODO later map of errors for specified scan types
+func (s *ScanProgress) SetStatus(status ScanState) {
+	s.State = status
 }
 
 type Job struct {
@@ -68,6 +59,7 @@ type JobConfig struct {
 
 type Instance interface {
 	GetID() string
+	GetLocation() string
 	GetRootVolume(ctx context.Context) (Volume, error)
 	WaitForReady(ctx context.Context) error
 	Delete(ctx context.Context) error
@@ -93,60 +85,41 @@ type ScannerConfig struct {
 }
 
 type ScannerJobConfig struct {
-	DirectoryToScan   string            `json:"directory_to_scan"`
-	ServerToReport    string            `json:"server_to_report"`
-	VulnerabilityScan VulnerabilityScan `json:"vulnerability_scan,omitempty"`
-	RootkitScan       RootkitScan       `json:"rootkit_scan,omitempty"`
-	MisconfigScan     MisconfigScan     `json:"misconfig_scan,omitempty"`
-	SecretScan        SecretScan        `json:"secret_scan,omitempty"`
-	MalewareScan      MalwareScan       `json:"malawre_scan,omitempty"`
-	ExploitCheck      ExploitCheck      `json:"exploit_check,omitempty"`
+	DirectoryToScan      string               `json:"directory_to_scan"`
+	ServerToReport       string               `json:"server_to_report"`
+	SbomScan             SbomScan             `json:"sbom_scan,omitempty"`
+	VulnerabilityScan    VulnerabilityScan    `json:"vulnerability_scan,omitempty"`
+	RootkitScan          RootkitScan          `json:"rootkit_scan,omitempty"`
+	MisconfigurationScan MisconfigurationScan `json:"misconfiguration_scan,omitempty"`
+	SecretScan           SecretScan           `json:"secret_scan,omitempty"`
+	MalwareScan          MalwareScan          `json:"malware_scan,omitempty"`
+	ExploitScan          ExploitScan          `json:"exploit_scan,omitempty"`
+}
+
+type SbomScan struct {
+	Enabled bool `json:"enabled,omitempty"`
 }
 
 type VulnerabilityScan struct {
-	Vuls Vuls `json:"vuls,omitempty"`
+	Enabled bool `json:"enabled,omitempty"`
 }
 
 type RootkitScan struct {
-	Chkrootkit Chkrootkit `json:"chkrootkit,omitempty"`
+	Enabled bool `json:"enabled,omitempty"`
 }
 
-type MisconfigScan struct {
-	Lynis Lynis `json:"lynis,omitempty"`
+type MisconfigurationScan struct {
+	Enabled bool `json:"enabled,omitempty"`
 }
 
 type SecretScan struct {
-	Trufflehog Trufflehog `json:"trufflehog,omitempty"`
+	Enabled bool `json:"enabled,omitempty"`
 }
 
 type MalwareScan struct {
-	Clamav Clamav `json:"clamav,omitempty"`
+	Enabled bool `json:"enabled,omitempty"`
 }
 
-type ExploitCheck struct {
-	Vuls Vuls `json:"vuls,omitempty"`
-}
-
-type Vuls struct {
-	Config Config `json:"config,omitempty"`
-}
-
-type Chkrootkit struct {
-	Config Config `json:"config,omitempty"`
-}
-
-type Lynis struct {
-	Config Config `json:"config,omitempty"`
-}
-
-type Trufflehog struct {
-	Config Config `json:"config,omitempty"`
-}
-
-type Clamav struct {
-	Config Config `json:"config,omitempty"`
-}
-
-type Config struct {
-	Someconfig string `json:"someconfig,omitempty"`
+type ExploitScan struct {
+	Enabled bool `json:"enabled,omitempty"`
 }

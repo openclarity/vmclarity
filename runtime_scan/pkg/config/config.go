@@ -41,7 +41,7 @@ func setConfigDefaults() {
 	viper.AutomaticEnv()
 }
 
-func LoadConfig(backendPort int, backendAddress, baseURL string) (*Config, error) {
+func LoadConfig(backendAddress string, backendPort int, baseURL string) (*Config, error) {
 	setConfigDefaults()
 
 	config := &Config{

@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
@@ -47,19 +48,17 @@ type Scanner struct {
 }
 
 type scanData struct {
-	instance    types.Instance
-	scanUUID    string
-	scanResults []string
-	success     bool
-	completed   bool
-	timeout     bool
-	scanErr     *types.ScanError
+	instance  types.Instance
+	scanUUID  string
+	success   bool // Needed for deletion policy in case we want to access the logs
+	timeout   bool
+	completed bool
 }
 
 func CreateScanner(config *_config.Config, providerClient provider.Client, backendClient *client.ClientWithResponses) *Scanner {
 	s := &Scanner{
 		progress: types.ScanProgress{
-			Status: types.Idle,
+			State: types.Idle,
 		},
 		killSignal:     make(chan bool),
 		providerClient: providerClient,
@@ -74,19 +73,30 @@ func CreateScanner(config *_config.Config, providerClient provider.Client, backe
 
 // initScan Calculate properties of scan targets
 // nolint:cyclop,unparam
-func (s *Scanner) initScan() error {
+func (s *Scanner) initScan(ctx context.Context, instances []types.Instance) error {
+
+	scanID, err := s.createScan(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to create a scan: %v", err)
+	}
 	instanceIDToScanData := make(map[string]*scanData)
 
 	// Populate the instance to scanData map
-	for _, instance := range s.scanConfig.Instances {
+	for _, instance := range instances {
+		targetID := instance.GetID()
+		if err := s.createTargetIfNotExist(ctx, targetID, instance.GetLocation()); err != nil {
+			return fmt.Errorf("failed to create target. targetId=%v: %v", targetID, err)
+		}
+		if err := s.createInitScanStatus(ctx, scanID, targetID); err != nil {
+			log.Errorf("Failed to create an init scan result. instance id=%v, scan id=%v: %v", instance.GetID(), scanID, err)
+			continue
+		}
 		instanceIDToScanData[instance.GetID()] = &scanData{
-			instance:    instance,
-			scanUUID:    uuid.NewV4().String(),
-			scanResults: nil, // list of expected scan results get from scanner job config implement later
-			success:     false,
-			completed:   false,
-			timeout:     false,
-			scanErr:     nil,
+			instance:  instance,
+			scanUUID:  scanID,
+			success:   false,
+			completed: false,
+			timeout:   false,
 		}
 	}
 
@@ -98,7 +108,7 @@ func (s *Scanner) initScan() error {
 	return nil
 }
 
-func (s *Scanner) Scan(scanConfig *_config.ScanConfig, scanDone chan struct{}) error {
+func (s *Scanner) Scan(ctx context.Context, scanConfig *_config.ScanConfig, instances []types.Instance, scanDone chan struct{}) error {
 	s.Lock()
 	defer s.Unlock()
 
@@ -106,11 +116,11 @@ func (s *Scanner) Scan(scanConfig *_config.ScanConfig, scanDone chan struct{}) e
 
 	log.WithFields(s.logFields).Infof("Start scanning...")
 
-	s.progress.Status = types.ScanInit
+	s.progress.State = types.ScanInit
 
-	if err := s.initScan(); err != nil {
-		s.progress.SetStatus(types.ScanInitFailure)
-		return fmt.Errorf("failed to initiate scan: %v", err)
+	err := s.initScan(ctx, instances)
+	if err != nil {
+		return fmt.Errorf("failed to init scan: %v", err)
 	}
 
 	if s.progress.InstancesToScan == 0 {
@@ -122,7 +132,7 @@ func (s *Scanner) Scan(scanConfig *_config.ScanConfig, scanDone chan struct{}) e
 
 	s.progress.SetStatus(types.Scanning)
 	go func() {
-		s.jobBatchManagement(scanDone)
+		s.jobBatchManagement(ctx, scanDone)
 
 		s.Lock()
 		s.progress.SetStatus(types.DoneScanning)
@@ -132,44 +142,46 @@ func (s *Scanner) Scan(scanConfig *_config.ScanConfig, scanDone chan struct{}) e
 	return nil
 }
 
-func (s *Scanner) GetScanStatus(data *scanData) *types.InstanceScanResult {
-	scanResult := &types.InstanceScanResult{
-		Instance: data.instance,
-		Success:  false,
-		Status:   types.Scanning,
-	}
-	resp, err := s.backendClient.GetTargetsTargetIDScanResultsScanIDWithResponse(context.TODO(), data.instance.GetID(), data.scanUUID)
+func (s *Scanner) GetScanStatus(ctx context.Context, data *scanData) (*models.TargetScanStatus, error) {
+	resp, err := s.backendClient.GetScansScanIDTargetsTargetIDScanStatusWithResponse(ctx, data.scanUUID, data.instance.GetID())
 	if err != nil {
-		log.WithFields(s.logFields).Errorf("Failed to get scan results %s for target: %s", data.scanUUID, data.instance.GetID())
-		scanResult.Status = types.NothingToScan
-		// TODO use map for scan errors in the case of scan types later
-		scanResult.ScanError = &types.ScanError{
-			ErrMsg:    err.Error(),
-			ErrType:   string(types.JobRun),
-			ErrSource: types.ScanErrSourceJob,
-		}
-		return scanResult
+		return nil, fmt.Errorf("failed to get scan status: %v", err)
 	}
 	if resp.HTTPResponse.StatusCode != http.StatusOK {
-		log.WithFields(s.logFields).Errorf("Failed to get scan results %s for target: %s", data.scanUUID, data.instance.GetID())
-		scanResult.Status = types.NothingToScan
-		// TODO use map for scan errors in the case of scan types later
-		scanResult.ScanError = &types.ScanError{
-			ErrMsg:    err.Error(),
-			ErrType:   string(types.JobRun),
-			ErrSource: types.ScanErrSourceJob,
-		}
-		return scanResult
+		return nil, fmt.Errorf("failed to get scan status: status code=%v", resp.HTTPResponse.StatusCode)
 	}
-	if checkResults(resp.JSON200) {
-		log.WithFields(s.logFields).Infof("Scan results %s exist for target %s.", data.scanUUID, data.instance.GetID())
-		scanResult.Success = true
-		scanResult.Status = types.DoneScanning
-		return scanResult
+	if resp.JSON200 == nil {
+		return nil, fmt.Errorf("failed to get scan status: empty body")
 	}
 
-	log.WithFields(s.logFields).Infof("Scan results %s not exist for target %s. waiting for results...", data.scanUUID, data.instance.GetID())
-	return scanResult
+	return resp.JSON200, nil
+}
+
+func (s *Scanner) SetScanStatusCompletionError(ctx context.Context, data *scanData, errMsg string) error {
+	// Get the status and set the completion error
+	status, err := s.GetScanStatus(ctx, data)
+	if err != nil {
+		return fmt.Errorf("failed to get scan status: %v", err)
+	}
+	var errors []string
+	if status.General.Errors != nil {
+		errors = *status.General.Errors
+	}
+	errors = append(errors, errMsg)
+	status.General.Errors = &errors
+	done := models.DONE
+	status.General.State = &done
+
+	// Update the status
+	resp, err := s.backendClient.PutScansScanIDTargetsTargetIDScanStatusWithResponse(ctx, data.scanUUID, data.instance.GetID(), *status)
+	if err != nil {
+		return fmt.Errorf("failed to set scan status: %v", err)
+	}
+	if resp.HTTPResponse.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to set scan status: status code=%v", resp.HTTPResponse.StatusCode)
+	}
+
+	return nil
 }
 
 func (s *Scanner) ScanProgress() types.ScanProgress {
@@ -177,7 +189,7 @@ func (s *Scanner) ScanProgress() types.ScanProgress {
 		InstancesToScan:          s.progress.InstancesToScan,
 		InstancesStartedToScan:   atomic.LoadUint32(&s.progress.InstancesStartedToScan),
 		InstancesCompletedToScan: atomic.LoadUint32(&s.progress.InstancesCompletedToScan),
-		Status:                   s.progress.Status,
+		State:                    s.progress.State,
 	}
 }
 
@@ -189,10 +201,33 @@ func (s *Scanner) Clear() {
 	close(s.killSignal)
 }
 
-func checkResults(results *models.ScanResults) bool {
-	// TODO the API returns empty sbom struct and []Packages
-	if results.Sboms != nil && results.Sboms.Packages != nil && len(*results.Sboms.Packages) > 0 {
-		return true
+func (s *Scanner) createScan(ctx context.Context) (string, error) {
+	startTime := time.Now()
+	scan := models.Scan{
+		EndTime:   nil,
+		Id:        nil,
+		StartTime: &startTime,
 	}
-	return false
+	resp, err := s.backendClient.PostScansWithResponse(ctx, scan)
+	if err != nil {
+		return "", fmt.Errorf("failed to post scan: %v", err)
+	}
+	if resp.HTTPResponse.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("failed to create a scan: status code=%v", resp.HTTPResponse.StatusCode)
+	}
+	if resp.JSON409 != nil {
+		log.Warnf("Scan already exists. scanID=%v", resp.JSON409.Id)
+		if resp.JSON409.Id == nil {
+			return "", fmt.Errorf("scan already exists but has no ID")
+		}
+		return *resp.JSON409.Id, nil
+	}
+	if resp.JSON201 == nil {
+		return "", fmt.Errorf("failed to create a scan: empty body")
+	}
+	if resp.JSON201.Id == nil {
+		return "", fmt.Errorf("scan has no ID")
+	}
+
+	return *resp.JSON409.Id, nil
 }

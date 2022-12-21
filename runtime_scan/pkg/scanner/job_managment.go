@@ -32,7 +32,7 @@ import (
 // TODO this code is taken from KubeClarity, we can make improvements base on the discussions here: https://github.com/openclarity/vmclarity/pull/3
 
 // run jobs.
-func (s *Scanner) jobBatchManagement(scanDone chan struct{}) {
+func (s *Scanner) jobBatchManagement(ctx context.Context, scanDone chan struct{}) {
 	s.Lock()
 	instanceIDToScanData := s.instanceIDToScanData
 	numberOfWorkers := s.scanConfig.MaxScanParallelism
@@ -49,7 +49,7 @@ func (s *Scanner) jobBatchManagement(scanDone chan struct{}) {
 
 	// spawn workers
 	for i := 0; i < numberOfWorkers; i++ {
-		go s.worker(q, i, done, s.killSignal)
+		go s.worker(ctx, q, i, done, s.killSignal)
 	}
 
 	// wait until scan of all instances is done - non blocking. once all done, notify on fullScanDone chan
@@ -92,28 +92,37 @@ func (s *Scanner) jobBatchManagement(scanDone chan struct{}) {
 }
 
 // worker waits for data on the queue, runs a scan job and waits for results from that scan job. Upon completion, done is notified to the caller.
-func (s *Scanner) worker(queue chan *scanData, workNumber int, done, ks chan bool) {
+func (s *Scanner) worker(ctx context.Context, queue chan *scanData, workNumber int, done, ks chan bool) {
 	for {
 		select {
 		case data := <-queue:
-			job, err := s.runJob(context.TODO(), data)
+			job, err := s.runJob(ctx, data)
+			var errMsg string
 			if err != nil {
-				errMsg := fmt.Errorf("failed to run job: %v", err)
-				log.WithFields(s.logFields).Error(errMsg)
+				errMsg = fmt.Sprintf("failed to run job: %v", err)
 				s.Lock()
 				data.success = false
-				data.scanErr = &types.ScanError{
-					ErrMsg:    err.Error(),
-					ErrType:   string(types.JobRun),
-					ErrSource: types.ScanErrSourceJob,
-				}
 				data.completed = true
 				s.Unlock()
 			} else {
-				s.waitForResult(data, ks)
+				s.waitForResult(ctx, data, ks)
+				// if there was a timeout, concat errMsg
+				if data.timeout {
+					errMsg = fmt.Sprintf("job has timed out")
+				}
+
 			}
 
-			s.deleteJobIfNeeded(context.TODO(), &job, data.success, data.completed)
+			if errMsg != "" {
+				log.WithFields(s.logFields).Error(errMsg)
+				err := s.SetScanStatusCompletionError(ctx, data, errMsg)
+				if err != nil {
+					log.WithFields(s.logFields).Errorf("Couldn't set completion error for scan status. instance id=%v, scan id=%v: %v", data.instance.GetID(), data.scanUUID, err)
+					// TODO: Should we retry?
+				}
+			}
+
+			s.deleteJobIfNeeded(ctx, &job, data.success, data.completed)
 
 			select {
 			case done <- true:
@@ -127,39 +136,51 @@ func (s *Scanner) worker(queue chan *scanData, workNumber int, done, ks chan boo
 	}
 }
 
-func (s *Scanner) waitForResult(data *scanData, ks chan bool) {
+func (s *Scanner) waitForResult(ctx context.Context, data *scanData, ks chan bool) {
 	log.WithFields(s.logFields).Infof("Waiting for result. instanceID=%+v", data.instance.GetID())
 	ticker := time.NewTicker(s.scanConfig.JobResultsPollingInterval)
 	timeout := time.After(s.scanConfig.JobResultTimeout)
-	select {
-	case <-ticker.C:
-		log.WithFields(s.logFields).Infof("Polling scan results for instanceID=%v with scanID=%v", data.instance.GetID(), data.scanUUID)
-		// Get scan results from backend
-		instanceScanResults := s.GetScanStatus(data)
-		if instanceScanResults.Status != types.Scanning {
+	for {
+		select {
+		case <-ticker.C:
+			log.WithFields(s.logFields).Infof("Polling scan results for instanceID=%v with scanID=%v", data.instance.GetID(), data.scanUUID)
+			// Get scan results from backend
+			instanceScanResults, err := s.GetScanStatus(ctx, data)
+			if err != nil {
+				log.WithFields(s.logFields).Errorf("Failed to get scan target status. scan id=%v, target id =%s: %v", data.scanUUID, data.instance.GetID(), err)
+				continue
+			}
+			if *instanceScanResults.General.State != models.DONE {
+				log.WithFields(s.logFields).Infof("Scan is not done. scan id=%v, target id=%s, state=%v", data.scanUUID, data.instance.GetID(), *instanceScanResults.General.State)
+				continue
+			}
+
 			s.Lock()
-			data.success = instanceScanResults.Success
+			data.success = scanStatusHasErrors(instanceScanResults)
 			data.completed = true
-			data.scanErr = instanceScanResults.ScanError
 			s.Unlock()
 			return
+		case <-timeout:
+			log.WithFields(s.logFields).Infof("Job has timed out. instanceID=%v", data.instance.GetID())
+			s.Lock()
+			data.success = false
+			data.completed = true
+			data.timeout = true
+			s.Unlock()
+			return
+		case <-ks:
+			log.WithFields(s.logFields).Infof("Instance scan was canceled. instanceID=%v", data.instance.GetID())
+			return
 		}
-	case <-timeout:
-		errMsg := fmt.Errorf("job has timed out. instanceID=%v", data.instance.GetID())
-		log.WithFields(s.logFields).Warn(errMsg)
-		s.Lock()
-		data.success = false
-		data.scanErr = &types.ScanError{
-			ErrMsg:    errMsg.Error(),
-			ErrType:   string(types.JobTimeout),
-			ErrSource: types.ScanErrSourceJob,
-		}
-		data.timeout = true
-		data.completed = true
-		s.Unlock()
-	case <-ks:
-		log.WithFields(s.logFields).Infof("Instance scan was canceled. instanceID=%v", data.instance.GetID())
 	}
+}
+
+func scanStatusHasErrors(status *models.TargetScanStatus) bool {
+	if status.General.Errors != nil && len(*status.General.Errors) > 0 {
+		return true
+	}
+
+	return false
 }
 
 func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error) {
@@ -206,9 +227,6 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 		}
 	}
 
-	if err := s.createEmptyScanResultOnBackend(ctx, instanceToScan.GetID()); err != nil {
-		return types.Job{}, fmt.Errorf("failed to create target with ID %s: %v", instanceToScan.GetID(), err)
-	}
 	launchInstance, err = s.providerClient.RunScanningJob(ctx, launchSnapshot, s.scanConfig.ScannerConfig)
 	if err != nil {
 		return types.Job{}, fmt.Errorf("failed to launch a new instance: %v", err)
@@ -259,22 +277,80 @@ func (s *Scanner) deleteJob(ctx context.Context, job *types.Job) {
 	}
 }
 
-func (s *Scanner) createEmptyScanResultOnBackend(ctx context.Context, targetID string) error {
-	if err := s.createTargetOnBackendIfNotExist(ctx, targetID); err != nil {
-		return fmt.Errorf("failed to create target with ID %s: %v", targetID, err)
+func (s *Scanner) createInitScanStatus(ctx context.Context, scanID string, targetID string) error {
+	initScanStatus := models.TargetScanStatus{
+		Exploits: &models.TargetScanState{
+			Errors: nil,
+			State:  getInitScanStatusStateFromEnabled(s.scanConfig.ScannerConfig.ExploitScan.Enabled),
+		},
+		General: &models.TargetScanState{
+			Errors: nil,
+			State:  getInitScanStatusStateFromEnabled(true),
+		},
+		Malware: &models.TargetScanState{
+			Errors: nil,
+			State:  getInitScanStatusStateFromEnabled(s.scanConfig.ScannerConfig.MalwareScan.Enabled),
+		},
+		Misconfigurations: &models.TargetScanState{
+			Errors: nil,
+			State:  getInitScanStatusStateFromEnabled(s.scanConfig.ScannerConfig.MisconfigurationScan.Enabled),
+		},
+		Rootkits: &models.TargetScanState{
+			Errors: nil,
+			State:  getInitScanStatusStateFromEnabled(s.scanConfig.ScannerConfig.RootkitScan.Enabled),
+		},
+		Sbom: &models.TargetScanState{
+			Errors: nil,
+			State:  getInitScanStatusStateFromEnabled(s.scanConfig.ScannerConfig.SbomScan.Enabled),
+		},
+		Secrets: &models.TargetScanState{
+			Errors: nil,
+			State:  getInitScanStatusStateFromEnabled(s.scanConfig.ScannerConfig.SecretScan.Enabled),
+		},
+		Vulnerabilities: &models.TargetScanState{
+			Errors: nil,
+			State:  getInitScanStatusStateFromEnabled(s.scanConfig.ScannerConfig.VulnerabilityScan.Enabled),
+		},
 	}
-
-	_, err := s.backendClient.PostTargetsTargetIDScanResultsWithResponse(ctx, targetID, models.ScanResults{})
+	resp, err := s.backendClient.PostScansScanIDTargetsTargetIDScanStatusWithResponse(ctx, targetID, scanID, initScanStatus)
 	if err != nil {
-		return fmt.Errorf("failed to post empty scanresults for target: %s", targetID)
+		return fmt.Errorf("failed to post init scan status. scanID=%v, targetId=%v: %v", scanID, targetID, err)
+	}
+	if resp.HTTPResponse.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to create an init scan result: status code=%v", resp.HTTPResponse.StatusCode)
+	}
+	if resp.JSON201 == nil {
+		return fmt.Errorf("failed to create an init scan result: empty body")
 	}
 
 	return nil
 }
 
-func (s *Scanner) createTargetOnBackendIfNotExist(ctx context.Context, targetID string) error {
+var initState = models.INIT
+var notScannedState = models.NOTSCANNED
+
+func getInitScanStatusStateFromEnabled(enabled bool) *models.TargetScanStateState {
+	if enabled {
+		return &initState
+	}
+	return &notScannedState
+}
+
+func (s *Scanner) createTargetIfNotExist(ctx context.Context, targetID string, targetLocation string) error {
+	info := models.TargetType{}
+	provider := models.AWS
+	objType, err := info.Discriminator()
+	if err != nil {
+		return fmt.Errorf("failed to get target info type: %v", err)
+	}
+	err = info.FromVMInfo(models.VMInfo{
+		InstanceProvider: &provider,
+		Location:         &targetLocation,
+		ObjectType:       objType,
+	})
 	resp, err := s.backendClient.PostTargetsWithResponse(ctx, models.Target{
-		Id: &targetID,
+		Id:         &targetID,
+		TargetInfo: &info,
 	})
 	if err != nil && resp.HTTPResponse.StatusCode != http.StatusConflict {
 		return fmt.Errorf("failed to create target with ID: %s", targetID)

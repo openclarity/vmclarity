@@ -25,7 +25,7 @@ import (
 
 // TODO after db design.
 type ScanResults struct {
-	ID               string
+	ScanID           string
 	Sbom             *SbomScanResults
 	Vulnerability    *VulnerabilityScanResults
 	Malware          *MalwareScanResults
@@ -66,7 +66,7 @@ type ExploitScanResults struct {
 
 //nolint:interfacebloat
 type ScanResultsTable interface {
-	ListScanResults(targetID models.TargetID, params models.GetTargetsTargetIDScanResultsParams) ([]ScanResults, error)
+	//ListScanResults(targetID models.TargetID, params models.gettarget) ([]ScanResults, error)
 	CreateScanResults(targetID models.TargetID, scanResults *ScanResults) (*ScanResults, error)
 	GetScanResults(targetID models.TargetID, scanID models.ScanID) (*ScanResults, error)
 	GetSBOM(targetID models.TargetID, scanID models.ScanID) (*SbomScanResults, error)
@@ -89,10 +89,10 @@ func (db *Handler) ScanResultsTable() ScanResultsTable {
 	}
 }
 
-func (s *ScanResultsTableHandler) ListScanResults(targetID models.TargetID, params models.GetTargetsTargetIDScanResultsParams,
-) ([]ScanResults, error) {
-	return []ScanResults{}, fmt.Errorf("not implemented")
-}
+//func (s *ScanResultsTableHandler) ListScanResults(targetID models.TargetID, params models.GetTargetsTargetIDScanResultsParams,
+//) ([]ScanResults, error) {
+//	return []ScanResults{}, fmt.Errorf("not implemented")
+//}
 
 func (s *ScanResultsTableHandler) CreateScanResults(targetID models.TargetID, scanResults *ScanResults,
 ) (*ScanResults, error) {

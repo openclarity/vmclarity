@@ -26,7 +26,7 @@ paths:
                 properties:
                   total:
                     type: integer
-                    description: Total targets count under the given filters
+                    description: Total targets count according the given filters
                   items:
                     type: array
                     description: List of targets in the given filters and page.
@@ -45,13 +45,13 @@ paths:
         required: true
       responses:
         201:
-          description: New target was created.
+          description: A new target was created.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Target'
         409:
-          description: target already exist.
+          description: Target already exists.
           content:
             application/json:
               schema:
@@ -86,14 +86,17 @@ paths:
         required: true
       responses:
         200:
-          description: Update target successful.
+          description: Updated target successfully.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Target'
         404:
-          description: target not found.
-          content: {}
+          description: Target ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
@@ -105,17 +108,213 @@ paths:
         204:
           $ref: '#/components/responses/Success'
         404:
-          description: target not found.
-          content: {}
+          description: Target ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
         default:
           $ref: '#/components/responses/UnknownError'
 
 
-  /targets/{targetID}/scanResults:
+  /scans/{scanID}/targets/{targetID}/scanResults:
     get:
-      summary: Get scan results for a specified target
+      summary: Get a specific scan result for a specific target
       parameters:
         - $ref: '#/components/parameters/targetID'
+        - $ref: '#/components/parameters/scanID'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetScanResults'
+        default:
+          $ref: '#/components/responses/UnknownError'
+    put:
+      summary: Update scan results.
+      parameters:
+        - $ref: '#/components/parameters/targetID'
+        - $ref: '#/components/parameters/scanID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TargetScanResults'
+        required: true
+      responses:
+        200:
+          description: Updated scan results successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetScanResults'
+        404:
+          description: Not found given scan ID with given target ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      x-codegen-request-body-name: body
+    post:
+      summary: Create a scan result for a specific target for a specific scan
+      parameters:
+        - $ref: '#/components/parameters/targetID'
+        - $ref: '#/components/parameters/scanID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TargetScanResults'
+        required: true
+      responses:
+        201:
+          description: New results were added to the target for a specific scan.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetScanResults'
+        409:
+          description: Scan results already exist for target and scan.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetScanResults'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      x-codegen-request-body-name: body
+    patch:
+      summary: Patch a scan result for a specific target for a specific scan
+      parameters:
+        - $ref: '#/components/parameters/targetID'
+        - $ref: '#/components/parameters/scanID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TargetScanResults'
+        required: true
+      responses:
+        201:
+          description: Target scan results were patched for the target for a specific scan.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetScanResults'
+        404:
+          description: Not found given scan ID with given target ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      x-codegen-request-body-name: body
+
+  /scans/{scanID}/targets/{targetID}/scanStatus:
+    get:
+      summary: The status of a specific scan for a specific target
+      parameters:
+        - $ref: '#/components/parameters/targetID'
+        - $ref: '#/components/parameters/scanID'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetScanStatus'
+        default:
+          $ref: '#/components/responses/UnknownError'
+    put:
+      summary: Update the status of a specific scan for a specific target
+      parameters:
+        - $ref: '#/components/parameters/targetID'
+        - $ref: '#/components/parameters/scanID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TargetScanStatus'
+        required: true
+      responses:
+        200:
+          description: Updated scan status successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetScanStatus'
+        404:
+          description: Not found given scan ID with given target ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      x-codegen-request-body-name: body
+    post:
+      summary: Create a scan status for a specific target for a specific scan
+      parameters:
+        - $ref: '#/components/parameters/targetID'
+        - $ref: '#/components/parameters/scanID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TargetScanStatus'
+        required: true
+      responses:
+        201:
+          description: New scan status was added to the target for a specific scan.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetScanStatus'
+        409:
+          description: Scan status already exist for target and scan.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetScanStatus'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      x-codegen-request-body-name: body
+    patch:
+      summary: Patch a scan status for a specifictarget for a specific scan
+      parameters:
+        - $ref: '#/components/parameters/targetID'
+        - $ref: '#/components/parameters/scanID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TargetScanResults'
+        required: true
+      responses:
+        201:
+          description: Target scan results were patched for the target for a specific scan.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetScanResults'
+        404:
+          description: Not found given scan ID with given target ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      x-codegen-request-body-name: body
+
+  /scans:
+    get:
+      summary: Get all scans. Each scan contaians details about a multi-target scheduled scan.
+      parameters:
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/pageSize'
       responses:
@@ -130,47 +329,44 @@ paths:
                 properties:
                   total:
                     type: integer
-                    description: Total scan results count under the given filters
+                    description: Total scans count according to the given filters
                   items:
                     type: array
-                    description: List of scan results for a specified target in the given filters and page.
+                    description: List of scans according to the given filters and page.
                       List length must be lower or equal to pageSize.
                     items:
-                      $ref: '#/components/schemas/ScanResults'
+                      $ref: '#/components/schemas/Scan'
         default:
           $ref: '#/components/responses/UnknownError'
     post:
-      summary: Create scan result for a specified target
-      parameters:
-        - $ref: '#/components/parameters/targetID'
+      summary: Create a multi-target scheduled scan
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ScanResults'
+              $ref: '#/components/schemas/Scan'
         required: true
       responses:
         201:
-          description: New results was added to the target.
+          description: A new scan was created.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ScanResults'
+                $ref: '#/components/schemas/Scan'
         409:
-          description: Scan results already exist.
+          description: Scan already exists.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ScanResults'
+                $ref: '#/components/schemas/Scan'
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
 
-  /targets/{targetID}/scanResults/{scanID}:
+  /scans/{scanID}:
     get:
-      summary: Report a specific scan result for a specific target
+      summary: Get the details for a given multi-target scheduled scan.
       parameters:
-        - $ref: '#/components/parameters/targetID'
         - $ref: '#/components/parameters/scanID'
       responses:
         200:
@@ -178,33 +374,210 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ScanResults'
+                $ref: '#/components/schemas/Scan'
         default:
           $ref: '#/components/responses/UnknownError'
     put:
-      summary: Update scan results.
+      summary: Update a scan.
       parameters:
-        - $ref: '#/components/parameters/targetID'
         - $ref: '#/components/parameters/scanID'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ScanResults'
+              $ref: '#/components/schemas/Scan'
         required: true
       responses:
         200:
-          description: Update scan results successful.
+          description: Updated scan successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ScanResults'
+                $ref: '#/components/schemas/Scan'
         404:
-          description: Scan ID not found.
-          content: {}
+          description: Scan ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
+    patch:
+      summary: Patch a scan.
+      parameters:
+        - $ref: '#/components/parameters/scanID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Scan'
+        required: true
+      responses:
+        200:
+          description: Patched scan successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scan'
+        404:
+          description: Scan ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      x-codegen-request-body-name: body
+    delete:
+      summary: Delete a scan.
+      parameters:
+        - $ref: '#/components/parameters/scanID'
+      responses:
+        204:
+          $ref: '#/components/responses/Success'
+        404:
+          description: Scan ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+
+  /scanConfigs:
+    get:
+      summary: Get all scan configs.
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/pageSize'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                required:
+                  - total
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    description: Total scan config count according to the given filters
+                  items:
+                    type: array
+                    description: List of scan configs according to the given filters and page.
+                      List length must be lower or equal to pageSize.
+                    items:
+                      $ref: '#/components/schemas/ScanConfig'
+        default:
+          $ref: '#/components/responses/UnknownError'
+    post:
+      summary: Create a scan config
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScanConfig'
+        required: true
+      responses:
+        201:
+          description: A new scan config was created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanConfig'
+        409:
+          description: Scan config already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanConfig'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      x-codegen-request-body-name: body
+
+  /scanConfigs/{scanConfigID}:
+    get:
+      summary: Get the details for a scan config.
+      parameters:
+        - $ref: '#/components/parameters/scanConfigID'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanConfig'
+        default:
+          $ref: '#/components/responses/UnknownError'
+    put:
+      summary: Update a scan config.
+      parameters:
+        - $ref: '#/components/parameters/scanConfigID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScanConfig'
+        required: true
+      responses:
+        200:
+          description: Updated scan config successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanConfig'
+        404:
+          description: Scan config ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      x-codegen-request-body-name: body
+    patch:
+      summary: Patch a scan config.
+      parameters:
+        - $ref: '#/components/parameters/scanConfigID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScanConfig'
+        required: true
+      responses:
+        200:
+          description: Patched scan config successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanConfig'
+        404:
+          description: Scan config ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      x-codegen-request-body-name: body
+    delete:
+      summary: Delete a scan config.
+      parameters:
+        - $ref: '#/components/parameters/scanConfigID'
+      responses:
+        204:
+          $ref: '#/components/responses/Success'
+        404:
+          description: Scan config ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
 
 components:
   schemas:
@@ -227,67 +600,298 @@ components:
       enum:
         - AWS
 
-    VMInfo:
+    Scan:
       type: object
+      description: Describes a multi-target scheduled scan.
       properties:
-        instanceName:
+        id:
           type: string
-        instanceProvider:
-          $ref: '#/components/schemas/CloudProvider'
-        location:
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        scanConfigId:
+          description: The ID of the config that this scan was initiated from (optionanl)
+          type: string
+        scanFamiliesConfig:
+          $ref: '#/components/schemas/ScanFamiliesConfig'
+
+    ScanFamiliesConfig:
+      type: object
+      description: The configuration of the scanner families within a scan config
+      properties:
+        sbom:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+        vulnerabilities:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+        malware:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+        rootkits:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+        secrets:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+        misconfigurations:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+        exploits:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+
+    ScanConfig:
+      type: object
+      description: Describes a multi-target scheduled scan config.
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        scanFamiliesConfig:
+          $ref: '#/components/schemas/ScanFamiliesConfig'
+        scope:
+          $ref: '#/components/schemas/ScanScopeType'
+        scheduled:
+          $ref: '#/components/schemas/RuntimeScheduleScanConfigType'
+
+    ScanScopeType:
+      type: object
+      anyOf:
+        - $ref: '#/components/schemas/AwsScanScope'
+      discriminator:
+        propertyName: objectType
+
+    AwsScanScope:
+      type: object
+      description: The scope of a configured scan.
+      properties:
+        objectType:
+          type: string
+        all:
+          type: boolean
+        regions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AwsRegion'
+        shouldScanStoppedInstances:
+          type: boolean
+        instanceTagSelector:
+          type: array
+          description: VM instances will be scanned if they contain all of these tags. If empty, not taken into account.
+          items:
+            $ref: '#/components/schemas/Tag'
+        instanceTagExclusion:
+          type: array
+          description: VM instances will not be scanned if they contain all of these tags (even if they match instanceTagSelector). If empty, not taken into account.
+          items:
+            $ref: '#/components/schemas/Tag'
+      required:
+        - objectType
+
+    AwsRegion:
+      type: object
+      description: AWS region
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        vpcs:
+          type: array
+          items:
+            $ref: '#/components/schemas/AwsVPC'
+
+    AwsVPC:
+      type: object
+      description: AWS VPC
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        securityGroups:
+          type: array
+          items:
+            $ref: '#/components/schemas/AwsSecurityGroup'
+
+    AwsSecurityGroup:
+      type: object
+      description: AWS security group
+      properties:
+        id:
+          type: string
+        name:
           type: string
 
-    PodInfo:
+    Tag:
       type: object
+      description: AWS tag
       properties:
-        podName:
+        key:
           type: string
-        location:
+        value:
           type: string
 
-    DirInfo:
+    RuntimeScheduleScanConfigType:
       type: object
-      properties:
-        dirName:
-          type: string
-        location:
-          type: string
+      anyOf:
+        - $ref: '#/components/schemas/SingleScheduleScanConfig'
+        - $ref: '#/components/schemas/ByHoursScheduleScanConfig'
+        - $ref: '#/components/schemas/ByDaysScheduleScanConfig'
+        - $ref: '#/components/schemas/WeeklyScheduleScanConfig'
+      discriminator:
+        propertyName: objectType
 
-    TargetType:
-      type: string
-      enum:
-        - VM
-        - POD
-        - DIR
+    SingleScheduleScanConfig:
+      type: 'object'
+      properties:
+        objectType:
+          type: string
+        operationTime:
+          type: 'string'
+          format: 'date-time'
+      required:
+        - operationTime
+        - objectType
+
+    ByHoursScheduleScanConfig:
+      type: 'object'
+      properties:
+        objectType:
+          type: string
+        hoursInterval:
+          type: 'integer'
+          minimum: 1
+          default: 1
+      required:
+        - objectType
+
+    ByDaysScheduleScanConfig:
+      type: 'object'
+      properties:
+        objectType:
+          type: string
+        daysInterval:
+          type: 'integer'
+          minimum: 1
+          default: 1
+        timeOfDay:
+          $ref: '#/components/schemas/TimeOfDay'
+      required:
+        - objectType
+
+    WeeklyScheduleScanConfig:
+      type: 'object'
+      properties:
+        objectType:
+          type: string
+        dayInWeek:
+          description: '1 - 7 which represents sun- sat'
+          type: 'integer'
+          minimum: 1
+          maximum: 7
+          default: 1
+        timeOfDay:
+          $ref: '#/components/schemas/TimeOfDay'
+      required:
+        - objectType
+
+    TimeOfDay:
+      type: 'object'
+      properties:
+        hour:
+          type: 'integer'
+          minimum: 0
+          maximum: 23
+          default: 0
+        minute:
+          type: 'integer'
+          minimum: 0
+          maximum: 59
+          default: 0
 
     Target:
       type: object
       properties:
         id:
           type: string
-        targetType:
-          $ref: '#/components/schemas/TargetType'
         targetInfo:
-          anyOf: # now we are using anyOf instead of oneOf because of the issue: https://github.com/getkin/kin-openapi/issues/369
-            - $ref: '#/components/schemas/VMInfo'
-            - $ref: '#/components/schemas/PodInfo'
-            - $ref: '#/components/schemas/DirInfo'
-        scanResults:
-          type: array
-          description: List of scan results ID
-          items:
-            type: string
+          $ref: '#/components/schemas/TargetType'
 
-    ScanResults:
+    TargetType:
+      type: object
+      anyOf:
+        - $ref: '#/components/schemas/VMInfo'
+        - $ref: '#/components/schemas/PodInfo'
+        - $ref: '#/components/schemas/DirInfo'
+      discriminator:
+        propertyName: objectType
+
+    VMInfo:
       type: object
       properties:
-        id:
+        objectType:
           type: string
+        instanceProvider:
+          $ref: '#/components/schemas/CloudProvider'
+        location:
+          type: string
+      required:
+        - objectType
+
+    PodInfo:
+      type: object
+      properties:
+        objectType:
+          type: string
+        podName:
+          type: string
+        location:
+          type: string
+      required:
+        - objectType
+
+    DirInfo:
+      type: object
+      properties:
+        objectType:
+          type: string
+        dirName:
+          type: string
+        location:
+          type: string
+      required:
+        - objectType
+
+    TargetScanResults:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/TargetScanStatus'
         sboms:
           $ref: '#/components/schemas/SbomScan'
         vulnerabilities:
           $ref: '#/components/schemas/VulnerabilityScan'
-        malwares:
+        malware:
           $ref: '#/components/schemas/MalwareScan'
         rootkits:
           $ref: '#/components/schemas/RootkitScan'
@@ -298,23 +902,40 @@ components:
         exploits:
           $ref: '#/components/schemas/ExploitScan'
 
-    ScanResultsSummary:
+    TargetScanStatus:
       type: object
       properties:
-        packagesCount:
-          type: integer
-        vulnerabilitiesCount:
-          type: integer
-        malwaresCount:
-          type: integer
-        rootkitsCount:
-          type: integer
-        secretsCount:
-          type: integer
-        misconfigurationsCount:
-          type: integer
-        exploitsCount:
-          type: integer
+        general:
+          $ref: '#/components/schemas/TargetScanState'
+        sbom:
+          $ref: '#/components/schemas/TargetScanState'
+        vulnerabilities:
+          $ref: '#/components/schemas/TargetScanState'
+        malware:
+          $ref: '#/components/schemas/TargetScanState'
+        rootkits:
+          $ref: '#/components/schemas/TargetScanState'
+        secrets:
+          $ref: '#/components/schemas/TargetScanState'
+        misconfigurations:
+          $ref: '#/components/schemas/TargetScanState'
+        exploits:
+          $ref: '#/components/schemas/TargetScanState'
+
+    TargetScanState:
+      type: object
+      properties:
+        state:
+          type: string
+          enum:
+            - NOT_SCANNED
+            - INIT
+            - IN_PROGRESS
+            - DONE
+        errors:
+          type: array
+          items:
+            type: string
 
     PackageInfo:
       type: object
@@ -431,7 +1052,7 @@ components:
     MalwareScan:
       type: object
       properties:
-        malwares:
+        malware:
           type: array
           items:
             $ref: '#/components/schemas/MalwareInfo'
@@ -499,14 +1120,14 @@ components:
 
   responses:
     Success:
-      description: success message
+      description: Success message
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/SuccessResponse'
 
     UnknownError:
-      description: unknown error
+      description: Unknown error
       content:
         application/json:
           schema:
@@ -527,12 +1148,12 @@ components:
       schema:
         type: string
 
-    scanTypeParam:
-      name: scanType
-      in: query
-      required: false
+    scanConfigID:
+      name: scanConfigID
+      in: path
+      required: true
       schema:
-        $ref: '#/components/schemas/ScanType'
+        type: string
 
     page:
       name: page
