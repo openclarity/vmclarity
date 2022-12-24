@@ -16,41 +16,72 @@
 package config
 
 import (
-	"github.com/spf13/viper"
+	"time"
 
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/config/aws"
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 const (
-	ScannerAWSRegion        = "SCANNER_AWS_REGION"
-	defaultScannerAWSRegion = "us-east-1"
+	ScannerAWSRegion          = "SCANNER_AWS_REGION"
+	defaultScannerAWSRegion   = "us-east-1"
+	JobResultTimeout          = "JOB_RESULT_TIMEOUT"
+	JobResultsPollingInterval = "JOB_RESULT_POLLING_INTERVAL"
+	DeleteJobPolicy           = "DELETE_JOB_POLICY"
 )
 
-type Config struct {
-	ScannerJobResultListenPort int
-	Region                     string // scanner region
-	AWSConfig                  *aws.Config
-	BackendAddress             string
-	BackendRestPort            int
-	BackendBaseURL             string
+type OrchestratorConfig struct {
+	AWSConfig       *aws.Config
+	BackendAddress  string
+	BackendRestPort int
+	BackendBaseURL  string
+	ScannerConfig
+}
+
+type ScannerConfig struct {
+	Region                    string // scanner region TODO: why do we need this???
+	JobResultTimeout          time.Duration
+	JobResultsPollingInterval time.Duration
+	DeleteJobPolicy           DeleteJobPolicyType
+	ScannerImage              string
 }
 
 func setConfigDefaults() {
 	viper.SetDefault(ScannerAWSRegion, defaultScannerAWSRegion)
+	viper.SetDefault(JobResultTimeout, "120m")
+	viper.SetDefault(JobResultsPollingInterval, "30s")
+	viper.SetDefault(DeleteJobPolicy, DeleteJobPolicySuccessful)
 
 	viper.AutomaticEnv()
 }
 
-func LoadConfig(backendAddress string, backendPort int, baseURL string) (*Config, error) {
+func LoadConfig(backendAddress string, backendPort int, baseURL string) (*OrchestratorConfig, error) {
 	setConfigDefaults()
 
-	config := &Config{
-		Region:          viper.GetString(ScannerAWSRegion),
+	config := &OrchestratorConfig{
 		AWSConfig:       aws.LoadConfig(),
 		BackendRestPort: backendPort,
 		BackendAddress:  backendAddress,
 		BackendBaseURL:  baseURL,
+		ScannerConfig: ScannerConfig{
+			Region:                    viper.GetString(ScannerAWSRegion),
+			JobResultTimeout:          viper.GetDuration(JobResultTimeout),
+			JobResultsPollingInterval: viper.GetDuration(JobResultsPollingInterval),
+			DeleteJobPolicy:           getDeleteJobPolicyType(viper.GetString(DeleteJobPolicy)),
+			ScannerImage:              "what???", // TODO: Set the image
+		},
 	}
 
 	return config, nil
+}
+
+func getDeleteJobPolicyType(policyType string) DeleteJobPolicyType {
+	deleteJobPolicy := DeleteJobPolicyType(policyType)
+	if !deleteJobPolicy.IsValid() {
+		log.Warnf("Invalid %s type - using default `%s`", DeleteJobPolicy, DeleteJobPolicySuccessful)
+		deleteJobPolicy = DeleteJobPolicySuccessful
+	}
+
+	return deleteJobPolicy
 }

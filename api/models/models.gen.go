@@ -217,6 +217,9 @@ type Scan struct {
 	// ScanFamiliesConfig The configuration of the scanner families within a scan config
 	ScanFamiliesConfig *ScanFamiliesConfig `json:"scanFamiliesConfig,omitempty"`
 	StartTime          *time.Time          `json:"startTime,omitempty"`
+
+	// TargetIDs List of target IDs that are targeted for scanning as part of this scan
+	TargetIDs *[]string `json:"targetIDs,omitempty"`
 }
 
 // ScanConfig Describes a multi-target scheduled scan config.
@@ -346,6 +349,7 @@ type TimeOfDay struct {
 
 // VMInfo defines model for VMInfo.
 type VMInfo struct {
+	InstanceID       *string        `json:"instanceID,omitempty"`
 	InstanceProvider *CloudProvider `json:"instanceProvider,omitempty"`
 	Location         *string        `json:"location,omitempty"`
 	ObjectType       string         `json:"objectType"`

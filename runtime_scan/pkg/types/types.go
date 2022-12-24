@@ -19,37 +19,13 @@ import (
 	"context"
 )
 
-type ScanState string
-
-const (
-	Idle            ScanState = "Idle"
-	ScanInit        ScanState = "ScanInit"
-	ScanInitFailure ScanState = "ScanInitFailure"
-	NothingToScan   ScanState = "NothingToScan"
-	Scanning        ScanState = "Scanning"
-	DoneScanning    ScanState = "DoneScanning"
-)
-
-type ScanScope interface{}
-
-type ScanProgress struct {
-	InstancesToScan          uint32
-	InstancesStartedToScan   uint32
-	InstancesCompletedToScan uint32
-	State                    ScanState
-}
-
-func (s *ScanProgress) SetStatus(status ScanState) {
-	s.State = status
-}
-
 type Job struct {
 	Instance    Instance
 	SrcSnapshot Snapshot
 	DstSnapshot Snapshot
 }
 
-type JobConfig struct {
+type ScanJobRunConfig struct {
 	InstanceToScan Instance
 	Region         string
 	ImageID        string
@@ -65,6 +41,11 @@ type Instance interface {
 	Delete(ctx context.Context) error
 }
 
+type TargetInstance struct {
+	TargetID string
+	Instance Instance
+}
+
 type Volume interface {
 	TakeSnapshot(ctx context.Context) (Snapshot, error)
 }
@@ -75,13 +56,6 @@ type Snapshot interface {
 	Copy(ctx context.Context, dstRegion string) (Snapshot, error)
 	Delete(ctx context.Context) error
 	WaitForReady(ctx context.Context) error
-}
-
-// TODO example ScannerConfig, needs to be defined.
-type ScannerConfig struct {
-	ScannerImage   string
-	ScannerCommand string
-	ScannerJobConfig
 }
 
 type ScannerJobConfig struct {

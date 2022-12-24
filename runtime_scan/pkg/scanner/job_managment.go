@@ -19,7 +19,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"sync/atomic"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -34,10 +33,8 @@ import (
 // run jobs.
 func (s *Scanner) jobBatchManagement(ctx context.Context, scanDone chan struct{}) {
 	s.Lock()
-	instanceIDToScanData := s.instanceIDToScanData
-	numberOfWorkers := s.scanConfig.MaxScanParallelism
-	instancesStartedToScan := &s.progress.InstancesStartedToScan
-	instancesCompletedToScan := &s.progress.InstancesCompletedToScan
+	targetIDToScanData := s.targetIDToScanData
+	numberOfWorkers := 2 // TODO: create this in the API
 	s.Unlock()
 
 	// queue of scan data
@@ -54,10 +51,9 @@ func (s *Scanner) jobBatchManagement(ctx context.Context, scanDone chan struct{}
 
 	// wait until scan of all instances is done - non blocking. once all done, notify on fullScanDone chan
 	go func() {
-		for c := 0; c < len(instanceIDToScanData); c++ {
+		for c := 0; c < len(targetIDToScanData); c++ {
 			select {
 			case <-done:
-				atomic.AddUint32(instancesCompletedToScan, 1)
 			case <-s.killSignal:
 				log.WithFields(s.logFields).Debugf("Scan process was canceled - stop waiting for finished jobs")
 				return
@@ -68,13 +64,12 @@ func (s *Scanner) jobBatchManagement(ctx context.Context, scanDone chan struct{}
 	}()
 
 	// send all scan data on scan data queue, for workers to pick it up.
-	for _, data := range instanceIDToScanData {
+	for _, data := range targetIDToScanData {
 		go func(data *scanData, ks chan bool) {
 			select {
 			case q <- data:
-				atomic.AddUint32(instancesStartedToScan, 1)
 			case <-ks:
-				log.WithFields(s.logFields).Debugf("Scan process was canceled. instanceID=%v, scanUUID=%v", data.instance.GetID(), data.scanUUID)
+				log.WithFields(s.logFields).Debugf("Scan process was canceled. targetID=%v, scanID=%v", data.targetInstance.TargetID, s.scanID)
 				return
 			}
 		}(data, s.killSignal)
@@ -96,6 +91,7 @@ func (s *Scanner) worker(ctx context.Context, queue chan *scanData, workNumber i
 	for {
 		select {
 		case data := <-queue:
+			// TODO: Run the job only if that target scan status is in init phase, else go to wait
 			job, err := s.runJob(ctx, data)
 			var errMsg string
 			if err != nil {
@@ -110,14 +106,13 @@ func (s *Scanner) worker(ctx context.Context, queue chan *scanData, workNumber i
 				if data.timeout {
 					errMsg = fmt.Sprintf("job has timed out")
 				}
-
 			}
 
 			if errMsg != "" {
 				log.WithFields(s.logFields).Error(errMsg)
-				err := s.SetScanStatusCompletionError(ctx, data, errMsg)
+				err := s.SetTargetScanStatusCompletionError(ctx, s.scanID, data.targetInstance.TargetID, errMsg)
 				if err != nil {
-					log.WithFields(s.logFields).Errorf("Couldn't set completion error for scan status. instance id=%v, scan id=%v: %v", data.instance.GetID(), data.scanUUID, err)
+					log.WithFields(s.logFields).Errorf("Couldn't set completion error for target scan status. targetID=%v, scanID=%v: %v", data.targetInstance.TargetID, s.scanID, err)
 					// TODO: Should we retry?
 				}
 			}
@@ -127,7 +122,7 @@ func (s *Scanner) worker(ctx context.Context, queue chan *scanData, workNumber i
 			select {
 			case done <- true:
 			case <-ks:
-				log.WithFields(s.logFields).Infof("Instance scan was canceled. instanceID=%v", data.instance.GetID())
+				log.WithFields(s.logFields).Infof("Instance scan was canceled. targetID=%v", data.targetInstance.TargetID)
 			}
 		case <-ks:
 			log.WithFields(s.logFields).Debugf("worker #%v halted", workNumber)
@@ -137,21 +132,21 @@ func (s *Scanner) worker(ctx context.Context, queue chan *scanData, workNumber i
 }
 
 func (s *Scanner) waitForResult(ctx context.Context, data *scanData, ks chan bool) {
-	log.WithFields(s.logFields).Infof("Waiting for result. instanceID=%+v", data.instance.GetID())
-	ticker := time.NewTicker(s.scanConfig.JobResultsPollingInterval)
-	timeout := time.After(s.scanConfig.JobResultTimeout)
+	log.WithFields(s.logFields).Infof("Waiting for result. targetID=%+v", data.targetInstance.TargetID)
+	ticker := time.NewTicker(s.config.JobResultsPollingInterval)
+	timeout := time.After(s.config.JobResultTimeout)
 	for {
 		select {
 		case <-ticker.C:
-			log.WithFields(s.logFields).Infof("Polling scan results for instanceID=%v with scanID=%v", data.instance.GetID(), data.scanUUID)
+			log.WithFields(s.logFields).Infof("Polling scan results for targetID=%v with scanID=%v", data.targetInstance.TargetID, s.scanID)
 			// Get scan results from backend
-			instanceScanResults, err := s.GetScanStatus(ctx, data)
+			instanceScanResults, err := s.GetTargetScanStatus(ctx, s.scanID, data.targetInstance.TargetID)
 			if err != nil {
-				log.WithFields(s.logFields).Errorf("Failed to get scan target status. scan id=%v, target id =%s: %v", data.scanUUID, data.instance.GetID(), err)
+				log.WithFields(s.logFields).Errorf("Failed to get target scan status. scanID=%v, targetID=%s: %v", s.scanID, data.targetInstance.TargetID, err)
 				continue
 			}
 			if *instanceScanResults.General.State != models.DONE {
-				log.WithFields(s.logFields).Infof("Scan is not done. scan id=%v, target id=%s, state=%v", data.scanUUID, data.instance.GetID(), *instanceScanResults.General.State)
+				log.WithFields(s.logFields).Infof("Scan is not done. scan id=%v, targetID=%s, state=%v", s.scanID, data.targetInstance.TargetID, *instanceScanResults.General.State)
 				continue
 			}
 
@@ -161,7 +156,7 @@ func (s *Scanner) waitForResult(ctx context.Context, data *scanData, ks chan boo
 			s.Unlock()
 			return
 		case <-timeout:
-			log.WithFields(s.logFields).Infof("Job has timed out. instanceID=%v", data.instance.GetID())
+			log.WithFields(s.logFields).Infof("Job has timed out. targetID=%v", data.targetInstance.TargetID)
 			s.Lock()
 			data.success = false
 			data.completed = true
@@ -169,7 +164,7 @@ func (s *Scanner) waitForResult(ctx context.Context, data *scanData, ks chan boo
 			s.Unlock()
 			return
 		case <-ks:
-			log.WithFields(s.logFields).Infof("Instance scan was canceled. instanceID=%v", data.instance.GetID())
+			log.WithFields(s.logFields).Infof("Instance scan was canceled. targetID=%v", data.targetInstance.TargetID)
 			return
 		}
 	}
@@ -183,6 +178,8 @@ func scanStatusHasErrors(status *models.TargetScanStatus) bool {
 	return false
 }
 
+// TODO: need to understand how to destroy the job in case the scanner dies until it gets the results
+// We can put the targetID on the scanner VM for easy deletion
 func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error) {
 	var launchInstance types.Instance
 	var launchSnapshot types.Snapshot
@@ -191,7 +188,7 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 	var job types.Job
 	var err error
 
-	instanceToScan := data.instance
+	instanceToScan := data.targetInstance.Instance
 
 	// cleanup in case of an error
 	defer func() {
@@ -215,8 +212,8 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 		return types.Job{}, fmt.Errorf("failed to wait for snapshot to be ready. snapshotID=%v: %v", snapshot.GetID(), err)
 	}
 
-	if s.region != snapshot.GetRegion() {
-		cpySnapshot, err = snapshot.Copy(ctx, s.region)
+	if s.config.Region != snapshot.GetRegion() {
+		cpySnapshot, err = snapshot.Copy(ctx, s.config.Region)
 		if err != nil {
 			return types.Job{}, fmt.Errorf("failed to copy snapshot. snapshotID=%v: %v", snapshot.GetID(), err)
 		}
@@ -227,7 +224,7 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 		}
 	}
 
-	launchInstance, err = s.providerClient.RunScanningJob(ctx, launchSnapshot, s.scanConfig.ScannerConfig)
+	launchInstance, err = s.providerClient.RunScanningJob(ctx, launchSnapshot, s.scanConfig)
 	if err != nil {
 		return types.Job{}, fmt.Errorf("failed to launch a new instance: %v", err)
 	}
@@ -247,7 +244,7 @@ func (s *Scanner) deleteJobIfNeeded(ctx context.Context, job *types.Job, isSucce
 		return
 	}
 
-	switch s.scanConfig.DeleteJobPolicy {
+	switch s.config.DeleteJobPolicy {
 	case config.DeleteJobPolicyNever:
 		// do nothing
 	case config.DeleteJobPolicyAll:
@@ -277,11 +274,11 @@ func (s *Scanner) deleteJob(ctx context.Context, job *types.Job) {
 	}
 }
 
-func (s *Scanner) createInitScanStatus(ctx context.Context, scanID string, targetID string) error {
+func (s *Scanner) createInitTargetScanStatus(ctx context.Context, scanID string, targetID string) error {
 	initScanStatus := models.TargetScanStatus{
 		Exploits: &models.TargetScanState{
 			Errors: nil,
-			State:  getInitScanStatusStateFromEnabled(s.scanConfig.ScannerConfig.ExploitScan.Enabled),
+			State:  getInitScanStatusStateFromEnabled(*s.scanConfig.ScanFamiliesConfig.Exploits.Enabled),
 		},
 		General: &models.TargetScanState{
 			Errors: nil,
@@ -289,38 +286,49 @@ func (s *Scanner) createInitScanStatus(ctx context.Context, scanID string, targe
 		},
 		Malware: &models.TargetScanState{
 			Errors: nil,
-			State:  getInitScanStatusStateFromEnabled(s.scanConfig.ScannerConfig.MalwareScan.Enabled),
+			State:  getInitScanStatusStateFromEnabled(*s.scanConfig.ScanFamiliesConfig.Malware.Enabled),
 		},
 		Misconfigurations: &models.TargetScanState{
 			Errors: nil,
-			State:  getInitScanStatusStateFromEnabled(s.scanConfig.ScannerConfig.MisconfigurationScan.Enabled),
+			State:  getInitScanStatusStateFromEnabled(*s.scanConfig.ScanFamiliesConfig.Misconfigurations.Enabled),
 		},
 		Rootkits: &models.TargetScanState{
 			Errors: nil,
-			State:  getInitScanStatusStateFromEnabled(s.scanConfig.ScannerConfig.RootkitScan.Enabled),
+			State:  getInitScanStatusStateFromEnabled(*s.scanConfig.ScanFamiliesConfig.Rootkits.Enabled),
 		},
 		Sbom: &models.TargetScanState{
 			Errors: nil,
-			State:  getInitScanStatusStateFromEnabled(s.scanConfig.ScannerConfig.SbomScan.Enabled),
+			State:  getInitScanStatusStateFromEnabled(*s.scanConfig.ScanFamiliesConfig.Sbom.Enabled),
 		},
 		Secrets: &models.TargetScanState{
 			Errors: nil,
-			State:  getInitScanStatusStateFromEnabled(s.scanConfig.ScannerConfig.SecretScan.Enabled),
+			State:  getInitScanStatusStateFromEnabled(*s.scanConfig.ScanFamiliesConfig.Secrets.Enabled),
 		},
 		Vulnerabilities: &models.TargetScanState{
 			Errors: nil,
-			State:  getInitScanStatusStateFromEnabled(s.scanConfig.ScannerConfig.VulnerabilityScan.Enabled),
+			State:  getInitScanStatusStateFromEnabled(*s.scanConfig.ScanFamiliesConfig.Vulnerabilities.Enabled),
 		},
 	}
 	resp, err := s.backendClient.PostScansScanIDTargetsTargetIDScanStatusWithResponse(ctx, targetID, scanID, initScanStatus)
 	if err != nil {
-		return fmt.Errorf("failed to post init scan status. scanID=%v, targetId=%v: %v", scanID, targetID, err)
+		return fmt.Errorf("failed to post scan status: %v", err)
 	}
-	if resp.HTTPResponse.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to create an init scan result: status code=%v", resp.HTTPResponse.StatusCode)
-	}
-	if resp.JSON201 == nil {
-		return fmt.Errorf("failed to create an init scan result: empty body")
+	switch resp.StatusCode() {
+	case http.StatusCreated:
+		if resp.JSON201 == nil {
+			return fmt.Errorf("failed to create a scan status, empty body")
+		}
+		return nil
+	case http.StatusConflict:
+		if resp.JSON409 == nil {
+			return fmt.Errorf("failed to create a scan status, empty body on conflict")
+		}
+		return nil
+	default:
+		if resp.JSONDefault != nil && resp.JSONDefault.Message != nil {
+			return fmt.Errorf("failed to post target. status code=%v: %v", resp.StatusCode(), resp.JSONDefault.Message)
+		}
+		return fmt.Errorf("failed to post target. status code=%v", resp.StatusCode())
 	}
 
 	return nil
@@ -334,26 +342,4 @@ func getInitScanStatusStateFromEnabled(enabled bool) *models.TargetScanStateStat
 		return &initState
 	}
 	return &notScannedState
-}
-
-func (s *Scanner) createTargetIfNotExist(ctx context.Context, targetID string, targetLocation string) error {
-	info := models.TargetType{}
-	provider := models.AWS
-	objType, err := info.Discriminator()
-	if err != nil {
-		return fmt.Errorf("failed to get target info type: %v", err)
-	}
-	err = info.FromVMInfo(models.VMInfo{
-		InstanceProvider: &provider,
-		Location:         &targetLocation,
-		ObjectType:       objType,
-	})
-	resp, err := s.backendClient.PostTargetsWithResponse(ctx, models.Target{
-		Id:         &targetID,
-		TargetInfo: &info,
-	})
-	if err != nil && resp.HTTPResponse.StatusCode != http.StatusConflict {
-		return fmt.Errorf("failed to create target with ID: %s", targetID)
-	}
-	return nil
 }

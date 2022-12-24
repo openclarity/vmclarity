@@ -18,11 +18,14 @@ package orchestrator
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"sync"
-
-	log "github.com/sirupsen/logrus"
+	"time"
 
 	"github.com/openclarity/vmclarity/api/client"
+	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
+	log "github.com/sirupsen/logrus"
 
 	_config "github.com/openclarity/vmclarity/runtime_scan/pkg/config"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
@@ -31,8 +34,7 @@ import (
 )
 
 type Orchestrator struct {
-	scanner        *_scanner.Scanner
-	config         *_config.Config
+	config         *_config.OrchestratorConfig
 	providerClient provider.Client
 	backendClient  *client.ClientWithResponses
 	// server *rest.Server
@@ -42,13 +44,10 @@ type Orchestrator struct {
 //go:generate $GOPATH/bin/mockgen -destination=./mock_orchestrator.go -package=orchestrator github.com/openclarity/vmclarity/runtime_scan/pkg/orchestrator VulnerabilitiesScanner
 type VulnerabilitiesScanner interface {
 	Start(errChan chan struct{})
-	Scan(ctx context.Context, scanConfig *_config.ScanConfig, scanDone chan struct{}) error
-	ScanProgress() types.ScanProgress
-	Clear()
-	Stop()
+	Scan(ctx context.Context, scanConfig *models.ScanConfig, scanDone chan struct{}) error
 }
 
-func Create(config *_config.Config, providerClient provider.Client) (*Orchestrator, error) {
+func Create(config *_config.OrchestratorConfig, providerClient provider.Client) (*Orchestrator, error) {
 	backendClient, err := client.NewClientWithResponses(
 		fmt.Sprintf("%s:%d/%s", config.BackendAddress, config.BackendRestPort, config.BackendBaseURL),
 	)
@@ -56,7 +55,6 @@ func Create(config *_config.Config, providerClient provider.Client) (*Orchestrat
 		return nil, fmt.Errorf("failed to create a backend client: %v", err)
 	}
 	orc := &Orchestrator{
-		scanner:        _scanner.CreateScanner(config, providerClient, backendClient),
 		config:         config,
 		providerClient: providerClient,
 		Mutex:          sync.Mutex{},
@@ -68,44 +66,144 @@ func Create(config *_config.Config, providerClient provider.Client) (*Orchestrat
 
 func (o *Orchestrator) Start(errChan chan struct{}) {
 	// Start orchestrator server
+
+	// TODO: watch scan configs and call Scan() when needed
 	log.Infof("Starting Orchestrator server")
 }
 
-func (o *Orchestrator) Stop() {
-	o.Clear()
-
-	log.Infof("Stopping Orchestrator server")
-}
-
-func (o *Orchestrator) Scan(ctx context.Context, scanConfig *_config.ScanConfig, scanDone chan struct{}) error {
-	instances, err := o.providerClient.Discover(ctx, scanConfig.ScanScope)
+func (o *Orchestrator) Scan(ctx context.Context, scanConfig *models.ScanConfig, scanDone chan struct{}) error {
+	// TODO: check if existing scan or a new scan
+	targetInstances, scanID, err := o.initNewScan(ctx, scanConfig)
 	if err != nil {
-		return fmt.Errorf("failed to discover instances to scan: %v", err)
+		return fmt.Errorf("failed to init new scan: %v", err)
 	}
 
-	if err := o.getScanner().Scan(ctx, scanConfig, instances, scanDone); err != nil {
+	scanner := _scanner.CreateScanner(o.config, o.providerClient, o.backendClient, scanConfig, targetInstances, scanID)
+
+	if err := scanner.Scan(ctx, scanDone); err != nil {
 		return fmt.Errorf("failed to scan: %v", err)
 	}
 
 	return nil
 }
 
-func (o *Orchestrator) ScanProgress() types.ScanProgress {
-	return o.getScanner().ScanProgress()
+func (o *Orchestrator) initExistingScan(ctx context.Context, scanConfig *models.ScanConfig, scanDone chan struct{}) error {
+	return nil
 }
 
-func (o *Orchestrator) Clear() {
-	o.Lock()
-	defer o.Unlock()
+func (o *Orchestrator) initNewScan(ctx context.Context, scanConfig *models.ScanConfig) (targetInstances []*types.TargetInstance, scanID string, err error) {
+	instances, err := o.providerClient.Discover(ctx, scanConfig.Scope)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to discover instances to scan: %v", err)
+	}
 
-	log.Infof("Clearing Orchestrator")
-	o.scanner.Clear()
-	o.scanner = _scanner.CreateScanner(o.config, o.providerClient, o.backendClient)
+	targetInstances, err = o.createTargetInstances(ctx, instances)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to get or create targets: %v", err)
+	}
+
+	now := time.Now().UTC()
+	scan := &models.Scan{
+		ScanConfigId:       scanConfig.Id,
+		ScanFamiliesConfig: scanConfig.ScanFamiliesConfig,
+		StartTime:          &now,
+		TargetIDs:          getTargetIDs(targetInstances),
+	}
+	scanID, err = o.getOrCreateScan(ctx, scan)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to get or create a scan: %v", err)
+	}
+
+	return targetInstances, scanID, nil
 }
 
-func (o *Orchestrator) getScanner() *_scanner.Scanner {
-	o.Lock()
-	defer o.Unlock()
+func getTargetIDs(targetInstances []*types.TargetInstance) *[]string {
+	var ret []string
+	for _, targetInstance := range targetInstances {
+		ret = append(ret, targetInstance.TargetID)
+	}
 
-	return o.scanner
+	return &ret
+}
+
+func (o *Orchestrator) createTargetInstances(ctx context.Context, instances []types.Instance) (targetInstances []*types.TargetInstance, err error) {
+	for i, instance := range instances {
+		target, err := o.getOrCreateTarget(ctx, instance)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get or create target. instanceID=%v: %v", instance.GetID(), err)
+		}
+		targetInstances = append(targetInstances, &types.TargetInstance{
+			TargetID: *target.Id,
+			Instance: instances[i],
+		})
+	}
+
+	return targetInstances, nil
+}
+
+func (o *Orchestrator) getOrCreateTarget(ctx context.Context, instance types.Instance) (target *models.Target, err error) {
+	info := models.TargetType{}
+	provider := models.AWS
+	err = info.FromVMInfo(models.VMInfo{
+		InstanceID:       utils.StringPtr(instance.GetID()),
+		InstanceProvider: &provider,
+		Location:         utils.StringPtr(instance.GetLocation()),
+		ObjectType:       "VMInfo", // TODO: Create const
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create VMInfo: %v", err)
+	}
+	resp, err := o.backendClient.PostTargetsWithResponse(ctx, models.Target{
+		TargetInfo: &info,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to post target: %v", err)
+	}
+	switch resp.StatusCode() {
+	case http.StatusCreated:
+		if resp.JSON201 == nil {
+			return nil, fmt.Errorf("failed to create a target: empty body")
+		}
+		return resp.JSON201, nil
+	case http.StatusConflict:
+		if resp.JSON409 == nil {
+			return nil, fmt.Errorf("failed to create a target: empty body on conflict")
+		}
+		return resp.JSON409, nil
+	default:
+		if resp.JSONDefault != nil && resp.JSONDefault.Message != nil {
+			return nil, fmt.Errorf("failed to post target. status code=%v: %v", resp.StatusCode(), resp.JSONDefault.Message)
+		}
+		return nil, fmt.Errorf("failed to post target. status code=%v", resp.StatusCode())
+	}
+}
+
+func (s *Orchestrator) getOrCreateScan(ctx context.Context, scan *models.Scan) (string, error) {
+	resp, err := s.backendClient.PostScansWithResponse(ctx, *scan)
+	if err != nil {
+		return "", fmt.Errorf("failed to post a scan: %v", err)
+	}
+	switch resp.StatusCode() {
+	case http.StatusCreated:
+		if resp.JSON201 == nil {
+			return "", fmt.Errorf("failed to create a scan: empty body")
+		}
+		if resp.JSON201.Id == nil {
+			return "", fmt.Errorf("scan id is nil")
+		}
+		return *resp.JSON201.Id, nil
+	case http.StatusConflict:
+		if resp.JSON409 == nil {
+			return "", fmt.Errorf("failed to create a scan: empty body on conflict")
+		}
+		if resp.JSON409.Id == nil {
+			return "", fmt.Errorf("scan id on conflict is nil")
+		}
+		return *resp.JSON409.Id, nil
+	default:
+		if resp.JSONDefault != nil && resp.JSONDefault.Message != nil {
+			return "", fmt.Errorf("failed to post scan. status code=%v: %v", resp.StatusCode(), resp.JSONDefault.Message)
+		}
+		return "", fmt.Errorf("failed to post scan. status code=%v", resp.StatusCode())
+	}
 }

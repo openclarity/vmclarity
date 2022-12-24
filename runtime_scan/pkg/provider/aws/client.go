@@ -24,6 +24,7 @@ import (
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/openclarity/vmclarity/api/models"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/cloudinit"
@@ -65,15 +66,17 @@ func Create(ctx context.Context, config *aws.Config) (*Client, error) {
 	return &awsClient, nil
 }
 
-func (c *Client) Discover(ctx context.Context, scanScope types.ScanScope) ([]types.Instance, error) {
+func (c *Client) Discover(ctx context.Context, scanScope *models.ScanScopeType) ([]types.Instance, error) {
 	var ret []types.Instance
 	var filters []ec2types.Filter
-	var scope *ScanScope
-	var ok bool
 
-	if scope, ok = scanScope.(*ScanScope); !ok {
-		return nil, fmt.Errorf("failed to assert scope type, received type %T", scanScope)
+	awsScanScope, err := scanScope.AsAwsScanScope()
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert as aws scope: %v", err)
 	}
+
+	scope := convertScope(&awsScanScope)
 
 	regions, err := c.getRegionsToScan(ctx, scope)
 	if err != nil {
@@ -110,8 +113,82 @@ func (c *Client) Discover(ctx context.Context, scanScope types.ScanScope) ([]typ
 	return ret, nil
 }
 
-func (c *Client) RunScanningJob(ctx context.Context, snapshot types.Snapshot, scannerConfig *types.ScannerConfig) (types.Instance, error) {
-	userData, err := cloudinit.GenerateCloudInit(scannerConfig, c.awsConfig.DeviceName)
+func convertScope(scope *models.AwsScanScope) *ScanScope {
+	return &ScanScope{
+		All:         convertBool(scope.All),
+		Regions:     convertRegions(scope.Regions),
+		ScanStopped: convertBool(scope.ShouldScanStoppedInstances),
+		TagSelector: convertTags(scope.InstanceTagSelector),
+		ExcludeTags: convertTags(scope.InstanceTagExclusion),
+	}
+}
+
+func convertTags(tags *[]models.Tag) []Tag {
+	var ret []Tag
+	if tags != nil {
+		for _, tag := range *tags {
+			ret = append(ret, Tag{
+				Key: *tag.Key,
+				Val: *tag.Value,
+			})
+		}
+	}
+
+	return ret
+}
+
+func convertRegions(regions *[]models.AwsRegion) []Region {
+	var ret []Region
+	if regions != nil {
+		for _, region := range *regions {
+			ret = append(ret, Region{
+				id:   *region.Id,
+				vpcs: convertVPCs(region.Vpcs),
+			})
+		}
+	}
+
+	return ret
+}
+
+func convertVPCs(vpcs *[]models.AwsVPC) []VPC {
+	var ret []VPC
+	if vpcs == nil {
+		return ret
+	}
+	for _, vpc := range *vpcs {
+		ret = append(ret, VPC{
+			id:             *vpc.Id,
+			securityGroups: convertSecurityGroups(vpc.SecurityGroups),
+		})
+	}
+
+	return ret
+}
+
+func convertSecurityGroups(securityGroups *[]models.AwsSecurityGroup) []SecurityGroup {
+	var ret []SecurityGroup
+	if securityGroups == nil {
+		return ret
+	}
+	for _, securityGroup := range *securityGroups {
+		ret = append(ret, SecurityGroup{
+			id: *securityGroup.Id,
+		})
+	}
+
+	return ret
+}
+
+func convertBool(all *bool) bool {
+	if all != nil {
+		return *all
+	}
+	return false
+}
+
+func (c *Client) RunScanningJob(ctx context.Context, snapshot types.Snapshot, scannerConfig *models.ScanConfig) (types.Instance, error) {
+	userData, err := cloudinit.GenerateCloudInit("TODO config", c.awsConfig.DeviceName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate cloud-init: %v", err)
 	}

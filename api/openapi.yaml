@@ -616,7 +616,13 @@ components:
           description: The ID of the config that this scan was initiated from (optionanl)
           type: string
         scanFamiliesConfig:
+          # The configuration as it was in the config when the scan was created
           $ref: '#/components/schemas/ScanFamiliesConfig'
+        targetIDs:
+          description: List of target IDs that are targeted for scanning as part of this scan
+          type: array
+          items:
+            type: string
 
     ScanFamiliesConfig:
       type: object
@@ -850,6 +856,8 @@ components:
       type: object
       properties:
         objectType:
+          type: string
+        instanceID:
           type: string
         instanceProvider:
           $ref: '#/components/schemas/CloudProvider'
