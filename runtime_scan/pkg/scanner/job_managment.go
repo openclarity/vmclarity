@@ -110,7 +110,7 @@ func (s *Scanner) worker(ctx context.Context, queue chan *scanData, workNumber i
 
 			if errMsg != "" {
 				log.WithFields(s.logFields).Error(errMsg)
-				err := s.SetTargetScanStatusCompletionError(ctx, s.scanID, data.targetInstance.TargetID, errMsg)
+				err := s.SetTargetScanStatusCompletionError(ctx, data.scanResultID, errMsg)
 				if err != nil {
 					log.WithFields(s.logFields).Errorf("Couldn't set completion error for target scan status. targetID=%v, scanID=%v: %v", data.targetInstance.TargetID, s.scanID, err)
 					// TODO: Should we retry?
@@ -140,7 +140,7 @@ func (s *Scanner) waitForResult(ctx context.Context, data *scanData, ks chan boo
 		case <-ticker.C:
 			log.WithFields(s.logFields).Infof("Polling scan results for targetID=%v with scanID=%v", data.targetInstance.TargetID, s.scanID)
 			// Get scan results from backend
-			instanceScanResults, err := s.GetTargetScanStatus(ctx, s.scanID, data.targetInstance.TargetID)
+			instanceScanResults, err := s.GetTargetScanStatus(ctx, data.scanResultID)
 			if err != nil {
 				log.WithFields(s.logFields).Errorf("Failed to get target scan status. scanID=%v, targetID=%s: %v", s.scanID, data.targetInstance.TargetID, err)
 				continue
@@ -274,8 +274,8 @@ func (s *Scanner) deleteJob(ctx context.Context, job *types.Job) {
 	}
 }
 
-func (s *Scanner) createInitTargetScanStatus(ctx context.Context, scanID string, targetID string) error {
-	initScanStatus := models.TargetScanStatus{
+func (s *Scanner) createInitTargetScanStatus(ctx context.Context, scanID, targetID string) (string, error) {
+	initScanStatus := &models.TargetScanStatus{
 		Exploits: &models.TargetScanState{
 			Errors: nil,
 			State:  getInitScanStatusStateFromEnabled(*s.scanConfig.ScanFamiliesConfig.Exploits.Enabled),
@@ -309,29 +309,27 @@ func (s *Scanner) createInitTargetScanStatus(ctx context.Context, scanID string,
 			State:  getInitScanStatusStateFromEnabled(*s.scanConfig.ScanFamiliesConfig.Vulnerabilities.Enabled),
 		},
 	}
-	resp, err := s.backendClient.PostScansScanIDTargetsTargetIDScanStatusWithResponse(ctx, targetID, scanID, initScanStatus)
+	scanResult := models.TargetScanResult{
+		ScanId:   scanID,
+		Status:   initScanStatus,
+		TargetId: targetID,
+	}
+	resp, err := s.backendClient.PostScanResultsWithResponse(ctx, scanResult)
 	if err != nil {
-		return fmt.Errorf("failed to post scan status: %v", err)
+		return "", fmt.Errorf("failed to post scan status: %v", err)
 	}
 	switch resp.StatusCode() {
 	case http.StatusCreated:
 		if resp.JSON201 == nil {
-			return fmt.Errorf("failed to create a scan status, empty body")
+			return "", fmt.Errorf("failed to create a scan status, empty body")
 		}
-		return nil
-	case http.StatusConflict:
-		if resp.JSON409 == nil {
-			return fmt.Errorf("failed to create a scan status, empty body on conflict")
-		}
-		return nil
+		return resp.JSON201.ScanId, nil
 	default:
 		if resp.JSONDefault != nil && resp.JSONDefault.Message != nil {
-			return fmt.Errorf("failed to post target. status code=%v: %v", resp.StatusCode(), resp.JSONDefault.Message)
+			return "", fmt.Errorf("failed to post target. status code=%v: %v", resp.StatusCode(), resp.JSONDefault.Message)
 		}
-		return fmt.Errorf("failed to post target. status code=%v", resp.StatusCode())
+		return "", fmt.Errorf("failed to post target. status code=%v", resp.StatusCode())
 	}
-
-	return nil
 }
 
 var initState = models.INIT

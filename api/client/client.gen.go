@@ -1924,7 +1924,6 @@ type PostScanResultsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON201      *TargetScanResult
-	JSON409      *TargetScanResult
 	JSONDefault  *ApiResponse
 }
 
@@ -2850,13 +2849,6 @@ func ParsePostScanResultsResponse(rsp *http.Response) (*PostScanResultsResponse,
 			return nil, err
 		}
 		response.JSON201 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
-		var dest TargetScanResult
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest ApiResponse

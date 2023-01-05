@@ -23,13 +23,12 @@ import (
 	"github.com/deepmap/oapi-codegen/pkg/middleware"
 	"github.com/labstack/echo/v4"
 	echomiddleware "github.com/labstack/echo/v4/middleware"
-	"github.com/openclarity/vmclarity/api/models"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/api/server"
-	"github.com/openclarity/vmclarity/backend/pkg/database"
-
 	"github.com/openclarity/vmclarity/backend/pkg/common"
+	"github.com/openclarity/vmclarity/backend/pkg/database"
 )
 
 const (
@@ -41,6 +40,31 @@ var oops = "oops"
 
 type ServerImpl struct {
 	dbHandler database.Database
+}
+
+func (s *ServerImpl) GetScanResults(ctx echo.Context, params models.GetScanResultsParams) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s *ServerImpl) PostScanResults(ctx echo.Context) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s *ServerImpl) GetScanResultsScanResultID(ctx echo.Context, scanResultID models.ScanResultID, params models.GetScanResultsScanResultIDParams) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s *ServerImpl) PatchScanResultsScanResultID(ctx echo.Context, scanResultID models.ScanResultID) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s *ServerImpl) PutScanResultsScanResultID(ctx echo.Context, scanResultID models.ScanResultID) error {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (s *ServerImpl) GetScanConfigs(ctx echo.Context, params models.GetScanConfigsParams) error {

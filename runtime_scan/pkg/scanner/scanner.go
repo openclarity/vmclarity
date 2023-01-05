@@ -29,6 +29,7 @@ import (
 	_config "github.com/openclarity/vmclarity/runtime_scan/pkg/config"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 )
 
 type Scanner struct {
@@ -47,6 +48,7 @@ type Scanner struct {
 
 type scanData struct {
 	targetInstance *types.TargetInstance
+	scanResultID   string
 	success        bool // Needed for deletion policy in case we want to access the logs
 	timeout        bool
 	completed      bool
@@ -78,12 +80,14 @@ func (s *Scanner) initScan(ctx context.Context) error {
 
 	// Populate the instance to scanData map
 	for _, targetInstance := range s.targetInstances {
-		if err := s.createInitTargetScanStatus(ctx, s.scanID, targetInstance.TargetID); err != nil {
+		scanResultID, err := s.createInitTargetScanStatus(ctx, s.scanID, targetInstance.TargetID)
+		if err != nil {
 			log.Errorf("Failed to create an init scan result. instance id=%v, scan id=%v: %v", targetInstance.TargetID, s.scanConfig, err)
 			continue
 		}
 		targetIDToScanData[targetInstance.TargetID] = &scanData{
 			targetInstance: targetInstance,
+			scanResultID:   scanResultID,
 			success:        false,
 			completed:      false,
 			timeout:        false,
@@ -119,8 +123,11 @@ func (s *Scanner) Scan(ctx context.Context, scanDone chan struct{}) error {
 	return nil
 }
 
-func (s *Scanner) GetTargetScanStatus(ctx context.Context, scanID string, targetID string) (*models.TargetScanStatus, error) {
-	resp, err := s.backendClient.GetScansScanIDTargetsTargetIDScanStatusWithResponse(ctx, scanID, targetID)
+func (s *Scanner) GetTargetScanStatus(ctx context.Context, scanResultID string) (*models.TargetScanStatus, error) {
+	params := &models.GetScanResultsScanResultIDParams{
+		Select: utils.StringPtr("status"),
+	}
+	resp, err := s.backendClient.GetScanResultsScanResultIDWithResponse(ctx, scanResultID, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get a target scan status: %v", err)
 	}
@@ -129,7 +136,10 @@ func (s *Scanner) GetTargetScanStatus(ctx context.Context, scanID string, target
 		if resp.JSON200 == nil {
 			return nil, fmt.Errorf("failed to get a target scan status: empty body")
 		}
-		return resp.JSON200, nil
+		if resp.JSON200.Status == nil {
+			return nil, fmt.Errorf("failed to get a target scan status: empty status in body")
+		}
+		return resp.JSON200.Status, nil
 	default:
 		if resp.JSONDefault != nil && resp.JSONDefault.Message != nil {
 			return nil, fmt.Errorf("failed to get a target scan status. status code=%v: %v", resp.StatusCode(), resp.JSONDefault.Message)
@@ -138,9 +148,9 @@ func (s *Scanner) GetTargetScanStatus(ctx context.Context, scanID string, target
 	}
 }
 
-func (s *Scanner) SetTargetScanStatusCompletionError(ctx context.Context, scanID string, targetID string, errMsg string) error {
+func (s *Scanner) SetTargetScanStatusCompletionError(ctx context.Context, scanResultID, errMsg string) error {
 	// Get the status and set the completion error
-	status, err := s.GetTargetScanStatus(ctx, scanID, targetID)
+	status, err := s.GetTargetScanStatus(ctx, scanResultID)
 	if err != nil {
 		return fmt.Errorf("failed to get a target scan status: %v", err)
 	}
@@ -154,7 +164,7 @@ func (s *Scanner) SetTargetScanStatusCompletionError(ctx context.Context, scanID
 	done := models.DONE
 	status.General.State = &done
 
-	err = s.putTargetScanStatus(ctx, scanID, targetID, status)
+	err = s.patchTargetScanStatus(ctx, scanResultID, status)
 	if err != nil {
 		return fmt.Errorf("failed to put target scan status: %v", err)
 	}
@@ -162,14 +172,17 @@ func (s *Scanner) SetTargetScanStatusCompletionError(ctx context.Context, scanID
 	return nil
 }
 
-func (s *Scanner) putTargetScanStatus(ctx context.Context, scanID string, targetID string, status *models.TargetScanStatus) error {
-	resp, err := s.backendClient.PutScansScanIDTargetsTargetIDScanStatusWithResponse(ctx, scanID, targetID, *status)
+func (s *Scanner) patchTargetScanStatus(ctx context.Context, scanResultID string, status *models.TargetScanStatus) error {
+	scanResult := models.TargetScanResult{
+		Status: status,
+	}
+	resp, err := s.backendClient.PatchScanResultsScanResultIDWithResponse(ctx, scanResultID, scanResult)
 	if err != nil {
 		return fmt.Errorf("failed to put a scan status: %v", err)
 	}
 	switch resp.StatusCode() {
 	case http.StatusCreated:
-		if resp.JSON200 == nil {
+		if resp.JSON201 == nil {
 			return fmt.Errorf("failed to update a scan status: empty body")
 		}
 		return nil
