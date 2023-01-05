@@ -233,6 +233,15 @@ type ScanConfig struct {
 	Scope              *ScanScopeType                 `json:"scope,omitempty"`
 }
 
+// ScanConfigs defines model for ScanConfigs.
+type ScanConfigs struct {
+	// Items List of scan configs according to the given filters and page. List length must be lower or equal to pageSize.
+	Items *[]ScanConfig `json:"items,omitempty"`
+
+	// Total Total scan config count according to the given filters
+	Total int `json:"total"`
+}
+
 // ScanFamiliesConfig The configuration of the scanner families within a scan config
 type ScanFamiliesConfig struct {
 	Exploits *struct {
@@ -265,6 +274,15 @@ type ScanScopeType struct {
 
 // ScanType defines model for ScanType.
 type ScanType string
+
+// Scans defines model for Scans.
+type Scans struct {
+	// Items List of scans according to the given filters and page. List length must be lower or equal to pageSize.
+	Items *[]Scan `json:"items,omitempty"`
+
+	// Total Total scans count according to the given filters
+	Total int `json:"total"`
+}
 
 // SecretInfo defines model for SecretInfo.
 type SecretInfo struct {
@@ -318,6 +336,15 @@ type TargetScanResult struct {
 	Vulnerabilities   *VulnerabilityScan    `json:"vulnerabilities,omitempty"`
 }
 
+// TargetScanResults defines model for TargetScanResults.
+type TargetScanResults struct {
+	// Items List of scan results according to the given filters and page. List length must be lower or equal to pageSize.
+	Items *[]TargetScanResult `json:"items,omitempty"`
+
+	// Total Total scan results count according to the given filters
+	Total int `json:"total"`
+}
+
 // TargetScanState defines model for TargetScanState.
 type TargetScanState struct {
 	Errors *[]string             `json:"errors,omitempty"`
@@ -342,6 +369,15 @@ type TargetScanStatus struct {
 // TargetType defines model for TargetType.
 type TargetType struct {
 	union json.RawMessage
+}
+
+// Targets defines model for Targets.
+type Targets struct {
+	// Items List of targets in the given filters and page. List length must be lower or equal to pageSize.
+	Items *[]Target `json:"items,omitempty"`
+
+	// Total Total targets count according the given filters
+	Total int `json:"total"`
 }
 
 // TimeOfDay defines model for TimeOfDay.
@@ -416,6 +452,8 @@ type UnknownError = ApiResponse
 
 // GetScanConfigsParams defines parameters for GetScanConfigs.
 type GetScanConfigsParams struct {
+	Filter *OdataFilter `form:"$filter,omitempty" json:"$filter,omitempty"`
+
 	// Page Page number of the query
 	Page Page `form:"page" json:"page"`
 
@@ -427,6 +465,12 @@ type GetScanConfigsParams struct {
 type GetScanResultsParams struct {
 	Filter *OdataFilter `form:"$filter,omitempty" json:"$filter,omitempty"`
 	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
+
+	// Page Page number of the query
+	Page Page `form:"page" json:"page"`
+
+	// PageSize Maximum items to return
+	PageSize PageSize `form:"pageSize" json:"pageSize"`
 }
 
 // GetScanResultsScanResultIDParams defines parameters for GetScanResultsScanResultID.
@@ -436,6 +480,8 @@ type GetScanResultsScanResultIDParams struct {
 
 // GetScansParams defines parameters for GetScans.
 type GetScansParams struct {
+	Filter *OdataFilter `form:"$filter,omitempty" json:"$filter,omitempty"`
+
 	// Page Page number of the query
 	Page Page `form:"page" json:"page"`
 
@@ -445,6 +491,8 @@ type GetScansParams struct {
 
 // GetTargetsParams defines parameters for GetTargets.
 type GetTargetsParams struct {
+	Filter *OdataFilter `form:"$filter,omitempty" json:"$filter,omitempty"`
+
 	// Page Page number of the query
 	Page Page `form:"page" json:"page"`
 

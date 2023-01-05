@@ -596,6 +596,22 @@ func NewGetScanConfigsRequest(server string, params *GetScanConfigsParams) (*htt
 
 	queryValues := queryURL.Query()
 
+	if params.Filter != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$filter", runtime.ParamLocationQuery, *params.Filter); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
 	if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, params.Page); err != nil {
 		return nil, err
 	} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
@@ -885,6 +901,30 @@ func NewGetScanResultsRequest(server string, params *GetScanResultsParams) (*htt
 
 	}
 
+	if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, params.Page); err != nil {
+		return nil, err
+	} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+		return nil, err
+	} else {
+		for k, v := range parsed {
+			for _, v2 := range v {
+				queryValues.Add(k, v2)
+			}
+		}
+	}
+
+	if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageSize", runtime.ParamLocationQuery, params.PageSize); err != nil {
+		return nil, err
+	} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+		return nil, err
+	} else {
+		for k, v := range parsed {
+			for _, v2 := range v {
+				queryValues.Add(k, v2)
+			}
+		}
+	}
+
 	queryURL.RawQuery = queryValues.Encode()
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
@@ -1103,6 +1143,22 @@ func NewGetScansRequest(server string, params *GetScansParams) (*http.Request, e
 	}
 
 	queryValues := queryURL.Query()
+
+	if params.Filter != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$filter", runtime.ParamLocationQuery, *params.Filter); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
 
 	if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, params.Page); err != nil {
 		return nil, err
@@ -1360,6 +1416,22 @@ func NewGetTargetsRequest(server string, params *GetTargetsParams) (*http.Reques
 	}
 
 	queryValues := queryURL.Query()
+
+	if params.Filter != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$filter", runtime.ParamLocationQuery, *params.Filter); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
 
 	if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, params.Page); err != nil {
 		return nil, err
@@ -1685,14 +1757,8 @@ type ClientWithResponsesInterface interface {
 type GetScanConfigsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Items List of scan configs according to the given filters and page. List length must be lower or equal to pageSize.
-		Items *[]ScanConfig `json:"items,omitempty"`
-
-		// Total Total scan config count according to the given filters
-		Total int `json:"total"`
-	}
-	JSONDefault *ApiResponse
+	JSON200      *ScanConfigs
+	JSONDefault  *ApiResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -1763,6 +1829,7 @@ type GetScanConfigsScanConfigIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ScanConfig
+	JSON404      *ApiResponse
 	JSONDefault  *ApiResponse
 }
 
@@ -1833,14 +1900,8 @@ func (r PutScanConfigsScanConfigIDResponse) StatusCode() int {
 type GetScanResultsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Items List of scan results according to the given filters and page. List length must be lower or equal to pageSize.
-		Items *[]TargetScanResult `json:"items,omitempty"`
-
-		// Total Total scan results count according to the given filters
-		Total int `json:"total"`
-	}
-	JSONDefault *ApiResponse
+	JSON200      *TargetScanResults
+	JSONDefault  *ApiResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -1887,6 +1948,7 @@ type GetScanResultsScanResultIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *TargetScanResult
+	JSON404      *ApiResponse
 	JSONDefault  *ApiResponse
 }
 
@@ -1957,14 +2019,8 @@ func (r PutScanResultsScanResultIDResponse) StatusCode() int {
 type GetScansResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Items List of scans according to the given filters and page. List length must be lower or equal to pageSize.
-		Items *[]Scan `json:"items,omitempty"`
-
-		// Total Total scans count according to the given filters
-		Total int `json:"total"`
-	}
-	JSONDefault *ApiResponse
+	JSON200      *Scans
+	JSONDefault  *ApiResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -2035,6 +2091,7 @@ type GetScansScanIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *Scan
+	JSON404      *ApiResponse
 	JSONDefault  *ApiResponse
 }
 
@@ -2105,14 +2162,8 @@ func (r PutScansScanIDResponse) StatusCode() int {
 type GetTargetsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Items List of targets in the given filters and page. List length must be lower or equal to pageSize.
-		Items *[]Target `json:"items,omitempty"`
-
-		// Total Total targets count according the given filters
-		Total int `json:"total"`
-	}
-	JSONDefault *ApiResponse
+	JSON200      *Targets
+	JSONDefault  *ApiResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -2183,6 +2234,7 @@ type GetTargetsTargetIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *Target
+	JSON404      *ApiResponse
 	JSONDefault  *ApiResponse
 }
 
@@ -2527,13 +2579,7 @@ func ParseGetScanConfigsResponse(rsp *http.Response) (*GetScanConfigsResponse, e
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Items List of scan configs according to the given filters and page. List length must be lower or equal to pageSize.
-			Items *[]ScanConfig `json:"items,omitempty"`
-
-			// Total Total scan config count according to the given filters
-			Total int `json:"total"`
-		}
+		var dest ScanConfigs
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -2652,6 +2698,13 @@ func ParseGetScanConfigsScanConfigIDResponse(rsp *http.Response) (*GetScanConfig
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest ApiResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -2759,13 +2812,7 @@ func ParseGetScanResultsResponse(rsp *http.Response) (*GetScanResultsResponse, e
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Items List of scan results according to the given filters and page. List length must be lower or equal to pageSize.
-			Items *[]TargetScanResult `json:"items,omitempty"`
-
-			// Total Total scan results count according to the given filters
-			Total int `json:"total"`
-		}
+		var dest TargetScanResults
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -2843,6 +2890,13 @@ func ParseGetScanResultsScanResultIDResponse(rsp *http.Response) (*GetScanResult
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest ApiResponse
@@ -2951,13 +3005,7 @@ func ParseGetScansResponse(rsp *http.Response) (*GetScansResponse, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Items List of scans according to the given filters and page. List length must be lower or equal to pageSize.
-			Items *[]Scan `json:"items,omitempty"`
-
-			// Total Total scans count according to the given filters
-			Total int `json:"total"`
-		}
+		var dest Scans
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -3076,6 +3124,13 @@ func ParseGetScansScanIDResponse(rsp *http.Response) (*GetScansScanIDResponse, e
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest ApiResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -3183,13 +3238,7 @@ func ParseGetTargetsResponse(rsp *http.Response) (*GetTargetsResponse, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Items List of targets in the given filters and page. List length must be lower or equal to pageSize.
-			Items *[]Target `json:"items,omitempty"`
-
-			// Total Total targets count according the given filters
-			Total int `json:"total"`
-		}
+		var dest Targets
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -3307,6 +3356,13 @@ func ParseGetTargetsTargetIDResponse(rsp *http.Response) (*GetTargetsTargetIDRes
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest ApiResponse

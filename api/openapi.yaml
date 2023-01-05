@@ -12,6 +12,7 @@ paths:
     get:
       summary: Get targets
       parameters:
+        - $ref: '#/components/parameters/odataFilter'
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/pageSize'
       responses:
@@ -20,19 +21,7 @@ paths:
           content:
             application/json:
               schema:
-                required:
-                  - total
-                type: object
-                properties:
-                  total:
-                    type: integer
-                    description: Total targets count according the given filters
-                  items:
-                    type: array
-                    description: List of targets in the given filters and page.
-                      List length must be lower or equal to pageSize.
-                    items:
-                      $ref: '#/components/schemas/Target'
+                $ref: '#/components/schemas/Targets'
         default:
           $ref: '#/components/responses/UnknownError'
     post:
@@ -72,6 +61,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Target'
+        404:
+          description: Target ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
         default:
           $ref: '#/components/responses/UnknownError'
     put:
@@ -122,25 +117,16 @@ paths:
       parameters:
         - $ref: '#/components/parameters/odataFilter'
         - $ref: '#/components/parameters/odataSelect'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/pageSize'
       responses:
         200:
           description: Success
           content:
             application/json:
               schema:
-                required:
-                  - total
-                type: object
-                properties:
-                  total:
-                    type: integer
-                    description: Total scan results count according to the given filters
-                  items:
-                    type: array
-                    description: List of scan results according to the given filters and page.
-                      List length must be lower or equal to pageSize.
-                    items:
-                      $ref: '#/components/schemas/TargetScanResult'
+                $ref: '#/components/schemas/TargetScanResults'
+
         default:
           $ref: '#/components/responses/UnknownError'
     post:
@@ -181,6 +167,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TargetScanResult'
+        404:
+          description: Scan result ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
         default:
           $ref: '#/components/responses/UnknownError'
     put:
@@ -201,7 +193,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/TargetScanResult'
         404:
-          description: Not found given scan ID with given target ID
+          description: Scan result ID not found
           content:
             application/json:
               schema:
@@ -227,7 +219,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/TargetScanResult'
         404:
-          description: Not found given scan ID with given target ID
+          description: Scan result ID not found
           content:
             application/json:
               schema:
@@ -240,6 +232,7 @@ paths:
     get:
       summary: Get all scans. Each scan contaians details about a multi-target scheduled scan.
       parameters:
+        - $ref: '#/components/parameters/odataFilter'
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/pageSize'
       responses:
@@ -248,19 +241,7 @@ paths:
           content:
             application/json:
               schema:
-                required:
-                  - total
-                type: object
-                properties:
-                  total:
-                    type: integer
-                    description: Total scans count according to the given filters
-                  items:
-                    type: array
-                    description: List of scans according to the given filters and page.
-                      List length must be lower or equal to pageSize.
-                    items:
-                      $ref: '#/components/schemas/Scan'
+                $ref: '#/components/schemas/Scans'
         default:
           $ref: '#/components/responses/UnknownError'
     post:
@@ -300,6 +281,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Scan'
+        404:
+          description: Scan ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
         default:
           $ref: '#/components/responses/UnknownError'
     put:
@@ -374,6 +361,7 @@ paths:
     get:
       summary: Get all scan configs.
       parameters:
+        - $ref: '#/components/parameters/odataFilter'
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/pageSize'
       responses:
@@ -382,19 +370,8 @@ paths:
           content:
             application/json:
               schema:
-                required:
-                  - total
-                type: object
-                properties:
-                  total:
-                    type: integer
-                    description: Total scan config count according to the given filters
-                  items:
-                    type: array
-                    description: List of scan configs according to the given filters and page.
-                      List length must be lower or equal to pageSize.
-                    items:
-                      $ref: '#/components/schemas/ScanConfig'
+                $ref: '#/components/schemas/ScanConfigs'
+
         default:
           $ref: '#/components/responses/UnknownError'
     post:
@@ -434,6 +411,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ScanConfig'
+        404:
+          description: Scan config ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
         default:
           $ref: '#/components/responses/UnknownError'
     put:
@@ -525,6 +508,21 @@ components:
       enum:
         - AWS
 
+    Scans:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total scans count according to the given filters
+        items:
+          type: array
+          description: List of scans according to the given filters and page.
+            List length must be lower or equal to pageSize.
+          items:
+            $ref: '#/components/schemas/Scan'
+      required:
+        - total
+
     Scan:
       type: object
       description: Describes a multi-target scheduled scan.
@@ -588,6 +586,21 @@ components:
           properties:
             enabled:
               type: boolean
+
+    ScanConfigs:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total scan config count according to the given filters
+        items:
+          type: array
+          description: List of scan configs according to the given filters and page.
+            List length must be lower or equal to pageSize.
+          items:
+            $ref: '#/components/schemas/ScanConfig'
+      required:
+        - total
 
     ScanConfig:
       type: object
@@ -760,6 +773,21 @@ components:
           maximum: 59
           default: 0
 
+    Targets:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total targets count according the given filters
+        items:
+          type: array
+          description: List of targets in the given filters and page.
+            List length must be lower or equal to pageSize.
+          items:
+            $ref: '#/components/schemas/Target'
+      required:
+        - total
+
     Target:
       type: object
       properties:
@@ -814,6 +842,21 @@ components:
           type: string
       required:
         - objectType
+
+    TargetScanResults:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total scan results count according to the given filters
+        items:
+          type: array
+          description: List of scan results according to the given filters and page.
+            List length must be lower or equal to pageSize.
+          items:
+            $ref: '#/components/schemas/TargetScanResult'
+      required:
+        - total
 
     TargetScanResult:
       type: object
