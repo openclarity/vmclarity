@@ -116,59 +116,40 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
 
-
-  /scans/{scanID}/targets/{targetID}/scanResults:
+  /scanResults:
     get:
-      summary: Get a specific scan result for a specific target
+      summary: Get scan results according to the given filters
       parameters:
-        - $ref: '#/components/parameters/targetID'
-        - $ref: '#/components/parameters/scanID'
+        - $ref: '#/components/parameters/odataFilter'
+        - $ref: '#/components/parameters/odataSelect'
       responses:
         200:
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TargetScanResults'
+                required:
+                  - total
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    description: Total scan results count according to the given filters
+                  items:
+                    type: array
+                    description: List of scan results according to the given filters and page.
+                      List length must be lower or equal to pageSize.
+                    items:
+                      $ref: '#/components/schemas/TargetScanResult'
         default:
           $ref: '#/components/responses/UnknownError'
-    put:
-      summary: Update scan results.
-      parameters:
-        - $ref: '#/components/parameters/targetID'
-        - $ref: '#/components/parameters/scanID'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TargetScanResults'
-        required: true
-      responses:
-        200:
-          description: Updated scan results successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TargetScanResults'
-        404:
-          description: Not found given scan ID with given target ID
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-        default:
-          $ref: '#/components/responses/UnknownError'
-      x-codegen-request-body-name: body
     post:
       summary: Create a scan result for a specific target for a specific scan
-      parameters:
-        - $ref: '#/components/parameters/targetID'
-        - $ref: '#/components/parameters/scanID'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TargetScanResults'
+              $ref: '#/components/schemas/TargetScanResult'
         required: true
       responses:
         201:
@@ -176,77 +157,49 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TargetScanResults'
+                $ref: '#/components/schemas/TargetScanResult'
         409:
           description: Scan results already exist for target and scan.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TargetScanResults'
-        default:
-          $ref: '#/components/responses/UnknownError'
-      x-codegen-request-body-name: body
-    patch:
-      summary: Patch a scan result for a specific target for a specific scan
-      parameters:
-        - $ref: '#/components/parameters/targetID'
-        - $ref: '#/components/parameters/scanID'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TargetScanResults'
-        required: true
-      responses:
-        201:
-          description: Target scan results were patched for the target for a specific scan.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TargetScanResults'
-        404:
-          description: Not found given scan ID with given target ID
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/TargetScanResult'
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
 
-  /scans/{scanID}/targets/{targetID}/scanStatus:
+  /scanResults/{scanResultID}:
     get:
-      summary: The status of a specific scan for a specific target
+      summary: Get a scan result.
       parameters:
-        - $ref: '#/components/parameters/targetID'
-        - $ref: '#/components/parameters/scanID'
+        - $ref: '#/components/parameters/scanResultID'
+        - $ref: '#/components/parameters/odataSelect'
       responses:
         200:
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TargetScanStatus'
+                $ref: '#/components/schemas/TargetScanResult'
         default:
           $ref: '#/components/responses/UnknownError'
     put:
-      summary: Update the status of a specific scan for a specific target
+      summary: Update a scan result.
       parameters:
-        - $ref: '#/components/parameters/targetID'
-        - $ref: '#/components/parameters/scanID'
+        - $ref: '#/components/parameters/scanResultID'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TargetScanStatus'
+              $ref: '#/components/schemas/TargetScanResult'
         required: true
       responses:
         200:
-          description: Updated scan status successfully.
+          description: Updated a scan result successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TargetScanStatus'
+                $ref: '#/components/schemas/TargetScanResult'
         404:
           description: Not found given scan ID with given target ID
           content:
@@ -256,43 +209,15 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
-    post:
-      summary: Create a scan status for a specific target for a specific scan
-      parameters:
-        - $ref: '#/components/parameters/targetID'
-        - $ref: '#/components/parameters/scanID'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TargetScanStatus'
-        required: true
-      responses:
-        201:
-          description: New scan status was added to the target for a specific scan.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TargetScanStatus'
-        409:
-          description: Scan status already exist for target and scan.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TargetScanStatus'
-        default:
-          $ref: '#/components/responses/UnknownError'
-      x-codegen-request-body-name: body
     patch:
-      summary: Patch a scan status for a specifictarget for a specific scan
+      summary: Patch a scan result
       parameters:
-        - $ref: '#/components/parameters/targetID'
-        - $ref: '#/components/parameters/scanID'
+        - $ref: '#/components/parameters/scanResultID'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TargetScanResults'
+              $ref: '#/components/schemas/TargetScanResult'
         required: true
       responses:
         201:
@@ -300,7 +225,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TargetScanResults'
+                $ref: '#/components/schemas/TargetScanResult'
         404:
           description: Not found given scan ID with given target ID
           content:
@@ -890,9 +815,16 @@ components:
       required:
         - objectType
 
-    TargetScanResults:
+    TargetScanResult:
       type: object
       properties:
+        id:
+          type: string
+          readOnly: true
+        targetId:
+          type: string
+        scanId:
+          type: string
         status:
           $ref: '#/components/schemas/TargetScanStatus'
         sboms:
@@ -909,6 +841,9 @@ components:
           $ref: '#/components/schemas/MisconfigurationScan'
         exploits:
           $ref: '#/components/schemas/ExploitScan'
+      required:
+        - targetId
+        - scanId
 
     TargetScanStatus:
       type: object
@@ -1149,8 +1084,27 @@ components:
       schema:
         type: string
 
+    odataFilter:
+      name: "$filter"
+      in: query
+      schema:
+        type: string
+
+    odataSelect:
+      name: "$select"
+      in: query
+      schema:
+        type: string
+
     scanID:
       name: scanID
+      in: path
+      required: true
+      schema:
+        type: string
+
+    scanResultID:
+      name: scanResultID
       in: path
       required: true
       schema:

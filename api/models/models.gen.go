@@ -303,15 +303,18 @@ type Target struct {
 	TargetInfo *TargetType `json:"targetInfo,omitempty"`
 }
 
-// TargetScanResults defines model for TargetScanResults.
-type TargetScanResults struct {
+// TargetScanResult defines model for TargetScanResult.
+type TargetScanResult struct {
 	Exploits          *ExploitScan          `json:"exploits,omitempty"`
+	Id                *string               `json:"id,omitempty"`
 	Malware           *MalwareScan          `json:"malware,omitempty"`
 	Misconfigurations *MisconfigurationScan `json:"misconfigurations,omitempty"`
 	Rootkits          *RootkitScan          `json:"rootkits,omitempty"`
 	Sboms             *SbomScan             `json:"sboms,omitempty"`
+	ScanId            string                `json:"scanId"`
 	Secrets           *SecretScan           `json:"secrets,omitempty"`
 	Status            *TargetScanStatus     `json:"status,omitempty"`
+	TargetId          string                `json:"targetId"`
 	Vulnerabilities   *VulnerabilityScan    `json:"vulnerabilities,omitempty"`
 }
 
@@ -381,6 +384,12 @@ type WeeklyScheduleScanConfig struct {
 	TimeOfDay  *TimeOfDay `json:"timeOfDay,omitempty"`
 }
 
+// OdataFilter defines model for odataFilter.
+type OdataFilter = string
+
+// OdataSelect defines model for odataSelect.
+type OdataSelect = string
+
 // Page defines model for page.
 type Page = int
 
@@ -392,6 +401,9 @@ type ScanConfigID = string
 
 // ScanID defines model for scanID.
 type ScanID = string
+
+// ScanResultID defines model for scanResultID.
+type ScanResultID = string
 
 // TargetID defines model for targetID.
 type TargetID = string
@@ -409,6 +421,17 @@ type GetScanConfigsParams struct {
 
 	// PageSize Maximum items to return
 	PageSize PageSize `form:"pageSize" json:"pageSize"`
+}
+
+// GetScanResultsParams defines parameters for GetScanResults.
+type GetScanResultsParams struct {
+	Filter *OdataFilter `form:"$filter,omitempty" json:"$filter,omitempty"`
+	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
+}
+
+// GetScanResultsScanResultIDParams defines parameters for GetScanResultsScanResultID.
+type GetScanResultsScanResultIDParams struct {
+	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
 }
 
 // GetScansParams defines parameters for GetScans.
@@ -438,6 +461,15 @@ type PatchScanConfigsScanConfigIDJSONRequestBody = ScanConfig
 // PutScanConfigsScanConfigIDJSONRequestBody defines body for PutScanConfigsScanConfigID for application/json ContentType.
 type PutScanConfigsScanConfigIDJSONRequestBody = ScanConfig
 
+// PostScanResultsJSONRequestBody defines body for PostScanResults for application/json ContentType.
+type PostScanResultsJSONRequestBody = TargetScanResult
+
+// PatchScanResultsScanResultIDJSONRequestBody defines body for PatchScanResultsScanResultID for application/json ContentType.
+type PatchScanResultsScanResultIDJSONRequestBody = TargetScanResult
+
+// PutScanResultsScanResultIDJSONRequestBody defines body for PutScanResultsScanResultID for application/json ContentType.
+type PutScanResultsScanResultIDJSONRequestBody = TargetScanResult
+
 // PostScansJSONRequestBody defines body for PostScans for application/json ContentType.
 type PostScansJSONRequestBody = Scan
 
@@ -446,24 +478,6 @@ type PatchScansScanIDJSONRequestBody = Scan
 
 // PutScansScanIDJSONRequestBody defines body for PutScansScanID for application/json ContentType.
 type PutScansScanIDJSONRequestBody = Scan
-
-// PatchScansScanIDTargetsTargetIDScanResultsJSONRequestBody defines body for PatchScansScanIDTargetsTargetIDScanResults for application/json ContentType.
-type PatchScansScanIDTargetsTargetIDScanResultsJSONRequestBody = TargetScanResults
-
-// PostScansScanIDTargetsTargetIDScanResultsJSONRequestBody defines body for PostScansScanIDTargetsTargetIDScanResults for application/json ContentType.
-type PostScansScanIDTargetsTargetIDScanResultsJSONRequestBody = TargetScanResults
-
-// PutScansScanIDTargetsTargetIDScanResultsJSONRequestBody defines body for PutScansScanIDTargetsTargetIDScanResults for application/json ContentType.
-type PutScansScanIDTargetsTargetIDScanResultsJSONRequestBody = TargetScanResults
-
-// PatchScansScanIDTargetsTargetIDScanStatusJSONRequestBody defines body for PatchScansScanIDTargetsTargetIDScanStatus for application/json ContentType.
-type PatchScansScanIDTargetsTargetIDScanStatusJSONRequestBody = TargetScanResults
-
-// PostScansScanIDTargetsTargetIDScanStatusJSONRequestBody defines body for PostScansScanIDTargetsTargetIDScanStatus for application/json ContentType.
-type PostScansScanIDTargetsTargetIDScanStatusJSONRequestBody = TargetScanStatus
-
-// PutScansScanIDTargetsTargetIDScanStatusJSONRequestBody defines body for PutScansScanIDTargetsTargetIDScanStatus for application/json ContentType.
-type PutScansScanIDTargetsTargetIDScanStatusJSONRequestBody = TargetScanStatus
 
 // PostTargetsJSONRequestBody defines body for PostTargets for application/json ContentType.
 type PostTargetsJSONRequestBody = Target
