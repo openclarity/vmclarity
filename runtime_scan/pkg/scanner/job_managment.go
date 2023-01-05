@@ -323,15 +323,19 @@ func (s *Scanner) createInitTargetScanStatus(ctx context.Context, scanID, target
 		if resp.JSON201 == nil {
 			return "", fmt.Errorf("failed to create a scan status, empty body")
 		}
-		return resp.JSON201.ScanId, nil
+		if resp.JSON201.Id == nil {
+			return "", fmt.Errorf("failed to create a scan status, missing id")
+		}
+		return *resp.JSON201.Id, nil
 	case http.StatusConflict:
 		if resp.JSON409 == nil {
 			return "", fmt.Errorf("failed to create a scan status, empty body on conflict")
 		}
-		if resp.JSON409.Id != nil {
-			return "", fmt.Errorf("failed to create a scan status, scan result already exist with id %v", *resp.JSON409.Id)
+		if resp.JSON409.Id == nil {
+			return "", fmt.Errorf("failed to create a scan status, missing id")
 		}
-		return "", fmt.Errorf("failed to create a scan status, scan result already exist")
+		log.Infof("Scan results already exist with id %v.", *resp.JSON409.Id)
+		return *resp.JSON409.Id, nil
 	default:
 		if resp.JSONDefault != nil && resp.JSONDefault.Message != nil {
 			return "", fmt.Errorf("failed to create a scan status. status code=%v: %v", resp.StatusCode(), resp.JSONDefault.Message)
