@@ -24,9 +24,9 @@ import (
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/openclarity/vmclarity/api/models"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/cloudinit"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/config/aws"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
@@ -71,7 +71,6 @@ func (c *Client) Discover(ctx context.Context, scanScope *models.ScanScopeType) 
 	var filters []ec2types.Filter
 
 	awsScanScope, err := scanScope.AsAwsScanScope()
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert as aws scope: %v", err)
 	}
@@ -152,29 +151,29 @@ func convertRegions(regions *[]models.AwsRegion) []Region {
 }
 
 func convertVPCs(vpcs *[]models.AwsVPC) []VPC {
-	var ret []VPC
 	if vpcs == nil {
-		return ret
+		return nil
 	}
-	for _, vpc := range *vpcs {
-		ret = append(ret, VPC{
+	ret := make([]VPC, len(*vpcs))
+	for i, vpc := range *vpcs {
+		ret[i] = VPC{
 			id:             *vpc.Id,
 			securityGroups: convertSecurityGroups(vpc.SecurityGroups),
-		})
+		}
 	}
 
 	return ret
 }
 
 func convertSecurityGroups(securityGroups *[]models.AwsSecurityGroup) []SecurityGroup {
-	var ret []SecurityGroup
 	if securityGroups == nil {
-		return ret
+		return []SecurityGroup{}
 	}
-	for _, securityGroup := range *securityGroups {
-		ret = append(ret, SecurityGroup{
+	ret := make([]SecurityGroup, len(*securityGroups))
+	for i, securityGroup := range *securityGroups {
+		ret[i] = SecurityGroup{
 			id: *securityGroup.Id,
-		})
+		}
 	}
 
 	return ret

@@ -22,15 +22,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/openclarity/vmclarity/api/client"
-	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/openclarity/vmclarity/api/client"
+	"github.com/openclarity/vmclarity/api/models"
 	_config "github.com/openclarity/vmclarity/runtime_scan/pkg/config"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 	_scanner "github.com/openclarity/vmclarity/runtime_scan/pkg/scanner"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 )
 
 type Orchestrator struct {
@@ -87,17 +87,14 @@ func (o *Orchestrator) Scan(ctx context.Context, scanConfig *models.ScanConfig, 
 	return nil
 }
 
-func (o *Orchestrator) initExistingScan(ctx context.Context, scanConfig *models.ScanConfig, scanDone chan struct{}) error {
-	return nil
-}
-
-func (o *Orchestrator) initNewScan(ctx context.Context, scanConfig *models.ScanConfig) (targetInstances []*types.TargetInstance, scanID string, err error) {
+// initNewScan Initialized a new scan, returns target instances and scan ID.
+func (o *Orchestrator) initNewScan(ctx context.Context, scanConfig *models.ScanConfig) ([]*types.TargetInstance, string, error) {
 	instances, err := o.providerClient.Discover(ctx, scanConfig.Scope)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to discover instances to scan: %v", err)
 	}
 
-	targetInstances, err = o.createTargetInstances(ctx, instances)
+	targetInstances, err := o.createTargetInstances(ctx, instances)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to get or create targets: %v", err)
 	}
@@ -109,7 +106,7 @@ func (o *Orchestrator) initNewScan(ctx context.Context, scanConfig *models.ScanC
 		StartTime:          &now,
 		TargetIDs:          getTargetIDs(targetInstances),
 	}
-	scanID, err = o.getOrCreateScan(ctx, scan)
+	scanID, err := o.getOrCreateScan(ctx, scan)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to get or create a scan: %v", err)
 	}
@@ -118,15 +115,16 @@ func (o *Orchestrator) initNewScan(ctx context.Context, scanConfig *models.ScanC
 }
 
 func getTargetIDs(targetInstances []*types.TargetInstance) *[]string {
-	var ret []string
-	for _, targetInstance := range targetInstances {
-		ret = append(ret, targetInstance.TargetID)
+	ret := make([]string, len(targetInstances))
+	for i, targetInstance := range targetInstances {
+		ret[i] = targetInstance.TargetID
 	}
 
 	return &ret
 }
 
-func (o *Orchestrator) createTargetInstances(ctx context.Context, instances []types.Instance) (targetInstances []*types.TargetInstance, err error) {
+func (o *Orchestrator) createTargetInstances(ctx context.Context, instances []types.Instance) ([]*types.TargetInstance, error) {
+	targetInstances := make([]*types.TargetInstance, 0, len(instances))
 	for i, instance := range instances {
 		target, err := o.getOrCreateTarget(ctx, instance)
 		if err != nil {
@@ -141,14 +139,13 @@ func (o *Orchestrator) createTargetInstances(ctx context.Context, instances []ty
 	return targetInstances, nil
 }
 
-func (o *Orchestrator) getOrCreateTarget(ctx context.Context, instance types.Instance) (target *models.Target, err error) {
+func (o *Orchestrator) getOrCreateTarget(ctx context.Context, instance types.Instance) (*models.Target, error) {
 	info := models.TargetType{}
-	provider := models.AWS
-	err = info.FromVMInfo(models.VMInfo{
+	instanceProvider := models.AWS
+	err := info.FromVMInfo(models.VMInfo{
 		InstanceID:       utils.StringPtr(instance.GetID()),
-		InstanceProvider: &provider,
+		InstanceProvider: &instanceProvider,
 		Location:         utils.StringPtr(instance.GetLocation()),
-		ObjectType:       "VMInfo", // TODO: Create const
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create VMInfo: %v", err)
@@ -178,8 +175,9 @@ func (o *Orchestrator) getOrCreateTarget(ctx context.Context, instance types.Ins
 	}
 }
 
-func (s *Orchestrator) getOrCreateScan(ctx context.Context, scan *models.Scan) (string, error) {
-	resp, err := s.backendClient.PostScansWithResponse(ctx, *scan)
+// nolint:cyclop
+func (o *Orchestrator) getOrCreateScan(ctx context.Context, scan *models.Scan) (string, error) {
+	resp, err := o.backendClient.PostScansWithResponse(ctx, *scan)
 	if err != nil {
 		return "", fmt.Errorf("failed to post a scan: %v", err)
 	}

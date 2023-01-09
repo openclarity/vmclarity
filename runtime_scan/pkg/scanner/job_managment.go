@@ -104,7 +104,7 @@ func (s *Scanner) worker(ctx context.Context, queue chan *scanData, workNumber i
 				s.waitForResult(ctx, data, ks)
 				// if there was a timeout, concat errMsg
 				if data.timeout {
-					errMsg = fmt.Sprintf("job has timed out")
+					errMsg = "job has timed out"
 				}
 			}
 
@@ -179,7 +179,7 @@ func scanStatusHasErrors(status *models.TargetScanStatus) bool {
 }
 
 // TODO: need to understand how to destroy the job in case the scanner dies until it gets the results
-// We can put the targetID on the scanner VM for easy deletion
+// We can put the targetID on the scanner VM for easy deletion.
 func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error) {
 	var launchInstance types.Instance
 	var launchSnapshot types.Snapshot
@@ -274,6 +274,7 @@ func (s *Scanner) deleteJob(ctx context.Context, job *types.Job) {
 	}
 }
 
+// nolint:cyclop
 func (s *Scanner) createInitTargetScanStatus(ctx context.Context, scanID, targetID string) (string, error) {
 	initScanStatus := &models.TargetScanStatus{
 		Exploits: &models.TargetScanState{
@@ -344,12 +345,12 @@ func (s *Scanner) createInitTargetScanStatus(ctx context.Context, scanID, target
 	}
 }
 
-var initState = models.INIT
-var notScannedState = models.NOTSCANNED
-
 func getInitScanStatusStateFromEnabled(enabled bool) *models.TargetScanStateState {
 	if enabled {
+		initState := models.INIT
 		return &initState
 	}
+
+	notScannedState := models.NOTSCANNED
 	return &notScannedState
 }

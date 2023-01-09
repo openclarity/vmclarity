@@ -22,8 +22,8 @@ import (
 	"text/template"
 )
 
-// TODO: Create a new config struct for scannerConfig
 func GenerateCloudInit(scannerConfig string, deviceName string) (string, error) {
+	// TODO: Create a new config struct for scannerConfig.
 	vars := make(map[string]interface{})
 	// parse cloud-init template
 	tmpl, err := template.New("cloud-init").Parse(cloudInitTmpl)

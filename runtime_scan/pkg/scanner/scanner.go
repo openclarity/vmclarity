@@ -54,10 +54,15 @@ type scanData struct {
 	completed      bool
 }
 
-func CreateScanner(config *_config.OrchestratorConfig, providerClient provider.Client, backendClient *client.ClientWithResponses,
-	scanConfig *models.ScanConfig, targetInstances []*types.TargetInstance, scanID string) *Scanner {
-
-	s := &Scanner{
+func CreateScanner(
+	config *_config.OrchestratorConfig,
+	providerClient provider.Client,
+	backendClient *client.ClientWithResponses,
+	scanConfig *models.ScanConfig,
+	targetInstances []*types.TargetInstance,
+	scanID string,
+) *Scanner {
+	return &Scanner{
 		targetIDToScanData: nil,
 		scanConfig:         scanConfig,
 		killSignal:         make(chan bool),
@@ -69,8 +74,6 @@ func CreateScanner(config *_config.OrchestratorConfig, providerClient provider.C
 		config:             &config.ScannerConfig,
 		Mutex:              sync.Mutex{},
 	}
-
-	return s
 }
 
 // initScan Calculate properties of scan targets
@@ -172,6 +175,7 @@ func (s *Scanner) SetTargetScanStatusCompletionError(ctx context.Context, scanRe
 	return nil
 }
 
+// nolint:cyclop
 func (s *Scanner) patchTargetScanStatus(ctx context.Context, scanResultID string, status *models.TargetScanStatus) error {
 	scanResult := models.TargetScanResult{
 		Status: status,

@@ -18,9 +18,10 @@ package config
 import (
 	"time"
 
-	"github.com/openclarity/vmclarity/runtime_scan/pkg/config/aws"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/config/aws"
 )
 
 const (
