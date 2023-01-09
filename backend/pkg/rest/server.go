@@ -43,127 +43,127 @@ type ServerImpl struct {
 }
 
 func (s *ServerImpl) GetScanResults(ctx echo.Context, params models.GetScanResultsParams) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *ServerImpl) PostScanResults(ctx echo.Context) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *ServerImpl) GetScanResultsScanResultID(ctx echo.Context, scanResultID models.ScanResultID, params models.GetScanResultsScanResultIDParams) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *ServerImpl) PatchScanResultsScanResultID(ctx echo.Context, scanResultID models.ScanResultID) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *ServerImpl) PutScanResultsScanResultID(ctx echo.Context, scanResultID models.ScanResultID) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *ServerImpl) GetScanConfigs(ctx echo.Context, params models.GetScanConfigsParams) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *ServerImpl) PostScanConfigs(ctx echo.Context) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *ServerImpl) DeleteScanConfigsScanConfigID(ctx echo.Context, scanConfigID models.ScanConfigID) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *ServerImpl) GetScanConfigsScanConfigID(ctx echo.Context, scanConfigID models.ScanConfigID) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *ServerImpl) PatchScanConfigsScanConfigID(ctx echo.Context, scanConfigID models.ScanConfigID) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *ServerImpl) PutScanConfigsScanConfigID(ctx echo.Context, scanConfigID models.ScanConfigID) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *ServerImpl) GetScans(ctx echo.Context, params models.GetScansParams) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *ServerImpl) PostScans(ctx echo.Context) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *ServerImpl) DeleteScansScanID(ctx echo.Context, scanID models.ScanID) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *ServerImpl) GetScansScanID(ctx echo.Context, scanID models.ScanID) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *ServerImpl) PatchScansScanID(ctx echo.Context, scanID models.ScanID) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *ServerImpl) PutScansScanID(ctx echo.Context, scanID models.ScanID) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *ServerImpl) GetScansScanIDTargetsTargetIDScanResults(ctx echo.Context, scanID models.ScanID, targetID models.TargetID) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *ServerImpl) PatchScansScanIDTargetsTargetIDScanResults(ctx echo.Context, scanID models.ScanID, targetID models.TargetID) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *ServerImpl) PostScansScanIDTargetsTargetIDScanResults(ctx echo.Context, scanID models.ScanID, targetID models.TargetID) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *ServerImpl) PutScansScanIDTargetsTargetIDScanResults(ctx echo.Context, scanID models.ScanID, targetID models.TargetID) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *ServerImpl) GetScansScanIDTargetsTargetIDScanStatus(ctx echo.Context, scanID models.ScanID, targetID models.TargetID) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *ServerImpl) PatchScansScanIDTargetsTargetIDScanStatus(ctx echo.Context, scanID models.ScanID, targetID models.TargetID) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *ServerImpl) PostScansScanIDTargetsTargetIDScanStatus(ctx echo.Context, scanID models.ScanID, targetID models.TargetID) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *ServerImpl) PutScansScanIDTargetsTargetIDScanStatus(ctx echo.Context, scanID models.ScanID, targetID models.TargetID) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
