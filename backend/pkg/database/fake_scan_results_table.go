@@ -16,6 +16,8 @@
 package database
 
 import (
+	"fmt"
+
 	"github.com/openclarity/vmclarity/api/models"
 )
 
@@ -47,7 +49,7 @@ func (fs *FakeScanResultsTable) CreateScanResults(targetID models.TargetID, scan
 	//scanRes[scanResults.ScanID] = scanResults
 	//fs.scanResults = &scanRes
 	//return sr, nil
-	return nil, nil
+	return nil, fmt.Errorf("TBD")
 }
 
 func (fs *FakeScanResultsTable) GetScanResults(targetID models.TargetID, scanID models.ScanID) (*ScanResults, error) {
@@ -60,7 +62,7 @@ func (fs *FakeScanResultsTable) GetScanResults(targetID models.TargetID, scanID 
 	//}
 	//results := *fs.scanResults
 	//return results[scanID], nil
-	return nil, nil
+	return nil, fmt.Errorf("TBD")
 }
 
 func (fs *FakeScanResultsTable) GetSBOM(targetID models.TargetID, scanID models.ScanID) (*SbomScanResults, error) {
@@ -73,7 +75,7 @@ func (fs *FakeScanResultsTable) GetSBOM(targetID models.TargetID, scanID models.
 	//}
 	//results := *fs.scanResults
 	//return results[scanID].Sbom, nil
-	return nil, nil
+	return nil, fmt.Errorf("TBD")
 }
 
 func (fs *FakeScanResultsTable) GetVulnerabilities(targetID models.TargetID, scanID models.ScanID) (*VulnerabilityScanResults, error) {
@@ -86,7 +88,7 @@ func (fs *FakeScanResultsTable) GetVulnerabilities(targetID models.TargetID, sca
 	//}
 	//results := *fs.scanResults
 	//return results[scanID].Vulnerability, nil
-	return nil, nil
+	return nil, fmt.Errorf("TBD")
 }
 
 func (fs *FakeScanResultsTable) GetMalwares(targetID models.TargetID, scanID models.ScanID) (*MalwareScanResults, error) {
@@ -99,7 +101,7 @@ func (fs *FakeScanResultsTable) GetMalwares(targetID models.TargetID, scanID mod
 	//}
 	//results := *fs.scanResults
 	//return results[scanID].Malware, nil
-	return nil, nil
+	return nil, fmt.Errorf("TBD")
 }
 
 func (fs *FakeScanResultsTable) GetRootkits(targetID models.TargetID, scanID models.ScanID) (*RootkitScanScanResults, error) {
@@ -112,7 +114,7 @@ func (fs *FakeScanResultsTable) GetRootkits(targetID models.TargetID, scanID mod
 	//}
 	//results := *fs.scanResults
 	//return results[scanID].Rootkit, nil
-	return nil, nil
+	return nil, fmt.Errorf("TBD")
 }
 
 func (fs *FakeScanResultsTable) GetSecrets(targetID models.TargetID, scanID models.ScanID) (*SecretScanResults, error) {
@@ -125,7 +127,7 @@ func (fs *FakeScanResultsTable) GetSecrets(targetID models.TargetID, scanID mode
 	//}
 	//results := *fs.scanResults
 	//return results[scanID].Secret, nil
-	return nil, nil
+	return nil, fmt.Errorf("TBD")
 }
 
 func (fs *FakeScanResultsTable) GetMisconfigurations(targetID models.TargetID, scanID models.ScanID) (*MisconfigurationScanResults, error) {
@@ -138,7 +140,7 @@ func (fs *FakeScanResultsTable) GetMisconfigurations(targetID models.TargetID, s
 	//}
 	//results := *fs.scanResults
 	//return results[scanID].Misconfiguration, nil
-	return nil, nil
+	return nil, fmt.Errorf("TBD")
 }
 
 func (fs *FakeScanResultsTable) GetExploits(targetID models.TargetID, scanID models.ScanID) (*ExploitScanResults, error) {
@@ -151,7 +153,7 @@ func (fs *FakeScanResultsTable) GetExploits(targetID models.TargetID, scanID mod
 	//}
 	//results := *fs.scanResults
 	//return results[scanID].Exploit, nil
-	return nil, nil
+	return nil, fmt.Errorf("TBD")
 }
 
 func (fs *FakeScanResultsTable) UpdateScanResults(
@@ -170,15 +172,16 @@ func (fs *FakeScanResultsTable) UpdateScanResults(
 	//results[scanID] = scanResults
 	//fs.scanResults = &results
 	//return results[scanID], nil
-	return nil, nil
+	return nil, fmt.Errorf("TBD")
 }
 
-func contains(str string, slice []string) bool {
-	for _, s := range slice {
-		if s == str {
-			return true
-		}
-	}
-
-	return false
-}
+//
+//func contains(str string, slice []string) bool {
+//	for _, s := range slice {
+//		if s == str {
+//			return true
+//		}
+//	}
+//
+//	return false
+//}

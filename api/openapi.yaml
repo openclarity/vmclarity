@@ -623,6 +623,8 @@ components:
         - $ref: '#/components/schemas/AwsScanScope'
       discriminator:
         propertyName: objectType
+        mapping:
+          AwsScanScope: '#/components/schemas/AwsScanScope'
 
     AwsScanScope:
       type: object
@@ -704,6 +706,11 @@ components:
         - $ref: '#/components/schemas/WeeklyScheduleScanConfig'
       discriminator:
         propertyName: objectType
+        mapping:
+          SingleScheduleScanConfig: '#/components/schemas/SingleScheduleScanConfig'
+          ByHoursScheduleScanConfig: '#/components/schemas/ByHoursScheduleScanConfig'
+          ByDaysScheduleScanConfig: '#/components/schemas/ByDaysScheduleScanConfig'
+          WeeklyScheduleScanConfig: '#/components/schemas/WeeklyScheduleScanConfig'
 
     SingleScheduleScanConfig:
       type: 'object'
@@ -804,6 +811,10 @@ components:
         - $ref: '#/components/schemas/DirInfo'
       discriminator:
         propertyName: objectType
+        mapping:
+          VMInfo: '#/components/schemas/VMInfo'
+          PodInfo: '#/components/schemas/PodInfo'
+          DirInfo: '#/components/schemas/DirInfo'
 
     VMInfo:
       type: object

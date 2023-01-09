@@ -66,7 +66,6 @@ type ExploitScanResults struct {
 
 //nolint:interfacebloat
 type ScanResultsTable interface {
-	//ListScanResults(targetID models.TargetID, params models.gettarget) ([]ScanResults, error)
 	CreateScanResults(targetID models.TargetID, scanResults *ScanResults) (*ScanResults, error)
 	GetScanResults(targetID models.TargetID, scanID models.ScanID) (*ScanResults, error)
 	GetSBOM(targetID models.TargetID, scanID models.ScanID) (*SbomScanResults, error)
@@ -88,11 +87,6 @@ func (db *Handler) ScanResultsTable() ScanResultsTable {
 		db: db.DB,
 	}
 }
-
-//func (s *ScanResultsTableHandler) ListScanResults(targetID models.TargetID, params models.GetTargetsTargetIDScanResultsParams,
-//) ([]ScanResults, error) {
-//	return []ScanResults{}, fmt.Errorf("not implemented")
-//}
 
 func (s *ScanResultsTableHandler) CreateScanResults(targetID models.TargetID, scanResults *ScanResults,
 ) (*ScanResults, error) {

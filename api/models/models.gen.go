@@ -5,6 +5,7 @@ package models
 
 import (
 	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/deepmap/oapi-codegen/pkg/runtime"
@@ -542,6 +543,7 @@ func (t RuntimeScheduleScanConfigType) AsSingleScheduleScanConfig() (SingleSched
 
 // FromSingleScheduleScanConfig overwrites any union data inside the RuntimeScheduleScanConfigType as the provided SingleScheduleScanConfig
 func (t *RuntimeScheduleScanConfigType) FromSingleScheduleScanConfig(v SingleScheduleScanConfig) error {
+	v.ObjectType = "SingleScheduleScanConfig"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -549,6 +551,7 @@ func (t *RuntimeScheduleScanConfigType) FromSingleScheduleScanConfig(v SingleSch
 
 // MergeSingleScheduleScanConfig performs a merge with any union data inside the RuntimeScheduleScanConfigType, using the provided SingleScheduleScanConfig
 func (t *RuntimeScheduleScanConfigType) MergeSingleScheduleScanConfig(v SingleScheduleScanConfig) error {
+	v.ObjectType = "SingleScheduleScanConfig"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -568,6 +571,7 @@ func (t RuntimeScheduleScanConfigType) AsByHoursScheduleScanConfig() (ByHoursSch
 
 // FromByHoursScheduleScanConfig overwrites any union data inside the RuntimeScheduleScanConfigType as the provided ByHoursScheduleScanConfig
 func (t *RuntimeScheduleScanConfigType) FromByHoursScheduleScanConfig(v ByHoursScheduleScanConfig) error {
+	v.ObjectType = "ByHoursScheduleScanConfig"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -575,6 +579,7 @@ func (t *RuntimeScheduleScanConfigType) FromByHoursScheduleScanConfig(v ByHoursS
 
 // MergeByHoursScheduleScanConfig performs a merge with any union data inside the RuntimeScheduleScanConfigType, using the provided ByHoursScheduleScanConfig
 func (t *RuntimeScheduleScanConfigType) MergeByHoursScheduleScanConfig(v ByHoursScheduleScanConfig) error {
+	v.ObjectType = "ByHoursScheduleScanConfig"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -594,6 +599,7 @@ func (t RuntimeScheduleScanConfigType) AsByDaysScheduleScanConfig() (ByDaysSched
 
 // FromByDaysScheduleScanConfig overwrites any union data inside the RuntimeScheduleScanConfigType as the provided ByDaysScheduleScanConfig
 func (t *RuntimeScheduleScanConfigType) FromByDaysScheduleScanConfig(v ByDaysScheduleScanConfig) error {
+	v.ObjectType = "ByDaysScheduleScanConfig"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -601,6 +607,7 @@ func (t *RuntimeScheduleScanConfigType) FromByDaysScheduleScanConfig(v ByDaysSch
 
 // MergeByDaysScheduleScanConfig performs a merge with any union data inside the RuntimeScheduleScanConfigType, using the provided ByDaysScheduleScanConfig
 func (t *RuntimeScheduleScanConfigType) MergeByDaysScheduleScanConfig(v ByDaysScheduleScanConfig) error {
+	v.ObjectType = "ByDaysScheduleScanConfig"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -620,6 +627,7 @@ func (t RuntimeScheduleScanConfigType) AsWeeklyScheduleScanConfig() (WeeklySched
 
 // FromWeeklyScheduleScanConfig overwrites any union data inside the RuntimeScheduleScanConfigType as the provided WeeklyScheduleScanConfig
 func (t *RuntimeScheduleScanConfigType) FromWeeklyScheduleScanConfig(v WeeklyScheduleScanConfig) error {
+	v.ObjectType = "WeeklyScheduleScanConfig"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -627,6 +635,7 @@ func (t *RuntimeScheduleScanConfigType) FromWeeklyScheduleScanConfig(v WeeklySch
 
 // MergeWeeklyScheduleScanConfig performs a merge with any union data inside the RuntimeScheduleScanConfigType, using the provided WeeklyScheduleScanConfig
 func (t *RuntimeScheduleScanConfigType) MergeWeeklyScheduleScanConfig(v WeeklyScheduleScanConfig) error {
+	v.ObjectType = "WeeklyScheduleScanConfig"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -643,6 +652,25 @@ func (t RuntimeScheduleScanConfigType) Discriminator() (string, error) {
 	}
 	err := json.Unmarshal(t.union, &discriminator)
 	return discriminator.Discriminator, err
+}
+
+func (t RuntimeScheduleScanConfigType) ValueByDiscriminator() (interface{}, error) {
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return nil, err
+	}
+	switch discriminator {
+	case "ByDaysScheduleScanConfig":
+		return t.AsByDaysScheduleScanConfig()
+	case "ByHoursScheduleScanConfig":
+		return t.AsByHoursScheduleScanConfig()
+	case "SingleScheduleScanConfig":
+		return t.AsSingleScheduleScanConfig()
+	case "WeeklyScheduleScanConfig":
+		return t.AsWeeklyScheduleScanConfig()
+	default:
+		return nil, errors.New("unknown discriminator value: " + discriminator)
+	}
 }
 
 func (t RuntimeScheduleScanConfigType) MarshalJSON() ([]byte, error) {
@@ -664,6 +692,7 @@ func (t ScanScopeType) AsAwsScanScope() (AwsScanScope, error) {
 
 // FromAwsScanScope overwrites any union data inside the ScanScopeType as the provided AwsScanScope
 func (t *ScanScopeType) FromAwsScanScope(v AwsScanScope) error {
+	v.ObjectType = "AwsScanScope"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -671,6 +700,7 @@ func (t *ScanScopeType) FromAwsScanScope(v AwsScanScope) error {
 
 // MergeAwsScanScope performs a merge with any union data inside the ScanScopeType, using the provided AwsScanScope
 func (t *ScanScopeType) MergeAwsScanScope(v AwsScanScope) error {
+	v.ObjectType = "AwsScanScope"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -687,6 +717,19 @@ func (t ScanScopeType) Discriminator() (string, error) {
 	}
 	err := json.Unmarshal(t.union, &discriminator)
 	return discriminator.Discriminator, err
+}
+
+func (t ScanScopeType) ValueByDiscriminator() (interface{}, error) {
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return nil, err
+	}
+	switch discriminator {
+	case "AwsScanScope":
+		return t.AsAwsScanScope()
+	default:
+		return nil, errors.New("unknown discriminator value: " + discriminator)
+	}
 }
 
 func (t ScanScopeType) MarshalJSON() ([]byte, error) {
@@ -708,6 +751,7 @@ func (t TargetType) AsVMInfo() (VMInfo, error) {
 
 // FromVMInfo overwrites any union data inside the TargetType as the provided VMInfo
 func (t *TargetType) FromVMInfo(v VMInfo) error {
+	v.ObjectType = "VMInfo"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -715,6 +759,7 @@ func (t *TargetType) FromVMInfo(v VMInfo) error {
 
 // MergeVMInfo performs a merge with any union data inside the TargetType, using the provided VMInfo
 func (t *TargetType) MergeVMInfo(v VMInfo) error {
+	v.ObjectType = "VMInfo"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -734,6 +779,7 @@ func (t TargetType) AsPodInfo() (PodInfo, error) {
 
 // FromPodInfo overwrites any union data inside the TargetType as the provided PodInfo
 func (t *TargetType) FromPodInfo(v PodInfo) error {
+	v.ObjectType = "PodInfo"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -741,6 +787,7 @@ func (t *TargetType) FromPodInfo(v PodInfo) error {
 
 // MergePodInfo performs a merge with any union data inside the TargetType, using the provided PodInfo
 func (t *TargetType) MergePodInfo(v PodInfo) error {
+	v.ObjectType = "PodInfo"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -760,6 +807,7 @@ func (t TargetType) AsDirInfo() (DirInfo, error) {
 
 // FromDirInfo overwrites any union data inside the TargetType as the provided DirInfo
 func (t *TargetType) FromDirInfo(v DirInfo) error {
+	v.ObjectType = "DirInfo"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -767,6 +815,7 @@ func (t *TargetType) FromDirInfo(v DirInfo) error {
 
 // MergeDirInfo performs a merge with any union data inside the TargetType, using the provided DirInfo
 func (t *TargetType) MergeDirInfo(v DirInfo) error {
+	v.ObjectType = "DirInfo"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -783,6 +832,23 @@ func (t TargetType) Discriminator() (string, error) {
 	}
 	err := json.Unmarshal(t.union, &discriminator)
 	return discriminator.Discriminator, err
+}
+
+func (t TargetType) ValueByDiscriminator() (interface{}, error) {
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return nil, err
+	}
+	switch discriminator {
+	case "DirInfo":
+		return t.AsDirInfo()
+	case "PodInfo":
+		return t.AsPodInfo()
+	case "VMInfo":
+		return t.AsVMInfo()
+	default:
+		return nil, errors.New("unknown discriminator value: " + discriminator)
+	}
 }
 
 func (t TargetType) MarshalJSON() ([]byte, error) {

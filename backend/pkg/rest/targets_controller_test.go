@@ -34,26 +34,22 @@ func TestTargetsController(t *testing.T) {
 	restServer.RegisterHandlers(fakeHandler)
 
 	targetID := testID
-	targetType := models.TargetType("VM")
-	scanResults := []string{}
 	instanceName := "instance"
 	instanceProvider := models.CloudProvider("AWS")
 	location := "eu-central2"
 	vmInfo := models.VMInfo{
-		InstanceName:     &instanceName,
+		InstanceID:       &instanceName,
 		InstanceProvider: &instanceProvider,
 		Location:         &location,
 	}
-	targetInfo := &models.Target_TargetInfo{}
+	targetInfo := &models.TargetType{}
 	if err := targetInfo.FromVMInfo(vmInfo); err != nil {
 		t.Errorf("failed to create target info")
 	}
 
 	newTarget := models.Target{
-		Id:          &targetID,
-		ScanResults: &scanResults,
-		TargetType:  &targetType,
-		TargetInfo:  targetInfo,
+		Id:         &targetID,
+		TargetInfo: targetInfo,
 	}
 
 	// Create new target
@@ -88,8 +84,6 @@ func TestTargetsController(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, result.Code())
 
 	updatedTarget := newTarget
-	updatedScanResults := []string{"1", "2"}
-	updatedTarget.ScanResults = &updatedScanResults
 	result = testutil.NewRequest().Put(fmt.Sprintf("%s/targets/%s", BaseURL, testID)).WithJsonBody(updatedTarget).Go(t, restServer.echoServer)
 	assert.Equal(t, http.StatusOK, result.Code())
 
