@@ -33,8 +33,10 @@ const (
 )
 
 type Database interface {
-	TargetsTable() TargetsTable
 	ScanResultsTable() ScanResultsTable
+	ScanConfigsTable() ScanConfigsTable
+	ScansTable() ScansTable
+	TargetsTable() TargetsTable
 }
 
 type Handler struct {
@@ -77,15 +79,10 @@ func initDataBase(config *DBConfig) *gorm.DB {
 
 	db := initDB(config, dbDriver, dbLogger)
 
-	// recreate views from scratch
-	dropAllViews(db)
-
 	// this will ensure table is created
-	if err := db.AutoMigrate(); err != nil {
+	if err := db.AutoMigrate(Target{}, ScanResult{}, ScanConfig{}, Scan{}); err != nil {
 		log.Fatalf("Failed to run auto migration: %v", err)
 	}
-
-	createAllViews(db)
 
 	return db
 }
@@ -99,13 +96,6 @@ func initDB(_ *DBConfig, dbDriver string, dbLogger logger.Interface) *gorm.DB {
 		log.Fatalf("DB driver is not supported: %v", dbDriver)
 	}
 	return db
-}
-
-// nolint:cyclop
-func createAllViews(db *gorm.DB) {
-}
-
-func dropAllViews(db *gorm.DB) {
 }
 
 func initSqlite(dbLogger logger.Interface) *gorm.DB {

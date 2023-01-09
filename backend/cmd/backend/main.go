@@ -20,6 +20,7 @@ import (
 	"os"
 
 	logutils "github.com/Portshift/go-utils/log"
+	"github.com/openclarity/vmclarity/backend/pkg/database"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/urfave/cli"
@@ -42,6 +43,7 @@ func versionCommand(_ *cli.Context) {
 func main() {
 	viper.SetDefault(config.HealthCheckAddress, ":8081")
 	viper.SetDefault(config.BackendRestPort, "8888")
+	viper.SetDefault(config.DatabaseDriver, database.DBDriverTypeLocal)
 	viper.AutomaticEnv()
 	app := cli.NewApp()
 	app.Usage = ""
