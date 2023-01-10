@@ -14,7 +14,7 @@ import (
 )
 
 func (s *ServerImpl) GetScanConfigs(ctx echo.Context, params models.GetScanConfigsParams) error {
-	dbScanConfigs, total, err := s.dbHandler.ScanConfigsTable().GetScanConfigsAndTotal(params)
+	dbScanConfigs, total, err := s.dbHandler.ScanConfigsTable().GetScanConfigsAndTotal(rest_to_db.ConvertGetScanConfigsParams(params))
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scan configs from db: %v", err))
 	}
@@ -34,12 +34,12 @@ func (s *ServerImpl) PostScanConfigs(ctx echo.Context) error {
 	}
 
 	// check if scan config with that name already exists.
-	sc, err := s.dbHandler.ScanConfigsTable().GetScanConfig(*scanConfig.Name)
-	if err == nil {
+	sc, exist, err := s.dbHandler.ScanConfigsTable().CheckExist(*scanConfig.Name)
+	if err != nil {
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to check scan config in db. name=%v: %v", *scanConfig.Name, err))
+	}
+	if exist {
 		return sendResponse(ctx, http.StatusConflict, &sc)
-	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
-		// if we got any error other than ErrRecordNotFound, something went wrong.
-		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scan config from db. name=%v: %v", *scanConfig.Name, err))
 	}
 
 	convertedDB, err := rest_to_db.ConvertScanConfig(&scanConfig)
@@ -90,9 +90,35 @@ func (s *ServerImpl) GetScanConfigsScanConfigID(ctx echo.Context, scanConfigID m
 }
 
 func (s *ServerImpl) PatchScanConfigsScanConfigID(ctx echo.Context, scanConfigID models.ScanConfigID) error {
-	ret := models.ScanConfig{}
+	var scanConfig models.ScanConfig
+	err := ctx.Bind(&scanConfig)
+	if err != nil {
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
+	}
 
-	return sendResponse(ctx, http.StatusOK, &ret)
+	// check that a scan config with that id exists.
+	_, err = s.dbHandler.ScanConfigsTable().GetScanConfig(scanConfigID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("scan config was not found. scanConfigID=%v: %v", scanConfigID, err))
+		}
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scan config from db. scanConfigID=%v: %v", scanConfigID, err))
+	}
+
+	convertedDB, err := rest_to_db.ConvertScanConfig(&scanConfig)
+	if err != nil {
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert scan config: %v", err))
+	}
+	updatedScanConfig, err := s.dbHandler.ScanConfigsTable().UpdateScanConfig(convertedDB, scanConfigID)
+	if err != nil {
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update scan config in db. scanConfigID=%v: %v", scanConfigID, err))
+	}
+
+	converted, err := db_to_rest.ConvertScanConfig(updatedScanConfig)
+	if err != nil {
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert scan config. scanConfigID=%v: %v", scanConfigID, err))
+	}
+	return sendResponse(ctx, http.StatusOK, converted)
 }
 
 func (s *ServerImpl) PutScanConfigsScanConfigID(ctx echo.Context, scanConfigID models.ScanConfigID) error {
@@ -115,7 +141,7 @@ func (s *ServerImpl) PutScanConfigsScanConfigID(ctx echo.Context, scanConfigID m
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert scan config: %v", err))
 	}
-	updatedScanConfig, err := s.dbHandler.ScanConfigsTable().UpdateScanConfig(convertedDB, scanConfigID)
+	updatedScanConfig, err := s.dbHandler.ScanConfigsTable().SaveScanConfig(convertedDB, scanConfigID)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update scan config in db. scanConfigID=%v: %v", scanConfigID, err))
 	}

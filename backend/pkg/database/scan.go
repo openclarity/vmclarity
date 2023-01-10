@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/openclarity/vmclarity/api/models"
 	"gorm.io/gorm"
 )
 
@@ -17,11 +16,11 @@ const (
 type Scan struct {
 	gorm.Model
 
-	ScanStartTime time.Time `json:"scan_start_time,omitempty" gorm:"column:scan_start_time"`
-	ScanEndTime   time.Time `json:"scan_end_time,omitempty" gorm:"column:scan_end_time"`
+	ScanStartTime *time.Time `json:"scan_start_time,omitempty" gorm:"column:scan_start_time"`
+	ScanEndTime   *time.Time `json:"scan_end_time,omitempty" gorm:"column:scan_end_time"`
 
 	// ScanConfigId The ID of the config that this scan was initiated from (optionanl)
-	ScanConfigId string `json:"scan_config_id,omitempty" gorm:"column:scan_config_id"`
+	ScanConfigId *string `json:"scan_config_id,omitempty" gorm:"column:scan_config_id"`
 	// ScanFamiliesConfig The configuration of the scanner families within a scan config
 	ScanFamiliesConfig []byte `json:"scan_families_config,omitempty" gorm:"column:scan_families_config"`
 
@@ -29,12 +28,22 @@ type Scan struct {
 	TargetIDs []byte `json:"target_ids,omitempty" gorm:"column:target_ids"`
 }
 
+type GetScansParams struct {
+	// Filter Odata filter
+	Filter *string
+	// Page Page number of the query
+	Page int
+	// PageSize Maximum items to return
+	PageSize int
+}
+
 type ScansTable interface {
-	GetScansAndTotal(params models.GetScansParams) ([]*Scan, int64, error)
-	GetScan(scanID models.ScanID) (*Scan, error)
-	CheckExist(scanConfigID models.ScanConfigID, startTime time.Time) (*Scan, bool, error)
-	UpdateScan(scan *Scan, scanID models.ScanID) (*Scan, error)
-	DeleteScan(scanID models.ScanID) error
+	GetScansAndTotal(params GetScansParams) ([]*Scan, int64, error)
+	GetScan(scanID string) (*Scan, error)
+	CheckExist(scanConfigID string, startTime time.Time) (*Scan, bool, error)
+	UpdateScan(scan *Scan, scanID string) (*Scan, error)
+	SaveScan(scan *Scan, scanID string) (*Scan, error)
+	DeleteScan(scanID string) error
 	CreateScan(scan *Scan) (*Scan, error)
 }
 
@@ -48,7 +57,7 @@ func (db *Handler) ScansTable() ScansTable {
 	}
 }
 
-func (s *ScansTableHandler) CheckExist(scanConfigID models.ScanConfigID, startTime time.Time) (*Scan, bool, error) {
+func (s *ScansTableHandler) CheckExist(scanConfigID string, startTime time.Time) (*Scan, bool, error) {
 	var scan *Scan
 
 	if err := s.scansTable.Where("scan_config_id = ? AND scan_start_time = ?", scanConfigID, startTime).First(&scan).Error; err != nil {
@@ -61,7 +70,7 @@ func (s *ScansTableHandler) CheckExist(scanConfigID models.ScanConfigID, startTi
 	return scan, true, nil
 }
 
-func (s *ScansTableHandler) GetScansAndTotal(params models.GetScansParams) ([]*Scan, int64, error) {
+func (s *ScansTableHandler) GetScansAndTotal(params GetScansParams) ([]*Scan, int64, error) {
 	var count int64
 	var scans []*Scan
 
@@ -85,18 +94,51 @@ func (s *ScansTableHandler) CreateScan(scan *Scan) (*Scan, error) {
 	return scan, nil
 }
 
-func (s *ScansTableHandler) UpdateScan(scan *Scan, scanID models.ScanID) (*Scan, error) {
+func (s *ScansTableHandler) SaveScan(scan *Scan, scanID string) (*Scan, error) {
 	id, err := strconv.Atoi(scanID)
 	if err != nil {
 		return nil, err
 	}
 	scan.ID = uint(id)
-	s.scansTable.Save(scan)
+
+	if err := s.scansTable.Save(scan).Error; err != nil {
+		return nil, err
+	}
 
 	return scan, err
 }
 
-func (s *ScansTableHandler) GetScan(scanID models.ScanID) (*Scan, error) {
+func (s *ScansTableHandler) UpdateScan(scan *Scan, scanID string) (*Scan, error) {
+	id, err := strconv.Atoi(scanID)
+	if err != nil {
+		return nil, err
+	}
+	scan.ID = uint(id)
+	selectClause := []string{}
+	if len(scan.ScanFamiliesConfig) > 0 {
+		selectClause = append(selectClause, "scan_families_config")
+	}
+	if scan.ScanConfigId != nil {
+		selectClause = append(selectClause, "scan_config_id")
+	}
+	if scan.ScanStartTime != nil {
+		selectClause = append(selectClause, "scan_start_time")
+	}
+	if scan.ScanEndTime != nil {
+		selectClause = append(selectClause, "scan_end_time")
+	}
+	if scan.TargetIDs != nil {
+		selectClause = append(selectClause, "target_ids")
+	}
+
+
+	if err := s.scansTable.Model(scan).Select(selectClause).Updates(scan).Error ; err != nil {
+		return nil, err
+	}
+	return scan, err
+}
+
+func (s *ScansTableHandler) GetScan(scanID string) (*Scan, error) {
 	var scan *Scan
 
 	if err := s.scansTable.Where("id = ?", scanID).First(&scan).Error; err != nil {
@@ -106,7 +148,7 @@ func (s *ScansTableHandler) GetScan(scanID models.ScanID) (*Scan, error) {
 	return scan, nil
 }
 
-func (s *ScansTableHandler) DeleteScan(scanID models.ScanID) error {
+func (s *ScansTableHandler) DeleteScan(scanID string) error {
 	if err := s.scansTable.Delete(&Scan{}, scanID).Error; err != nil {
 		return fmt.Errorf("failed to delete scan: %w", err)
 	}

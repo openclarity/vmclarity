@@ -65,7 +65,7 @@ func TestConvertScanConfig(t *testing.T) {
 					Model: gorm.Model{
 						ID: 1,
 					},
-					Name:               "test",
+					Name:               utils.StringPtr("test"),
 					ScanFamiliesConfig: scanFamiliesConfigB,
 					Scheduled:          runtimeScheduleScanConfigTypeB,
 					Scope:              scanScopeTypeB,
@@ -150,7 +150,7 @@ func TestConvertScanConfigs(t *testing.T) {
 						Model: gorm.Model{
 							ID: 1,
 						},
-						Name:               "test",
+						Name:               utils.StringPtr("test"),
 						ScanFamiliesConfig: scanFamiliesConfigB,
 						Scheduled:          runtimeScheduleScanConfigTypeB,
 						Scope:              scanScopeTypeB,
@@ -182,6 +182,81 @@ func TestConvertScanConfigs(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ConvertScanConfigs() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestConvertScanResult(t *testing.T) {
+	state := models.DONE
+	status := models.TargetScanStatus{
+		Vulnerabilities: &models.TargetScanState{
+			Errors: nil,
+			State:  &state,
+		},
+		Exploits: &models.TargetScanState{
+			Errors: &[]string{"err"},
+			State:  &state,
+		},
+	}
+
+	vulsScan := models.VulnerabilityScan{
+		Vulnerabilities: &[]models.Vulnerability{
+			{
+				VulnerabilityInfo: &models.VulnerabilityInfo{
+					VulnerabilityName: utils.StringPtr("name"),
+				},
+			},
+		},
+	}
+
+	vulScanB, err := json.Marshal(&vulsScan)
+	assert.NilError(t, err)
+
+	statusB, err := json.Marshal(&status)
+	assert.NilError(t, err)
+
+	type args struct {
+		scanResult *database.ScanResult
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *models.TargetScanResult
+		wantErr bool
+	}{
+		{
+			name: "",
+			args: args{
+				scanResult: &database.ScanResult{
+					Model: gorm.Model{
+						ID:        3,
+					},
+					ScanID:            "1",
+					TargetID:          "2",
+					Status:            statusB,
+					Vulnerabilities:   vulScanB,
+				},
+			},
+			want: &models.TargetScanResult{
+				Id: utils.StringPtr("3"),
+				ScanId: "1",
+				Status: &status,
+				TargetId: "2",
+				Vulnerabilities: &vulsScan,
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ConvertScanResult(tt.args.scanResult)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ConvertScanResult() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ConvertScanResult() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

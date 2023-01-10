@@ -11,24 +11,32 @@ import (
 )
 
 func ConvertScanConfig(config *database.ScanConfig) (*models.ScanConfig, error) {
-	var ret = models.ScanConfig{
-		ScanFamiliesConfig: &models.ScanFamiliesConfig{},
-		Scheduled:          &models.RuntimeScheduleScanConfigType{},
-		Scope:              &models.ScanScopeType{},
+	var ret models.ScanConfig
+
+	if config.ScanFamiliesConfig != nil {
+		ret.ScanFamiliesConfig = &models.ScanFamiliesConfig{}
+		if err := json.Unmarshal(config.ScanFamiliesConfig, ret.ScanFamiliesConfig); err != nil {
+			return nil, err
+		}
 	}
 
-	if err := json.Unmarshal(config.ScanFamiliesConfig, ret.ScanFamiliesConfig); err != nil {
-		return nil, err
+	if config.Scope != nil {
+		ret.Scope = &models.ScanScopeType{}
+		if err := ret.Scope.UnmarshalJSON(config.Scope); err != nil {
+			return nil, err
+		}
 	}
-	if err := ret.Scope.UnmarshalJSON(config.Scope); err != nil {
-		return nil, err
+
+	if config.Scheduled != nil {
+		ret.Scheduled = &models.RuntimeScheduleScanConfigType{}
+		if err := ret.Scheduled.UnmarshalJSON(config.Scheduled); err != nil {
+			return nil, err
+		}
 	}
-	if err := ret.Scheduled.UnmarshalJSON(config.Scheduled); err != nil {
-		return nil, err
-	}
+
+	ret.Name = config.Name
 
 	ret.Id = utils.StringPtr(strconv.Itoa(int(config.ID)))
-	ret.Name = utils.StringPtr(config.Name)
 
 	return &ret, nil
 }
@@ -62,11 +70,9 @@ func ConvertTarget(target *database.Target) (*models.Target, error) {
 			InstanceID:       utils.StringPtr(target.InstanceID),
 			InstanceProvider: &cloudProvider,
 			Location:         utils.StringPtr(target.Location),
-			ObjectType:       target.Type,
 		}); err != nil {
 			return nil, err
 		}
-
 	case "Dir":
 		return nil, fmt.Errorf("unsupported target type Dir")
 	case "Pod":
@@ -98,40 +104,56 @@ func ConvertTargets(targets []*database.Target, total int64) (*models.Targets, e
 }
 
 func ConvertScanResult(scanResult *database.ScanResult) (*models.TargetScanResult, error) {
-	var ret = models.TargetScanResult{
-		Exploits:          &models.ExploitScan{},
-		Malware:           &models.MalwareScan{},
-		Misconfigurations: &models.MisconfigurationScan{},
-		Rootkits:          &models.RootkitScan{},
-		Sboms:             &models.SbomScan{},
-		Secrets:           &models.SecretScan{},
-		Status:            &models.TargetScanStatus{},
-		Vulnerabilities:   &models.VulnerabilityScan{},
+	var ret models.TargetScanResult
+
+	if scanResult.Secrets != nil {
+		ret.Secrets = &models.SecretScan{}
+		if err := json.Unmarshal(scanResult.Secrets, ret.Secrets); err != nil {
+			return nil, err
+		}
+	}
+	if scanResult.Vulnerabilities != nil {
+		ret.Vulnerabilities = &models.VulnerabilityScan{}
+		if err := json.Unmarshal(scanResult.Vulnerabilities, ret.Vulnerabilities); err != nil {
+			return nil, err
+		}
 	}
 
-	if err := json.Unmarshal(scanResult.Secrets, ret.Secrets); err != nil {
-		return nil, err
+	if scanResult.Exploits != nil {
+		ret.Exploits = &models.ExploitScan{}
+		if err := json.Unmarshal(scanResult.Exploits, ret.Exploits); err != nil {
+			return nil, err
+		}
 	}
-	if err := json.Unmarshal(scanResult.Vulnerabilities, ret.Vulnerabilities); err != nil {
-		return nil, err
+	if scanResult.Malware != nil {
+		ret.Malware = &models.MalwareScan{}
+		if err := json.Unmarshal(scanResult.Malware, ret.Malware); err != nil {
+			return nil, err
+		}
 	}
-	if err := json.Unmarshal(scanResult.Exploits, ret.Exploits); err != nil {
-		return nil, err
+	if scanResult.Misconfigurations != nil {
+		ret.Misconfigurations = &models.MisconfigurationScan{}
+		if err := json.Unmarshal(scanResult.Misconfigurations, ret.Misconfigurations); err != nil {
+			return nil, err
+		}
 	}
-	if err := json.Unmarshal(scanResult.Malware, ret.Malware); err != nil {
-		return nil, err
+	if scanResult.Rootkits != nil {
+		ret.Rootkits = &models.RootkitScan{}
+		if err := json.Unmarshal(scanResult.Rootkits, ret.Rootkits); err != nil {
+			return nil, err
+		}
 	}
-	if err := json.Unmarshal(scanResult.Misconfigurations, ret.Misconfigurations); err != nil {
-		return nil, err
+	if scanResult.Sboms != nil {
+		ret.Sboms = &models.SbomScan{}
+		if err := json.Unmarshal(scanResult.Sboms, ret.Sboms); err != nil {
+			return nil, err
+		}
 	}
-	if err := json.Unmarshal(scanResult.Rootkits, ret.Rootkits); err != nil {
-		return nil, err
-	}
-	if err := json.Unmarshal(scanResult.Sboms, ret.Sboms); err != nil {
-		return nil, err
-	}
-	if err := json.Unmarshal(scanResult.Status, ret.Status); err != nil {
-		return nil, err
+	if scanResult.Status != nil {
+		ret.Status = &models.TargetScanStatus{}
+		if err := json.Unmarshal(scanResult.Status, ret.Status); err != nil {
+			return nil, err
+		}
 	}
 	ret.Id = utils.StringPtr(strconv.Itoa(int(scanResult.ID)))
 	ret.ScanId = scanResult.ScanID
@@ -159,22 +181,23 @@ func ConvertScanResults(scanResults []*database.ScanResult, total int64) (*model
 }
 
 func ConvertScan(scan *database.Scan) (*models.Scan, error) {
-	var ret = models.Scan{
-		ScanFamiliesConfig: &models.ScanFamiliesConfig{},
-		TargetIDs:          &[]string{},
+	var ret models.Scan
+
+	if scan.ScanFamiliesConfig != nil {
+		ret.ScanFamiliesConfig = &models.ScanFamiliesConfig{}
+		if err := json.Unmarshal(scan.ScanFamiliesConfig, ret.ScanFamiliesConfig); err != nil {
+			return nil, err
+		}
 	}
 
-	if err := json.Unmarshal(scan.ScanFamiliesConfig, ret.ScanFamiliesConfig); err != nil {
-		return nil, err
-	}
 	if err := json.Unmarshal(scan.TargetIDs, ret.TargetIDs); err != nil {
 		return nil, err
 	}
 
 	ret.Id = utils.StringPtr(strconv.Itoa(int(scan.ID)))
-	ret.StartTime = &scan.ScanStartTime
-	ret.EndTime = &scan.ScanEndTime
-	ret.ScanConfigId = utils.StringPtr(scan.ScanConfigId)
+	ret.StartTime = scan.ScanStartTime
+	ret.EndTime = scan.ScanEndTime
+	ret.ScanConfigId = scan.ScanConfigId
 
 	return &ret, nil
 }

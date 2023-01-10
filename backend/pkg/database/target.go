@@ -21,8 +21,6 @@ import (
 	"strconv"
 
 	"gorm.io/gorm"
-
-	"github.com/openclarity/vmclarity/api/models"
 )
 
 const (
@@ -46,13 +44,22 @@ type Target struct {
 	DirName string `json:"dir_name,omitempty" gorm:"column:dir_name"`
 }
 
+type GetTargetsParams struct {
+	// Filter Odata filter
+	Filter *string
+	// Page Page number of the query
+	Page int
+	// PageSize Maximum items to return
+	PageSize int
+}
+
 type TargetsTable interface {
-	GetTargetsAndTotal(params models.GetTargetsParams) ([]*Target, int64, error)
-	GetTarget(targetID models.TargetID) (*Target, error)
+	GetTargetsAndTotal(params GetTargetsParams) ([]*Target, int64, error)
+	GetTarget(targetID string) (*Target, error)
 	CheckVMInfoExists(instanceID string, location string) (*Target, bool, error)
 	CreateTarget(target *Target) (*Target, error)
-	UpdateTarget(target *Target, targetID models.TargetID) (*Target, error)
-	DeleteTarget(targetID models.TargetID) error
+	SaveTarget(target *Target, targetID string) (*Target, error)
+	DeleteTarget(targetID string) error
 }
 
 type TargetsTableHandler struct {
@@ -78,7 +85,7 @@ func (t *TargetsTableHandler) CheckVMInfoExists(instanceID string, location stri
 	return target, true, nil
 }
 
-func (t *TargetsTableHandler) GetTargetsAndTotal(params models.GetTargetsParams) ([]*Target, int64, error) {
+func (t *TargetsTableHandler) GetTargetsAndTotal(params GetTargetsParams) ([]*Target, int64, error) {
 	var count int64
 	var targets []*Target
 
@@ -95,7 +102,7 @@ func (t *TargetsTableHandler) GetTargetsAndTotal(params models.GetTargetsParams)
 	return targets, count, nil
 }
 
-func (t *TargetsTableHandler) GetTarget(targetID models.TargetID) (*Target, error) {
+func (t *TargetsTableHandler) GetTarget(targetID string) (*Target, error) {
 	var target *Target
 
 	if err := t.targetsTable.Where("id = ?", targetID).First(&target).Error; err != nil {
@@ -112,7 +119,7 @@ func (t *TargetsTableHandler) CreateTarget(target *Target) (*Target, error) {
 	return target, nil
 }
 
-func (t *TargetsTableHandler) UpdateTarget(target *Target, targetID models.TargetID) (*Target, error) {
+func (t *TargetsTableHandler) SaveTarget(target *Target, targetID string) (*Target, error) {
 	id, err := strconv.Atoi(targetID)
 	if err != nil {
 		return nil, err
@@ -123,7 +130,7 @@ func (t *TargetsTableHandler) UpdateTarget(target *Target, targetID models.Targe
 	return target, err
 }
 
-func (t *TargetsTableHandler) DeleteTarget(targetID models.TargetID) error {
+func (t *TargetsTableHandler) DeleteTarget(targetID string) error {
 	if err := t.targetsTable.Delete(&Scan{}, targetID).Error; err != nil {
 		return fmt.Errorf("failed to delete target: %w", err)
 	}

@@ -29,7 +29,7 @@ import (
 )
 
 func (s *ServerImpl) GetTargets(ctx echo.Context, params models.GetTargetsParams) error {
-	dbTargets, total, err := s.dbHandler.TargetsTable().GetTargetsAndTotal(params)
+	dbTargets, total, err := s.dbHandler.TargetsTable().GetTargetsAndTotal(rest_to_db.ConvertGetTargetsParams(params))
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get targets from db: %v", err))
 	}
@@ -55,6 +55,9 @@ func (s *ServerImpl) PostTargets(ctx echo.Context) error {
 	switch disc {
 	case "VMInfo":
 		vminfo, err := target.TargetInfo.AsVMInfo()
+		if err != nil {
+			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get target as vm info: %v", err))
+		}
 		targetFromDB, exists, err := s.dbHandler.TargetsTable().CheckVMInfoExists(*vminfo.InstanceID, *vminfo.Location)
 		if err != nil {
 			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to check vminfo existence: %v", err))
@@ -121,7 +124,7 @@ func (s *ServerImpl) PutTargetsTargetID(ctx echo.Context, targetID models.Target
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert target: %v", err))
 	}
-	updatedTarget, err := s.dbHandler.TargetsTable().UpdateTarget(convertedDB, targetID)
+	updatedTarget, err := s.dbHandler.TargetsTable().SaveTarget(convertedDB, targetID)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Errorf("failed to update target in db. targetID=%v: %v", targetID, err).Error())
 	}

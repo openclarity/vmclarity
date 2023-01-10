@@ -21,8 +21,6 @@ import (
 	"strconv"
 
 	"gorm.io/gorm"
-
-	"github.com/openclarity/vmclarity/api/models"
 )
 
 const (
@@ -45,13 +43,30 @@ type ScanResult struct {
 	Vulnerabilities   []byte `json:"vulnerabilities,omitempty" gorm:"column:vulnerabilities"`
 }
 
+type GetScanResultsParams struct {
+	// Filter Odata filter
+	Filter *string
+	// Select Odata select
+	Select *string
+	// Page Page number of the query
+	Page int
+	// PageSize Maximum items to return
+	PageSize int
+}
+
+type GetScanResultsScanResultIDParams struct {
+	// Select Odata select
+	Select *string
+}
+
 //nolint:interfacebloat
 type ScanResultsTable interface {
 	CreateScanResult(scanResults *ScanResult) (*ScanResult, error)
-	GetScanResultsAndTotal(params models.GetScanResultsParams) ([]*ScanResult, int64, error)
-	CheckExist(scanID models.ScanID, targetID models.TargetID) (*ScanResult, bool, error)
-	GetScanResult(scanResultID models.ScanResultID, params models.GetScanResultsScanResultIDParams) (*ScanResult, error)
-	UpdateScanResult(scanResults *ScanResult, scanResultID models.ScanResultID) (*ScanResult, error)
+	GetScanResultsAndTotal(params GetScanResultsParams) ([]*ScanResult, int64, error)
+	CheckExist(scanID string, targetID string) (*ScanResult, bool, error)
+	GetScanResult(scanResultID string, params GetScanResultsScanResultIDParams) (*ScanResult, error)
+	UpdateScanResult(scanResults *ScanResult, scanResultID string) (*ScanResult, error)
+	SaveScanResult(scanResults *ScanResult, scanResultID string) (*ScanResult, error)
 }
 
 type ScanResultsTableHandler struct {
@@ -64,7 +79,7 @@ func (db *Handler) ScanResultsTable() ScanResultsTable {
 	}
 }
 
-func (s *ScanResultsTableHandler) CheckExist(scanID models.ScanID, targetID models.TargetID) (*ScanResult, bool, error) {
+func (s *ScanResultsTableHandler) CheckExist(scanID string, targetID string) (*ScanResult, bool, error) {
 	var scanResult *ScanResult
 
 	if err := s.scanResultsTable.Where("scan_id = ? AND target_id = ?", scanID, targetID).First(&scanResult).Error; err != nil {
@@ -77,7 +92,7 @@ func (s *ScanResultsTableHandler) CheckExist(scanID models.ScanID, targetID mode
 	return scanResult, true, nil
 }
 
-func (s *ScanResultsTableHandler) GetScanResult(scanResultID models.ScanResultID, params models.GetScanResultsScanResultIDParams) (*ScanResult, error) {
+func (s *ScanResultsTableHandler) GetScanResult(scanResultID string, params GetScanResultsScanResultIDParams) (*ScanResult, error) {
 	var scanResult *ScanResult
 
 	if err := s.scanResultsTable.Where("id = ?", scanResultID).First(&scanResult).Error; err != nil {
@@ -94,7 +109,7 @@ func (s *ScanResultsTableHandler) CreateScanResult(scanResult *ScanResult) (*Sca
 	return scanResult, nil
 }
 
-func (s *ScanResultsTableHandler) GetScanResultsAndTotal(params models.GetScanResultsParams) ([]*ScanResult, int64, error) {
+func (s *ScanResultsTableHandler) GetScanResultsAndTotal(params GetScanResultsParams) ([]*ScanResult, int64, error) {
 	var count int64
 	var scanResults []*ScanResult
 
@@ -111,13 +126,58 @@ func (s *ScanResultsTableHandler) GetScanResultsAndTotal(params models.GetScanRe
 	return scanResults, count, nil
 }
 
-func (s *ScanResultsTableHandler) UpdateScanResult(scanResult *ScanResult, scanResultID models.ScanResultID) (*ScanResult, error) {
+func (s *ScanResultsTableHandler) SaveScanResult(scanResult *ScanResult, scanResultID string) (*ScanResult, error) {
 	id, err := strconv.Atoi(scanResultID)
 	if err != nil {
 		return nil, err
 	}
 	scanResult.ID = uint(id)
-	s.scanResultsTable.Save(scanResult)
+	if err := s.scanResultsTable.Save(scanResult).Error; err != nil {
+		return nil, err
+	}
+
+	return scanResult, err
+}
+
+func (s *ScanResultsTableHandler) UpdateScanResult(scanResult *ScanResult, scanResultID string) (*ScanResult, error) {
+	id, err := strconv.Atoi(scanResultID)
+	if err != nil {
+		return nil, err
+	}
+	scanResult.ID = uint(id)
+
+	selectClause := []string{}
+	if len(scanResult.ScanID) > 0 {
+		selectClause = append(selectClause, "scan_id")
+	}
+	if len(scanResult.TargetID) > 0 {
+		selectClause = append(selectClause, "target_id")
+	}
+	if scanResult.Sboms != nil {
+		selectClause = append(selectClause, "sboms")
+	}
+	if scanResult.Status != nil {
+		selectClause = append(selectClause, "status")
+	}
+	if scanResult.Rootkits != nil {
+		selectClause = append(selectClause, "rootkits")
+	}
+	if scanResult.Malware != nil {
+		selectClause = append(selectClause, "malware")
+	}
+	if scanResult.Vulnerabilities != nil {
+		selectClause = append(selectClause, "vulnerabilities")
+	}
+	if scanResult.Secrets != nil {
+		selectClause = append(selectClause, "secrets")
+	}
+	if scanResult.Misconfigurations != nil {
+		selectClause = append(selectClause, "misconfigurations")
+	}
+
+	if err := s.scanResultsTable.Model(scanResult).Select(selectClause).Updates(scanResult).Error ; err != nil {
+		return nil, err
+	}
 
 	return scanResult, err
 }

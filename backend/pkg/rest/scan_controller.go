@@ -14,7 +14,7 @@ import (
 )
 
 func (s *ServerImpl) GetScans(ctx echo.Context, params models.GetScansParams) error {
-	dbScans, total, err := s.dbHandler.ScansTable().GetScansAndTotal(params)
+	dbScans, total, err := s.dbHandler.ScansTable().GetScansAndTotal(rest_to_db.ConvertGetScansParams(params))
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scans from db: %v", err))
 	}
@@ -36,7 +36,7 @@ func (s *ServerImpl) PostScans(ctx echo.Context) error {
 	// check if scan already exists.
 	sc, exist, err := s.dbHandler.ScansTable().CheckExist(*scan.ScanConfigId, *scan.StartTime)
 	if err != nil {
-		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to check scan in db. id=%v: %v", *scan.Id, err))
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to check scan in db. ScanConfigId=%v, StartTime=%v: %v", *scan.ScanConfigId, *scan.StartTime, err))
 	}
 	if exist {
 		return sendResponse(ctx, http.StatusConflict, &sc)
@@ -90,8 +90,35 @@ func (s *ServerImpl) GetScansScanID(ctx echo.Context, scanID models.ScanID) erro
 }
 
 func (s *ServerImpl) PatchScansScanID(ctx echo.Context, scanID models.ScanID) error {
-	//TODO implement me
-	panic("implement me")
+	var scan models.Scan
+	err := ctx.Bind(&scan)
+	if err != nil {
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
+	}
+
+	// check that a scan with that id exists.
+	_, err = s.dbHandler.ScansTable().GetScan(scanID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("scan was not found in db. scanID=%v: %v", scanID, err))
+		}
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scan from db. scanID=%v: %v", scanID, err))
+	}
+
+	convertedDB, err := rest_to_db.ConvertScan(&scan)
+	if err != nil {
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert scan: %v", err))
+	}
+	updatedScan, err := s.dbHandler.ScansTable().UpdateScan(convertedDB, scanID)
+	if err != nil {
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update scan in db. scanID=%v: %v", scanID, err))
+	}
+
+	converted, err := db_to_rest.ConvertScan(updatedScan)
+	if err != nil {
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert scan: %v", err))
+	}
+	return sendResponse(ctx, http.StatusOK, converted)
 }
 
 func (s *ServerImpl) PutScansScanID(ctx echo.Context, scanID models.ScanID) error {
@@ -114,7 +141,7 @@ func (s *ServerImpl) PutScansScanID(ctx echo.Context, scanID models.ScanID) erro
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert scan: %v", err))
 	}
-	updatedScan, err := s.dbHandler.ScansTable().UpdateScan(convertedDB, scanID)
+	updatedScan, err := s.dbHandler.ScansTable().SaveScan(convertedDB, scanID)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update scan in db. scanID=%v: %v", scanID, err))
 	}
