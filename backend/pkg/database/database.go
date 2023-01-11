@@ -61,7 +61,6 @@ type Base struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time `sql:"index"`
-
 }
 
 // BeforeCreate will set a UUID rather than numeric ID.

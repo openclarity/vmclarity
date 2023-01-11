@@ -1,4 +1,4 @@
-package rest_to_db
+package resttodb
 
 import (
 	"encoding/json"
@@ -15,21 +15,21 @@ func ConvertScanConfig(config *models.ScanConfig) (*database.ScanConfig, error) 
 	if config.ScanFamiliesConfig != nil {
 		ret.ScanFamiliesConfig, err = json.Marshal(config.ScanFamiliesConfig)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to marshal json: %w", err)
 		}
 	}
 
 	if config.Scope != nil {
 		ret.Scope, err = config.Scope.MarshalJSON()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to marshal json: %w", err)
 		}
 	}
 
 	if config.Scheduled != nil {
 		ret.Scheduled, err = config.Scheduled.MarshalJSON()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to marshal json: %w", err)
 		}
 	}
 
@@ -41,13 +41,13 @@ func ConvertScanConfig(config *models.ScanConfig) (*database.ScanConfig, error) 
 func ConvertTarget(target *models.Target) (*database.Target, error) {
 	disc, err := target.TargetInfo.Discriminator()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get discriminator: %w", err)
 	}
 	switch disc {
 	case "VMInfo":
 		vminfo, err := target.TargetInfo.AsVMInfo()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to convert target to vm info: %w", err)
 		}
 		return &database.Target{
 			Type:             vminfo.ObjectType,
@@ -60,6 +60,7 @@ func ConvertTarget(target *models.Target) (*database.Target, error) {
 	}
 }
 
+// nolint:cyclop
 func ConvertScanResult(result *models.TargetScanResult) (*database.ScanResult, error) {
 	var ret database.ScanResult
 	var err error
@@ -70,50 +71,50 @@ func ConvertScanResult(result *models.TargetScanResult) (*database.ScanResult, e
 	if result.Exploits != nil {
 		ret.Exploits, err = json.Marshal(result.Exploits)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to marshal json: %w", err)
 		}
 	}
 	if result.Malware != nil {
 		ret.Malware, err = json.Marshal(result.Malware)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to marshal json: %w", err)
 		}
 	}
 	if result.Misconfigurations != nil {
 		ret.Misconfigurations, err = json.Marshal(result.Misconfigurations)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to marshal json: %w", err)
 		}
 	}
 	if result.Rootkits != nil {
 		ret.Rootkits, err = json.Marshal(result.Rootkits)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to marshal json: %w", err)
 		}
 	}
 	if result.Sboms != nil {
 		ret.Sboms, err = json.Marshal(result.Sboms)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to marshal json: %w", err)
 		}
 	}
 
 	if result.Secrets != nil {
 		ret.Secrets, err = json.Marshal(result.Secrets)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to marshal json: %w", err)
 		}
 	}
 	if result.Status != nil {
 		ret.Status, err = json.Marshal(result.Status)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to marshal json: %w", err)
 		}
 	}
 	if result.Vulnerabilities != nil {
 		ret.Vulnerabilities, err = json.Marshal(result.Vulnerabilities)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to marshal json: %w", err)
 		}
 	}
 
@@ -124,7 +125,7 @@ func ConvertScan(scan *models.Scan) (*database.Scan, error) {
 	var ret database.Scan
 	var err error
 
-	ret.ScanConfigId = scan.ScanConfigId
+	ret.ScanConfigID = scan.ScanConfigId
 
 	ret.ScanEndTime = scan.EndTime
 
@@ -133,14 +134,14 @@ func ConvertScan(scan *models.Scan) (*database.Scan, error) {
 	if scan.ScanFamiliesConfig != nil {
 		ret.ScanFamiliesConfig, err = json.Marshal(scan.ScanFamiliesConfig)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to marshal json: %w", err)
 		}
 	}
 
 	if scan.TargetIDs != nil {
 		ret.TargetIDs, err = json.Marshal(scan.TargetIDs)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to marshal json: %w", err)
 		}
 	}
 

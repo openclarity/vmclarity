@@ -84,7 +84,7 @@ func (s *ScanConfigsTableHandler) GetScanConfigsAndTotal(params GetScanConfigsPa
 
 func (s *ScanConfigsTableHandler) CreateScanConfig(scanConfig *ScanConfig) (*ScanConfig, error) {
 	if err := s.scanConfigsTable.Create(scanConfig).Error; err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create scan config in db: %w", err)
 	}
 	return scanConfig, nil
 }
@@ -93,11 +93,11 @@ func (s *ScanConfigsTableHandler) SaveScanConfig(scanConfig *ScanConfig, scanCon
 	var err error
 	scanConfig.ID, err = uuid.FromString(scanConfigID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to convert scanConfigID %v to uuid: %w", scanConfigID, err)
 	}
 
-	if err := s.scanConfigsTable.Save(scanConfig).Error ; err != nil {
-		return nil, err
+	if err := s.scanConfigsTable.Save(scanConfig).Error; err != nil {
+		return nil, fmt.Errorf("failed to save scan config in db: %w", err)
 	}
 
 	return scanConfig, nil
@@ -107,7 +107,7 @@ func (s *ScanConfigsTableHandler) UpdateScanConfig(scanConfig *ScanConfig, scanC
 	var err error
 	scanConfig.ID, err = uuid.FromString(scanConfigID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to convert scanConfigID %v to uuid: %w", scanConfigID, err)
 	}
 
 	selectClause := []string{}
@@ -124,8 +124,8 @@ func (s *ScanConfigsTableHandler) UpdateScanConfig(scanConfig *ScanConfig, scanC
 		selectClause = append(selectClause, "scope")
 	}
 
-	if err := s.scanConfigsTable.Model(scanConfig).Select(selectClause).Updates(scanConfig).Error ; err != nil {
-		return nil, err
+	if err := s.scanConfigsTable.Model(scanConfig).Select(selectClause).Updates(scanConfig).Error; err != nil {
+		return nil, fmt.Errorf("failed to update scan config in db: %w", err)
 	}
 
 	return scanConfig, nil

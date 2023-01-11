@@ -1,14 +1,15 @@
-package rest_to_db
+package resttodb
 
 import (
 	"encoding/json"
 	"reflect"
 	"testing"
 
+	"gotest.tools/v3/assert"
+
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/backend/pkg/database"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
-	"gotest.tools/v3/assert"
 )
 
 func TestConvertScanConfig(t *testing.T) {
@@ -36,7 +37,7 @@ func TestConvertScanConfig(t *testing.T) {
 	scanScopeTypeB, err := scanScopeType.MarshalJSON()
 	assert.NilError(t, err)
 
-	var byHoursScheduleScanConfig = models.ByHoursScheduleScanConfig{
+	byHoursScheduleScanConfig := models.ByHoursScheduleScanConfig{
 		HoursInterval: utils.IntPtr(2),
 		ObjectType:    "ByHoursScheduleScanConfig",
 	}
@@ -93,14 +94,14 @@ func TestConvertScanConfig(t *testing.T) {
 
 func TestConvertScanResult(t *testing.T) {
 	vulnerabilities := []models.Vulnerability{
-	{
-		VulnerabilityInfo: &models.VulnerabilityInfo{
-			Description:       utils.StringPtr("desc"),
-			Id:                utils.StringPtr("1"),
-			VulnerabilityName: utils.StringPtr("name"),
+		{
+			VulnerabilityInfo: &models.VulnerabilityInfo{
+				Description:       utils.StringPtr("desc"),
+				Id:                utils.StringPtr("1"),
+				VulnerabilityName: utils.StringPtr("name"),
+			},
+			Id: utils.StringPtr("1"),
 		},
-		Id: utils.StringPtr("1"),
-	},
 	}
 	vulScan := models.VulnerabilityScan{Vulnerabilities: &vulnerabilities}
 
@@ -119,10 +120,10 @@ func TestConvertScanResult(t *testing.T) {
 		{
 			name: "",
 			args: args{
-				result: &models.TargetScanResult {
-					Id:       nil,
-					ScanId:   "3",
-					TargetId: "2",
+				result: &models.TargetScanResult{
+					Id:              nil,
+					ScanId:          "3",
+					TargetId:        "2",
 					Vulnerabilities: &vulScan,
 				},
 			},
@@ -229,13 +230,13 @@ func TestConvertScan(t *testing.T) {
 			name: "",
 			args: args{
 				scan: &models.Scan{
-					ScanConfigId: utils.StringPtr("1"),
+					ScanConfigId:       utils.StringPtr("1"),
 					ScanFamiliesConfig: &scanFamiliesConfig,
-					TargetIDs: &targetIDs,
+					TargetIDs:          &targetIDs,
 				},
 			},
 			want: &database.Scan{
-				ScanConfigId:       utils.StringPtr("1"),
+				ScanConfigID:       utils.StringPtr("1"),
 				ScanFamiliesConfig: scanFamiliesConfigB,
 				TargetIDs:          targetIDsB,
 			},

@@ -1,15 +1,16 @@
-package db_to_rest
+package dbtorest
 
 import (
 	"encoding/json"
 	"reflect"
 	"testing"
 
+	uuid "github.com/satori/go.uuid"
+	"gotest.tools/v3/assert"
+
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/backend/pkg/database"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
-	uuid "github.com/satori/go.uuid"
-	"gotest.tools/v3/assert"
 )
 
 func TestConvertScanConfig(t *testing.T) {
@@ -37,7 +38,7 @@ func TestConvertScanConfig(t *testing.T) {
 	scanScopeTypeB, err := scanScopeType.MarshalJSON()
 	assert.NilError(t, err)
 
-	var byHoursScheduleScanConfig = models.ByHoursScheduleScanConfig{
+	byHoursScheduleScanConfig := models.ByHoursScheduleScanConfig{
 		HoursInterval: utils.IntPtr(2),
 		ObjectType:    "ByHoursScheduleScanConfig",
 	}
@@ -122,7 +123,7 @@ func TestConvertScanConfigs(t *testing.T) {
 	scanScopeTypeB, err := scanScopeType.MarshalJSON()
 	assert.NilError(t, err)
 
-	var byHoursScheduleScanConfig = models.ByHoursScheduleScanConfig{
+	byHoursScheduleScanConfig := models.ByHoursScheduleScanConfig{
 		HoursInterval: utils.IntPtr(2),
 		ObjectType:    "ByHoursScheduleScanConfig",
 	}
@@ -236,19 +237,19 @@ func TestConvertScanResult(t *testing.T) {
 			args: args{
 				scanResult: &database.ScanResult{
 					Base: database.Base{
-						ID:        uid,
+						ID: uid,
 					},
-					ScanID:            "1",
-					TargetID:          "2",
-					Status:            statusB,
-					Vulnerabilities:   vulScanB,
+					ScanID:          "1",
+					TargetID:        "2",
+					Status:          statusB,
+					Vulnerabilities: vulScanB,
 				},
 			},
 			want: &models.TargetScanResult{
-				Id: utils.StringPtr(uid.String()),
-				ScanId: "1",
-				Status: &status,
-				TargetId: "2",
+				Id:              utils.StringPtr(uid.String()),
+				ScanId:          "1",
+				Status:          &status,
+				TargetId:        "2",
 				Vulnerabilities: &vulsScan,
 			},
 			wantErr: false,

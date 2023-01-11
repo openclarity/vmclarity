@@ -86,7 +86,7 @@ func (s *ScanResultsTableHandler) CheckExist(scanID string, targetID string) (*S
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, false, nil
 		}
-		return nil, false, err
+		return nil, false, fmt.Errorf("failed to query: %w", err)
 	}
 
 	return scanResult, true, nil
@@ -104,7 +104,7 @@ func (s *ScanResultsTableHandler) GetScanResult(scanResultID string, params GetS
 
 func (s *ScanResultsTableHandler) CreateScanResult(scanResult *ScanResult) (*ScanResult, error) {
 	if err := s.scanResultsTable.Create(scanResult).Error; err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create scan result in db: %w", err)
 	}
 	return scanResult, nil
 }
@@ -130,20 +130,21 @@ func (s *ScanResultsTableHandler) SaveScanResult(scanResult *ScanResult, scanRes
 	var err error
 	scanResult.ID, err = uuid.FromString(scanResultID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to convert scanResultID %v to uuid: %w", scanResultID, err)
 	}
 	if err := s.scanResultsTable.Save(scanResult).Error; err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to save scan result in db: %w", err)
 	}
 
 	return scanResult, nil
 }
 
+// nolint:cyclop
 func (s *ScanResultsTableHandler) UpdateScanResult(scanResult *ScanResult, scanResultID string) (*ScanResult, error) {
 	var err error
 	scanResult.ID, err = uuid.FromString(scanResultID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to convert scanResultID %v to uuid: %w", scanResultID, err)
 	}
 
 	selectClause := []string{}
@@ -178,8 +179,8 @@ func (s *ScanResultsTableHandler) UpdateScanResult(scanResult *ScanResult, scanR
 		selectClause = append(selectClause, "exploits")
 	}
 
-	if err := s.scanResultsTable.Model(scanResult).Select(selectClause).Updates(scanResult).Error ; err != nil {
-		return nil, err
+	if err := s.scanResultsTable.Model(scanResult).Select(selectClause).Updates(scanResult).Error; err != nil {
+		return nil, fmt.Errorf("failed to update scan result in db: %w", err)
 	}
 
 	return scanResult, nil

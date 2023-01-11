@@ -19,8 +19,8 @@ type Scan struct {
 	ScanStartTime *time.Time `json:"scan_start_time,omitempty" gorm:"column:scan_start_time"`
 	ScanEndTime   *time.Time `json:"scan_end_time,omitempty" gorm:"column:scan_end_time"`
 
-	// ScanConfigId The ID of the config that this scan was initiated from (optionanl)
-	ScanConfigId *string `json:"scan_config_id,omitempty" gorm:"column:scan_config_id"`
+	// ScanConfigID The ID of the config that this scan was initiated from (optionanl)
+	ScanConfigID *string `json:"scan_config_id,omitempty" gorm:"column:scan_config_id"`
 	// ScanFamiliesConfig The configuration of the scanner families within a scan config
 	ScanFamiliesConfig []byte `json:"scan_families_config,omitempty" gorm:"column:scan_families_config"`
 
@@ -98,11 +98,11 @@ func (s *ScansTableHandler) SaveScan(scan *Scan, scanID string) (*Scan, error) {
 	var err error
 	scan.ID, err = uuid.FromString(scanID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w", err)
 	}
 
 	if err := s.scansTable.Save(scan).Error; err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to save scan in db: %w", err)
 	}
 
 	return scan, nil
@@ -112,14 +112,14 @@ func (s *ScansTableHandler) UpdateScan(scan *Scan, scanID string) (*Scan, error)
 	var err error
 	scan.ID, err = uuid.FromString(scanID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w", err)
 	}
 
 	selectClause := []string{}
 	if len(scan.ScanFamiliesConfig) > 0 {
 		selectClause = append(selectClause, "scan_families_config")
 	}
-	if scan.ScanConfigId != nil {
+	if scan.ScanConfigID != nil {
 		selectClause = append(selectClause, "scan_config_id")
 	}
 	if scan.ScanStartTime != nil {
@@ -132,9 +132,8 @@ func (s *ScansTableHandler) UpdateScan(scan *Scan, scanID string) (*Scan, error)
 		selectClause = append(selectClause, "target_ids")
 	}
 
-
-	if err := s.scansTable.Model(scan).Select(selectClause).Updates(scan).Error ; err != nil {
-		return nil, err
+	if err := s.scansTable.Model(scan).Select(selectClause).Updates(scan).Error; err != nil {
+		return nil, fmt.Errorf("failed to update scan in db: %w", err)
 	}
 	return scan, nil
 }

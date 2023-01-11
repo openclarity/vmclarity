@@ -30,7 +30,7 @@ const (
 type Target struct {
 	Base
 
-	Type     string `json:"type" json:"type,omitempty" gorm:"column:type"`
+	Type     string `json:"type,omitempty" gorm:"column:type"`
 	Location string `json:"location,omitempty" gorm:"column:location"`
 
 	// VMInfo
@@ -79,7 +79,7 @@ func (t *TargetsTableHandler) CheckVMInfoExists(instanceID string, location stri
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, false, nil
 		}
-		return nil, false, err
+		return nil, false, fmt.Errorf("failed to query: %w", err)
 	}
 
 	return target, true, nil
@@ -114,7 +114,7 @@ func (t *TargetsTableHandler) GetTarget(targetID string) (*Target, error) {
 
 func (t *TargetsTableHandler) CreateTarget(target *Target) (*Target, error) {
 	if err := t.targetsTable.Create(target).Error; err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create target in db: %w", err)
 	}
 	return target, nil
 }
@@ -123,7 +123,7 @@ func (t *TargetsTableHandler) SaveTarget(target *Target, targetID string) (*Targ
 	var err error
 	target.ID, err = uuid.FromString(targetID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to convert targetID %v to uuid: %w", targetID, err)
 	}
 	t.targetsTable.Save(target)
 

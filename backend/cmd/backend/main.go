@@ -20,13 +20,13 @@ import (
 	"os"
 
 	logutils "github.com/Portshift/go-utils/log"
-	"github.com/openclarity/vmclarity/backend/pkg/database"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/urfave/cli"
 
 	"github.com/openclarity/vmclarity/backend/pkg/backend"
 	"github.com/openclarity/vmclarity/backend/pkg/config"
+	"github.com/openclarity/vmclarity/backend/pkg/database"
 	"github.com/openclarity/vmclarity/backend/pkg/version"
 )
 

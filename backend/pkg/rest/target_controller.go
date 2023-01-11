@@ -21,26 +21,28 @@ import (
 	"net/http"
 
 	echo "github.com/labstack/echo/v4"
-	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/backend/pkg/rest/convert/db_to_rest"
-	"github.com/openclarity/vmclarity/backend/pkg/rest/convert/rest_to_db"
-	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 	"gorm.io/gorm"
+
+	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/backend/pkg/rest/convert/dbtorest"
+	"github.com/openclarity/vmclarity/backend/pkg/rest/convert/resttodb"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 )
 
 func (s *ServerImpl) GetTargets(ctx echo.Context, params models.GetTargetsParams) error {
-	dbTargets, total, err := s.dbHandler.TargetsTable().GetTargetsAndTotal(rest_to_db.ConvertGetTargetsParams(params))
+	dbTargets, total, err := s.dbHandler.TargetsTable().GetTargetsAndTotal(resttodb.ConvertGetTargetsParams(params))
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get targets from db: %v", err))
 	}
 
-	converted, err := db_to_rest.ConvertTargets(dbTargets, total)
+	converted, err := dbtorest.ConvertTargets(dbTargets, total)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert targets: %v", err))
 	}
 	return sendResponse(ctx, http.StatusOK, converted)
 }
 
+// nolint:cyclop
 func (s *ServerImpl) PostTargets(ctx echo.Context) error {
 	var target models.Target
 	err := ctx.Bind(&target)
@@ -63,7 +65,7 @@ func (s *ServerImpl) PostTargets(ctx echo.Context) error {
 			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to check vminfo existence: %v", err))
 		}
 		if exists {
-			converted, err := db_to_rest.ConvertTarget(targetFromDB)
+			converted, err := dbtorest.ConvertTarget(targetFromDB)
 			if err != nil {
 				return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert target: %v", err))
 			}
@@ -73,7 +75,7 @@ func (s *ServerImpl) PostTargets(ctx echo.Context) error {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("unknown target type %v", disc))
 	}
 
-	convertedDB, err := rest_to_db.ConvertTarget(&target)
+	convertedDB, err := resttodb.ConvertTarget(&target)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert target: %v", err))
 	}
@@ -82,7 +84,7 @@ func (s *ServerImpl) PostTargets(ctx echo.Context) error {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to create target in db: %v", err))
 	}
 
-	converted, err := db_to_rest.ConvertTarget(createdTarget)
+	converted, err := dbtorest.ConvertTarget(createdTarget)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert target: %v", err))
 	}
@@ -98,7 +100,7 @@ func (s *ServerImpl) GetTargetsTargetID(ctx echo.Context, targetID models.Target
 		return sendError(ctx, http.StatusInternalServerError, fmt.Errorf("failed to get target from db. targetID=%v: %v", targetID, err).Error())
 	}
 
-	converted, err := db_to_rest.ConvertTarget(target)
+	converted, err := dbtorest.ConvertTarget(target)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert target: %v", err))
 	}
@@ -120,7 +122,7 @@ func (s *ServerImpl) PutTargetsTargetID(ctx echo.Context, targetID models.Target
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get target from db: %v", err))
 	}
 
-	convertedDB, err := rest_to_db.ConvertTarget(&target)
+	convertedDB, err := resttodb.ConvertTarget(&target)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert target: %v", err))
 	}
@@ -129,7 +131,7 @@ func (s *ServerImpl) PutTargetsTargetID(ctx echo.Context, targetID models.Target
 		return sendError(ctx, http.StatusInternalServerError, fmt.Errorf("failed to update target in db. targetID=%v: %v", targetID, err).Error())
 	}
 
-	converted, err := db_to_rest.ConvertTarget(updatedTarget)
+	converted, err := dbtorest.ConvertTarget(updatedTarget)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert target: %v", err))
 	}

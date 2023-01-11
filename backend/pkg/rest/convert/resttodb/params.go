@@ -1,4 +1,4 @@
-package rest_to_db
+package resttodb
 
 import (
 	"github.com/openclarity/vmclarity/api/models"
@@ -24,7 +24,7 @@ func ConvertGetScanResultsParams(params models.GetScanResultsParams) database.Ge
 
 func ConvertGetScanResultsScanResultIDParams(params models.GetScanResultsScanResultIDParams) database.GetScanResultsScanResultIDParams {
 	return database.GetScanResultsScanResultIDParams{
-		Select:   params.Select,
+		Select: params.Select,
 	}
 }
 
@@ -43,4 +43,3 @@ func ConvertGetScanConfigsParams(params models.GetScanConfigsParams) database.Ge
 		PageSize: params.PageSize,
 	}
 }
-

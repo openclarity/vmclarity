@@ -1,4 +1,4 @@
-package db_to_rest
+package dbtorest
 
 import (
 	"encoding/json"
@@ -15,21 +15,21 @@ func ConvertScanConfig(config *database.ScanConfig) (*models.ScanConfig, error) 
 	if config.ScanFamiliesConfig != nil {
 		ret.ScanFamiliesConfig = &models.ScanFamiliesConfig{}
 		if err := json.Unmarshal(config.ScanFamiliesConfig, ret.ScanFamiliesConfig); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to unmarshal json: %w", err)
 		}
 	}
 
 	if config.Scope != nil {
 		ret.Scope = &models.ScanScopeType{}
 		if err := ret.Scope.UnmarshalJSON(config.Scope); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to unmarshal json: %w", err)
 		}
 	}
 
 	if config.Scheduled != nil {
 		ret.Scheduled = &models.RuntimeScheduleScanConfigType{}
 		if err := ret.Scheduled.UnmarshalJSON(config.Scheduled); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to unmarshal json: %w", err)
 		}
 	}
 
@@ -41,14 +41,14 @@ func ConvertScanConfig(config *database.ScanConfig) (*models.ScanConfig, error) 
 }
 
 func ConvertScanConfigs(configs []*database.ScanConfig, total int64) (*models.ScanConfigs, error) {
-	var ret = models.ScanConfigs{
+	ret := models.ScanConfigs{
 		Items: &[]models.ScanConfig{},
 	}
 
 	for _, config := range configs {
 		sc, err := ConvertScanConfig(config)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to convet scan config: %w", err)
 		}
 		*ret.Items = append(*ret.Items, *sc)
 	}
@@ -58,7 +58,7 @@ func ConvertScanConfigs(configs []*database.ScanConfig, total int64) (*models.Sc
 }
 
 func ConvertTarget(target *database.Target) (*models.Target, error) {
-	var ret = models.Target{
+	ret := models.Target{
 		TargetInfo: &models.TargetType{},
 	}
 
@@ -70,7 +70,7 @@ func ConvertTarget(target *database.Target) (*models.Target, error) {
 			InstanceProvider: &cloudProvider,
 			Location:         utils.StringPtr(target.Location),
 		}); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("FromVMInfo failed: %w", err)
 		}
 	case "Dir":
 		return nil, fmt.Errorf("unsupported target type Dir")
@@ -85,14 +85,14 @@ func ConvertTarget(target *database.Target) (*models.Target, error) {
 }
 
 func ConvertTargets(targets []*database.Target, total int64) (*models.Targets, error) {
-	var ret = models.Targets{
+	ret := models.Targets{
 		Items: &[]models.Target{},
 	}
 
 	for _, target := range targets {
 		tr, err := ConvertTarget(target)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to convert target: %w", err)
 		}
 		*ret.Items = append(*ret.Items, *tr)
 	}
@@ -102,56 +102,57 @@ func ConvertTargets(targets []*database.Target, total int64) (*models.Targets, e
 	return &ret, nil
 }
 
+// nolint:cyclop
 func ConvertScanResult(scanResult *database.ScanResult) (*models.TargetScanResult, error) {
 	var ret models.TargetScanResult
 
 	if scanResult.Secrets != nil {
 		ret.Secrets = &models.SecretScan{}
 		if err := json.Unmarshal(scanResult.Secrets, ret.Secrets); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to unmarshal json: %w", err)
 		}
 	}
 	if scanResult.Vulnerabilities != nil {
 		ret.Vulnerabilities = &models.VulnerabilityScan{}
 		if err := json.Unmarshal(scanResult.Vulnerabilities, ret.Vulnerabilities); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to unmarshal json: %w", err)
 		}
 	}
 
 	if scanResult.Exploits != nil {
 		ret.Exploits = &models.ExploitScan{}
 		if err := json.Unmarshal(scanResult.Exploits, ret.Exploits); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to unmarshal json: %w", err)
 		}
 	}
 	if scanResult.Malware != nil {
 		ret.Malware = &models.MalwareScan{}
 		if err := json.Unmarshal(scanResult.Malware, ret.Malware); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to unmarshal json: %w", err)
 		}
 	}
 	if scanResult.Misconfigurations != nil {
 		ret.Misconfigurations = &models.MisconfigurationScan{}
 		if err := json.Unmarshal(scanResult.Misconfigurations, ret.Misconfigurations); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to unmarshal json: %w", err)
 		}
 	}
 	if scanResult.Rootkits != nil {
 		ret.Rootkits = &models.RootkitScan{}
 		if err := json.Unmarshal(scanResult.Rootkits, ret.Rootkits); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to unmarshal json: %w", err)
 		}
 	}
 	if scanResult.Sboms != nil {
 		ret.Sboms = &models.SbomScan{}
 		if err := json.Unmarshal(scanResult.Sboms, ret.Sboms); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to unmarshal json: %w", err)
 		}
 	}
 	if scanResult.Status != nil {
 		ret.Status = &models.TargetScanStatus{}
 		if err := json.Unmarshal(scanResult.Status, ret.Status); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to unmarshal json: %w", err)
 		}
 	}
 	ret.Id = utils.StringPtr(scanResult.ID.String())
@@ -162,14 +163,14 @@ func ConvertScanResult(scanResult *database.ScanResult) (*models.TargetScanResul
 }
 
 func ConvertScanResults(scanResults []*database.ScanResult, total int64) (*models.TargetScanResults, error) {
-	var ret = models.TargetScanResults{
+	ret := models.TargetScanResults{
 		Items: &[]models.TargetScanResult{},
 	}
 
 	for _, scanResult := range scanResults {
 		sr, err := ConvertScanResult(scanResult)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to convert scan result: %w", err)
 		}
 		*ret.Items = append(*ret.Items, *sr)
 	}
@@ -185,31 +186,31 @@ func ConvertScan(scan *database.Scan) (*models.Scan, error) {
 	if scan.ScanFamiliesConfig != nil {
 		ret.ScanFamiliesConfig = &models.ScanFamiliesConfig{}
 		if err := json.Unmarshal(scan.ScanFamiliesConfig, ret.ScanFamiliesConfig); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to unmarshal json: %w", err)
 		}
 	}
 
 	if err := json.Unmarshal(scan.TargetIDs, ret.TargetIDs); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to unmarshal json: %w", err)
 	}
 
 	ret.Id = utils.StringPtr(scan.ID.String())
 	ret.StartTime = scan.ScanStartTime
 	ret.EndTime = scan.ScanEndTime
-	ret.ScanConfigId = scan.ScanConfigId
+	ret.ScanConfigId = scan.ScanConfigID
 
 	return &ret, nil
 }
 
 func ConvertScans(scans []*database.Scan, total int64) (*models.Scans, error) {
-	var ret = models.Scans{
+	ret := models.Scans{
 		Items: &[]models.Scan{},
 	}
 
 	for _, scan := range scans {
 		sc, err := ConvertScan(scan)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to convert scan: %w", err)
 		}
 		*ret.Items = append(*ret.Items, *sc)
 	}

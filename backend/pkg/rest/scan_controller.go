@@ -6,20 +6,21 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/backend/pkg/rest/convert/db_to_rest"
-	"github.com/openclarity/vmclarity/backend/pkg/rest/convert/rest_to_db"
-	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 	"gorm.io/gorm"
+
+	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/backend/pkg/rest/convert/dbtorest"
+	"github.com/openclarity/vmclarity/backend/pkg/rest/convert/resttodb"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 )
 
 func (s *ServerImpl) GetScans(ctx echo.Context, params models.GetScansParams) error {
-	dbScans, total, err := s.dbHandler.ScansTable().GetScansAndTotal(rest_to_db.ConvertGetScansParams(params))
+	dbScans, total, err := s.dbHandler.ScansTable().GetScansAndTotal(resttodb.ConvertGetScansParams(params))
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scans from db: %v", err))
 	}
 
-	converted, err := db_to_rest.ConvertScans(dbScans, total)
+	converted, err := dbtorest.ConvertScans(dbScans, total)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert scans: %v", err))
 	}
@@ -36,14 +37,14 @@ func (s *ServerImpl) PostScans(ctx echo.Context) error {
 	// check if scan already exists.
 	sc, exist, err := s.dbHandler.ScansTable().CheckExist(*scan.ScanConfigId)
 	if err != nil {
-		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to check scan in db. ScanConfigId=%v, StartTime=%v: %v", *scan.ScanConfigId, *scan.StartTime, err))
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to check scan in db. ScanConfigID=%v, StartTime=%v: %v", *scan.ScanConfigId, *scan.StartTime, err))
 	}
 	// if there is a running (ScanEndTime not set yet) scan instance for that scanConfigID, return conflict
 	if exist && sc.ScanEndTime == nil {
 		return sendResponse(ctx, http.StatusConflict, &sc)
 	}
 
-	convertedDB, err := rest_to_db.ConvertScan(&scan)
+	convertedDB, err := resttodb.ConvertScan(&scan)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert scan: %v", err))
 	}
@@ -52,7 +53,7 @@ func (s *ServerImpl) PostScans(ctx echo.Context) error {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to create scan in db: %v", err))
 	}
 
-	converted, err := db_to_rest.ConvertScan(createdScan)
+	converted, err := dbtorest.ConvertScan(createdScan)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert scan: %v", err))
 	}
@@ -83,7 +84,7 @@ func (s *ServerImpl) GetScansScanID(ctx echo.Context, scanID models.ScanID) erro
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scan from db. id=%v: %v", scanID, err))
 	}
 
-	converted, err := db_to_rest.ConvertScan(scan)
+	converted, err := dbtorest.ConvertScan(scan)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert scan: %v", err))
 	}
@@ -106,7 +107,7 @@ func (s *ServerImpl) PatchScansScanID(ctx echo.Context, scanID models.ScanID) er
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scan from db. scanID=%v: %v", scanID, err))
 	}
 
-	convertedDB, err := rest_to_db.ConvertScan(&scan)
+	convertedDB, err := resttodb.ConvertScan(&scan)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert scan: %v", err))
 	}
@@ -115,7 +116,7 @@ func (s *ServerImpl) PatchScansScanID(ctx echo.Context, scanID models.ScanID) er
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update scan in db. scanID=%v: %v", scanID, err))
 	}
 
-	converted, err := db_to_rest.ConvertScan(updatedScan)
+	converted, err := dbtorest.ConvertScan(updatedScan)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert scan: %v", err))
 	}
@@ -138,7 +139,7 @@ func (s *ServerImpl) PutScansScanID(ctx echo.Context, scanID models.ScanID) erro
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scan from db. scanID=%v: %v", scanID, err))
 	}
 
-	convertedDB, err := rest_to_db.ConvertScan(&scan)
+	convertedDB, err := resttodb.ConvertScan(&scan)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert scan: %v", err))
 	}
@@ -147,7 +148,7 @@ func (s *ServerImpl) PutScansScanID(ctx echo.Context, scanID models.ScanID) erro
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update scan in db. scanID=%v: %v", scanID, err))
 	}
 
-	converted, err := db_to_rest.ConvertScan(updatedScan)
+	converted, err := dbtorest.ConvertScan(updatedScan)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert scan: %v", err))
 	}
