@@ -18,8 +18,8 @@ package database
 import (
 	"errors"
 	"fmt"
-	"strconv"
 
+	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
 )
 
@@ -28,7 +28,7 @@ const (
 )
 
 type ScanResult struct {
-	gorm.Model
+	Base
 
 	ScanID   string `json:"scan_id,omitempty" gorm:"column:scan_id"`
 	TargetID string `json:"target_id,omitempty" gorm:"column:target_id"`
@@ -127,24 +127,24 @@ func (s *ScanResultsTableHandler) GetScanResultsAndTotal(params GetScanResultsPa
 }
 
 func (s *ScanResultsTableHandler) SaveScanResult(scanResult *ScanResult, scanResultID string) (*ScanResult, error) {
-	id, err := strconv.Atoi(scanResultID)
+	var err error
+	scanResult.ID, err = uuid.FromString(scanResultID)
 	if err != nil {
 		return nil, err
 	}
-	scanResult.ID = uint(id)
 	if err := s.scanResultsTable.Save(scanResult).Error; err != nil {
 		return nil, err
 	}
 
-	return scanResult, err
+	return scanResult, nil
 }
 
 func (s *ScanResultsTableHandler) UpdateScanResult(scanResult *ScanResult, scanResultID string) (*ScanResult, error) {
-	id, err := strconv.Atoi(scanResultID)
+	var err error
+	scanResult.ID, err = uuid.FromString(scanResultID)
 	if err != nil {
 		return nil, err
 	}
-	scanResult.ID = uint(id)
 
 	selectClause := []string{}
 	if len(scanResult.ScanID) > 0 {
@@ -174,10 +174,13 @@ func (s *ScanResultsTableHandler) UpdateScanResult(scanResult *ScanResult, scanR
 	if scanResult.Misconfigurations != nil {
 		selectClause = append(selectClause, "misconfigurations")
 	}
+	if scanResult.Exploits != nil {
+		selectClause = append(selectClause, "exploits")
+	}
 
 	if err := s.scanResultsTable.Model(scanResult).Select(selectClause).Updates(scanResult).Error ; err != nil {
 		return nil, err
 	}
 
-	return scanResult, err
+	return scanResult, nil
 }

@@ -18,8 +18,8 @@ package database
 import (
 	"errors"
 	"fmt"
-	"strconv"
 
+	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
 )
 
@@ -28,7 +28,7 @@ const (
 )
 
 type Target struct {
-	gorm.Model
+	Base
 
 	Type     string `json:"type" json:"type,omitempty" gorm:"column:type"`
 	Location string `json:"location,omitempty" gorm:"column:location"`
@@ -120,14 +120,14 @@ func (t *TargetsTableHandler) CreateTarget(target *Target) (*Target, error) {
 }
 
 func (t *TargetsTableHandler) SaveTarget(target *Target, targetID string) (*Target, error) {
-	id, err := strconv.Atoi(targetID)
+	var err error
+	target.ID, err = uuid.FromString(targetID)
 	if err != nil {
 		return nil, err
 	}
-	target.ID = uint(id)
 	t.targetsTable.Save(target)
 
-	return target, err
+	return target, nil
 }
 
 func (t *TargetsTableHandler) DeleteTarget(targetID string) error {

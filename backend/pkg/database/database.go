@@ -17,7 +17,9 @@ package database
 
 import (
 	"os"
+	"time"
 
+	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -51,6 +53,24 @@ type DBConfig struct {
 	DBHost         string
 	DBPort         string
 	DBName         string
+}
+
+// Base contains common columns for all tables.
+type Base struct {
+	ID        uuid.UUID `gorm:"type:uuid;primary_key;"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time `sql:"index"`
+
+}
+
+// BeforeCreate will set a UUID rather than numeric ID.
+func (base *Base) BeforeCreate(db *gorm.DB) error {
+	uid := uuid.NewV4()
+
+	base.ID = uid
+
+	return nil
 }
 
 func Init(config *DBConfig) *Handler {

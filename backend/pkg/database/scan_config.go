@@ -3,8 +3,8 @@ package database
 import (
 	"errors"
 	"fmt"
-	"strconv"
 
+	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
 )
 
@@ -13,7 +13,7 @@ const (
 )
 
 type ScanConfig struct {
-	gorm.Model
+	Base
 
 	Name *string `json:"name,omitempty" gorm:"column:name"`
 
@@ -90,25 +90,25 @@ func (s *ScanConfigsTableHandler) CreateScanConfig(scanConfig *ScanConfig) (*Sca
 }
 
 func (s *ScanConfigsTableHandler) SaveScanConfig(scanConfig *ScanConfig, scanConfigID string) (*ScanConfig, error) {
-	id, err := strconv.Atoi(scanConfigID)
+	var err error
+	scanConfig.ID, err = uuid.FromString(scanConfigID)
 	if err != nil {
 		return nil, err
 	}
-	scanConfig.ID = uint(id)
 
 	if err := s.scanConfigsTable.Save(scanConfig).Error ; err != nil {
 		return nil, err
 	}
 
-	return scanConfig, err
+	return scanConfig, nil
 }
 
 func (s *ScanConfigsTableHandler) UpdateScanConfig(scanConfig *ScanConfig, scanConfigID string) (*ScanConfig, error) {
-	id, err := strconv.Atoi(scanConfigID)
+	var err error
+	scanConfig.ID, err = uuid.FromString(scanConfigID)
 	if err != nil {
 		return nil, err
 	}
-	scanConfig.ID = uint(id)
 
 	selectClause := []string{}
 	if len(scanConfig.ScanFamiliesConfig) > 0 {
@@ -128,7 +128,7 @@ func (s *ScanConfigsTableHandler) UpdateScanConfig(scanConfig *ScanConfig, scanC
 		return nil, err
 	}
 
-	return scanConfig, err
+	return scanConfig, nil
 }
 
 func (s *ScanConfigsTableHandler) GetScanConfig(scanConfigID string) (*ScanConfig, error) {

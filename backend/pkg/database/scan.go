@@ -3,9 +3,9 @@ package database
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
+	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
 )
 
@@ -14,7 +14,7 @@ const (
 )
 
 type Scan struct {
-	gorm.Model
+	Base
 
 	ScanStartTime *time.Time `json:"scan_start_time,omitempty" gorm:"column:scan_start_time"`
 	ScanEndTime   *time.Time `json:"scan_end_time,omitempty" gorm:"column:scan_end_time"`
@@ -40,7 +40,7 @@ type GetScansParams struct {
 type ScansTable interface {
 	GetScansAndTotal(params GetScansParams) ([]*Scan, int64, error)
 	GetScan(scanID string) (*Scan, error)
-	CheckExist(scanConfigID string, startTime time.Time) (*Scan, bool, error)
+	CheckExist(scanConfigID string) (*Scan, bool, error)
 	UpdateScan(scan *Scan, scanID string) (*Scan, error)
 	SaveScan(scan *Scan, scanID string) (*Scan, error)
 	DeleteScan(scanID string) error
@@ -57,10 +57,10 @@ func (db *Handler) ScansTable() ScansTable {
 	}
 }
 
-func (s *ScansTableHandler) CheckExist(scanConfigID string, startTime time.Time) (*Scan, bool, error) {
+func (s *ScansTableHandler) CheckExist(scanConfigID string) (*Scan, bool, error) {
 	var scan *Scan
 
-	if err := s.scansTable.Where("scan_config_id = ? AND scan_start_time = ?", scanConfigID, startTime).First(&scan).Error; err != nil {
+	if err := s.scansTable.Where("scan_config_id = ?", scanConfigID).First(&scan).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, false, nil
 		}
@@ -95,25 +95,26 @@ func (s *ScansTableHandler) CreateScan(scan *Scan) (*Scan, error) {
 }
 
 func (s *ScansTableHandler) SaveScan(scan *Scan, scanID string) (*Scan, error) {
-	id, err := strconv.Atoi(scanID)
+	var err error
+	scan.ID, err = uuid.FromString(scanID)
 	if err != nil {
 		return nil, err
 	}
-	scan.ID = uint(id)
 
 	if err := s.scansTable.Save(scan).Error; err != nil {
 		return nil, err
 	}
 
-	return scan, err
+	return scan, nil
 }
 
 func (s *ScansTableHandler) UpdateScan(scan *Scan, scanID string) (*Scan, error) {
-	id, err := strconv.Atoi(scanID)
+	var err error
+	scan.ID, err = uuid.FromString(scanID)
 	if err != nil {
 		return nil, err
 	}
-	scan.ID = uint(id)
+
 	selectClause := []string{}
 	if len(scan.ScanFamiliesConfig) > 0 {
 		selectClause = append(selectClause, "scan_families_config")
@@ -135,7 +136,7 @@ func (s *ScansTableHandler) UpdateScan(scan *Scan, scanID string) (*Scan, error)
 	if err := s.scansTable.Model(scan).Select(selectClause).Updates(scan).Error ; err != nil {
 		return nil, err
 	}
-	return scan, err
+	return scan, nil
 }
 
 func (s *ScansTableHandler) GetScan(scanID string) (*Scan, error) {

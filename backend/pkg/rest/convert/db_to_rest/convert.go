@@ -3,7 +3,6 @@ package db_to_rest
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/backend/pkg/database"
@@ -36,7 +35,7 @@ func ConvertScanConfig(config *database.ScanConfig) (*models.ScanConfig, error) 
 
 	ret.Name = config.Name
 
-	ret.Id = utils.StringPtr(strconv.Itoa(int(config.ID)))
+	ret.Id = utils.StringPtr(config.ID.String())
 
 	return &ret, nil
 }
@@ -80,7 +79,7 @@ func ConvertTarget(target *database.Target) (*models.Target, error) {
 	default:
 		return nil, fmt.Errorf("unknown target type: %v", target.Type)
 	}
-	ret.Id = utils.StringPtr(strconv.Itoa(int(target.ID)))
+	ret.Id = utils.StringPtr(target.ID.String())
 
 	return &ret, nil
 }
@@ -155,7 +154,7 @@ func ConvertScanResult(scanResult *database.ScanResult) (*models.TargetScanResul
 			return nil, err
 		}
 	}
-	ret.Id = utils.StringPtr(strconv.Itoa(int(scanResult.ID)))
+	ret.Id = utils.StringPtr(scanResult.ID.String())
 	ret.ScanId = scanResult.ScanID
 	ret.TargetId = scanResult.TargetID
 
@@ -194,7 +193,7 @@ func ConvertScan(scan *database.Scan) (*models.Scan, error) {
 		return nil, err
 	}
 
-	ret.Id = utils.StringPtr(strconv.Itoa(int(scan.ID)))
+	ret.Id = utils.StringPtr(scan.ID.String())
 	ret.StartTime = scan.ScanStartTime
 	ret.EndTime = scan.ScanEndTime
 	ret.ScanConfigId = scan.ScanConfigId

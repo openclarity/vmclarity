@@ -34,11 +34,12 @@ func (s *ServerImpl) PostScans(ctx echo.Context) error {
 	}
 
 	// check if scan already exists.
-	sc, exist, err := s.dbHandler.ScansTable().CheckExist(*scan.ScanConfigId, *scan.StartTime)
+	sc, exist, err := s.dbHandler.ScansTable().CheckExist(*scan.ScanConfigId)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to check scan in db. ScanConfigId=%v, StartTime=%v: %v", *scan.ScanConfigId, *scan.StartTime, err))
 	}
-	if exist {
+	// if there is a running (ScanEndTime not set yet) scan instance for that scanConfigID, return conflict
+	if exist && sc.ScanEndTime == nil {
 		return sendResponse(ctx, http.StatusConflict, &sc)
 	}
 

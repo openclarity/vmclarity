@@ -8,7 +8,7 @@ import (
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/backend/pkg/database"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
-	"gorm.io/gorm"
+	uuid "github.com/satori/go.uuid"
 	"gotest.tools/v3/assert"
 )
 
@@ -49,6 +49,8 @@ func TestConvertScanConfig(t *testing.T) {
 	runtimeScheduleScanConfigTypeB, err := runtimeScheduleScanConfigType.MarshalJSON()
 	assert.NilError(t, err)
 
+	uid := uuid.NewV4()
+
 	type args struct {
 		config *database.ScanConfig
 	}
@@ -62,8 +64,8 @@ func TestConvertScanConfig(t *testing.T) {
 			name: "",
 			args: args{
 				config: &database.ScanConfig{
-					Model: gorm.Model{
-						ID: 1,
+					Base: database.Base{
+						ID: uid,
 					},
 					Name:               utils.StringPtr("test"),
 					ScanFamiliesConfig: scanFamiliesConfigB,
@@ -72,7 +74,7 @@ func TestConvertScanConfig(t *testing.T) {
 				},
 			},
 			want: &models.ScanConfig{
-				Id:                 utils.StringPtr("1"),
+				Id:                 utils.StringPtr(uid.String()),
 				Name:               utils.StringPtr("test"),
 				ScanFamiliesConfig: &scanFamiliesConfig,
 				Scheduled:          &runtimeScheduleScanConfigType,
@@ -132,6 +134,8 @@ func TestConvertScanConfigs(t *testing.T) {
 	runtimeScheduleScanConfigTypeB, err := runtimeScheduleScanConfigType.MarshalJSON()
 	assert.NilError(t, err)
 
+	uid := uuid.NewV4()
+
 	type args struct {
 		configs []*database.ScanConfig
 		total   int64
@@ -147,8 +151,8 @@ func TestConvertScanConfigs(t *testing.T) {
 			args: args{
 				configs: []*database.ScanConfig{
 					{
-						Model: gorm.Model{
-							ID: 1,
+						Base: database.Base{
+							ID: uid,
 						},
 						Name:               utils.StringPtr("test"),
 						ScanFamiliesConfig: scanFamiliesConfigB,
@@ -161,7 +165,7 @@ func TestConvertScanConfigs(t *testing.T) {
 			want: &models.ScanConfigs{
 				Items: &[]models.ScanConfig{
 					{
-						Id:                 utils.StringPtr("1"),
+						Id:                 utils.StringPtr(uid.String()),
 						Name:               utils.StringPtr("test"),
 						ScanFamiliesConfig: &scanFamiliesConfig,
 						Scheduled:          &runtimeScheduleScanConfigType,
@@ -216,6 +220,8 @@ func TestConvertScanResult(t *testing.T) {
 	statusB, err := json.Marshal(&status)
 	assert.NilError(t, err)
 
+	uid := uuid.NewV4()
+
 	type args struct {
 		scanResult *database.ScanResult
 	}
@@ -229,8 +235,8 @@ func TestConvertScanResult(t *testing.T) {
 			name: "",
 			args: args{
 				scanResult: &database.ScanResult{
-					Model: gorm.Model{
-						ID:        3,
+					Base: database.Base{
+						ID:        uid,
 					},
 					ScanID:            "1",
 					TargetID:          "2",
@@ -239,7 +245,7 @@ func TestConvertScanResult(t *testing.T) {
 				},
 			},
 			want: &models.TargetScanResult{
-				Id: utils.StringPtr("3"),
+				Id: utils.StringPtr(uid.String()),
 				ScanId: "1",
 				Status: &status,
 				TargetId: "2",
