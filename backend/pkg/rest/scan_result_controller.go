@@ -55,7 +55,11 @@ func (s *ServerImpl) PostScanResults(ctx echo.Context) error {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scan result from db. scanID=%v, targetID=%v: %v", scanResult.ScanId, scanResult.TargetId, err))
 	}
 	if exist {
-		return sendResponse(ctx, http.StatusConflict, &dbScanResult)
+		convertedExist, err := dbtorest.ConvertScanResult(dbScanResult)
+		if err != nil {
+			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert existing scan result: %v", err))
+		}
+		return sendResponse(ctx, http.StatusConflict, convertedExist)
 	}
 
 	convertedDB, err := resttodb.ConvertScanResult(&scanResult)

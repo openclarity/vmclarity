@@ -55,7 +55,11 @@ func (s *ServerImpl) PostScanConfigs(ctx echo.Context) error {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to check scan config in db. name=%v: %v", *scanConfig.Name, err))
 	}
 	if exist {
-		return sendResponse(ctx, http.StatusConflict, &sc)
+		convertedExist, err := dbtorest.ConvertScanConfig(sc)
+		if err != nil {
+			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert existing scan config: %v", err))
+		}
+		return sendResponse(ctx, http.StatusConflict, convertedExist)
 	}
 
 	convertedDB, err := resttodb.ConvertScanConfig(&scanConfig)

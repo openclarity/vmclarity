@@ -225,7 +225,7 @@ func TestConvertScan(t *testing.T) {
 		},
 	}
 
-	scanFamiliesConfigB, err := json.Marshal(&scanFamiliesConfig)
+	scanFamiliesConfigB, err := json.Marshal(scanFamiliesConfig)
 	assert.NilError(t, err)
 
 	targetIDs := []string{"s1"}

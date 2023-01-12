@@ -283,3 +283,65 @@ func TestConvertScanResult(t *testing.T) {
 		})
 	}
 }
+
+func TestConvertScan(t *testing.T) {
+	scanFam := models.ScanFamiliesConfig{
+		Vulnerabilities: &models.VulnerabilitiesConfig{
+			Enabled: nil,
+		},
+	}
+
+	scanFamB, err := json.Marshal(&scanFam)
+	assert.NilError(t, err)
+
+	targetIDs := []string{"s"}
+	targetIDsB, err := json.Marshal(&targetIDs)
+	assert.NilError(t, err)
+
+	id := uuid.NewV4()
+
+	type args struct {
+		scan *database.Scan
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *models.Scan
+		wantErr bool
+	}{
+		{
+			name: "",
+			args: args{
+				scan: &database.Scan{
+					Base: database.Base{
+						ID:        id,
+					},
+					ScanStartTime:      nil,
+					ScanEndTime:        nil,
+					ScanConfigID:       utils.StringPtr("1"),
+					ScanFamiliesConfig: scanFamB,
+					TargetIDs:          targetIDsB,
+				},
+			},
+			want: &models.Scan{
+				Id:           utils.StringPtr(id.String()),
+				ScanConfigId: utils.StringPtr("1"),
+				ScanFamiliesConfig: &scanFam,
+				TargetIDs: &targetIDs,
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ConvertScan(tt.args.scan)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ConvertScan() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ConvertScan() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

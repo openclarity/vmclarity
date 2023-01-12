@@ -55,8 +55,12 @@ func (s *ServerImpl) PostScans(ctx echo.Context) error {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to check scan in db. ScanConfigID=%v, StartTime=%v: %v", *scan.ScanConfigId, *scan.StartTime, err))
 	}
 	// if there is a running (ScanEndTime not set yet) scan instance for that scanConfigID, return conflict
-	if exist && sc.ScanEndTime == nil {
-		return sendResponse(ctx, http.StatusConflict, &sc)
+	if exist {
+		convertedExist, err := dbtorest.ConvertScan(sc)
+		if err != nil {
+			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert existing scan: %v", err))
+		}
+		return sendResponse(ctx, http.StatusConflict, convertedExist)
 	}
 
 	convertedDB, err := resttodb.ConvertScan(&scan)

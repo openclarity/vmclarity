@@ -73,16 +73,22 @@ func (db *Handler) ScansTable() ScansTable {
 }
 
 func (s *ScansTableHandler) CheckExist(scanConfigID string) (*Scan, bool, error) {
-	var scan *Scan
+	var scans []Scan
 
-	if err := s.scansTable.Where("scan_config_id = ?", scanConfigID).First(&scan).Error; err != nil {
+	if err := s.scansTable.Where("scan_config_id = ?", scanConfigID).Find(&scans).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, false, nil
 		}
-		return nil, false, err
 	}
 
-	return scan, true, nil
+	// check if there is a running scan (end time not set)
+	for i, scan := range scans {
+		if scan.ScanEndTime == nil {
+			return &scans[i], true, nil
+		}
+	}
+
+	return nil, false, nil
 }
 
 func (s *ScansTableHandler) GetScansAndTotal(params GetScansParams) ([]*Scan, int64, error) {

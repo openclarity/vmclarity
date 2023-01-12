@@ -205,8 +205,11 @@ func ConvertScan(scan *database.Scan) (*models.Scan, error) {
 		}
 	}
 
-	if err := json.Unmarshal(scan.TargetIDs, ret.TargetIDs); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal json: %w", err)
+	if scan.TargetIDs != nil {
+		ret.TargetIDs = &[]string{}
+		if err := json.Unmarshal(scan.TargetIDs, ret.TargetIDs); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal json: %w", err)
+		}
 	}
 
 	ret.Id = utils.StringPtr(scan.ID.String())
