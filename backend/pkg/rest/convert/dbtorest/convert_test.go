@@ -314,7 +314,7 @@ func TestConvertScan(t *testing.T) {
 			args: args{
 				scan: &database.Scan{
 					Base: database.Base{
-						ID:        id,
+						ID: id,
 					},
 					ScanStartTime:      nil,
 					ScanEndTime:        nil,
@@ -324,10 +324,10 @@ func TestConvertScan(t *testing.T) {
 				},
 			},
 			want: &models.Scan{
-				Id:           utils.StringPtr(id.String()),
-				ScanConfigId: utils.StringPtr("1"),
+				Id:                 utils.StringPtr(id.String()),
+				ScanConfigId:       utils.StringPtr("1"),
 				ScanFamiliesConfig: &scanFam,
-				TargetIDs: &targetIDs,
+				TargetIDs:          &targetIDs,
 			},
 			wantErr: false,
 		},
