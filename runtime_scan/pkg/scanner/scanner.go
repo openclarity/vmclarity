@@ -55,7 +55,7 @@ type scanData struct {
 }
 
 func CreateScanner(
-	config *_config.OrchestratorConfig,
+	config *_config.ScannerConfig,
 	providerClient provider.Client,
 	backendClient *client.ClientWithResponses,
 	scanConfig *models.ScanConfig,
@@ -71,7 +71,7 @@ func CreateScanner(
 		backendClient:      backendClient,
 		scanID:             scanID,
 		targetInstances:    targetInstances,
-		config:             &config.ScannerConfig,
+		config:             config,
 		Mutex:              sync.Mutex{},
 	}
 }

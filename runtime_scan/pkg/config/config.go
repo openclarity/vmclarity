@@ -35,6 +35,7 @@ const (
 	DeleteJobPolicy           = "DELETE_JOB_POLICY"
 	ScannerContainerImage     = "SCANNER_CONTAINER_IMAGE"
 	ScannerBackendAddress     = "SCANNER_VMCLARITY_BACKEND_ADDRESS"
+	ScanConfigWatchInterval   = "SCAN_CONFIG_WATCH_INTERVAL"
 )
 
 type OrchestratorConfig struct {
@@ -61,6 +62,7 @@ type ScannerConfig struct {
 
 	JobResultTimeout          time.Duration
 	JobResultsPollingInterval time.Duration
+	ScanConfigWatchInterval   time.Duration
 	DeleteJobPolicy           DeleteJobPolicyType
 
 	// The container image to use once we've booted the scanner virtual
@@ -73,6 +75,7 @@ func setConfigDefaults(backendAddress string, backendPort int, backendBaseURL st
 	viper.SetDefault(ScannerAWSRegion, defaultScannerAWSRegion)
 	viper.SetDefault(JobResultTimeout, "120m")
 	viper.SetDefault(JobResultsPollingInterval, "30s")
+	viper.SetDefault(ScanConfigWatchInterval, "60s")
 	viper.SetDefault(DeleteJobPolicy, DeleteJobPolicySuccessful)
 	viper.SetDefault(ScannerBackendAddress, fmt.Sprintf("http://%s%s", net.JoinHostPort(backendAddress, strconv.Itoa(backendPort)), backendBaseURL))
 
@@ -91,6 +94,7 @@ func LoadConfig(backendAddress string, backendPort int, baseURL string) (*Orches
 			Region:                    viper.GetString(ScannerAWSRegion),
 			JobResultTimeout:          viper.GetDuration(JobResultTimeout),
 			JobResultsPollingInterval: viper.GetDuration(JobResultsPollingInterval),
+			ScanConfigWatchInterval:   viper.GetDuration(ScanConfigWatchInterval),
 			DeleteJobPolicy:           getDeleteJobPolicyType(viper.GetString(DeleteJobPolicy)),
 			ScannerImage:              viper.GetString(ScannerContainerImage),
 			ScannerBackendAddress:     viper.GetString(ScannerBackendAddress),
