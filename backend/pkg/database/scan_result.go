@@ -16,11 +16,14 @@
 package database
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
+
+	"github.com/openclarity/vmclarity/backend/pkg/common"
 )
 
 const (
@@ -63,10 +66,9 @@ type GetScanResultsScanResultIDParams struct {
 type ScanResultsTable interface {
 	CreateScanResult(scanResults *ScanResult) (*ScanResult, error)
 	GetScanResultsAndTotal(params GetScanResultsParams) ([]*ScanResult, int64, error)
-	CheckExist(scanID string, targetID string) (*ScanResult, bool, error)
-	GetScanResult(scanResultID string, params GetScanResultsScanResultIDParams) (*ScanResult, error)
-	UpdateScanResult(scanResults *ScanResult, scanResultID string) (*ScanResult, error)
-	SaveScanResult(scanResults *ScanResult, scanResultID string) (*ScanResult, error)
+	GetScanResult(scanResultID uuid.UUID, params GetScanResultsScanResultIDParams) (*ScanResult, error)
+	UpdateScanResult(scanResults *ScanResult) (*ScanResult, error)
+	SaveScanResult(scanResults *ScanResult) (*ScanResult, error)
 }
 
 type ScanResultsTableHandler struct {
@@ -79,20 +81,7 @@ func (db *Handler) ScanResultsTable() ScanResultsTable {
 	}
 }
 
-func (s *ScanResultsTableHandler) CheckExist(scanID string, targetID string) (*ScanResult, bool, error) {
-	var scanResult *ScanResult
-
-	if err := s.scanResultsTable.Where("scan_id = ? AND target_id = ?", scanID, targetID).First(&scanResult).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, false, nil
-		}
-		return nil, false, fmt.Errorf("failed to query: %w", err)
-	}
-
-	return scanResult, true, nil
-}
-
-func (s *ScanResultsTableHandler) GetScanResult(scanResultID string, params GetScanResultsScanResultIDParams) (*ScanResult, error) {
+func (s *ScanResultsTableHandler) GetScanResult(scanResultID uuid.UUID, params GetScanResultsScanResultIDParams) (*ScanResult, error) {
 	var scanResult *ScanResult
 
 	if err := s.scanResultsTable.Where("id = ?", scanResultID).First(&scanResult).Error; err != nil {
@@ -103,6 +92,15 @@ func (s *ScanResultsTableHandler) GetScanResult(scanResultID string, params GetS
 }
 
 func (s *ScanResultsTableHandler) CreateScanResult(scanResult *ScanResult) (*ScanResult, error) {
+	// check if there is already a scanResult for that scan id and target id.
+	existingSR, exist, err := s.checkExist(scanResult.ScanID, scanResult.TargetID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check existing scan result: %w", err)
+	}
+	if exist {
+		return existingSR, fmt.Errorf("a scan result alredy exists for scanID %v and targetID %v: %w", scanResult.ScanID, scanResult.TargetID, common.ErrConflict)
+	}
+
 	if err := s.scanResultsTable.Create(scanResult).Error; err != nil {
 		return nil, fmt.Errorf("failed to create scan result in db: %w", err)
 	}
@@ -126,12 +124,7 @@ func (s *ScanResultsTableHandler) GetScanResultsAndTotal(params GetScanResultsPa
 	return scanResults, count, nil
 }
 
-func (s *ScanResultsTableHandler) SaveScanResult(scanResult *ScanResult, scanResultID string) (*ScanResult, error) {
-	var err error
-	scanResult.ID, err = uuid.FromString(scanResultID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert scanResultID %v to uuid: %w", scanResultID, err)
-	}
+func (s *ScanResultsTableHandler) SaveScanResult(scanResult *ScanResult) (*ScanResult, error) {
 	if err := s.scanResultsTable.Save(scanResult).Error; err != nil {
 		return nil, fmt.Errorf("failed to save scan result in db: %w", err)
 	}
@@ -139,49 +132,25 @@ func (s *ScanResultsTableHandler) SaveScanResult(scanResult *ScanResult, scanRes
 	return scanResult, nil
 }
 
-// nolint:cyclop
-func (s *ScanResultsTableHandler) UpdateScanResult(scanResult *ScanResult, scanResultID string) (*ScanResult, error) {
-	var err error
-	scanResult.ID, err = uuid.FromString(scanResultID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert scanResultID %v to uuid: %w", scanResultID, err)
-	}
-
-	selectClause := []string{}
-	if len(scanResult.ScanID) > 0 {
-		selectClause = append(selectClause, "scan_id")
-	}
-	if len(scanResult.TargetID) > 0 {
-		selectClause = append(selectClause, "target_id")
-	}
-	if scanResult.Sboms != nil {
-		selectClause = append(selectClause, "sboms")
-	}
-	if scanResult.Status != nil {
-		selectClause = append(selectClause, "status")
-	}
-	if scanResult.Rootkits != nil {
-		selectClause = append(selectClause, "rootkits")
-	}
-	if scanResult.Malware != nil {
-		selectClause = append(selectClause, "malware")
-	}
-	if scanResult.Vulnerabilities != nil {
-		selectClause = append(selectClause, "vulnerabilities")
-	}
-	if scanResult.Secrets != nil {
-		selectClause = append(selectClause, "secrets")
-	}
-	if scanResult.Misconfigurations != nil {
-		selectClause = append(selectClause, "misconfigurations")
-	}
-	if scanResult.Exploits != nil {
-		selectClause = append(selectClause, "exploits")
-	}
-
-	if err := s.scanResultsTable.Model(scanResult).Select(selectClause).Updates(scanResult).Error; err != nil {
+func (s *ScanResultsTableHandler) UpdateScanResult(scanResult *ScanResult) (*ScanResult, error) {
+	if err := s.scanResultsTable.Model(scanResult).Updates(scanResult).Error; err != nil {
 		return nil, fmt.Errorf("failed to update scan result in db: %w", err)
 	}
 
 	return scanResult, nil
+}
+
+func (s *ScanResultsTableHandler) checkExist(scanID string, targetID string) (*ScanResult, bool, error) {
+	var scanResult *ScanResult
+
+	tx := s.scanResultsTable.WithContext(context.Background())
+
+	if err := tx.Where("scan_id = ? AND target_id = ?", scanID, targetID).First(&scanResult).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, false, nil
+		}
+		return nil, false, fmt.Errorf("failed to query: %w", err)
+	}
+
+	return scanResult, true, nil
 }

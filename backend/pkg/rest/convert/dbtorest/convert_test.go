@@ -77,7 +77,7 @@ func TestConvertScanConfig(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "",
+			name: "sanity",
 			args: args{
 				config: &database.ScanConfig{
 					Base: database.Base{
@@ -163,7 +163,7 @@ func TestConvertScanConfigs(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "",
+			name: "sanity",
 			args: args{
 				configs: []*database.ScanConfig{
 					{
@@ -248,7 +248,7 @@ func TestConvertScanResult(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "",
+			name: "sanity",
 			args: args{
 				scanResult: &database.ScanResult{
 					Base: database.Base{
@@ -310,7 +310,7 @@ func TestConvertScan(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "",
+			name: "sanity",
 			args: args{
 				scan: &database.Scan{
 					Base: database.Base{

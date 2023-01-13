@@ -16,12 +16,15 @@
 package database
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
 
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
+
+	"github.com/openclarity/vmclarity/backend/pkg/common"
 )
 
 const (
@@ -54,11 +57,10 @@ type GetScansParams struct {
 
 type ScansTable interface {
 	GetScansAndTotal(params GetScansParams) ([]*Scan, int64, error)
-	GetScan(scanID string) (*Scan, error)
-	CheckExist(scanConfigID string) (*Scan, bool, error)
-	UpdateScan(scan *Scan, scanID string) (*Scan, error)
-	SaveScan(scan *Scan, scanID string) (*Scan, error)
-	DeleteScan(scanID string) error
+	GetScan(scanID uuid.UUID) (*Scan, error)
+	UpdateScan(scan *Scan) (*Scan, error)
+	SaveScan(scan *Scan) (*Scan, error)
+	DeleteScan(scanID uuid.UUID) error
 	CreateScan(scan *Scan) (*Scan, error)
 }
 
@@ -70,25 +72,6 @@ func (db *Handler) ScansTable() ScansTable {
 	return &ScansTableHandler{
 		scansTable: db.DB.Table(scansTableName),
 	}
-}
-
-func (s *ScansTableHandler) CheckExist(scanConfigID string) (*Scan, bool, error) {
-	var scans []Scan
-
-	if err := s.scansTable.Where("scan_config_id = ?", scanConfigID).Find(&scans).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, false, nil
-		}
-	}
-
-	// check if there is a running scan (end time not set)
-	for i, scan := range scans {
-		if scan.ScanEndTime == nil {
-			return &scans[i], true, nil
-		}
-	}
-
-	return nil, false, nil
 }
 
 func (s *ScansTableHandler) GetScansAndTotal(params GetScansParams) ([]*Scan, int64, error) {
@@ -109,19 +92,22 @@ func (s *ScansTableHandler) GetScansAndTotal(params GetScansParams) ([]*Scan, in
 }
 
 func (s *ScansTableHandler) CreateScan(scan *Scan) (*Scan, error) {
+	// check if there is already a running scan for that scan config id.
+	existingSR, exist, err := s.checkExist(*scan.ScanConfigID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check existing scan: %w", err)
+	}
+	if exist {
+		return existingSR, fmt.Errorf("a scan alredy exists for ScanConfigID %v: %w", *scan.ScanConfigID, common.ErrConflict)
+	}
+
 	if err := s.scansTable.Create(scan).Error; err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create scan in db: %w", err)
 	}
 	return scan, nil
 }
 
-func (s *ScansTableHandler) SaveScan(scan *Scan, scanID string) (*Scan, error) {
-	var err error
-	scan.ID, err = uuid.FromString(scanID)
-	if err != nil {
-		return nil, fmt.Errorf("%w", err)
-	}
-
+func (s *ScansTableHandler) SaveScan(scan *Scan) (*Scan, error) {
 	if err := s.scansTable.Save(scan).Error; err != nil {
 		return nil, fmt.Errorf("failed to save scan in db: %w", err)
 	}
@@ -129,37 +115,14 @@ func (s *ScansTableHandler) SaveScan(scan *Scan, scanID string) (*Scan, error) {
 	return scan, nil
 }
 
-func (s *ScansTableHandler) UpdateScan(scan *Scan, scanID string) (*Scan, error) {
-	var err error
-	scan.ID, err = uuid.FromString(scanID)
-	if err != nil {
-		return nil, fmt.Errorf("%w", err)
-	}
-
-	selectClause := []string{}
-	if len(scan.ScanFamiliesConfig) > 0 {
-		selectClause = append(selectClause, "scan_families_config")
-	}
-	if scan.ScanConfigID != nil {
-		selectClause = append(selectClause, "scan_config_id")
-	}
-	if scan.ScanStartTime != nil {
-		selectClause = append(selectClause, "scan_start_time")
-	}
-	if scan.ScanEndTime != nil {
-		selectClause = append(selectClause, "scan_end_time")
-	}
-	if scan.TargetIDs != nil {
-		selectClause = append(selectClause, "target_ids")
-	}
-
-	if err := s.scansTable.Model(scan).Select(selectClause).Updates(scan).Error; err != nil {
+func (s *ScansTableHandler) UpdateScan(scan *Scan) (*Scan, error) {
+	if err := s.scansTable.Model(scan).Updates(scan).Error; err != nil {
 		return nil, fmt.Errorf("failed to update scan in db: %w", err)
 	}
 	return scan, nil
 }
 
-func (s *ScansTableHandler) GetScan(scanID string) (*Scan, error) {
+func (s *ScansTableHandler) GetScan(scanID uuid.UUID) (*Scan, error) {
 	var scan *Scan
 
 	if err := s.scansTable.Where("id = ?", scanID).First(&scan).Error; err != nil {
@@ -169,9 +132,30 @@ func (s *ScansTableHandler) GetScan(scanID string) (*Scan, error) {
 	return scan, nil
 }
 
-func (s *ScansTableHandler) DeleteScan(scanID string) error {
+func (s *ScansTableHandler) DeleteScan(scanID uuid.UUID) error {
 	if err := s.scansTable.Delete(&Scan{}, scanID).Error; err != nil {
 		return fmt.Errorf("failed to delete scan: %w", err)
 	}
 	return nil
+}
+
+func (s *ScansTableHandler) checkExist(scanConfigID string) (*Scan, bool, error) {
+	var scans []Scan
+
+	tx := s.scansTable.WithContext(context.Background())
+
+	if err := tx.Where("scan_config_id = ?", scanConfigID).Find(&scans).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, false, nil
+		}
+	}
+
+	// check if there is a running scan (end time not set)
+	for i, scan := range scans {
+		if scan.ScanEndTime == nil {
+			return &scans[i], true, nil
+		}
+	}
+
+	return nil, false, nil
 }

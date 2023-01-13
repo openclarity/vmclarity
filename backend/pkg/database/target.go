@@ -16,11 +16,14 @@
 package database
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
+
+	"github.com/openclarity/vmclarity/backend/pkg/common"
 )
 
 const (
@@ -31,17 +34,17 @@ type Target struct {
 	Base
 
 	Type     string `json:"type,omitempty" gorm:"column:type"`
-	Location string `json:"location,omitempty" gorm:"column:location"`
+	Location *string `json:"location,omitempty" gorm:"column:location"`
 
 	// VMInfo
-	InstanceID       string `json:"instance_id,omitempty" gorm:"column:instance_id"`
-	InstanceProvider string `json:"instance_provider,omitempty" gorm:"column:instance_provider"`
+	InstanceID       *string `json:"instance_id,omitempty" gorm:"column:instance_id"`
+	InstanceProvider *string `json:"instance_provider,omitempty" gorm:"column:instance_provider"`
 
 	// PodInfo
-	PodName string `json:"pod_name,omitempty" gorm:"column:pod_name"`
+	PodName *string `json:"pod_name,omitempty" gorm:"column:pod_name"`
 
 	// DirInfo
-	DirName string `json:"dir_name,omitempty" gorm:"column:dir_name"`
+	DirName *string `json:"dir_name,omitempty" gorm:"column:dir_name"`
 }
 
 type GetTargetsParams struct {
@@ -55,11 +58,10 @@ type GetTargetsParams struct {
 
 type TargetsTable interface {
 	GetTargetsAndTotal(params GetTargetsParams) ([]*Target, int64, error)
-	GetTarget(targetID string) (*Target, error)
-	CheckVMInfoExists(instanceID string, location string) (*Target, bool, error)
+	GetTarget(targetID uuid.UUID) (*Target, error)
 	CreateTarget(target *Target) (*Target, error)
-	SaveTarget(target *Target, targetID string) (*Target, error)
-	DeleteTarget(targetID string) error
+	SaveTarget(target *Target) (*Target, error)
+	DeleteTarget(targetID uuid.UUID) error
 }
 
 type TargetsTableHandler struct {
@@ -70,19 +72,6 @@ func (db *Handler) TargetsTable() TargetsTable {
 	return &TargetsTableHandler{
 		targetsTable: db.DB.Table(targetsTableName),
 	}
-}
-
-func (t *TargetsTableHandler) CheckVMInfoExists(instanceID string, location string) (*Target, bool, error) {
-	var target *Target
-
-	if err := t.targetsTable.Where("instance_id = ? AND location = ?", instanceID, location).First(&target).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, false, nil
-		}
-		return nil, false, fmt.Errorf("failed to query: %w", err)
-	}
-
-	return target, true, nil
 }
 
 func (t *TargetsTableHandler) GetTargetsAndTotal(params GetTargetsParams) ([]*Target, int64, error) {
@@ -102,7 +91,7 @@ func (t *TargetsTableHandler) GetTargetsAndTotal(params GetTargetsParams) ([]*Ta
 	return targets, count, nil
 }
 
-func (t *TargetsTableHandler) GetTarget(targetID string) (*Target, error) {
+func (t *TargetsTableHandler) GetTarget(targetID uuid.UUID) (*Target, error) {
 	var target *Target
 
 	if err := t.targetsTable.Where("id = ?", targetID).First(&target).Error; err != nil {
@@ -113,26 +102,49 @@ func (t *TargetsTableHandler) GetTarget(targetID string) (*Target, error) {
 }
 
 func (t *TargetsTableHandler) CreateTarget(target *Target) (*Target, error) {
+	existingTarget, exist, err := t.checkExist(target)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check existing target: %w", err)
+	}
+	if exist {
+		return existingTarget, fmt.Errorf("a target alredy exists in db: %w", common.ErrConflict)
+	}
+
 	if err := t.targetsTable.Create(target).Error; err != nil {
 		return nil, fmt.Errorf("failed to create target in db: %w", err)
 	}
 	return target, nil
 }
 
-func (t *TargetsTableHandler) SaveTarget(target *Target, targetID string) (*Target, error) {
-	var err error
-	target.ID, err = uuid.FromString(targetID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert targetID %v to uuid: %w", targetID, err)
+func (t *TargetsTableHandler) SaveTarget(target *Target) (*Target, error) {
+	if err := t.targetsTable.Save(target).Error; err != nil {
+		return nil, fmt.Errorf("failed to save target in db: %w", err)
 	}
-	t.targetsTable.Save(target)
 
 	return target, nil
 }
 
-func (t *TargetsTableHandler) DeleteTarget(targetID string) error {
+func (t *TargetsTableHandler) DeleteTarget(targetID uuid.UUID) error {
 	if err := t.targetsTable.Delete(&Scan{}, targetID).Error; err != nil {
 		return fmt.Errorf("failed to delete target: %w", err)
 	}
 	return nil
+}
+
+func (t *TargetsTableHandler) checkExist(target *Target) (*Target, bool, error) {
+	var targetFromDB Target
+
+	tx := t.targetsTable.WithContext(context.Background())
+
+	switch target.Type {
+	case "VMInfo":
+		if err := tx.Where("instance_id = ? AND location = ?", target.InstanceID, target.Location).First(&targetFromDB).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, false, nil
+			}
+			return nil, false, fmt.Errorf("failed to query: %w", err)
+		}
+	}
+
+	return &targetFromDB, true, nil
 }

@@ -57,7 +57,7 @@ type DBConfig struct {
 
 // Base contains common columns for all tables.
 type Base struct {
-	ID        uuid.UUID `gorm:"type:uuid;primary_key;"`
+	ID        uuid.UUID `gorm:"type:uuid;primaryKey"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time `sql:"index"`
@@ -65,10 +65,7 @@ type Base struct {
 
 // BeforeCreate will set a UUID rather than numeric ID.
 func (base *Base) BeforeCreate(db *gorm.DB) error {
-	uid := uuid.NewV4()
-
-	base.ID = uid
-
+	base.ID = uuid.NewV4()
 	return nil
 }
 

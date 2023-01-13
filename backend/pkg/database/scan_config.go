@@ -16,11 +16,14 @@
 package database
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
+
+	"github.com/openclarity/vmclarity/backend/pkg/common"
 )
 
 const (
@@ -49,11 +52,10 @@ type GetScanConfigsParams struct {
 
 type ScanConfigsTable interface {
 	GetScanConfigsAndTotal(params GetScanConfigsParams) ([]*ScanConfig, int64, error)
-	GetScanConfig(scanConfigID string) (*ScanConfig, error)
-	CheckExist(name string) (*ScanConfig, bool, error)
-	UpdateScanConfig(scanConfig *ScanConfig, scanConfigID string) (*ScanConfig, error)
-	SaveScanConfig(scanConfig *ScanConfig, scanConfigID string) (*ScanConfig, error)
-	DeleteScanConfig(scanConfigID string) error
+	GetScanConfig(scanConfigID uuid.UUID) (*ScanConfig, error)
+	UpdateScanConfig(scanConfig *ScanConfig) (*ScanConfig, error)
+	SaveScanConfig(scanConfig *ScanConfig) (*ScanConfig, error)
+	DeleteScanConfig(scanConfigID uuid.UUID) error
 	CreateScanConfig(scanConfig *ScanConfig) (*ScanConfig, error)
 }
 
@@ -65,19 +67,6 @@ func (db *Handler) ScanConfigsTable() ScanConfigsTable {
 	return &ScanConfigsTableHandler{
 		scanConfigsTable: db.DB.Table(scanConfigsTableName),
 	}
-}
-
-func (s *ScanConfigsTableHandler) CheckExist(name string) (*ScanConfig, bool, error) {
-	var scanConfig *ScanConfig
-
-	if err := s.scanConfigsTable.Where("name = ?", name).First(&scanConfig).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, false, nil
-		}
-		return nil, false, err
-	}
-
-	return scanConfig, true, nil
 }
 
 func (s *ScanConfigsTableHandler) GetScanConfigsAndTotal(params GetScanConfigsParams) ([]*ScanConfig, int64, error) {
@@ -98,19 +87,22 @@ func (s *ScanConfigsTableHandler) GetScanConfigsAndTotal(params GetScanConfigsPa
 }
 
 func (s *ScanConfigsTableHandler) CreateScanConfig(scanConfig *ScanConfig) (*ScanConfig, error) {
+	// check if there is already a scan config with that name.
+	existingSR, exist, err := s.checkExist(*scanConfig.Name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check existing scan config: %w", err)
+	}
+	if exist {
+		return existingSR, fmt.Errorf("a scan config alredy exists with the name %v: %w", *scanConfig.Name, common.ErrConflict)
+	}
+
 	if err := s.scanConfigsTable.Create(scanConfig).Error; err != nil {
 		return nil, fmt.Errorf("failed to create scan config in db: %w", err)
 	}
 	return scanConfig, nil
 }
 
-func (s *ScanConfigsTableHandler) SaveScanConfig(scanConfig *ScanConfig, scanConfigID string) (*ScanConfig, error) {
-	var err error
-	scanConfig.ID, err = uuid.FromString(scanConfigID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert scanConfigID %v to uuid: %w", scanConfigID, err)
-	}
-
+func (s *ScanConfigsTableHandler) SaveScanConfig(scanConfig *ScanConfig) (*ScanConfig, error) {
 	if err := s.scanConfigsTable.Save(scanConfig).Error; err != nil {
 		return nil, fmt.Errorf("failed to save scan config in db: %w", err)
 	}
@@ -118,35 +110,15 @@ func (s *ScanConfigsTableHandler) SaveScanConfig(scanConfig *ScanConfig, scanCon
 	return scanConfig, nil
 }
 
-func (s *ScanConfigsTableHandler) UpdateScanConfig(scanConfig *ScanConfig, scanConfigID string) (*ScanConfig, error) {
-	var err error
-	scanConfig.ID, err = uuid.FromString(scanConfigID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert scanConfigID %v to uuid: %w", scanConfigID, err)
-	}
-
-	selectClause := []string{}
-	if len(scanConfig.ScanFamiliesConfig) > 0 {
-		selectClause = append(selectClause, "scan_families_config")
-	}
-	if scanConfig.Name != nil {
-		selectClause = append(selectClause, "name")
-	}
-	if len(scanConfig.Scheduled) > 0 {
-		selectClause = append(selectClause, "scheduled")
-	}
-	if len(scanConfig.Scope) > 0 {
-		selectClause = append(selectClause, "scope")
-	}
-
-	if err := s.scanConfigsTable.Model(scanConfig).Select(selectClause).Updates(scanConfig).Error; err != nil {
+func (s *ScanConfigsTableHandler) UpdateScanConfig(scanConfig *ScanConfig) (*ScanConfig, error) {
+	if err := s.scanConfigsTable.Model(scanConfig).Updates(scanConfig).Error; err != nil {
 		return nil, fmt.Errorf("failed to update scan config in db: %w", err)
 	}
 
 	return scanConfig, nil
 }
 
-func (s *ScanConfigsTableHandler) GetScanConfig(scanConfigID string) (*ScanConfig, error) {
+func (s *ScanConfigsTableHandler) GetScanConfig(scanConfigID uuid.UUID) (*ScanConfig, error) {
 	var scanConfig *ScanConfig
 
 	if err := s.scanConfigsTable.Where("id = ?", scanConfigID).First(&scanConfig).Error; err != nil {
@@ -156,9 +128,24 @@ func (s *ScanConfigsTableHandler) GetScanConfig(scanConfigID string) (*ScanConfi
 	return scanConfig, nil
 }
 
-func (s *ScanConfigsTableHandler) DeleteScanConfig(scanConfigID string) error {
+func (s *ScanConfigsTableHandler) DeleteScanConfig(scanConfigID uuid.UUID) error {
 	if err := s.scanConfigsTable.Delete(&Scan{}, scanConfigID).Error; err != nil {
 		return fmt.Errorf("failed to delete scan config: %w", err)
 	}
 	return nil
+}
+
+func (s *ScanConfigsTableHandler) checkExist(name string) (*ScanConfig, bool, error) {
+	var scanConfig *ScanConfig
+
+	tx := s.scanConfigsTable.WithContext(context.Background())
+
+	if err := tx.Where("name = ?", name).First(&scanConfig).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, false, nil
+		}
+		return nil, false, err
+	}
+
+	return scanConfig, true, nil
 }

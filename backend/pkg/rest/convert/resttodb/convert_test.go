@@ -74,7 +74,7 @@ func TestConvertScanConfig(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "",
+			name: "sanity",
 			args: args{
 				config: &models.ScanConfig{
 					Id:                 utils.StringPtr("1"),
@@ -85,6 +85,7 @@ func TestConvertScanConfig(t *testing.T) {
 				},
 			},
 			want: &database.ScanConfig{
+				Base:               database.Base{},
 				Name:               utils.StringPtr("scanConfigName"),
 				ScanFamiliesConfig: scanFamiliesConfigB,
 				Scheduled:          runtimeScheduleScanConfigTypeB,
@@ -95,7 +96,7 @@ func TestConvertScanConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ConvertScanConfig(tt.args.config)
+			got, err := ConvertScanConfig(tt.args.config, *tt.args.config.Id)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ConvertScanConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -133,7 +134,7 @@ func TestConvertScanResult(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "",
+			name: "sanity",
 			args: args{
 				result: &models.TargetScanResult{
 					Id:              nil,
@@ -187,7 +188,7 @@ func TestConvertTarget(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "",
+			name: "sanity",
 			args: args{
 				target: &models.Target{
 					TargetInfo: &targetType,
@@ -242,7 +243,7 @@ func TestConvertScan(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "",
+			name: "sanity",
 			args: args{
 				scan: &models.Scan{
 					ScanConfigId:       utils.StringPtr("1"),

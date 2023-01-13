@@ -79,11 +79,15 @@ func ConvertTarget(target *database.Target) (*models.Target, error) {
 
 	switch target.Type {
 	case "VMInfo":
-		cloudProvider := models.CloudProvider(target.InstanceProvider)
+		var cloudProvider *models.CloudProvider
+		if target.InstanceProvider != nil {
+			cp := models.CloudProvider(*target.InstanceProvider)
+			cloudProvider = &cp
+		}
 		if err := ret.TargetInfo.FromVMInfo(models.VMInfo{
-			InstanceID:       utils.StringPtr(target.InstanceID),
-			InstanceProvider: &cloudProvider,
-			Location:         utils.StringPtr(target.Location),
+			InstanceID:       target.InstanceID,
+			InstanceProvider: cloudProvider,
+			Location:         target.Location,
 		}); err != nil {
 			return nil, fmt.Errorf("FromVMInfo failed: %w", err)
 		}

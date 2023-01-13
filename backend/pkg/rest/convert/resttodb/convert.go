@@ -19,13 +19,23 @@ import (
 	"encoding/json"
 	"fmt"
 
+	uuid "github.com/satori/go.uuid"
+
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/backend/pkg/database"
 )
 
-func ConvertScanConfig(config *models.ScanConfig) (*database.ScanConfig, error) {
+func ConvertScanConfig(config *models.ScanConfig, id string) (*database.ScanConfig, error) {
 	var ret database.ScanConfig
 	var err error
+	var scanConfigUUID uuid.UUID
+
+	if id != "" {
+		scanConfigUUID, err = uuid.FromString(id)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert scanConfigID %v to uuid: %v", id, err)
+		}
+	}
 
 	if config.ScanFamiliesConfig != nil {
 		ret.ScanFamiliesConfig, err = json.Marshal(config.ScanFamiliesConfig)
@@ -50,10 +60,20 @@ func ConvertScanConfig(config *models.ScanConfig) (*database.ScanConfig, error) 
 
 	ret.Name = config.Name
 
+	ret.Base = database.Base{ID: scanConfigUUID}
+
 	return &ret, nil
 }
 
-func ConvertTarget(target *models.Target) (*database.Target, error) {
+func ConvertTarget(target *models.Target, id string) (*database.Target, error) {
+	var targetUUID uuid.UUID
+	var err error
+	if id != "" {
+		targetUUID, err = uuid.FromString(id)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert targetID %v to uuid: %v", id, err)
+		}
+	}
 	disc, err := target.TargetInfo.Discriminator()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get discriminator: %w", err)
@@ -64,11 +84,18 @@ func ConvertTarget(target *models.Target) (*database.Target, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert target to vm info: %w", err)
 		}
+		var provider string
+		if vminfo.InstanceProvider != nil {
+			provider = string(*vminfo.InstanceProvider)
+		}
 		return &database.Target{
+			Base:             database.Base{
+				ID: targetUUID,
+			},
 			Type:             vminfo.ObjectType,
-			Location:         *vminfo.Location,
-			InstanceID:       *vminfo.InstanceID,
-			InstanceProvider: string(*vminfo.InstanceProvider),
+			Location:         vminfo.Location,
+			InstanceID:       vminfo.InstanceID,
+			InstanceProvider: &provider,
 		}, nil
 	default:
 		return nil, fmt.Errorf("unknown target type: %v", disc)
@@ -76,10 +103,17 @@ func ConvertTarget(target *models.Target) (*database.Target, error) {
 }
 
 // nolint:cyclop
-func ConvertScanResult(result *models.TargetScanResult) (*database.ScanResult, error) {
+func ConvertScanResult(result *models.TargetScanResult, id string) (*database.ScanResult, error) {
 	var ret database.ScanResult
 	var err error
+	var scanResultUUID uuid.UUID
 
+	if id != "" {
+		scanResultUUID, err = uuid.FromString(id)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert scanResultID %v to uuid: %v", id, err)
+		}
+	}
 	ret.ScanID = result.ScanId
 	ret.TargetID = result.TargetId
 
@@ -133,12 +167,22 @@ func ConvertScanResult(result *models.TargetScanResult) (*database.ScanResult, e
 		}
 	}
 
+	ret.Base = database.Base{ID: scanResultUUID}
+
 	return &ret, nil
 }
 
-func ConvertScan(scan *models.Scan) (*database.Scan, error) {
+func ConvertScan(scan *models.Scan, id string) (*database.Scan, error) {
 	var ret database.Scan
 	var err error
+	var scanUUID uuid.UUID
+
+	if id != "" {
+		scanUUID, err = uuid.FromString(id)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert scanID %v to uuid: %v", id, err)
+		}
+	}
 
 	ret.ScanConfigID = scan.ScanConfigId
 
@@ -159,6 +203,8 @@ func ConvertScan(scan *models.Scan) (*database.Scan, error) {
 			return nil, fmt.Errorf("failed to marshal json: %w", err)
 		}
 	}
+
+	ret.Base = database.Base{ID: scanUUID}
 
 	return &ret, nil
 }
