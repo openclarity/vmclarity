@@ -33,12 +33,17 @@ import (
 )
 
 type Scheduler struct {
-	stopChan        chan struct{}
-	scanConfigChan  chan *map[string]models.ScanConfig
-	scannerConfig   *_config.ScannerConfig
-	providerClient  provider.Client
-	backendClient   *client.ClientWithResponses
-	scheduledCancel *map[string]context.CancelFunc
+	stopChan       chan struct{}
+	scanConfigChan chan *map[string]models.ScanConfig
+	scannerConfig  *_config.ScannerConfig
+	providerClient provider.Client
+	backendClient  *client.ClientWithResponses
+	scheduledScans *scheduledScans
+}
+
+type scheduledScans struct {
+	scheduledScanDoneChanMap map[string]chan struct{}
+	scheduledCancelFnMap     map[string]context.CancelFunc
 }
 
 type Params struct {
@@ -58,6 +63,10 @@ func CreateScheduler(scanConfigChan chan *map[string]models.ScanConfig,
 		scannerConfig:  scannerConfig,
 		providerClient: providerClient,
 		backendClient:  backendClient,
+		scheduledScans: &scheduledScans{
+			scheduledScanDoneChanMap: make(map[string]chan struct{}),
+			scheduledCancelFnMap:     make(map[string]context.CancelFunc),
+		},
 	}
 }
 
@@ -85,14 +94,16 @@ func (s *Scheduler) Stop() {
 }
 
 func (s *Scheduler) scheduleNewScans(scanConfigMap *map[string]models.ScanConfig) error {
-	for _, scanConfig := range *scanConfigMap {
-		ctx, cancel := context.WithCancel(context.Background())
+	for id, scanConfig := range *scanConfigMap {
 		params, err := handleNewScheduleScanConfig(scanConfig.Scheduled)
 		if err != nil {
-			return fmt.Errorf("failed to schedule new scan with scanConfigID %s: %v", *scanConfig.Id, err)
+			return fmt.Errorf("failed to schedule new scan with scanConfigID %s: %v", id, err)
 		}
-
-		s.schedule(ctx, params, scanConfig)
+		ctx, cancel := context.WithCancel(context.Background())
+		// TODO clear scheduledCancelFnMap after cancel
+		s.scheduledScans.scheduledCancelFnMap[id] = cancel
+		startsAt := getStartsAt(time.Now().UTC(), params.StartTime, params.Interval)
+		go s.spin(ctx, params, startsAt, &scanConfig)
 	}
 
 	return nil
@@ -186,13 +197,6 @@ func handleNewScheduleScanConfig(scheduleScanConfigType *models.RuntimeScheduleS
 	}, nil
 }
 
-func (s *Scheduler) schedule(ctx context.Context, params *Params, scanConfig *models.ScanConfig) {
-
-	startsAt := getStartsAt(time.Now().UTC(), params.StartTime, params.Interval)
-
-	go s.spin(ctx, params, startsAt, scanConfig)
-}
-
 // get the next scan, that is after timeNow. if currentScanTime is already after timeNow, it will be return.
 func getNextScanTime(timeNow, currentScanTime time.Time, interval time.Duration) time.Time {
 	// if current scan time is before timeNow, jump to the next future scan time
@@ -233,25 +237,25 @@ func (s *Scheduler) spin(ctx context.Context, params *Params, startsAt time.Dura
 	case <-ctx.Done():
 		return
 	case <-timer.C:
-		go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+		for {
 			scanDone := make(chan struct{})
-			ticker := time.NewTicker(interval)
-			defer ticker.Stop()
-			for {
-				if err := s.scan(ctx, scanConfig, scanDone); err != nil {
-					log.Errorf("Failed to send scan: %v", err)
-				}
-				if singleScan {
-					return
-				}
-				select {
-				case <-ticker.C:
-				case <-ctx.Done():
-					log.Debugf("Received a stop signal...")
-					return
-				}
+			s.scheduledScans.scheduledScanDoneChanMap[*scanConfig.Id] = scanDone
+			if err := s.scan(ctx, scanConfig, scanDone); err != nil {
+				log.Errorf("Failed to send scan: %v", err)
 			}
-		}()
+			if singleScan {
+				delete(s.scheduledScans.scheduledCancelFnMap, *scanConfig.Id)
+				return
+			}
+			select {
+			case <-ticker.C:
+			case <-ctx.Done():
+				log.Debugf("Scheduled scan canceled...")
+				return
+			}
+		}
 	}
 }
 
