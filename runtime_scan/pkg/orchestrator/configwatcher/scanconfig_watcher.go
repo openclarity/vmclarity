@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package scanconfig_watcher
+package configwatcher
 
 import (
 	"context"
@@ -27,6 +27,8 @@ import (
 	"github.com/openclarity/vmclarity/api/client"
 	"github.com/openclarity/vmclarity/api/models"
 )
+
+const pageSize = 100
 
 type ScanConfigWatcher struct {
 	existingScanConfigMap   map[string]models.ScanConfig
@@ -52,7 +54,7 @@ func CreateScanConfigWatcher(scanConfigChan chan *map[string]models.ScanConfig,
 func (scw *ScanConfigWatcher) getScanConfigs() ([]models.ScanConfig, error) {
 	params := &models.GetScanConfigsParams{
 		Page:     1,
-		PageSize: 100,
+		PageSize: pageSize,
 	}
 
 	var scanConfigs []models.ScanConfig

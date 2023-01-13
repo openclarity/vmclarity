@@ -95,6 +95,7 @@ func (s *Scheduler) Stop() {
 
 func (s *Scheduler) scheduleNewScans(scanConfigMap *map[string]models.ScanConfig) error {
 	for id, scanConfig := range *scanConfigMap {
+		scanConfig := scanConfig
 		params, err := handleNewScheduleScanConfig(scanConfig.Scheduled)
 		if err != nil {
 			return fmt.Errorf("failed to schedule new scan with scanConfigID %s: %v", id, err)
@@ -117,8 +118,8 @@ const (
 
 func getIntervalAndStartTimeFromByDaysScheduleScanConfig(timeNow time.Time, scanConfig *models.ByDaysScheduleScanConfig) (time.Duration, time.Time) {
 	interval := time.Duration(*scanConfig.DaysInterval*secondsInDay) * time.Second
-	hour := int(*scanConfig.TimeOfDay.Hour)
-	minute := int(*scanConfig.TimeOfDay.Minute)
+	hour := *scanConfig.TimeOfDay.Hour
+	minute := *scanConfig.TimeOfDay.Minute
 	year, month, day := timeNow.Date()
 
 	startTime := time.Date(year, month, day, hour, minute, 0, 0, time.UTC)
@@ -138,8 +139,8 @@ func getIntervalAndStartTimeFromWeeklyScheduleScanConfig(timeNow time.Time, scan
 	currentDay := timeNow.Weekday() + 1
 	diffDays := int64(*scanConfig.DayInWeek) - int64(currentDay)
 
-	hour := int(*scanConfig.TimeOfDay.Hour)
-	minute := int(*scanConfig.TimeOfDay.Minute)
+	hour := *scanConfig.TimeOfDay.Hour
+	minute := *scanConfig.TimeOfDay.Minute
 	year, month, day := timeNow.Add(time.Duration(diffDays*secondsInDay) * time.Second).Date()
 
 	startTime := time.Date(year, month, day, hour, minute, 0, 0, time.UTC)

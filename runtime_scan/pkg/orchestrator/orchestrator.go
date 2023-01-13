@@ -23,14 +23,14 @@ import (
 	"github.com/openclarity/vmclarity/api/client"
 	"github.com/openclarity/vmclarity/api/models"
 	_config "github.com/openclarity/vmclarity/runtime_scan/pkg/config"
-	"github.com/openclarity/vmclarity/runtime_scan/pkg/orchestrator/scanconfig_watcher"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/orchestrator/configwatcher"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/orchestrator/scheduler"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 )
 
 type Orchestrator struct {
 	config            *_config.OrchestratorConfig
-	scanConfigWatcher *scanconfig_watcher.ScanConfigWatcher
+	scanConfigWatcher *configwatcher.ScanConfigWatcher
 	scheduler         *scheduler.Scheduler
 }
 
@@ -44,7 +44,7 @@ func Create(config *_config.OrchestratorConfig, providerClient provider.Client) 
 	scanConfigChan := make(chan *map[string]models.ScanConfig)
 	orc := &Orchestrator{
 		config:            config,
-		scanConfigWatcher: scanconfig_watcher.CreateScanConfigWatcher(scanConfigChan, backendClient),
+		scanConfigWatcher: configwatcher.CreateScanConfigWatcher(scanConfigChan, backendClient),
 		scheduler:         scheduler.CreateScheduler(scanConfigChan, &config.ScannerConfig, providerClient, backendClient),
 	}
 
