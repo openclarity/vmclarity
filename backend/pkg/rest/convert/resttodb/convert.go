@@ -89,7 +89,7 @@ func ConvertTarget(target *models.Target, id string) (*database.Target, error) {
 			provider = string(*vminfo.InstanceProvider)
 		}
 		return &database.Target{
-			Base:             database.Base{
+			Base: database.Base{
 				ID: targetUUID,
 			},
 			Type:             vminfo.ObjectType,

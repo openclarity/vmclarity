@@ -33,7 +33,7 @@ const (
 type Target struct {
 	Base
 
-	Type     string `json:"type,omitempty" gorm:"column:type"`
+	Type     string  `json:"type,omitempty" gorm:"column:type"`
 	Location *string `json:"location,omitempty" gorm:"column:location"`
 
 	// VMInfo

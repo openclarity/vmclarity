@@ -20,12 +20,15 @@ import (
 	"reflect"
 	"testing"
 
+	uuid "github.com/satori/go.uuid"
 	"gotest.tools/v3/assert"
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/backend/pkg/database"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 )
+
+const id = "f12d1ca7-1048-4e31-899c-7a25b357bed1"
 
 func TestConvertScanConfig(t *testing.T) {
 	scanFamiliesConfig := models.ScanFamiliesConfig{
@@ -64,8 +67,12 @@ func TestConvertScanConfig(t *testing.T) {
 	runtimeScheduleScanConfigTypeB, err := runtimeScheduleScanConfigType.MarshalJSON()
 	assert.NilError(t, err)
 
+	UUID, err := uuid.FromString(id)
+	assert.NilError(t, err)
+
 	type args struct {
 		config *models.ScanConfig
+		id     string
 	}
 	tests := []struct {
 		name    string
@@ -76,6 +83,7 @@ func TestConvertScanConfig(t *testing.T) {
 		{
 			name: "sanity",
 			args: args{
+				id: id,
 				config: &models.ScanConfig{
 					Id:                 utils.StringPtr("1"),
 					Name:               utils.StringPtr("scanConfigName"),
@@ -85,7 +93,7 @@ func TestConvertScanConfig(t *testing.T) {
 				},
 			},
 			want: &database.ScanConfig{
-				Base:               database.Base{},
+				Base:               database.Base{ID: UUID},
 				Name:               utils.StringPtr("scanConfigName"),
 				ScanFamiliesConfig: scanFamiliesConfigB,
 				Scheduled:          runtimeScheduleScanConfigTypeB,
@@ -96,7 +104,7 @@ func TestConvertScanConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ConvertScanConfig(tt.args.config, *tt.args.config.Id)
+			got, err := ConvertScanConfig(tt.args.config, tt.args.id)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ConvertScanConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -124,8 +132,12 @@ func TestConvertScanResult(t *testing.T) {
 	vulScanB, err := json.Marshal(vulScan)
 	assert.NilError(t, err)
 
+	UUID, err := uuid.FromString(id)
+	assert.NilError(t, err)
+
 	type args struct {
 		result *models.TargetScanResult
+		id     string
 	}
 	tests := []struct {
 		name    string
@@ -136,6 +148,7 @@ func TestConvertScanResult(t *testing.T) {
 		{
 			name: "sanity",
 			args: args{
+				id: id,
 				result: &models.TargetScanResult{
 					Id:              nil,
 					ScanId:          "3",
@@ -144,6 +157,7 @@ func TestConvertScanResult(t *testing.T) {
 				},
 			},
 			want: &database.ScanResult{
+				Base:            database.Base{ID: UUID},
 				ScanID:          "3",
 				TargetID:        "2",
 				Vulnerabilities: vulScanB,
@@ -153,7 +167,7 @@ func TestConvertScanResult(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ConvertScanResult(tt.args.result)
+			got, err := ConvertScanResult(tt.args.result, tt.args.id)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ConvertScanResult() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -178,8 +192,12 @@ func TestConvertTarget(t *testing.T) {
 	err := targetType.FromVMInfo(vmInfo)
 	assert.NilError(t, err)
 
+	UUID, err := uuid.FromString(id)
+	assert.NilError(t, err)
+
 	type args struct {
 		target *models.Target
+		id     string
 	}
 	tests := []struct {
 		name    string
@@ -193,21 +211,23 @@ func TestConvertTarget(t *testing.T) {
 				target: &models.Target{
 					TargetInfo: &targetType,
 				},
+				id: id,
 			},
 			want: &database.Target{
+				Base:             database.Base{ID: UUID},
 				Type:             "VMInfo",
-				Location:         "location",
-				InstanceID:       "instanceID",
-				InstanceProvider: "aws",
-				PodName:          "",
-				DirName:          "",
+				Location:         utils.StringPtr("location"),
+				InstanceID:       utils.StringPtr("instanceID"),
+				InstanceProvider: utils.StringPtr("aws"),
+				PodName:          nil,
+				DirName:          nil,
 			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ConvertTarget(tt.args.target)
+			got, err := ConvertTarget(tt.args.target, tt.args.id)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ConvertTarget() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -233,8 +253,12 @@ func TestConvertScan(t *testing.T) {
 	targetIDsB, err := json.Marshal(&targetIDs)
 	assert.NilError(t, err)
 
+	UUID, err := uuid.FromString(id)
+	assert.NilError(t, err)
+
 	type args struct {
 		scan *models.Scan
+		id   string
 	}
 	tests := []struct {
 		name    string
@@ -245,6 +269,7 @@ func TestConvertScan(t *testing.T) {
 		{
 			name: "sanity",
 			args: args{
+				id: id,
 				scan: &models.Scan{
 					ScanConfigId:       utils.StringPtr("1"),
 					ScanFamiliesConfig: &scanFamiliesConfig,
@@ -252,6 +277,7 @@ func TestConvertScan(t *testing.T) {
 				},
 			},
 			want: &database.Scan{
+				Base:               database.Base{ID: UUID},
 				ScanConfigID:       utils.StringPtr("1"),
 				ScanFamiliesConfig: scanFamiliesConfigB,
 				TargetIDs:          targetIDsB,
@@ -261,7 +287,7 @@ func TestConvertScan(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ConvertScan(tt.args.scan)
+			got, err := ConvertScan(tt.args.scan, tt.args.id)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ConvertScan() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -144,7 +144,7 @@ func (s *ScanConfigsTableHandler) checkExist(name string) (*ScanConfig, bool, er
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, false, nil
 		}
-		return nil, false, err
+		return nil, false, fmt.Errorf("failed to query: %w", err)
 	}
 
 	return scanConfig, true, nil

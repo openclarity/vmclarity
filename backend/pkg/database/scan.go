@@ -148,6 +148,7 @@ func (s *ScansTableHandler) checkExist(scanConfigID string) (*Scan, bool, error)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, false, nil
 		}
+		return nil, false, fmt.Errorf("failed to query: %w", err)
 	}
 
 	// check if there is a running scan (end time not set)
