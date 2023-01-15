@@ -138,7 +138,7 @@ func (t *TargetsTableHandler) checkExist(target *Target) (*Target, bool, error) 
 
 	switch target.Type {
 	case "VMInfo":
-		if err := tx.Where("instance_id = ? AND location = ?", target.InstanceID, target.Location).First(&targetFromDB).Error; err != nil {
+		if err := tx.Where("instance_id = ? AND location = ?", *target.InstanceID, *target.Location).First(&targetFromDB).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return nil, false, nil
 			}
