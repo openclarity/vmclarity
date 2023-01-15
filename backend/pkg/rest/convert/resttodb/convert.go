@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 	uuid "github.com/satori/go.uuid"
 
 	"github.com/openclarity/vmclarity/api/models"
@@ -84,9 +85,9 @@ func ConvertTarget(target *models.Target, id string) (*database.Target, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert target to vm info: %w", err)
 		}
-		var provider string
+		var provider *string
 		if vminfo.InstanceProvider != nil {
-			provider = string(*vminfo.InstanceProvider)
+			provider = utils.StringPtr(string(*vminfo.InstanceProvider))
 		}
 		return &database.Target{
 			Base: database.Base{
@@ -95,7 +96,7 @@ func ConvertTarget(target *models.Target, id string) (*database.Target, error) {
 			Type:             vminfo.ObjectType,
 			Location:         vminfo.Location,
 			InstanceID:       vminfo.InstanceID,
-			InstanceProvider: &provider,
+			InstanceProvider: provider,
 		}, nil
 	default:
 		return nil, fmt.Errorf("unknown target type: %v", disc)
