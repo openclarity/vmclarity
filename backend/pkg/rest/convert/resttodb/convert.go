@@ -19,11 +19,11 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 	uuid "github.com/satori/go.uuid"
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/backend/pkg/database"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 )
 
 func ConvertScanConfig(config *models.ScanConfig, id string) (*database.ScanConfig, error) {
