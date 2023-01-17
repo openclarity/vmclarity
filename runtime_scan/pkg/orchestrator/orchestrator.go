@@ -28,6 +28,11 @@ import (
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 )
 
+type ScannerFamilies interface {
+	Start(errChan chan struct{})
+	Stop(errChan chan struct{})
+}
+
 type Orchestrator struct {
 	config            *_config.OrchestratorConfig
 	scanConfigWatcher *configwatcher.ScanConfigWatcher
@@ -41,7 +46,7 @@ func Create(config *_config.OrchestratorConfig, providerClient provider.Client) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create a backend client: %v", err)
 	}
-	scanConfigChan := make(chan *map[string]models.ScanConfig)
+	scanConfigChan := make(chan []models.ScanConfig)
 	orc := &Orchestrator{
 		config:            config,
 		scanConfigWatcher: configwatcher.CreateScanConfigWatcher(scanConfigChan, backendClient),
@@ -54,14 +59,13 @@ func Create(config *_config.OrchestratorConfig, providerClient provider.Client) 
 func (o *Orchestrator) Start(errChan chan struct{}) {
 	log.Infof("Starting Orchestrator server")
 
-	go o.scanConfigWatcher.Start(errChan)
-	go o.scheduler.Start(errChan)
+	o.scanConfigWatcher.Start()
+	o.scheduler.Start()
 }
 
 func (o *Orchestrator) Stop(errChan chan struct{}) {
-	// Stop orchestrator server
+	log.Infof("Stoping Orchestrator server")
+
 	o.scanConfigWatcher.Stop()
 	o.scheduler.Stop()
-
-	log.Infof("Stop Orchestrator server")
 }

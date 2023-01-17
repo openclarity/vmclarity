@@ -33,17 +33,11 @@ import (
 )
 
 type Scheduler struct {
-	stopChan       chan struct{}
-	scanConfigChan chan *map[string]models.ScanConfig
-	scannerConfig  *_config.ScannerConfig
-	providerClient provider.Client
-	backendClient  *client.ClientWithResponses
-	scheduledScans *scheduledScans
-}
-
-type scheduledScans struct {
-	scheduledScanDoneChanMap map[string]chan struct{}
-	scheduledCancelFnMap     map[string]context.CancelFunc
+	stopChan        chan struct{}
+	scanConfigsChan chan []models.ScanConfig
+	scannerConfig   *_config.ScannerConfig
+	providerClient  provider.Client
+	backendClient   *client.ClientWithResponses
 }
 
 type Params struct {
@@ -52,215 +46,52 @@ type Params struct {
 	SingleScan bool
 }
 
-func CreateScheduler(scanConfigChan chan *map[string]models.ScanConfig,
+func CreateScheduler(scanConfigsChan chan []models.ScanConfig,
 	scannerConfig *_config.ScannerConfig,
 	providerClient provider.Client,
 	backendClient *client.ClientWithResponses,
 ) *Scheduler {
 	return &Scheduler{
-		stopChan:       make(chan struct{}),
-		scanConfigChan: scanConfigChan,
-		scannerConfig:  scannerConfig,
-		providerClient: providerClient,
-		backendClient:  backendClient,
-		scheduledScans: &scheduledScans{
-			scheduledScanDoneChanMap: make(map[string]chan struct{}),
-			scheduledCancelFnMap:     make(map[string]context.CancelFunc),
-		},
+		stopChan:        make(chan struct{}),
+		scanConfigsChan: scanConfigsChan,
+		scannerConfig:   scannerConfig,
+		providerClient:  providerClient,
+		backendClient:   backendClient,
 	}
 }
 
-func (s *Scheduler) Start(errChan chan struct{}) {
+func (s *Scheduler) Start() {
 	// Clear
 	close(s.stopChan)
 	s.stopChan = make(chan struct{})
-	for {
-		select {
-		case scanConfigMap := <-s.scanConfigChan:
-			if err := s.scheduleNewScans(scanConfigMap); err != nil {
-				if errChan != nil {
-					errChan <- struct{}{}
-				}
+	go func() {
+		for {
+			select {
+			case scanConfigs := <-s.scanConfigsChan:
+				s.scheduleNewScans(scanConfigs)
+			case <-s.stopChan:
+				log.Infof("Stop scheduling scans.")
+				return
 			}
-		case <-s.stopChan:
-			log.Infof("Stop watching scan configs.")
-			return
 		}
-	}
+	}()
 }
 
 func (s *Scheduler) Stop() {
-	s.stopChan <- struct{}{}
+	close(s.stopChan)
 }
 
-func (s *Scheduler) scheduleNewScans(scanConfigMap *map[string]models.ScanConfig) error {
-	for id, scanConfig := range *scanConfigMap {
+func (s *Scheduler) scheduleNewScans(scanConfigs []models.ScanConfig) {
+	for _, scanConfig := range scanConfigs {
 		scanConfig := scanConfig
-		params, err := handleNewScheduleScanConfig(scanConfig.Scheduled)
-		if err != nil {
-			return fmt.Errorf("failed to schedule new scan with scanConfigID %s: %v", id, err)
-		}
-		ctx, cancel := context.WithCancel(context.Background())
-		// TODO clear scheduledCancelFnMap after cancel
-		s.scheduledScans.scheduledCancelFnMap[id] = cancel
-		startsAt := getStartsAt(time.Now().UTC(), params.StartTime, params.Interval)
-		go s.spin(ctx, params, startsAt, &scanConfig)
-	}
-
-	return nil
-}
-
-const (
-	secondsInHour = 60 * 60
-	secondsInDay  = 24 * secondsInHour
-	secondsInWeek = 7 * secondsInDay
-)
-
-func getIntervalAndStartTimeFromByDaysScheduleScanConfig(timeNow time.Time, scanConfig *models.ByDaysScheduleScanConfig) (time.Duration, time.Time) {
-	interval := time.Duration(*scanConfig.DaysInterval*secondsInDay) * time.Second
-	hour := *scanConfig.TimeOfDay.Hour
-	minute := *scanConfig.TimeOfDay.Minute
-	year, month, day := timeNow.Date()
-
-	startTime := time.Date(year, month, day, hour, minute, 0, 0, time.UTC)
-
-	return interval, startTime
-}
-
-func getIntervalAndStartTimeFromByHoursScheduleScanConfig(timeNow time.Time, scanConfig *models.ByHoursScheduleScanConfig) (time.Duration, time.Time) {
-	interval := time.Duration(*scanConfig.HoursInterval*secondsInHour) * time.Second
-
-	return interval, timeNow
-}
-
-func getIntervalAndStartTimeFromWeeklyScheduleScanConfig(timeNow time.Time, scanConfig *models.WeeklyScheduleScanConfig) (time.Duration, time.Time) {
-	interval := time.Duration(secondsInWeek) * time.Second
-
-	currentDay := timeNow.Weekday() + 1
-	diffDays := int64(*scanConfig.DayInWeek) - int64(currentDay)
-
-	hour := *scanConfig.TimeOfDay.Hour
-	minute := *scanConfig.TimeOfDay.Minute
-	year, month, day := timeNow.Add(time.Duration(diffDays*secondsInDay) * time.Second).Date()
-
-	startTime := time.Date(year, month, day, hour, minute, 0, 0, time.UTC)
-
-	return interval, startTime
-}
-
-func handleNewScheduleScanConfig(scheduleScanConfigType *models.RuntimeScheduleScanConfigType) (*Params, error) {
-	var interval time.Duration
-	var startTime time.Time
-	singleScan := false
-
-	timeNow := time.Now().UTC()
-
-	scanConfigType, err := scheduleScanConfigType.ValueByDiscriminator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to determine scheduled scan config type: %v", err)
-	}
-	switch scanConfigType.(type) {
-	case models.SingleScheduleScanConfig:
-		var err error
-		singleScan = true
-		// nolint:forcetypeassert
-		scanConfig := scanConfigType.(*models.SingleScheduleScanConfig)
-		startTime, err = time.Parse(time.RFC3339, scanConfig.OperationTime.String())
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse operation time: %v. %v", scanConfig.OperationTime.String(), err)
-		}
-		// set interval to a positive value, so we will not crash when starting ticker in Scheduler.spin. This will not be used.
-		interval = 1
-	case models.ByHoursScheduleScanConfig:
-		// nolint:forcetypeassert
-		scanConfig := scanConfigType.(*models.ByHoursScheduleScanConfig)
-		interval, startTime = getIntervalAndStartTimeFromByHoursScheduleScanConfig(timeNow, scanConfig)
-	case models.ByDaysScheduleScanConfig:
-		// nolint:forcetypeassert
-		scanConfig := scanConfigType.(*models.ByDaysScheduleScanConfig)
-		interval, startTime = getIntervalAndStartTimeFromByDaysScheduleScanConfig(timeNow, scanConfig)
-	case models.WeeklyScheduleScanConfig:
-		// nolint:forcetypeassert
-		scanConfig := scanConfigType.(*models.WeeklyScheduleScanConfig)
-		interval, startTime = getIntervalAndStartTimeFromWeeklyScheduleScanConfig(timeNow, scanConfig)
-	default:
-		return nil, fmt.Errorf("unsupported schedule config type: %v", scanConfigType)
-	}
-
-	if interval <= 0 {
-		return nil, fmt.Errorf("parameters validation failed. Interval=%v", interval)
-	}
-
-	return &Params{
-		Interval:   interval,
-		StartTime:  startTime,
-		SingleScan: singleScan,
-	}, nil
-}
-
-// get the next scan, that is after timeNow. if currentScanTime is already after timeNow, it will be return.
-func getNextScanTime(timeNow, currentScanTime time.Time, interval time.Duration) time.Time {
-	// if current scan time is before timeNow, jump to the next future scan time
-	if currentScanTime.Before(timeNow) {
-		// if scan time has passed in less than a second, start a scan now.
-		timePassed := timeNow.Sub(currentScanTime)
-		if timePassed < time.Second {
-			return timeNow
-		}
-		remainingInterval := timePassed % interval
-		if remainingInterval == 0 {
-			currentScanTime = timeNow
-		} else {
-			currentScanTime = timeNow.Add(interval - remainingInterval)
-		}
-	}
-	return currentScanTime
-}
-
-// get the time in Duration that the next scan should start at.
-func getStartsAt(timeNow time.Time, startTime time.Time, interval time.Duration) time.Duration {
-	nextScanTime := getNextScanTime(timeNow, startTime, interval)
-
-	startsAt := nextScanTime.Sub(timeNow)
-
-	return startsAt
-}
-
-func (s *Scheduler) spin(ctx context.Context, params *Params, startsAt time.Duration, scanConfig *models.ScanConfig) {
-	log.Debugf("Starting a new scheduled scan. interval: %v, start time: %v, starts at: %v",
-		params.Interval, params.StartTime, startsAt)
-	singleScan := params.SingleScan
-	interval := params.Interval
-
-	timer := time.NewTimer(startsAt)
-	defer timer.Stop()
-	select {
-	case <-ctx.Done():
-		return
-	case <-timer.C:
-		ticker := time.NewTicker(interval)
-		defer ticker.Stop()
-		for {
-			scanDone := make(chan struct{})
-			s.scheduledScans.scheduledScanDoneChanMap[*scanConfig.Id] = scanDone
-			if err := s.scan(ctx, scanConfig, scanDone); err != nil {
-				log.Errorf("Failed to send scan: %v", err)
-			}
-			if singleScan {
-				delete(s.scheduledScans.scheduledCancelFnMap, *scanConfig.Id)
-				return
-			}
-			select {
-			case <-ticker.C:
-			case <-ctx.Done():
-				log.Debugf("Scheduled scan canceled...")
-				return
-			}
+		// Now only SingleScheduledScanConfigs will be started, so don't need to real schedule.
+		if err := s.scan(context.Background(), &scanConfig); err != nil {
+			log.Errorf("falied to schedule a scan with scan config ID=%s: %v", *scanConfig.Id, err)
 		}
 	}
 }
 
-func (s *Scheduler) scan(ctx context.Context, scanConfig *models.ScanConfig, scanDone chan struct{}) error {
+func (s *Scheduler) scan(ctx context.Context, scanConfig *models.ScanConfig) error {
 	// TODO: check if existing scan or a new scan
 	targetInstances, scanID, err := s.initNewScan(ctx, scanConfig)
 	if err != nil {
@@ -268,7 +99,7 @@ func (s *Scheduler) scan(ctx context.Context, scanConfig *models.ScanConfig, sca
 	}
 
 	scanner := _scanner.CreateScanner(s.scannerConfig, s.providerClient, s.backendClient, scanConfig, targetInstances, scanID)
-
+	scanDone := make(chan struct{})
 	if err := scanner.Scan(ctx, scanDone); err != nil {
 		return fmt.Errorf("failed to scan: %v", err)
 	}
