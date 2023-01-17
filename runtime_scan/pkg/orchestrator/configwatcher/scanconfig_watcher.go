@@ -161,7 +161,7 @@ func (scw *ScanConfigWatcher) checkScanConfigs() ([]models.ScanConfig, error) {
 			continue
 		}
 		now := time.Now()
-		// ScanConfig needs to start because its within the window
+		// ScanConfig skip to start because its within the window
 		if !(operationTime.Before(now.Add(timeWindowMin*time.Minute)) && operationTime.After(now.Add(-timeWindowMin*time.Minute))) {
 			continue
 		}
