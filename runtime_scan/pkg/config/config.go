@@ -75,7 +75,7 @@ func setConfigDefaults(backendAddress string, backendPort int, backendBaseURL st
 	viper.SetDefault(ScannerAWSRegion, defaultScannerAWSRegion)
 	viper.SetDefault(JobResultTimeout, "120m")
 	viper.SetDefault(JobResultsPollingInterval, "30s")
-	viper.SetDefault(ScanConfigWatchInterval, "60s")
+	viper.SetDefault(ScanConfigWatchInterval, "30s")
 	viper.SetDefault(DeleteJobPolicy, DeleteJobPolicySuccessful)
 	viper.SetDefault(ScannerBackendAddress, fmt.Sprintf("http://%s%s", net.JoinHostPort(backendAddress, strconv.Itoa(backendPort)), backendBaseURL))
 
