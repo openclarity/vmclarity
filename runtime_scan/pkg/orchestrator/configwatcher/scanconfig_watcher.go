@@ -25,59 +25,39 @@ import (
 
 	"github.com/openclarity/vmclarity/api/client"
 	"github.com/openclarity/vmclarity/api/models"
+	_config "github.com/openclarity/vmclarity/runtime_scan/pkg/config"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 )
 
 const (
-	pageSize      = 100
-	timeWindowMin = 5
+	timeWindow = 5 * time.Minute
 )
 
 type ScanConfigWatcher struct {
-	stopChan                chan struct{}
-	scanConfigsChan         chan []models.ScanConfig
-	backendClient           *client.ClientWithResponses
-	scanConfigWatchInterval time.Duration
+	backendClient  *client.ClientWithResponses
+	providerClient provider.Client
+	scannerConfig  *_config.ScannerConfig
+	cancelFn       context.CancelFunc
 }
 
-func CreateScanConfigWatcher(scanConfigsChan chan []models.ScanConfig,
+func CreateScanConfigWatcher(
 	backendClient *client.ClientWithResponses,
+	providerClient provider.Client,
+	scannerConfig _config.ScannerConfig,
 ) *ScanConfigWatcher {
 	return &ScanConfigWatcher{
-		stopChan:        make(chan struct{}),
-		scanConfigsChan: scanConfigsChan,
-		backendClient:   backendClient,
+		backendClient:  backendClient,
+		providerClient: providerClient,
+		scannerConfig:  &scannerConfig,
 	}
 }
 
-func (scw *ScanConfigWatcher) getScanConfigs() ([]models.ScanConfig, error) {
-	params := &models.GetScanConfigsParams{
-		Page:     1,
-		PageSize: pageSize,
-	}
-
-	var scanConfigs []models.ScanConfig
-	paginatedScanConfigs, err := scw.getScanConfigsByPage(params)
-	if err != nil {
-		return scanConfigs, fmt.Errorf("failed to get scan configs by page:%d, pageSize: %d, error:%v", params.Page, params.PageSize, err)
-	}
-	scanConfigs = append(scanConfigs, *paginatedScanConfigs.Items...)
-	for {
-		if paginatedScanConfigs.Total-(params.Page*params.PageSize) <= 0 {
-			break
-		}
-		params.Page++
-		paginatedScanConfigs, err = scw.getScanConfigsByPage(params)
-		if err != nil {
-			return scanConfigs, fmt.Errorf("failed to get scanconfigs by page:%d, pageSize: %d, error:%v", params.Page, params.PageSize, err)
-		}
-		scanConfigs = append(scanConfigs, *paginatedScanConfigs.Items...)
-	}
-
-	return scanConfigs, nil
+func (scw *ScanConfigWatcher) SetCancelFn(cancel context.CancelFunc) {
+	scw.cancelFn = cancel
 }
 
-func (scw *ScanConfigWatcher) getScanConfigsByPage(params *models.GetScanConfigsParams) (*models.ScanConfigs, error) {
-	resp, err := scw.backendClient.GetScanConfigsWithResponse(context.TODO(), params)
+func (scw *ScanConfigWatcher) getScanConfigs() (*models.ScanConfigs, error) {
+	resp, err := scw.backendClient.GetScanConfigsWithResponse(context.TODO(), &models.GetScanConfigsParams{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get a scan configs: %v", err)
 	}
@@ -95,62 +75,39 @@ func (scw *ScanConfigWatcher) getScanConfigsByPage(params *models.GetScanConfigs
 	}
 }
 
-func (scw *ScanConfigWatcher) getScansByScanConfigID(scanConfigID string) ([]models.Scan, error) {
-	odataFilter := fmt.Sprintf("scanConfigId eq '%s'", scanConfigID)
-	params := &models.GetScansParams{
-		Filter:   &odataFilter,
-		Page:     1,
-		PageSize: pageSize,
-	}
-
-	var scans []models.Scan
-	paginatedScans, err := scw.getScansByPage(params)
+func (scw *ScanConfigWatcher) getScansByScanConfigIDAndOperationTime(scanConfigID string, operationTime time.Time) ([]models.Scan, error) {
+	//odataFilter := fmt.Sprintf("scanConfigId eq '%s' and (endTime eq null or startTime gte '%s')", scanConfigID, operationTime.String())
+	//params := &models.GetScansParams{
+	//	Filter: &odataFilter,
+	//}
+	resp, err := scw.backendClient.GetScansWithResponse(context.TODO(), &models.GetScansParams{})
 	if err != nil {
-		return scans, fmt.Errorf("failed to get scans by page:%d, pageSize: %d, error:%v", params.Page, params.PageSize, err)
-	}
-	scans = append(scans, *paginatedScans.Items...)
-	for {
-		if paginatedScans.Total-(params.Page*params.PageSize) <= 0 {
-			break
-		}
-		params.Page++
-		paginatedScans, err = scw.getScansByPage(params)
-		if err != nil {
-			return scans, fmt.Errorf("failed to get scanconfigs by page:%d, pageSize: %d, error:%v", params.Page, params.PageSize, err)
-		}
-		scans = append(scans, *paginatedScans.Items...)
-	}
-
-	return scans, nil
-}
-
-func (scw *ScanConfigWatcher) getScansByPage(params *models.GetScansParams) (*models.Scans, error) {
-	resp, err := scw.backendClient.GetScansWithResponse(context.TODO(), params)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get a scans with params=%s: %v", *params.Filter, err)
+		return nil, fmt.Errorf("failed to get a scans with: %v", err)
 	}
 	switch resp.StatusCode() {
 	case http.StatusOK:
 		if resp.JSON200 == nil {
 			return nil, fmt.Errorf("no scans: empty body")
 		}
-		return resp.JSON200, nil
 	default:
 		if resp.JSONDefault != nil && resp.JSONDefault.Message != nil {
 			return nil, fmt.Errorf("failed to get scans. status code=%v: %s", resp.StatusCode(), *resp.JSONDefault.Message)
 		}
 		return nil, fmt.Errorf("failed to get scans. status code=%v", resp.StatusCode())
 	}
+	// After Odata filters will be implemented on the backend the filter function can be removed
+	return scw.filterScanConfigs(resp.JSON200, scanConfigID, operationTime), nil
 }
 
-func (scw *ScanConfigWatcher) checkScanConfigs() ([]models.ScanConfig, error) {
+func (scw *ScanConfigWatcher) getScanConfigsToScan() ([]models.ScanConfig, error) {
 	scanConfigsToScan := make([]models.ScanConfig, 0)
 	scanConfigs, err := scw.getScanConfigs()
 	if err != nil {
 		return nil, fmt.Errorf("failed to check new scan configs: %v", err)
 	}
 
-	for _, scanConfig := range scanConfigs {
+	now := time.Now()
+	for _, scanConfig := range *scanConfigs.Items {
 		// Check only the SingleScheduledScanConfigs at the moment
 		operationTime, ok, err := getSingleScheduledScanConfigOperationTime(scanConfig.Scheduled)
 		if err != nil {
@@ -160,41 +117,40 @@ func (scw *ScanConfigWatcher) checkScanConfigs() ([]models.ScanConfig, error) {
 		if !ok {
 			continue
 		}
-		now := time.Now()
 		// ScanConfig skip to start because its within the window
-		if !(operationTime.Before(now.Add(timeWindowMin*time.Minute)) && operationTime.After(now.Add(-timeWindowMin*time.Minute))) {
+		if operationTime.Sub(now).Abs() >= timeWindow {
 			continue
 		}
 
 		// Need to check existing Scans to determine if we can create a Scan
-		initiate, err := scw.shouldInitiateScanForScanConfig(*scanConfig.Id, operationTime)
+		scans, err := scw.getScansByScanConfigIDAndOperationTime(*scanConfig.Id, operationTime)
 		if err != nil {
-			log.Errorf("Failed to determine whether scan should be initiated: %v", err)
+			log.Errorf("Failed to get scan configs: %v", err)
 			continue
 		}
-		if initiate {
+		if len(scans) != 0 {
 			scanConfigsToScan = append(scanConfigsToScan, scanConfig)
 		}
 	}
 	return scanConfigsToScan, nil
 }
 
-func (scw *ScanConfigWatcher) shouldInitiateScanForScanConfig(scanConfigID string, operationTime time.Time) (bool, error) {
-	scans, err := scw.getScansByScanConfigID(scanConfigID)
-	if err != nil {
-		return false, fmt.Errorf("failed to get scans for scan config ID=%s: %v", scanConfigID, err)
-	}
-	for _, scan := range scans {
+func (scw *ScanConfigWatcher) filterScanConfigs(scans *models.Scans, scanConfigID string, operationTime time.Time) []models.Scan {
+	for _, scan := range *scans.Items {
+		if *scan.ScanConfigId != scanConfigID {
+			continue
+		}
 		if scan.EndTime == nil {
 			// there is a running scan for this scanConfig
-			return false, nil
+			continue
 		}
 		if scan.StartTime.After(operationTime) {
-			// there is already a scan created for this scanConfig operation
-			return false, nil
+			// there is already a scan created for this scanConfig operation time
+			continue
 		}
+		return []models.Scan{scan}
 	}
-	return true, nil
+	return []models.Scan{}
 }
 
 func getSingleScheduledScanConfigOperationTime(scheduleScanConfigType *models.RuntimeScheduleScanConfigType) (time.Time, bool, error) {
@@ -211,22 +167,19 @@ func getSingleScheduledScanConfigOperationTime(scheduleScanConfigType *models.Ru
 	}
 }
 
-func (scw *ScanConfigWatcher) Start() {
-	// Clear
-	close(scw.stopChan)
-	scw.stopChan = make(chan struct{})
+func (scw *ScanConfigWatcher) Start(ctx context.Context) {
 	go func() {
 		for {
 			select {
-			case <-time.After(scw.scanConfigWatchInterval):
-				scanConfigsToScan, err := scw.checkScanConfigs()
+			case <-time.After(scw.scannerConfig.ScanConfigWatchInterval):
+				scanConfigsToScan, err := scw.getScanConfigsToScan()
 				if err != nil {
 					log.Warnf("Failed to check scan configs: %v", err)
 				}
 				if len(scanConfigsToScan) > 0 {
-					scw.scanConfigsChan <- scanConfigsToScan
+					scw.scheduleNewScans(scanConfigsToScan)
 				}
-			case <-scw.stopChan:
+			case <-ctx.Done():
 				log.Infof("Stop watching scan configs.")
 				return
 			}
@@ -235,5 +188,5 @@ func (scw *ScanConfigWatcher) Start() {
 }
 
 func (scw *ScanConfigWatcher) Stop() {
-	close(scw.stopChan)
+	scw.cancelFn()
 }

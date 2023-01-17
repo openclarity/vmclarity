@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package scheduler
+package configwatcher
 
 import (
 	"context"
@@ -23,82 +23,30 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/openclarity/vmclarity/api/client"
 	"github.com/openclarity/vmclarity/api/models"
-	_config "github.com/openclarity/vmclarity/runtime_scan/pkg/config"
-	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 	_scanner "github.com/openclarity/vmclarity/runtime_scan/pkg/scanner"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 )
 
-type Scheduler struct {
-	stopChan        chan struct{}
-	scanConfigsChan chan []models.ScanConfig
-	scannerConfig   *_config.ScannerConfig
-	providerClient  provider.Client
-	backendClient   *client.ClientWithResponses
-}
-
-type Params struct {
-	Interval   time.Duration
-	StartTime  time.Time
-	SingleScan bool
-}
-
-func CreateScheduler(scanConfigsChan chan []models.ScanConfig,
-	scannerConfig *_config.ScannerConfig,
-	providerClient provider.Client,
-	backendClient *client.ClientWithResponses,
-) *Scheduler {
-	return &Scheduler{
-		stopChan:        make(chan struct{}),
-		scanConfigsChan: scanConfigsChan,
-		scannerConfig:   scannerConfig,
-		providerClient:  providerClient,
-		backendClient:   backendClient,
-	}
-}
-
-func (s *Scheduler) Start() {
-	// Clear
-	close(s.stopChan)
-	s.stopChan = make(chan struct{})
-	go func() {
-		for {
-			select {
-			case scanConfigs := <-s.scanConfigsChan:
-				s.scheduleNewScans(scanConfigs)
-			case <-s.stopChan:
-				log.Infof("Stop scheduling scans.")
-				return
-			}
-		}
-	}()
-}
-
-func (s *Scheduler) Stop() {
-	close(s.stopChan)
-}
-
-func (s *Scheduler) scheduleNewScans(scanConfigs []models.ScanConfig) {
-	for _, scanConfig := range scanConfigs {
-		scanConfig := scanConfig
+func (scw *ScanConfigWatcher) scheduleNewScans(scanConfigs []models.ScanConfig) {
+	for _, sc := range scanConfigs {
+		scanConfig := sc
 		// Now only SingleScheduledScanConfigs will be started, so don't need to real schedule.
-		if err := s.scan(context.Background(), &scanConfig); err != nil {
+		if err := scw.scan(context.Background(), &scanConfig); err != nil {
 			log.Errorf("falied to schedule a scan with scan config ID=%s: %v", *scanConfig.Id, err)
 		}
 	}
 }
 
-func (s *Scheduler) scan(ctx context.Context, scanConfig *models.ScanConfig) error {
+func (scw *ScanConfigWatcher) scan(ctx context.Context, scanConfig *models.ScanConfig) error {
 	// TODO: check if existing scan or a new scan
-	targetInstances, scanID, err := s.initNewScan(ctx, scanConfig)
+	targetInstances, scanID, err := scw.initNewScan(ctx, scanConfig)
 	if err != nil {
 		return fmt.Errorf("failed to init new scan: %v", err)
 	}
 
-	scanner := _scanner.CreateScanner(s.scannerConfig, s.providerClient, s.backendClient, scanConfig, targetInstances, scanID)
+	scanner := _scanner.CreateScanner(scw.scannerConfig, scw.providerClient, scw.backendClient, scanConfig, targetInstances, scanID)
 	scanDone := make(chan struct{})
 	if err := scanner.Scan(ctx, scanDone); err != nil {
 		return fmt.Errorf("failed to scan: %v", err)
@@ -108,13 +56,13 @@ func (s *Scheduler) scan(ctx context.Context, scanConfig *models.ScanConfig) err
 }
 
 // initNewScan Initialized a new scan, returns target instances and scan ID.
-func (s *Scheduler) initNewScan(ctx context.Context, scanConfig *models.ScanConfig) ([]*types.TargetInstance, string, error) {
-	instances, err := s.providerClient.Discover(ctx, scanConfig.Scope)
+func (scw *ScanConfigWatcher) initNewScan(ctx context.Context, scanConfig *models.ScanConfig) ([]*types.TargetInstance, string, error) {
+	instances, err := scw.providerClient.Discover(ctx, scanConfig.Scope)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to discover instances to scan: %v", err)
 	}
 
-	targetInstances, err := s.createTargetInstances(ctx, instances)
+	targetInstances, err := scw.createTargetInstances(ctx, instances)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to get or create targets: %v", err)
 	}
@@ -126,7 +74,7 @@ func (s *Scheduler) initNewScan(ctx context.Context, scanConfig *models.ScanConf
 		StartTime:          &now,
 		TargetIDs:          getTargetIDs(targetInstances),
 	}
-	scanID, err := s.getOrCreateScan(ctx, scan)
+	scanID, err := scw.getOrCreateScan(ctx, scan)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to get or create a scan: %v", err)
 	}
@@ -143,10 +91,10 @@ func getTargetIDs(targetInstances []*types.TargetInstance) *[]string {
 	return &ret
 }
 
-func (s *Scheduler) createTargetInstances(ctx context.Context, instances []types.Instance) ([]*types.TargetInstance, error) {
+func (scw *ScanConfigWatcher) createTargetInstances(ctx context.Context, instances []types.Instance) ([]*types.TargetInstance, error) {
 	targetInstances := make([]*types.TargetInstance, 0, len(instances))
 	for i, instance := range instances {
-		target, err := s.getOrCreateTarget(ctx, instance)
+		target, err := scw.getOrCreateTarget(ctx, instance)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get or create target. instanceID=%v: %v", instance.GetID(), err)
 		}
@@ -159,7 +107,7 @@ func (s *Scheduler) createTargetInstances(ctx context.Context, instances []types
 	return targetInstances, nil
 }
 
-func (s *Scheduler) getOrCreateTarget(ctx context.Context, instance types.Instance) (*models.Target, error) {
+func (scw *ScanConfigWatcher) getOrCreateTarget(ctx context.Context, instance types.Instance) (*models.Target, error) {
 	info := models.TargetType{}
 	instanceProvider := models.AWS
 	err := info.FromVMInfo(models.VMInfo{
@@ -170,7 +118,7 @@ func (s *Scheduler) getOrCreateTarget(ctx context.Context, instance types.Instan
 	if err != nil {
 		return nil, fmt.Errorf("failed to create VMInfo: %v", err)
 	}
-	resp, err := s.backendClient.PostTargetsWithResponse(ctx, models.Target{
+	resp, err := scw.backendClient.PostTargetsWithResponse(ctx, models.Target{
 		TargetInfo: &info,
 	})
 	if err != nil {
@@ -196,8 +144,8 @@ func (s *Scheduler) getOrCreateTarget(ctx context.Context, instance types.Instan
 }
 
 // nolint:cyclop
-func (s *Scheduler) getOrCreateScan(ctx context.Context, scan *models.Scan) (string, error) {
-	resp, err := s.backendClient.PostScansWithResponse(ctx, *scan)
+func (scw *ScanConfigWatcher) getOrCreateScan(ctx context.Context, scan *models.Scan) (string, error) {
+	resp, err := scw.backendClient.PostScansWithResponse(ctx, *scan)
 	if err != nil {
 		return "", fmt.Errorf("failed to post a scan: %v", err)
 	}

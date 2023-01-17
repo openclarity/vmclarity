@@ -16,15 +16,14 @@
 package orchestrator
 
 import (
+	"context"
 	"fmt"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/api/client"
-	"github.com/openclarity/vmclarity/api/models"
 	_config "github.com/openclarity/vmclarity/runtime_scan/pkg/config"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/orchestrator/configwatcher"
-	"github.com/openclarity/vmclarity/runtime_scan/pkg/orchestrator/scheduler"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 )
 
@@ -36,7 +35,6 @@ type ScannerFamilies interface {
 type Orchestrator struct {
 	config            *_config.OrchestratorConfig
 	scanConfigWatcher *configwatcher.ScanConfigWatcher
-	scheduler         *scheduler.Scheduler
 }
 
 func Create(config *_config.OrchestratorConfig, providerClient provider.Client) (*Orchestrator, error) {
@@ -46,11 +44,9 @@ func Create(config *_config.OrchestratorConfig, providerClient provider.Client) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create a backend client: %v", err)
 	}
-	scanConfigChan := make(chan []models.ScanConfig)
 	orc := &Orchestrator{
 		config:            config,
-		scanConfigWatcher: configwatcher.CreateScanConfigWatcher(scanConfigChan, backendClient),
-		scheduler:         scheduler.CreateScheduler(scanConfigChan, &config.ScannerConfig, providerClient, backendClient),
+		scanConfigWatcher: configwatcher.CreateScanConfigWatcher(backendClient, providerClient, config.ScannerConfig),
 	}
 
 	return orc, nil
@@ -59,13 +55,13 @@ func Create(config *_config.OrchestratorConfig, providerClient provider.Client) 
 func (o *Orchestrator) Start(errChan chan struct{}) {
 	log.Infof("Starting Orchestrator server")
 
-	o.scanConfigWatcher.Start()
-	o.scheduler.Start()
+	ctx, cancel := context.WithCancel(context.Background())
+	o.scanConfigWatcher.SetCancelFn(cancel)
+	o.scanConfigWatcher.Start(ctx)
 }
 
 func (o *Orchestrator) Stop(errChan chan struct{}) {
-	log.Infof("Stoping Orchestrator server")
+	log.Infof("Stopping Orchestrator server")
 
 	o.scanConfigWatcher.Stop()
-	o.scheduler.Stop()
 }
