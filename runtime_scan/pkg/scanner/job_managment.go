@@ -42,7 +42,8 @@ import (
 const TrivyTimeout = 300
 
 // run jobs.
-func (s *Scanner) jobBatchManagement(ctx context.Context) {
+// nolint:cyclop
+func (s *Scanner) jobBatchManagement(ctx context.Context, scanID string) {
 	s.Lock()
 	targetIDToScanData := s.targetIDToScanData
 	numberOfWorkers := 2 // TODO: create this in the API
@@ -90,10 +91,11 @@ func (s *Scanner) jobBatchManagement(ctx context.Context) {
 	select {
 	case <-s.killSignal:
 		log.WithFields(s.logFields).Info("Scan process was canceled")
-		return
 	case <-fullScanDone:
 		log.WithFields(s.logFields).Infof("All jobs has finished")
-		return
+	}
+	if err := s.patchScanEndTime(ctx, scanID, time.Now()); err != nil {
+		log.WithFields(s.logFields).Errorf("Failed to set end time of the scan ID=%s: %v", scanID, err)
 	}
 }
 

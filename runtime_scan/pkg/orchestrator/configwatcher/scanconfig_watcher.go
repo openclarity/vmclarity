@@ -70,28 +70,28 @@ func (scw *ScanConfigWatcher) getScanConfigs() (*models.ScanConfigs, error) {
 	}
 }
 
-func (scw *ScanConfigWatcher) getScansByScanConfigIDAndOperationTime(scanConfigID string, operationTime time.Time) ([]models.Scan, error) {
+func (scw *ScanConfigWatcher) hasRunningScansByScanConfigIDAndOperationTime(scanConfigID string, operationTime time.Time) (bool, error) {
 	//odataFilter := fmt.Sprintf("scanConfigId eq '%s' and (endTime eq null or startTime gte '%s')", scanConfigID, operationTime.String())
 	//params := &models.GetScansParams{
 	//	Filter: &odataFilter,
 	//}
 	resp, err := scw.backendClient.GetScansWithResponse(context.TODO(), &models.GetScansParams{})
 	if err != nil {
-		return nil, fmt.Errorf("failed to get a scans with: %v", err)
+		return false, fmt.Errorf("failed to get a scans with: %v", err)
 	}
 	switch resp.StatusCode() {
 	case http.StatusOK:
 		if resp.JSON200 == nil {
-			return nil, fmt.Errorf("no scans: empty body")
+			return false, fmt.Errorf("no scans: empty body")
 		}
 	default:
 		if resp.JSONDefault != nil && resp.JSONDefault.Message != nil {
-			return nil, fmt.Errorf("failed to get scans. status code=%v: %s", resp.StatusCode(), *resp.JSONDefault.Message)
+			return false, fmt.Errorf("failed to get scans. status code=%v: %s", resp.StatusCode(), *resp.JSONDefault.Message)
 		}
-		return nil, fmt.Errorf("failed to get scans. status code=%v", resp.StatusCode())
+		return false, fmt.Errorf("failed to get scans. status code=%v", resp.StatusCode())
 	}
 	// After Odata filters will be implemented on the backend the filter function can be removed
-	return scw.filterScanConfigs(resp.JSON200, scanConfigID, operationTime), nil
+	return scw.hasRunningOrCompletedScan(resp.JSON200, scanConfigID, operationTime), nil
 }
 
 func (scw *ScanConfigWatcher) getScanConfigsToScan() ([]models.ScanConfig, error) {
@@ -104,62 +104,58 @@ func (scw *ScanConfigWatcher) getScanConfigsToScan() ([]models.ScanConfig, error
 	now := time.Now()
 	for _, scanConfig := range *scanConfigs.Items {
 		// Check only the SingleScheduledScanConfigs at the moment
-		operationTime, ok, err := getSingleScheduledScanConfigOperationTime(scanConfig.Scheduled)
+		shouldScan := false
+		scheduled, err := scanConfig.Scheduled.ValueByDiscriminator()
 		if err != nil {
-			log.Errorf("Failed to check scan config type with id=%s: %v", *scanConfig.Id, err)
+			log.Errorf("failed to determine scheduled scan config type: %v", err)
 			continue
 		}
-		if !ok {
-			continue
-		}
-		// ScanConfig skip to start because its within the window
-		if operationTime.Sub(now).Abs() >= timeWindow {
+		switch scheduled.(type) {
+		case models.SingleScheduleScanConfig:
+			// nolint:forcetypeassert
+			singleSchedule := scheduled.(*models.SingleScheduleScanConfig)
+			shouldScan = scw.shouldStartSingleScheduleScanConfig(*scanConfig.Id, singleSchedule, now)
+		default:
 			continue
 		}
 
-		// Need to check existing Scans to determine if we can create a Scan
-		scans, err := scw.getScansByScanConfigIDAndOperationTime(*scanConfig.Id, operationTime)
-		if err != nil {
-			log.Errorf("Failed to get scan configs: %v", err)
-			continue
-		}
-		if len(scans) != 0 {
+		if shouldScan {
 			scanConfigsToScan = append(scanConfigsToScan, scanConfig)
 		}
 	}
 	return scanConfigsToScan, nil
 }
 
-func (scw *ScanConfigWatcher) filterScanConfigs(scans *models.Scans, scanConfigID string, operationTime time.Time) []models.Scan {
+func (scw *ScanConfigWatcher) hasRunningOrCompletedScan(scans *models.Scans, scanConfigID string, operationTime time.Time) bool {
 	for _, scan := range *scans.Items {
 		if *scan.ScanConfigId != scanConfigID {
 			continue
 		}
 		if scan.EndTime == nil {
-			// there is a running scan for this scanConfig
+			// There is a running scan for this scanConfig
 			continue
 		}
 		if scan.StartTime.After(operationTime) {
-			// there is already a scan created for this scanConfig operation time
+			// There is a completed scan that started after the operation time
 			continue
 		}
-		return []models.Scan{scan}
+		return true
 	}
-	return []models.Scan{}
+	return false
 }
 
-func getSingleScheduledScanConfigOperationTime(scheduleScanConfigType *models.RuntimeScheduleScanConfigType) (time.Time, bool, error) {
-	scanConfig, err := scheduleScanConfigType.ValueByDiscriminator()
+func (scw *ScanConfigWatcher) shouldStartSingleScheduleScanConfig(scanConfigID string, schedule *models.SingleScheduleScanConfig, now time.Time) bool {
+	// Skip processing ScanConfig because its operationTime is outside of the start window
+	if schedule.OperationTime.Sub(now).Abs() >= timeWindow {
+		return false
+	}
+	// Check running or completed scan for specific scan config
+	hasRunningOrCompletedScan, err := scw.hasRunningScansByScanConfigIDAndOperationTime(scanConfigID, schedule.OperationTime)
 	if err != nil {
-		return time.Time{}, false, fmt.Errorf("failed to determine scheduled scan config type: %v", err)
+		log.Errorf("Failed to get scan configs: %v", err)
+		return false
 	}
-	switch scanConfig.(type) {
-	case models.SingleScheduleScanConfig:
-		// nolint:forcetypeassert
-		return scanConfig.(*models.SingleScheduleScanConfig).OperationTime, true, nil
-	default:
-		return time.Time{}, false, nil
-	}
+	return !hasRunningOrCompletedScan
 }
 
 func (scw *ScanConfigWatcher) Start(ctx context.Context) {
@@ -170,7 +166,7 @@ func (scw *ScanConfigWatcher) Start(ctx context.Context) {
 				// nolint:contextcheck
 				scanConfigsToScan, err := scw.getScanConfigsToScan()
 				if err != nil {
-					log.Warnf("Failed to check scan configs: %v", err)
+					log.Warnf("Failed to get scan configs to scan: %v", err)
 				}
 				if len(scanConfigsToScan) > 0 {
 					scw.runNewScans(ctx, scanConfigsToScan)

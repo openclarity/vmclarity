@@ -39,10 +39,11 @@ const (
 )
 
 type OrchestratorConfig struct {
-	AWSConfig       *aws.Config
-	BackendAddress  string
-	BackendRestPort int
-	BackendBaseURL  string
+	AWSConfig             *aws.Config
+	BackendAddress        string
+	BackendRestDisableTLS bool
+	BackendRestPort       int
+	BackendBaseURL        string
 	ScannerConfig
 }
 

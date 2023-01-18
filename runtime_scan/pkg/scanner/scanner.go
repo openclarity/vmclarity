@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
@@ -104,23 +105,25 @@ func (s *Scanner) initScan(ctx context.Context) error {
 	return nil
 }
 
-func (s *Scanner) Scan(ctx context.Context) error {
+func (s *Scanner) Scan(ctx context.Context, scanID string) error {
 	s.Lock()
 	defer s.Unlock()
 
-	log.WithFields(s.logFields).Infof("Start scanning...")
+	log.WithFields(s.logFields).Infof("Start scanning ID=%s", scanID)
 
 	err := s.initScan(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to init scan: %v", err)
+		return fmt.Errorf("failed to init scan ID=%s: %v", scanID, err)
 	}
 
 	if len(s.targetIDToScanData) == 0 {
 		log.WithFields(s.logFields).Info("Nothing to scan")
-		return nil
+		if err := s.patchScanEndTime(ctx, scanID, time.Now()); err != nil {
+			return fmt.Errorf("failed to set end time of the scan ID=%s: %v", scanID, err)
+		}
 	}
 
-	go s.jobBatchManagement(ctx)
+	go s.jobBatchManagement(ctx, scanID)
 
 	return nil
 }
@@ -181,27 +184,58 @@ func (s *Scanner) patchTargetScanStatus(ctx context.Context, scanResultID string
 	}
 	resp, err := s.backendClient.PatchScanResultsScanResultIDWithResponse(ctx, scanResultID, scanResult)
 	if err != nil {
-		return fmt.Errorf("failed to put a scan status: %v", err)
+		return fmt.Errorf("failed to patch a scan result status: %v", err)
 	}
 	switch resp.StatusCode() {
 	case http.StatusCreated:
 		if resp.JSON200 == nil {
-			return fmt.Errorf("failed to update a scan status: empty body")
+			return fmt.Errorf("failed to update a scan result status: empty body")
 		}
 		return nil
 	case http.StatusNotFound:
 		if resp.JSON404 == nil {
-			return fmt.Errorf("failed to update a scan status: empty body on not found")
+			return fmt.Errorf("failed to update a scan result status: empty body on not found")
 		}
 		if resp.JSON404 != nil && resp.JSON404.Message != nil {
-			return fmt.Errorf("failed to update scan status, not found: %v", resp.JSON404.Message)
+			return fmt.Errorf("failed to update scan result status, not found: %v", resp.JSON404.Message)
+		}
+		return fmt.Errorf("failed to update scan result status, not found")
+	default:
+		if resp.JSONDefault != nil && resp.JSONDefault.Message != nil {
+			return fmt.Errorf("failed to update scan result status. status code=%v: %v", resp.StatusCode(), resp.JSONDefault.Message)
+		}
+		return fmt.Errorf("failed to update scan result status. status code=%v", resp.StatusCode())
+	}
+}
+
+// nolint:cyclop
+func (s *Scanner) patchScanEndTime(ctx context.Context, scanID string, endTime time.Time) error {
+	scan := models.Scan{
+		EndTime: &endTime,
+	}
+	resp, err := s.backendClient.PatchScansScanIDWithResponse(ctx, scanID, scan)
+	if err != nil {
+		return fmt.Errorf("failed to patch a scan end time: %v", err)
+	}
+	switch resp.StatusCode() {
+	case http.StatusCreated:
+		if resp.JSON200 == nil {
+			return fmt.Errorf("failed to update a scan end time: empty body")
+		}
+		return nil
+	case http.StatusNotFound:
+		if resp.JSON404 == nil {
+			return fmt.Errorf("failed to update a scan end time: empty body on not found")
+		}
+		if resp.JSON404 != nil && resp.JSON404.Message != nil {
+			return fmt.Errorf("failed to update scan end time, not found: %v", resp.JSON404.Message)
 		}
 		return fmt.Errorf("failed to update scan status, not found")
 	default:
 		if resp.JSONDefault != nil && resp.JSONDefault.Message != nil {
-			return fmt.Errorf("failed to update scan status. status code=%v: %v", resp.StatusCode(), resp.JSONDefault.Message)
+			return fmt.Errorf("failed to update scan end time. status code=%v: %v", resp.StatusCode(), resp.JSONDefault.Message)
 		}
-		return fmt.Errorf("failed to update scan status. status code=%v", resp.StatusCode())
+		return fmt.Errorf("failed to update scan end time. status code=%v", resp.StatusCode())
 	}
 }
 

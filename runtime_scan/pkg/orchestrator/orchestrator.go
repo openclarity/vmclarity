@@ -27,24 +27,26 @@ import (
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 )
 
-type ScannerFamilies interface {
+type Orchestrator interface {
 	Start(ctx context.Context)
 	Stop(cancel context.CancelFunc)
 }
 
-type Orchestrator struct {
+type APIBasedOrchestrator struct {
 	config            *_config.OrchestratorConfig
 	scanConfigWatcher *configwatcher.ScanConfigWatcher
+	cancelFunc        context.CancelFunc
 }
 
-func Create(config *_config.OrchestratorConfig, providerClient provider.Client) (*Orchestrator, error) {
+func Create(config *_config.OrchestratorConfig, providerClient provider.Client) (*APIBasedOrchestrator, error) {
 	backendClient, err := client.NewClientWithResponses(
-		fmt.Sprintf("%s:%d/%s", config.BackendAddress, config.BackendRestPort, config.BackendBaseURL),
+		// nolint:nosprintfhostport
+		fmt.Sprintf("http://%s:%d%s", config.BackendAddress, config.BackendRestPort, config.BackendBaseURL),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create a backend client: %v", err)
 	}
-	orc := &Orchestrator{
+	orc := &APIBasedOrchestrator{
 		config:            config,
 		scanConfigWatcher: configwatcher.CreateScanConfigWatcher(backendClient, providerClient, config.ScannerConfig),
 	}
@@ -52,12 +54,16 @@ func Create(config *_config.OrchestratorConfig, providerClient provider.Client) 
 	return orc, nil
 }
 
-func (o *Orchestrator) Start(ctx context.Context) {
+func (o *APIBasedOrchestrator) Start(ctx context.Context) {
 	log.Infof("Starting Orchestrator server")
+	ctx, cancel := context.WithCancel(ctx)
+	o.cancelFunc = cancel
 	o.scanConfigWatcher.Start(ctx)
 }
 
-func (o *Orchestrator) Stop(cancel context.CancelFunc) {
+func (o *APIBasedOrchestrator) Stop(cancel context.CancelFunc) {
 	log.Infof("Stopping Orchestrator server")
-	cancel()
+	if o.cancelFunc != nil {
+		o.cancelFunc()
+	}
 }
