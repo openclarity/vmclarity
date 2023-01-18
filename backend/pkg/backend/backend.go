@@ -101,7 +101,7 @@ func Run() {
 	if err != nil {
 		log.Fatalf("Failed to create runtime scan orchestrator: %v", err)
 	}
-	orc.Start(errChan)
+	orc.Start(globalCtx)
 
 	healthServer.SetIsReady(true)
 	log.Info("VMClarity backend is ready")

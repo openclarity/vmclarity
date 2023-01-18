@@ -37,7 +37,6 @@ type ScanConfigWatcher struct {
 	backendClient  *client.ClientWithResponses
 	providerClient provider.Client
 	scannerConfig  *_config.ScannerConfig
-	cancelFn       context.CancelFunc
 }
 
 func CreateScanConfigWatcher(
@@ -50,10 +49,6 @@ func CreateScanConfigWatcher(
 		providerClient: providerClient,
 		scannerConfig:  &scannerConfig,
 	}
-}
-
-func (scw *ScanConfigWatcher) SetCancelFn(cancel context.CancelFunc) {
-	scw.cancelFn = cancel
 }
 
 func (scw *ScanConfigWatcher) getScanConfigs() (*models.ScanConfigs, error) {
@@ -172,12 +167,13 @@ func (scw *ScanConfigWatcher) Start(ctx context.Context) {
 		for {
 			select {
 			case <-time.After(scw.scannerConfig.ScanConfigWatchInterval):
+				// nolint:contextcheck
 				scanConfigsToScan, err := scw.getScanConfigsToScan()
 				if err != nil {
 					log.Warnf("Failed to check scan configs: %v", err)
 				}
 				if len(scanConfigsToScan) > 0 {
-					scw.scheduleNewScans(scanConfigsToScan)
+					scw.runNewScans(ctx, scanConfigsToScan)
 				}
 			case <-ctx.Done():
 				log.Infof("Stop watching scan configs.")
@@ -185,8 +181,4 @@ func (scw *ScanConfigWatcher) Start(ctx context.Context) {
 			}
 		}
 	}()
-}
-
-func (scw *ScanConfigWatcher) Stop() {
-	scw.cancelFn()
 }

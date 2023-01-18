@@ -29,11 +29,10 @@ import (
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 )
 
-func (scw *ScanConfigWatcher) scheduleNewScans(scanConfigs []models.ScanConfig) {
+func (scw *ScanConfigWatcher) runNewScans(ctx context.Context, scanConfigs []models.ScanConfig) {
 	for _, sc := range scanConfigs {
 		scanConfig := sc
-		// Now only SingleScheduledScanConfigs will be started, so don't need to real schedule.
-		if err := scw.scan(context.Background(), &scanConfig); err != nil {
+		if err := scw.scan(ctx, &scanConfig); err != nil {
 			log.Errorf("falied to schedule a scan with scan config ID=%s: %v", *scanConfig.Id, err)
 		}
 	}
@@ -47,8 +46,7 @@ func (scw *ScanConfigWatcher) scan(ctx context.Context, scanConfig *models.ScanC
 	}
 
 	scanner := _scanner.CreateScanner(scw.scannerConfig, scw.providerClient, scw.backendClient, scanConfig, targetInstances, scanID)
-	scanDone := make(chan struct{})
-	if err := scanner.Scan(ctx, scanDone); err != nil {
+	if err := scanner.Scan(ctx); err != nil {
 		return fmt.Errorf("failed to scan: %v", err)
 	}
 

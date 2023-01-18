@@ -104,7 +104,7 @@ func (s *Scanner) initScan(ctx context.Context) error {
 	return nil
 }
 
-func (s *Scanner) Scan(ctx context.Context, scanDone chan struct{}) error {
+func (s *Scanner) Scan(ctx context.Context) error {
 	s.Lock()
 	defer s.Unlock()
 
@@ -117,11 +117,10 @@ func (s *Scanner) Scan(ctx context.Context, scanDone chan struct{}) error {
 
 	if len(s.targetIDToScanData) == 0 {
 		log.WithFields(s.logFields).Info("Nothing to scan")
-		nonBlockingNotification(scanDone)
 		return nil
 	}
 
-	go s.jobBatchManagement(ctx, scanDone)
+	go s.jobBatchManagement(ctx)
 
 	return nil
 }

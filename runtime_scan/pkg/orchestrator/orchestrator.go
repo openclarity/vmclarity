@@ -28,8 +28,8 @@ import (
 )
 
 type ScannerFamilies interface {
-	Start(errChan chan struct{})
-	Stop(errChan chan struct{})
+	Start(ctx context.Context)
+	Stop(cancel context.CancelFunc)
 }
 
 type Orchestrator struct {
@@ -52,16 +52,12 @@ func Create(config *_config.OrchestratorConfig, providerClient provider.Client) 
 	return orc, nil
 }
 
-func (o *Orchestrator) Start(errChan chan struct{}) {
+func (o *Orchestrator) Start(ctx context.Context) {
 	log.Infof("Starting Orchestrator server")
-
-	ctx, cancel := context.WithCancel(context.Background())
-	o.scanConfigWatcher.SetCancelFn(cancel)
 	o.scanConfigWatcher.Start(ctx)
 }
 
-func (o *Orchestrator) Stop(errChan chan struct{}) {
+func (o *Orchestrator) Stop(cancel context.CancelFunc) {
 	log.Infof("Stopping Orchestrator server")
-
-	o.scanConfigWatcher.Stop()
+	cancel()
 }
