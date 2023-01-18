@@ -3,7 +3,7 @@ module github.com/openclarity/vmclarity
 go 1.19
 
 require (
-	github.com/CycloneDX/cyclonedx-go v0.6.0
+	github.com/CycloneDX/cyclonedx-go v0.7.0
 	github.com/Portshift/go-utils v0.0.0-20220421083203-89265d8a6487
 	github.com/aws/aws-sdk-go-v2/config v1.17.10
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.63.1
