@@ -18,8 +18,6 @@ package orchestrator
 import (
 	"context"
 	"fmt"
-	"net"
-	"strconv"
 
 	log "github.com/sirupsen/logrus"
 
@@ -42,7 +40,7 @@ type orchestrator struct {
 
 func Create(config *_config.OrchestratorConfig, providerClient provider.Client) (Orchestrator, error) {
 	backendClient, err := client.NewClientWithResponses(
-		fmt.Sprintf("http://%s%s", net.JoinHostPort(config.BackendAddress, strconv.Itoa(config.BackendRestPort)), config.BackendBaseURL),
+		config.BackendEndpoint,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create a backend client: %v", err)

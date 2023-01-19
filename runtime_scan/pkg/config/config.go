@@ -39,11 +39,8 @@ const (
 )
 
 type OrchestratorConfig struct {
-	AWSConfig             *aws.Config
-	BackendAddress        string
-	BackendRestDisableTLS bool
-	BackendRestPort       int
-	BackendBaseURL        string
+	AWSConfig       *aws.Config
+	BackendEndpoint string
 	ScannerConfig
 }
 
@@ -88,9 +85,7 @@ func LoadConfig(backendAddress string, backendPort int, baseURL string) (*Orches
 
 	config := &OrchestratorConfig{
 		AWSConfig:       aws.LoadConfig(),
-		BackendRestPort: backendPort,
-		BackendAddress:  backendAddress,
-		BackendBaseURL:  baseURL,
+		BackendEndpoint: fmt.Sprintf("http://%s%s", net.JoinHostPort(backendAddress, strconv.Itoa(backendPort)), baseURL),
 		ScannerConfig: ScannerConfig{
 			Region:                    viper.GetString(ScannerAWSRegion),
 			JobResultTimeout:          viper.GetDuration(JobResultTimeout),
