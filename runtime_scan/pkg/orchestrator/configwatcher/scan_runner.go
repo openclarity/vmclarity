@@ -23,7 +23,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/openclarity/vmclarity/api/client"
 	"github.com/openclarity/vmclarity/api/models"
 	_scanner "github.com/openclarity/vmclarity/runtime_scan/pkg/scanner"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
@@ -73,7 +72,7 @@ func (scw *ScanConfigWatcher) initNewScan(ctx context.Context, scanConfig *model
 		StartTime:          &now,
 		TargetIDs:          getTargetIDs(targetInstances),
 	}
-	scanID, err := scw.createScanReturnID(ctx, scan)
+	scanID, err := scw.createScan(ctx, scan)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to get or create a scan: %v", err)
 	}
@@ -93,7 +92,7 @@ func getTargetIDs(targetInstances []*types.TargetInstance) *[]string {
 func (scw *ScanConfigWatcher) createTargetInstances(ctx context.Context, instances []types.Instance) ([]*types.TargetInstance, error) {
 	targetInstances := make([]*types.TargetInstance, 0, len(instances))
 	for i, instance := range instances {
-		target, err := createTarget(ctx, scw.backendClient, instance)
+		target, err := scw.createTarget(ctx, instance)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create target. instanceID=%v: %v", instance.GetID(), err)
 		}
@@ -106,7 +105,7 @@ func (scw *ScanConfigWatcher) createTargetInstances(ctx context.Context, instanc
 	return targetInstances, nil
 }
 
-func createTarget(ctx context.Context, apiClient client.ClientWithResponsesInterface, instance types.Instance) (*models.Target, error) {
+func (scw *ScanConfigWatcher) createTarget(ctx context.Context, instance types.Instance) (*models.Target, error) {
 	info := models.TargetType{}
 	instanceProvider := models.AWS
 	err := info.FromVMInfo(models.VMInfo{
@@ -117,7 +116,7 @@ func createTarget(ctx context.Context, apiClient client.ClientWithResponsesInter
 	if err != nil {
 		return nil, fmt.Errorf("failed to create VMInfo: %v", err)
 	}
-	resp, err := apiClient.PostTargetsWithResponse(ctx, models.Target{
+	resp, err := scw.backendClient.PostTargetsWithResponse(ctx, models.Target{
 		Id:         utils.StringPtr(instance.GetID()),
 		TargetInfo: &info,
 	})
@@ -143,41 +142,33 @@ func createTarget(ctx context.Context, apiClient client.ClientWithResponsesInter
 	}
 }
 
-func (scw *ScanConfigWatcher) createScanReturnID(ctx context.Context, scan *models.Scan) (string, error) {
-	scan, err := createScan(ctx, scw.backendClient, scan)
-	if err != nil {
-		return "", fmt.Errorf("failed to create scan: %v", err)
-	}
-	return *scan.Id, nil
-}
-
 // nolint:cyclop
-func createScan(ctx context.Context, apiClient client.ClientWithResponsesInterface, scan *models.Scan) (*models.Scan, error) {
-	resp, err := apiClient.PostScansWithResponse(ctx, *scan)
+func (scw *ScanConfigWatcher) createScan(ctx context.Context, scan *models.Scan) (string, error) {
+	resp, err := scw.backendClient.PostScansWithResponse(ctx, *scan)
 	if err != nil {
-		return nil, fmt.Errorf("failed to post a scan: %v", err)
+		return "", fmt.Errorf("failed to post a scan: %v", err)
 	}
 	switch resp.StatusCode() {
 	case http.StatusCreated:
 		if resp.JSON201 == nil {
-			return nil, fmt.Errorf("failed to create a scan: empty body")
+			return "", fmt.Errorf("failed to create a scan: empty body")
 		}
 		if resp.JSON201 == nil {
-			return nil, fmt.Errorf("scan id is nil")
+			return "", fmt.Errorf("scan id is nil")
 		}
-		return resp.JSON201, nil
+		return *resp.JSON201.Id, nil
 	case http.StatusConflict:
 		if resp.JSON409 == nil {
-			return nil, fmt.Errorf("failed to create a scan: empty body on conflict")
+			return "", fmt.Errorf("failed to create a scan: empty body on conflict")
 		}
 		if resp.JSON409.Id == nil {
-			return nil, fmt.Errorf("scan id on conflict is nil")
+			return "", fmt.Errorf("scan id on conflict is nil")
 		}
-		return resp.JSON409, nil
+		return *resp.JSON409.Id, nil
 	default:
 		if resp.JSONDefault != nil && resp.JSONDefault.Message != nil {
-			return nil, fmt.Errorf("failed to post scan. status code=%v: %v", resp.StatusCode(), resp.JSONDefault.Message)
+			return "", fmt.Errorf("failed to post scan. status code=%v: %v", resp.StatusCode(), resp.JSONDefault.Message)
 		}
-		return nil, fmt.Errorf("failed to post scan. status code=%v", resp.StatusCode())
+		return "", fmt.Errorf("failed to post scan. status code=%v", resp.StatusCode())
 	}
 }
