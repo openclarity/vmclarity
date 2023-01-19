@@ -86,7 +86,7 @@ func (s *Scanner) initScan(ctx context.Context) error {
 	for _, targetInstance := range s.targetInstances {
 		scanResultID, err := s.createInitTargetScanStatus(ctx, s.scanID, targetInstance.TargetID)
 		if err != nil {
-			log.Errorf("Failed to create an init scan result. instance id=%v, scan id=%v: %v", targetInstance.TargetID, s.scanConfig, err)
+			log.Errorf("Failed to create an init scan result. instance id=%v, scan id=%v: %v", targetInstance.TargetID, s.scanID, err)
 			continue
 		}
 		targetIDToScanData[targetInstance.TargetID] = &scanData{
@@ -109,17 +109,17 @@ func (s *Scanner) Scan(ctx context.Context) error {
 	s.Lock()
 	defer s.Unlock()
 
-	log.WithFields(s.logFields).Infof("Start scanning ID=%s", *s.scanConfig.Id)
+	log.WithFields(s.logFields).Infof("Start scanning ID=%s", s.scanID)
 
 	err := s.initScan(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to init scan ID=%s: %v", *s.scanConfig.Id, err)
+		return fmt.Errorf("failed to init scan ID=%s: %v", s.scanID, err)
 	}
 
 	if len(s.targetIDToScanData) == 0 {
 		log.WithFields(s.logFields).Info("Nothing to scan")
 		if err := s.patchScanEndTime(ctx, time.Now()); err != nil {
-			return fmt.Errorf("failed to set end time of the scan ID=%s: %v", *s.scanConfig.Id, err)
+			return fmt.Errorf("failed to set end time of the scan ID=%s: %v", s.scanID, err)
 		}
 		return nil
 	}
@@ -214,7 +214,7 @@ func (s *Scanner) patchScanEndTime(ctx context.Context, endTime time.Time) error
 	scan := models.Scan{
 		EndTime: &endTime,
 	}
-	resp, err := s.backendClient.PatchScansScanIDWithResponse(ctx, *s.scanConfig.Id, scan)
+	resp, err := s.backendClient.PatchScansScanIDWithResponse(ctx, s.scanID, scan)
 	if err != nil {
 		return fmt.Errorf("failed to patch a scan end time: %v", err)
 	}

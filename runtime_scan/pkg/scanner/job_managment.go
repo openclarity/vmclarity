@@ -95,7 +95,7 @@ func (s *Scanner) jobBatchManagement(ctx context.Context) {
 		log.WithFields(s.logFields).Infof("All jobs has finished")
 	}
 	if err := s.patchScanEndTime(ctx, time.Now()); err != nil {
-		log.WithFields(s.logFields).Errorf("Failed to set end time of the scan ID=%s: %v", *s.scanConfig.Id, err)
+		log.WithFields(s.logFields).Errorf("Failed to set end time of the scan ID=%s: %v", s.scanID, err)
 	}
 }
 
