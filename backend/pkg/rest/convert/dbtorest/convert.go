@@ -67,7 +67,8 @@ func ConvertScanConfigs(configs []*database.ScanConfig, total int64) (*models.Sc
 		}
 		*ret.Items = append(*ret.Items, *sc)
 	}
-	ret.Total = int(total)
+	totalInt := int(total)
+	ret.Total = &totalInt
 
 	return &ret, nil
 }
@@ -115,8 +116,8 @@ func ConvertTargets(targets []*database.Target, total int64) (*models.Targets, e
 		}
 		*ret.Items = append(*ret.Items, *tr)
 	}
-
-	ret.Total = int(total)
+	totalInt := int(total)
+	ret.Total = &totalInt
 
 	return &ret, nil
 }
@@ -193,8 +194,8 @@ func ConvertScanResults(scanResults []*database.ScanResult, total int64) (*model
 		}
 		*ret.Items = append(*ret.Items, *sr)
 	}
-
-	ret.Total = int(total)
+	totalInt := int(total)
+	ret.Total = &totalInt
 
 	return &ret, nil
 }
@@ -236,8 +237,8 @@ func ConvertScans(scans []*database.Scan, total int64) (*models.Scans, error) {
 		}
 		*ret.Items = append(*ret.Items, *sc)
 	}
-
-	ret.Total = int(total)
+	totalInt := int(total)
+	ret.Total = &totalInt
 
 	return &ret, nil
 }
