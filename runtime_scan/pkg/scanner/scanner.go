@@ -105,25 +105,26 @@ func (s *Scanner) initScan(ctx context.Context) error {
 	return nil
 }
 
-func (s *Scanner) Scan(ctx context.Context, scanID string) error {
+func (s *Scanner) Scan(ctx context.Context) error {
 	s.Lock()
 	defer s.Unlock()
 
-	log.WithFields(s.logFields).Infof("Start scanning ID=%s", scanID)
+	log.WithFields(s.logFields).Infof("Start scanning ID=%s", *s.scanConfig.Id)
 
 	err := s.initScan(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to init scan ID=%s: %v", scanID, err)
+		return fmt.Errorf("failed to init scan ID=%s: %v", *s.scanConfig.Id, err)
 	}
 
 	if len(s.targetIDToScanData) == 0 {
 		log.WithFields(s.logFields).Info("Nothing to scan")
-		if err := s.patchScanEndTime(ctx, scanID, time.Now()); err != nil {
-			return fmt.Errorf("failed to set end time of the scan ID=%s: %v", scanID, err)
+		if err := s.patchScanEndTime(ctx, time.Now()); err != nil {
+			return fmt.Errorf("failed to set end time of the scan ID=%s: %v", *s.scanConfig.Id, err)
 		}
+		return nil
 	}
 
-	go s.jobBatchManagement(ctx, scanID)
+	go s.jobBatchManagement(ctx)
 
 	return nil
 }
@@ -209,11 +210,11 @@ func (s *Scanner) patchTargetScanStatus(ctx context.Context, scanResultID string
 }
 
 // nolint:cyclop
-func (s *Scanner) patchScanEndTime(ctx context.Context, scanID string, endTime time.Time) error {
+func (s *Scanner) patchScanEndTime(ctx context.Context, endTime time.Time) error {
 	scan := models.Scan{
 		EndTime: &endTime,
 	}
-	resp, err := s.backendClient.PatchScansScanIDWithResponse(ctx, scanID, scan)
+	resp, err := s.backendClient.PatchScansScanIDWithResponse(ctx, *s.scanConfig.Id, scan)
 	if err != nil {
 		return fmt.Errorf("failed to patch a scan end time: %v", err)
 	}

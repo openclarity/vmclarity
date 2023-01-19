@@ -43,7 +43,7 @@ const TrivyTimeout = 300
 
 // run jobs.
 // nolint:cyclop
-func (s *Scanner) jobBatchManagement(ctx context.Context, scanID string) {
+func (s *Scanner) jobBatchManagement(ctx context.Context) {
 	s.Lock()
 	targetIDToScanData := s.targetIDToScanData
 	numberOfWorkers := 2 // TODO: create this in the API
@@ -94,8 +94,8 @@ func (s *Scanner) jobBatchManagement(ctx context.Context, scanID string) {
 	case <-fullScanDone:
 		log.WithFields(s.logFields).Infof("All jobs has finished")
 	}
-	if err := s.patchScanEndTime(ctx, scanID, time.Now()); err != nil {
-		log.WithFields(s.logFields).Errorf("Failed to set end time of the scan ID=%s: %v", scanID, err)
+	if err := s.patchScanEndTime(ctx, time.Now()); err != nil {
+		log.WithFields(s.logFields).Errorf("Failed to set end time of the scan ID=%s: %v", *s.scanConfig.Id, err)
 	}
 }
 

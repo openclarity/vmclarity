@@ -114,7 +114,10 @@ func (scw *ScanConfigWatcher) getScanConfigsToScan() ([]models.ScanConfig, error
 		case models.SingleScheduleScanConfig:
 			// nolint:forcetypeassert
 			singleSchedule := scheduled.(*models.SingleScheduleScanConfig)
-			shouldScan = scw.shouldStartSingleScheduleScanConfig(*scanConfig.Id, singleSchedule, now)
+			if shouldScan, err = scw.shouldStartSingleScheduleScanConfig(*scanConfig.Id, singleSchedule, now); err != nil {
+				log.Errorf("Failed to get scans for scan config ID=%s: %v", *scanConfig.Id, err)
+				continue
+			}
 		default:
 			continue
 		}
@@ -144,18 +147,17 @@ func (scw *ScanConfigWatcher) hasRunningOrCompletedScan(scans *models.Scans, sca
 	return false
 }
 
-func (scw *ScanConfigWatcher) shouldStartSingleScheduleScanConfig(scanConfigID string, schedule *models.SingleScheduleScanConfig, now time.Time) bool {
+func (scw *ScanConfigWatcher) shouldStartSingleScheduleScanConfig(scanConfigID string, schedule *models.SingleScheduleScanConfig, now time.Time) (bool, error) {
 	// Skip processing ScanConfig because its operationTime is outside of the start window
 	if schedule.OperationTime.Sub(now).Abs() >= timeWindow {
-		return false
+		return false, nil
 	}
 	// Check running or completed scan for specific scan config
 	hasRunningOrCompletedScan, err := scw.hasRunningScansByScanConfigIDAndOperationTime(scanConfigID, schedule.OperationTime)
 	if err != nil {
-		log.Errorf("Failed to get scan configs: %v", err)
-		return false
+		return false, fmt.Errorf("failed to get scans: %v", err)
 	}
-	return !hasRunningOrCompletedScan
+	return !hasRunningOrCompletedScan, nil
 }
 
 func (scw *ScanConfigWatcher) Start(ctx context.Context) {
