@@ -91,7 +91,7 @@ func (scw *ScanConfigWatcher) hasRunningScansByScanConfigIDAndOperationTime(scan
 		return false, fmt.Errorf("failed to get scans. status code=%v", resp.StatusCode())
 	}
 	// After Odata filters will be implemented on the backend the filter function can be removed
-	return scw.hasRunningOrCompletedScan(resp.JSON200, scanConfigID, operationTime), nil
+	return hasRunningOrCompletedScan(resp.JSON200, scanConfigID, operationTime), nil
 }
 
 func (scw *ScanConfigWatcher) getScanConfigsToScan() ([]models.ScanConfig, error) {
@@ -114,7 +114,8 @@ func (scw *ScanConfigWatcher) getScanConfigsToScan() ([]models.ScanConfig, error
 		case models.SingleScheduleScanConfig:
 			// nolint:forcetypeassert
 			singleSchedule := scheduled.(*models.SingleScheduleScanConfig)
-			if shouldScan, err = scw.shouldStartSingleScheduleScanConfig(*scanConfig.Id, singleSchedule, now); err != nil {
+			shouldScan, err = scw.shouldStartSingleScheduleScanConfig(*scanConfig.Id, singleSchedule, now)
+			if err != nil {
 				log.Errorf("Failed to get scans for scan config ID=%s: %v", *scanConfig.Id, err)
 				continue
 			}
@@ -129,20 +130,22 @@ func (scw *ScanConfigWatcher) getScanConfigsToScan() ([]models.ScanConfig, error
 	return scanConfigsToScan, nil
 }
 
-func (scw *ScanConfigWatcher) hasRunningOrCompletedScan(scans *models.Scans, scanConfigID string, operationTime time.Time) bool {
+func hasRunningOrCompletedScan(scans *models.Scans, scanConfigID string, operationTime time.Time) bool {
+	if scans.Items == nil {
+		return false
+	}
 	for _, scan := range *scans.Items {
 		if *scan.ScanConfigId != scanConfigID {
 			continue
 		}
 		if scan.EndTime == nil {
 			// There is a running scan for this scanConfig
-			continue
+			return true
 		}
 		if scan.StartTime.After(operationTime) {
 			// There is a completed scan that started after the operation time
-			continue
+			return true
 		}
-		return true
 	}
 	return false
 }

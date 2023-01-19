@@ -32,13 +32,13 @@ type Orchestrator interface {
 	Stop(cancel context.CancelFunc)
 }
 
-type APIBasedOrchestrator struct {
+type orchestrator struct {
 	config            *_config.OrchestratorConfig
 	scanConfigWatcher *configwatcher.ScanConfigWatcher
 	cancelFunc        context.CancelFunc
 }
 
-func Create(config *_config.OrchestratorConfig, providerClient provider.Client) (*APIBasedOrchestrator, error) {
+func Create(config *_config.OrchestratorConfig, providerClient provider.Client) (Orchestrator, error) {
 	backendClient, err := client.NewClientWithResponses(
 		// nolint:nosprintfhostport
 		fmt.Sprintf("http://%s:%d%s", config.BackendAddress, config.BackendRestPort, config.BackendBaseURL),
@@ -46,7 +46,7 @@ func Create(config *_config.OrchestratorConfig, providerClient provider.Client) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create a backend client: %v", err)
 	}
-	orc := &APIBasedOrchestrator{
+	orc := &orchestrator{
 		config:            config,
 		scanConfigWatcher: configwatcher.CreateScanConfigWatcher(backendClient, providerClient, config.ScannerConfig),
 	}
@@ -54,14 +54,14 @@ func Create(config *_config.OrchestratorConfig, providerClient provider.Client) 
 	return orc, nil
 }
 
-func (o *APIBasedOrchestrator) Start(ctx context.Context) {
+func (o *orchestrator) Start(ctx context.Context) {
 	log.Infof("Starting Orchestrator server")
 	ctx, cancel := context.WithCancel(ctx)
 	o.cancelFunc = cancel
 	o.scanConfigWatcher.Start(ctx)
 }
 
-func (o *APIBasedOrchestrator) Stop(cancel context.CancelFunc) {
+func (o *orchestrator) Stop(cancel context.CancelFunc) {
 	log.Infof("Stopping Orchestrator server")
 	if o.cancelFunc != nil {
 		o.cancelFunc()
