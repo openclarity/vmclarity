@@ -118,6 +118,7 @@ func createTarget(ctx context.Context, apiClient client.ClientWithResponsesInter
 		return nil, fmt.Errorf("failed to create VMInfo: %v", err)
 	}
 	resp, err := apiClient.PostTargetsWithResponse(ctx, models.Target{
+		Id:         utils.StringPtr(instance.GetID()),
 		TargetInfo: &info,
 	})
 	if err != nil {
