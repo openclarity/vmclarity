@@ -40,7 +40,7 @@ type orchestrator struct {
 
 func Create(config *_config.OrchestratorConfig, providerClient provider.Client) (Orchestrator, error) {
 	backendClient, err := client.NewClientWithResponses(
-		config.BackendEndpoint,
+		config.ScannerBackendAddress,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create a backend client: %v", err)
