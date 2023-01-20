@@ -110,10 +110,8 @@ func (scw *ScanConfigWatcher) getScanConfigsToScan() ([]models.ScanConfig, error
 			log.Errorf("failed to determine scheduled scan config type: %v", err)
 			continue
 		}
-		switch scheduled.(type) {
+		switch singleSchedule := scheduled.(type) {
 		case models.SingleScheduleScanConfig:
-			// nolint:forcetypeassert
-			singleSchedule := scheduled.(*models.SingleScheduleScanConfig)
 			shouldScan, err = scw.shouldStartSingleScheduleScanConfig(*scanConfig.Id, singleSchedule, now)
 			if err != nil {
 				log.Errorf("Failed to get scans for scan config ID=%s: %v", *scanConfig.Id, err)
@@ -150,7 +148,7 @@ func hasRunningOrCompletedScan(scans *models.Scans, scanConfigID string, operati
 	return false
 }
 
-func (scw *ScanConfigWatcher) shouldStartSingleScheduleScanConfig(scanConfigID string, schedule *models.SingleScheduleScanConfig, now time.Time) (bool, error) {
+func (scw *ScanConfigWatcher) shouldStartSingleScheduleScanConfig(scanConfigID string, schedule models.SingleScheduleScanConfig, now time.Time) (bool, error) {
 	// Skip processing ScanConfig because its operationTime is outside of the start window
 	if schedule.OperationTime.Sub(now).Abs() >= timeWindow {
 		return false, nil
