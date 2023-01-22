@@ -33,7 +33,7 @@ func (scw *ScanConfigWatcher) runNewScans(ctx context.Context, scanConfigs []mod
 	for _, sc := range scanConfigs {
 		scanConfig := sc
 		if err := scw.scan(ctx, &scanConfig); err != nil {
-			log.Errorf("falied to schedule a scan with scan config ID=%s: %v", *scanConfig.Id, err)
+			log.Errorf("Failed to schedule a scan with scan config ID=%s: %v", *scanConfig.Id, err)
 		}
 	}
 }
