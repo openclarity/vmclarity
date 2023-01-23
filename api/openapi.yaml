@@ -533,6 +533,7 @@ components:
       properties:
         id:
           type: string
+          readOnly: true
         startTime:
           type: string
           format: date-time
@@ -635,6 +636,7 @@ components:
       properties:
         id:
           type: string
+          readOnly: true
         name:
           type: string
         scanFamiliesConfig:
@@ -687,6 +689,7 @@ components:
       properties:
         id:
           type: string
+          readOnly: true
         name:
           type: string
         vpcs:
@@ -700,6 +703,7 @@ components:
       properties:
         id:
           type: string
+          readOnly: true
         name:
           type: string
         securityGroups:
@@ -713,6 +717,7 @@ components:
       properties:
         id:
           type: string
+          readOnly: true
         name:
           type: string
 
