@@ -655,7 +655,6 @@ components:
         mapping:
           AwsScanScope: '#/components/schemas/AwsScanScope'
 
-
     AwsScanScope:
       type: object
       description: The scope of a configured scan.
