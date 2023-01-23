@@ -494,6 +494,7 @@ components:
       properties:
         message:
           type: string
+          readOnly: true
       description: An object that is returned in all cases of failures.
 
     SuccessResponse:
@@ -501,6 +502,7 @@ components:
       properties:
         message:
           type: string
+          readOnly: true
       description: An object that is returned in cases of success that returns nothing.
 
     CloudProvider:
