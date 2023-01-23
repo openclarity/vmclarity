@@ -904,6 +904,7 @@ components:
       properties:
         id:
           type: string
+          readOnly: true
         targetId:
           type: string
         scanId:
