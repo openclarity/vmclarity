@@ -834,6 +834,7 @@ components:
       properties:
         id:
           type: string
+          readOnly: true
         targetInfo:
           $ref: '#/components/schemas/TargetType'
 
