@@ -121,7 +121,6 @@ func TestConvertScanResult(t *testing.T) {
 		{
 			VulnerabilityInfo: &models.VulnerabilityInfo{
 				Description:       utils.StringPtr("desc"),
-				Id:                utils.StringPtr("1"),
 				VulnerabilityName: utils.StringPtr("name"),
 			},
 			Id: utils.StringPtr("1"),

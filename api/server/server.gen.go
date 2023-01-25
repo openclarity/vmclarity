@@ -16,6 +16,7 @@ import (
 	"github.com/deepmap/oapi-codegen/pkg/runtime"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/labstack/echo/v4"
+
 	. "github.com/openclarity/vmclarity/api/models"
 )
 

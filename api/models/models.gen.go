@@ -115,21 +115,32 @@ type DirInfo struct {
 	ObjectType string  `json:"objectType"`
 }
 
+// Exploit defines model for Exploit.
+type Exploit struct {
+	ExploitInfo *ExploitInfo `json:"exploitInfo,omitempty"`
+	Id          *string      `json:"id,omitempty"`
+}
+
 // ExploitInfo defines model for ExploitInfo.
 type ExploitInfo struct {
 	Description     *string   `json:"description,omitempty"`
-	Id              *string   `json:"id,omitempty"`
 	Vulnerabilities *[]string `json:"vulnerabilities,omitempty"`
 }
 
 // ExploitScan defines model for ExploitScan.
 type ExploitScan struct {
-	Exploits *[]ExploitInfo `json:"exploits,omitempty"`
+	Exploits *[]Exploit `json:"exploits,omitempty"`
 }
 
 // ExploitsConfig defines model for ExploitsConfig.
 type ExploitsConfig struct {
 	Enabled *bool `json:"enabled,omitempty"`
+}
+
+// Malware defines model for Malware.
+type Malware struct {
+	Id          *string      `json:"id,omitempty"`
+	MalwareInfo *MalwareInfo `json:"malwareInfo,omitempty"`
 }
 
 // MalwareConfig defines model for MalwareConfig.
@@ -139,7 +150,6 @@ type MalwareConfig struct {
 
 // MalwareInfo defines model for MalwareInfo.
 type MalwareInfo struct {
-	Id          *string      `json:"id,omitempty"`
 	MalwareName *string      `json:"malwareName,omitempty"`
 	MalwareType *MalwareType `json:"malwareType,omitempty"`
 
@@ -149,16 +159,21 @@ type MalwareInfo struct {
 
 // MalwareScan defines model for MalwareScan.
 type MalwareScan struct {
-	Malware *[]MalwareInfo `json:"malware,omitempty"`
+	Malware *[]Malware `json:"malware,omitempty"`
 }
 
 // MalwareType defines model for MalwareType.
 type MalwareType string
 
+// Misconfiguration defines model for Misconfiguration.
+type Misconfiguration struct {
+	Id                   *string               `json:"id,omitempty"`
+	MisconfigurationInfo *MisconfigurationInfo `json:"misconfigurationInfo,omitempty"`
+}
+
 // MisconfigurationInfo defines model for MisconfigurationInfo.
 type MisconfigurationInfo struct {
 	Description *string `json:"description,omitempty"`
-	Id          *string `json:"id,omitempty"`
 
 	// Path Path of the file that contains misconfigurations
 	Path *string `json:"path,omitempty"`
@@ -166,7 +181,7 @@ type MisconfigurationInfo struct {
 
 // MisconfigurationScan defines model for MisconfigurationScan.
 type MisconfigurationScan struct {
-	Misconfigurations *[]MisconfigurationInfo `json:"misconfigurations,omitempty"`
+	Misconfigurations *[]Misconfiguration `json:"misconfigurations,omitempty"`
 }
 
 // MisconfigurationsConfig defines model for MisconfigurationsConfig.
@@ -182,7 +197,6 @@ type Package struct {
 
 // PackageInfo defines model for PackageInfo.
 type PackageInfo struct {
-	Id             *string `json:"id,omitempty"`
 	PackageName    *string `json:"packageName,omitempty"`
 	PackageVersion *string `json:"packageVersion,omitempty"`
 }
@@ -194,10 +208,14 @@ type PodInfo struct {
 	PodName    *string `json:"podName,omitempty"`
 }
 
+// Rootkit defines model for Rootkit.
+type Rootkit struct {
+	Id          *string      `json:"id,omitempty"`
+	RootkitInfo *RootkitInfo `json:"rootkitInfo,omitempty"`
+}
+
 // RootkitInfo defines model for RootkitInfo.
 type RootkitInfo struct {
-	Id *string `json:"id,omitempty"`
-
 	// Path Path of the file that contains rootkit
 	Path        *string      `json:"path,omitempty"`
 	RootkitName *string      `json:"rootkitName,omitempty"`
@@ -206,7 +224,7 @@ type RootkitInfo struct {
 
 // RootkitScan defines model for RootkitScan.
 type RootkitScan struct {
-	Rootkits *[]RootkitInfo `json:"rootkits,omitempty"`
+	Rootkits *[]Rootkit `json:"rootkits,omitempty"`
 }
 
 // RootkitType defines model for RootkitType.
@@ -298,8 +316,8 @@ type Scans struct {
 
 // Secret defines model for Secret.
 type Secret struct {
-	SecretInfo *SecretInfo `json:"SecretInfo,omitempty"`
 	Id         *string     `json:"id,omitempty"`
+	SecretInfo *SecretInfo `json:"secretInfo,omitempty"`
 }
 
 // SecretInfo defines model for SecretInfo.
@@ -428,14 +446,13 @@ type VulnerabilitiesConfig struct {
 
 // Vulnerability defines model for Vulnerability.
 type Vulnerability struct {
-	VulnerabilityInfo *VulnerabilityInfo `json:"VulnerabilityInfo,omitempty"`
 	Id                *string            `json:"id,omitempty"`
+	VulnerabilityInfo *VulnerabilityInfo `json:"vulnerabilityInfo,omitempty"`
 }
 
 // VulnerabilityInfo defines model for VulnerabilityInfo.
 type VulnerabilityInfo struct {
 	Description       *string `json:"description,omitempty"`
-	Id                *string `json:"id,omitempty"`
 	VulnerabilityName *string `json:"vulnerabilityName,omitempty"`
 }
 

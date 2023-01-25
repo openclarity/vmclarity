@@ -971,26 +971,6 @@ components:
           items:
             type: string
 
-    PackageInfo:
-      type: object
-      properties:
-        id:
-          type: string
-        packageName:
-          type: string
-        packageVersion:
-          type: string
-
-    VulnerabilityInfo:
-      type: object
-      properties:
-        id:
-          type: string
-        vulnerabilityName:
-          type: string
-        description:
-          type: string
-
     Package:
       type: object
       properties:
@@ -1004,7 +984,7 @@ components:
       properties:
         id:
           type: string
-        VulnerabilityInfo:
+        vulnerabilityInfo:
           $ref: '#/components/schemas/VulnerabilityInfo'
 
     Secret:
@@ -1012,14 +992,60 @@ components:
       properties:
         id:
           type: string
-        SecretInfo:
+        secretInfo:
           $ref: '#/components/schemas/SecretInfo'
 
-    MalwareInfo:
+    Malware:
       type: object
       properties:
         id:
           type: string
+        malwareInfo:
+          $ref: '#/components/schemas/MalwareInfo'
+
+    Rootkit:
+      type: object
+      properties:
+        id:
+          type: string
+        rootkitInfo:
+          $ref: '#/components/schemas/RootkitInfo'
+
+    Misconfiguration:
+      type: object
+      properties:
+        id:
+          type: string
+        misconfigurationInfo:
+          $ref: '#/components/schemas/MisconfigurationInfo'
+
+    Exploit:
+      type: object
+      properties:
+        id:
+          type: string
+        exploitInfo:
+          $ref: '#/components/schemas/ExploitInfo'
+
+    PackageInfo:
+      type: object
+      properties:
+        packageName:
+          type: string
+        packageVersion:
+          type: string
+
+    VulnerabilityInfo:
+      type: object
+      properties:
+        vulnerabilityName:
+          type: string
+        description:
+          type: string
+
+    MalwareInfo:
+      type: object
+      properties:
         malwareName:
           type: string
         malwareType:
@@ -1031,8 +1057,6 @@ components:
     RootkitInfo:
       type: object
       properties:
-        id:
-          type: string
         rootkitName:
           type: string
         rootkitType:
@@ -1044,8 +1068,6 @@ components:
     MisconfigurationInfo:
       type: object
       properties:
-        id:
-          type: string
         description:
           type: string
         path:
@@ -1071,8 +1093,6 @@ components:
     ExploitInfo:
       type: object
       properties:
-        id:
-          type: string
         description:
           type: string
         vulnerabilities:
@@ -1102,7 +1122,7 @@ components:
         malware:
           type: array
           items:
-            $ref: '#/components/schemas/MalwareInfo'
+            $ref: '#/components/schemas/Malware'
 
     RootkitScan:
       type: object
@@ -1110,7 +1130,7 @@ components:
         rootkits:
           type: array
           items:
-            $ref: '#/components/schemas/RootkitInfo'
+            $ref: '#/components/schemas/Rootkit'
 
     SecretScan:
       type: object
@@ -1126,7 +1146,7 @@ components:
         misconfigurations:
           type: array
           items:
-            $ref: '#/components/schemas/MisconfigurationInfo'
+            $ref: '#/components/schemas/Misconfiguration'
 
     ExploitScan:
       type: object
@@ -1134,7 +1154,7 @@ components:
         exploits:
           type: array
           items:
-            $ref: '#/components/schemas/ExploitInfo'
+            $ref: '#/components/schemas/Exploit'
 
     MalwareType:
       type: string
