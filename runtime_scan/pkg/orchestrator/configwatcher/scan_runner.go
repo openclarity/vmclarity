@@ -109,7 +109,7 @@ func (scw *ScanConfigWatcher) createTarget(ctx context.Context, instance types.I
 	info := models.TargetType{}
 	instanceProvider := models.AWS
 	err := info.FromVMInfo(models.VMInfo{
-		InstanceID:       utils.StringPtr(instance.GetID()),
+		InstanceID:       instance.GetID(),
 		InstanceProvider: &instanceProvider,
 		Location:         utils.StringPtr(instance.GetLocation()),
 	})

@@ -181,7 +181,7 @@ func TestConvertScanResult(t *testing.T) {
 func TestConvertTarget(t *testing.T) {
 	cloudProvider := models.CloudProvider("aws")
 	vmInfo := models.VMInfo{
-		InstanceID:       utils.StringPtr("instanceID"),
+		InstanceID:       "instanceID",
 		InstanceProvider: &cloudProvider,
 		Location:         utils.StringPtr("location"),
 	}

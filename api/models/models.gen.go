@@ -433,7 +433,7 @@ type TimeOfDay struct {
 
 // VMInfo defines model for VMInfo.
 type VMInfo struct {
-	InstanceID       *string        `json:"instanceID,omitempty"`
+	InstanceID       string         `json:"instanceID"`
 	InstanceProvider *CloudProvider `json:"instanceProvider,omitempty"`
 	Location         *string        `json:"location,omitempty"`
 	ObjectType       string         `json:"objectType"`
