@@ -73,12 +73,10 @@ func ConvertScanConfigs(configs []*database.ScanConfig, total int64) (*models.Sc
 	return &ret, nil
 }
 
-func ConvertTarget(target *database.Target) (*models.Target, string, error) {
+func ConvertTarget(target *database.Target) (*models.Target, error) {
 	ret := models.Target{
 		TargetInfo: &models.TargetType{},
 	}
-
-	var uniqueConstraints string
 
 	switch target.Type {
 	case "VMInfo":
@@ -92,19 +90,31 @@ func ConvertTarget(target *database.Target) (*models.Target, string, error) {
 			InstanceProvider: cloudProvider,
 			Location:         target.Location,
 		}); err != nil {
-			return nil, "", fmt.Errorf("FromVMInfo failed: %w", err)
+			return nil, fmt.Errorf("FromVMInfo failed: %w", err)
 		}
-		uniqueConstraints = fmt.Sprintf("instanceID=%s, region=%s", *target.InstanceID, *target.Location)
 	case "Dir":
-		return nil, "", fmt.Errorf("unsupported target type Dir")
+		return nil, fmt.Errorf("unsupported target type Dir")
 	case "Pod":
-		return nil, "", fmt.Errorf("unsupported target type Pod")
+		return nil, fmt.Errorf("unsupported target type Pod")
 	default:
-		return nil, "", fmt.Errorf("unknown target type: %v", target.Type)
+		return nil, fmt.Errorf("unknown target type: %v", target.Type)
 	}
 	ret.Id = utils.StringPtr(target.ID.String())
 
-	return &ret, uniqueConstraints, nil
+	return &ret, nil
+}
+
+func GetUniqueConstraintsOfTarget(target *database.Target) string {
+	switch target.Type {
+	case "VMInfo":
+		return fmt.Sprintf("instanceID=%s, region=%s", *target.InstanceID, *target.Location)
+	case "Dir":
+		return "unsupported target type Dir"
+	case "Pod":
+		return "unsupported target type Pod"
+	default:
+		return fmt.Sprintf("unknown target type: %v", target.Type)
+	}
 }
 
 func ConvertTargets(targets []*database.Target, total int64) (*models.Targets, error) {
@@ -113,7 +123,7 @@ func ConvertTargets(targets []*database.Target, total int64) (*models.Targets, e
 	}
 
 	for _, target := range targets {
-		tr, _, err := ConvertTarget(target)
+		tr, err := ConvertTarget(target)
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert target: %w", err)
 		}

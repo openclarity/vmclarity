@@ -59,11 +59,13 @@ func (s *ServerImpl) PostTargets(ctx echo.Context) error {
 	createdTarget, err := s.dbHandler.TargetsTable().CreateTarget(convertedDB)
 	if err != nil {
 		if errors.Is(err, common.ErrConflict) {
-			convertedExist, uniqueConstraints, err := dbtorest.ConvertTarget(createdTarget)
+			convertedExist, err := dbtorest.ConvertTarget(createdTarget)
 			if err != nil {
 				return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert existing target: %v", err))
 			}
-			message := fmt.Sprintf("Target exists with the unique constraint combination: %s", uniqueConstraints)
+			message := fmt.Sprintf("Target exists with the unique constraint combination: %s",
+				dbtorest.GetUniqueConstraintsOfTarget(createdTarget),
+			)
 			existResponse := &models.TargetExists{
 				Message: utils.StringPtr(message),
 				Target:  convertedExist,
@@ -73,7 +75,7 @@ func (s *ServerImpl) PostTargets(ctx echo.Context) error {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to create target in db: %v", err))
 	}
 
-	converted, _, err := dbtorest.ConvertTarget(createdTarget)
+	converted, err := dbtorest.ConvertTarget(createdTarget)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert target: %v", err))
 	}
@@ -94,7 +96,7 @@ func (s *ServerImpl) GetTargetsTargetID(ctx echo.Context, targetID models.Target
 		return sendError(ctx, http.StatusInternalServerError, fmt.Errorf("failed to get target from db. targetID=%v: %v", targetID, err).Error())
 	}
 
-	converted, _, err := dbtorest.ConvertTarget(target)
+	converted, err := dbtorest.ConvertTarget(target)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert target: %v", err))
 	}
@@ -125,7 +127,7 @@ func (s *ServerImpl) PutTargetsTargetID(ctx echo.Context, targetID models.Target
 		return sendError(ctx, http.StatusInternalServerError, fmt.Errorf("failed to update target in db. targetID=%v: %v", targetID, err).Error())
 	}
 
-	converted, _, err := dbtorest.ConvertTarget(updatedTarget)
+	converted, err := dbtorest.ConvertTarget(updatedTarget)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert target: %v", err))
 	}
