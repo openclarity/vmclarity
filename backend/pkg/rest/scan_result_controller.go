@@ -58,14 +58,14 @@ func (s *ServerImpl) PostScanResults(ctx echo.Context) error {
 	}
 	createdScanResult, err := s.dbHandler.ScanResultsTable().CreateScanResult(convertedDB)
 	if err != nil {
-		if errors.Is(err, common.ErrConflict) {
+		var conflictErr *common.ConflictError
+		if errors.As(err, &conflictErr) {
 			convertedExist, err := dbtorest.ConvertScanResult(createdScanResult)
 			if err != nil {
 				return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert existing scan result: %v", err))
 			}
-			message := fmt.Sprintf("Target scan result exists with scanID=%s, targetID=%s", convertedExist.ScanId, convertedExist.TargetId)
 			existResponse := &models.TargetScanResultExists{
-				Message:          utils.StringPtr(message),
+				Message:          utils.StringPtr(conflictErr.Reason),
 				TargetScanResult: convertedExist,
 			}
 			return sendResponse(ctx, http.StatusConflict, existResponse)

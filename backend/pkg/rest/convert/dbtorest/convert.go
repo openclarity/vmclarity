@@ -104,19 +104,6 @@ func ConvertTarget(target *database.Target) (*models.Target, error) {
 	return &ret, nil
 }
 
-func GetUniqueConstraintsOfTarget(target *database.Target) string {
-	switch target.Type {
-	case "VMInfo":
-		return fmt.Sprintf("instanceID=%s, region=%s", *target.InstanceID, *target.Location)
-	case "Dir":
-		return "unsupported target type Dir"
-	case "Pod":
-		return "unsupported target type Pod"
-	default:
-		return fmt.Sprintf("unknown target type: %v", target.Type)
-	}
-}
-
 func ConvertTargets(targets []*database.Target, total int64) (*models.Targets, error) {
 	ret := models.Targets{
 		Items: &[]models.Target{},

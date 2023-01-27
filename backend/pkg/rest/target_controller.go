@@ -58,16 +58,14 @@ func (s *ServerImpl) PostTargets(ctx echo.Context) error {
 	}
 	createdTarget, err := s.dbHandler.TargetsTable().CreateTarget(convertedDB)
 	if err != nil {
-		if errors.Is(err, common.ErrConflict) {
+		var conflictErr *common.ConflictError
+		if errors.As(err, &conflictErr) {
 			convertedExist, err := dbtorest.ConvertTarget(createdTarget)
 			if err != nil {
 				return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert existing target: %v", err))
 			}
-			message := fmt.Sprintf("Target exists with the unique constraint combination: %s",
-				dbtorest.GetUniqueConstraintsOfTarget(createdTarget),
-			)
 			existResponse := &models.TargetExists{
-				Message: utils.StringPtr(message),
+				Message: utils.StringPtr(conflictErr.Reason),
 				Target:  convertedExist,
 			}
 			return sendResponse(ctx, http.StatusConflict, existResponse)
