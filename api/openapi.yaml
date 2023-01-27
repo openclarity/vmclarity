@@ -44,7 +44,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Target'
+                $ref: '#/components/schemas/TargetExists'
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
@@ -149,7 +149,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TargetScanResult'
+                $ref: '#/components/schemas/TargetScanResultExists'
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
@@ -264,7 +264,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Scan'
+                $ref: '#/components/schemas/ScanExists'
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
@@ -394,7 +394,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ScanConfig'
+                $ref: '#/components/schemas/ScanConfigExists'
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
@@ -552,6 +552,16 @@ components:
           items:
             type: string
 
+    ScanExists:
+      type: object
+      properties:
+        message:
+          description: Describes which unique constraint combination causes the conflict.
+          type: string
+          readOnly: true
+        scan:
+          $ref: '#/components/schemas/Scan'
+
     ScanFamiliesConfig:
       type: object
       description: The configuration of the scanner families within a scan config
@@ -645,6 +655,16 @@ components:
           $ref: '#/components/schemas/ScanScopeType'
         scheduled:
           $ref: '#/components/schemas/RuntimeScheduleScanConfigType'
+
+    ScanConfigExists:
+      type: object
+      properties:
+        message:
+          description: Describes which unique constraint combination causes the conflict.
+          type: string
+          readOnly: true
+        scanConfig:
+          $ref: '#/components/schemas/ScanConfig'
 
     ScanScopeType:
       type: object
@@ -838,6 +858,16 @@ components:
         targetInfo:
           $ref: '#/components/schemas/TargetType'
 
+    TargetExists:
+      type: object
+      properties:
+        message:
+          description: Describes which unique constraint combination causes the conflict.
+          type: string
+          readOnly: true
+        target:
+          $ref: '#/components/schemas/Target'
+
     TargetType:
       type: object
       anyOf:
@@ -936,6 +966,16 @@ components:
       required:
         - targetId
         - scanId
+
+    TargetScanResultExists:
+      type: object
+      properties:
+        message:
+          description: Describes which unique constraint combination causes the conflict.
+          readOnly: true
+          type: string
+        targetScanResult:
+          $ref: '#/components/schemas/TargetScanResult'
 
     TargetScanStatus:
       type: object

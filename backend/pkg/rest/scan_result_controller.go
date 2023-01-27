@@ -29,6 +29,7 @@ import (
 	"github.com/openclarity/vmclarity/backend/pkg/database"
 	"github.com/openclarity/vmclarity/backend/pkg/rest/convert/dbtorest"
 	"github.com/openclarity/vmclarity/backend/pkg/rest/convert/resttodb"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 )
 
 func (s *ServerImpl) GetScanResults(ctx echo.Context, params models.GetScanResultsParams) error {
@@ -62,7 +63,12 @@ func (s *ServerImpl) PostScanResults(ctx echo.Context) error {
 			if err != nil {
 				return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert existing scan result: %v", err))
 			}
-			return sendResponse(ctx, http.StatusConflict, convertedExist)
+			message := fmt.Sprintf("Target scan result exists with scanID=%s, targetID=%s", convertedExist.ScanId, convertedExist.TargetId)
+			existResponse := &models.TargetScanResultExists{
+				Message:          utils.StringPtr(message),
+				TargetScanResult: convertedExist,
+			}
+			return sendResponse(ctx, http.StatusConflict, existResponse)
 		}
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to create scan result in db: %v", err))
 	}

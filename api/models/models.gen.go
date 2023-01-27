@@ -277,6 +277,15 @@ type ScanConfig struct {
 	Scope              *ScanScopeType                 `json:"scope,omitempty"`
 }
 
+// ScanConfigExists defines model for ScanConfigExists.
+type ScanConfigExists struct {
+	// Message Describes which unique constraint combination causes the conflict.
+	Message *string `json:"message,omitempty"`
+
+	// ScanConfig Describes a multi-target scheduled scan config.
+	ScanConfig *ScanConfig `json:"scanConfig,omitempty"`
+}
+
 // ScanConfigs defines model for ScanConfigs.
 type ScanConfigs struct {
 	// Items List of scan configs according to the given filters and page. List length must be lower or equal to pageSize.
@@ -284,6 +293,15 @@ type ScanConfigs struct {
 
 	// Total Total scan config count according to the given filters
 	Total *int `json:"total,omitempty"`
+}
+
+// ScanExists defines model for ScanExists.
+type ScanExists struct {
+	// Message Describes which unique constraint combination causes the conflict.
+	Message *string `json:"message,omitempty"`
+
+	// Scan Describes a multi-target scheduled scan.
+	Scan *Scan `json:"scan,omitempty"`
 }
 
 // ScanFamiliesConfig The configuration of the scanner families within a scan config
@@ -366,6 +384,13 @@ type Target struct {
 	TargetInfo *TargetType `json:"targetInfo,omitempty"`
 }
 
+// TargetExists defines model for TargetExists.
+type TargetExists struct {
+	// Message Describes which unique constraint combination causes the conflict.
+	Message *string `json:"message,omitempty"`
+	Target  *Target `json:"target,omitempty"`
+}
+
 // TargetScanResult defines model for TargetScanResult.
 type TargetScanResult struct {
 	Exploits          *ExploitScan          `json:"exploits,omitempty"`
@@ -379,6 +404,13 @@ type TargetScanResult struct {
 	Status            *TargetScanStatus     `json:"status,omitempty"`
 	TargetId          string                `json:"targetId"`
 	Vulnerabilities   *VulnerabilityScan    `json:"vulnerabilities,omitempty"`
+}
+
+// TargetScanResultExists defines model for TargetScanResultExists.
+type TargetScanResultExists struct {
+	// Message Describes which unique constraint combination causes the conflict.
+	Message          *string           `json:"message,omitempty"`
+	TargetScanResult *TargetScanResult `json:"targetScanResult,omitempty"`
 }
 
 // TargetScanResults defines model for TargetScanResults.

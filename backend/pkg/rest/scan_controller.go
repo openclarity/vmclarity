@@ -62,7 +62,12 @@ func (s *ServerImpl) PostScans(ctx echo.Context) error {
 			if err != nil {
 				return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert existing scan: %v", err))
 			}
-			return sendResponse(ctx, http.StatusConflict, convertedExist)
+			message := fmt.Sprintf("There is a running scan with scanConfigID=%s", *convertedExist.ScanConfigId)
+			existResponse := &models.ScanExists{
+				Message: utils.StringPtr(message),
+				Scan:    convertedExist,
+			}
+			return sendResponse(ctx, http.StatusConflict, existResponse)
 		}
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to create scan in db: %v", err))
 	}
