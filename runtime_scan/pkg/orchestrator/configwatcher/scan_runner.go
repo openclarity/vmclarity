@@ -65,7 +65,7 @@ func (scw *ScanConfigWatcher) initNewScan(ctx context.Context, scanConfig *model
 		return nil, "", fmt.Errorf("failed to get or create targets: %v", err)
 	}
 
-	now := time.Now().UTC()
+	now := time.Now()
 	scan := &models.Scan{
 		ScanConfigId:       scanConfig.Id,
 		ScanFamiliesConfig: scanConfig.ScanFamiliesConfig,

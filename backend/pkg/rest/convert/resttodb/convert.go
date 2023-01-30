@@ -18,6 +18,7 @@ package resttodb
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	uuid "github.com/satori/go.uuid"
 
@@ -187,9 +188,9 @@ func ConvertScan(scan *models.Scan, id string) (*database.Scan, error) {
 
 	ret.ScanConfigID = scan.ScanConfigId
 
-	ret.ScanEndTime = scan.EndTime
-
-	ret.ScanStartTime = scan.StartTime
+	// convert times to rfc3339 format in order to keep a unified format in the db
+	ret.ScanEndTime = convertTimeToRFC3339(scan.EndTime)
+	ret.ScanStartTime = convertTimeToRFC3339(scan.StartTime)
 
 	if scan.ScanFamiliesConfig != nil {
 		ret.ScanFamiliesConfig, err = json.Marshal(scan.ScanFamiliesConfig)
@@ -208,4 +209,16 @@ func ConvertScan(scan *models.Scan, id string) (*database.Scan, error) {
 	ret.Base = database.Base{ID: scanUUID}
 
 	return &ret, nil
+}
+
+func convertTimeToRFC3339(t *time.Time) *time.Time {
+	if t == nil {
+		return nil
+	}
+
+	str := t.Format(time.RFC3339)
+	// ignore the error since str is converted from a valid time.
+	converted, _ := time.Parse(time.RFC3339, str)
+
+	return &converted
 }
