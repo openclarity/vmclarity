@@ -73,8 +73,10 @@ var rootCmd = &cobra.Command{
 		if exporter != nil {
 			errors := []error{famerr}
 
-			exportErrors := exporter.ExportResults(res)
-			errors = append(errors, exportErrors...)
+			if res != nil {
+				exportErrors := exporter.ExportResults(res)
+				errors = append(errors, exportErrors...)
+			}
 
 			err := exporter.MarkScanResultDone(errors)
 			if err != nil {
