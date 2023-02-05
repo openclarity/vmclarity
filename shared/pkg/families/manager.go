@@ -80,7 +80,7 @@ func (m *Manager) Run() (*results.Results, error) {
 	for _, family := range m.families {
 		ret, err := family.Run(familiesResults)
 		if err != nil {
-			return nil, fmt.Errorf("failed to run family %T: %w", family, err)
+			return familiesResults, fmt.Errorf("failed to run family %T: %w", family, err)
 		}
 		familiesResults.SetResults(ret)
 	}
