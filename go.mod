@@ -21,7 +21,7 @@ require (
 	github.com/urfave/cli v1.22.7
 	gorm.io/driver/sqlite v1.3.6
 	gorm.io/gorm v1.23.5
-	gotest.tools/v3 v3.2.0
+	gotest.tools/v3 v3.4.0
 )
 
 require (
