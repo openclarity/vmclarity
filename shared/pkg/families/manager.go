@@ -82,10 +82,9 @@ func (m *Manager) Run() (*results.Results, FamiliesRunErrors) {
 	var errors = make(map[types.FamilyType]error)
 
 	for _, family := range m.families {
-		log.Infof("Running family %v", family.GetType())
 		ret, err := family.Run(familiesResults)
 		if err != nil {
-			errors[family.GetType()] = fmt.Errorf("failed to run family %T: %w", family, err)
+			errors[family.GetType()] = fmt.Errorf("failed to run family %v: %w", family.GetType(), err)
 		} else {
 			familiesResults.SetResults(ret)
 		}

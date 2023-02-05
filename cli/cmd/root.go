@@ -89,7 +89,7 @@ var rootCmd = &cobra.Command{
 		}
 
 		if famerr != nil {
-			return fmt.Errorf("failed to run families: %v", famerr)
+			return fmt.Errorf("failed to run families: %+v", famerr)
 		}
 
 		if err := outputResults(config, res); err != nil {
