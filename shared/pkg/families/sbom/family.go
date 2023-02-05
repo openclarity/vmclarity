@@ -17,7 +17,6 @@ package sbom
 
 import (
 	"fmt"
-	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 
 	"github.com/openclarity/kubeclarity/cli/pkg"
 	cliutils "github.com/openclarity/kubeclarity/cli/pkg/utils"
@@ -30,6 +29,7 @@ import (
 
 	"github.com/openclarity/vmclarity/shared/pkg/families/interfaces"
 	familiesresults "github.com/openclarity/vmclarity/shared/pkg/families/results"
+	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 )
 
 type SBOM struct {

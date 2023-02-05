@@ -17,7 +17,6 @@ package secrets
 
 import (
 	"fmt"
-	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 
 	log "github.com/sirupsen/logrus"
 
@@ -28,6 +27,7 @@ import (
 	familiesresults "github.com/openclarity/vmclarity/shared/pkg/families/results"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets/common"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets/job"
+	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 )
 
 type Secrets struct {

@@ -18,10 +18,6 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/openclarity/vmclarity/shared/pkg/families/results"
-	"github.com/openclarity/vmclarity/shared/pkg/families/sbom"
-	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
-	"github.com/openclarity/vmclarity/shared/pkg/families/vulnerabilities"
 	"os"
 
 	"github.com/ghodss/yaml"
@@ -31,6 +27,10 @@ import (
 
 	"github.com/openclarity/vmclarity/cli/pkg"
 	"github.com/openclarity/vmclarity/shared/pkg/families"
+	"github.com/openclarity/vmclarity/shared/pkg/families/results"
+	"github.com/openclarity/vmclarity/shared/pkg/families/sbom"
+	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
+	"github.com/openclarity/vmclarity/shared/pkg/families/vulnerabilities"
 )
 
 var (

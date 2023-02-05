@@ -17,7 +17,6 @@ package vulnerabilities
 
 import (
 	"fmt"
-	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 	"os"
 
 	"github.com/openclarity/kubeclarity/shared/pkg/config"
@@ -30,6 +29,7 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/families/interfaces"
 	"github.com/openclarity/vmclarity/shared/pkg/families/results"
 	"github.com/openclarity/vmclarity/shared/pkg/families/sbom"
+	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 )
 
 const (

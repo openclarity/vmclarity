@@ -17,7 +17,6 @@ package families
 
 import (
 	"fmt"
-	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 
 	log "github.com/sirupsen/logrus"
 
@@ -29,6 +28,7 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/families/rootkits"
 	"github.com/openclarity/vmclarity/shared/pkg/families/sbom"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
+	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 	"github.com/openclarity/vmclarity/shared/pkg/families/vulnerabilities"
 )
 

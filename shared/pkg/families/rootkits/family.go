@@ -16,11 +16,11 @@
 package rootkits
 
 import (
-	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/shared/pkg/families/interfaces"
 	"github.com/openclarity/vmclarity/shared/pkg/families/results"
+	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 )
 
 type Rootkits struct {
