@@ -75,11 +75,12 @@ func New(logger *log.Entry, config *Config) *Manager {
 	return manager
 }
 
-type FamiliesRunErrors map[types.FamilyType]error
+type RunErrors map[types.FamilyType]error
 
-func (m *Manager) Run() (*results.Results, FamiliesRunErrors) {
+func (m *Manager) Run() (*results.Results, RunErrors) {
+	errors := make(map[types.FamilyType]error)
+
 	familiesResults := results.New()
-	var errors = make(map[types.FamilyType]error)
 
 	for _, family := range m.families {
 		ret, err := family.Run(familiesResults)

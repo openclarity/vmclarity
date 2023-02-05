@@ -226,7 +226,7 @@ func (e *Exporter) MarkScanResultDone(errors []error) error {
 	return nil
 }
 
-func (e *Exporter) ExportSbomResult(res *results.Results, famerr families.FamiliesRunErrors) error {
+func (e *Exporter) ExportSbomResult(res *results.Results, famerr families.RunErrors) error {
 	scanResults, err := e.getExistingScanResult()
 	if err != nil {
 		return err
@@ -264,7 +264,7 @@ func (e *Exporter) ExportSbomResult(res *results.Results, famerr families.Famili
 	return nil
 }
 
-func (e *Exporter) ExportVulResult(res *results.Results, famerr families.FamiliesRunErrors) error {
+func (e *Exporter) ExportVulResult(res *results.Results, famerr families.RunErrors) error {
 	scanResults, err := e.getExistingScanResult()
 	if err != nil {
 		return err
@@ -302,7 +302,7 @@ func (e *Exporter) ExportVulResult(res *results.Results, famerr families.Familie
 	return nil
 }
 
-func (e *Exporter) ExportSecretsResult(res *results.Results, famerr families.FamiliesRunErrors) error {
+func (e *Exporter) ExportSecretsResult(res *results.Results, famerr families.RunErrors) error {
 	scanResults, err := e.getExistingScanResult()
 	if err != nil {
 		return err
@@ -371,7 +371,7 @@ func convertSecretsResultToAPIModel(secretsResults *secrets.Results) *models.Sec
 	}
 }
 
-func (e *Exporter) ExportResults(res *results.Results, famerr families.FamiliesRunErrors) []error {
+func (e *Exporter) ExportResults(res *results.Results, famerr families.RunErrors) []error {
 	var errors []error
 	if config.SBOM.Enabled {
 		err := e.ExportSbomResult(res, famerr)

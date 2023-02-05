@@ -100,6 +100,7 @@ var rootCmd = &cobra.Command{
 	},
 }
 
+// nolint:cyclop
 func outputResults(config *families.Config, res *results.Results) error {
 	if config.SBOM.Enabled {
 		sbomResults, err := results.GetResult[*sbom.Results](res)
