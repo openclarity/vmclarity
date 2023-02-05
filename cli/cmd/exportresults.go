@@ -241,19 +241,19 @@ func (e *Exporter) ExportSbomResult(res *results.Results, famerr families.Famili
 
 	var errors []string
 
-	sbomResults, err := results.GetResult[*sbom.Results](res)
-	if err != nil {
-		errors = append(errors, fmt.Errorf("failed to get sbom from scan: %w", err).Error())
+	if err, ok := famerr[types.SBOM]; ok {
+		errors = append(errors, err.Error())
 	} else {
-		scanResults.Sboms = convertSBOMResultToAPIModel(sbomResults)
+		sbomResults, err := results.GetResult[*sbom.Results](res)
+		if err != nil {
+			errors = append(errors, fmt.Errorf("failed to get sbom from scan: %w", err).Error())
+		} else {
+			scanResults.Sboms = convertSBOMResultToAPIModel(sbomResults)
+		}
 	}
 
 	state := models.DONE
 	scanResults.Status.Sbom.State = &state
-
-	if err, ok := famerr[types.SBOM]; ok {
-		errors = append(errors, err.Error())
-	}
 	scanResults.Status.Sbom.Errors = &errors
 
 	err = e.patchExistingScanResult(scanResults)
@@ -279,19 +279,19 @@ func (e *Exporter) ExportVulResult(res *results.Results, famerr families.Familie
 
 	var errors []string
 
-	vulnerabilitiesResults, err := results.GetResult[*vulnerabilities.Results](res)
-	if err != nil {
-		errors = append(errors, fmt.Errorf("failed to get vulnerabilities from scan: %w", err).Error())
+	if err, ok := famerr[types.Vulnerabilities]; ok {
+		errors = append(errors, err.Error())
 	} else {
-		scanResults.Vulnerabilities = convertVulnResultToAPIModel(vulnerabilitiesResults)
+		vulnerabilitiesResults, err := results.GetResult[*vulnerabilities.Results](res)
+		if err != nil {
+			errors = append(errors, fmt.Errorf("failed to get vulnerabilities from scan: %w", err).Error())
+		} else {
+			scanResults.Vulnerabilities = convertVulnResultToAPIModel(vulnerabilitiesResults)
+		}
 	}
 
 	state := models.DONE
 	scanResults.Status.Vulnerabilities.State = &state
-
-	if err, ok := famerr[types.Vulnerabilities]; ok {
-		errors = append(errors, err.Error())
-	}
 	scanResults.Status.Vulnerabilities.Errors = &errors
 
 	err = e.patchExistingScanResult(scanResults)
@@ -317,19 +317,19 @@ func (e *Exporter) ExportSecretsResult(res *results.Results, famerr families.Fam
 
 	var errors []string
 
-	secretsResults, err := results.GetResult[*secrets.Results](res)
-	if err != nil {
-		errors = append(errors, fmt.Errorf("failed to get secrets results from scan: %w", err).Error())
+	if err, ok := famerr[types.Secrets]; ok {
+		errors = append(errors, err.Error())
 	} else {
-		scanResults.Secrets = convertSecretsResultToAPIModel(secretsResults)
+		secretsResults, err := results.GetResult[*secrets.Results](res)
+		if err != nil {
+			errors = append(errors, fmt.Errorf("failed to get secrets results from scan: %w", err).Error())
+		} else {
+			scanResults.Secrets = convertSecretsResultToAPIModel(secretsResults)
+		}
 	}
 
 	state := models.DONE
 	scanResults.Status.Secrets.State = &state
-
-	if err, ok := famerr[types.Secrets]; ok {
-		errors = append(errors, err.Error())
-	}
 	scanResults.Status.Secrets.Errors = &errors
 
 	err = e.patchExistingScanResult(scanResults)
