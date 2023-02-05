@@ -18,6 +18,8 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/openclarity/vmclarity/shared/pkg/families"
+	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 	"net/http"
 
 	"github.com/openclarity/vmclarity/api/client"
@@ -224,7 +226,7 @@ func (e *Exporter) MarkScanResultDone(errors []error) error {
 	return nil
 }
 
-func (e *Exporter) ExportSbomResult(res *results.Results) error {
+func (e *Exporter) ExportSbomResult(res *results.Results, famerr families.FamiliesRunErrors) error {
 	scanResults, err := e.getExistingScanResult()
 	if err != nil {
 		return err
@@ -248,6 +250,10 @@ func (e *Exporter) ExportSbomResult(res *results.Results) error {
 
 	state := models.DONE
 	scanResults.Status.Sbom.State = &state
+
+	if err, ok := famerr[types.SBOM]; ok {
+		errors = append(errors, err.Error())
+	}
 	scanResults.Status.Sbom.Errors = &errors
 
 	err = e.patchExistingScanResult(scanResults)
@@ -258,7 +264,7 @@ func (e *Exporter) ExportSbomResult(res *results.Results) error {
 	return nil
 }
 
-func (e *Exporter) ExportVulResult(res *results.Results) error {
+func (e *Exporter) ExportVulResult(res *results.Results, famerr families.FamiliesRunErrors) error {
 	scanResults, err := e.getExistingScanResult()
 	if err != nil {
 		return err
@@ -282,6 +288,10 @@ func (e *Exporter) ExportVulResult(res *results.Results) error {
 
 	state := models.DONE
 	scanResults.Status.Vulnerabilities.State = &state
+
+	if err, ok := famerr[types.Vulnerabilities]; ok {
+		errors = append(errors, err.Error())
+	}
 	scanResults.Status.Vulnerabilities.Errors = &errors
 
 	err = e.patchExistingScanResult(scanResults)
@@ -292,7 +302,7 @@ func (e *Exporter) ExportVulResult(res *results.Results) error {
 	return nil
 }
 
-func (e *Exporter) ExportSecretsResult(res *results.Results) error {
+func (e *Exporter) ExportSecretsResult(res *results.Results, famerr families.FamiliesRunErrors) error {
 	scanResults, err := e.getExistingScanResult()
 	if err != nil {
 		return err
@@ -316,6 +326,10 @@ func (e *Exporter) ExportSecretsResult(res *results.Results) error {
 
 	state := models.DONE
 	scanResults.Status.Secrets.State = &state
+
+	if err, ok := famerr[types.Secrets]; ok {
+		errors = append(errors, err.Error())
+	}
 	scanResults.Status.Secrets.Errors = &errors
 
 	err = e.patchExistingScanResult(scanResults)
@@ -357,10 +371,10 @@ func convertSecretsResultToAPIModel(secretsResults *secrets.Results) *models.Sec
 	}
 }
 
-func (e *Exporter) ExportResults(res *results.Results) []error {
+func (e *Exporter) ExportResults(res *results.Results, famerr families.FamiliesRunErrors) []error {
 	var errors []error
 	if config.SBOM.Enabled {
-		err := e.ExportSbomResult(res)
+		err := e.ExportSbomResult(res, famerr)
 		if err != nil {
 			err = fmt.Errorf("failed to export sbom to server: %w", err)
 			logger.Error(err)
@@ -369,7 +383,7 @@ func (e *Exporter) ExportResults(res *results.Results) []error {
 	}
 
 	if config.Vulnerabilities.Enabled {
-		err := e.ExportVulResult(res)
+		err := e.ExportVulResult(res, famerr)
 		if err != nil {
 			err = fmt.Errorf("failed to export vulnerabilties to server: %w", err)
 			logger.Error(err)
@@ -378,7 +392,7 @@ func (e *Exporter) ExportResults(res *results.Results) []error {
 	}
 
 	if config.Secrets.Enabled {
-		err := e.ExportSecretsResult(res)
+		err := e.ExportSecretsResult(res, famerr)
 		if err != nil {
 			err = fmt.Errorf("failed to export secrets findings to server: %w", err)
 			logger.Error(err)

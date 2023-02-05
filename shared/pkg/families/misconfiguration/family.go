@@ -16,6 +16,7 @@
 package misconfiguration
 
 import (
+	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/shared/pkg/families/interfaces"
@@ -32,6 +33,10 @@ func (m Misconfiguration) Run(res *results.Results) (interfaces.IsResults, error
 	m.logger.Info("Misconfiguration Run...")
 	m.logger.Info("Misconfiguration Done...")
 	return &Results{}, nil
+}
+
+func (m Misconfiguration) GetType() types.FamilyType {
+	return types.Misconfiguration
 }
 
 // ensure types implement the requisite interfaces.

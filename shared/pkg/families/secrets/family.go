@@ -17,6 +17,7 @@ package secrets
 
 import (
 	"fmt"
+	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 
 	log "github.com/sirupsen/logrus"
 
@@ -57,6 +58,10 @@ func (s Secrets) Run(res *familiesresults.Results) (interfaces.IsResults, error)
 	return &Results{
 		MergedResults: mergedResults,
 	}, nil
+}
+
+func (s Secrets) GetType() types.FamilyType {
+	return types.Secrets
 }
 
 // ensure types implement the requisite interfaces.

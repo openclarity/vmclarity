@@ -17,6 +17,7 @@ package families
 
 import (
 	"fmt"
+	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 
 	log "github.com/sirupsen/logrus"
 
@@ -74,16 +75,21 @@ func New(logger *log.Entry, config *Config) *Manager {
 	return manager
 }
 
-func (m *Manager) Run() (*results.Results, error) {
+type FamiliesRunErrors map[types.FamilyType]error
+
+func (m *Manager) Run() (*results.Results, FamiliesRunErrors) {
 	familiesResults := results.New()
+	var errors = make(map[types.FamilyType]error)
 
 	for _, family := range m.families {
+		log.Infof("Running family %v", family.GetType())
 		ret, err := family.Run(familiesResults)
 		if err != nil {
-			return nil, fmt.Errorf("failed to run family %T: %w", family, err)
+			errors[family.GetType()] = fmt.Errorf("failed to run family %T: %w", family, err)
+		} else {
+			familiesResults.SetResults(ret)
 		}
-		familiesResults.SetResults(ret)
 	}
 
-	return familiesResults, nil
+	return familiesResults, errors
 }

@@ -16,6 +16,7 @@
 package rootkits
 
 import (
+	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/shared/pkg/families/interfaces"
@@ -32,6 +33,10 @@ func (r Rootkits) Run(res *results.Results) (interfaces.IsResults, error) {
 	r.logger.Info("Rootkits Run...")
 	r.logger.Info("Rootkits Done...")
 	return &Results{}, nil
+}
+
+func (r Rootkits) GetType() types.FamilyType {
+	return types.Rootkits
 }
 
 // ensure types implement the requisite interfaces.

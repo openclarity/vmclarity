@@ -17,6 +17,7 @@ package vulnerabilities
 
 import (
 	"fmt"
+	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 	"os"
 
 	"github.com/openclarity/kubeclarity/shared/pkg/config"
@@ -101,6 +102,10 @@ func (v Vulnerabilities) Run(res *results.Results) (interfaces.IsResults, error)
 	return &Results{
 		MergedResults: mergedResults,
 	}, nil
+}
+
+func (v Vulnerabilities) GetType() types.FamilyType {
+	return types.Vulnerabilities
 }
 
 // ensure types implement the requisite interfaces.
