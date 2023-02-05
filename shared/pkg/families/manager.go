@@ -78,18 +78,18 @@ func New(logger *log.Entry, config *Config) *Manager {
 type RunErrors map[types.FamilyType]error
 
 func (m *Manager) Run() (*results.Results, RunErrors) {
-	errors := make(map[types.FamilyType]error)
+	familyErrors := make(map[types.FamilyType]error)
 
-	familiesResults := results.New()
+	familyResults := results.New()
 
 	for _, family := range m.families {
-		ret, err := family.Run(familiesResults)
+		ret, err := family.Run(familyResults)
 		if err != nil {
-			errors[family.GetType()] = fmt.Errorf("failed to run family %v: %w", family.GetType(), err)
+			familyErrors[family.GetType()] = fmt.Errorf("failed to run family %v: %w", family.GetType(), err)
 		} else {
-			familiesResults.SetResults(ret)
+			familyResults.SetResults(ret)
 		}
 	}
 
-	return familiesResults, errors
+	return familyResults, familyErrors
 }
