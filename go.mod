@@ -22,7 +22,7 @@ require (
 	github.com/urfave/cli v1.22.7
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/sqlite v1.3.6
-	gorm.io/gorm v1.23.5
+	gorm.io/gorm v1.24.5
 	gotest.tools/v3 v3.4.0
 )
 
