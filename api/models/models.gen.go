@@ -467,7 +467,7 @@ type TimeOfDay struct {
 type VMInfo struct {
 	InstanceID       string         `json:"instanceID"`
 	InstanceProvider *CloudProvider `json:"instanceProvider,omitempty"`
-	Location         *string        `json:"location,omitempty"`
+	Location         string         `json:"location"`
 	ObjectType       string         `json:"objectType"`
 }
 

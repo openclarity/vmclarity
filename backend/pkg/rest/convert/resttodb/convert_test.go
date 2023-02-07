@@ -183,7 +183,7 @@ func TestConvertTarget(t *testing.T) {
 	vmInfo := models.VMInfo{
 		InstanceID:       "instanceID",
 		InstanceProvider: &cloudProvider,
-		Location:         utils.StringPtr("location"),
+		Location:         "location",
 	}
 
 	var targetType models.TargetType

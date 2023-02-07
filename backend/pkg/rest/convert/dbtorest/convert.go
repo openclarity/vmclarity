@@ -88,7 +88,7 @@ func ConvertTarget(target *database.Target) (*models.Target, error) {
 		if err := ret.TargetInfo.FromVMInfo(models.VMInfo{
 			InstanceID:       *target.InstanceID,
 			InstanceProvider: cloudProvider,
-			Location:         target.Location,
+			Location:         *target.Location,
 		}); err != nil {
 			return nil, fmt.Errorf("FromVMInfo failed: %w", err)
 		}

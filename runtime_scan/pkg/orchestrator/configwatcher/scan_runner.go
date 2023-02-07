@@ -26,7 +26,6 @@ import (
 	"github.com/openclarity/vmclarity/api/models"
 	_scanner "github.com/openclarity/vmclarity/runtime_scan/pkg/scanner"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
-	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 )
 
 func (scw *ScanConfigWatcher) runNewScans(ctx context.Context, scanConfigs []models.ScanConfig) {
@@ -111,7 +110,7 @@ func (scw *ScanConfigWatcher) createTarget(ctx context.Context, instance types.I
 	err := info.FromVMInfo(models.VMInfo{
 		InstanceID:       instance.GetID(),
 		InstanceProvider: &instanceProvider,
-		Location:         utils.StringPtr(instance.GetLocation()),
+		Location:         instance.GetLocation(),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create VMInfo: %v", err)

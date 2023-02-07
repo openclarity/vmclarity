@@ -895,6 +895,7 @@ components:
       required:
         - objectType
         - instanceID
+        - location
 
     PodInfo:
       type: object
