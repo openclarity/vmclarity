@@ -273,7 +273,6 @@ Resources:
 
                 [Install]
                 WantedBy=multi-user.target
-
               mode: "000644"
           commands:
             01subsitute_rest_address:
