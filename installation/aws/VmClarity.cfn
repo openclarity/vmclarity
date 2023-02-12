@@ -318,7 +318,7 @@ Resources:
   # Allow the Scanner VMs in the VmClarityScannerSecurityGroup to access the
   # VMClarity server API on 8888 by adding an ingress rule to the
   # VmClarityServerSecurityGroup.
-  VmClarityServerSecurityGroupScannerIngress:
+  VmClarityServerSecurityGroupScannerIngressToAPI:
     Type: "AWS::EC2::SecurityGroupIngress"
     Properties:
       GroupId: !Ref VmClarityServerSecurityGroup
@@ -329,7 +329,7 @@ Resources:
   # Allow the Scanner VMs in the VmClarityScannerSecurityGroup to access the
   # Exploits DB server on port 1326 by adding an ingress rule to the
   # VmClarityServerSecurityGroup.
-  VmClarityServerSecurityGroupScannerIngress:
+  VmClarityServerSecurityGroupScannerIngressToExploitDB:
     Type: "AWS::EC2::SecurityGroupIngress"
     Properties:
       GroupId: !Ref VmClarityServerSecurityGroup
