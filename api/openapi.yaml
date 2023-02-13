@@ -487,6 +487,22 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
 
+  /discovery/scopes:
+    get:
+      summary: Discover available scopes
+      parameters:
+        - $ref: '#/components/parameters/odataFilter'
+        - $ref: '#/components/parameters/odataSelect'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScopeType'
+        default:
+          $ref: '#/components/responses/UnknownError'
+
 components:
   schemas:
     ApiResponse:
@@ -790,6 +806,28 @@ components:
           description: VM instances will not be scanned if they contain all of these tags (even if they match instanceTagSelector). If empty, not taken into account.
           items:
             $ref: '#/components/schemas/Tag'
+      required:
+        - objectType
+
+    ScopeType:
+      type: object
+      anyOf:
+        - $ref: '#/components/schemas/AwsScope'
+      discriminator:
+        propertyName: objectType
+        mapping:
+          AwsScope: '#/components/schemas/AwsScope'
+
+    AwsScope:
+      type: object
+      description: AWS cloud scope
+      properties:
+        objectType:
+          type: string
+        regions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AwsRegion'
       required:
         - objectType
 
