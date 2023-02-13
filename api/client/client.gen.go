@@ -90,6 +90,9 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
+	// GetDiscoveryScopes request
+	GetDiscoveryScopes(ctx context.Context, params *GetDiscoveryScopesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetScanConfigs request
 	GetScanConfigs(ctx context.Context, params *GetScanConfigsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -177,6 +180,18 @@ type ClientInterface interface {
 	PutTargetsTargetIDWithBody(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PutTargetsTargetID(ctx context.Context, targetID TargetID, body PutTargetsTargetIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+}
+
+func (c *Client) GetDiscoveryScopes(ctx context.Context, params *GetDiscoveryScopesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetDiscoveryScopesRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
 }
 
 func (c *Client) GetScanConfigs(ctx context.Context, params *GetScanConfigsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -573,6 +588,69 @@ func (c *Client) PutTargetsTargetID(ctx context.Context, targetID TargetID, body
 		return nil, err
 	}
 	return c.Client.Do(req)
+}
+
+// NewGetDiscoveryScopesRequest generates requests for GetDiscoveryScopes
+func NewGetDiscoveryScopesRequest(server string, params *GetDiscoveryScopesParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/discovery/scopes")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	queryValues := queryURL.Query()
+
+	if params.Filter != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$filter", runtime.ParamLocationQuery, *params.Filter); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Select != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$select", runtime.ParamLocationQuery, *params.Select); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
 }
 
 // NewGetScanConfigsRequest generates requests for GetScanConfigs
@@ -1697,6 +1775,9 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
+	// GetDiscoveryScopes request
+	GetDiscoveryScopesWithResponse(ctx context.Context, params *GetDiscoveryScopesParams, reqEditors ...RequestEditorFn) (*GetDiscoveryScopesResponse, error)
+
 	// GetScanConfigs request
 	GetScanConfigsWithResponse(ctx context.Context, params *GetScanConfigsParams, reqEditors ...RequestEditorFn) (*GetScanConfigsResponse, error)
 
@@ -1784,6 +1865,29 @@ type ClientWithResponsesInterface interface {
 	PutTargetsTargetIDWithBodyWithResponse(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutTargetsTargetIDResponse, error)
 
 	PutTargetsTargetIDWithResponse(ctx context.Context, targetID TargetID, body PutTargetsTargetIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PutTargetsTargetIDResponse, error)
+}
+
+type GetDiscoveryScopesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ScopeType
+	JSONDefault  *ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetDiscoveryScopesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetDiscoveryScopesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
 }
 
 type GetScanConfigsResponse struct {
@@ -2310,6 +2414,15 @@ func (r PutTargetsTargetIDResponse) StatusCode() int {
 	return 0
 }
 
+// GetDiscoveryScopesWithResponse request returning *GetDiscoveryScopesResponse
+func (c *ClientWithResponses) GetDiscoveryScopesWithResponse(ctx context.Context, params *GetDiscoveryScopesParams, reqEditors ...RequestEditorFn) (*GetDiscoveryScopesResponse, error) {
+	rsp, err := c.GetDiscoveryScopes(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetDiscoveryScopesResponse(rsp)
+}
+
 // GetScanConfigsWithResponse request returning *GetScanConfigsResponse
 func (c *ClientWithResponses) GetScanConfigsWithResponse(ctx context.Context, params *GetScanConfigsParams, reqEditors ...RequestEditorFn) (*GetScanConfigsResponse, error) {
 	rsp, err := c.GetScanConfigs(ctx, params, reqEditors...)
@@ -2594,6 +2707,39 @@ func (c *ClientWithResponses) PutTargetsTargetIDWithResponse(ctx context.Context
 		return nil, err
 	}
 	return ParsePutTargetsTargetIDResponse(rsp)
+}
+
+// ParseGetDiscoveryScopesResponse parses an HTTP response from a GetDiscoveryScopesWithResponse call
+func ParseGetDiscoveryScopesResponse(rsp *http.Response) (*GetDiscoveryScopesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetDiscoveryScopesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ScopeType
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
 }
 
 // ParseGetScanConfigsResponse parses an HTTP response from a GetScanConfigsWithResponse call
