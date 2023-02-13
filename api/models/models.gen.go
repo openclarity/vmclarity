@@ -108,6 +108,12 @@ type AwsScanScope struct {
 	ShouldScanStoppedInstances *bool        `json:"shouldScanStoppedInstances,omitempty"`
 }
 
+// AwsScope AWS cloud scope
+type AwsScope struct {
+	ObjectType string       `json:"objectType"`
+	Regions    *[]AwsRegion `json:"regions,omitempty"`
+}
+
 // AwsSecurityGroup AWS security group
 type AwsSecurityGroup struct {
 	Id   *string `json:"id,omitempty"`
@@ -421,6 +427,11 @@ type Scans struct {
 	Total *int `json:"total,omitempty"`
 }
 
+// ScopeType defines model for ScopeType.
+type ScopeType struct {
+	union json.RawMessage
+}
+
 // Secret defines model for Secret.
 type Secret struct {
 	Id         *string     `json:"id,omitempty"`
@@ -660,6 +671,12 @@ type Success = SuccessResponse
 
 // UnknownError An object that is returned in all cases of failures.
 type UnknownError = ApiResponse
+
+// GetDiscoveryScopesParams defines parameters for GetDiscoveryScopes.
+type GetDiscoveryScopesParams struct {
+	Filter *OdataFilter `form:"$filter,omitempty" json:"$filter,omitempty"`
+	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
+}
 
 // GetScanConfigsParams defines parameters for GetScanConfigs.
 type GetScanConfigsParams struct {
@@ -953,6 +970,65 @@ func (t ScanScopeType) MarshalJSON() ([]byte, error) {
 }
 
 func (t *ScanScopeType) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsAwsScope returns the union data inside the ScopeType as a AwsScope
+func (t ScopeType) AsAwsScope() (AwsScope, error) {
+	var body AwsScope
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAwsScope overwrites any union data inside the ScopeType as the provided AwsScope
+func (t *ScopeType) FromAwsScope(v AwsScope) error {
+	v.ObjectType = "AwsScope"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAwsScope performs a merge with any union data inside the ScopeType, using the provided AwsScope
+func (t *ScopeType) MergeAwsScope(v AwsScope) error {
+	v.ObjectType = "AwsScope"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+func (t ScopeType) Discriminator() (string, error) {
+	var discriminator struct {
+		Discriminator string `json:"objectType"`
+	}
+	err := json.Unmarshal(t.union, &discriminator)
+	return discriminator.Discriminator, err
+}
+
+func (t ScopeType) ValueByDiscriminator() (interface{}, error) {
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return nil, err
+	}
+	switch discriminator {
+	case "AwsScope":
+		return t.AsAwsScope()
+	default:
+		return nil, errors.New("unknown discriminator value: " + discriminator)
+	}
+}
+
+func (t ScopeType) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *ScopeType) UnmarshalJSON(b []byte) error {
 	err := t.union.UnmarshalJSON(b)
 	return err
 }
