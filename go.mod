@@ -8,7 +8,7 @@ require (
 	github.com/Portshift/go-utils v0.0.0-20220421083203-89265d8a6487
 	github.com/anchore/syft v0.60.3
 	github.com/aws/aws-sdk-go-v2/config v1.17.10
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.63.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.85.0
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/deepmap/oapi-codegen v1.12.3
 	github.com/ghodss/yaml v1.0.0

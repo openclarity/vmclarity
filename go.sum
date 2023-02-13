@@ -396,8 +396,8 @@ github.com/aws/aws-sdk-go-v2/internal/ini v1.1.1/go.mod h1:Zy8smImhTdOETZqfyn01i
 github.com/aws/aws-sdk-go-v2/internal/ini v1.3.26/go.mod h1:Y2OJ+P+MC1u1VKnavT+PshiEuGPyh/7DqxoDNij4/bg=
 github.com/aws/aws-sdk-go-v2/internal/ini v1.3.29 h1:J4xhFd6zHhdF9jPP0FQJ6WknzBboGMBNjKOv4iTuw4A=
 github.com/aws/aws-sdk-go-v2/internal/ini v1.3.29/go.mod h1:TwuqRBGzxjQJIwH16/fOZodwXt2Zxa9/cwJC5ke4j7s=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.63.1 h1:jSS5gynKz4XaGcs6m25idCTN+tvPkRJ2WedSWCcZEjI=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.63.1/go.mod h1:0+6fPoY0SglgzQUs2yml7X/fup12cMlVumJufh5npRQ=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.85.0 h1:/2DsxY+k2OGYUbxjWtm0eb4fqGRSaKRoCvfizx9zXjY=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.85.0/go.mod h1:jK4MhMMe6HIe4qnjGaQqQQECcsxRZ0q86oCq06T8IEE=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.4.1/go.mod h1:FglZcyeiBqcbvyinl+n14aT/EWC7S1MIH+Gan2iizt0=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.17.18 h1:uiF/RI+Up8H2xdgT2GWa20YzxiKEalHieqNjm6HC3Xk=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.17.18/go.mod h1:DQtDYmexqR+z+B6HBCvY7zK/tuXKv6Zy/IwOXOK3eow=
@@ -405,7 +405,6 @@ github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.4.1/go.mod h1:eD5Eo4drVP2FLTw0
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.12.0 h1:LsqBpyRofMG6eDs6YGud6FhdGyIyXelAasPOZ6wWLro=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.12.0/go.mod h1:IArQ3IBR00FkuraKwudKZZU32OxJfdTdwV+W5iZh3Y4=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.2.1/go.mod h1:zceowr5Z1Nh2WVP8bf/3ikB41IZW59E4yIYbg+pC6mw=
-github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.17/go.mod h1:4nYOrY41Lrbk2170/BGkcJKBhws9Pfn8MG3aGqjjeFI=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.19/go.mod h1:02CP6iuYP+IVnBX5HULVdSAku/85eHB2Y9EsFhrkEwU=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.22 h1:LjFQf8hFuMO22HkV5VWGLBvmCLBCLPivUAmpdpnp4Vs=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.22/go.mod h1:xt0Au8yPIwYXf/GYPy/vl4K3CgwhfQMYbrH7DlUUIws=
