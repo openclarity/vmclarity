@@ -16,7 +16,7 @@
 package aws
 
 const (
-	maxResults = 50
+	maxResults = 500
 )
 
 type ScanScope struct {
@@ -37,15 +37,15 @@ type Tag struct {
 }
 
 type SecurityGroup struct {
-	id string
+	ID string
 }
 
 type VPC struct {
-	id             string
-	securityGroups []SecurityGroup
+	ID             string
+	SecurityGroups []SecurityGroup
 }
 
 type Region struct {
-	name string
-	vpcs []VPC
+	Name string
+	VPCs []VPC
 }

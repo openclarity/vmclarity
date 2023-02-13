@@ -90,7 +90,7 @@ type ApiResponse struct {
 
 // AwsRegion AWS region
 type AwsRegion struct {
-	Name string    `json:"name"`
+	Name *string   `json:"name,omitempty"`
 	Vpcs *[]AwsVPC `json:"vpcs,omitempty"`
 }
 
@@ -109,6 +109,12 @@ type AwsScanScope struct {
 	ShouldScanStoppedInstances *bool        `json:"shouldScanStoppedInstances,omitempty"`
 }
 
+// AwsScope AWS cloud scope
+type AwsScope struct {
+	ObjectType string       `json:"objectType"`
+	Regions    *[]AwsRegion `json:"regions,omitempty"`
+}
+
 // AwsSecurityGroup AWS security group
 type AwsSecurityGroup struct {
 	Id string `json:"id"`
@@ -116,7 +122,7 @@ type AwsSecurityGroup struct {
 
 // AwsVPC AWS VPC
 type AwsVPC struct {
-	Id             string              `json:"id"`
+	Id             *string             `json:"id,omitempty"`
 	SecurityGroups *[]AwsSecurityGroup `json:"securityGroups,omitempty"`
 }
 
@@ -388,12 +394,25 @@ type ScanFamiliesConfig struct {
 	Vulnerabilities   *VulnerabilitiesConfig   `json:"vulnerabilities,omitempty"`
 }
 
+// ScanFindingsSummary A summary of the scan findings.
+type ScanFindingsSummary struct {
+	TotalExploits          *int `json:"totalExploits,omitempty"`
+	TotalMalware           *int `json:"totalMalware,omitempty"`
+	TotalMisconfigurations *int `json:"totalMisconfigurations,omitempty"`
+	TotalPackages          *int `json:"totalPackages,omitempty"`
+	TotalRootkits          *int `json:"totalRootkits,omitempty"`
+	TotalSecrets           *int `json:"totalSecrets,omitempty"`
+
+	// TotalVulnerabilities A summary of number of vulnerabilities found per severity.
+	TotalVulnerabilities *VulnerabilityScanSummary `json:"totalVulnerabilities,omitempty"`
+}
+
 // ScanScopeType defines model for ScanScopeType.
 type ScanScopeType struct {
 	union json.RawMessage
 }
 
-// ScanSummary A summary of the progress of a scan for informational purposes.
+// ScanSummary defines model for ScanSummary.
 type ScanSummary struct {
 	JobsCompleted          *int `json:"jobsCompleted,omitempty"`
 	JobsLeftToRun          *int `json:"jobsLeftToRun,omitempty"`
@@ -418,6 +437,16 @@ type Scans struct {
 
 	// Total Total scans count according to the given filters
 	Total *int `json:"total,omitempty"`
+}
+
+// ScopeType defines model for ScopeType.
+type ScopeType struct {
+	union json.RawMessage
+}
+
+// Scopes Scopes discovery
+type Scopes struct {
+	Scopes *ScopeType `json:"scopes,omitempty"`
 }
 
 // Secret defines model for Secret.
@@ -468,8 +497,14 @@ type Tag struct {
 
 // Target defines model for Target.
 type Target struct {
-	Id         *string     `json:"id,omitempty"`
-	TargetInfo *TargetType `json:"targetInfo,omitempty"`
+	Id *string `json:"id,omitempty"`
+
+	// ScansCount Total number of target scans
+	ScansCount *int `json:"scansCount,omitempty"`
+
+	// Summary A summary of the scan findings.
+	Summary    *ScanFindingsSummary `json:"summary,omitempty"`
+	TargetInfo *TargetType          `json:"targetInfo,omitempty"`
 }
 
 // TargetExists defines model for TargetExists.
@@ -487,14 +522,16 @@ type TargetScanResult struct {
 	Misconfigurations *MisconfigurationScan `json:"misconfigurations,omitempty"`
 	Rootkits          *RootkitScan          `json:"rootkits,omitempty"`
 	Sboms             *SbomScan             `json:"sboms,omitempty"`
-	ScanId            string                `json:"scanId"`
-	Secrets           *SecretScan           `json:"secrets,omitempty"`
-	Status            *TargetScanStatus     `json:"status,omitempty"`
 
-	// Summary A summary of target scan result for informational purposes.
-	Summary         *TargetScanResultSummary `json:"summary,omitempty"`
-	TargetId        string                   `json:"targetId"`
-	Vulnerabilities *VulnerabilityScan       `json:"vulnerabilities,omitempty"`
+	// Scan Describes a multi-target scheduled scan.
+	Scan    *Scan             `json:"scan,omitempty"`
+	Secrets *SecretScan       `json:"secrets,omitempty"`
+	Status  *TargetScanStatus `json:"status,omitempty"`
+
+	// Summary A summary of the scan findings.
+	Summary         *ScanFindingsSummary `json:"summary,omitempty"`
+	Target          *Target              `json:"target,omitempty"`
+	Vulnerabilities *VulnerabilityScan   `json:"vulnerabilities,omitempty"`
 }
 
 // TargetScanResultExists defines model for TargetScanResultExists.
@@ -504,26 +541,13 @@ type TargetScanResultExists struct {
 	TargetScanResult *TargetScanResult `json:"targetScanResult,omitempty"`
 }
 
-// TargetScanResultSummary A summary of target scan result for informational purposes.
-type TargetScanResultSummary struct {
-	TotalExploits          *int `json:"totalExploits,omitempty"`
-	TotalMalware           *int `json:"totalMalware,omitempty"`
-	TotalMisconfigurations *int `json:"totalMisconfigurations,omitempty"`
-	TotalPackages          *int `json:"totalPackages,omitempty"`
-	TotalRootkits          *int `json:"totalRootkits,omitempty"`
-	TotalSecrets           *int `json:"totalSecrets,omitempty"`
-
-	// TotalVulnerabilities A summary of number of vulnerabilities found per severity.
-	TotalVulnerabilities *VulnerabilityScanSummary `json:"totalVulnerabilities,omitempty"`
-}
-
 // TargetScanResults defines model for TargetScanResults.
 type TargetScanResults struct {
+	// Count Total scan results count according to the given filters
+	Count *int `json:"count,omitempty"`
+
 	// Items List of scan results according to the given filters and page. List length must be lower or equal to pageSize.
 	Items *[]TargetScanResult `json:"items,omitempty"`
-
-	// Total Total scan results count according to the given filters
-	Total *int `json:"total,omitempty"`
 }
 
 // TargetScanState defines model for TargetScanState.
@@ -554,11 +578,11 @@ type TargetType struct {
 
 // Targets defines model for Targets.
 type Targets struct {
+	// Count Total targets count according the given filters
+	Count *int `json:"count,omitempty"`
+
 	// Items List of targets in the given filters and page. List length must be lower or equal to pageSize.
 	Items *[]Target `json:"items,omitempty"`
-
-	// Total Total targets count according the given filters
-	Total *int `json:"total,omitempty"`
 }
 
 // TimeOfDay defines model for TimeOfDay.
@@ -660,6 +684,12 @@ type Success = SuccessResponse
 // UnknownError An object that is returned in all cases of failures.
 type UnknownError = ApiResponse
 
+// GetDiscoveryScopesParams defines parameters for GetDiscoveryScopes.
+type GetDiscoveryScopesParams struct {
+	Filter *OdataFilter `form:"$filter,omitempty" json:"$filter,omitempty"`
+	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
+}
+
 // GetScanConfigsParams defines parameters for GetScanConfigs.
 type GetScanConfigsParams struct {
 	Filter *OdataFilter `form:"$filter,omitempty" json:"$filter,omitempty"`
@@ -680,17 +710,16 @@ type GetScanConfigsScanConfigIDParams struct {
 type GetScanResultsParams struct {
 	Filter *OdataFilter `form:"$filter,omitempty" json:"$filter,omitempty"`
 	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
-
-	// Page Page number of the query
-	Page *Page `form:"page,omitempty" json:"page,omitempty"`
-
-	// PageSize Maximum items to return
-	PageSize *PageSize `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	Count  *OdataCount  `form:"$count,omitempty" json:"$count,omitempty"`
+	Top    *OdataTop    `form:"$top,omitempty" json:"$top,omitempty"`
+	Skip   *OdataSkip   `form:"$skip,omitempty" json:"$skip,omitempty"`
+	Expand *OdataExpand `form:"$expand,omitempty" json:"$expand,omitempty"`
 }
 
 // GetScanResultsScanResultIDParams defines parameters for GetScanResultsScanResultID.
 type GetScanResultsScanResultIDParams struct {
 	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
+	Expand *OdataExpand `form:"$expand,omitempty" json:"$expand,omitempty"`
 }
 
 // GetScansParams defines parameters for GetScans.
@@ -707,13 +736,19 @@ type GetScansParams struct {
 // GetTargetsParams defines parameters for GetTargets.
 type GetTargetsParams struct {
 	Filter *OdataFilter `form:"$filter,omitempty" json:"$filter,omitempty"`
-
-	// Page Page number of the query
-	Page *Page `form:"page,omitempty" json:"page,omitempty"`
-
-	// PageSize Maximum items to return
-	PageSize *PageSize `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
+	Count  *OdataCount  `form:"$count,omitempty" json:"$count,omitempty"`
+	Top    *OdataTop    `form:"$top,omitempty" json:"$top,omitempty"`
+	Skip   *OdataSkip   `form:"$skip,omitempty" json:"$skip,omitempty"`
 }
+
+// GetTargetsTargetIDParams defines parameters for GetTargetsTargetID.
+type GetTargetsTargetIDParams struct {
+	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
+}
+
+// PutDiscoveryScopesJSONRequestBody defines body for PutDiscoveryScopes for application/json ContentType.
+type PutDiscoveryScopesJSONRequestBody = Scopes
 
 // PostScanConfigsJSONRequestBody defines body for PostScanConfigs for application/json ContentType.
 type PostScanConfigsJSONRequestBody = ScanConfig
@@ -952,6 +987,65 @@ func (t ScanScopeType) MarshalJSON() ([]byte, error) {
 }
 
 func (t *ScanScopeType) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsAwsScope returns the union data inside the ScopeType as a AwsScope
+func (t ScopeType) AsAwsScope() (AwsScope, error) {
+	var body AwsScope
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAwsScope overwrites any union data inside the ScopeType as the provided AwsScope
+func (t *ScopeType) FromAwsScope(v AwsScope) error {
+	v.ObjectType = "AwsScope"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAwsScope performs a merge with any union data inside the ScopeType, using the provided AwsScope
+func (t *ScopeType) MergeAwsScope(v AwsScope) error {
+	v.ObjectType = "AwsScope"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+func (t ScopeType) Discriminator() (string, error) {
+	var discriminator struct {
+		Discriminator string `json:"objectType"`
+	}
+	err := json.Unmarshal(t.union, &discriminator)
+	return discriminator.Discriminator, err
+}
+
+func (t ScopeType) ValueByDiscriminator() (interface{}, error) {
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return nil, err
+	}
+	switch discriminator {
+	case "AwsScope":
+		return t.AsAwsScope()
+	default:
+		return nil, errors.New("unknown discriminator value: " + discriminator)
+	}
+}
+
+func (t ScopeType) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *ScopeType) UnmarshalJSON(b []byte) error {
 	err := t.union.UnmarshalJSON(b)
 	return err
 }

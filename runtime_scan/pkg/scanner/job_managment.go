@@ -568,10 +568,14 @@ func (s *Scanner) createInitTargetScanStatus(ctx context.Context, scanID, target
 		},
 	}
 	scanResult := models.TargetScanResult{
-		ScanId:   scanID,
-		Status:   initScanStatus,
-		TargetId: targetID,
-		Summary:  createInitScanResultSummary(),
+		Summary: createInitScanResultSummary(),
+		Scan: &models.Scan{
+			Id: &scanID,
+		},
+		Status: initScanStatus,
+		Target: &models.Target{
+			Id: &targetID,
+		},
 	}
 	createdScanResult, err := s.backendClient.PostScanResult(ctx, scanResult)
 	if err != nil {
@@ -585,8 +589,8 @@ func (s *Scanner) createInitTargetScanStatus(ctx context.Context, scanID, target
 	return *createdScanResult.Id, nil
 }
 
-func createInitScanResultSummary() *models.TargetScanResultSummary {
-	return &models.TargetScanResultSummary{
+func createInitScanResultSummary() *models.ScanFindingsSummary {
+	return &models.ScanFindingsSummary{
 		TotalExploits:          runtimeScanUtils.PointerTo[int](0),
 		TotalMalware:           runtimeScanUtils.PointerTo[int](0),
 		TotalMisconfigurations: runtimeScanUtils.PointerTo[int](0),

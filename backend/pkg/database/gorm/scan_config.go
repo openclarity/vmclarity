@@ -27,6 +27,7 @@ import (
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/backend/pkg/common"
 	"github.com/openclarity/vmclarity/backend/pkg/database/types"
+	"github.com/openclarity/vmclarity/shared/pkg/utils"
 )
 
 type ScanConfig struct {
@@ -99,14 +100,13 @@ func (s *ScanConfigsTableHandler) CreateScanConfig(scanConfig models.ScanConfig)
 		return models.ScanConfig{}, fmt.Errorf("name can not be empty")
 	}
 
-	// Check the user didn't provide an Id
+	// Check the user didn't provide an ID
 	if scanConfig.Id != nil {
 		return models.ScanConfig{}, fmt.Errorf("can not specify Id field when creating a new ScanConfig")
 	}
 
 	// Generate a new UUID
-	newID := uuid.New().String()
-	scanConfig.Id = &newID
+	scanConfig.Id = utils.PointerTo(uuid.New().String())
 
 	// TODO(sambetts) Lock the table here to prevent race conditions
 	// checking the uniqueness.

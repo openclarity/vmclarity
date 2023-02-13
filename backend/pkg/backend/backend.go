@@ -79,11 +79,14 @@ func Run() {
 	log.Info("VMClarity backend is running")
 
 	dbConfig := createDatabaseConfig(config)
-	dbHandler, err := database.InitaliseDatabase(dbConfig)
+	dbHandler, err := database.InitializeDatabase(dbConfig)
 	if err != nil {
 		log.Fatalf("Failed to initialise database: %v", err)
 	}
 
+	if config.EnableFakeData {
+		go dbHandler.CreateDemoData()
+	}
 	_ = CreateBackend(dbHandler)
 
 	restServer, err := rest.CreateRESTServer(config.BackendRestPort, dbHandler)
@@ -101,11 +104,14 @@ func Run() {
 	if err != nil {
 		log.Fatalf("Failed to create provider client: %v", err)
 	}
-	orc, err := createRuntimeScanOrchestrator(providerClient, runtimeScanConfig)
-	if err != nil {
-		log.Fatalf("Failed to create runtime scan orchestrator: %v", err)
+
+	if _, ok := os.LookupEnv("FAKE_SCOPES"); !ok {
+		orc, err := createRuntimeScanOrchestrator(providerClient, runtimeScanConfig)
+		if err != nil {
+			log.Fatalf("Failed to create runtime scan orchestrator: %v", err)
+		}
+		orc.Start(globalCtx)
 	}
-	orc.Start(globalCtx)
 
 	healthServer.SetIsReady(true)
 	log.Info("VMClarity backend is ready")

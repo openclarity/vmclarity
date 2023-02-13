@@ -19,6 +19,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/orchestrator/discovery"
 	log "github.com/sirupsen/logrus"
 
 	_config "github.com/openclarity/vmclarity/runtime_scan/pkg/config"
@@ -35,6 +36,7 @@ type Orchestrator interface {
 type orchestrator struct {
 	config            *_config.OrchestratorConfig
 	scanConfigWatcher *configwatcher.ScanConfigWatcher
+	scopeDiscoverer   *discovery.ScopeDiscoverer
 	cancelFunc        context.CancelFunc
 }
 
@@ -46,6 +48,7 @@ func Create(config *_config.OrchestratorConfig, providerClient provider.Client) 
 	orc := &orchestrator{
 		config:            config,
 		scanConfigWatcher: configwatcher.CreateScanConfigWatcher(backendClient, providerClient, config.ScannerConfig),
+		scopeDiscoverer:   discovery.CreateScopeDiscoverer(backendClient, providerClient),
 	}
 
 	return orc, nil
@@ -56,6 +59,7 @@ func (o *orchestrator) Start(ctx context.Context) {
 	ctx, cancel := context.WithCancel(ctx)
 	o.cancelFunc = cancel
 	o.scanConfigWatcher.Start(ctx)
+	o.scopeDiscoverer.Start(ctx)
 }
 
 func (o *orchestrator) Stop(cancel context.CancelFunc) {
