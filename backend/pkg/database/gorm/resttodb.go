@@ -25,46 +25,6 @@ import (
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 )
 
-func ConvertToDBScanConfig(config models.ScanConfig) (ScanConfig, error) {
-	var ret ScanConfig
-	var err error
-	var scanConfigUUID uuid.UUID
-
-	if config.Id != nil {
-		scanConfigUUID, err = uuid.FromString(*config.Id)
-		if err != nil {
-			return ret, fmt.Errorf("failed to convert scanConfigID %v to uuid: %v", *config.Id, err)
-		}
-	}
-
-	if config.ScanFamiliesConfig != nil {
-		ret.ScanFamiliesConfig, err = json.Marshal(config.ScanFamiliesConfig)
-		if err != nil {
-			return ret, fmt.Errorf("failed to marshal json: %w", err)
-		}
-	}
-
-	if config.Scope != nil {
-		ret.Scope, err = config.Scope.MarshalJSON()
-		if err != nil {
-			return ret, fmt.Errorf("failed to marshal json: %w", err)
-		}
-	}
-
-	if config.Scheduled != nil {
-		ret.Scheduled, err = config.Scheduled.MarshalJSON()
-		if err != nil {
-			return ret, fmt.Errorf("failed to marshal json: %w", err)
-		}
-	}
-
-	ret.Name = config.Name
-
-	ret.Base = Base{ID: scanConfigUUID}
-
-	return ret, nil
-}
-
 func ConvertToDBTarget(target models.Target) (Target, error) {
 	var targetUUID uuid.UUID
 	var err error

@@ -362,11 +362,11 @@ type ScanConfigRelationship struct {
 
 // ScanConfigs defines model for ScanConfigs.
 type ScanConfigs struct {
+	// Count Total scan config count according to the given filters
+	Count *int `json:"count,omitempty"`
+
 	// Items List of scan configs according to the given filters and page. List length must be lower or equal to pageSize.
 	Items *[]ScanConfig `json:"items,omitempty"`
-
-	// Total Total scan config count according to the given filters
-	Total *int `json:"total,omitempty"`
 }
 
 // ScanExists defines model for ScanExists.
@@ -619,6 +619,9 @@ type WeeklyScheduleScanConfig struct {
 	TimeOfDay  *TimeOfDay `json:"timeOfDay,omitempty"`
 }
 
+// OdataCount defines model for odataCount.
+type OdataCount = bool
+
 // OdataFilter defines model for odataFilter.
 type OdataFilter = string
 
@@ -652,12 +655,19 @@ type UnknownError = ApiResponse
 // GetScanConfigsParams defines parameters for GetScanConfigs.
 type GetScanConfigsParams struct {
 	Filter *OdataFilter `form:"$filter,omitempty" json:"$filter,omitempty"`
+	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
+	Count  *OdataCount  `form:"$count,omitempty" json:"$count,omitempty"`
 
 	// Page Page number of the query
 	Page *Page `form:"page,omitempty" json:"page,omitempty"`
 
 	// PageSize Maximum items to return
 	PageSize *PageSize `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+}
+
+// GetScanConfigsScanConfigIDParams defines parameters for GetScanConfigsScanConfigID.
+type GetScanConfigsScanConfigIDParams struct {
+	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
 }
 
 // GetScanResultsParams defines parameters for GetScanResults.

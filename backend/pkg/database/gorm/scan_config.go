@@ -16,10 +16,11 @@
 package gorm
 
 import (
-	"context"
-	"errors"
+	"encoding/json"
 	"fmt"
 
+	jsonpatch "github.com/evanphx/json-patch/v5"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 
 	"github.com/openclarity/vmclarity/api/models"
@@ -27,144 +28,215 @@ import (
 	"github.com/openclarity/vmclarity/backend/pkg/database/types"
 )
 
-const (
-	scanConfigsTableName = "scan_configs"
-)
-
 type ScanConfig struct {
-	Base
-
-	Name *string `json:"name,omitempty" gorm:"column:name"`
-
-	// ScanFamiliesConfig The configuration of the scanner families within a scan config
-	ScanFamiliesConfig []byte `json:"scan_families_config,omitempty" gorm:"column:scan_families_config"`
-	Scheduled          []byte `json:"scheduled,omitempty" gorm:"column:scheduled"`
-	Scope              []byte `json:"scope,omitempty" gorm:"column:scope"`
+	ODataObject
 }
 
 type ScanConfigsTableHandler struct {
-	scanConfigsTable *gorm.DB
+	DB *gorm.DB
 }
 
 func (db *Handler) ScanConfigsTable() types.ScanConfigsTable {
 	return &ScanConfigsTableHandler{
-		scanConfigsTable: db.DB.Table(scanConfigsTableName),
+		DB: db.DB,
 	}
 }
 
 func (s *ScanConfigsTableHandler) GetScanConfigs(params models.GetScanConfigsParams) (models.ScanConfigs, error) {
 	var scanConfigs []ScanConfig
-
-	tx := s.scanConfigsTable
-
-	if err := tx.Find(&scanConfigs).Error; err != nil {
-		return models.ScanConfigs{}, fmt.Errorf("failed to find scan configs: %w", err)
-	}
-
-	converted, err := ConvertToRestScanConfigs(scanConfigs)
+	err := ODataQuery(s.DB, "scan_configs", "ScanConfig", params.Filter, params.Select, true, &scanConfigs)
 	if err != nil {
-		return models.ScanConfigs{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+		return models.ScanConfigs{}, err
 	}
-	return converted, nil
+
+	items := []models.ScanConfig{}
+	for _, scanConfig := range scanConfigs {
+		var sc models.ScanConfig
+		err := json.Unmarshal(scanConfig.Data, &sc)
+		if err != nil {
+			return models.ScanConfigs{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+		}
+		items = append(items, sc)
+	}
+
+	output := models.ScanConfigs{Items: &items}
+
+	if params.Count != nil && *params.Count {
+		count := len(items)
+		output.Count = &count
+	}
+
+	return output, nil
 }
 
 func (s *ScanConfigsTableHandler) GetScanConfig(scanConfigID models.ScanConfigID) (models.ScanConfig, error) {
 	var dbScanConfig ScanConfig
-	if err := s.scanConfigsTable.Where("id = ?", scanConfigID).First(&dbScanConfig).Error; err != nil {
-		return models.ScanConfig{}, fmt.Errorf("failed to get scan config by id %q: %w", scanConfigID, err)
+	filter := fmt.Sprintf("id eq '%s'", scanConfigID)
+	err := ODataQuery(s.DB, "scan_configs", "ScanConfig", &filter, nil, false, &dbScanConfig)
+	if err != nil {
+		return models.ScanConfig{}, err
 	}
 
-	converted, err := ConvertToRestScanConfig(dbScanConfig)
+	var sc models.ScanConfig
+	err = json.Unmarshal(dbScanConfig.Data, &sc)
 	if err != nil {
 		return models.ScanConfig{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
-	return converted, nil
+
+	return sc, nil
 }
 
 func (s *ScanConfigsTableHandler) CreateScanConfig(scanConfig models.ScanConfig) (models.ScanConfig, error) {
-	// check if there is already a scan config with that name.
-	existingSR, exist, err := s.checkExist(*scanConfig.Name)
+	// TODO(sambetts) Lock the table here to prevent race conditions
+	// checking the uniqueness.
+	//
+	// We might also be able to do this without locking the table by doing
+	// a single query which includes the uniqueness check like:
+	//
+	// INSERT INTO scan_configs(data) SELECT * FROM (SELECT "<encoded json>") AS tmp WHERE NOT EXISTS (SELECT * FROM scan_configs WHERE JSON_EXTRACT(`Data`, '$.Name') = '<name from input>') LIMIT 1;
+	//
+	// This should return 0 affected fields if there is a conflicting
+	// record in the DB, and should be treated safely by the DB without
+	// locking the table.
+
+	var scanConfigs []ScanConfig
+	filter := fmt.Sprintf("name eq '%s'", *scanConfig.Name)
+	err := ODataQuery(s.DB, "scan_configs", "ScanConfig", &filter, nil, true, &scanConfigs)
 	if err != nil {
-		return models.ScanConfig{}, fmt.Errorf("failed to check existing scan config: %w", err)
+		return models.ScanConfig{}, err
 	}
-	if exist {
-		converted, err := ConvertToRestScanConfig(existingSR)
+
+	if len(scanConfigs) > 0 {
+		var sc models.ScanConfig
+		err := json.Unmarshal(scanConfigs[0].Data, &sc)
 		if err != nil {
 			return models.ScanConfig{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 		}
-		return converted, &common.ConflictError{
-			Reason: fmt.Sprintf("Scan config exists with name=%s", *existingSR.Name),
+		return sc, &common.ConflictError{
+			Reason: fmt.Sprintf("Scan config exists with name=%s", *sc.Name),
 		}
 	}
 
-	dbScanConfig, err := ConvertToDBScanConfig(scanConfig)
+	if scanConfig.Id == nil || *scanConfig.Id == "" {
+		newID := uuid.New().String()
+		scanConfig.Id = &newID
+	}
+
+	marshaled, err := json.Marshal(scanConfig)
 	if err != nil {
 		return models.ScanConfig{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
 	}
 
-	if err := s.scanConfigsTable.Create(&dbScanConfig).Error; err != nil {
+	newScanConfig := ScanConfig{}
+	newScanConfig.Data = marshaled
+
+	if err := s.DB.Create(&newScanConfig).Error; err != nil {
 		return models.ScanConfig{}, fmt.Errorf("failed to create scan config in db: %w", err)
 	}
 
-	converted, err := ConvertToRestScanConfig(dbScanConfig)
+	// TODO(sambetts) Maybe this isn't required now because the DB isn't
+	// creating any of the data (like the ID) so we can just return the
+	// scanConfig pre-marshal above.
+	var sc models.ScanConfig
+	err = json.Unmarshal(newScanConfig.Data, &sc)
 	if err != nil {
 		return models.ScanConfig{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
-	return converted, nil
+
+	return sc, nil
 }
 
 func (s *ScanConfigsTableHandler) SaveScanConfig(scanConfig models.ScanConfig) (models.ScanConfig, error) {
-	dbScanConfig, err := ConvertToDBScanConfig(scanConfig)
+	var scanConfigs []ScanConfig
+	filter := fmt.Sprintf("id eq '%s'", *scanConfig.Id)
+	err := ODataQuery(s.DB, "scan_configs", "ScanConfig", &filter, nil, true, &scanConfigs)
+	if err != nil {
+		return models.ScanConfig{}, err
+	}
+
+	if len(scanConfigs) > 1 {
+		// Error multiple found for that ID (this is problems and should never happen)
+		return models.ScanConfig{}, fmt.Errorf("ummm")
+	} else if len(scanConfigs) == 0 {
+		return models.ScanConfig{}, fmt.Errorf("not found")
+	}
+
+	marshaled, err := json.Marshal(scanConfig)
 	if err != nil {
 		return models.ScanConfig{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
 	}
 
-	if err := s.scanConfigsTable.Save(&dbScanConfig).Error; err != nil {
+	dbScanConfig := scanConfigs[0]
+	dbScanConfig.Data = marshaled
+
+	if err := s.DB.Save(&dbScanConfig).Error; err != nil {
 		return models.ScanConfig{}, fmt.Errorf("failed to save scan config in db: %w", err)
 	}
 
-	converted, err := ConvertToRestScanConfig(dbScanConfig)
+	// TODO(sambetts) Maybe this isn't required now because the DB isn't
+	// creating any of the data (like the ID) so we can just return the
+	// scanConfig pre-marshal above.
+	var sc models.ScanConfig
+	err = json.Unmarshal(dbScanConfig.Data, &sc)
 	if err != nil {
 		return models.ScanConfig{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
-	return converted, nil
+	return sc, nil
 }
 
 func (s *ScanConfigsTableHandler) UpdateScanConfig(scanConfig models.ScanConfig) (models.ScanConfig, error) {
-	dbScanConfig, err := ConvertToDBScanConfig(scanConfig)
+	var scanConfigs []ScanConfig
+	filter := fmt.Sprintf("id eq '%s'", *scanConfig.Id)
+	err := ODataQuery(s.DB, "scan_configs", "ScanConfig", &filter, nil, true, &scanConfigs)
+	if err != nil {
+		return models.ScanConfig{}, err
+	}
+
+	if len(scanConfigs) > 1 {
+		// Error multiple found for that ID (this is problems and should never happen)
+		return models.ScanConfig{}, fmt.Errorf("ummm")
+	} else if len(scanConfigs) == 0 {
+		return models.ScanConfig{}, fmt.Errorf("not found")
+	}
+
+	marshaled, err := json.Marshal(scanConfig)
 	if err != nil {
 		return models.ScanConfig{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
 	}
 
-	if err := s.scanConfigsTable.Model(dbScanConfig).Updates(&dbScanConfig).Error; err != nil {
-		return models.ScanConfig{}, fmt.Errorf("failed to update scan config in db: %w", err)
+	// Calculate the diffs between the current doc and the user doc
+	patch, err := jsonpatch.CreateMergePatch(scanConfigs[0].Data, marshaled)
+	if err != nil {
+		return models.ScanConfig{}, fmt.Errorf("failed to calculate patch changes: %w", err)
 	}
 
-	converted, err := ConvertToRestScanConfig(dbScanConfig)
+	// Apply the diff to the doc stored in the DB
+	updated, err := jsonpatch.MergePatch(scanConfigs[0].Data, patch)
+	if err != nil {
+		return models.ScanConfig{}, fmt.Errorf("failed to apply patch: %w", err)
+	}
+
+	scanConfigs[0].Data = updated
+
+	if err := s.DB.Save(&scanConfigs[0]).Error; err != nil {
+		return models.ScanConfig{}, fmt.Errorf("failed to save scan config in db: %w", err)
+	}
+
+	// TODO(sambetts) Maybe this isn't required now because the DB isn't
+	// creating any of the data (like the ID) so we can just return the
+	// scanConfig pre-marshal above.
+	var sc models.ScanConfig
+	err = json.Unmarshal(scanConfigs[0].Data, &sc)
 	if err != nil {
 		return models.ScanConfig{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
-	return converted, nil
+	return sc, nil
 }
 
 func (s *ScanConfigsTableHandler) DeleteScanConfig(scanConfigID models.ScanConfigID) error {
-	if err := s.scanConfigsTable.Where("id = ?", scanConfigID).Delete(&Scan{}).Error; err != nil {
+	jsonQuotedID := fmt.Sprintf("\"%s\"", scanConfigID)
+	if err := s.DB.Where("`Data` -> '$.id' = ?", jsonQuotedID).Delete(&ScanConfig{}).Error; err != nil {
 		return fmt.Errorf("failed to delete scan config: %w", err)
 	}
 	return nil
-}
-
-func (s *ScanConfigsTableHandler) checkExist(name string) (ScanConfig, bool, error) {
-	var scanConfig ScanConfig
-
-	tx := s.scanConfigsTable.WithContext(context.Background())
-
-	if err := tx.Where("name = ?", name).First(&scanConfig).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return ScanConfig{}, false, nil
-		}
-		return ScanConfig{}, false, fmt.Errorf("failed to query: %w", err)
-	}
-
-	return scanConfig, true, nil
 }

@@ -66,7 +66,12 @@ func initDataBase(config types.DBConfig) (*gorm.DB, error) {
 	}
 
 	// this will ensure table is created
-	if err := db.AutoMigrate(Target{}, ScanResult{}, ScanConfig{}, Scan{}); err != nil {
+	if err := db.AutoMigrate(
+		Target{},
+		ScanResult{},
+		ScanConfig{},
+		Scan{},
+	); err != nil {
 		return nil, fmt.Errorf("failed to run auto migration: %w", err)
 	}
 

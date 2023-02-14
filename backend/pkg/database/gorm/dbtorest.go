@@ -23,55 +23,6 @@ import (
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 )
 
-func ConvertToRestScanConfig(config ScanConfig) (models.ScanConfig, error) {
-	var ret models.ScanConfig
-
-	if config.ScanFamiliesConfig != nil {
-		ret.ScanFamiliesConfig = &models.ScanFamiliesConfig{}
-		if err := json.Unmarshal(config.ScanFamiliesConfig, ret.ScanFamiliesConfig); err != nil {
-			return ret, fmt.Errorf("failed to unmarshal json: %w", err)
-		}
-	}
-
-	if config.Scope != nil {
-		ret.Scope = &models.ScanScopeType{}
-		if err := ret.Scope.UnmarshalJSON(config.Scope); err != nil {
-			return ret, fmt.Errorf("failed to unmarshal json: %w", err)
-		}
-	}
-
-	if config.Scheduled != nil {
-		ret.Scheduled = &models.RuntimeScheduleScanConfigType{}
-		if err := ret.Scheduled.UnmarshalJSON(config.Scheduled); err != nil {
-			return ret, fmt.Errorf("failed to unmarshal json: %w", err)
-		}
-	}
-
-	ret.Name = config.Name
-
-	ret.Id = utils.StringPtr(config.ID.String())
-
-	return ret, nil
-}
-
-func ConvertToRestScanConfigs(configs []ScanConfig) (models.ScanConfigs, error) {
-	ret := models.ScanConfigs{
-		Items: &[]models.ScanConfig{},
-	}
-
-	for _, config := range configs {
-		sc, err := ConvertToRestScanConfig(config)
-		if err != nil {
-			return ret, fmt.Errorf("failed to convet scan config: %w", err)
-		}
-		*ret.Items = append(*ret.Items, sc)
-	}
-
-	ret.Total = utils.IntPtr(len(configs))
-
-	return ret, nil
-}
-
 func ConvertToRestTarget(target Target) (models.Target, error) {
 	ret := models.Target{
 		TargetInfo: &models.TargetType{},

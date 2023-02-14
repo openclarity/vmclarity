@@ -102,7 +102,7 @@ type ClientInterface interface {
 	DeleteScanConfigsScanConfigID(ctx context.Context, scanConfigID ScanConfigID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetScanConfigsScanConfigID request
-	GetScanConfigsScanConfigID(ctx context.Context, scanConfigID ScanConfigID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetScanConfigsScanConfigID(ctx context.Context, scanConfigID ScanConfigID, params *GetScanConfigsScanConfigIDParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PatchScanConfigsScanConfigID request with any body
 	PatchScanConfigsScanConfigIDWithBody(ctx context.Context, scanConfigID ScanConfigID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -227,8 +227,8 @@ func (c *Client) DeleteScanConfigsScanConfigID(ctx context.Context, scanConfigID
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetScanConfigsScanConfigID(ctx context.Context, scanConfigID ScanConfigID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetScanConfigsScanConfigIDRequest(c.Server, scanConfigID)
+func (c *Client) GetScanConfigsScanConfigID(ctx context.Context, scanConfigID ScanConfigID, params *GetScanConfigsScanConfigIDParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetScanConfigsScanConfigIDRequest(c.Server, scanConfigID, params)
 	if err != nil {
 		return nil, err
 	}
@@ -612,6 +612,38 @@ func NewGetScanConfigsRequest(server string, params *GetScanConfigsParams) (*htt
 
 	}
 
+	if params.Select != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$select", runtime.ParamLocationQuery, *params.Select); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Count != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$count", runtime.ParamLocationQuery, *params.Count); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
 	if params.Page != nil {
 
 		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
@@ -729,7 +761,7 @@ func NewDeleteScanConfigsScanConfigIDRequest(server string, scanConfigID ScanCon
 }
 
 // NewGetScanConfigsScanConfigIDRequest generates requests for GetScanConfigsScanConfigID
-func NewGetScanConfigsScanConfigIDRequest(server string, scanConfigID ScanConfigID) (*http.Request, error) {
+func NewGetScanConfigsScanConfigIDRequest(server string, scanConfigID ScanConfigID, params *GetScanConfigsScanConfigIDParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -753,6 +785,26 @@ func NewGetScanConfigsScanConfigIDRequest(server string, scanConfigID ScanConfig
 	if err != nil {
 		return nil, err
 	}
+
+	queryValues := queryURL.Query()
+
+	if params.Select != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$select", runtime.ParamLocationQuery, *params.Select); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
 	if err != nil {
@@ -1709,7 +1761,7 @@ type ClientWithResponsesInterface interface {
 	DeleteScanConfigsScanConfigIDWithResponse(ctx context.Context, scanConfigID ScanConfigID, reqEditors ...RequestEditorFn) (*DeleteScanConfigsScanConfigIDResponse, error)
 
 	// GetScanConfigsScanConfigID request
-	GetScanConfigsScanConfigIDWithResponse(ctx context.Context, scanConfigID ScanConfigID, reqEditors ...RequestEditorFn) (*GetScanConfigsScanConfigIDResponse, error)
+	GetScanConfigsScanConfigIDWithResponse(ctx context.Context, scanConfigID ScanConfigID, params *GetScanConfigsScanConfigIDParams, reqEditors ...RequestEditorFn) (*GetScanConfigsScanConfigIDResponse, error)
 
 	// PatchScanConfigsScanConfigID request with any body
 	PatchScanConfigsScanConfigIDWithBodyWithResponse(ctx context.Context, scanConfigID ScanConfigID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchScanConfigsScanConfigIDResponse, error)
@@ -2346,8 +2398,8 @@ func (c *ClientWithResponses) DeleteScanConfigsScanConfigIDWithResponse(ctx cont
 }
 
 // GetScanConfigsScanConfigIDWithResponse request returning *GetScanConfigsScanConfigIDResponse
-func (c *ClientWithResponses) GetScanConfigsScanConfigIDWithResponse(ctx context.Context, scanConfigID ScanConfigID, reqEditors ...RequestEditorFn) (*GetScanConfigsScanConfigIDResponse, error) {
-	rsp, err := c.GetScanConfigsScanConfigID(ctx, scanConfigID, reqEditors...)
+func (c *ClientWithResponses) GetScanConfigsScanConfigIDWithResponse(ctx context.Context, scanConfigID ScanConfigID, params *GetScanConfigsScanConfigIDParams, reqEditors ...RequestEditorFn) (*GetScanConfigsScanConfigIDResponse, error) {
+	rsp, err := c.GetScanConfigsScanConfigID(ctx, scanConfigID, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
