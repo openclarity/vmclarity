@@ -55,6 +55,7 @@ func (scw *ScanConfigWatcher) scan(ctx context.Context, scanConfig *models.ScanC
 
 // initNewScan Initialized a new scan, returns target instances and scan ID.
 func (scw *ScanConfigWatcher) initNewScan(ctx context.Context, scanConfig *models.ScanConfig) ([]*types.TargetInstance, string, error) {
+<<<<<<< HEAD
 	// Create scan in pending
 	now := time.Now().UTC()
 	scan := &models.Scan{
@@ -91,7 +92,7 @@ func (scw *ScanConfigWatcher) initNewScan(ctx context.Context, scanConfig *model
 	}
 
 	// Do discovery of targets
-	instances, err := scw.providerClient.Discover(ctx, scan.ScanConfigSnapshot.Scope)
+	instances, err := scw.providerClient.DiscoverInstances(ctx, scan.ScanConfigSnapshot.Scope)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to discover instances to scan: %v", err)
 	}
