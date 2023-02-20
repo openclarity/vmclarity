@@ -190,3 +190,61 @@ func ConvertToRestScans(scans []Scan) (models.Scans, error) {
 
 	return ret, nil
 }
+
+func ConvertScopes(scopes *database.Scopes) (*models.ScopeType, error) {
+	ret := models.ScopeType{}
+
+	switch scopes.Type {
+	case "AwsScope":
+		awsScope := models.AwsScope{
+			Regions: convertRegions(scopes.AwsScopesRegions),
+		}
+		if err := ret.FromAwsScope(awsScope); err != nil {
+			return nil, fmt.Errorf("FromAwsScope failed: %w", err)
+		}
+	default:
+		return nil, fmt.Errorf("unknown scope type: %v", scopes.Type)
+	}
+
+	return &ret, nil
+}
+
+func convertRegions(regions []database.AwsScopesRegion) *[]models.AwsRegion {
+	var ret []models.AwsRegion
+	for _, region := range regions {
+		ret = append(ret, convertRegion(region))
+	}
+
+	return &ret
+}
+
+func convertRegion(region database.AwsScopesRegion) models.AwsRegion {
+	return models.AwsRegion{
+		Id:   &region.RegionID,
+		Vpcs: convertVPCs(region.AwsRegionVpcs),
+	}
+}
+
+func convertVPCs(vpcs []database.AwsRegionVpc) *[]models.AwsVPC {
+	var ret []models.AwsVPC
+	for i, _ := range vpcs {
+		ret = append(ret, models.AwsVPC{
+			Id:             &vpcs[i].VpcID,
+			SecurityGroups: convertSecurityGroups(vpcs[i].AwsVpcSecurityGroups),
+		})
+	}
+
+	return &ret
+}
+
+func convertSecurityGroups(groups []database.AwsVpcSecurityGroup) *[]models.AwsSecurityGroup {
+	var ret []models.AwsSecurityGroup
+
+	for i, _ := range groups {
+		ret = append(ret, models.AwsSecurityGroup{
+			Id: &groups[i].GroupID,
+		})
+	}
+
+	return &ret
+}

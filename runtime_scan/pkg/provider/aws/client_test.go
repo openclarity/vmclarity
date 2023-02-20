@@ -48,8 +48,8 @@ func Test_createVPCFilters(t *testing.T) {
 			name: "vpc with no security group",
 			args: args{
 				vpc: VPC{
-					id:             vpcID,
-					securityGroups: nil,
+					ID:             vpcID,
+					SecurityGroups: nil,
 				},
 			},
 			want: []ec2types.Filter{
@@ -63,10 +63,10 @@ func Test_createVPCFilters(t *testing.T) {
 			name: "vpc with one security group",
 			args: args{
 				vpc: VPC{
-					id: vpcID,
-					securityGroups: []SecurityGroup{
+					ID: vpcID,
+					SecurityGroups: []SecurityGroup{
 						{
-							id: sgID1,
+							ID: sgID1,
 						},
 					},
 				},
@@ -86,13 +86,13 @@ func Test_createVPCFilters(t *testing.T) {
 			name: "vpc with two security groups",
 			args: args{
 				vpc: VPC{
-					id: vpcID,
-					securityGroups: []SecurityGroup{
+					ID: vpcID,
+					SecurityGroups: []SecurityGroup{
 						{
-							id: sgID1,
+							ID: sgID1,
 						},
 						{
-							id: sgID2,
+							ID: sgID2,
 						},
 					},
 				},

@@ -494,7 +494,7 @@ paths:
 
   /discovery/scopes:
     get:
-      summary: Discover available scopes
+      summary: Get all available scopes
       parameters:
         - $ref: '#/components/parameters/odataFilter'
         - $ref: '#/components/parameters/odataSelect'
@@ -507,6 +507,24 @@ paths:
                 $ref: '#/components/schemas/ScopeType'
         default:
           $ref: '#/components/responses/UnknownError'
+    put:
+      summary: Set all available scopes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScopeType'
+        required: true
+      responses:
+        200:
+          description: All scopes were set successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScopeType'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      x-codegen-request-body-name: body
 
 components:
   schemas:
@@ -841,8 +859,6 @@ components:
         id:
           type: string
           readOnly: true
-        name:
-          type: string
         vpcs:
           type: array
           items:
@@ -855,8 +871,6 @@ components:
         id:
           type: string
           readOnly: true
-        name:
-          type: string
         securityGroups:
           type: array
           items:
@@ -869,8 +883,6 @@ components:
         id:
           type: string
           readOnly: true
-        name:
-          type: string
 
     Tag:
       type: object

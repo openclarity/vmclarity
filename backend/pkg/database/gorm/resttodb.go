@@ -170,3 +170,68 @@ func ConvertToDBScan(scan models.Scan) (Scan, error) {
 
 	return ret, nil
 }
+
+func ConvertScopes(scope *models.ScopeType) (*database.Scopes, error) {
+	var ret database.Scopes
+	disc, err := scope.Discriminator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get discriminator: %w", err)
+	}
+	switch disc {
+	case "AwsScope":
+		awsScope, err := scope.AsAwsScope()
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert scope to aws scope: %w", err)
+		}
+		ret.Type = awsScope.ObjectType
+		ret.AwsScopesRegions = convertRegions(awsScope.Regions)
+		return &ret, nil
+	default:
+		return nil, fmt.Errorf("unknown scope type: %v", disc)
+	}
+}
+
+func convertRegions(regions *[]models.AwsRegion) []database.AwsScopesRegion {
+	var ret []database.AwsScopesRegion
+	if regions != nil {
+		for _, region := range *regions {
+			ret = append(ret, convertRegion(region))
+		}
+	}
+
+	return ret
+}
+
+func convertRegion(region models.AwsRegion) database.AwsScopesRegion {
+	return database.AwsScopesRegion{
+		RegionID:      *region.Id,
+		AwsRegionVpcs: convertVPCs(region.Vpcs),
+	}
+}
+
+func convertVPCs(vpcs *[]models.AwsVPC) []database.AwsRegionVpc {
+	var ret []database.AwsRegionVpc
+	if vpcs != nil {
+		for _, vpc := range *vpcs {
+			ret = append(ret, database.AwsRegionVpc{
+				VpcID:                *vpc.Id,
+				AwsVpcSecurityGroups: convertSecurityGroups(vpc.SecurityGroups),
+			})
+		}
+	}
+
+	return ret
+}
+
+func convertSecurityGroups(groups *[]models.AwsSecurityGroup) []database.AwsVpcSecurityGroup {
+	var ret []database.AwsVpcSecurityGroup
+	if groups != nil {
+		for _, group := range *groups {
+			ret = append(ret, database.AwsVpcSecurityGroup{
+				GroupID: *group.Id,
+			})
+		}
+	}
+
+	return ret
+}

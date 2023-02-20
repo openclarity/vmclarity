@@ -31,8 +31,10 @@ type ScanningJobConfig struct {
 }
 
 type Client interface {
-	// Discover - list VM instances in the account according to the scan scope.
-	Discover(ctx context.Context, scanScope *models.ScanScopeType) ([]types.Instance, error)
-	// RunScanningJob - run a scanning job
+	// DiscoverScopes - List all scopes
+	DiscoverScopes(ctx context.Context) (*models.ScopeType, error)
+	// DiscoverInstances - list VM instances in the account according to the scan scope.
+	DiscoverInstances(ctx context.Context, scanScope *models.ScanScopeType) ([]types.Instance, error)
+	// RunScanningJob - run a scanning job. Upon successful run, the scanner instance is returned
 	RunScanningJob(ctx context.Context, snapshot types.Snapshot, config ScanningJobConfig) (types.Instance, error)
 }
