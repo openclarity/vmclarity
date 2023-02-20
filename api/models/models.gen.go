@@ -61,7 +61,6 @@ type ApiResponse struct {
 // AwsRegion AWS region
 type AwsRegion struct {
 	Id   *string   `json:"id,omitempty"`
-	Name *string   `json:"name,omitempty"`
 	Vpcs *[]AwsVPC `json:"vpcs,omitempty"`
 }
 
@@ -87,14 +86,12 @@ type AwsScope struct {
 
 // AwsSecurityGroup AWS security group
 type AwsSecurityGroup struct {
-	Id   *string `json:"id,omitempty"`
-	Name *string `json:"name,omitempty"`
+	Id *string `json:"id,omitempty"`
 }
 
 // AwsVPC AWS VPC
 type AwsVPC struct {
 	Id             *string             `json:"id,omitempty"`
-	Name           *string             `json:"name,omitempty"`
 	SecurityGroups *[]AwsSecurityGroup `json:"securityGroups,omitempty"`
 }
 
@@ -601,6 +598,9 @@ type GetTargetsParams struct {
 	// PageSize Maximum items to return
 	PageSize *PageSize `form:"pageSize,omitempty" json:"pageSize,omitempty"`
 }
+
+// PutDiscoveryScopesJSONRequestBody defines body for PutDiscoveryScopes for application/json ContentType.
+type PutDiscoveryScopesJSONRequestBody = ScopeType
 
 // PostScanConfigsJSONRequestBody defines body for PostScanConfigs for application/json ContentType.
 type PostScanConfigsJSONRequestBody = ScanConfig

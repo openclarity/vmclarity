@@ -80,15 +80,11 @@ func Run() {
 	dbConfig := createDatabaseConfig(config)
 	dbHandler := database.Init(dbConfig)
 
-	_ = CreateBackend(dbHandler)
-
-	restServer, err := rest.CreateRESTServer(config.BackendRestPort)
-	if err != nil {
-		log.Fatalf("Failed to create REST server: %v", err)
+	if config.EnableFakeData {
+		go dbHandler.CreateFakeData()
 	}
-	restServer.RegisterHandlers(dbHandler)
-	restServer.Start(errChan)
-	defer restServer.Stop()
+
+	_ = CreateBackend(dbHandler)
 
 	runtimeScanConfig, err := runtime_scan_config.LoadConfig(config.BackendRestAddress, config.BackendRestPort, rest.BaseURL)
 	if err != nil {
@@ -98,11 +94,22 @@ func Run() {
 	if err != nil {
 		log.Fatalf("Failed to create provider client: %v", err)
 	}
-	orc, err := createRuntimeScanOrchestrator(providerClient, runtimeScanConfig)
+
+	restServer, err := rest.CreateRESTServer(config.BackendRestPort)
 	if err != nil {
-		log.Fatalf("Failed to create runtime scan orchestrator: %v", err)
+		log.Fatalf("Failed to create REST server: %v", err)
 	}
-	orc.Start(globalCtx)
+	restServer.RegisterHandlers(dbHandler)
+	restServer.Start(errChan)
+	defer restServer.Stop()
+
+	if _, ok := os.LookupEnv("FAKE_SCOPES"); !ok {
+		orc, err := createRuntimeScanOrchestrator(providerClient, runtimeScanConfig)
+		if err != nil {
+			log.Fatalf("Failed to create runtime scan orchestrator: %v", err)
+		}
+		orc.Start(globalCtx)
+	}
 
 	healthServer.SetIsReady(true)
 	log.Info("VMClarity backend is ready")
