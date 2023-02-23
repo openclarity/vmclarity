@@ -5,7 +5,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,14 +16,12 @@ package gorm
 
 import (
 	"context"
-	"context"
 	"fmt"
 	"strings"
 	"sync"
 
 	"github.com/CiscoM31/godata"
 
-	"gorm.io/datatypes"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -35,51 +33,67 @@ type ODataObject struct {
 	Data datatypes.JSON
 }
 
+type fieldType int
+
+const (
+	primitiveFieldType fieldType = iota
+	complexFieldType
+	collectionFieldType
+)
+
+type fieldMeta struct {
+	fieldType           fieldType
+	collectionItemMeta  *fieldMeta
+	complexFieldSchemas []string
+}
+
+type schema map[string]fieldMeta
+
 var schemaMeta = map[string]schema{
 	"ScanConfig": {
-		"id":                 fieldMeta{collection: false, primitive: true},
-		"name":               fieldMeta{collection: false, primitive: true},
-		"scanFamiliesConfig": fieldMeta{collection: false, primitive: false, ty: []string{"ScanFamiliesConfig"}},
-		"scheduled":          fieldMeta{collection: false, primitive: false, ty: []string{"SingleScheduleScanConfig"}},
-		"scope":              fieldMeta{collection: false, primitive: false, ty: []string{"AwsScanScope"}},
+		"id":                 fieldMeta{fieldType: primitiveFieldType},
+		"name":               fieldMeta{fieldType: primitiveFieldType},
+		"scanFamiliesConfig": fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"ScanFamiliesConfig"}},
+		"scheduled":          fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"SingleScheduleScanConfig"}},
+		"scope":              fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"AwsScanScope"}},
 	},
 	"ScanFamiliesConfig": {
-		"exploits": fieldMeta{collection: false, primitive: false, ty: []string{"Exploits"}},
-		"sbom":     fieldMeta{collection: false, primitive: false, ty: []string{"Sbom"}},
+		"exploits": fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"Exploits"}},
+		"sbom":     fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"Sbom"}},
 	},
 	"Exploits": {
-		"enabled": fieldMeta{collection: false, primitive: true},
+		"enabled": fieldMeta{fieldType: primitiveFieldType},
 	},
 	"Sbom": {
-		"enabled": fieldMeta{collection: false, primitive: true},
+		"enabled": fieldMeta{fieldType: primitiveFieldType},
 	},
 	"SingleScheduleScanConfig": {
-		"operationTime": fieldMeta{collection: false, primitive: true},
+		"operationTime": fieldMeta{fieldType: primitiveFieldType},
 	},
 	"AwsScanScope": {
-		"all":                        fieldMeta{primitive: true},
-		"instanceTagExclusion":       fieldMeta{collection: true, ty: []string{"Tag"}},
-		"instanceTagSelector":        fieldMeta{collection: true, ty: []string{"Tag"}},
-		"regions":                    fieldMeta{collection: true, ty: []string{"AwsRegion"}},
-		"shouldScanStoppedInstances": fieldMeta{primitive: true},
+		"all":                        fieldMeta{fieldType: primitiveFieldType},
+		"instanceTagExclusion":       fieldMeta{fieldType: collectionFieldType, collectionItemMeta: &fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"Tag"}}},
+		"instanceTagSelector":        fieldMeta{fieldType: collectionFieldType, collectionItemMeta: &fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"Tag"}}},
+		"regions":                    fieldMeta{fieldType: collectionFieldType, collectionItemMeta: &fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"AwsRegion"}}},
+		"shouldScanStoppedInstances": fieldMeta{fieldType: primitiveFieldType},
 	},
 	"Tag": {
-		"key":   fieldMeta{primitive: true},
-		"value": fieldMeta{primitive: true},
+		"key":   fieldMeta{fieldType: primitiveFieldType},
+		"value": fieldMeta{fieldType: primitiveFieldType},
 	},
 	"AwsRegion": {
-		"id":   fieldMeta{primitive: true},
-		"name": fieldMeta{primitive: true},
-		"vpcs": fieldMeta{collection: true, ty: []string{"AwsVPC"}},
+		"id":   fieldMeta{fieldType: primitiveFieldType},
+		"name": fieldMeta{fieldType: primitiveFieldType},
+		"vpcs": fieldMeta{fieldType: collectionFieldType, collectionItemMeta: &fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"AwsVPC"}}},
 	},
 	"AwsVPC": {
-		"id":             fieldMeta{primitive: true},
-		"name":           fieldMeta{primitive: true},
-		"securityGroups": fieldMeta{collection: true, ty: []string{"AwsSecurityGroup"}},
+		"id":             fieldMeta{fieldType: primitiveFieldType},
+		"name":           fieldMeta{fieldType: primitiveFieldType},
+		"securityGroups": fieldMeta{fieldType: collectionFieldType, collectionItemMeta: &fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"AwsSecurityGroup"}}},
 	},
 	"AwsSecurityGroup": {
-		"id":   fieldMeta{primitive: true},
-		"name": fieldMeta{primitive: true},
+		"id":   fieldMeta{fieldType: primitiveFieldType},
+		"name": fieldMeta{fieldType: primitiveFieldType},
 	},
 }
 
@@ -123,7 +137,7 @@ func ODataQuery(db *gorm.DB, table string, schema string, filter *string, select
 	selectTree := buildSelectTreeFromSelect(selectItems)
 
 	// Build query selecting fields based on the selectTree
-	selectFields := buildSelectFields("$", "Data", schema, schemaMeta["ScanConfig"], selectTree)
+	selectFields := buildSelectFields(fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{schema}}, schema, "Data", "$", selectTree)
 
 	query := fmt.Sprintf("SELECT ID, %s AS Data FROM %s %s", selectFields, table, where)
 	if collection {
@@ -138,14 +152,6 @@ func ODataQuery(db *gorm.DB, table string, schema string, filter *string, select
 	}
 	return nil
 }
-
-type fieldMeta struct {
-	collection bool
-	primitive  bool
-	ty         []string
-}
-
-type schema map[string]fieldMeta
 
 type selectNode struct {
 	children map[string]*selectNode
@@ -186,63 +192,59 @@ func buildSelectTreeFromSelect(si []*godata.ExpandItem) *selectNode {
 	return tree
 }
 
-// nolint:cyclop,gocognit
-func buildSelectFields(path string, source string, schemaName string, sch schema, st *selectNode) string {
-	parts := []string{fmt.Sprintf("'objectType', '%s'", schemaName)}
-	for key, meta := range sch {
-		var where string
-		var sel *selectNode
-		if st != nil {
-			var ok bool
-			sel, ok = st.children[key]
-			// If any children specified, but this key isn't one of them
-			// then skip this key.
-			if len(st.children) > 0 && !ok {
-				continue
-			}
-		}
+// nolint:cyclop
+func buildSelectFields(field fieldMeta, identifier, source, path string, st *selectNode) string {
+	switch field.fieldType {
+	case collectionFieldType:
+		newIdentifier := fmt.Sprintf("%sOptions", identifier)
+		newSource := fmt.Sprintf("%s.value", identifier)
 
-		var extract string
-		if meta.primitive {
-			// Primitive
-			extract = fmt.Sprintf("%s -> '%s.%s'", source, path, key)
-		} else if meta.collection {
-			// List
-			newSource := fmt.Sprintf("%s.value", key)
-			if sel != nil && sel.filter != nil {
-				conditions, _ := buildWhereFromFilter(newSource, sel.filter.Tree)
+		var where string
+		var newSelectNode *selectNode
+		if st != nil {
+			if st.filter != nil {
+				conditions, _ := buildWhereFromFilter(newSource, st.filter.Tree)
 				where = fmt.Sprintf("WHERE %s", conditions)
 			}
-
-			var subQuery string
-			if len(meta.ty) == 1 {
-				subQuery = buildSelectFields("$", newSource, meta.ty[0], schemaMeta[meta.ty[0]], sel)
-			} else {
-				objects := []string{}
-				for _, t := range meta.ty {
-					objects = append(objects, buildSelectFields("$", newSource, t, schemaMeta[t], sel))
-				}
-				subQuery = fmt.Sprintf("(SELECT %sOptions.value FROM JSON_EACH(JSON_ARRAY(%s)) AS %sOptions WHERE %sOptions.value -> '$.objectType' = %s -> '%s.objectType')", key, strings.Join(objects, ","), key, key, newSource, path)
-			}
-
-			extract = fmt.Sprintf("(SELECT JSON_GROUP_ARRAY(%s) FROM JSON_EACH(%s, '%s.%s') AS %s %s)", subQuery, source, path, key, key, where)
-		} else {
-			// Struct
-			if len(meta.ty) == 1 {
-				extract = buildSelectFields(fmt.Sprintf("%s.%s", path, key), source, meta.ty[0], schemaMeta[meta.ty[0]], sel)
-			} else {
-				objects := []string{}
-				for _, t := range meta.ty {
-					objects = append(objects, buildSelectFields(fmt.Sprintf("%s.%s", path, key), source, t, schemaMeta[t], sel))
-				}
-				extract = fmt.Sprintf("(SELECT %s.value FROM JSON_EACH(JSON_ARRAY(%s)) AS %s WHERE %s.value -> '$.objectType' = %s -> '%s.%s.objectType')", key, strings.Join(objects, ","), key, key, source, path, key)
-			}
+			newSelectNode = &selectNode{children: st.children}
 		}
-		part := fmt.Sprintf("'%s', %s", key, extract)
-		parts = append(parts, part)
-	}
 
-	return fmt.Sprintf("JSON_OBJECT(%s)", strings.Join(parts, ","))
+		subQuery := buildSelectFields(*field.collectionItemMeta, newIdentifier, newSource, "$", newSelectNode)
+		return fmt.Sprintf("(SELECT JSON_GROUP_ARRAY(%s) FROM JSON_EACH(%s, '%s') AS %s %s)", subQuery, source, path, identifier, where)
+	case complexFieldType:
+		objects := []string{}
+		for _, schemaName := range field.complexFieldSchemas {
+			schema := schemaMeta[schemaName]
+			parts := []string{fmt.Sprintf("'ObjectType', '%s'", schemaName)}
+			for key, fm := range schema {
+				var sel *selectNode
+				if st != nil && len(st.children) > 0 {
+					var ok bool
+					sel, ok = st.children[key]
+					if !ok {
+						continue
+					}
+				}
+
+				extract := buildSelectFields(fm, fmt.Sprintf("%s%s", identifier, key), source, fmt.Sprintf("%s.%s", path, key), sel)
+				part := fmt.Sprintf("'%s', %s", key, extract)
+				parts = append(parts, part)
+			}
+			objects = append(objects, fmt.Sprintf("JSON_OBJECT(%s)", strings.Join(parts, ",")))
+		}
+		if len(objects) == 1 {
+			return objects[0]
+		}
+		return fmt.Sprintf("(SELECT %s.value FROM JSON_EACH(JSON_ARRAY(%s)) AS %s WHERE %s.value -> '$.ObjectType' = %s -> '%s.ObjectType')", identifier, strings.Join(objects, ","), identifier, identifier, source, path)
+	case primitiveFieldType:
+		fallthrough
+	default:
+		// If root of source (path is just $) is primitive just return the source
+		if path == "$" {
+			return source
+		}
+		return fmt.Sprintf("%s -> '%s'", source, path)
+	}
 }
 
 var sqlOperators = map[string]string{
