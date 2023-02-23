@@ -45,29 +45,13 @@ $color-warning-low: #EAD246;
 $color-status-violet: #721BD5;
 $color-status-blue: #30749E;
 
-// //Dashboard
-// $color-dash-blue: #5078B2;
-// $color-dash-blue-light: #719DDE;
-// $color-dash-blue-lighter: #90BDFF;
-
 :export {
     color-main: $color-main;
-    // color-main-dark: $color-main-dark;
     color-main-light: $color-main-light;
     color-grey: $color-grey;
     color-grey-light: $color-grey-light;
     color-grey-lighter: $color-grey-lighter;
     color-grey-dark: $color-grey-dark;
-    // color-grey-black: $color-grey-black;
-    // color-status-violet: $color-status-violet;
-    // color-status-blue: $color-status-blue;
-    // color-error-dark: $color-error-dark;
-    // color-error: $color-error;
-    // color-warning: $color-warning;
-    // color-warning-low: $color-warning-low;
     color-blue: $color-blue;
     color-blue-light: $color-blue-light
-    // color-dash-blue: $color-dash-blue;
-    // color-dash-blue-light: $color-dash-blue-light;
-    // color-dash-blue-lighter: $color-dash-blue-lighter;
 }
