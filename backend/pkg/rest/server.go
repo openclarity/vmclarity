@@ -73,6 +73,13 @@ func createEchoServer() (*echo.Echo, error) {
 	// the base URL router group against the OpenAPI schema.
 	g.Use(middleware.OapiRequestValidator(swagger))
 
+	// https://sunde.dev/blog/Echo_Golang_server_for_a_Single_Page_Application_(SPA)
+	e.Use(echomiddleware.StaticWithConfig(echomiddleware.StaticConfig{
+		Root:   "/app/site",  // This is the path to your SPA build folder, the folder that is created from running "npm build"
+		Index:  "index.html", // This is the default html page for your SPA
+		Browse: false,
+		HTML5:  true,
+	}))
 	return e, nil
 }
 
