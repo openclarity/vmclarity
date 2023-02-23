@@ -1,3 +1,5 @@
+@import 'utils/scss_variables.module.scss';
+
 .scan-configs-table-page-wrapper {
     .content-container-wrapper {
         margin-top: 35px;
@@ -11,5 +13,20 @@
                 }
             }
         }
+    }
+}
+
+.modal-inner-wrapper.scan-config-delete-confirmation {
+    padding: 30px;
+
+    .modal-title {
+        font-weight: 350;
+        font-size: 26px;
+        line-height: 30px;
+        color: $color-main;
+    }
+    .clarity-button.modal-submit-button {
+        background-color: $color-error;
+        color: white;
     }
 }

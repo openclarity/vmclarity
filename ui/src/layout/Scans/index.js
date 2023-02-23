@@ -6,25 +6,9 @@ import Loader from 'components/Loader';
 import EmptyDisplay from 'components/EmptyDisplay';
 import ScanConfigWizardModal from './ScanConfigWizardModal';
 import ScansTable from './ScansTable';
-import ConfigurationsTable from './ConfigurationsTable';
+import ConfigurationsTable, { SCAN_CONFIGS_PATH } from './ConfigurationsTable';
 
-const Scans = () => {
-    const [scanConfigFormData, setScanConfigFormData] = useState(null);
-    const closeConfigForm = () => setScanConfigFormData(null);
-
-    const [{data, error, loading}, fetchData] = useMountMultiFetch([
-        {key: "scans", url: "scans"},
-        {key: "scanConfigs", url: "scanConfigs"}
-    ]);
-
-    if (loading) {
-        return <Loader />;
-    }
-
-    if (error) {
-        return null;
-    }
-
+const Scans = React.memo(({setScanConfigFormData, data}) => {
     const {scans, scanConfigs} = data;
     
     return (
@@ -51,12 +35,37 @@ const Scans = () => {
                         {
                             id: "configs",
                             title: "Configurations",
-                            path: "configs",
+                            path: SCAN_CONFIGS_PATH,
                             component: () => <ConfigurationsTable setScanConfigFormData={setScanConfigFormData} />
                         }
                     ]}
                 />
             }
+        </React.Fragment>
+    
+    )
+}, () => true);
+
+const ScansWrapper = () => {
+    const [scanConfigFormData, setScanConfigFormData] = useState(null);
+    const closeConfigForm = () => setScanConfigFormData(null);
+
+    const [{data, error, loading}, fetchData] = useMountMultiFetch([
+        {key: "scans", url: "scans"},
+        {key: "scanConfigs", url: "scanConfigs"}
+    ]);
+
+    if (loading) {
+        return <Loader />;
+    }
+
+    if (error) {
+        return null;
+    }
+
+    return (
+        <>
+            <Scans setScanConfigFormData={setScanConfigFormData} data={data} />
             {!isNull(scanConfigFormData) && 
                 <ScanConfigWizardModal
                     initialData={scanConfigFormData}
@@ -67,9 +76,10 @@ const Scans = () => {
                     }}
                 />
             }
-        </React.Fragment>
-    
+        </>
     )
 }
 
-export default Scans;
+export default ScansWrapper;
+
+

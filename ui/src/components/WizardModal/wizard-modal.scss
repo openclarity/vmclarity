@@ -40,6 +40,14 @@ $navigation-width: 180px;
                 height: calc(100vh - #{$top-bar-height} - #{$actions-panel-height} - #{$top-padding} - 65px);
                 overflow-y: auto;
 
+                .main-error-message {
+                    background-color: $color-error-light;
+                    padding: 5px 10px;
+                    margin-bottom: 27px;
+                    font-weight: 400;
+                    font-size: 12px;
+                    line-height: 18px;
+                }
                 .wizard-step-display-title {
                     font-weight: 350;
                     font-size: 26px;

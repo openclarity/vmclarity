@@ -1,19 +1,12 @@
 import React from 'react';
 import { FETCH_METHODS } from 'hooks';
 import WizardModal from 'components/WizardModal';
+import { formatStringInstancesToTags, formatTagsToStringInstances } from '../utils';
 import StepGeneralProperties, { REGIONS_EMPTY_VALUE, VPCS_EMPTY_VALUE, SCOPE_ITEMS } from './StepGeneralProperties';
 import StepScanTypes from './StepScanTypes';
 import StepTimeConfiguration, { SCHEDULE_TYPES_ITEMS } from './StepTimeConfiguration';
 
 import './scan-config-wizard-modal.scss';
-
-const formatStringInstancesToTags = items => items.map(item => {
-    const [key, value] = item.split("=");
-
-    return {key, value};
-});
-
-const formatTagsToStringInstances = tags => tags.map(({key, value}) => `${key}=${value}`);
 
 const padDateTime = time => String(time).padStart(2, "0");
 

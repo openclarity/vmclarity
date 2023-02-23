@@ -34,7 +34,7 @@ const Modal = (props) => {
                 <CloseButton onClose={onClose} />
                 <div className="modal-actions">
                     {!hideCancel && <Button tertiary onClick={onClose}>Cancel</Button>}
-                    {!hideSubmit && <Button onClick={onDone} disabled={disableDone}>{doneTitle}</Button>}
+                    {!hideSubmit && <Button className="modal-submit-button" onClick={onDone} disabled={disableDone}>{doneTitle}</Button>}
             </div>
             </div>
         </div>,

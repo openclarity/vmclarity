@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { isNull } from 'lodash';
 import { useDelete, usePrevious } from 'hooks';
 import ButtonWithIcon from 'components/ButtonWithIcon';
 import Icon, { ICON_NAMES } from 'components/Icon';
@@ -6,6 +7,10 @@ import ContentContainer from 'components/ContentContainer';
 import EmptyDisplay from 'components/EmptyDisplay';
 import Table from 'components/Table';
 import { TooltipWrapper } from 'components/Tooltip';
+import Modal from 'components/Modal';
+import ExpandableList from 'components/ExpandableList';
+import { BoldText, toCapitalized, formatDate } from 'utils/utils';
+import { formatTagsToStringInstances, formatRegionsToStrings } from '../utils';
 
 import './configurations-table.scss';
 
@@ -13,17 +18,89 @@ const TABLE_TITLE = "scan configurations";
 
 const SCAN_CONFIGS_URL = "scanConfigs";
 
+export const SCAN_CONFIGS_PATH = "configs";
+
 const ConfigurationsTable = ({setScanConfigFormData}) => {
     const columns = useMemo(() => [
         {
             Header: "Name",
             id: "name",
             accessor: "name"
+        },
+        {
+            Header: "Scope",
+            id: "scope",
+            Cell: ({row}) => {
+                const {all, regions} = row.original.scope;
+
+                return (
+                    all ? "All" : <ExpandableList items={formatRegionsToStrings(regions)} />
+                )
+            }
+        },
+        {
+            Header: "Excluded instances",
+            id: "instanceTagExclusion",
+            Cell: ({row}) => {
+                const {instanceTagExclusion} = row.original.scope;
+                
+                return (
+                    <ExpandableList items={formatTagsToStringInstances(instanceTagExclusion)} withTagWrap />
+                )
+            }
+        },
+        {
+            Header: "Included instances",
+            id: "instanceTagSelector",
+            Cell: ({row}) => {
+                const {instanceTagSelector} = row.original.scope;
+                
+                return (
+                    <ExpandableList items={formatTagsToStringInstances(instanceTagSelector)} withTagWrap />
+                )
+            }
+        },
+        {
+            Header: "Time config",
+            id: "timeConfig",
+            Cell: ({row}) => {
+                const {operationTime} = row.original.scheduled;
+                const isScheduled = (Date.now() - (new Date(operationTime)).valueOf() <= 0);
+                
+                return (
+                    <div>
+                        {!!isScheduled && <BoldText>Scheduled</BoldText>}
+                        <div>{formatDate(operationTime)}</div>
+                    </div>
+                )
+            }
+        },
+        {
+            Header: "Scan types",
+            id: "scanTypes",
+            Cell: ({row}) => {
+                const {scanFamiliesConfig} = row.original;
+
+                return (
+                    <div>
+                        {
+                            Object.keys(scanFamiliesConfig).map(type => {
+                                const {enabled} = scanFamiliesConfig[type];
+
+                                return enabled ? toCapitalized(type) : null;
+                            }).filter(type => !isNull(type)).join(" - ")
+                        }
+                    </div>
+                )
+            }
         }
     ], []);
 
     const [refreshTimestamp, setRefreshTimestamp] = useState(Date());
     const doRefreshTimestamp = useCallback(() => setRefreshTimestamp(Date()), []);
+
+    const [deleteConfigmationData, setDeleteConfigmationData] = useState(null);
+    const closeDeleteConfigmation = () => setDeleteConfigmationData(null);
 
     const [{deleting}, deleteScan] = useDelete(SCAN_CONFIGS_URL);
     const prevDeleting = usePrevious(deleting);
@@ -71,7 +148,7 @@ const ConfigurationsTable = ({setScanConfigFormData}) => {
                                             event.stopPropagation();
                                             event.preventDefault();
     
-                                            deleteScan(id)
+                                            setDeleteConfigmationData(original);
                                         }}
                                     />
                                 </TooltipWrapper>
@@ -92,6 +169,22 @@ const ConfigurationsTable = ({setScanConfigFormData}) => {
                     )}
                 />
             </ContentContainer>
+            {!isNull(deleteConfigmationData) &&
+                <Modal
+                    title="Delete configmation"
+                    className="scan-config-delete-confirmation"
+                    onClose={closeDeleteConfigmation}
+                    height={250}
+                    doneTitle="Delete"
+                    onDone={() => {
+                        deleteScan(deleteConfigmationData.id);
+                        closeDeleteConfigmation();
+                    }}
+                >
+                    <span>{`Once `}</span><BoldText>{deleteConfigmationData.name}</BoldText><span>{` will be deleted, the action cannot be reverted`}</span><br />
+                    <span>{`Are you sure you want to delete ${deleteConfigmationData.name}?`}</span>
+                </Modal>
+            }
         </div>
     )
 }

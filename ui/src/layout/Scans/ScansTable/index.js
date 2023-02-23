@@ -1,11 +1,15 @@
 import React, { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ContentContainer from 'components/ContentContainer';
 import EmptyDisplay from 'components/EmptyDisplay';
 import Table from 'components/Table';
+import { SCAN_CONFIGS_PATH } from '../ConfigurationsTable';
 
 const TABLE_TITLE = "scans";
 
 const ScansTable = ({setScanConfigFormData}) => {
+    const navigate = useNavigate();
+
     const columns = useMemo(() => [
         {
             Header: "Config Name",
@@ -43,7 +47,7 @@ const ScansTable = ({setScanConfigFormData}) => {
                             title="New scan configuration"
                             onClick={() => setScanConfigFormData({})}
                             subTitle="Start scan from config"
-                            onSubClick={() => {debugger}}
+                            onSubClick={() => navigate(SCAN_CONFIGS_PATH)}
                         />
                     )}
                 />

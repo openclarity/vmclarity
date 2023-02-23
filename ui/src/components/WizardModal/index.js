@@ -80,6 +80,7 @@ const Wizard = ({steps, onClose, submitUrl, onSubmitSuccess, getSubmitParams}) =
                     }
                 </ul>
                 <div className="wizard-step-display">
+                    {!!status && <div className="main-error-message">{status}</div>}
                     <div className="wizard-step-display-title">{activeTitle}</div>
                     <ActiveStepComponent />
                 </div>
