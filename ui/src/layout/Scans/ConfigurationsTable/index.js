@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDelete, usePrevious } from 'hooks';
 import ButtonWithIcon from 'components/ButtonWithIcon';
 import Icon, { ICON_NAMES } from 'components/Icon';
@@ -23,7 +23,7 @@ const ConfigurationsTable = ({setScanConfigFormData}) => {
     ], []);
 
     const [refreshTimestamp, setRefreshTimestamp] = useState(Date());
-    const doRefreshTimestamp = () => setRefreshTimestamp(Date());
+    const doRefreshTimestamp = useCallback(() => setRefreshTimestamp(Date()), []);
 
     const [{deleting}, deleteScan] = useDelete(SCAN_CONFIGS_URL);
     const prevDeleting = usePrevious(deleting);
