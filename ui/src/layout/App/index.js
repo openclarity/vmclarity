@@ -1,0 +1,106 @@
+import React from 'react';
+import { Route, Routes, BrowserRouter, Outlet, useNavigate, useMatch, useLocation} from 'react-router-dom';
+import classnames from 'classnames';
+import Icon, { ICON_NAMES } from 'components/Icon';
+import IconTemplates from 'components/Icon/IconTemplates';
+import Notification from 'components/Notification';
+import Tooltip from 'components/Tooltip';
+import Scans from 'layout/Scans';
+import { NotificationProvider, useNotificationState, useNotificationDispatch, removeNotification } from 'context/NotificationProvider';
+import { ROUTES } from 'utils/systemConsts';
+
+import brandImage from 'utils/images/brand.svg';
+
+import './app.scss';
+
+const ROUTES_CONFIG = [
+    {
+		path: ROUTES.DEFAULT,
+		component: () => "TBD",
+        icon: ICON_NAMES.DASHBOARD,
+        isIndex: true,
+        title: "Dashboard"
+	},
+	{
+		path: ROUTES.SCANS,
+		component: Scans,
+        icon: ICON_NAMES.SCANS,
+        title: "Scans"
+	}
+];
+
+const ConnectedNotification = () => {
+    const {message, type} = useNotificationState();
+    const dispatch = useNotificationDispatch()
+
+    if (!message) {
+        return null;
+    }
+
+    return <Notification message={message} type={type} onClose={() => removeNotification(dispatch)} />
+}
+
+const NavLinkItem = ({pathname, icon}) => {
+    const location = useLocation();
+    const match = useMatch(`${pathname}/*`);
+    const isActive = pathname === location.pathname ? true : !!match;
+
+    const navigate = useNavigate();
+
+    const onClick = () => {
+        navigate(pathname);
+    }
+    
+    return (
+        <div className={classnames("nav-item", {active: isActive})} onClick={onClick}>
+            <Icon name={icon} />
+        </div>
+    )
+}
+
+const Layout = () => (
+    <div id="main-wrapper">  
+        <div className="sidebar-container">
+            {
+                ROUTES_CONFIG.map(({path, icon, title}) => {
+                    const tooltipId = `sidebar-item-tooltip-${path}`;
+
+                    return (
+                        <div key={path} data-tip data-for={tooltipId}>
+                            <NavLinkItem pathname={path} icon={icon} />
+                            <Tooltip id={tooltipId} text={title} />
+                        </div>
+                    )
+                })
+            }
+        </div>
+        <main role="main">
+            <NotificationProvider>
+                <Outlet />
+                <ConnectedNotification />
+            </NotificationProvider>
+        </main>
+    </div>
+)
+
+const App = () => (
+    <div className="app-wrapper">
+        <div className="topbar-container">
+            <img src={brandImage} alt="VMClarity" />
+        </div>
+        <BrowserRouter>
+            <Routes>
+                <Route path="/" element={<Layout />}>
+                    {
+                        ROUTES_CONFIG.map(({path, component: Component, isIndex}) => (
+                            <Route key={path} path={isIndex ? undefined : `${path}/*`} index={isIndex} element={(<Component />)} />
+                        ))
+                    }
+                </Route>
+            </Routes>
+        </BrowserRouter>
+        <IconTemplates />
+    </div>
+)
+
+export default App;
