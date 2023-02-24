@@ -17,6 +17,7 @@ package gorm
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	jsonpatch "github.com/evanphx/json-patch/v5"
@@ -74,6 +75,9 @@ func (s *ScanConfigsTableHandler) GetScanConfig(scanConfigID models.ScanConfigID
 	filter := fmt.Sprintf("id eq '%s'", scanConfigID)
 	err := ODataQuery(s.DB, "scan_configs", "ScanConfig", &filter, nil, false, &dbScanConfig)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return models.ScanConfig{}, types.ErrNotFound
+		}
 		return models.ScanConfig{}, err
 	}
 
@@ -157,18 +161,14 @@ func (s *ScanConfigsTableHandler) CreateScanConfig(scanConfig models.ScanConfig)
 }
 
 func (s *ScanConfigsTableHandler) SaveScanConfig(scanConfig models.ScanConfig) (models.ScanConfig, error) {
-	var scanConfigs []ScanConfig
+	var dbScanConfig ScanConfig
 	filter := fmt.Sprintf("id eq '%s'", *scanConfig.Id)
-	err := ODataQuery(s.DB, "scan_configs", "ScanConfig", &filter, nil, true, &scanConfigs)
+	err := ODataQuery(s.DB, "scan_configs", "ScanConfig", &filter, nil, false, &dbScanConfig)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return models.ScanConfig{}, types.ErrNotFound
+		}
 		return models.ScanConfig{}, err
-	}
-
-	if len(scanConfigs) > 1 {
-		// Error multiple found for that ID (this is problems and should never happen)
-		return models.ScanConfig{}, fmt.Errorf("ummm")
-	} else if len(scanConfigs) == 0 {
-		return models.ScanConfig{}, fmt.Errorf("not found")
 	}
 
 	marshaled, err := json.Marshal(scanConfig)
@@ -176,7 +176,6 @@ func (s *ScanConfigsTableHandler) SaveScanConfig(scanConfig models.ScanConfig) (
 		return models.ScanConfig{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
 	}
 
-	dbScanConfig := scanConfigs[0]
 	dbScanConfig.Data = marshaled
 
 	if err := s.DB.Save(&dbScanConfig).Error; err != nil {
@@ -195,18 +194,14 @@ func (s *ScanConfigsTableHandler) SaveScanConfig(scanConfig models.ScanConfig) (
 }
 
 func (s *ScanConfigsTableHandler) UpdateScanConfig(scanConfig models.ScanConfig) (models.ScanConfig, error) {
-	var scanConfigs []ScanConfig
+	var dbScanConfig ScanConfig
 	filter := fmt.Sprintf("id eq '%s'", *scanConfig.Id)
-	err := ODataQuery(s.DB, "scan_configs", "ScanConfig", &filter, nil, true, &scanConfigs)
+	err := ODataQuery(s.DB, "scan_configs", "ScanConfig", &filter, nil, false, &dbScanConfig)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return models.ScanConfig{}, types.ErrNotFound
+		}
 		return models.ScanConfig{}, err
-	}
-
-	if len(scanConfigs) > 1 {
-		// Error multiple found for that ID (this is problems and should never happen)
-		return models.ScanConfig{}, fmt.Errorf("ummm")
-	} else if len(scanConfigs) == 0 {
-		return models.ScanConfig{}, fmt.Errorf("not found")
 	}
 
 	marshaled, err := json.Marshal(scanConfig)
@@ -215,20 +210,20 @@ func (s *ScanConfigsTableHandler) UpdateScanConfig(scanConfig models.ScanConfig)
 	}
 
 	// Calculate the diffs between the current doc and the user doc
-	patch, err := jsonpatch.CreateMergePatch(scanConfigs[0].Data, marshaled)
+	patch, err := jsonpatch.CreateMergePatch(dbScanConfig.Data, marshaled)
 	if err != nil {
 		return models.ScanConfig{}, fmt.Errorf("failed to calculate patch changes: %w", err)
 	}
 
 	// Apply the diff to the doc stored in the DB
-	updated, err := jsonpatch.MergePatch(scanConfigs[0].Data, patch)
+	updated, err := jsonpatch.MergePatch(dbScanConfig.Data, patch)
 	if err != nil {
 		return models.ScanConfig{}, fmt.Errorf("failed to apply patch: %w", err)
 	}
 
-	scanConfigs[0].Data = updated
+	dbScanConfig.Data = updated
 
-	if err := s.DB.Save(&scanConfigs[0]).Error; err != nil {
+	if err := s.DB.Save(&dbScanConfig).Error; err != nil {
 		return models.ScanConfig{}, fmt.Errorf("failed to save scan config in db: %w", err)
 	}
 
@@ -236,7 +231,7 @@ func (s *ScanConfigsTableHandler) UpdateScanConfig(scanConfig models.ScanConfig)
 	// creating any of the data (like the ID) so we can just return the
 	// scanConfig pre-marshal above.
 	var sc models.ScanConfig
-	err = json.Unmarshal(scanConfigs[0].Data, &sc)
+	err = json.Unmarshal(dbScanConfig.Data, &sc)
 	if err != nil {
 		return models.ScanConfig{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
@@ -246,6 +241,9 @@ func (s *ScanConfigsTableHandler) UpdateScanConfig(scanConfig models.ScanConfig)
 func (s *ScanConfigsTableHandler) DeleteScanConfig(scanConfigID models.ScanConfigID) error {
 	jsonQuotedID := fmt.Sprintf("\"%s\"", scanConfigID)
 	if err := s.DB.Where("`Data` -> '$.id' = ?", jsonQuotedID).Delete(&ScanConfig{}).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return types.ErrNotFound
+		}
 		return fmt.Errorf("failed to delete scan config: %w", err)
 	}
 	return nil

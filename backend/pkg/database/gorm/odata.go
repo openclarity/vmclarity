@@ -166,7 +166,7 @@ func ODataQuery(db *gorm.DB, table string, schema string, filter *string, select
 		}
 	} else {
 		query := fmt.Sprintf("%s LIMIT 1", query)
-		if err := db.Raw(query).Find(result).Error; err != nil {
+		if err := db.Raw(query).First(result).Error; err != nil {
 			return fmt.Errorf("failed to query DB: %w", err)
 		}
 	}

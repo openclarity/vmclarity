@@ -16,12 +16,16 @@
 package types
 
 import (
+	"errors"
+
 	"github.com/openclarity/vmclarity/api/models"
 )
 
 const (
 	DBDriverTypeLocal = "LOCAL"
 )
+
+var ErrNotFound = errors.New("not found")
 
 type DBConfig struct {
 	EnableInfoLogs bool   `json:"enable-info-logs"`
