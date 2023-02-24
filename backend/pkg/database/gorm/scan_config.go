@@ -87,6 +87,20 @@ func (s *ScanConfigsTableHandler) GetScanConfig(scanConfigID models.ScanConfigID
 }
 
 func (s *ScanConfigsTableHandler) CreateScanConfig(scanConfig models.ScanConfig) (models.ScanConfig, error) {
+	// Check the user provided the name field
+	if scanConfig.Name == nil || *scanConfig.Name == "" {
+		return models.ScanConfig{}, fmt.Errorf("name is a required field")
+	}
+
+	// Check the user didn't provide an Id
+	if scanConfig.Id != nil {
+		return models.ScanConfig{}, fmt.Errorf("can not specify Id field when creating a new ScanConfig")
+	}
+
+	// Generate a new UUID
+	newID := uuid.New().String()
+	scanConfig.Id = &newID
+
 	// TODO(sambetts) Lock the table here to prevent race conditions
 	// checking the uniqueness.
 	//
@@ -99,6 +113,7 @@ func (s *ScanConfigsTableHandler) CreateScanConfig(scanConfig models.ScanConfig)
 	// record in the DB, and should be treated safely by the DB without
 	// locking the table.
 
+	// Check the existing DB entries to ensure that the name field is unique
 	var scanConfigs []ScanConfig
 	filter := fmt.Sprintf("name eq '%s'", *scanConfig.Name)
 	err := ODataQuery(s.DB, "scan_configs", "ScanConfig", &filter, nil, true, &scanConfigs)
@@ -115,11 +130,6 @@ func (s *ScanConfigsTableHandler) CreateScanConfig(scanConfig models.ScanConfig)
 		return sc, &common.ConflictError{
 			Reason: fmt.Sprintf("Scan config exists with name=%s", *sc.Name),
 		}
-	}
-
-	if scanConfig.Id == nil || *scanConfig.Id == "" {
-		newID := uuid.New().String()
-		scanConfig.Id = &newID
 	}
 
 	marshaled, err := json.Marshal(scanConfig)
