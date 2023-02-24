@@ -58,13 +58,33 @@ var schemaMeta = map[string]schema{
 		"scope":              fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"AwsScanScope"}},
 	},
 	"ScanFamiliesConfig": {
-		"exploits": fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"Exploits"}},
-		"sbom":     fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"Sbom"}},
+		"exploits":          fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"ExploitsConfig"}},
+		"malware":           fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"MalwareConfig"}},
+		"misconfigurations": fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"MisconfigurationsConfig"}},
+		"rootkits":          fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"RootkitsConfig"}},
+		"sbom":              fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"SBOMConfig"}},
+		"secrets":           fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"SecretsConfig"}},
+		"vulnerabilties":    fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"VulnerabiltiesConfig"}},
 	},
-	"Exploits": {
+	"ExploitsConfig": {
 		"enabled": fieldMeta{fieldType: primitiveFieldType},
 	},
-	"Sbom": {
+	"MalwareConfig": {
+		"enabled": fieldMeta{fieldType: primitiveFieldType},
+	},
+	"MisconfigurationsConfig": {
+		"enabled": fieldMeta{fieldType: primitiveFieldType},
+	},
+	"RootkitsConfig": {
+		"enabled": fieldMeta{fieldType: primitiveFieldType},
+	},
+	"SBOMConfig": {
+		"enabled": fieldMeta{fieldType: primitiveFieldType},
+	},
+	"SecretsConfig": {
+		"enabled": fieldMeta{fieldType: primitiveFieldType},
+	},
+	"VulnerabilitiesConfig": {
 		"enabled": fieldMeta{fieldType: primitiveFieldType},
 	},
 	"SingleScheduleScanConfig": {
@@ -215,7 +235,7 @@ func buildSelectFields(field fieldMeta, identifier, source, path string, st *sel
 		objects := []string{}
 		for _, schemaName := range field.complexFieldSchemas {
 			schema := schemaMeta[schemaName]
-			parts := []string{fmt.Sprintf("'ObjectType', '%s'", schemaName)}
+			parts := []string{fmt.Sprintf("'objectType', '%s'", schemaName)}
 			for key, fm := range schema {
 				var sel *selectNode
 				if st != nil && len(st.children) > 0 {
@@ -235,7 +255,7 @@ func buildSelectFields(field fieldMeta, identifier, source, path string, st *sel
 		if len(objects) == 1 {
 			return objects[0]
 		}
-		return fmt.Sprintf("(SELECT %s.value FROM JSON_EACH(JSON_ARRAY(%s)) AS %s WHERE %s.value -> '$.ObjectType' = %s -> '%s.ObjectType')", identifier, strings.Join(objects, ","), identifier, identifier, source, path)
+		return fmt.Sprintf("(SELECT %s.value FROM JSON_EACH(JSON_ARRAY(%s)) AS %s WHERE %s.value -> '$.objectType' = %s -> '%s.objectType')", identifier, strings.Join(objects, ","), identifier, identifier, source, path)
 	case primitiveFieldType:
 		fallthrough
 	default:
