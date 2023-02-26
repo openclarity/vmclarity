@@ -1,6 +1,7 @@
 export const ICON_NAMES = {
     DASHBOARD: "dashboard",
     SCANS: "scans",
+    DUPLICATE: "duplicate",
     X_MARK: "x-mark",
     // CHECK_MARK: "check-mark",
     // STROKE: "stroke",

@@ -123,14 +123,24 @@ const ConfigurationsTable = ({setScanConfigFormData}) => {
                     url={SCAN_CONFIGS_URL}
                     refreshTimestamp={refreshTimestamp}
                     noResultsTitle={TABLE_TITLE}
+                    actionsColumnWidth={100}
                     actionsComponent={({original}) => {
                         const {id} = original;
-                        const deleteTooltipId = `${id}-delete`;
-                        const editTooltipId = `${id}-edit`;
     
                         return (
                             <div className="config-row-actions">
-                                <TooltipWrapper tooltipId={editTooltipId} tooltipText="Edit scan configuration" >
+                                <TooltipWrapper tooltipId={`${id}-duplicate`} tooltipText="Duplicate scan configuration" >
+                                    <Icon
+                                        name={ICON_NAMES.DUPLICATE}
+                                        onClick={event => {
+                                            event.stopPropagation();
+                                            event.preventDefault();
+                                            
+                                            setScanConfigFormData({...original, id: null, name: ""});
+                                        }}
+                                    />
+                                </TooltipWrapper>
+                                <TooltipWrapper tooltipId={`${id}-edit`} tooltipText="Edit scan configuration" >
                                     <Icon
                                         name={ICON_NAMES.EDIT}
                                         onClick={event => {
@@ -141,7 +151,7 @@ const ConfigurationsTable = ({setScanConfigFormData}) => {
                                         }}
                                     />
                                 </TooltipWrapper>
-                                <TooltipWrapper tooltipId={deleteTooltipId} tooltipText="Delete scan configuration" >
+                                <TooltipWrapper tooltipId={`${id}-delete`} tooltipText="Delete scan configuration" >
                                     <Icon
                                         name={ICON_NAMES.DELETE}
                                         onClick={event => {

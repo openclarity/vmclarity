@@ -20,7 +20,7 @@ const ScanConfigWizardModal = ({initialData, onClose, onSubmitSuccess}) => {
         id: id || null,
         name: name || "",
         scope: {
-            scopeSelect: (!isEditForm || all) ? SCOPE_ITEMS.ALL.value : SCOPE_ITEMS.DEFINED.value,
+            scopeSelect: (!regions || all) ? SCOPE_ITEMS.ALL.value : SCOPE_ITEMS.DEFINED.value,
             regions: REGIONS_EMPTY_VALUE,
             shouldScanStoppedInstances: shouldScanStoppedInstances || false,
             instanceTagSelector: formatTagsToStringInstances(instanceTagSelector || []),
@@ -36,7 +36,7 @@ const ScanConfigWizardModal = ({initialData, onClose, onSubmitSuccess}) => {
             exploits: {enabled: false}
         },
         scheduled: {
-            scheduledSelect: isEditForm ? SCHEDULE_TYPES_ITEMS.LATER.value : SCHEDULE_TYPES_ITEMS.NOW.value,
+            scheduledSelect: !!scheduled.objectType ? SCHEDULE_TYPES_ITEMS.LATER.value : SCHEDULE_TYPES_ITEMS.NOW.value,
             laterDate: "",
             laterTime: ""
         }
