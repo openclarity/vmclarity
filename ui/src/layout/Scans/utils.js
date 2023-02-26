@@ -23,13 +23,13 @@ export const formatRegionsToStrings = regions => {
 
             return [
                 ...acc,
-                ...(isEmpty(securityGroups) ? [vpc] : securityGroups.map(group => `${vpc} ${SEPARATOR} ${group}`))
+                ...(isEmpty(securityGroups) ? [vpc] : securityGroups.map(({id: group}) => `${vpc}${SEPARATOR}${group}`))
             ];
         }, []);
         
         return [
             ...acc,
-            ...(isEmpty(formattedVpcs) ? [region] : formattedVpcs.map(formattedVpc => `${region} ${SEPARATOR} ${formattedVpc}`))
+            ...(isEmpty(formattedVpcs) ? [region] : formattedVpcs.map(formattedVpc => `${region}${SEPARATOR}${formattedVpc}`))
         ]
     }, []);
 }
