@@ -36,7 +36,7 @@ const ScanConfigWizardModal = ({initialData, onClose, onSubmitSuccess}) => {
             exploits: {enabled: false}
         },
         scheduled: {
-            scheduledSelect: !!scheduled.objectType ? SCHEDULE_TYPES_ITEMS.LATER.value : SCHEDULE_TYPES_ITEMS.NOW.value,
+            scheduledSelect: !!scheduled?.objectType ? SCHEDULE_TYPES_ITEMS.LATER.value : SCHEDULE_TYPES_ITEMS.NOW.value,
             laterDate: "",
             laterTime: ""
         }
