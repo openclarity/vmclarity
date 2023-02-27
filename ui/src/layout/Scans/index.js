@@ -56,7 +56,7 @@ const ScansWrapper = () => {
 
     const [{data, error, loading}, fetchData] = useMountMultiFetch([
         {key: "scans", url: "scans"},
-        // {key: "scanConfigs", url: "scanConfigs"}
+        {key: "scanConfigs", url: "scanConfigs"}
     ]);
 
     if (loading) {
