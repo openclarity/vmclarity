@@ -628,6 +628,12 @@ type OdataFilter = string
 // OdataSelect defines model for odataSelect.
 type OdataSelect = string
 
+// OdataSkip defines model for odataSkip.
+type OdataSkip = int
+
+// OdataTop defines model for odataTop.
+type OdataTop = int
+
 // Page defines model for page.
 type Page = int
 
@@ -657,12 +663,8 @@ type GetScanConfigsParams struct {
 	Filter *OdataFilter `form:"$filter,omitempty" json:"$filter,omitempty"`
 	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
 	Count  *OdataCount  `form:"$count,omitempty" json:"$count,omitempty"`
-
-	// Page Page number of the query
-	Page *Page `form:"page,omitempty" json:"page,omitempty"`
-
-	// PageSize Maximum items to return
-	PageSize *PageSize `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	Top    *OdataTop    `form:"$top,omitempty" json:"$top,omitempty"`
+	Skip   *OdataSkip   `form:"$skip,omitempty" json:"$skip,omitempty"`
 }
 
 // GetScanConfigsScanConfigIDParams defines parameters for GetScanConfigsScanConfigID.

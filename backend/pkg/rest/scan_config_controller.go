@@ -36,8 +36,8 @@ func (s *ServerImpl) GetScanConfigs(ctx echo.Context, params models.GetScanConfi
 	return sendResponse(ctx, http.StatusOK, scanConfigs)
 }
 
-func (s *ServerImpl) GetScanConfigsScanConfigID(ctx echo.Context, scanConfigID models.ScanConfigID) error {
-	sc, err := s.dbHandler.ScanConfigsTable().GetScanConfig(scanConfigID)
+func (s *ServerImpl) GetScanConfigsScanConfigID(ctx echo.Context, scanConfigID models.ScanConfigID, params models.GetScanConfigsScanConfigIDParams) error {
+	sc, err := s.dbHandler.ScanConfigsTable().GetScanConfig(scanConfigID, params)
 	if err != nil {
 		if errors.Is(err, databaseTypes.ErrNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("ScanConfig with ID %v not found", scanConfigID))

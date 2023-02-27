@@ -118,7 +118,7 @@ var schemaMeta = map[string]schema{
 }
 
 // nolint:cyclop
-func ODataQuery(db *gorm.DB, table string, schema string, filter *string, selectString *string, collection bool, result interface{}) error {
+func ODataQuery(db *gorm.DB, table string, schema string, filter *string, selectString *string, top, skip *int, collection bool, result interface{}) error {
 	// Fix GlobalExpandTokenizer so that it allows for `-` characters in the Literal tokens
 	fixSelectToken.Do(func() {
 		godata.GlobalExpandTokenizer.Add("^[a-zA-Z0-9_\\'\\.:\\$ \\*-]+", godata.ExpandTokenLiteral)
@@ -159,7 +159,21 @@ func ODataQuery(db *gorm.DB, table string, schema string, filter *string, select
 	// Build query selecting fields based on the selectTree
 	selectFields := buildSelectFields(fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{schema}}, schema, "Data", "$", selectTree)
 
-	query := fmt.Sprintf("SELECT ID, %s AS Data FROM %s %s", selectFields, table, where)
+	// Build paging statement
+	var limitStm string
+	if top != nil || skip != nil {
+		limitVal := -1 // Negative means no limit, if no "$top" is specified this is what we want
+		if top != nil {
+			limitVal = *top
+		}
+		limitStm = fmt.Sprintf("LIMIT %d", limitVal)
+
+		if skip != nil {
+			limitStm = fmt.Sprintf("%s OFFSET %d", limitStm, *skip)
+		}
+	}
+
+	query := fmt.Sprintf("SELECT ID, %s AS Data FROM %s %s %s", selectFields, table, where, limitStm)
 	if collection {
 		if err := db.Raw(query).Find(result).Error; err != nil {
 			return fmt.Errorf("failed to query DB: %w", err)

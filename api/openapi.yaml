@@ -364,8 +364,8 @@ paths:
         - $ref: '#/components/parameters/odataFilter'
         - $ref: '#/components/parameters/odataSelect'
         - $ref: '#/components/parameters/odataCount'
-        - $ref: '#/components/parameters/page'
-        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/odataTop'
+        - $ref: '#/components/parameters/odataSkip'
       responses:
         200:
           description: Success
@@ -1399,6 +1399,18 @@ components:
       in: query
       schema:
         type: boolean
+
+    odataTop:
+      name: "$top"
+      in: query
+      schema:
+        type: integer
+
+    odataSkip:
+      name: "$skip"
+      in: query
+      schema:
+        type: integer
 
     scanID:
       name: scanID

@@ -644,9 +644,9 @@ func NewGetScanConfigsRequest(server string, params *GetScanConfigsParams) (*htt
 
 	}
 
-	if params.Page != nil {
+	if params.Top != nil {
 
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$top", runtime.ParamLocationQuery, *params.Top); err != nil {
 			return nil, err
 		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 			return nil, err
@@ -660,9 +660,9 @@ func NewGetScanConfigsRequest(server string, params *GetScanConfigsParams) (*htt
 
 	}
 
-	if params.PageSize != nil {
+	if params.Skip != nil {
 
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageSize", runtime.ParamLocationQuery, *params.PageSize); err != nil {
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$skip", runtime.ParamLocationQuery, *params.Skip); err != nil {
 			return nil, err
 		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 			return nil, err

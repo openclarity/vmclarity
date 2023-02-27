@@ -70,7 +70,7 @@ type ScanResultsTable interface {
 
 type ScanConfigsTable interface {
 	GetScanConfigs(params models.GetScanConfigsParams) (models.ScanConfigs, error)
-	GetScanConfig(scanConfigID models.ScanConfigID) (models.ScanConfig, error)
+	GetScanConfig(scanConfigID models.ScanConfigID, params models.GetScanConfigsScanConfigIDParams) (models.ScanConfig, error)
 
 	CreateScanConfig(scanConfig models.ScanConfig) (models.ScanConfig, error)
 	UpdateScanConfig(scanConfig models.ScanConfig) (models.ScanConfig, error)
