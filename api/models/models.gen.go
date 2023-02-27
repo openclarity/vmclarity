@@ -34,6 +34,26 @@ const (
 	MEMORY      RootkitType = "MEMORY"
 )
 
+// Defines values for ScanState.
+const (
+	Discovered ScanState = "Discovered"
+	Done       ScanState = "Done"
+	Failed     ScanState = "Failed"
+	InProgress ScanState = "InProgress"
+	Pending    ScanState = "Pending"
+)
+
+// Defines values for ScanStateReason.
+const (
+	ScanStateReasonAborted                     ScanStateReason = "Aborted"
+	ScanStateReasonDiscoveryFailed             ScanStateReason = "DiscoveryFailed"
+	ScanStateReasonNothingToScan               ScanStateReason = "NothingToScan"
+	ScanStateReasonOneOrMoreTargetFailedToScan ScanStateReason = "OneOrMoreTargetFailedToScan"
+	ScanStateReasonSuccess                     ScanStateReason = "Success"
+	ScanStateReasonTimedOut                    ScanStateReason = "TimedOut"
+	ScanStateReasonUnexpected                  ScanStateReason = "Unexpected"
+)
+
 // Defines values for ScanType.
 const (
 	EXPLOIT          ScanType = "EXPLOIT"
@@ -259,20 +279,52 @@ type Scan struct {
 	EndTime *time.Time `json:"endTime,omitempty"`
 	Id      *string    `json:"id,omitempty"`
 
-	// ScanConfigId The ID of the config that this scan was initiated from (optionanl)
-	ScanConfigId *string `json:"scanConfigId,omitempty"`
+	// ScanConfig Describes a relationship to a scan config which can be expanded.
+	ScanConfig *ScanConfigRelationship `json:"scanConfig,omitempty"`
 
-	// ScanFamiliesConfig The configuration of the scanner families within a scan config
-	ScanFamiliesConfig *ScanFamiliesConfig `json:"scanFamiliesConfig,omitempty"`
-	StartTime          *time.Time          `json:"startTime,omitempty"`
+	// ScanConfigSnapshot Fields for a ScanConfig so they can be shared between the ScanConfig,
+	// ScanConfigRelationship and used for the ScanConfig snapshot in the
+	// scan.
+	ScanConfigSnapshot *ScanConfigData `json:"scanConfigSnapshot,omitempty"`
+	StartTime          *time.Time      `json:"startTime,omitempty"`
+
+	// State The lifecycle state of this scan.
+	State *ScanState `json:"state,omitempty"`
+
+	// StateMessage Human-readable message indicating details about the last state transition.
+	StateMessage *string `json:"stateMessage,omitempty"`
+
+	// StateReason Machine-readable, UpperCamelCase text indicating the reason for the condition's last transition.
+	StateReason *ScanStateReason `json:"stateReason,omitempty"`
+
+	// Summary A summary of the progress of a scan for informational purposes.
+	Summary *ScanSummary `json:"summary,omitempty"`
 
 	// TargetIDs List of target IDs that are targeted for scanning as part of this scan
 	TargetIDs *[]string `json:"targetIDs,omitempty"`
 }
 
-// ScanConfig Describes a multi-target scheduled scan config.
+// ScanState The lifecycle state of this scan.
+type ScanState string
+
+// ScanStateReason Machine-readable, UpperCamelCase text indicating the reason for the condition's last transition.
+type ScanStateReason string
+
+// ScanConfig defines model for ScanConfig.
 type ScanConfig struct {
 	Id   *string `json:"id,omitempty"`
+	Name *string `json:"name,omitempty"`
+
+	// ScanFamiliesConfig The configuration of the scanner families within a scan config
+	ScanFamiliesConfig *ScanFamiliesConfig            `json:"scanFamiliesConfig,omitempty"`
+	Scheduled          *RuntimeScheduleScanConfigType `json:"scheduled,omitempty"`
+	Scope              *ScanScopeType                 `json:"scope,omitempty"`
+}
+
+// ScanConfigData Fields for a ScanConfig so they can be shared between the ScanConfig,
+// ScanConfigRelationship and used for the ScanConfig snapshot in the
+// scan.
+type ScanConfigData struct {
 	Name *string `json:"name,omitempty"`
 
 	// ScanFamiliesConfig The configuration of the scanner families within a scan config
@@ -288,6 +340,15 @@ type ScanConfigExists struct {
 
 	// ScanConfig Describes a multi-target scheduled scan config.
 	ScanConfig *ScanConfig `json:"scanConfig,omitempty"`
+}
+
+// ScanConfigRelationship defines model for ScanConfigRelationship.
+type ScanConfigRelationship struct {
+	Id                 string       `json:"id"`
+	Name               *interface{} `json:"name,omitempty"`
+	ScanFamiliesConfig *interface{} `json:"scanFamiliesConfig,omitempty"`
+	Scheduled          *interface{} `json:"scheduled,omitempty"`
+	Scope              *interface{} `json:"scope,omitempty"`
 }
 
 // ScanConfigs defines model for ScanConfigs.
@@ -322,6 +383,19 @@ type ScanFamiliesConfig struct {
 // ScanScopeType defines model for ScanScopeType.
 type ScanScopeType struct {
 	union json.RawMessage
+}
+
+// ScanSummary A summary of the progress of a scan for informational purposes.
+type ScanSummary struct {
+	JobsCompleted          *int `json:"jobsCompleted,omitempty"`
+	JobsLeftToRun          *int `json:"jobsLeftToRun,omitempty"`
+	TotalExploits          *int `json:"totalExploits,omitempty"`
+	TotalMalware           *int `json:"totalMalware,omitempty"`
+	TotalMisconfigurations *int `json:"totalMisconfigurations,omitempty"`
+	TotalPackages          *int `json:"totalPackages,omitempty"`
+	TotalRootkits          *int `json:"totalRootkits,omitempty"`
+	TotalSecrets           *int `json:"totalSecrets,omitempty"`
+	TotalVulnerabilities   *int `json:"totalVulnerabilities,omitempty"`
 }
 
 // ScanType defines model for ScanType.
@@ -406,8 +480,11 @@ type TargetScanResult struct {
 	ScanId            string                `json:"scanId"`
 	Secrets           *SecretScan           `json:"secrets,omitempty"`
 	Status            *TargetScanStatus     `json:"status,omitempty"`
-	TargetId          string                `json:"targetId"`
-	Vulnerabilities   *VulnerabilityScan    `json:"vulnerabilities,omitempty"`
+
+	// Summary A summary of target scan result for informational purposes.
+	Summary         *TargetScanResultSummary `json:"summary,omitempty"`
+	TargetId        string                   `json:"targetId"`
+	Vulnerabilities *VulnerabilityScan       `json:"vulnerabilities,omitempty"`
 }
 
 // TargetScanResultExists defines model for TargetScanResultExists.
@@ -415,6 +492,17 @@ type TargetScanResultExists struct {
 	// Message Describes which unique constraint combination causes the conflict.
 	Message          *string           `json:"message,omitempty"`
 	TargetScanResult *TargetScanResult `json:"targetScanResult,omitempty"`
+}
+
+// TargetScanResultSummary A summary of target scan result for informational purposes.
+type TargetScanResultSummary struct {
+	TotalExploits          *int `json:"totalExploits,omitempty"`
+	TotalMalware           *int `json:"totalMalware,omitempty"`
+	TotalMisconfigurations *int `json:"totalMisconfigurations,omitempty"`
+	TotalPackages          *int `json:"totalPackages,omitempty"`
+	TotalRootkits          *int `json:"totalRootkits,omitempty"`
+	TotalSecrets           *int `json:"totalSecrets,omitempty"`
+	TotalVulnerabilities   *int `json:"totalVulnerabilities,omitempty"`
 }
 
 // TargetScanResults defines model for TargetScanResults.

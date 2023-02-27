@@ -239,6 +239,9 @@ func (e *Exporter) ExportSbomResult(res *results.Results, famerr families.RunErr
 	if scanResults.Status.Sbom == nil {
 		scanResults.Status.Sbom = &models.TargetScanState{}
 	}
+	if scanResults.Summary == nil {
+		scanResults.Summary = &models.TargetScanResultSummary{}
+	}
 
 	var errors []string
 
@@ -251,6 +254,7 @@ func (e *Exporter) ExportSbomResult(res *results.Results, famerr families.RunErr
 		} else {
 			scanResults.Sboms = convertSBOMResultToAPIModel(sbomResults)
 		}
+		scanResults.Summary.TotalPackages = utils.PointerTo[int](len(*scanResults.Sboms.Packages))
 	}
 
 	state := models.DONE
@@ -277,6 +281,9 @@ func (e *Exporter) ExportVulResult(res *results.Results, famerr families.RunErro
 	if scanResults.Status.Vulnerabilities == nil {
 		scanResults.Status.Vulnerabilities = &models.TargetScanState{}
 	}
+	if scanResults.Summary == nil {
+		scanResults.Summary = &models.TargetScanResultSummary{}
+	}
 
 	var errors []string
 
@@ -289,6 +296,7 @@ func (e *Exporter) ExportVulResult(res *results.Results, famerr families.RunErro
 		} else {
 			scanResults.Vulnerabilities = convertVulnResultToAPIModel(vulnerabilitiesResults)
 		}
+		scanResults.Summary.TotalVulnerabilities = utils.PointerTo[int](len(*scanResults.Vulnerabilities.Vulnerabilities))
 	}
 
 	state := models.DONE
@@ -315,6 +323,9 @@ func (e *Exporter) ExportSecretsResult(res *results.Results, famerr families.Run
 	if scanResults.Status.Secrets == nil {
 		scanResults.Status.Secrets = &models.TargetScanState{}
 	}
+	if scanResults.Summary == nil {
+		scanResults.Summary = &models.TargetScanResultSummary{}
+	}
 
 	var errors []string
 
@@ -327,6 +338,7 @@ func (e *Exporter) ExportSecretsResult(res *results.Results, famerr families.Run
 		} else {
 			scanResults.Secrets = convertSecretsResultToAPIModel(secretsResults)
 		}
+		scanResults.Summary.TotalSecrets = utils.PointerTo[int](len(*scanResults.Secrets.Secrets))
 	}
 
 	state := models.DONE
@@ -416,6 +428,9 @@ func (e *Exporter) ExportExploitsResult(res *results.Results) error {
 	if scanResults.Status.Exploits == nil {
 		scanResults.Status.Exploits = &models.TargetScanState{}
 	}
+	if scanResults.Summary == nil {
+		scanResults.Summary = &models.TargetScanResultSummary{}
+	}
 
 	var errors []string
 
@@ -424,6 +439,7 @@ func (e *Exporter) ExportExploitsResult(res *results.Results) error {
 		errors = append(errors, fmt.Errorf("failed to get exploits results from scan: %w", err).Error())
 	} else {
 		scanResults.Exploits = convertExploitsResultToAPIModel(exploitsResults)
+		scanResults.Summary.TotalExploits = utils.PointerTo[int](len(*scanResults.Exploits.Exploits))
 	}
 
 	state := models.DONE
