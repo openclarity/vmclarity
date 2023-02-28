@@ -6,6 +6,7 @@
         height: 44px;
         border-bottom: 2px solid $color-grey-lighter;
         background-color: white;
+        position: relative;
 
         .tab-item {
             display: inline-flex;
@@ -25,8 +26,16 @@
                 cursor: not-allowed;
             }
         }
+        .tabs-header-custom-content-wrapper {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+        }
     }
     .tab-content {
-        padding: $main-content-padding;
+        &.with-padding {
+            padding: $main-content-padding;
+        }
     }
 }

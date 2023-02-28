@@ -1,0 +1,13 @@
+@import 'utils/scss_variables.module.scss';
+
+.details-page-wrapper {
+    .details-page-content-wrapper {
+        .details-page-title {
+            font-weight: 300;
+            font-size: 35px;
+            line-height: 48px;
+            letter-spacing: 0.30625px;
+            margin-bottom: 22px;
+        }
+    }
+}

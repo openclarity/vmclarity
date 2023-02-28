@@ -126,7 +126,7 @@ const StepGeneralProperties = () => {
 
     const isDefineScope = scopeSelect === SCOPE_ITEMS.DEFINED.value;
     const prevIsDefineScope = usePrevious(isDefineScope);
-
+    
     useEffect(() => {
         if (prevIsDefineScope && !isDefineScope) {
             setFieldValue("scope.regions", REGIONS_EMPTY_VALUE);

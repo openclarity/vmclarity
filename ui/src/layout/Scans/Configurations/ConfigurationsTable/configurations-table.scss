@@ -3,16 +3,6 @@
 .scan-configs-table-page-wrapper {
     .content-container-wrapper {
         margin-top: 35px;
-
-        .table {
-            .config-row-actions {
-                display: flex;
-
-                :not(:last-child) {
-                    margin-right: 5px;
-                }
-            }
-        }
     }
 }
 

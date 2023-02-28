@@ -15,15 +15,6 @@
             .expandable-list-item {
                 display: inline-block;
                 white-space: nowrap;
-
-                &.with-tag-wrap {
-                    padding: 5px 10px;
-                    background-color: $color-blue-light;
-                    border: 1px solid $color-blue;
-                    font-weight: 400;
-                    font-size: 10px;
-                    line-height: 14px;
-                }
             }
         }
         

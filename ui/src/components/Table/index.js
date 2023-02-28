@@ -17,12 +17,10 @@ export {
 const ACTIONS_COLUMN_ID = "ACTIONS";
 const STATIC_COLUMN_IDS = [ACTIONS_COLUMN_ID];
 
-const ACTIONS_WIDTH = 80;
-
 const Table = props => {
     const {columns, defaultSortBy: defaultSortByItems, onLineClick, paginationItemsName, url, formatFetchedData, filters,
         noResultsTitle="items", refreshTimestamp, withPagination=true, data: externalData, onRowSelect,
-        actionsComponent: ActionsComponent, customEmptyResultsDisplay: CustomEmptyResultsDisplay} = props;
+        actionsComponent: ActionsComponent, customEmptyResultsDisplay: CustomEmptyResultsDisplay, actionsColumnWidth=80} = props;
 
     const defaultSortBy = useMemo(() => defaultSortByItems || [], [defaultSortByItems]);
     const defaultColumn = React.useMemo(() => ({
@@ -102,9 +100,9 @@ const Table = props => {
                         ),
                         disableSortBy: true,
                         disableResizing: true,
-                        minWidth: ACTIONS_WIDTH,
-                        width: ACTIONS_WIDTH,
-                        maxWidth: ACTIONS_WIDTH
+                        minWidth: actionsColumnWidth,
+                        width: actionsColumnWidth,
+                        maxWidth: actionsColumnWidth
                     });
                 }
 

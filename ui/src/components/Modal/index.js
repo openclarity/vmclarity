@@ -27,8 +27,17 @@ const Modal = (props) => {
     }
 
     return ReactDOM.createPortal(
-        <div className="modal-outer-wrapper">
-            <div className={classnames("modal-inner-wrapper", {"stick-left": stickLeft}, className)} style={stickLeft ? {width: `${width}px`} : {height: `${height}px`, width: `${width}px`}}>
+        <div className="modal-outer-wrapper" onClick={event => {
+            event.stopPropagation();
+            event.preventDefault();
+
+            onClose();
+        }}>
+            <div
+                className={classnames("modal-inner-wrapper", {"stick-left": stickLeft}, className)}
+                style={stickLeft ? {width: `${width}px`} : {height: `${height}px`, width: `${width}px`}}
+                onClick={(event) => event.stopPropagation()}
+            >
                 <div className="modal-title">{title}</div>
                 <div className="modal-content">{children}</div>
                 <CloseButton onClose={onClose} />

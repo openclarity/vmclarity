@@ -15,6 +15,7 @@ $padding: 30px;
         background: white;
         box-sizing: border-box;
         box-shadow: -8px 12px 19px rgba(55, 72, 95, 0.13);
+        z-index: 55;
 
         &:not(.stick-left) {
             top: 40%;

@@ -1,14 +1,15 @@
 import React, { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import ContentContainer from 'components/ContentContainer';
 import EmptyDisplay from 'components/EmptyDisplay';
 import Table from 'components/Table';
-import { SCAN_CONFIGS_PATH } from '../ConfigurationsTable';
+import { SCAN_CONFIGS_PATH } from 'layout/Scans/Configurations';
 
 const TABLE_TITLE = "scans";
 
 const ScansTable = ({setScanConfigFormData}) => {
     const navigate = useNavigate();
+    const {pathname} = useLocation();
 
     const columns = useMemo(() => [
         {
@@ -36,6 +37,7 @@ const ScansTable = ({setScanConfigFormData}) => {
                     paginationItemsName={TABLE_TITLE.toLowerCase()}
                     url="scans"
                     noResultsTitle={TABLE_TITLE}
+                    onLineClick={({id}) => navigate(`${pathname}/${id}`)}
                     customEmptyResultsDisplay={() => (
                         <EmptyDisplay
                             message={(

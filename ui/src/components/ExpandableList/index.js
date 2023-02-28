@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import classnames from 'classnames';
 import Arrow, { ARROW_NAMES } from 'components/Arrow';
+import Tag from 'components/Tag';
 
 import './expandable-list.scss';
 
-const MINIMAL_LEN = 1;
+const MINIMIZED_LEN = 1;
 
 const ExpandableList = ({items, withTagWrap=false}) => {
     const allItems = items || [];
-    const minimalItems = allItems.slice(0, MINIMAL_LEN);
+    const minmizedItems = allItems.slice(0, MINIMIZED_LEN);
 
-    const [itemsToDisplay, setItemsToDisplay] = useState(allItems.length > MINIMAL_LEN ? minimalItems : allItems);
+    const [itemsToDisplay, setItemsToDisplay] = useState(allItems.length > MINIMIZED_LEN ? minmizedItems : allItems);
     const isOpen = itemsToDisplay.length === allItems.length;
 
     return (
@@ -20,19 +21,21 @@ const ExpandableList = ({items, withTagWrap=false}) => {
                     {
                         itemsToDisplay.map((item, index) => (
                             <div key={index} className="expandable-list-item-wrapper">
-                                <div className={classnames("expandable-list-item", {"with-tag-wrap": withTagWrap})}>{item}</div>
+                                <div className={classnames("expandable-list-item")}>
+                                    {withTagWrap ? <Tag>{item}</Tag> : item}
+                                </div>
                             </div>
                         ))
                     }
                 </div>
-                {minimalItems.length !== allItems.length &&
+                {minmizedItems.length !== allItems.length &&
                     <Arrow
                         name={isOpen ? ARROW_NAMES.TOP : ARROW_NAMES.BOTTOM}
                         onClick={event => {
                             event.stopPropagation();
                             event.preventDefault();
                             
-                            setItemsToDisplay(isOpen ? minimalItems : allItems);
+                            setItemsToDisplay(isOpen ? minmizedItems : allItems);
                         }}
                         small
                     />
