@@ -1,26 +1,25 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { isNull } from 'lodash';
-import { useDelete, usePrevious } from 'hooks';
 import ButtonWithIcon from 'components/ButtonWithIcon';
-import Icon, { ICON_NAMES } from 'components/Icon';
+import { ICON_NAMES } from 'components/Icon';
 import ContentContainer from 'components/ContentContainer';
 import EmptyDisplay from 'components/EmptyDisplay';
 import Table from 'components/Table';
-import { TooltipWrapper } from 'components/Tooltip';
-import Modal from 'components/Modal';
 import ExpandableList from 'components/ExpandableList';
 import { BoldText, toCapitalized, formatDate } from 'utils/utils';
-import { formatTagsToStringInstances, formatRegionsToStrings } from '../utils';
+import { formatTagsToStringInstances, formatRegionsToStrings } from 'layout/Scans/utils';
+import ConfigurationActionsDisplay from '../ConfigurationActionsDisplay';
+import { SCAN_CONFIGS_URL } from '../utils';
 
 import './configurations-table.scss';
 
 const TABLE_TITLE = "scan configurations";
 
-const SCAN_CONFIGS_URL = "scanConfigs";
-
-export const SCAN_CONFIGS_PATH = "configs";
-
 const ConfigurationsTable = ({setScanConfigFormData}) => {
+    const navigate = useNavigate();
+    const {pathname} = useLocation();
+
     const columns = useMemo(() => [
         {
             Header: "Name",
@@ -99,18 +98,6 @@ const ConfigurationsTable = ({setScanConfigFormData}) => {
     const [refreshTimestamp, setRefreshTimestamp] = useState(Date());
     const doRefreshTimestamp = useCallback(() => setRefreshTimestamp(Date()), []);
 
-    const [deleteConfigmationData, setDeleteConfigmationData] = useState(null);
-    const closeDeleteConfigmation = () => setDeleteConfigmationData(null);
-
-    const [{deleting}, deleteScan] = useDelete(SCAN_CONFIGS_URL);
-    const prevDeleting = usePrevious(deleting);
-
-    useEffect(() => {
-        if (prevDeleting && !deleting) {
-            doRefreshTimestamp();
-        }
-    }, [prevDeleting, deleting, doRefreshTimestamp])
-
     return (
         <div className="scan-configs-table-page-wrapper">
             <ButtonWithIcon iconName={ICON_NAMES.PLUS} onClick={() => setScanConfigFormData({})}>
@@ -123,38 +110,15 @@ const ConfigurationsTable = ({setScanConfigFormData}) => {
                     url={SCAN_CONFIGS_URL}
                     refreshTimestamp={refreshTimestamp}
                     noResultsTitle={TABLE_TITLE}
-                    actionsComponent={({original}) => {
-                        const {id} = original;
-                        const deleteTooltipId = `${id}-delete`;
-                        const editTooltipId = `${id}-edit`;
-    
-                        return (
-                            <div className="config-row-actions">
-                                <TooltipWrapper tooltipId={editTooltipId} tooltipText="Edit scan configuration" >
-                                    <Icon
-                                        name={ICON_NAMES.EDIT}
-                                        onClick={event => {
-                                            event.stopPropagation();
-                                            event.preventDefault();
-                                            
-                                            setScanConfigFormData(original);
-                                        }}
-                                    />
-                                </TooltipWrapper>
-                                <TooltipWrapper tooltipId={deleteTooltipId} tooltipText="Delete scan configuration" >
-                                    <Icon
-                                        name={ICON_NAMES.DELETE}
-                                        onClick={event => {
-                                            event.stopPropagation();
-                                            event.preventDefault();
-    
-                                            setDeleteConfigmationData(original);
-                                        }}
-                                    />
-                                </TooltipWrapper>
-                            </div>
-                        );
-                    }}
+                    onLineClick={({id}) => navigate(`${pathname}/${id}`)}
+                    actionsColumnWidth={100}
+                    actionsComponent={({original}) => (
+                        <ConfigurationActionsDisplay
+                            data={original}
+                            setScanConfigFormData={setScanConfigFormData}
+                            onDelete={() => doRefreshTimestamp()}
+                        />
+                    )}
                     customEmptyResultsDisplay={() => (
                         <EmptyDisplay
                             message={(
@@ -169,22 +133,6 @@ const ConfigurationsTable = ({setScanConfigFormData}) => {
                     )}
                 />
             </ContentContainer>
-            {!isNull(deleteConfigmationData) &&
-                <Modal
-                    title="Delete configmation"
-                    className="scan-config-delete-confirmation"
-                    onClose={closeDeleteConfigmation}
-                    height={250}
-                    doneTitle="Delete"
-                    onDone={() => {
-                        deleteScan(deleteConfigmationData.id);
-                        closeDeleteConfigmation();
-                    }}
-                >
-                    <span>{`Once `}</span><BoldText>{deleteConfigmationData.name}</BoldText><span>{` will be deleted, the action cannot be reverted`}</span><br />
-                    <span>{`Are you sure you want to delete ${deleteConfigmationData.name}?`}</span>
-                </Modal>
-            }
         </div>
     )
 }

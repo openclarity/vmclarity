@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { isNull } from 'lodash';
 import { useMountMultiFetch } from 'hooks';
 import TabbedPage from 'components/TabbedPage';
 import Loader from 'components/Loader';
 import EmptyDisplay from 'components/EmptyDisplay';
 import ScanConfigWizardModal from './ScanConfigWizardModal';
-import ScansTable from './ScansTable';
-import ConfigurationsTable, { SCAN_CONFIGS_PATH } from './ConfigurationsTable';
+import Scans, { SCAN_SCANS_PATH } from './Scans';
+import Configurations, { SCAN_CONFIGS_PATH } from './Configurations';
 
-const Scans = React.memo(({setScanConfigFormData, data}) => {
+const ScansTabbedPage = React.memo(({setScanConfigFormData, data}) => {
     const {scans, scanConfigs} = data;
+
+    const {pathname} = useLocation();
     
     return (
         <React.Fragment>
@@ -25,18 +28,19 @@ const Scans = React.memo(({setScanConfigFormData, data}) => {
                     onClick={() => setScanConfigFormData({})}
                 /> :
                 <TabbedPage
+                    redirectTo={`${pathname}/${SCAN_SCANS_PATH}`}
                     items={[
                         {
                             id: "scans",
                             title: "Scans",
-                            isIndex: true,
-                            component: () => <ScansTable setScanConfigFormData={setScanConfigFormData} />
+                            path: SCAN_SCANS_PATH,
+                            component: () => <Scans setScanConfigFormData={setScanConfigFormData} />
                         },
                         {
                             id: "configs",
                             title: "Configurations",
                             path: SCAN_CONFIGS_PATH,
-                            component: () => <ConfigurationsTable setScanConfigFormData={setScanConfigFormData} />
+                            component: () => <Configurations setScanConfigFormData={setScanConfigFormData} />
                         }
                     ]}
                 />
@@ -65,7 +69,7 @@ const ScansWrapper = () => {
 
     return (
         <>
-            <Scans setScanConfigFormData={setScanConfigFormData} data={data} />
+            <ScansTabbedPage setScanConfigFormData={setScanConfigFormData} data={data} />
             {!isNull(scanConfigFormData) && 
                 <ScanConfigWizardModal
                     initialData={scanConfigFormData}
