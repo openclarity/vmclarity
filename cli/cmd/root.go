@@ -19,8 +19,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/ghodss/yaml"
+	"github.com/openclarity/kubeclarity/shared/pkg/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -42,6 +44,12 @@ var (
 
 	server       string
 	scanResultID string
+	mountVolume  bool
+)
+
+const (
+	fsTypeExt4 = "ext4"
+	fsTypeXFS  = "xfs"
 )
 
 // rootCmd represents the base command when called without any subcommands.
@@ -53,6 +61,15 @@ var rootCmd = &cobra.Command{
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		logger.Infof("Running...")
+
+		if mountVolume {
+			mountPoints, err := mountAttachedVolume()
+			if err != nil {
+				return fmt.Errorf("failed to mount attached volume: %v", err)
+			}
+			setMountPointsForFamiliesInput(mountPoints)
+		}
+
 		var exporter *Exporter
 		if server != "" {
 			exp, err := CreateExporter()
@@ -193,6 +210,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&output, "output", "", "set file path output (default: stdout)")
 	rootCmd.PersistentFlags().StringVar(&server, "server", "", "VMClarity server to export scan results to, for example: http://localhost:9999/api")
 	rootCmd.PersistentFlags().StringVar(&scanResultID, "scan-result-id", "", "the ScanResult ID to export the scan results to")
+	rootCmd.PersistentFlags().BoolVar(&mountVolume, "mount-attached-volume", false, "tells the CLI to discover the attached volume and mount it")
 
 	// TODO(sambetts) we may have to change this to our own validation when
 	// we add the CI/CD scenario and there isn't an existing scan-result-id
@@ -265,4 +283,57 @@ func Output(bytes []byte, outputPrefix string) error {
 	}
 
 	return nil
+}
+
+func isSupportedFS(fs string) bool {
+	switch fs {
+	case fsTypeExt4, fsTypeXFS:
+		return true
+	}
+	return false
+}
+
+func setMountPointsForFamiliesInput(mountPoints []string) {
+	// update families inputs with the mount point as rootfs
+	for _, mountDir := range mountPoints {
+		if config.SBOM.Enabled {
+			config.SBOM.Inputs = append(config.SBOM.Inputs, sbom.Input{
+				Input:     mountDir,
+				InputType: string(utils.ROOTFS),
+			})
+		}
+		if config.Vulnerabilities.Enabled && !config.SBOM.Enabled {
+			config.Vulnerabilities.Inputs = append(config.Vulnerabilities.Inputs, vulnerabilities.Input{
+				Input:     mountDir,
+				InputType: string(utils.ROOTFS),
+			})
+		}
+		if config.Secrets.Enabled {
+			config.Secrets.Inputs = append(config.Secrets.Inputs, secrets.Input{
+				Input:     mountDir,
+				InputType: string(utils.ROOTFS),
+			})
+		}
+	}
+}
+
+func mountAttachedVolume() ([]string, error) {
+	var mountPoints []string
+
+	devices, err := ListBlockDevices()
+	if err != nil {
+		return nil, fmt.Errorf("failed to list block devices: %v", err)
+	}
+	for i, device := range devices {
+		if device.MountPoint == "" && isSupportedFS(device.FilesystemType) {
+			mountDir := "/mnt/snapshot" + strconv.Itoa(i)
+
+			if err := device.Mount(mountDir); err != nil {
+				return nil, fmt.Errorf("failed to mount device: %v", err)
+			}
+			logger.Infof("mounted device %v on %v", device.DeviceName, mountDir)
+			mountPoints = append(mountPoints, mountDir)
+		}
+	}
+	return mountPoints, nil
 }
