@@ -58,8 +58,8 @@ func ListBlockDevices() ([]BlockDevice, error) {
 			case "SIZE":
 				size, err := strconv.ParseUint(pair[2], 10, 64)
 				if err != nil {
-					fmt.Printf(
-						"invalid size %q from lsblk: %v", pair[2], err,
+					logger.Warnf(
+						"Invalid size %q from lsblk: %v", pair[2], err,
 					)
 				} else {
 					// the number of bytes in a MiB.
@@ -76,7 +76,7 @@ func ListBlockDevices() ([]BlockDevice, error) {
 			case "MOUNTPOINT":
 				dev.MountPoint = pair[2]
 			default:
-				fmt.Printf("unexpected field from lsblk: %q", pair[1])
+				logger.Warnf("unexpected field from lsblk: %q", pair[1])
 			}
 		}
 
