@@ -366,6 +366,7 @@ paths:
         - $ref: '#/components/parameters/odataCount'
         - $ref: '#/components/parameters/odataTop'
         - $ref: '#/components/parameters/odataSkip'
+        - $ref: '#/components/parameters/odataExpand'
       responses:
         200:
           description: Success
@@ -407,6 +408,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/scanConfigID'
         - $ref: '#/components/parameters/odataSelect'
+        - $ref: '#/components/parameters/odataExpand'
       responses:
         200:
           description: Success
@@ -1411,6 +1413,12 @@ components:
       in: query
       schema:
         type: integer
+
+    odataExpand:
+      name: "$expand"
+      in: query
+      schema:
+        type: string
 
     scanID:
       name: scanID

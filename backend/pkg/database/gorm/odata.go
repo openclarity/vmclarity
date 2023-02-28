@@ -5,7 +5,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,171 +15,202 @@
 package gorm
 
 import (
-	"context"
 	"fmt"
-	"strings"
-	"sync"
 
-	"github.com/CiscoM31/godata"
-
+	"github.com/openclarity/vmclarity/backend/pkg/database/odatasql"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
-
-var fixSelectToken sync.Once
 
 type ODataObject struct {
 	gorm.Model
 	Data datatypes.JSON
 }
 
-type fieldType int
-
-const (
-	primitiveFieldType fieldType = iota
-	complexFieldType
-	collectionFieldType
-)
-
-type fieldMeta struct {
-	fieldType           fieldType
-	collectionItemMeta  *fieldMeta
-	complexFieldSchemas []string
-}
-
-type schema map[string]fieldMeta
-
-var schemaMeta = map[string]schema{
+var schemaMetas = map[string]odatasql.SchemaMeta{
 	"ScanConfig": {
-		"id":                 fieldMeta{fieldType: primitiveFieldType},
-		"name":               fieldMeta{fieldType: primitiveFieldType},
-		"scanFamiliesConfig": fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"ScanFamiliesConfig"}},
-		"scheduled":          fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"SingleScheduleScanConfig"}},
-		"scope":              fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"AwsScanScope"}},
+		Table: "scan_configs",
+		Fields: odatasql.Schema{
+			"id":                 odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"name":               odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"scanFamiliesConfig": odatasql.FieldMeta{
+				FieldType: odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"ScanFamiliesConfig"},
+			},
+			"scheduled":          odatasql.FieldMeta{
+				FieldType: odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"SingleScheduleScanConfig"},
+			},
+			"scope":              odatasql.FieldMeta{
+				FieldType: odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"AwsScanScope"},
+				DescriminatorProperty: "objectType",
+			},
+		},
 	},
 	"ScanFamiliesConfig": {
-		"exploits":          fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"ExploitsConfig"}},
-		"malware":           fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"MalwareConfig"}},
-		"misconfigurations": fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"MisconfigurationsConfig"}},
-		"rootkits":          fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"RootkitsConfig"}},
-		"sbom":              fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"SBOMConfig"}},
-		"secrets":           fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"SecretsConfig"}},
-		"vulnerabilties":    fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"VulnerabiltiesConfig"}},
+		Fields: odatasql.Schema{
+			"exploits":          odatasql.FieldMeta{
+				FieldType: odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"ExploitsConfig"},
+			},
+			"malware":           odatasql.FieldMeta{
+				FieldType: odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"MalwareConfig"},
+			},
+			"misconfigurations": odatasql.FieldMeta{
+				FieldType: odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"MisconfigurationsConfig"},
+			},
+			"rootkits":          odatasql.FieldMeta{
+				FieldType: odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"RootkitsConfig"},
+			},
+			"sbom":              odatasql.FieldMeta{
+				FieldType: odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"SBOMConfig"},
+			},
+			"secrets":           odatasql.FieldMeta{
+				FieldType: odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"SecretsConfig"},
+			},
+			"vulnerabilties":    odatasql.FieldMeta{
+				FieldType: odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"VulnerabiltiesConfig"},
+			},
+		},
 	},
 	"ExploitsConfig": {
-		"enabled": fieldMeta{fieldType: primitiveFieldType},
+		Fields: odatasql.Schema{
+			"enabled": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+		},
 	},
 	"MalwareConfig": {
-		"enabled": fieldMeta{fieldType: primitiveFieldType},
+		Fields: odatasql.Schema{
+			"enabled": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+		},
 	},
 	"MisconfigurationsConfig": {
-		"enabled": fieldMeta{fieldType: primitiveFieldType},
+		Fields: odatasql.Schema{
+			"enabled": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+		},
 	},
 	"RootkitsConfig": {
-		"enabled": fieldMeta{fieldType: primitiveFieldType},
+		Fields: odatasql.Schema{
+			"enabled": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+		},
 	},
 	"SBOMConfig": {
-		"enabled": fieldMeta{fieldType: primitiveFieldType},
+		Fields: odatasql.Schema{
+			"enabled": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+		},
 	},
 	"SecretsConfig": {
-		"enabled": fieldMeta{fieldType: primitiveFieldType},
+		Fields: odatasql.Schema{
+			"enabled": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+		},
 	},
 	"VulnerabilitiesConfig": {
-		"enabled": fieldMeta{fieldType: primitiveFieldType},
+		Fields: odatasql.Schema{
+			"enabled": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+		},
 	},
 	"SingleScheduleScanConfig": {
-		"operationTime": fieldMeta{fieldType: primitiveFieldType},
+		Fields: odatasql.Schema{
+			"operationTime": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+		},
 	},
 	"AwsScanScope": {
-		"all":                        fieldMeta{fieldType: primitiveFieldType},
-		"instanceTagExclusion":       fieldMeta{fieldType: collectionFieldType, collectionItemMeta: &fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"Tag"}}},
-		"instanceTagSelector":        fieldMeta{fieldType: collectionFieldType, collectionItemMeta: &fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"Tag"}}},
-		"regions":                    fieldMeta{fieldType: collectionFieldType, collectionItemMeta: &fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"AwsRegion"}}},
-		"shouldScanStoppedInstances": fieldMeta{fieldType: primitiveFieldType},
+		Fields: odatasql.Schema{
+			"objectType": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"all":                        odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"shouldScanStoppedInstances": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"instanceTagExclusion":       odatasql.FieldMeta{
+				FieldType: odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{
+					FieldType: odatasql.ComplexFieldType,
+					ComplexFieldSchemas: []string{"Tag"},
+				},
+			},
+			"instanceTagSelector":        odatasql.FieldMeta{
+				FieldType: odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{
+					FieldType: odatasql.ComplexFieldType,
+					ComplexFieldSchemas: []string{"Tag"},
+				},
+			},
+			"regions":                    odatasql.FieldMeta{
+				FieldType: odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{
+					FieldType: odatasql.ComplexFieldType,
+					ComplexFieldSchemas: []string{"AwsRegion"},
+				},
+			},
+		},
 	},
 	"Tag": {
-		"key":   fieldMeta{fieldType: primitiveFieldType},
-		"value": fieldMeta{fieldType: primitiveFieldType},
+		Fields: odatasql.Schema{
+			"key":   odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"value": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+		},
 	},
 	"AwsRegion": {
-		"id":   fieldMeta{fieldType: primitiveFieldType},
-		"name": fieldMeta{fieldType: primitiveFieldType},
-		"vpcs": fieldMeta{fieldType: collectionFieldType, collectionItemMeta: &fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"AwsVPC"}}},
+		Fields: odatasql.Schema{
+			"id":   odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"name": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"vpcs": odatasql.FieldMeta{
+				FieldType: odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{
+					FieldType: odatasql.ComplexFieldType,
+					ComplexFieldSchemas: []string{"AwsVPC"},
+				},
+			},
+		},
 	},
 	"AwsVPC": {
-		"id":             fieldMeta{fieldType: primitiveFieldType},
-		"name":           fieldMeta{fieldType: primitiveFieldType},
-		"securityGroups": fieldMeta{fieldType: collectionFieldType, collectionItemMeta: &fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{"AwsSecurityGroup"}}},
+		Fields: odatasql.Schema{
+			"id":             odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"name":           odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"securityGroups": odatasql.FieldMeta{
+				FieldType: odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{
+					FieldType: odatasql.ComplexFieldType,
+					ComplexFieldSchemas: []string{"AwsSecurityGroup"},
+				},
+			},
+		},
 	},
 	"AwsSecurityGroup": {
-		"id":   fieldMeta{fieldType: primitiveFieldType},
-		"name": fieldMeta{fieldType: primitiveFieldType},
+		Fields: odatasql.Schema{
+			"id":   odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"name": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+		},
 	},
 }
 
-// nolint:cyclop
-func ODataQuery(db *gorm.DB, table string, schema string, filter *string, selectString *string, top, skip *int, collection bool, result interface{}) error {
-	// Fix GlobalExpandTokenizer so that it allows for `-` characters in the Literal tokens
-	fixSelectToken.Do(func() {
-		godata.GlobalExpandTokenizer.Add("^[a-zA-Z0-9_\\'\\.:\\$ \\*-]+", godata.ExpandTokenLiteral)
-	})
-
-	// Parse top level $filter and create the top level "WHERE"
-	var where string
-	if filter != nil && *filter != "" {
-		filterQuery, err := godata.ParseFilterString(context.TODO(), *filter)
-		if err != nil {
-			return fmt.Errorf("failed to parse $filter: %w", err)
-		}
-
-		// Build the WHERE conditions based on the $filter tree
-		conditions, err := buildWhereFromFilter("Data", filterQuery.Tree)
-		if err != nil {
-			return fmt.Errorf("failed to build DB query from $filter: %w", err)
-		}
-
-		where = fmt.Sprintf("WHERE %s", conditions)
+func ODataQuery(db *gorm.DB, schema string, filterString, selectString, expandString *string, top, skip *int, collection bool, result interface{}) error {
+	// If we're not getting a collection, make sure the result is limited
+	// to 1 item.
+	if !collection {
+		top = utils.IntPtr(1)
+		skip = nil
 	}
 
-	selectItems := []*godata.ExpandItem{}
-	if selectString != nil && *selectString != "" {
-		// Parse $select using ParseExpandString because godata.ParseSelectString
-		// is a nieve implementation and doesn't handle query options properly
-		expandQuery, err := godata.ParseExpandString(context.TODO(), *selectString)
-		if err != nil {
-			return fmt.Errorf("failed to parse $select: %w", err)
-		}
-		selectItems = expandQuery.ExpandItems
+	// Build the raw SQL query using the odatasql library, this will also
+	// parse and validate the ODATA query params.
+	query, err := odatasql.BuildSQLQuery(schemaMetas, schema, filterString, selectString, expandString, top, skip)
+	if err != nil {
+		return fmt.Errorf("failed to build query for DB: %w", err)
 	}
 
-	// Turn the select query into a tree that can be used to build nested
-	// select queries for all the embedded types.
-	selectTree := buildSelectTreeFromSelect(selectItems)
-
-	// Build query selecting fields based on the selectTree
-	selectFields := buildSelectFields(fieldMeta{fieldType: complexFieldType, complexFieldSchemas: []string{schema}}, schema, "Data", "$", selectTree)
-
-	// Build paging statement
-	var limitStm string
-	if top != nil || skip != nil {
-		limitVal := -1 // Negative means no limit, if no "$top" is specified this is what we want
-		if top != nil {
-			limitVal = *top
-		}
-		limitStm = fmt.Sprintf("LIMIT %d", limitVal)
-
-		if skip != nil {
-			limitStm = fmt.Sprintf("%s OFFSET %d", limitStm, *skip)
-		}
-	}
-
-	query := fmt.Sprintf("SELECT ID, %s AS Data FROM %s %s %s", selectFields, table, where, limitStm)
+	// Use the query to populate "result" using the gorm finalisers so that
+	// the gorm error handling processes things like no results found.
 	if collection {
 		if err := db.Raw(query).Find(result).Error; err != nil {
 			return fmt.Errorf("failed to query DB: %w", err)
 		}
 	} else {
-		query := fmt.Sprintf("%s LIMIT 1", query)
 		if err := db.Raw(query).First(result).Error; err != nil {
 			return fmt.Errorf("failed to query DB: %w", err)
 		}
@@ -187,6 +218,7 @@ func ODataQuery(db *gorm.DB, table string, schema string, filter *string, select
 	return nil
 }
 
+/*
 type selectNode struct {
 	children map[string]*selectNode
 	filter   *godata.GoDataFilterQuery
@@ -243,11 +275,11 @@ func buildSelectFields(field fieldMeta, identifier, source, path string, st *sel
 			newSelectNode = &selectNode{children: st.children}
 		}
 
-		subQuery := buildSelectFields(*field.collectionItemMeta, newIdentifier, newSource, "$", newSelectNode)
+		subQuery := buildSelectFields(*field.CollectionItemMeta, newIdentifier, newSource, "$", newSelectNode)
 		return fmt.Sprintf("(SELECT JSON_GROUP_ARRAY(%s) FROM JSON_EACH(%s, '%s') AS %s %s)", subQuery, source, path, identifier, where)
-	case complexFieldType:
+	case odatasql.ComplexFieldType:
 		objects := []string{}
-		for _, schemaName := range field.complexFieldSchemas {
+		for _, schemaName := range field.ComplexFieldSchemas {
 			schema := schemaMeta[schemaName]
 			parts := []string{fmt.Sprintf("'objectType', '%s'", schemaName)}
 			for key, fm := range schema {
@@ -353,3 +385,4 @@ func buildWhereFromFilter(source string, node *godata.ParseNode) (string, error)
 
 	return query, nil
 }
+*/

@@ -622,6 +622,9 @@ type WeeklyScheduleScanConfig struct {
 // OdataCount defines model for odataCount.
 type OdataCount = bool
 
+// OdataExpand defines model for odataExpand.
+type OdataExpand = string
+
 // OdataFilter defines model for odataFilter.
 type OdataFilter = string
 
@@ -665,11 +668,13 @@ type GetScanConfigsParams struct {
 	Count  *OdataCount  `form:"$count,omitempty" json:"$count,omitempty"`
 	Top    *OdataTop    `form:"$top,omitempty" json:"$top,omitempty"`
 	Skip   *OdataSkip   `form:"$skip,omitempty" json:"$skip,omitempty"`
+	Expand *OdataExpand `form:"$expand,omitempty" json:"$expand,omitempty"`
 }
 
 // GetScanConfigsScanConfigIDParams defines parameters for GetScanConfigsScanConfigID.
 type GetScanConfigsScanConfigIDParams struct {
 	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
+	Expand *OdataExpand `form:"$expand,omitempty" json:"$expand,omitempty"`
 }
 
 // GetScanResultsParams defines parameters for GetScanResults.
