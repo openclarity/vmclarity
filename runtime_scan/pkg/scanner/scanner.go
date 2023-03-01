@@ -112,7 +112,13 @@ func (s *Scanner) initScan(ctx context.Context) error {
 			TotalPackages:          utils.PointerTo[int](0),
 			TotalRootkits:          utils.PointerTo[int](0),
 			TotalSecrets:           utils.PointerTo[int](0),
-			TotalVulnerabilities:   utils.PointerTo[int](0),
+			TotalVulnerabilities: &models.VulnerabilityScanSummary{
+				TotalCriticalVulnerabilities:   utils.PointerTo[int](0),
+				TotalHighVulnerabilities:       utils.PointerTo[int](0),
+				TotalMediumVulnerabilities:     utils.PointerTo[int](0),
+				TotalLowVulnerabilities:        utils.PointerTo[int](0),
+				TotalNegligibleVulnerabilities: utils.PointerTo[int](0),
+			},
 		},
 	}
 	err := s.patchScan(ctx, s.scanID, scan)

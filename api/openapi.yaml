@@ -596,6 +596,21 @@ components:
         totalSecrets:
           type: integer
         totalVulnerabilities:
+          $ref: '#/components/schemas/VulnerabilityScanSummary'
+
+    VulnerabilityScanSummary:
+      description: A summary of number of vulnerabilities found per severity.
+      type: object
+      properties:
+        totalCriticalVulnerabilities:
+          type: integer
+        totalHighVulnerabilities:
+          type: integer
+        totalMediumVulnerabilities:
+          type: integer
+        totalLowVulnerabilities:
+          type: integer
+        totalNegligibleVulnerabilities:
           type: integer
 
     ScanExists:
@@ -1063,7 +1078,7 @@ components:
         totalSecrets:
           type: integer
         totalVulnerabilities:
-          type: integer
+          $ref: '#/components/schemas/VulnerabilityScanSummary'
 
     TargetScanResultExists:
       type: object
@@ -1181,6 +1196,17 @@ components:
           type: string
         description:
           type: string
+        severity:
+          $ref: '#/components/schemas/VulnerabilitySeverity'
+
+    VulnerabilitySeverity:
+      type: string
+      enum:
+        - CRITICAL
+        - HIGH
+        - MEDIUM
+        - LOW
+        - NEGLIGIBLE
 
     MalwareInfo:
       type: object

@@ -203,7 +203,13 @@ func (s *Scanner) createScanWithUpdatedSummary(ctx context.Context, data scanDat
 	scan.Summary.TotalPackages = runtimeScanUtils.IntPtr(*scan.Summary.TotalPackages + *scanResultSummary.TotalPackages)
 	scan.Summary.TotalRootkits = runtimeScanUtils.IntPtr(*scan.Summary.TotalRootkits + *scanResultSummary.TotalRootkits)
 	scan.Summary.TotalSecrets = runtimeScanUtils.IntPtr(*scan.Summary.TotalSecrets + *scanResultSummary.TotalSecrets)
-	scan.Summary.TotalVulnerabilities = runtimeScanUtils.IntPtr(*scan.Summary.TotalVulnerabilities + *scanResultSummary.TotalVulnerabilities)
+	scan.Summary.TotalVulnerabilities = &models.VulnerabilityScanSummary{
+		TotalCriticalVulnerabilities:   runtimeScanUtils.IntPtr(*scan.Summary.TotalVulnerabilities.TotalCriticalVulnerabilities + *scanResultSummary.TotalVulnerabilities.TotalCriticalVulnerabilities),
+		TotalHighVulnerabilities:       runtimeScanUtils.IntPtr(*scan.Summary.TotalVulnerabilities.TotalHighVulnerabilities + *scanResultSummary.TotalVulnerabilities.TotalHighVulnerabilities),
+		TotalLowVulnerabilities:        runtimeScanUtils.IntPtr(*scan.Summary.TotalVulnerabilities.TotalLowVulnerabilities + *scanResultSummary.TotalVulnerabilities.TotalLowVulnerabilities),
+		TotalMediumVulnerabilities:     runtimeScanUtils.IntPtr(*scan.Summary.TotalVulnerabilities.TotalMediumVulnerabilities + *scanResultSummary.TotalVulnerabilities.TotalMediumVulnerabilities),
+		TotalNegligibleVulnerabilities: runtimeScanUtils.IntPtr(*scan.Summary.TotalVulnerabilities.TotalCriticalVulnerabilities + *scanResultSummary.TotalVulnerabilities.TotalNegligibleVulnerabilities),
+	}
 
 	return scan, nil
 }

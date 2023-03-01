@@ -76,7 +76,13 @@ func (scw *ScanConfigWatcher) initNewScan(ctx context.Context, scanConfig *model
 			TotalPackages:          utils.PointerTo[int](0),
 			TotalRootkits:          utils.PointerTo[int](0),
 			TotalSecrets:           utils.PointerTo[int](0),
-			TotalVulnerabilities:   utils.PointerTo[int](0),
+			TotalVulnerabilities: &models.VulnerabilityScanSummary{
+				TotalCriticalVulnerabilities:   utils.PointerTo[int](0),
+				TotalHighVulnerabilities:       utils.PointerTo[int](0),
+				TotalLowVulnerabilities:        utils.PointerTo[int](0),
+				TotalMediumVulnerabilities:     utils.PointerTo[int](0),
+				TotalNegligibleVulnerabilities: utils.PointerTo[int](0),
+			},
 		},
 	}
 	scanID, err := scw.createScan(ctx, scan)
@@ -109,7 +115,13 @@ func (scw *ScanConfigWatcher) initNewScan(ctx context.Context, scanConfig *model
 			TotalPackages:          utils.PointerTo[int](0),
 			TotalRootkits:          utils.PointerTo[int](0),
 			TotalSecrets:           utils.PointerTo[int](0),
-			TotalVulnerabilities:   utils.PointerTo[int](0),
+			TotalVulnerabilities: &models.VulnerabilityScanSummary{
+				TotalCriticalVulnerabilities:   utils.PointerTo[int](0),
+				TotalHighVulnerabilities:       utils.PointerTo[int](0),
+				TotalMediumVulnerabilities:     utils.PointerTo[int](0),
+				TotalLowVulnerabilities:        utils.PointerTo[int](0),
+				TotalNegligibleVulnerabilities: utils.PointerTo[int](0),
+			},
 		},
 	}
 	scanID, err = scw.patchScan(ctx, scanID, scan)

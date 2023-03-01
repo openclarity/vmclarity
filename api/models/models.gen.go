@@ -73,6 +73,15 @@ const (
 	NOTSCANNED TargetScanStateState = "NOT_SCANNED"
 )
 
+// Defines values for VulnerabilitySeverity.
+const (
+	CRITICAL   VulnerabilitySeverity = "CRITICAL"
+	HIGH       VulnerabilitySeverity = "HIGH"
+	LOW        VulnerabilitySeverity = "LOW"
+	MEDIUM     VulnerabilitySeverity = "MEDIUM"
+	NEGLIGIBLE VulnerabilitySeverity = "NEGLIGIBLE"
+)
+
 // ApiResponse An object that is returned in all cases of failures.
 type ApiResponse struct {
 	Message *string `json:"message,omitempty"`
@@ -395,7 +404,9 @@ type ScanSummary struct {
 	TotalPackages          *int `json:"totalPackages,omitempty"`
 	TotalRootkits          *int `json:"totalRootkits,omitempty"`
 	TotalSecrets           *int `json:"totalSecrets,omitempty"`
-	TotalVulnerabilities   *int `json:"totalVulnerabilities,omitempty"`
+
+	// TotalVulnerabilities A summary of number of vulnerabilities found per severity.
+	TotalVulnerabilities *VulnerabilityScanSummary `json:"totalVulnerabilities,omitempty"`
 }
 
 // ScanType defines model for ScanType.
@@ -502,7 +513,9 @@ type TargetScanResultSummary struct {
 	TotalPackages          *int `json:"totalPackages,omitempty"`
 	TotalRootkits          *int `json:"totalRootkits,omitempty"`
 	TotalSecrets           *int `json:"totalSecrets,omitempty"`
-	TotalVulnerabilities   *int `json:"totalVulnerabilities,omitempty"`
+
+	// TotalVulnerabilities A summary of number of vulnerabilities found per severity.
+	TotalVulnerabilities *VulnerabilityScanSummary `json:"totalVulnerabilities,omitempty"`
 }
 
 // TargetScanResults defines model for TargetScanResults.
@@ -576,14 +589,27 @@ type Vulnerability struct {
 
 // VulnerabilityInfo defines model for VulnerabilityInfo.
 type VulnerabilityInfo struct {
-	Description       *string `json:"description,omitempty"`
-	VulnerabilityName *string `json:"vulnerabilityName,omitempty"`
+	Description       *string                `json:"description,omitempty"`
+	Severity          *VulnerabilitySeverity `json:"severity,omitempty"`
+	VulnerabilityName *string                `json:"vulnerabilityName,omitempty"`
 }
 
 // VulnerabilityScan defines model for VulnerabilityScan.
 type VulnerabilityScan struct {
 	Vulnerabilities *[]Vulnerability `json:"vulnerabilities,omitempty"`
 }
+
+// VulnerabilityScanSummary A summary of number of vulnerabilities found per severity.
+type VulnerabilityScanSummary struct {
+	TotalCriticalVulnerabilities   *int `json:"totalCriticalVulnerabilities,omitempty"`
+	TotalHighVulnerabilities       *int `json:"totalHighVulnerabilities,omitempty"`
+	TotalLowVulnerabilities        *int `json:"totalLowVulnerabilities,omitempty"`
+	TotalMediumVulnerabilities     *int `json:"totalMediumVulnerabilities,omitempty"`
+	TotalNegligibleVulnerabilities *int `json:"totalNegligibleVulnerabilities,omitempty"`
+}
+
+// VulnerabilitySeverity defines model for VulnerabilitySeverity.
+type VulnerabilitySeverity string
 
 // WeeklyScheduleScanConfig defines model for WeeklyScheduleScanConfig.
 type WeeklyScheduleScanConfig struct {
