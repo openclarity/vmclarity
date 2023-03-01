@@ -297,6 +297,26 @@ func TestConvertScan(t *testing.T) {
 	scanSnapB, err := json.Marshal(&scanSnap)
 	assert.NilError(t, err)
 
+	summary := &models.ScanSummary{
+		JobsCompleted:          utils.PointerTo[int](123),
+		JobsLeftToRun:          utils.PointerTo[int](5123),
+		TotalExploits:          utils.PointerTo[int](23),
+		TotalMalware:           utils.PointerTo[int](2346),
+		TotalMisconfigurations: utils.PointerTo[int](62),
+		TotalPackages:          utils.PointerTo[int](84),
+		TotalRootkits:          utils.PointerTo[int](586),
+		TotalSecrets:           utils.PointerTo[int](27),
+		TotalVulnerabilities: &models.VulnerabilityScanSummary{
+			TotalCriticalVulnerabilities:   utils.PointerTo[int](5),
+			TotalHighVulnerabilities:       utils.PointerTo[int](1),
+			TotalLowVulnerabilities:        utils.PointerTo[int](3),
+			TotalMediumVulnerabilities:     utils.PointerTo[int](6),
+			TotalNegligibleVulnerabilities: utils.PointerTo[int](99),
+		},
+	}
+	summaryB, err := json.Marshal(&summary)
+	assert.NilError(t, err)
+
 	targetIDs := []string{"s"}
 	targetIDsB, err := json.Marshal(&targetIDs)
 	assert.NilError(t, err)
@@ -323,15 +343,25 @@ func TestConvertScan(t *testing.T) {
 					ScanEndTime:        nil,
 					ScanConfigID:       utils.StringPtr("1"),
 					ScanConfigSnapshot: scanSnapB,
+					State:              string(models.InProgress),
+					StateMessage:       "running",
+					StateReason:        string(models.ScanStateReasonSuccess),
+					Summary:            summaryB,
 					TargetIDs:          targetIDsB,
 				},
 			},
 			want: &models.Scan{
-				Id: utils.StringPtr(id.String()),
+				EndTime: nil,
+				Id:      utils.StringPtr(id.String()),
 				ScanConfig: &models.ScanConfigRelationship{
 					Id: "1",
 				},
 				ScanConfigSnapshot: &scanSnap,
+				StartTime:          nil,
+				State:              utils.PointerTo[models.ScanState](models.InProgress),
+				StateMessage:       utils.PointerTo[string]("running"),
+				StateReason:        utils.PointerTo[models.ScanStateReason](models.ScanStateReasonSuccess),
+				Summary:            summary,
 				TargetIDs:          &targetIDs,
 			},
 			wantErr: false,

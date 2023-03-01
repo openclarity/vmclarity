@@ -352,6 +352,38 @@ func (db *Handler) CreateFakeData() {
 	if err != nil {
 		log.Fatalf("failed to marshal scan1Targets: %v", err)
 	}
+	scan1Summary := &models.ScanSummary{
+		JobsCompleted:          utils.PointerTo[int](23),
+		JobsLeftToRun:          utils.PointerTo[int](107),
+		TotalExploits:          utils.PointerTo[int](14),
+		TotalMalware:           utils.PointerTo[int](44),
+		TotalMisconfigurations: utils.PointerTo[int](9),
+		TotalPackages:          utils.PointerTo[int](4221),
+		TotalRootkits:          utils.PointerTo[int](1),
+		TotalSecrets:           utils.PointerTo[int](0),
+		TotalVulnerabilities: &models.VulnerabilityScanSummary{
+			TotalCriticalVulnerabilities:   utils.PointerTo[int](9),
+			TotalHighVulnerabilities:       utils.PointerTo[int](12),
+			TotalLowVulnerabilities:        utils.PointerTo[int](424),
+			TotalMediumVulnerabilities:     utils.PointerTo[int](1551),
+			TotalNegligibleVulnerabilities: utils.PointerTo[int](132),
+		},
+	}
+	scan1SummaryB, err := json.Marshal(scan1Summary)
+	if err != nil {
+		log.Fatalf("failed to marshal scan1Summary: %v", err)
+	}
+
+	scan1ConfigSnapshot := &models.ScanConfigData{
+		Name:               utils.PointerTo[string]("Scan Config 1"),
+		ScanFamiliesConfig: scanConfig1Families,
+		Scheduled:          &scanConfig1Scheduled,
+		Scope:              &scanConfig1ScopeType,
+	}
+	scan1ConfigSnapshotB, err := json.Marshal(scan1ConfigSnapshot)
+	if err != nil {
+		log.Fatalf("failed to marshal scan1ConfigSnapshot: %v", err)
+	}
 
 	// Create scan 2
 	scan2Start := time.Now()
@@ -359,6 +391,39 @@ func (db *Handler) CreateFakeData() {
 	scan2TargetsB, err := json.Marshal(scan2Targets)
 	if err != nil {
 		log.Fatalf("failed to marshal scan2TargetsB: %v", err)
+	}
+
+	scan2Summary := &models.ScanSummary{
+		JobsCompleted:          utils.PointerTo[int](77),
+		JobsLeftToRun:          utils.PointerTo[int](98),
+		TotalExploits:          utils.PointerTo[int](6),
+		TotalMalware:           utils.PointerTo[int](0),
+		TotalMisconfigurations: utils.PointerTo[int](75),
+		TotalPackages:          utils.PointerTo[int](9778),
+		TotalRootkits:          utils.PointerTo[int](5),
+		TotalSecrets:           utils.PointerTo[int](557),
+		TotalVulnerabilities: &models.VulnerabilityScanSummary{
+			TotalCriticalVulnerabilities:   utils.PointerTo[int](11),
+			TotalHighVulnerabilities:       utils.PointerTo[int](52),
+			TotalLowVulnerabilities:        utils.PointerTo[int](241),
+			TotalMediumVulnerabilities:     utils.PointerTo[int](8543),
+			TotalNegligibleVulnerabilities: utils.PointerTo[int](73),
+		},
+	}
+	scan2SummaryB, err := json.Marshal(scan2Summary)
+	if err != nil {
+		log.Fatalf("failed to marshal scan2Summary: %v", err)
+	}
+
+	scan2ConfigSnapshot := &models.ScanConfigData{
+		Name:               utils.PointerTo[string]("Scan Config 2"),
+		ScanFamiliesConfig: scanConfig2Families,
+		Scheduled:          &scanConfig2Scheduled,
+		Scope:              &scanConfig2ScopeType,
+	}
+	scan2ConfigSnapshotB, err := json.Marshal(scan2ConfigSnapshot)
+	if err != nil {
+		log.Fatalf("failed to marshal scan2ConfigSnapshot: %v", err)
 	}
 
 	scans := []Scan{
@@ -369,7 +434,11 @@ func (db *Handler) CreateFakeData() {
 			ScanStartTime:      &scan1Start,
 			ScanEndTime:        &scan1End,
 			ScanConfigID:       utils.StringPtr(scanConfigs[0].ID.String()),
-			ScanFamiliesConfig: scanConfigs[0].ScanFamiliesConfig,
+			ScanConfigSnapshot: scan1ConfigSnapshotB,
+			State:              string(models.Done),
+			StateMessage:       "Scan was completed successfully",
+			StateReason:        string(models.ScanStateReasonSuccess),
+			Summary:            scan1SummaryB,
 			TargetIDs:          scan1TargetsB,
 		},
 		{
@@ -379,7 +448,11 @@ func (db *Handler) CreateFakeData() {
 			ScanStartTime:      &scan2Start,
 			ScanEndTime:        nil, // not ended
 			ScanConfigID:       utils.StringPtr(scanConfigs[1].ID.String()),
-			ScanFamiliesConfig: scanConfigs[1].ScanFamiliesConfig,
+			ScanConfigSnapshot: scan2ConfigSnapshotB,
+			State:              string(models.InProgress),
+			StateMessage:       "Scan is in progress",
+			StateReason:        string(models.ScanStateReasonSuccess),
+			Summary:            scan2SummaryB,
 			TargetIDs:          scan2TargetsB,
 		},
 	}

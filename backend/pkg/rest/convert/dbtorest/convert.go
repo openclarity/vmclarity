@@ -210,6 +210,13 @@ func ConvertScan(scan *database.Scan) (*models.Scan, error) {
 		}
 	}
 
+	if scan.Summary != nil {
+		ret.Summary = &models.ScanSummary{}
+		if err := json.Unmarshal(scan.Summary, ret.Summary); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal json: %w", err)
+		}
+	}
+
 	if scan.TargetIDs != nil {
 		ret.TargetIDs = &[]string{}
 		if err := json.Unmarshal(scan.TargetIDs, ret.TargetIDs); err != nil {
@@ -221,6 +228,9 @@ func ConvertScan(scan *database.Scan) (*models.Scan, error) {
 	ret.StartTime = scan.ScanStartTime
 	ret.EndTime = scan.ScanEndTime
 	ret.ScanConfig = &models.ScanConfigRelationship{Id: *scan.ScanConfigID}
+	ret.State = utils.PointerTo[models.ScanState](models.ScanState(scan.State))
+	ret.StateMessage = utils.PointerTo[string](scan.StateMessage)
+	ret.StateReason = utils.PointerTo[models.ScanStateReason](models.ScanStateReason(scan.StateReason))
 
 	return &ret, nil
 }
