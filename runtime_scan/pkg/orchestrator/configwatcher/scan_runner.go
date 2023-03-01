@@ -55,7 +55,6 @@ func (scw *ScanConfigWatcher) scan(ctx context.Context, scanConfig *models.ScanC
 
 // initNewScan Initialized a new scan, returns target instances and scan ID.
 func (scw *ScanConfigWatcher) initNewScan(ctx context.Context, scanConfig *models.ScanConfig) ([]*types.TargetInstance, string, error) {
-<<<<<<< HEAD
 	// Create scan in pending
 	now := time.Now().UTC()
 	scan := &models.Scan{

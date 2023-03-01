@@ -159,6 +159,23 @@ func ConvertToDBScan(scan models.Scan) (Scan, error) {
 		}
 	}
 
+	if scan.State != nil {
+		ret.State = string(*scan.State)
+	}
+	if scan.StateMessage != nil {
+		ret.StateMessage = *scan.StateMessage
+	}
+	if scan.StateReason != nil {
+		ret.StateReason = string(*scan.StateReason)
+	}
+
+	if scan.Summary != nil {
+		ret.Summary, err = json.Marshal(scan.Summary)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal json: %w", err)
+		}
+	}
+
 	if scan.TargetIDs != nil {
 		ret.TargetIDs, err = json.Marshal(scan.TargetIDs)
 		if err != nil {
