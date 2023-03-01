@@ -122,6 +122,14 @@ func buildSelectFields(schemaMetas map[string]SchemaMeta, field FieldMeta, ident
 		subQuery := buildSelectFields(schemaMetas, *field.CollectionItemMeta, newIdentifier, newSource, "$", newSelectNode)
 		return fmt.Sprintf("(SELECT JSON_GROUP_ARRAY(%s) FROM JSON_EACH(%s, '%s') AS %s %s)", subQuery, source, path, identifier, where)
 	case ComplexFieldType:
+		// If there are no children in the select tree for this complex
+		// type, shortcircuit and just return the data from the DB raw,
+		// as there is no need to build the complex query, and it'll
+		// ensure that null values are handled correctly.
+		if len(st.children) == 0 {
+			return fmt.Sprintf("%s -> '%s'", source, path)
+		}
+
 		objects := []string{}
 		for _, schemaName := range field.ComplexFieldSchemas {
 			schema := schemaMetas[schemaName]

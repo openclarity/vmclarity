@@ -40,8 +40,9 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 				ComplexFieldSchemas: []string{"ScanFamiliesConfig"},
 			},
 			"scheduled": odatasql.FieldMeta{
-				FieldType:           odatasql.ComplexFieldType,
-				ComplexFieldSchemas: []string{"SingleScheduleScanConfig"},
+				FieldType:             odatasql.ComplexFieldType,
+				ComplexFieldSchemas:   []string{"SingleScheduleScanConfig"},
+				DescriminatorProperty: "objectType",
 			},
 			"scope": odatasql.FieldMeta{
 				FieldType:             odatasql.ComplexFieldType,
@@ -76,9 +77,9 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 				FieldType:           odatasql.ComplexFieldType,
 				ComplexFieldSchemas: []string{"SecretsConfig"},
 			},
-			"vulnerabilties": odatasql.FieldMeta{
+			"vulnerabilities": odatasql.FieldMeta{
 				FieldType:           odatasql.ComplexFieldType,
-				ComplexFieldSchemas: []string{"VulnerabiltiesConfig"},
+				ComplexFieldSchemas: []string{"VulnerabilitiesConfig"},
 			},
 		},
 	},
@@ -119,6 +120,7 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 	},
 	"SingleScheduleScanConfig": {
 		Fields: odatasql.Schema{
+			"objectType":    odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"operationTime": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 		},
 	},
