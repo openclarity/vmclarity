@@ -56,19 +56,19 @@ const (
 func (s *Scanner) GetScan(ctx context.Context, scanID string) (*models.Scan, error) {
 	resp, err := s.backendClient.GetScansScanIDWithResponse(ctx, scanID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get a target scan status: %v", err)
+		return nil, fmt.Errorf("failed to get a scan: %v", err)
 	}
 	switch resp.StatusCode() {
 	case http.StatusOK:
 		if resp.JSON200 == nil {
-			return nil, fmt.Errorf("failed to get a target scan status: empty body")
+			return nil, fmt.Errorf("failed to get a scan: empty body")
 		}
 		return resp.JSON200, nil
 	default:
 		if resp.JSONDefault != nil && resp.JSONDefault.Message != nil {
-			return nil, fmt.Errorf("failed to get a target scan status. status code=%v: %v", resp.StatusCode(), resp.JSONDefault.Message)
+			return nil, fmt.Errorf("failed to get a scan status. status code=%v: %v", resp.StatusCode(), resp.JSONDefault.Message)
 		}
-		return nil, fmt.Errorf("failed to get a target scan status. status code=%v", resp.StatusCode())
+		return nil, fmt.Errorf("failed to get a scan status. status code=%v", resp.StatusCode())
 	}
 }
 
@@ -142,7 +142,7 @@ func (s *Scanner) jobBatchManagement(ctx context.Context) {
 
 			scan, err := s.createScanWithUpdatedSummary(ctx, *data)
 			if err != nil {
-				log.WithFields(s.logFields).Errorf("Failed to update scan summary: %v", err)
+				log.WithFields(s.logFields).Errorf("Failed to create a scan with updated summary: %v", err)
 				scan = &models.Scan{}
 			}
 
