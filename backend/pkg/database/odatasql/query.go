@@ -96,7 +96,7 @@ func BuildSQLQuery(schemaMetas map[string]SchemaMeta, schema string, filterStrin
 	return fmt.Sprintf("SELECT ID, %s AS Data FROM %s %s %s", selectFields, table, where, limitStm), nil
 }
 
-// nolint:cyclop,gocognit
+// nolint:cyclop,gocognit,gocyclo
 func buildSelectFields(schemaMetas map[string]SchemaMeta, field FieldMeta, identifier, source, path string, st *selectNode) string {
 	switch field.FieldType {
 	case PrimitiveFieldType:
@@ -136,12 +136,19 @@ func buildSelectFields(schemaMetas map[string]SchemaMeta, field FieldMeta, ident
 				}
 
 				var sel *selectNode
-				if st != nil && len(st.children) > 0 {
-					var ok bool
-					sel, ok = st.children[key]
-					if !ok {
-						continue
+				if st != nil {
+					// If there are any select children
+					// then we need to make sure this is
+					// either a select child or a expand
+					// child, otherwise skip this field.
+					if len(st.selectChildren) > 0 {
+						_, isSelect := st.selectChildren[key]
+						_, isExpand := st.expandChildren[key]
+						if !isSelect && !isExpand {
+							continue
+						}
 					}
+					sel = st.children[key]
 				}
 
 				extract := buildSelectFields(schemaMetas, fm, fmt.Sprintf("%s%s", identifier, key), source, fmt.Sprintf("%s.%s", path, key), sel)
@@ -154,9 +161,14 @@ func buildSelectFields(schemaMetas map[string]SchemaMeta, field FieldMeta, ident
 		if len(objects) == 1 {
 			return objects[0]
 		}
-		if field.DescriminatorProperty == "" {
-			//TODO(sambetts) Error, if multiple schema there must be a descriminator
-		}
+
+		// TODO(sambetts) Error, if multiple schema there must be a
+		// descriminator, this would be a developer error. Might be
+		// avoidable if we create a schema builder thing instead of
+		// just defining it as a variable.
+		// if field.DescriminatorProperty == "" {
+		// }
+
 		return fmt.Sprintf("(SELECT %s.value FROM JSON_EACH(JSON_ARRAY(%s)) AS %s WHERE %s.value -> '$.%s' = %s -> '%s.%s')", identifier, strings.Join(objects, ","), identifier, identifier, field.DescriminatorProperty, source, path, field.DescriminatorProperty)
 
 	case RelationshipFieldType:
@@ -170,12 +182,19 @@ func buildSelectFields(schemaMetas map[string]SchemaMeta, field FieldMeta, ident
 		parts := []string{fmt.Sprintf("'ObjectType', '%s'", schemaName)}
 		for key, fm := range schema.Fields {
 			var sel *selectNode
-			if st != nil && len(st.children) > 0 {
-				var ok bool
-				sel, ok = st.children[key]
-				if !ok {
-					continue
+			if st != nil {
+				// If there are any select children
+				// then we need to make sure this is
+				// either a select child or a expand
+				// child, otherwise skip this field.
+				if len(st.selectChildren) > 0 {
+					_, isSelect := st.selectChildren[key]
+					_, isExpand := st.expandChildren[key]
+					if !isSelect && !isExpand {
+						continue
+					}
 				}
+				sel = st.children[key]
 			}
 
 			extract := buildSelectFields(schemaMetas, fm, fmt.Sprintf("%s%s", identifier, key), newsource, fmt.Sprintf("$.%s", key), sel)
@@ -184,7 +203,7 @@ func buildSelectFields(schemaMetas map[string]SchemaMeta, field FieldMeta, ident
 		}
 		object := fmt.Sprintf("JSON_OBJECT(%s)", strings.Join(parts, ","))
 
-		return fmt.Sprintf("(SELECT %s FROM %s WHERE %s -> '$.Id' == %s -> '%s.Id')", object, schema.Table, newsource, source, path)
+		return fmt.Sprintf("(SELECT %s FROM %s WHERE %s -> '$.%s' == %s -> '%s.%s')", object, schema.Table, newsource, field.RelationshipProperty, source, path, field.RelationshipProperty)
 	case RelationshipCollectionFieldType:
 		if st == nil || !st.expand {
 			return fmt.Sprintf("%s -> '%s'", source, path)
@@ -194,7 +213,7 @@ func buildSelectFields(schemaMetas map[string]SchemaMeta, field FieldMeta, ident
 		schema := schemaMetas[schemaName]
 		newSource := fmt.Sprintf("%s.Data", schema.Table)
 
-		where := fmt.Sprintf("WHERE %s -> '$.Id' = %s.value -> '$.Id'", newSource, identifier)
+		where := fmt.Sprintf("WHERE %s -> '$.%s' = %s.value -> '$.%s'", newSource, field.RelationshipProperty, identifier, field.RelationshipProperty)
 		if st != nil {
 			if st.filter != nil {
 				conditions, _ := buildWhereFromFilter(newSource, st.filter.Tree)
@@ -205,12 +224,19 @@ func buildSelectFields(schemaMetas map[string]SchemaMeta, field FieldMeta, ident
 		parts := []string{fmt.Sprintf("'ObjectType', '%s'", schemaName)}
 		for key, fm := range schema.Fields {
 			var sel *selectNode
-			if st != nil && len(st.children) > 0 {
-				var ok bool
-				sel, ok = st.children[key]
-				if !ok {
-					continue
+			if st != nil {
+				// If there are any select children
+				// then we need to make sure this is
+				// either a select child or a expand
+				// child, otherwise skip this field.
+				if len(st.selectChildren) > 0 {
+					_, isSelect := st.selectChildren[key]
+					_, isExpand := st.expandChildren[key]
+					if !isSelect && !isExpand {
+						continue
+					}
 				}
+				sel = st.children[key]
 			}
 
 			extract := buildSelectFields(schemaMetas, fm, fmt.Sprintf("%s%s", identifier, key), newSource, fmt.Sprintf("$.%s", key), sel)

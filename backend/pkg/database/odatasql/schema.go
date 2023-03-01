@@ -11,11 +11,18 @@ const (
 )
 
 type FieldMeta struct {
-	FieldType          FieldType
-	CollectionItemMeta    *FieldMeta
-	ComplexFieldSchemas []string
-	RelationshipSchema string
+	FieldType FieldType
+
+	// Field for collection field types
+	CollectionItemMeta *FieldMeta
+
+	// Fields for complex field types
+	ComplexFieldSchemas   []string
 	DescriminatorProperty string
+
+	// Fields for relationship and relationship collection types
+	RelationshipSchema   string
+	RelationshipProperty string
 }
 
 type SchemaMeta struct {

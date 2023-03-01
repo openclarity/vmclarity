@@ -8,14 +8,18 @@ import (
 )
 
 type selectNode struct {
-	children map[string]*selectNode
-	filter   *godata.GoDataFilterQuery
-	expand   bool
+	children       map[string]*selectNode
+	expandChildren map[string]struct{}
+	selectChildren map[string]struct{}
+	filter         *godata.GoDataFilterQuery
+	expand         bool
 }
 
 func newSelectTree() *selectNode {
 	return &selectNode{
-		children: map[string]*selectNode{},
+		children:       map[string]*selectNode{},
+		expandChildren: map[string]struct{}{},
+		selectChildren: map[string]struct{}{},
 	}
 }
 
@@ -76,6 +80,14 @@ func (st *selectNode) insert(path []*godata.Token, filter *godata.GoDataFilterQu
 	if !ok {
 		st.children[childName] = newSelectTree()
 		child = st.children[childName]
+	}
+
+	// Keep track of which children where added as part of $select or
+	// $expand, or both.
+	if expand {
+		st.expandChildren[childName] = struct{}{}
+	} else {
+		st.selectChildren[childName] = struct{}{}
 	}
 
 	err := child.insert(path[1:], filter, sel, subExpand, expand)
