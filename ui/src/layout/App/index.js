@@ -5,6 +5,7 @@ import Icon, { ICON_NAMES } from 'components/Icon';
 import IconTemplates from 'components/Icon/IconTemplates';
 import Notification from 'components/Notification';
 import Tooltip from 'components/Tooltip';
+import Title from 'components/Title';
 import Scans from 'layout/Scans';
 import { NotificationProvider, useNotificationState, useNotificationDispatch, removeNotification } from 'context/NotificationProvider';
 import { ROUTES } from 'utils/systemConsts';
@@ -58,36 +59,50 @@ const NavLinkItem = ({pathname, icon}) => {
     )
 }
 
-const Layout = () => (
-    <div id="main-wrapper">  
-        <div className="sidebar-container">
-            {
-                ROUTES_CONFIG.map(({path, icon, title}) => {
-                    const tooltipId = `sidebar-item-tooltip-${path}`;
-
-                    return (
-                        <div key={path} data-tip data-for={tooltipId}>
-                            <NavLinkItem pathname={path} icon={icon} />
-                            <Tooltip id={tooltipId} text={title} />
-                        </div>
-                    )
-                })
-            }
+const Layout = () => {
+    const navigate = useNavigate()
+    const {pathname} = useLocation();
+    const mainPath = pathname.split("/").find(item => !!item);
+    const pageTitle = ROUTES_CONFIG.find(({path, isIndex}) => (isIndex && !mainPath) || path === `/${mainPath}`)?.title;
+    
+    return (
+        <div id="main-wrapper">  
+            <div className="topbar-container">
+                <img src={brandImage} alt="VMClarity" />
+                {!!pageTitle &&
+                    <div className="topbar-page-title">
+                        <Title medium removeMargin>{pageTitle}</Title>
+                        <Icon name={ICON_NAMES.REFRESH} onClick={() => navigate(0)} />
+                    </div>
+                }
+            </div>
+            <div className="sidebar-container">
+                {
+                    ROUTES_CONFIG.map(({path, icon, title}) => {
+                        const tooltipId = `sidebar-item-tooltip-${path}`;
+    
+                        return (
+                            <div key={path} data-tip data-for={tooltipId}>
+                                <NavLinkItem pathname={path} icon={icon} />
+                                <Tooltip id={tooltipId} text={title} />
+                            </div>
+                        )
+                    })
+                }
+            </div>
+            <main role="main">
+                <NotificationProvider>
+                    <Outlet />
+                    <ConnectedNotification />
+                </NotificationProvider>
+            </main>
         </div>
-        <main role="main">
-            <NotificationProvider>
-                <Outlet />
-                <ConnectedNotification />
-            </NotificationProvider>
-        </main>
-    </div>
-)
+    )
+}
 
 const App = () => (
     <div className="app-wrapper">
-        <div className="topbar-container">
-            <img src={brandImage} alt="VMClarity" />
-        </div>
+        
         <BrowserRouter>
             <Routes>
                 <Route path="/" element={<Layout />}>

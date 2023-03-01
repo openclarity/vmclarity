@@ -7,9 +7,8 @@ const TabScans = ({data}) => {
     return (
         <DoublePaneDisplay
             leftPaneDisplay={() => (
-                "test"
+                "TBD"
             )}
-            rightPlaneDisplay={() => null}
         />
     )
 }

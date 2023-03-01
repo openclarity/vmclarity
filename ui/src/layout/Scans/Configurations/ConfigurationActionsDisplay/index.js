@@ -5,17 +5,21 @@ import Icon, { ICON_NAMES } from 'components/Icon';
 import { TooltipWrapper } from 'components/Tooltip';
 import Modal from 'components/Modal';
 import { BoldText } from 'utils/utils';
-import { SCAN_CONFIGS_URL } from '../utils';
+import { APIS } from 'utils/systemConsts';
+import { useModalDisplayDispatch, MODAL_DISPLAY_ACTIONS } from 'layout/Scans/ScanConfigWizardModal/ModalDisplayProvider';
 
 import './configuration-actions-display.scss';
 
-const ConfigurationActionsDisplay = ({data, setScanConfigFormData, onDelete}) => {
+const ConfigurationActionsDisplay = ({data, onDelete}) => {
+    const modalDisplayDispatch = useModalDisplayDispatch();
+    const setScanConfigFormData = (data) => modalDisplayDispatch({type: MODAL_DISPLAY_ACTIONS.SET_MODAL_DISPLAY_DATA, payload: data});
+    
     const {id} = data;
 
     const [deleteConfigmationData, setDeleteConfigmationData] = useState(null);
     const closeDeleteConfigmation = () => setDeleteConfigmationData(null);
 
-    const [{deleting}, deleteConfiguration] = useDelete(SCAN_CONFIGS_URL);
+    const [{deleting}, deleteConfiguration] = useDelete(APIS.SCAN_CONFIGS);
     const prevDeleting = usePrevious(deleting);
 
     useEffect(() => {
@@ -64,6 +68,7 @@ const ConfigurationActionsDisplay = ({data, setScanConfigFormData, onDelete}) =>
             {!isNull(deleteConfigmationData) &&
                 <Modal
                     title="Delete configmation"
+                    isMediumTitle
                     className="scan-config-delete-confirmation"
                     onClose={closeDeleteConfigmation}
                     height={250}

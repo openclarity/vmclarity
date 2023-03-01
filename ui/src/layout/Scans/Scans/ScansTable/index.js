@@ -4,10 +4,14 @@ import ContentContainer from 'components/ContentContainer';
 import EmptyDisplay from 'components/EmptyDisplay';
 import Table from 'components/Table';
 import { SCAN_CONFIGS_PATH } from 'layout/Scans/Configurations';
+import { useModalDisplayDispatch, MODAL_DISPLAY_ACTIONS } from 'layout/Scans/ScanConfigWizardModal/ModalDisplayProvider';
+import { APIS } from 'utils/systemConsts';
 
 const TABLE_TITLE = "scans";
 
-const ScansTable = ({setScanConfigFormData}) => {
+const ScansTable = () => {
+    const modalDisplayDispatch = useModalDisplayDispatch();
+
     const navigate = useNavigate();
     const {pathname} = useLocation();
 
@@ -35,7 +39,7 @@ const ScansTable = ({setScanConfigFormData}) => {
                 <Table
                     columns={columns}
                     paginationItemsName={TABLE_TITLE.toLowerCase()}
-                    url="scans"
+                    url={APIS.SCANS}
                     noResultsTitle={TABLE_TITLE}
                     onLineClick={({id}) => navigate(`${pathname}/${id}`)}
                     customEmptyResultsDisplay={() => (
@@ -47,7 +51,7 @@ const ScansTable = ({setScanConfigFormData}) => {
                                 </>
                             )}
                             title="New scan configuration"
-                            onClick={() => setScanConfigFormData({})}
+                            onClick={() => modalDisplayDispatch({type: MODAL_DISPLAY_ACTIONS.SET_MODAL_DISPLAY_DATA, payload: {}})}
                             subTitle="Start scan from config"
                             onSubClick={() => navigate(SCAN_CONFIGS_PATH)}
                         />

@@ -14,20 +14,37 @@ html body {
         .app-wrapper {
             position: relative;
 
-            .topbar-container {
-                position: fixed;
-                top: 0;
-                right: 0;
-                left: 0;
-                background-color: $color-main;
-                z-index: 1;
-                height: $top-bar-height;
-                
-                img {
-                    margin: 4px 15px;
-                }
-            }
             #main-wrapper {
+                .topbar-container {
+                    position: fixed;
+                    top: 0;
+                    right: 0;
+                    left: 0;
+                    background-color: $color-main;
+                    z-index: 1;
+                    height: $top-bar-height;
+                    display: flex;
+                    align-items: center;
+                    
+                    img {
+                        margin: 4px 15px;
+                    }
+                    .topbar-page-title {
+                        display: flex;
+                        align-items: center;
+                        border-left: 1px solid $color-grey;
+                        padding-left: 20px;
+                        margin-left: 15px;
+                        
+                        .clarity-title {
+                            color: $color-grey;
+                        }
+                        .icon {
+                            color: $color-grey;
+                            margin-left: 10px;
+                        }
+                    }
+                }
                 .sidebar-container {
                     background-color: $color-main-dark;
                     box-shadow: 0px 2px 43px rgba($color-shadow-main, 0.21);

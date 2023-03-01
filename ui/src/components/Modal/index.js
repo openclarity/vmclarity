@@ -3,11 +3,12 @@ import ReactDOM from 'react-dom';
 import classnames from 'classnames';
 import CloseButton from 'components/CloseButton';
 import Button from 'components/Button';
+import Title from 'components/Title';
 
 import './modal.scss';
 
 const Modal = (props) => {
-    const {title, children, onClose, className, height=380, width=720, stickLeft=false, onDone, doneTitle="Done", disableDone=false, hideCancel=false,
+    const {title, isMediumTitle=false, children, onClose, className, height=380, width=720, stickLeft=false, onDone, doneTitle="Done", disableDone=false, hideCancel=false,
         hideSubmit=false} = props;
 
     const [portalContainer, setPortalContainer] = useState(null);
@@ -38,7 +39,7 @@ const Modal = (props) => {
                 style={stickLeft ? {width: `${width}px`} : {height: `${height}px`, width: `${width}px`}}
                 onClick={(event) => event.stopPropagation()}
             >
-                <div className="modal-title">{title}</div>
+                <Title className="modal-title" medium={isMediumTitle}>{title}</Title>
                 <div className="modal-content">{children}</div>
                 <CloseButton onClose={onClose} />
                 <div className="modal-actions">

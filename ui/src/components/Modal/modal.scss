@@ -15,7 +15,6 @@ $padding: 30px;
         background: white;
         box-sizing: border-box;
         box-shadow: -8px 12px 19px rgba(55, 72, 95, 0.13);
-        z-index: 55;
 
         &:not(.stick-left) {
             top: 40%;
@@ -31,12 +30,6 @@ $padding: 30px;
             position: absolute;
             top: $padding;
             right: $padding;
-        }
-        .modal-title {
-            font-weight: 300;
-            font-size: 35px;
-            line-height: 48px;
-            margin-bottom: 14px;
         }
         .modal-content {
             font-size: 14px;

@@ -10,7 +10,16 @@ export const ICON_NAMES = {
     PLUS: "plus",
     MINUS: "minus",
     PLAY: "play",
+    STOP: "stop",
     DELETE: "delete",
     EDIT: "edit",
-    INFO: "info"
+    INFO: "info",
+    SHIELD: "shield",
+    WARNING: "warning",
+    LOCK: "lock",
+    COG: "cog",
+    KEY: "key",
+    BUG: "bug",
+    GHOST: "ghost",
+    REFRESH: "refresh"
 }

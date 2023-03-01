@@ -8,17 +8,21 @@ import EmptyDisplay from 'components/EmptyDisplay';
 import Table from 'components/Table';
 import ExpandableList from 'components/ExpandableList';
 import { BoldText, toCapitalized, formatDate } from 'utils/utils';
+import { APIS } from 'utils/systemConsts';
 import { formatTagsToStringInstances, formatRegionsToStrings } from 'layout/Scans/utils';
+import { useModalDisplayDispatch, MODAL_DISPLAY_ACTIONS } from 'layout/Scans/ScanConfigWizardModal/ModalDisplayProvider';
 import ConfigurationActionsDisplay from '../ConfigurationActionsDisplay';
-import { SCAN_CONFIGS_URL } from '../utils';
 
 import './configurations-table.scss';
 
 const TABLE_TITLE = "scan configurations";
 
-const ConfigurationsTable = ({setScanConfigFormData}) => {
+const ConfigurationsTable = () => {
     const navigate = useNavigate();
     const {pathname} = useLocation();
+
+    const modalDisplayDispatch = useModalDisplayDispatch();
+    const setScanConfigFormData = (data) => modalDisplayDispatch({type: MODAL_DISPLAY_ACTIONS.SET_MODAL_DISPLAY_DATA, payload: data});
 
     const columns = useMemo(() => [
         {
@@ -107,7 +111,7 @@ const ConfigurationsTable = ({setScanConfigFormData}) => {
                 <Table
                     columns={columns}
                     paginationItemsName={TABLE_TITLE.toLowerCase()}
-                    url={SCAN_CONFIGS_URL}
+                    url={APIS.SCAN_CONFIGS}
                     refreshTimestamp={refreshTimestamp}
                     noResultsTitle={TABLE_TITLE}
                     onLineClick={({id}) => navigate(`${pathname}/${id}`)}

@@ -8,24 +8,24 @@ import { useFetch } from 'hooks';
 
 import './details-page-wrapper.scss';
 
-const DetailsContentWrapper = ({data, titleKey, detailsContent: DetailsContent}) => (
+const DetailsContentWrapper = ({data, getTitle, detailsContent: DetailsContent}) => (
     <div className="details-page-content-wrapper">
-        <div className="details-page-title">{data[titleKey]}</div>
+        <div className="details-page-title">{getTitle(data)}</div>
         <ContentContainer><DetailsContent data={data} /></ContentContainer>
     </div>
 )
 
-const DetailsPageWrapper = ({className, backTitle, url, getUrl, getReplace, titleKey, detailsContent}) => {
+const DetailsPageWrapper = ({className, backTitle, url, getUrl, getReplace, getTitle, detailsContent}) => {
     const {pathname} = useLocation();
     const params = useParams();
     const {id} = params;
     
-    const [{loading, data, error}, fetchData] = useFetch(!!url ? `${url}/${id}` : getUrl(params));
+    const [{loading, data, error}] = useFetch(!!url ? `${url}/${id}` : getUrl(params));
 
     return (
         <div className={classnames("details-page-wrapper", className)}>
             <BackRouteButton title={backTitle} pathname={pathname.replace(!!getReplace ? getReplace(params) : `/${id}`, "")} />
-            {loading ? <Loader /> : (!!error ? null : <DetailsContentWrapper detailsContent={detailsContent} titleKey={titleKey} data={data} />)}
+            {loading ? <Loader /> : (!!error ? null : <DetailsContentWrapper detailsContent={detailsContent} getTitle={getTitle} data={data} />)}
         </div>
     )
 }
