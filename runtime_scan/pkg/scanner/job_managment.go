@@ -18,6 +18,7 @@ package scanner
 import (
 	"context"
 	"fmt"
+	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 	"net/http"
 	"time"
 
@@ -394,6 +395,7 @@ func (s *Scanner) generateFamiliesConfigurationYaml(scanRootDirectory string) (s
 		Vulnerabilities: userVulnConfigToFamiliesVulnConfig(s.scanConfig.ScanFamiliesConfig.Vulnerabilities),
 		Secrets:         userSecretsConfigToFamiliesSecretsConfig(s.scanConfig.ScanFamiliesConfig.Secrets, scanRootDirectory, s.config.GitleaksBinaryPath),
 		Exploits:        userExploitsConfigToFamiliesExploitsConfig(s.scanConfig.ScanFamiliesConfig.Exploits, s.config.ExploitsDBAddress),
+		Malware:         userMalwareConfigToFamiliesMalwareConfig(s.scanConfig.ScanFamiliesConfig.Malware),
 		// TODO(sambetts) Configure other families once we've got the known working ones working e2e
 	}
 
@@ -403,6 +405,15 @@ func (s *Scanner) generateFamiliesConfigurationYaml(scanRootDirectory string) (s
 	}
 
 	return string(famConfigYaml), nil
+}
+
+func userMalwareConfigToFamiliesMalwareConfig(malwareConfig *models.MalwareConfig) malware.Config {
+	if malwareConfig == nil || malwareConfig.Enabled == nil || !*malwareConfig.Enabled {
+		return malware.Config{}
+	}
+	return malware.Config{
+		Enabled: true,
+	}
 }
 
 func userSecretsConfigToFamiliesSecretsConfig(secretsConfig *models.SecretsConfig, scanRootDirectory string, gitleaksBinaryPath string) secrets.Config {

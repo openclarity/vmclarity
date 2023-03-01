@@ -18,6 +18,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 	"net/http"
 
 	"github.com/openclarity/vmclarity/api/client"
@@ -445,6 +446,26 @@ func convertExploitsResultToAPIModel(exploitsResults *exploits.Results) *models.
 	}
 }
 
+func convertMalwareResultToAPIModel(malwareResults *malware.Results) *models.MalwareScan {
+	if malwareResults == nil {
+		return &models.MalwareScan{}
+	}
+
+	// This is currently Test data
+	return &models.MalwareScan{
+		Malware: &([]models.Malware{
+			{
+				Id: &malwareResults.Test,
+				MalwareInfo: &models.MalwareInfo{
+					MalwareName: &malwareResults.Test,
+					MalwareType: (*models.MalwareType)(&malwareResults.Test),
+					Path:        &malwareResults.Test,
+				},
+			},
+		}),
+	}
+}
+
 func (e *Exporter) ExportExploitsResult(res *results.Results) error {
 	scanResults, err := e.getExistingScanResult()
 	if err != nil {
@@ -474,6 +495,40 @@ func (e *Exporter) ExportExploitsResult(res *results.Results) error {
 	state := models.DONE
 	scanResults.Status.Exploits.State = &state
 	scanResults.Status.Exploits.Errors = &errors
+
+	err = e.patchExistingScanResult(scanResults)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (e *Exporter) ExportMalwareResult(res *results.Results) error {
+	scanResults, err := e.getExistingScanResult()
+	if err != nil {
+		return err
+	}
+
+	if scanResults.Status == nil {
+		scanResults.Status = &models.TargetScanStatus{}
+	}
+	if scanResults.Status.Malware == nil {
+		scanResults.Status.Malware = &models.TargetScanState{}
+	}
+
+	var errors []string
+
+	malwareResults, err := results.GetResult[*malware.Results](res)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("failed to get malware results from scan: %w", err).Error())
+	} else {
+		scanResults.Malware = convertMalwareResultToAPIModel(malwareResults)
+	}
+
+	state := models.DONE
+	scanResults.Status.Malware.State = &state
+	scanResults.Status.Malware.Errors = &errors
 
 	err = e.patchExistingScanResult(scanResults)
 	if err != nil {
@@ -513,6 +568,15 @@ func (e *Exporter) ExportResults(res *results.Results, famerr families.RunErrors
 	}
 
 	if config.Exploits.Enabled {
+		err := e.ExportExploitsResult(res)
+		if err != nil {
+			err = fmt.Errorf("failed to export exploits results to server: %w", err)
+			logger.Error(err)
+			errors = append(errors, err)
+		}
+	}
+
+	if config.Malware.Enabled {
 		err := e.ExportExploitsResult(res)
 		if err != nil {
 			err = fmt.Errorf("failed to export exploits results to server: %w", err)
