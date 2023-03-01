@@ -27,6 +27,33 @@ import (
 var fixSelectToken sync.Once
 
 // nolint:cyclop
+func BuildCountQuery(schemaMetas map[string]SchemaMeta, schema string, filterString *string) (string, error) {
+	// Parse top level $filter and create the top level "WHERE"
+	var where string
+	if filterString != nil && *filterString != "" {
+		filterQuery, err := godata.ParseFilterString(context.TODO(), *filterString)
+		if err != nil {
+			return "", fmt.Errorf("failed to parse $filter: %w", err)
+		}
+
+		// Build the WHERE conditions based on the $filter tree
+		conditions, err := buildWhereFromFilter("Data", filterQuery.Tree)
+		if err != nil {
+			return "", fmt.Errorf("failed to build DB query from $filter: %w", err)
+		}
+
+		where = fmt.Sprintf("WHERE %s", conditions)
+	}
+
+	table := schemaMetas[schema].Table
+	if table == "" {
+		return "", fmt.Errorf("trying to query complex type schema %s with no source table", schema)
+	}
+
+	return fmt.Sprintf("SELECT COUNT(*) FROM %s %s", table, where), nil
+}
+
+// nolint:cyclop
 func BuildSQLQuery(schemaMetas map[string]SchemaMeta, schema string, filterString, selectString, expandString *string, top, skip *int) (string, error) {
 	// Fix GlobalExpandTokenizer so that it allows for `-` characters in the Literal tokens
 	fixSelectToken.Do(func() {

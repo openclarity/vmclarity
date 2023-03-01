@@ -221,3 +221,16 @@ func ODataQuery(db *gorm.DB, schema string, filterString, selectString, expandSt
 	}
 	return nil
 }
+
+func ODataCount(db *gorm.DB, schema string, filterString *string) (int, error) {
+	query, err := odatasql.BuildCountQuery(schemaMetas, schema, filterString)
+	if err != nil {
+		return 0, fmt.Errorf("failed to build query to count objects: %w", err)
+	}
+
+	var count int
+	if err := db.Raw(query).Scan(&count).Error; err != nil {
+		return 0, fmt.Errorf("failed to query DB: %w", err)
+	}
+	return count, nil
+}

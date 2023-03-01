@@ -63,7 +63,10 @@ func (s *ScanConfigsTableHandler) GetScanConfigs(params models.GetScanConfigsPar
 	output := models.ScanConfigs{Items: &items}
 
 	if params.Count != nil && *params.Count {
-		count := len(items)
+		count, err := ODataCount(s.DB, "ScanConfig", params.Filter)
+		if err != nil {
+			return models.ScanConfigs{}, fmt.Errorf("failed to count records: %w", err)
+		}
 		output.Count = &count
 	}
 
