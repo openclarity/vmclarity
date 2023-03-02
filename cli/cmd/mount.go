@@ -113,11 +113,5 @@ func (b BlockDevice) Mount(mountPoint string) error {
 		return fmt.Errorf("failed to run mount command: %v", err)
 	}
 
-	// Change the file permissions to world readable
-	// TODO not sure we need this
-	//_, err = exec.Command("chmod", "-R", "o+r", mountPoint).Output()
-	//if err != nil {
-	//	return fmt.Errorf("failed to run chmod command: %v", err)
-	//}
 	return nil
 }
