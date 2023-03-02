@@ -1,6 +1,5 @@
 @import 'utils/scss_variables.module.scss';
 
-$icon-size: 30px;
 $inner-padding: 21px;
 
 .vulnerabilities-minimized-display-wrapper {
@@ -30,7 +29,6 @@ $inner-padding: 21px;
             }
             .icon {
                 margin-right: 2px;
-                width: 18px;
             }
         }
     }
@@ -41,8 +39,6 @@ $inner-padding: 21px;
     align-items: center;
 
     .icon {
-        width: $icon-size;
-        height: $icon-size;
         margin-right: 5px;
     }
     .vulnerabilities-display-summary {

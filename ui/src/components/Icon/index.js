@@ -11,7 +11,7 @@ export {
 	IconTemplates
 }
 
-const Icon = ({name, className, onClick, disabled, style={}}) => {
+const Icon = ({name, className, onClick, disabled, size=22, style={}}) => {
 	if (!Object.values(ICON_NAMES).includes(name)) {
 		console.error(`Icon name '${name}' does not exist`);
 	}
@@ -28,7 +28,7 @@ const Icon = ({name, className, onClick, disabled, style={}}) => {
 				{disabled}
 			)}
 			onClick={event => !disabled && !!onClick ? onClick(event) : undefined}
-			style={style}
+			style={{...style, height: `${size}px`, width: `${size}px`}}
 		>
 			<use href={`#${name}`} />
 		</svg>

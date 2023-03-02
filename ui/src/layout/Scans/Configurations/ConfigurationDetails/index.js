@@ -58,7 +58,7 @@ const ConfigurationDetails = () => (
         className="configuration-details-page-wrapper"
         backTitle="Scan configurations"
         url={APIS.SCAN_CONFIGS}
-        getTitle={data => data?.name}
+        getTitleData={data => ({title: data?.name})}
         detailsContent={DetailsContent}
         getReplace={params => getReplace(params)}
     />

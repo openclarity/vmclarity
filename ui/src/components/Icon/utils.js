@@ -1,6 +1,8 @@
 export const ICON_NAMES = {
     DASHBOARD: "dashboard",
     SCANS: "scans",
+    ASSETS: "assets",
+    FINDINGS: "findings",
     DUPLICATE: "duplicate",
     X_MARK: "x-mark",
     CHECK_MARK: "check-mark",

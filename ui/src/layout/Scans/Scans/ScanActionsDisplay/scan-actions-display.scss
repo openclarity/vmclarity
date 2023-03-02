@@ -6,7 +6,7 @@
     .icon:not(:disabled) {
         color: $color-main;
     }
-    .tooltip-wrapper:not(:last-child) {
+    .icon-with-tooltip-wrapper:not(:last-child) {
         margin-right: 5px;
     }
 }

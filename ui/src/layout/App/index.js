@@ -4,7 +4,7 @@ import classnames from 'classnames';
 import Icon, { ICON_NAMES } from 'components/Icon';
 import IconTemplates from 'components/Icon/IconTemplates';
 import Notification from 'components/Notification';
-import Tooltip from 'components/Tooltip';
+import { TooltipWrapper } from 'components/Tooltip';
 import Title from 'components/Title';
 import Scans from 'layout/Scans';
 import { NotificationProvider, useNotificationState, useNotificationDispatch, removeNotification } from 'context/NotificationProvider';
@@ -27,6 +27,18 @@ const ROUTES_CONFIG = [
 		component: Scans,
         icon: ICON_NAMES.SCANS,
         title: "Scans"
+	},
+	{
+		path: ROUTES.ASSETS,
+		component: () => "TBD",
+        icon: ICON_NAMES.ASSETS,
+        title: "Assets"
+	},
+	{
+		path: ROUTES.FINDINGS,
+		component: () => "TBD",
+        icon: ICON_NAMES.FINDINGS,
+        title: "Findings"
 	}
 ];
 
@@ -78,16 +90,11 @@ const Layout = () => {
             </div>
             <div className="sidebar-container">
                 {
-                    ROUTES_CONFIG.map(({path, icon, title}) => {
-                        const tooltipId = `sidebar-item-tooltip-${path}`;
-    
-                        return (
-                            <div key={path} data-tip data-for={tooltipId}>
-                                <NavLinkItem pathname={path} icon={icon} />
-                                <Tooltip id={tooltipId} text={title} />
-                            </div>
-                        )
-                    })
+                    ROUTES_CONFIG.map(({path, icon, title}) => (
+                        <TooltipWrapper key={path} tooltipId={`sidebar-item-tooltip-${path}`} tooltipText={title}>
+                            <NavLinkItem pathname={path} icon={icon} />
+                        </TooltipWrapper>
+                    ))
                 }
             </div>
             <main role="main">

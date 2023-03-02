@@ -3,7 +3,8 @@ import { useLocation } from 'react-router-dom';
 import DetailsPageWrapper from 'components/DetailsPageWrapper';
 import TabbedPage from 'components/TabbedPage';
 import { APIS } from 'utils/systemConsts';
-import ScanActionsDisplay from '../ScanActionsDisplay';
+import { formatDate } from 'utils/utils';
+// import ScanActionsDisplay from '../ScanActionsDisplay';
 import TabGeneral from './TabGeneral';
 import TabFindings from './TabFindings';
 
@@ -40,9 +41,9 @@ const DetailsContent = ({data}) => {
                     component: () => <TabFindings data={data} />
                 }
             ]}
-            headerCustomDisplay={() => (
-                <ScanActionsDisplay data={data} />
-            )}
+            // headerCustomDisplay={() => (
+            //     <ScanActionsDisplay data={data} />
+            // )}
             withInnerPadding={false}
         />
     )
@@ -52,8 +53,8 @@ const ScanDetails = () => (
     <DetailsPageWrapper
         className="scan-details-page-wrapper"
         backTitle="Scans"
-        url={APIS.SCANS}
-        getTitle={() => "Scan"}
+        getUrl={({id}) => `${APIS.SCANS}/${id}?$expand=ScanConfig`}
+        getTitleData={({scanConfigSnapshot, startTime}) => ({title: scanConfigSnapshot?.name, subTitle: formatDate(startTime)})}
         detailsContent={props => <DetailsContent {...props} />}
         getReplace={params => getReplace(params)}
     />

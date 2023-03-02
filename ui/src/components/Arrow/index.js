@@ -22,6 +22,7 @@ const Arrow = ({name=ARROW_NAMES.TOP, onClick, disabled, small=false}) => {
             className={classnames("arrow-icon", `${name}-arrow`, {small}, {clickable: !!onClick})}
             onClick={onClick}
             disabled={disabled}
+            size={small ? 10 : 16}
         />
     );
 }

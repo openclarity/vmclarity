@@ -9,6 +9,7 @@ $padding: 30px;
     width: calc(100% - #{$side-bar-width});
     height: 100%;
     background-color: rgba(#E4E6E8, 0.8);
+    z-index: 1;
 
     .modal-inner-wrapper {
         position: absolute;

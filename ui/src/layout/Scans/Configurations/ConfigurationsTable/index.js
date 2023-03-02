@@ -29,7 +29,8 @@ const ConfigurationsTable = () => {
         {
             Header: "Name",
             id: "name",
-            accessor: "name"
+            accessor: "name",
+            disableSort: true
         },
         {
             Header: "Scope",
@@ -40,7 +41,9 @@ const ConfigurationsTable = () => {
                 return (
                     <ExpandableScopeDisplay all={all} regions={regions} />
                 )
-            }
+            },
+            alignToTop: true,
+            disableSort: true
         },
         {
             Header: "Excluded instances",
@@ -51,7 +54,9 @@ const ConfigurationsTable = () => {
                 return (
                     <ExpandableList items={formatTagsToStringInstances(instanceTagExclusion)} withTagWrap />
                 )
-            }
+            },
+            alignToTop: true,
+            disableSort: true
         },
         {
             Header: "Included instances",
@@ -62,7 +67,9 @@ const ConfigurationsTable = () => {
                 return (
                     <ExpandableList items={formatTagsToStringInstances(instanceTagSelector)} withTagWrap />
                 )
-            }
+            },
+            alignToTop: true,
+            disableSort: true
         },
         {
             Header: "Time config",
@@ -77,7 +84,8 @@ const ConfigurationsTable = () => {
                         <div>{formatDate(operationTime)}</div>
                     </div>
                 )
-            }
+            },
+            disableSort: true
         },
         {
             Header: "Scan types",
@@ -96,7 +104,8 @@ const ConfigurationsTable = () => {
                         }
                     </div>
                 )
-            }
+            },
+            disableSort: true
         }
     ], []);
 

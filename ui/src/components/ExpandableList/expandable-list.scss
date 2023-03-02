@@ -13,7 +13,10 @@
                 margin-bottom: 7px;
             }
             .expandable-list-item {
+                width: 100%;
                 display: inline-block;
+                overflow: hidden;
+                text-overflow: ellipsis;
                 white-space: nowrap;
             }
         }

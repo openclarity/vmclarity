@@ -1,8 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { isEqual } from 'lodash';
 import Title from 'components/Title';
-import Icon, { ICON_NAMES } from 'components/Icon';
-import { TooltipWrapper } from 'components/Tooltip';
+import { ICON_NAMES } from 'components/Icon';
+import IconWithTooltip from 'components/IconWithTooltip';
 import { SCAN_CONFIGS_PATH } from 'layout/Scans/Configurations';
 import { ROUTES } from 'utils/systemConsts';
 
@@ -16,15 +17,21 @@ const CONFIGURATION_ALERT_TEXT = (
     </span>
 )
 
-const ConfigurationAlertLink = ({configData}) => {
+const ConfigurationAlertLink = ({scanConfigData, updatedConfigData}) => {
     const navigate = useNavigate();
 
+    const {id, dataToCompare} = updatedConfigData;
+    
     return (
         <div className="configuration-alert-link">
-            <Title medium removeMargin onClick={() => navigate(`/${ROUTES.SCANS}/${SCAN_CONFIGS_PATH}/${configData.id}`)}>Configuration</Title>
-            <TooltipWrapper tooltipId="configuration-alert-tooltip" tooltipText={CONFIGURATION_ALERT_TEXT}>
-                <Icon name={ICON_NAMES.WARNING} />
-            </TooltipWrapper>
+            <Title medium removeMargin onClick={() => navigate(`${ROUTES.SCANS}/${SCAN_CONFIGS_PATH}/${id}`)}>Configuration</Title>
+            {!isEqual(dataToCompare, scanConfigData) &&
+                <IconWithTooltip
+                    tooltipId="configuration-alert-tooltip"
+                    tooltipText={CONFIGURATION_ALERT_TEXT}
+                    name={ICON_NAMES.WARNING} 
+                />
+            }
         </div>
     )
 }

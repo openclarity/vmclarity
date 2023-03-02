@@ -1,14 +1,10 @@
 @import 'utils/scss_variables.module.scss';
 
-$icon-size: 30px;
-
 .findings-item-display {
     display: flex;
     align-items: center;
 
     .icon {
-        width: $icon-size;
-        height: $icon-size;
         color: $color-main;
     }
     .findings-item-counter {

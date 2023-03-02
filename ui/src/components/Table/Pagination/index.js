@@ -16,7 +16,7 @@ const PaginationNumber = ({page, isActive, onClick}) => (
 
 const PaginationArrow = ({isLeft=false, isDouble=false, onClick, disabled}) => (
     <PaginationItem className={classnames("pagination-arrow", {left: isLeft}, {disabled})} onClick={disabled ? undefined : onClick}>
-        <Icon name={isDouble ? ICON_NAMES.CHEVRON_RIGHT_DOUBLE : ICON_NAMES.CHEVRON_RIGHT} />
+        <Icon name={isDouble ? ICON_NAMES.CHEVRON_RIGHT_DOUBLE : ICON_NAMES.CHEVRON_RIGHT} size={19} />
     </PaginationItem>
 );
 

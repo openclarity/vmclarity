@@ -14,10 +14,9 @@ export const STATUS_MAPPPING = {
     WARNING: {value: "WARNING", icon: ICON_NAMES.WARNING, color: COLORS["color-success"], iconColor: COLORS["color-warning"]}
 }
 
-const status = STATUS_MAPPPING.IN_PROGRESS.value;
-
-const ProgressBar = ({itemsCompleted, itemsLeft, width="100%"}) => {
-    const percent = status === STATUS_MAPPPING.IN_PROGRESS.value ? Math.round((itemsCompleted / (itemsCompleted + itemsLeft)) * 100) : 100;
+const ProgressBar = ({status=STATUS_MAPPPING.IN_PROGRESS.value, itemsCompleted=0, itemsLeft=0, width="100%"}) => {
+    const totalItems = itemsCompleted + itemsLeft;
+    const percent = status === STATUS_MAPPPING.IN_PROGRESS.value ? (!!totalItems ? Math.round((itemsCompleted / totalItems) * 100) : 0) : 100;
 
     const {icon, color, iconColor} = STATUS_MAPPPING[status];
 

@@ -1,18 +1,23 @@
 import React from 'react';
 import ProgressBar from 'components/ProgressBar';
+import { findProgressStatusFromScanState } from '../utils';
 
 import './scan-status-display.scss';
 
-const ScanStatusDisplay = ({itemsCompleted, itemsLeft, errorMessage}) => (
-    <div className="scan-status-display-wrapper">
-        <ProgressBar itemsCompleted={itemsCompleted} itemsLeft={itemsLeft} />
-        {errorMessage &&
-            <div className="error-display-wrapper">
-                <div className="error-display-title">Some of the elements were failed to be scanned.</div>
-                <div className="error-display-message">{errorMessage}</div>
-            </div>
-        }
-    </div>
-)
+const ScanStatusDisplay = ({itemsCompleted, itemsLeft, state, stateReason, stateMessage}) => {
+    const {status, errorTitle} = findProgressStatusFromScanState({state, stateReason});
+
+    return (
+        <div className="scan-status-display-wrapper">
+            <ProgressBar status={status} itemsCompleted={itemsCompleted} itemsLeft={itemsLeft} />
+            {errorTitle &&
+                <div className="error-display-wrapper">
+                    <div className="error-display-title">{errorTitle}</div>
+                    <div className="error-display-message">{stateMessage || errorTitle}</div>
+                </div>
+            }
+        </div>
+    )
+}
 
 export default ScanStatusDisplay;

@@ -1,6 +1,6 @@
 import React from 'react';
-import Icon, { ICON_NAMES } from 'components/Icon';
-import { TooltipWrapper } from 'components/Tooltip';
+import { ICON_NAMES } from 'components/Icon';
+import IconWithTooltip from 'components/IconWithTooltip';
 
 import './scan-actions-display.scss';
 
@@ -9,17 +9,17 @@ const ScanActionsDisplay = ({data}) => {
 
     return (
         <div className="scan-actions-display">
-            <TooltipWrapper tooltipId={`${id}-stop`} tooltipText="Stop scan" >
-                <Icon
-                    name={ICON_NAMES.STOP}
-                    onClick={event => {
-                        event.stopPropagation();
-                        event.preventDefault();
-                        
-                        console.log("stop scan");
-                    }}
-                />
-            </TooltipWrapper>
+            <IconWithTooltip
+                tooltipId={`${id}-stop`}
+                tooltipText="Stop scan"
+                name={ICON_NAMES.STOP}
+                onClick={event => {
+                    event.stopPropagation();
+                    event.preventDefault();
+                    
+                    console.log("stop scan");
+                }}
+            />
         </div>
     );
 }

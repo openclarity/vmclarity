@@ -222,7 +222,7 @@ const Table = props => {
 
                                             return (
                                                 <div className="table-th" {...column.getHeaderProps()}>
-                                                    {column.render('Header')}
+                                                    <span className="table-th-content">{column.render('Header')}</span>
                                                     {column.canSort && !column.disableSort &&
                                                         <Icon
                                                             className={classnames("table-sort-icon", {sorted: isSorted}, {rotate: isSortedDesc && isSorted})}
@@ -257,9 +257,10 @@ const Table = props => {
                                     <div className={classnames("table-tr", {clickable: !!onLineClick}, {"with-row-actions": withRowActions})} {...row.getRowProps()}>
                                         {
                                             row.cells.map(cell => {
-                                                const {className} = cell.column;
+                                                const {className, alignToTop} = cell.column;
                                                 const cellClassName = classnames(
                                                     "table-td",
+                                                    {"align-to-top": alignToTop},
                                                     {[className]: className}
                                                 );
                         

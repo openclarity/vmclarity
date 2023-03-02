@@ -7,7 +7,7 @@ import './info-icon.scss';
 
 const InfoIcon = ({tooltipId, tooltipText, large=false}) => (
     <TooltipWrapper className={classnames("info-icon-wrapper", {large})} tooltipId={tooltipId} tooltipText={tooltipText}>
-        <Icon name={ICON_NAMES.INFO} />
+        <Icon name={ICON_NAMES.INFO} size={large ? 12 : 10} />
     </TooltipWrapper>
 )
 

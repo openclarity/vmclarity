@@ -101,6 +101,9 @@ $cell-padding: 10px;
                     justify-content: center;
                     overflow-x: hidden;
 
+                    &.align-to-top {
+                        align-self: flex-start;
+                    }
                     .actions-column-container {
                         visibility: hidden;
 

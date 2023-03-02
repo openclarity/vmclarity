@@ -1,22 +1,13 @@
 import React from 'react';
 import DoublePaneDisplay from 'components/DoublePaneDisplay';
 import Title from 'components/Title';
-import { ICON_NAMES } from 'components/Icon';
 import LinksList from 'components/LinksList';
+import { FINDINGS_MAPPING } from '../utils';
 import VulnerabilitiesDisplay from '../VulnerabilitiesDisplay';
 import FindingsCounterDisplay from './FindingsCounterDisplay';
 
-const FINDINGS_ITEMS = [
-    {title: "Packages", key: "test", icon: ICON_NAMES.PACKAGE, path: "test"},
-    {title: "Exploits", key: "test", icon: ICON_NAMES.BOMB, path: "test"},
-    {title: "Misconfigurations", key: "test", icon: ICON_NAMES.COG, path: "test"},
-    {title: "Secrets", key: "test", icon: ICON_NAMES.KEY, path: "test"},
-    {title: "Malwares", key: "test", icon: ICON_NAMES.BUG, path: "test"},
-    {title: "Rootkits", key: "test", icon: ICON_NAMES.GHOST, path: "test"}
-]
-
 const TabFindings = ({data}) => {
-    const {id} = data || {};
+    const {summary} = data || {};
     
     return (
         <DoublePaneDisplay
@@ -25,10 +16,15 @@ const TabFindings = ({data}) => {
                     <Title medium>Findings</Title>
                     <LinksList
                         items={[
-                            {path: "test", component: () => <VulnerabilitiesDisplay />},
-                            ...FINDINGS_ITEMS.map(({title, key, icon, path}) => ({path: path, component: () => (
-                                <FindingsCounterDisplay key={title} icon={icon} count={10} title={title} />
-                            )}))
+                            {path: 0, component: () => <VulnerabilitiesDisplay counters={summary?.totalVulnerabilities} />},
+                            ...Object.keys(FINDINGS_MAPPING).map(findingType => {
+                                const {key, title, icon} = FINDINGS_MAPPING[findingType];
+
+                                return {
+                                    path: 0,
+                                    component: () => <FindingsCounterDisplay key={key} icon={icon} count={summary[key]} title={title} />
+                                }
+                            })
                         ]}
                     />
                 </>

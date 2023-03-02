@@ -20,3 +20,22 @@
         }
     }
 }
+
+.configuration-details-tab-scans {
+    .clarity-title {
+        margin-bottom: 30px;
+    }
+    .configuration-details-tab-scans-list {
+        margin-bottom: 54px;
+        
+        .clarity-button {
+            font-weight: 400;
+            font-size: 14px;
+            line-height: 14px;
+
+            &:not(:last-child) {
+                margin-bottom: 30px;
+            }
+        }
+    }
+}

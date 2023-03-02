@@ -57,6 +57,7 @@ html body {
                     flex-direction: column;
                     align-items: center;
                     padding: 22px 0;
+                    z-index: 2;
 
                     .nav-item {
                         width: $side-bar-width;
