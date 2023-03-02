@@ -7,6 +7,7 @@ import Notification from 'components/Notification';
 import { TooltipWrapper } from 'components/Tooltip';
 import Title from 'components/Title';
 import Scans from 'layout/Scans';
+import Findings from 'layout/Findings';
 import { NotificationProvider, useNotificationState, useNotificationDispatch, removeNotification } from 'context/NotificationProvider';
 import { ROUTES } from 'utils/systemConsts';
 
@@ -36,7 +37,7 @@ const ROUTES_CONFIG = [
 	},
 	{
 		path: ROUTES.FINDINGS,
-		component: () => "TBD",
+		component: Findings,
         icon: ICON_NAMES.FINDINGS,
         title: "Findings"
 	}

@@ -87,5 +87,3 @@ const ScansWrapper = () => (
 )
 
 export default ScansWrapper;
-
-
