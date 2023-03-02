@@ -92,7 +92,7 @@ func BuildSQLQuery(schemaMetas map[string]SchemaMeta, schema string, filterStrin
 	var expandQuery *godata.GoDataExpandQuery
 	if expandString != nil && *expandString != "" {
 		var err error
-		expandQuery, err = godata.ParseExpandString(context.TODO(), "Eggs($filter=Name eq 'Egg1')")
+		expandQuery, err = godata.ParseExpandString(context.TODO(), *expandString)
 		if err != nil {
 			return "", fmt.Errorf("failed to parse $expand ")
 		}
@@ -109,12 +109,13 @@ func BuildSQLQuery(schemaMetas map[string]SchemaMeta, schema string, filterStrin
 		return "", fmt.Errorf("failed to parse select and expand: %w", err)
 	}
 
-	// Build query selecting fields based on the selectTree
+	table := schemaMetas[schema].Table
 
+	// Build query selecting fields based on the selectTree
 	// For now all queries must start with a root "object" so we create a
 	// complex field meta to represent that object
 	rootObject := FieldMeta{FieldType: ComplexFieldType, ComplexFieldSchemas: []string{schema}}
-	selectFields := buildSelectFields(schemaMetas, rootObject, schema, "Data", "$", selectTree)
+	selectFields := buildSelectFields(schemaMetas, rootObject, schema, fmt.Sprintf("%s.Data", table), "$", selectTree)
 
 	// Build paging statement
 	var limitStm string
@@ -130,7 +131,6 @@ func BuildSQLQuery(schemaMetas map[string]SchemaMeta, schema string, filterStrin
 		}
 	}
 
-	table := schemaMetas[schema].Table
 	if table == "" {
 		return "", fmt.Errorf("trying to query complex type schema %s with no source table", schema)
 	}
@@ -168,7 +168,7 @@ func buildSelectFields(schemaMetas map[string]SchemaMeta, field FieldMeta, ident
 		// type, shortcircuit and just return the data from the DB raw,
 		// as there is no need to build the complex query, and it'll
 		// ensure that null values are handled correctly.
-		if len(st.children) == 0 {
+		if st == nil || len(st.children) == 0 {
 			return fmt.Sprintf("%s -> '%s'", source, path)
 		}
 
@@ -229,7 +229,7 @@ func buildSelectFields(schemaMetas map[string]SchemaMeta, field FieldMeta, ident
 		schemaName := field.RelationshipSchema
 		schema := schemaMetas[schemaName]
 		newsource := fmt.Sprintf("%s.Data", schema.Table)
-		parts := []string{fmt.Sprintf("'ObjectType', '%s'", schemaName)}
+		parts := []string{}
 		for key, fm := range schema.Fields {
 			var sel *selectNode
 			if st != nil {
@@ -271,7 +271,7 @@ func buildSelectFields(schemaMetas map[string]SchemaMeta, field FieldMeta, ident
 			}
 		}
 
-		parts := []string{fmt.Sprintf("'ObjectType', '%s'", schemaName)}
+		parts := []string{}
 		for key, fm := range schema.Fields {
 			var sel *selectNode
 			if st != nil {
@@ -314,6 +314,30 @@ var sqlOperators = map[string]string{
 	"startswith": "%s%%",
 }
 
+func singleQuote(s string) string {
+	return fmt.Sprintf("'%s'", s)
+}
+
+func buildJSONPathFromParseNode(node *godata.ParseNode) (string, error) {
+	switch node.Token.Type {
+	case godata.ExpressionTokenNav:
+		right, err := buildJSONPathFromParseNode(node.Children[0])
+		if err != nil {
+			return "", fmt.Errorf("unable to build right side of navigation path: %w", err)
+		}
+
+		left, err := buildJSONPathFromParseNode(node.Children[1])
+		if err != nil {
+			return "", fmt.Errorf("unable to build left side of navigation path: %w", err)
+		}
+		return fmt.Sprintf("%s.%s", right, left), nil
+	case godata.ExpressionTokenLiteral:
+		return node.Token.Value, nil
+	default:
+		return "", fmt.Errorf("unsupported token type")
+	}
+}
+
 // nolint:cyclop
 func buildWhereFromFilter(source string, node *godata.ParseNode) (string, error) {
 	operator := node.Token.Value
@@ -321,20 +345,29 @@ func buildWhereFromFilter(source string, node *godata.ParseNode) (string, error)
 	var query string
 	switch operator {
 	case "eq", "ne", "gt", "ge", "lt", "le":
-		queryField := node.Children[0].Token.Value
-		// TODO Possibly convert "slash paths" to "dot paths"
-		queryPath := fmt.Sprintf("$.%s", queryField)
-
-		right := node.Children[1].Token.Value
-		var value string
-		switch node.Children[1].Token.Type {
-		case godata.ExpressionTokenString:
-			value = strings.ReplaceAll(right, "'", "\"")
-		case godata.ExpressionTokenBoolean:
-			value = right
+		// Convert ODATA paths with slashes like "Thing/Name" into JSON
+		// path like "Thing.Name".
+		queryPath, err := buildJSONPathFromParseNode(node.Children[0])
+		if err != nil {
+			return "", fmt.Errorf("unable to covert oData path to json path: %w", err)
 		}
 
-		query = fmt.Sprintf("%s -> '%s' %s '%s'", source, queryPath, sqlOperators[operator], value)
+		rhs := node.Children[1]
+		extractFunction := "->"
+		var value string
+		switch rhs.Token.Type {
+		case godata.ExpressionTokenString:
+			value = singleQuote(strings.ReplaceAll(rhs.Token.Value, "'", "\""))
+		case godata.ExpressionTokenBoolean:
+			value = singleQuote(rhs.Token.Value)
+		case godata.ExpressionTokenInteger, godata.ExpressionTokenFloat:
+			value = rhs.Token.Value
+			extractFunction = "->>"
+		default:
+			return "", fmt.Errorf("unsupported token type %s", node.Children[1].Token.Type)
+		}
+
+		query = fmt.Sprintf("%s %s '%s' %s %s", source, extractFunction, queryPath, sqlOperators[operator], value)
 	case "and":
 		left, err := buildWhereFromFilter(source, node.Children[0])
 		if err != nil {
