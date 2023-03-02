@@ -18,13 +18,12 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
-	"os"
-
 	"github.com/ghodss/yaml"
+	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"os"
 
 	"github.com/openclarity/vmclarity/cli/pkg"
 	"github.com/openclarity/vmclarity/shared/pkg/families"
@@ -183,7 +182,7 @@ func outputResults(config *families.Config, res *results.Results) error {
 		}
 		err = Output(bytes, "malware")
 		if err != nil {
-			return fmt.Errorf("failed to output malware results: %v", err)
+			return fmt.Errorf("failed to output  %v", err)
 		}
 	}
 

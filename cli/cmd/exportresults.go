@@ -18,19 +18,19 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
-	"net/http"
-
 	"github.com/openclarity/vmclarity/api/client"
 	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/cli/util"
 	"github.com/openclarity/vmclarity/shared/pkg/families"
 	"github.com/openclarity/vmclarity/shared/pkg/families/exploits"
+	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 	"github.com/openclarity/vmclarity/shared/pkg/families/results"
 	"github.com/openclarity/vmclarity/shared/pkg/families/sbom"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
 	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 	"github.com/openclarity/vmclarity/shared/pkg/families/vulnerabilities"
 	"github.com/openclarity/vmclarity/shared/pkg/utils"
+	"net/http"
 )
 
 type Exporter struct {
@@ -446,23 +446,15 @@ func convertExploitsResultToAPIModel(exploitsResults *exploits.Results) *models.
 	}
 }
 
-func convertMalwareResultToAPIModel(malwareResults *malware.Results) *models.MalwareScan {
-	if malwareResults == nil {
+func ConvertMalwareResultToAPIModel(malwareResults *malware.Results) *models.MalwareScan {
+	if malwareResults == nil || malwareResults.ClamAVOutput == "" {
 		return &models.MalwareScan{}
 	}
 
-	// This is currently Test data
+	malwareList := util.ParseMalwareScanOutput(malwareResults)
+
 	return &models.MalwareScan{
-		Malware: &([]models.Malware{
-			{
-				Id: &malwareResults.Test,
-				MalwareInfo: &models.MalwareInfo{
-					MalwareName: &malwareResults.Test,
-					MalwareType: (*models.MalwareType)(&malwareResults.Test),
-					Path:        &malwareResults.Test,
-				},
-			},
-		}),
+		Malware: &malwareList,
 	}
 }
 
@@ -523,7 +515,7 @@ func (e *Exporter) ExportMalwareResult(res *results.Results) error {
 	if err != nil {
 		errors = append(errors, fmt.Errorf("failed to get malware results from scan: %w", err).Error())
 	} else {
-		scanResults.Malware = convertMalwareResultToAPIModel(malwareResults)
+		scanResults.Malware = ConvertMalwareResultToAPIModel(malwareResults)
 	}
 
 	state := models.DONE
