@@ -4,10 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"k8s.io/utils/mount"
 )
 
 var pairsRE = regexp.MustCompile(`([A-Z]+)=(?:"(.*?)")`)
@@ -99,26 +102,22 @@ func ListBlockDevices() ([]BlockDevice, error) {
 
 func (b BlockDevice) Mount(mountPoint string) error {
 	// Make a directory for the device to mount to
-	cmd := exec.Command("mkdir", "-p", mountPoint)
-	_, err := cmd.Output()
-	if err != nil {
+	if err := os.MkdirAll(mountPoint, os.ModePerm); err != nil {
 		return fmt.Errorf("failed to run mkdir comand: %v", err)
 	}
 
 	// Do the mount
-	cmd = exec.Command("mount", "-t", b.FilesystemType, "/dev/"+b.DeviceName, mountPoint)
-	var stderrBuff bytes.Buffer
-	cmd.Stderr = &stderrBuff
-	_, err = cmd.Output()
-	if err != nil {
+
+	mounter := mount.New(mountPoint)
+	if err := mounter.Mount("/dev/"+b.DeviceName, mountPoint, b.FilesystemType, nil); err != nil {
 		return fmt.Errorf("failed to run mount command: %v", err)
 	}
 
 	// Change the file permissions to world readable
 	// TODO not sure we need this
-	_, err = exec.Command("chmod", "-R", "o+r", mountPoint).Output()
-	if err != nil {
-		return fmt.Errorf("failed to run chmod command: %v", err)
-	}
+	//_, err = exec.Command("chmod", "-R", "o+r", mountPoint).Output()
+	//if err != nil {
+	//	return fmt.Errorf("failed to run chmod command: %v", err)
+	//}
 	return nil
 }
