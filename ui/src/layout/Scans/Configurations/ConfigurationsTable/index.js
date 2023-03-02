@@ -9,7 +9,8 @@ import Table from 'components/Table';
 import ExpandableList from 'components/ExpandableList';
 import { BoldText, toCapitalized, formatDate } from 'utils/utils';
 import { APIS } from 'utils/systemConsts';
-import { formatTagsToStringInstances, formatRegionsToStrings } from 'layout/Scans/utils';
+import { formatTagsToStringInstances } from 'layout/Scans/utils';
+import { ExpandableScopeDisplay } from 'layout/Scans/scopeDisplayUtils';
 import { useModalDisplayDispatch, MODAL_DISPLAY_ACTIONS } from 'layout/Scans/ScanConfigWizardModal/ModalDisplayProvider';
 import ConfigurationActionsDisplay from '../ConfigurationActionsDisplay';
 
@@ -37,7 +38,7 @@ const ConfigurationsTable = () => {
                 const {all, regions} = row.original.scope;
 
                 return (
-                    all ? "All" : <ExpandableList items={formatRegionsToStrings(regions)} />
+                    <ExpandableScopeDisplay all={all} regions={regions} />
                 )
             }
         },

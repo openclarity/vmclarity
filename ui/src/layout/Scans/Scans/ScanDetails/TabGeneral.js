@@ -6,7 +6,8 @@ import Loader from 'components/Loader';
 import Title from 'components/Title';
 import { ScopeDisplay, ScanTypesDisplay, InstancesDisplay } from 'layout/Scans/scopeDisplayUtils';
 import { APIS } from 'utils/systemConsts';
-import { formatDate } from 'utils/utils';
+import { formatDate, calculateDuration } from 'utils/utils';
+import ScanStatusDisplay from '../ScanStatusDisplay';
 import ConfigurationAlertLink from './ConfigurationAlertLink';
 
 const TabGeneral = ({data}) => {
@@ -38,10 +39,11 @@ const TabGeneral = ({data}) => {
             rightPlaneDisplay={() => (
                 <>
                     <Title medium>Status</Title>
+                    <ScanStatusDisplay itemsCompleted={10} itemsLeft={8} errorMessage="commons.bc9c7595faf84454ec54.8.js:808 Stripping out potentially privacy-unsafe analytics attribute: 'method'" />
                     <TitleValueDisplayRow>
                         <TitleValueDisplay title="Started">{formatDate(startTime)}</TitleValueDisplay>
                         <TitleValueDisplay title="Ended">{formatDate(endTime)}</TitleValueDisplay>
-                        <TitleValueDisplay title="Duration"></TitleValueDisplay>
+                        <TitleValueDisplay title="Duration">{calculateDuration(startTime, endTime)}</TitleValueDisplay>
                     </TitleValueDisplayRow>
                 </>
             )}

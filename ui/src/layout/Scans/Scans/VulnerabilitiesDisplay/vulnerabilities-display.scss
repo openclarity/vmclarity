@@ -4,7 +4,6 @@ $icon-size: 30px;
 $inner-padding: 21px;
 
 .vulnerabilities-minimized-display-wrapper {
-    margin: 200px;
     display: inline-block;
 
     .vulnerabilities-minimized-display-summary-item {
@@ -61,6 +60,8 @@ $inner-padding: 21px;
         }
     }
     .vulnerabilities-display-counter-item {
+        min-width: 42px;
+        
         .vulnerabilities-counter-item-count {
             font-size: 22px;
         }

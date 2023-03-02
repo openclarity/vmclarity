@@ -5,7 +5,7 @@ import { TooltipWrapper } from 'components/Tooltip';
 
 import './tabbed-page.scss';
 
-const TabbedPage= ({items, redirectTo, basePath, headerCustomDisplay: HeaderCustomDisplay, withInnerPadding=true}) => {
+const TabbedPage= ({items, redirectTo, basePath, headerCustomDisplay: HeaderCustomDisplay, withInnerPadding=true, withStickyTabs=false}) => {
     const navigate = useNavigate();
 
     const {pathname} = useLocation();
@@ -21,7 +21,7 @@ const TabbedPage= ({items, redirectTo, basePath, headerCustomDisplay: HeaderCust
     return (
         <div className="tabbed-page-container">
             {isInTab &&
-                <div className="tabs-container">
+                <div className={classnames("tabs-container", {sticky: withStickyTabs})}>
                     {
                         items.map(({id, path, title, isIndex, disabled, tabTooltip}) => {
                             const isActive = checkIsActive({isIndex, path});

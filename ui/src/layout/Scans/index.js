@@ -63,6 +63,7 @@ const ScansTabbedPage = () => {
                             component: Configurations
                         }
                     ]}
+                    withStickyTabs
                 />
             }
             {!isNull(modalDisplayData) && 

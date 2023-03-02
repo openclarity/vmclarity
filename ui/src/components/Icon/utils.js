@@ -3,6 +3,8 @@ export const ICON_NAMES = {
     SCANS: "scans",
     DUPLICATE: "duplicate",
     X_MARK: "x-mark",
+    CHECK_MARK: "check-mark",
+    BLOCK: "block",
     SORT: "sort",
     CHEVRON_RIGHT: "chevron-right",
     CHEVRON_RIGHT_DOUBLE: "chevron-right-double",
@@ -16,10 +18,12 @@ export const ICON_NAMES = {
     INFO: "info",
     SHIELD: "shield",
     WARNING: "warning",
-    LOCK: "lock",
+    BOMB: "bomb",
     COG: "cog",
     KEY: "key",
     BUG: "bug",
     GHOST: "ghost",
-    REFRESH: "refresh"
+    PACKAGE: "package",
+    REFRESH: "refresh",
+    STROKE: "stroke"
 }

@@ -21,7 +21,7 @@ export default Tooltip;
 
 export const TooltipWrapper = ({children, className, tooltipId, tooltipText}) => (
     <React.Fragment>
-        <div data-tip data-for={tooltipId} className={classnames("tooltip-wrapper", className)} style={{display: "flex"}}>{children}</div>
+        <div data-tip data-for={tooltipId} className={classnames("tooltip-wrapper", className)} style={{display: "inline-block"}}>{children}</div>
         <Tooltip id={tooltipId} text={tooltipText} />
     </React.Fragment>
 )

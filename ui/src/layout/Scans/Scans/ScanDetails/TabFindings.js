@@ -7,7 +7,8 @@ import VulnerabilitiesDisplay from '../VulnerabilitiesDisplay';
 import FindingsCounterDisplay from './FindingsCounterDisplay';
 
 const FINDINGS_ITEMS = [
-    {title: "Exploits", key: "test", icon: ICON_NAMES.LOCK, path: "test"},
+    {title: "Packages", key: "test", icon: ICON_NAMES.PACKAGE, path: "test"},
+    {title: "Exploits", key: "test", icon: ICON_NAMES.BOMB, path: "test"},
     {title: "Misconfigurations", key: "test", icon: ICON_NAMES.COG, path: "test"},
     {title: "Secrets", key: "test", icon: ICON_NAMES.KEY, path: "test"},
     {title: "Malwares", key: "test", icon: ICON_NAMES.BUG, path: "test"},
