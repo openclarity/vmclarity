@@ -163,14 +163,22 @@ func (s *ScanConfigsTableHandler) CreateScanConfig(scanConfig models.ScanConfig)
 	return sc, nil
 }
 
-func (s *ScanConfigsTableHandler) SaveScanConfig(scanConfig models.ScanConfig) (models.ScanConfig, error) {
+func getExistingScanConfigbyID(db *gorm.DB, scanConfig models.ScanConfig) (ScanConfig, error) {
 	var dbScanConfig ScanConfig
 	filter := fmt.Sprintf("id eq '%s'", *scanConfig.Id)
-	err := ODataQuery(s.DB, "ScanConfig", &filter, nil, nil, nil, nil, false, &dbScanConfig)
+	err := ODataQuery(db, "ScanConfig", &filter, nil, nil, nil, nil, false, &dbScanConfig)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return models.ScanConfig{}, types.ErrNotFound
+			return ScanConfig{}, types.ErrNotFound
 		}
+		return ScanConfig{}, err
+	}
+	return dbScanConfig, nil
+}
+
+func (s *ScanConfigsTableHandler) SaveScanConfig(scanConfig models.ScanConfig) (models.ScanConfig, error) {
+	dbScanConfig, err := getExistingScanConfigbyID(s.DB, scanConfig)
+	if err != nil {
 		return models.ScanConfig{}, err
 	}
 
@@ -197,13 +205,8 @@ func (s *ScanConfigsTableHandler) SaveScanConfig(scanConfig models.ScanConfig) (
 }
 
 func (s *ScanConfigsTableHandler) UpdateScanConfig(scanConfig models.ScanConfig) (models.ScanConfig, error) {
-	var dbScanConfig ScanConfig
-	filter := fmt.Sprintf("id eq '%s'", *scanConfig.Id)
-	err := ODataQuery(s.DB, "ScanConfig", &filter, nil, nil, nil, nil, false, &dbScanConfig)
+	dbScanConfig, err := getExistingScanConfigbyID(s.DB, scanConfig)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return models.ScanConfig{}, types.ErrNotFound
-		}
 		return models.ScanConfig{}, err
 	}
 
