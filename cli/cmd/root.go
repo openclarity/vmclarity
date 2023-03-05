@@ -335,9 +335,8 @@ func mountAttachedVolume() ([]string, error) {
 		// we assume it belongs to the attached volume, so we mount it.
 		if device.MountPoint == "" && isSupportedFS(device.FilesystemType) {
 			mountDir := "/mnt/snapshot" + uuid.NewV4().String()
-			device.MountPoint = mountDir
 
-			if err := device.Mount(); err != nil {
+			if err := device.Mount(mountDir); err != nil {
 				return nil, fmt.Errorf("failed to mount device: %v", err)
 			}
 			logger.Infof("Mounted device %v on %v", device.DeviceName, mountDir)

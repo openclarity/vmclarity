@@ -101,18 +101,19 @@ func ListBlockDevices() ([]BlockDevice, error) {
 	return blockDevices, nil
 }
 
-func (b BlockDevice) Mount() error {
+func (b BlockDevice) Mount(mountPoint string) error {
 	// Make a directory for the device to mount to
-	if err := os.MkdirAll(b.MountPoint, os.ModePerm); err != nil {
+	if err := os.MkdirAll(mountPoint, os.ModePerm); err != nil {
 		return fmt.Errorf("failed to run mkdir comand: %v", err)
 	}
 
 	// Do the mount
 
-	mounter := mount.New(b.MountPoint)
-	if err := mounter.Mount("/dev/"+b.DeviceName, b.MountPoint, b.FilesystemType, nil); err != nil {
+	mounter := mount.New(mountPoint)
+	if err := mounter.Mount("/dev/"+b.DeviceName, mountPoint, b.FilesystemType, nil); err != nil {
 		return fmt.Errorf("failed to run mount command: %v", err)
 	}
+	b.MountPoint = mountPoint
 
 	return nil
 }
