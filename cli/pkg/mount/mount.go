@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/mount"
+	"k8s.io/mount-utils"
 )
 
 var pairsRE = regexp.MustCompile(`([A-Z]+)=(?:"(.*?)")`)
