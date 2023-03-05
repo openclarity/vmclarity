@@ -1,30 +1,7 @@
 import React from 'react';
-import TitleValueDisplay, { TitleValueDisplayColumn, ValuesListDisplay } from 'components/TitleValueDisplay';
-import Tag from 'components/Tag';
+import TitleValueDisplay, { TitleValueDisplayColumn } from 'components/TitleValueDisplay';
 import DoublePaneDisplay from 'components/DoublePaneDisplay';
-import { formatRegionsToStrings, formatTagsToStringInstances, getEnabledScanTypesList } from 'layout/Scans/utils';
-
-const ScopeDisplay = ({all, regions}) => {
-    if (all) {
-        return "All";
-    }
-
-    return (
-        <ValuesListDisplay values={formatRegionsToStrings(regions)} />
-    )
-}
-
-const ScanTypesDisplay = ({scanFamiliesConfig}) => (
-    <ValuesListDisplay values={getEnabledScanTypesList(scanFamiliesConfig)} />
-)
-
-const InstancesDisplay = ({tags}) => (
-    <div className="configuration-instances-tags-display">
-        {
-            formatTagsToStringInstances(tags).map(tag => <Tag key={tag}>{tag}</Tag>)
-        }
-    </div>
-)
+import { ScopeDisplay, ScanTypesDisplay, InstancesDisplay } from 'layout/Scans/scopeDisplayUtils';
 
 const TabConfiguration = ({data}) => {
     const {scope, scanFamiliesConfig} = data || {};

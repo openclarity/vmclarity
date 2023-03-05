@@ -6,6 +6,7 @@ import { useFetch, FETCH_METHODS, usePrevious } from 'hooks';
 import Button from 'components/Button';
 import Modal from 'components/Modal';
 import Loader from 'components/Loader';
+import Title from 'components/Title';
 
 import './wizard-modal.scss';
 
@@ -81,7 +82,7 @@ const Wizard = ({steps, onClose, submitUrl, onSubmitSuccess, getSubmitParams}) =
                 </ul>
                 <div className="wizard-step-display">
                     {!!status && <div className="main-error-message">{status}</div>}
-                    <div className="wizard-step-display-title">{activeTitle}</div>
+                    <Title medium>{activeTitle}</Title>
                     <ActiveStepComponent />
                 </div>
             </div>

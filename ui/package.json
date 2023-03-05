@@ -18,7 +18,7 @@
     "react-select": "^5.7.0",
     "react-table": "^7.8.0",
     "react-time-picker": "^5.2.0",
-    "react-tooltip": "^5.7.5",
+    "react-tooltip": "^4.2.15",
     "sass": "^1.58.0",
     "spinners-react": "^1.0.7",
     "web-vitals": "^2.1.4"

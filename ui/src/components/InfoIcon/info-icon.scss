@@ -1,10 +1,7 @@
 @import 'utils/scss_variables.module.scss';
 
 $size: 12px;
-$inner-icon-size: 10px;
-
 $size-large: 14px;
-$inner-icon-size-large: 12px;
 
 .info-icon-wrapper {
     background-color: $color-grey-light;
@@ -21,14 +18,10 @@ $inner-icon-size-large: 12px;
         background-color: $color-main;
 
         .icon {
-            width: $inner-icon-size-large;
-            height: $inner-icon-size-large;
             color: white;
         }
     }
     .icon {
         color: $color-grey-black;
-        width: $inner-icon-size;
-        height: $inner-icon-size;
     }
 }

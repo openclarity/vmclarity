@@ -1,4 +1,12 @@
-.ac-tooltip {
-    font-size: 11px;
-    padding: 3px 5px;
+@import 'utils/scss_variables.module.scss';
+
+.__react_component_tooltip.clarity-tooltip {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 21px;
+    padding: 10px 15px;
+
+    &.place-top::before {
+        height: 0;
+    }
 }
