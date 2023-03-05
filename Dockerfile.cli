@@ -23,7 +23,6 @@ WORKDIR /app
 
 RUN apk update
 RUN apk add clamav
-RUN systemctl stop clamav-freshclam.service
 RUN freshclam
 
 COPY --from=builder /build/cli/cli ./vmclarity-cli
