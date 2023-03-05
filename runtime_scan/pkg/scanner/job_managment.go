@@ -18,9 +18,10 @@ package scanner
 import (
 	"context"
 	"fmt"
-	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 	"net/http"
 	"time"
+
+	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 
 	"github.com/anchore/syft/syft/source"
 	log "github.com/sirupsen/logrus"
