@@ -40,7 +40,14 @@ type BlockDevice struct {
 	MountPoint     string
 }
 
+const (
+	base     = 10
+	baseSize = 64
+	kbToByte = 1024
+)
+
 // ListBlockDevices Taken from https://github.com/BishopFox/dufflebag
+// nolint:cyclop
 func ListBlockDevices() ([]BlockDevice, error) {
 	log.Info("Listing block devices...")
 	columns := []string{
@@ -54,6 +61,7 @@ func ListBlockDevices() ([]BlockDevice, error) {
 	}
 
 	log.Info("executing lsblk...")
+	//nolint: gosec
 	output, err := exec.Command(
 		"lsblk",
 		"-b", // output size in bytes
@@ -75,14 +83,14 @@ func ListBlockDevices() ([]BlockDevice, error) {
 			case "NAME":
 				dev.DeviceName = pair[2]
 			case "SIZE":
-				size, err := strconv.ParseUint(pair[2], 10, 64)
+				size, err := strconv.ParseUint(pair[2], base, baseSize)
 				if err != nil {
 					log.Warnf(
 						"Invalid size %q from lsblk: %v", pair[2], err,
 					)
 				} else {
 					// the number of bytes in a MiB.
-					dev.Size = size / 1024 * 1024
+					dev.Size = size / kbToByte * kbToByte
 				}
 			case "LABEL":
 				dev.Label = pair[2]
@@ -123,12 +131,10 @@ func (b BlockDevice) Mount(mountPoint string) error {
 	}
 
 	// Do the mount
-
 	mounter := mount.New(mountPoint)
 	if err := mounter.Mount("/dev/"+b.DeviceName, mountPoint, b.FilesystemType, nil); err != nil {
 		return fmt.Errorf("failed to run mount command: %v", err)
 	}
-	b.MountPoint = mountPoint
 
 	return nil
 }
