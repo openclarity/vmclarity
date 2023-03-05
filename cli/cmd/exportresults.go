@@ -18,9 +18,10 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/openclarity/vmclarity/cli/util"
 	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
-	"net/http"
 
 	"github.com/openclarity/vmclarity/api/client"
 	"github.com/openclarity/vmclarity/api/models"
