@@ -21,7 +21,7 @@ FROM ${VMCLARITY_TOOLS_BASE}
 
 WORKDIR /app
 
-RUN apt install clamav clamav-daemon
+RUN apt-get install clamav clamav-daemon
 RUN systemctl stop clamav-freshclam.service
 RUN freshclam
 
