@@ -336,7 +336,7 @@ func mountAttachedVolume() ([]string, error) {
 			mountDir := "/mnt/snapshot" + uuid.NewV4().String()
 			device.MountPoint = mountDir
 
-			if err := device.Mount(mountDir); err != nil {
+			if err := device.Mount(); err != nil {
 				return nil, fmt.Errorf("failed to mount device: %v", err)
 			}
 			logger.Infof("Mounted device %v on %v", device.DeviceName, mountDir)
