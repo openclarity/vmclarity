@@ -21,9 +21,9 @@ FROM ${VMCLARITY_TOOLS_BASE}
 
 WORKDIR /app
 
-RUN sudo apt install clamav clamav-daemon
-RUN sudo systemctl stop clamav-freshclam.service
-RUN sudo freshclam
+RUN apt install clamav clamav-daemon
+RUN systemctl stop clamav-freshclam.service
+RUN freshclam
 
 COPY --from=builder /build/cli/cli ./vmclarity-cli
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
