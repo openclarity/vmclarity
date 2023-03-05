@@ -18,6 +18,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 	"os"
 
 	"github.com/ghodss/yaml"
@@ -185,6 +186,22 @@ func outputResults(config *families.Config, res *results.Results) error {
 		err = Output(bytes, "exploits")
 		if err != nil {
 			return fmt.Errorf("failed to output exploits results: %v", err)
+		}
+	}
+
+	if config.Malware.Enabled {
+		malwareResults, err := results.GetResult[*malware.Results](res)
+		if err != nil {
+			return fmt.Errorf("failed to get malware results: %v", err)
+		}
+
+		bytes, err := json.Marshal(malwareResults)
+		if err != nil {
+			return fmt.Errorf("failed to marshal malware results: %v", err)
+		}
+		err = Output(bytes, "malware")
+		if err != nil {
+			return fmt.Errorf("failed to output  %v", err)
 		}
 	}
 
