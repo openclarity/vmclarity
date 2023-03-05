@@ -21,7 +21,7 @@ FROM ${VMCLARITY_TOOLS_BASE}
 
 WORKDIR /app
 
-apk update && apk add
+RUN apk update && apk add
 RUN apt-get install clamav
 RUN systemctl stop clamav-freshclam.service
 RUN freshclam
