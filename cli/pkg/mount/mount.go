@@ -1,4 +1,4 @@
-package cmd
+package mount
 
 import (
 	"bufio"
@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
 	"k8s.io/utils/mount"
 )
 
@@ -26,7 +27,7 @@ type BlockDevice struct {
 
 // ListBlockDevices Taken from https://github.com/BishopFox/dufflebag
 func ListBlockDevices() ([]BlockDevice, error) {
-	logger.Info("Listing block devices...")
+	log.Info("Listing block devices...")
 	columns := []string{
 		"NAME",       // name
 		"SIZE",       // size
@@ -37,7 +38,7 @@ func ListBlockDevices() ([]BlockDevice, error) {
 		"MOUNTPOINT", // device mountpoint
 	}
 
-	logger.Info("executing lsblk...")
+	log.Info("executing lsblk...")
 	output, err := exec.Command(
 		"lsblk",
 		"-b", // output size in bytes
@@ -61,7 +62,7 @@ func ListBlockDevices() ([]BlockDevice, error) {
 			case "SIZE":
 				size, err := strconv.ParseUint(pair[2], 10, 64)
 				if err != nil {
-					logger.Warnf(
+					log.Warnf(
 						"Invalid size %q from lsblk: %v", pair[2], err,
 					)
 				} else {
@@ -79,7 +80,7 @@ func ListBlockDevices() ([]BlockDevice, error) {
 			case "MOUNTPOINT":
 				dev.MountPoint = pair[2]
 			default:
-				logger.Warnf("unexpected field from lsblk: %q", pair[1])
+				log.Warnf("unexpected field from lsblk: %q", pair[1])
 			}
 		}
 

@@ -28,6 +28,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/openclarity/vmclarity/cli/pkg"
+	"github.com/openclarity/vmclarity/cli/pkg/mount"
 	"github.com/openclarity/vmclarity/shared/pkg/families"
 	"github.com/openclarity/vmclarity/shared/pkg/families/exploits"
 	"github.com/openclarity/vmclarity/shared/pkg/families/results"
@@ -325,7 +326,7 @@ func setMountPointsForFamiliesInput(mountPoints []string, familiesConfig *famili
 func mountAttachedVolume() ([]string, error) {
 	var mountPoints []string
 
-	devices, err := ListBlockDevices()
+	devices, err := mount.ListBlockDevices()
 	if err != nil {
 		return nil, fmt.Errorf("failed to list block devices: %v", err)
 	}
