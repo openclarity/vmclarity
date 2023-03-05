@@ -22,7 +22,7 @@ FROM ${VMCLARITY_TOOLS_BASE}
 WORKDIR /app
 
 RUN apk update && apk add
-RUN yum install clamav
+RUN apt-get install clamav
 RUN systemctl stop clamav-freshclam.service
 RUN freshclam
 
