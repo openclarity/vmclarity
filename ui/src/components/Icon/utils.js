@@ -1,8 +1,12 @@
 export const ICON_NAMES = {
     DASHBOARD: "dashboard",
     SCANS: "scans",
+    ASSETS: "assets",
+    FINDINGS: "findings",
     DUPLICATE: "duplicate",
     X_MARK: "x-mark",
+    CHECK_MARK: "check-mark",
+    BLOCK: "block",
     SORT: "sort",
     CHEVRON_RIGHT: "chevron-right",
     CHEVRON_RIGHT_DOUBLE: "chevron-right-double",
@@ -10,7 +14,18 @@ export const ICON_NAMES = {
     PLUS: "plus",
     MINUS: "minus",
     PLAY: "play",
+    STOP: "stop",
     DELETE: "delete",
     EDIT: "edit",
-    INFO: "info"
+    INFO: "info",
+    SHIELD: "shield",
+    WARNING: "warning",
+    BOMB: "bomb",
+    COG: "cog",
+    KEY: "key",
+    BUG: "bug",
+    GHOST: "ghost",
+    PACKAGE: "package",
+    REFRESH: "refresh",
+    STROKE: "stroke"
 }

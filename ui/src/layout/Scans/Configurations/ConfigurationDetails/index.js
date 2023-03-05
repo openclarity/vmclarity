@@ -2,11 +2,14 @@ import React from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import DetailsPageWrapper from 'components/DetailsPageWrapper';
 import TabbedPage from 'components/TabbedPage';
+import { APIS } from 'utils/systemConsts';
 import ConfigurationActionsDisplay from '../ConfigurationActionsDisplay';
 import TabConfiguration from './TabConfiguration';
 import TabScans from './TabScans';
 
 import './configuration-details.scss';
+
+export const SCAN_CONFIGS_SCAN_TAB_PATH = "scans";
 
 const getReplace = params => {
     const id = params["id"];
@@ -15,7 +18,7 @@ const getReplace = params => {
     return !!innerTab ? `/${id}/${innerTab}` : `/${id}`;
 }
 
-const DetailsContent = ({data, setScanConfigFormData}) => {
+const DetailsContent = ({data}) => {
     const navigate = useNavigate();
     const {pathname} = useLocation();
     const params = useParams();
@@ -35,14 +38,13 @@ const DetailsContent = ({data, setScanConfigFormData}) => {
                 {
                     id: "scans",
                     title: "Scans",
-                    path: "scans",
+                    path: SCAN_CONFIGS_SCAN_TAB_PATH,
                     component: () => <TabScans data={data} />
                 }
             ]}
             headerCustomDisplay={() => (
                 <ConfigurationActionsDisplay
                     data={data}
-                    setScanConfigFormData={setScanConfigFormData}
                     onDelete={() => navigate(pathname.replace(getReplace(params), ""))}
                 />
             )}
@@ -51,13 +53,13 @@ const DetailsContent = ({data, setScanConfigFormData}) => {
     )
 }
 
-const ConfigurationDetails = ({setScanConfigFormData}) => (
+const ConfigurationDetails = () => (
     <DetailsPageWrapper
         className="configuration-details-page-wrapper"
         backTitle="Scan configurations"
-        url="scanConfigs"
-        titleKey="name"
-        detailsContent={props => <DetailsContent {...props} setScanConfigFormData={setScanConfigFormData} />}
+        url={APIS.SCAN_CONFIGS}
+        getTitleData={data => ({title: data?.name})}
+        detailsContent={DetailsContent}
         getReplace={params => getReplace(params)}
     />
 )

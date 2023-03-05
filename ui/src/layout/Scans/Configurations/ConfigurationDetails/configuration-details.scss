@@ -1,13 +1,3 @@
-.configuration-instances-tags-display {
-    .clarity-tag {
-        margin-bottom: 5px;
-        
-        &:not(:last-child) {
-            margin-right: 10px;
-        }
-    }
-}
-
 .configuration-details-page-wrapper {
     .content-container-wrapper {
         display: flex;
@@ -26,6 +16,25 @@
                 .double-pane-display-wrapper {
                     flex-grow: 1;
                 }
+            }
+        }
+    }
+}
+
+.configuration-details-tab-scans {
+    .clarity-title {
+        margin-bottom: 30px;
+    }
+    .configuration-details-tab-scans-list {
+        margin-bottom: 54px;
+        
+        .clarity-button {
+            font-weight: 400;
+            font-size: 14px;
+            line-height: 14px;
+
+            &:not(:last-child) {
+                margin-bottom: 30px;
             }
         }
     }

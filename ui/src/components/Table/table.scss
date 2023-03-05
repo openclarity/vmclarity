@@ -20,6 +20,7 @@ $cell-padding: 10px;
             font-size: 14px;
             line-height: 18px;
             letter-spacing: 0.27px;
+            overflow-y: hidden;
 
             .table-tr {
                 border-bottom: 2px solid $color-grey-lighter;
@@ -59,6 +60,7 @@ $cell-padding: 10px;
         .table-body {
             font-size: 14px;
             line-height: 18px;
+            overflow-y: hidden;
 
             .empty-results-display-wrapper {
                 margin: 30px 10px;
@@ -99,6 +101,9 @@ $cell-padding: 10px;
                     justify-content: center;
                     overflow-x: hidden;
 
+                    &.align-to-top {
+                        align-self: flex-start;
+                    }
                     .actions-column-container {
                         visibility: hidden;
 
@@ -112,9 +117,6 @@ $cell-padding: 10px;
             //----- table utils -----
             .table-empty-value {
                 color: $color-grey;
-            }
-            .status-indicator-icon {
-                color: $color-success;
             }
         }
     }

@@ -8,23 +8,29 @@ import EmptyDisplay from 'components/EmptyDisplay';
 import Table from 'components/Table';
 import ExpandableList from 'components/ExpandableList';
 import { BoldText, toCapitalized, formatDate } from 'utils/utils';
-import { formatTagsToStringInstances, formatRegionsToStrings } from 'layout/Scans/utils';
+import { APIS } from 'utils/systemConsts';
+import { formatTagsToStringInstances } from 'layout/Scans/utils';
+import { ExpandableScopeDisplay } from 'layout/Scans/scopeDisplayUtils';
+import { useModalDisplayDispatch, MODAL_DISPLAY_ACTIONS } from 'layout/Scans/ScanConfigWizardModal/ModalDisplayProvider';
 import ConfigurationActionsDisplay from '../ConfigurationActionsDisplay';
-import { SCAN_CONFIGS_URL } from '../utils';
 
 import './configurations-table.scss';
 
 const TABLE_TITLE = "scan configurations";
 
-const ConfigurationsTable = ({setScanConfigFormData}) => {
+const ConfigurationsTable = () => {
     const navigate = useNavigate();
     const {pathname} = useLocation();
+
+    const modalDisplayDispatch = useModalDisplayDispatch();
+    const setScanConfigFormData = (data) => modalDisplayDispatch({type: MODAL_DISPLAY_ACTIONS.SET_MODAL_DISPLAY_DATA, payload: data});
 
     const columns = useMemo(() => [
         {
             Header: "Name",
             id: "name",
-            accessor: "name"
+            accessor: "name",
+            disableSort: true
         },
         {
             Header: "Scope",
@@ -33,9 +39,11 @@ const ConfigurationsTable = ({setScanConfigFormData}) => {
                 const {all, regions} = row.original.scope;
 
                 return (
-                    all ? "All" : <ExpandableList items={formatRegionsToStrings(regions)} />
+                    <ExpandableScopeDisplay all={all} regions={regions} />
                 )
-            }
+            },
+            alignToTop: true,
+            disableSort: true
         },
         {
             Header: "Excluded instances",
@@ -46,7 +54,9 @@ const ConfigurationsTable = ({setScanConfigFormData}) => {
                 return (
                     <ExpandableList items={formatTagsToStringInstances(instanceTagExclusion)} withTagWrap />
                 )
-            }
+            },
+            alignToTop: true,
+            disableSort: true
         },
         {
             Header: "Included instances",
@@ -57,7 +67,9 @@ const ConfigurationsTable = ({setScanConfigFormData}) => {
                 return (
                     <ExpandableList items={formatTagsToStringInstances(instanceTagSelector)} withTagWrap />
                 )
-            }
+            },
+            alignToTop: true,
+            disableSort: true
         },
         {
             Header: "Time config",
@@ -72,7 +84,8 @@ const ConfigurationsTable = ({setScanConfigFormData}) => {
                         <div>{formatDate(operationTime)}</div>
                     </div>
                 )
-            }
+            },
+            disableSort: true
         },
         {
             Header: "Scan types",
@@ -91,7 +104,8 @@ const ConfigurationsTable = ({setScanConfigFormData}) => {
                         }
                     </div>
                 )
-            }
+            },
+            disableSort: true
         }
     ], []);
 
@@ -107,7 +121,7 @@ const ConfigurationsTable = ({setScanConfigFormData}) => {
                 <Table
                     columns={columns}
                     paginationItemsName={TABLE_TITLE.toLowerCase()}
-                    url={SCAN_CONFIGS_URL}
+                    url={APIS.SCAN_CONFIGS}
                     refreshTimestamp={refreshTimestamp}
                     noResultsTitle={TABLE_TITLE}
                     onLineClick={({id}) => navigate(`${pathname}/${id}`)}

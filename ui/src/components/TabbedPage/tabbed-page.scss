@@ -8,6 +8,11 @@
         background-color: white;
         position: relative;
 
+        &.sticky {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
         .tab-item {
             display: inline-flex;
             align-items: center;

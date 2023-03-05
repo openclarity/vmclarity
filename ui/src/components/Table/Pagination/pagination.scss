@@ -1,6 +1,5 @@
 @import 'utils/scss_variables.module.scss';
 
-$icon-size: 19px;
 $box-size: 30px;
 
 .pagination-container {
@@ -36,10 +35,6 @@ $box-size: 30px;
             &.pagination-arrow {
                 color: $color-grey;
 
-                .icon {
-                    width: $icon-size;
-                    height: $icon-size;
-                }
                 &.left .icon {
                     transform: rotate(180deg);
                 }

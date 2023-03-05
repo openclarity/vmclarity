@@ -1,1 +1,0 @@
-export const SCAN_CONFIGS_URL = "scanConfigs";
