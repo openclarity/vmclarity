@@ -21,8 +21,6 @@ FROM ${VMCLARITY_TOOLS_BASE}
 
 RUN apk update
 RUN apk add util-linux
-RUN apk add clamav
-RUN freshclam
 
 WORKDIR /app
 
