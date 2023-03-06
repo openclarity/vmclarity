@@ -241,7 +241,7 @@ func (e *Exporter) ExportSbomResult(res *results.Results, famerr families.RunErr
 		scanResults.Status.Sbom = &models.TargetScanState{}
 	}
 	if scanResults.Summary == nil {
-		scanResults.Summary = &models.TargetScanResultSummary{}
+		scanResults.Summary = &models.ScanFindingsSummary{}
 	}
 
 	var errors []string
@@ -283,7 +283,7 @@ func (e *Exporter) ExportVulResult(res *results.Results, famerr families.RunErro
 		scanResults.Status.Vulnerabilities = &models.TargetScanState{}
 	}
 	if scanResults.Summary == nil {
-		scanResults.Summary = &models.TargetScanResultSummary{}
+		scanResults.Summary = &models.ScanFindingsSummary{}
 	}
 
 	var errors []string
@@ -353,7 +353,7 @@ func (e *Exporter) ExportSecretsResult(res *results.Results, famerr families.Run
 		scanResults.Status.Secrets = &models.TargetScanState{}
 	}
 	if scanResults.Summary == nil {
-		scanResults.Summary = &models.TargetScanResultSummary{}
+		scanResults.Summary = &models.ScanFindingsSummary{}
 	}
 
 	var errors []string
@@ -458,7 +458,7 @@ func (e *Exporter) ExportExploitsResult(res *results.Results) error {
 		scanResults.Status.Exploits = &models.TargetScanState{}
 	}
 	if scanResults.Summary == nil {
-		scanResults.Summary = &models.TargetScanResultSummary{}
+		scanResults.Summary = &models.ScanFindingsSummary{}
 	}
 
 	var errors []string

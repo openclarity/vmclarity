@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/openclarity/vmclarity/backend/pkg/database"
 	uuid "github.com/satori/go.uuid"
 
 	"github.com/openclarity/vmclarity/api/models"
@@ -74,8 +75,8 @@ func ConvertToDBScanResult(result models.TargetScanResult) (ScanResult, error) {
 			return ret, fmt.Errorf("failed to convert scanResultID %v to uuid: %v", *result.Id, err)
 		}
 	}
-	ret.ScanID = result.ScanId
-	ret.TargetID = result.TargetId
+	ret.ScanID = *result.Scan.Id
+	ret.TargetID = *result.Target.Id
 
 	if result.Exploits != nil {
 		ret.Exploits, err = json.Marshal(result.Exploits)
