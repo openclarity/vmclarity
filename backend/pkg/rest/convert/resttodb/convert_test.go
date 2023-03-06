@@ -149,9 +149,13 @@ func TestConvertScanResult(t *testing.T) {
 			args: args{
 				id: id,
 				result: &models.TargetScanResult{
-					Id:              nil,
-					ScanId:          "3",
-					TargetId:        "2",
+					Id: nil,
+					Scan: &models.Scan{
+						Id: utils.PointerTo("3"),
+					},
+					Target: &models.Target{
+						Id: utils.PointerTo("2"),
+					},
 					Vulnerabilities: &vulScan,
 				},
 			},

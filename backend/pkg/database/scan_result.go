@@ -44,6 +44,9 @@ type ScanResult struct {
 	Secrets           []byte `json:"secrets,omitempty" gorm:"column:secrets"`
 	Status            []byte `json:"status,omitempty" gorm:"column:status"`
 	Vulnerabilities   []byte `json:"vulnerabilities,omitempty" gorm:"column:vulnerabilities"`
+
+	// Summary A summary of the scan findings.
+	Summary []byte `json:"summary,omitempty" gorm:"column:summary"`
 }
 
 type GetScanResultsParams struct {

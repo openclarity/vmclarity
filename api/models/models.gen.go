@@ -392,12 +392,25 @@ type ScanFamiliesConfig struct {
 	Vulnerabilities   *VulnerabilitiesConfig   `json:"vulnerabilities,omitempty"`
 }
 
+// ScanFindingsSummary A summary of the scan findings.
+type ScanFindingsSummary struct {
+	TotalExploits          *int `json:"totalExploits,omitempty"`
+	TotalMalware           *int `json:"totalMalware,omitempty"`
+	TotalMisconfigurations *int `json:"totalMisconfigurations,omitempty"`
+	TotalPackages          *int `json:"totalPackages,omitempty"`
+	TotalRootkits          *int `json:"totalRootkits,omitempty"`
+	TotalSecrets           *int `json:"totalSecrets,omitempty"`
+
+	// TotalVulnerabilities A summary of number of vulnerabilities found per severity.
+	TotalVulnerabilities *VulnerabilityScanSummary `json:"totalVulnerabilities,omitempty"`
+}
+
 // ScanScopeType defines model for ScanScopeType.
 type ScanScopeType struct {
 	union json.RawMessage
 }
 
-// ScanSummary A summary of the progress of a scan for informational purposes.
+// ScanSummary defines model for ScanSummary.
 type ScanSummary struct {
 	JobsCompleted          *int `json:"jobsCompleted,omitempty"`
 	JobsLeftToRun          *int `json:"jobsLeftToRun,omitempty"`
@@ -477,8 +490,14 @@ type Tag struct {
 
 // Target defines model for Target.
 type Target struct {
-	Id         *string     `json:"id,omitempty"`
-	TargetInfo *TargetType `json:"targetInfo,omitempty"`
+	Id *string `json:"id,omitempty"`
+
+	// ScansCount Total number of target scans
+	ScansCount *int `json:"scansCount,omitempty"`
+
+	// Summary A summary of the scan findings.
+	Summary    *ScanFindingsSummary `json:"summary,omitempty"`
+	TargetInfo *TargetType          `json:"targetInfo,omitempty"`
 }
 
 // TargetExists defines model for TargetExists.
@@ -496,14 +515,16 @@ type TargetScanResult struct {
 	Misconfigurations *MisconfigurationScan `json:"misconfigurations,omitempty"`
 	Rootkits          *RootkitScan          `json:"rootkits,omitempty"`
 	Sboms             *SbomScan             `json:"sboms,omitempty"`
-	ScanId            string                `json:"scanId"`
-	Secrets           *SecretScan           `json:"secrets,omitempty"`
-	Status            *TargetScanStatus     `json:"status,omitempty"`
 
-	// Summary A summary of target scan result for informational purposes.
-	Summary         *TargetScanResultSummary `json:"summary,omitempty"`
-	TargetId        string                   `json:"targetId"`
-	Vulnerabilities *VulnerabilityScan       `json:"vulnerabilities,omitempty"`
+	// Scan Describes a multi-target scheduled scan.
+	Scan    *Scan             `json:"scan,omitempty"`
+	Secrets *SecretScan       `json:"secrets,omitempty"`
+	Status  *TargetScanStatus `json:"status,omitempty"`
+
+	// Summary A summary of the scan findings.
+	Summary         *ScanFindingsSummary `json:"summary,omitempty"`
+	Target          *Target              `json:"target,omitempty"`
+	Vulnerabilities *VulnerabilityScan   `json:"vulnerabilities,omitempty"`
 }
 
 // TargetScanResultExists defines model for TargetScanResultExists.
@@ -511,19 +532,6 @@ type TargetScanResultExists struct {
 	// Message Describes which unique constraint combination causes the conflict.
 	Message          *string           `json:"message,omitempty"`
 	TargetScanResult *TargetScanResult `json:"targetScanResult,omitempty"`
-}
-
-// TargetScanResultSummary A summary of target scan result for informational purposes.
-type TargetScanResultSummary struct {
-	TotalExploits          *int `json:"totalExploits,omitempty"`
-	TotalMalware           *int `json:"totalMalware,omitempty"`
-	TotalMisconfigurations *int `json:"totalMisconfigurations,omitempty"`
-	TotalPackages          *int `json:"totalPackages,omitempty"`
-	TotalRootkits          *int `json:"totalRootkits,omitempty"`
-	TotalSecrets           *int `json:"totalSecrets,omitempty"`
-
-	// TotalVulnerabilities A summary of number of vulnerabilities found per severity.
-	TotalVulnerabilities *VulnerabilityScanSummary `json:"totalVulnerabilities,omitempty"`
 }
 
 // TargetScanResults defines model for TargetScanResults.
@@ -705,6 +713,7 @@ type GetScansParams struct {
 // GetTargetsParams defines parameters for GetTargets.
 type GetTargetsParams struct {
 	Filter *OdataFilter `form:"$filter,omitempty" json:"$filter,omitempty"`
+	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
 
 	// Page Page number of the query
 	Page *Page `form:"page,omitempty" json:"page,omitempty"`

@@ -38,7 +38,31 @@ func (s *ServerImpl) GetScanResults(ctx echo.Context, params models.GetScanResul
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scans results from db: %v", err))
 	}
 
-	converted, err := dbtorest.ConvertScanResults(dbScanResults, total)
+	var dbScans []*database.Scan
+	var dbTargets []*database.Target
+	for _, result := range dbScanResults {
+		scanUUID, err := uuid.FromString(result.ScanID)
+		if err != nil {
+			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert ScanID %v to uuid: %v", result.ScanID, err))
+		}
+		scan, err := s.dbHandler.ScansTable().GetScan(scanUUID)
+		if err != nil {
+			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scan by uuid %v: %v", scanUUID, err))
+		}
+		dbScans = append(dbScans, scan)
+
+		TargetUUID, err := uuid.FromString(result.TargetID)
+		if err != nil {
+			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert TargetID %v to uuid: %v", result.TargetID, err))
+		}
+		target, err := s.dbHandler.TargetsTable().GetTarget(TargetUUID)
+		if err != nil {
+			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get target by uuid %v: %v", TargetUUID, err))
+		}
+		dbTargets = append(dbTargets, target)
+	}
+
+	converted, err := dbtorest.ConvertScanResults(dbScanResults, dbScans, dbTargets, total)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert scan results: %v", err))
 	}
@@ -60,7 +84,7 @@ func (s *ServerImpl) PostScanResults(ctx echo.Context) error {
 	if err != nil {
 		var conflictErr *common.ConflictError
 		if errors.As(err, &conflictErr) {
-			convertedExist, err := dbtorest.ConvertScanResult(createdScanResult)
+			convertedExist, err := dbtorest.ConvertScanResult(createdScanResult, nil, nil)
 			if err != nil {
 				return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert existing scan result: %v", err))
 			}
@@ -73,7 +97,7 @@ func (s *ServerImpl) PostScanResults(ctx echo.Context) error {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to create scan result in db: %v", err))
 	}
 
-	converted, err := dbtorest.ConvertScanResult(createdScanResult)
+	converted, err := dbtorest.ConvertScanResult(createdScanResult, nil, nil)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert scan result: %v", err))
 	}
@@ -93,7 +117,25 @@ func (s *ServerImpl) GetScanResultsScanResultID(ctx echo.Context, scanResultID m
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scan result from db. scanResultID=%v: %v", scanResultID, err))
 	}
 
-	converted, err := dbtorest.ConvertScanResult(dbScanResult)
+	scanUUID, err := uuid.FromString(dbScanResult.ScanID)
+	if err != nil {
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert ScanID %v to uuid: %v", dbScanResult.ScanID, err))
+	}
+	scan, err := s.dbHandler.ScansTable().GetScan(scanUUID)
+	if err != nil {
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scan by uuid %v: %v", scanUUID, err))
+	}
+
+	TargetUUID, err := uuid.FromString(dbScanResult.TargetID)
+	if err != nil {
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert TargetID %v to uuid: %v", dbScanResult.TargetID, err))
+	}
+	target, err := s.dbHandler.TargetsTable().GetTarget(TargetUUID)
+	if err != nil {
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get target by uuid %v: %v", TargetUUID, err))
+	}
+
+	converted, err := dbtorest.ConvertScanResult(dbScanResult, scan, target)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert scan result: %v", err))
 	}
@@ -125,7 +167,7 @@ func (s *ServerImpl) PatchScanResultsScanResultID(ctx echo.Context, scanResultID
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update scan result in db. scanResultID=%v: %v", scanResultID, err))
 	}
 
-	converted, err := dbtorest.ConvertScanResult(updatedScanResult)
+	converted, err := dbtorest.ConvertScanResult(updatedScanResult, nil, nil)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert scan result: %v", err))
 	}
@@ -158,7 +200,7 @@ func (s *ServerImpl) PutScanResultsScanResultID(ctx echo.Context, scanResultID m
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update scan result in db. scanResultID=%v: %v", scanResultID, err))
 	}
 
-	converted, err := dbtorest.ConvertScanResult(updatedScanResult)
+	converted, err := dbtorest.ConvertScanResult(updatedScanResult, nil, nil)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert scan result: %v", err))
 	}

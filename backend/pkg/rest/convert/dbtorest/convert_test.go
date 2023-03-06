@@ -262,10 +262,14 @@ func TestConvertScanResult(t *testing.T) {
 				},
 			},
 			want: &models.TargetScanResult{
-				Id:              utils.StringPtr(uid.String()),
-				ScanId:          "1",
-				Status:          &status,
-				TargetId:        "2",
+				Id: utils.StringPtr(uid.String()),
+				Scan: &models.Scan{
+					Id: utils.PointerTo("1"),
+				},
+				Status: &status,
+				Target: &models.Target{
+					Id: utils.PointerTo("2"),
+				},
 				Vulnerabilities: &vulsScan,
 			},
 			wantErr: false,
@@ -273,7 +277,7 @@ func TestConvertScanResult(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ConvertScanResult(tt.args.scanResult)
+			got, err := ConvertScanResult(tt.args.scanResult, nil, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ConvertScanResult() error = %v, wantErr %v", err, tt.wantErr)
 				return

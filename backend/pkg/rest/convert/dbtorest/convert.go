@@ -73,7 +73,7 @@ func ConvertScanConfigs(configs []*database.ScanConfig, total int64) (*models.Sc
 	return &ret, nil
 }
 
-func ConvertTarget(target *database.Target) (*models.Target, error) {
+func ConvertTarget(target *database.Target, scanCount int, scanFindingsSummaryB []byte) (*models.Target, error) {
 	ret := models.Target{
 		TargetInfo: &models.TargetType{},
 	}
@@ -100,17 +100,26 @@ func ConvertTarget(target *database.Target) (*models.Target, error) {
 		return nil, fmt.Errorf("unknown target type: %v", target.Type)
 	}
 	ret.Id = utils.StringPtr(target.ID.String())
+	ret.ScansCount = &scanCount
+	if len(scanFindingsSummaryB) > 0 {
+		scanFindingsSummary := models.ScanFindingsSummary{}
+		err := json.Unmarshal(scanFindingsSummaryB, &scanFindingsSummary)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal scan findings summary: %w", err)
+		}
+		ret.Summary = &scanFindingsSummary
+	}
 
 	return &ret, nil
 }
 
-func ConvertTargets(targets []*database.Target, total int64) (*models.Targets, error) {
+func ConvertTargets(targets []*database.Target, scanCount map[string]int, summary map[string][]byte, total int64) (*models.Targets, error) {
 	ret := models.Targets{
 		Items: &[]models.Target{},
 	}
 
 	for _, target := range targets {
-		tr, err := ConvertTarget(target)
+		tr, err := ConvertTarget(target, scanCount[target.ID.String()], summary[target.ID.String()])
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert target: %w", err)
 		}
@@ -123,7 +132,7 @@ func ConvertTargets(targets []*database.Target, total int64) (*models.Targets, e
 }
 
 // nolint:cyclop
-func ConvertScanResult(scanResult *database.ScanResult) (*models.TargetScanResult, error) {
+func ConvertScanResult(scanResult *database.ScanResult, scan *database.Scan, target *database.Target) (*models.TargetScanResult, error) {
 	var ret models.TargetScanResult
 
 	if scanResult.Secrets != nil {
@@ -176,19 +185,36 @@ func ConvertScanResult(scanResult *database.ScanResult) (*models.TargetScanResul
 		}
 	}
 	ret.Id = utils.StringPtr(scanResult.ID.String())
-	ret.ScanId = scanResult.ScanID
-	ret.TargetId = scanResult.TargetID
+	if scan != nil {
+		convertScan, err := ConvertScan(scan)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert scan: %w", err)
+		}
+		ret.Scan = convertScan
+	} else {
+		ret.Scan = &models.Scan{Id: &scanResult.ScanID}
+	}
+
+	if target != nil {
+		convertTarget, err := ConvertTarget(target, 0, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert scan: %w", err)
+		}
+		ret.Target = convertTarget
+	} else {
+		ret.Target = &models.Target{Id: &scanResult.TargetID}
+	}
 
 	return &ret, nil
 }
 
-func ConvertScanResults(scanResults []*database.ScanResult, total int64) (*models.TargetScanResults, error) {
+func ConvertScanResults(scanResults []*database.ScanResult, scans []*database.Scan, targets []*database.Target, total int64) (*models.TargetScanResults, error) {
 	ret := models.TargetScanResults{
 		Items: &[]models.TargetScanResult{},
 	}
 
-	for _, scanResult := range scanResults {
-		sr, err := ConvertScanResult(scanResult)
+	for i := range scanResults {
+		sr, err := ConvertScanResult(scanResults[i], scans[i], targets[i])
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert scan result: %w", err)
 		}

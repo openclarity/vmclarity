@@ -13,6 +13,7 @@ paths:
       summary: Get targets
       parameters:
         - $ref: '#/components/parameters/odataFilter'
+        - $ref: '#/components/parameters/odataSelect'
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/pageSize'
       responses:
@@ -611,12 +612,19 @@ components:
 
     ScanSummary:
       description: A summary of the progress of a scan for informational purposes.
+      allOf:
+        - $ref: '#/components/schemas/ScanFindingsSummary'
+        - type: object
+          properties:
+            jobsLeftToRun:
+              type: integer
+            jobsCompleted:
+              type: integer
+
+    ScanFindingsSummary:
+      description: A summary of the scan findings.
       type: object
       properties:
-        jobsLeftToRun:
-          type: integer
-        jobsCompleted:
-          type: integer
         totalPackages:
           type: integer
         totalExploits:
@@ -998,6 +1006,11 @@ components:
           readOnly: true
         targetInfo:
           $ref: '#/components/schemas/TargetType'
+        scansCount:
+          description: Total number of target scans
+          type: integer
+        summary:
+          $ref: '#/components/schemas/ScanFindingsSummary'
 
     TargetExists:
       type: object
@@ -1085,10 +1098,10 @@ components:
         id:
           type: string
           readOnly: true
-        targetId:
-          type: string
-        scanId:
-          type: string
+        target:
+          $ref: '#/components/schemas/Target'
+        scan:
+          $ref: '#/components/schemas/Scan'
         status:
           $ref: '#/components/schemas/TargetScanStatus'
         sboms:
@@ -1106,29 +1119,7 @@ components:
         exploits:
           $ref: '#/components/schemas/ExploitScan'
         summary:
-          $ref: '#/components/schemas/TargetScanResultSummary'
-      required:
-        - targetId
-        - scanId
-
-    TargetScanResultSummary:
-      description: A summary of target scan result for informational purposes.
-      type: object
-      properties:
-        totalPackages:
-          type: integer
-        totalExploits:
-          type: integer
-        totalMalware:
-          type: integer
-        totalMisconfigurations:
-          type: integer
-        totalRootkits:
-          type: integer
-        totalSecrets:
-          type: integer
-        totalVulnerabilities:
-          $ref: '#/components/schemas/VulnerabilityScanSummary'
+          $ref: '#/components/schemas/ScanFindingsSummary'
 
     TargetScanResultExists:
       type: object

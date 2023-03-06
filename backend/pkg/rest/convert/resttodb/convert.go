@@ -115,8 +115,8 @@ func ConvertScanResult(result *models.TargetScanResult, id string) (*database.Sc
 			return nil, fmt.Errorf("failed to convert scanResultID %v to uuid: %v", id, err)
 		}
 	}
-	ret.ScanID = result.ScanId
-	ret.TargetID = result.TargetId
+	ret.ScanID = *result.Scan.Id
+	ret.TargetID = *result.Target.Id
 
 	if result.Exploits != nil {
 		ret.Exploits, err = json.Marshal(result.Exploits)

@@ -26,6 +26,7 @@ import (
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/backend/pkg/common"
+	"github.com/openclarity/vmclarity/backend/pkg/database"
 	"github.com/openclarity/vmclarity/backend/pkg/rest/convert/dbtorest"
 	"github.com/openclarity/vmclarity/backend/pkg/rest/convert/resttodb"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
@@ -36,8 +37,18 @@ func (s *ServerImpl) GetTargets(ctx echo.Context, params models.GetTargetsParams
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get targets from db: %v", err))
 	}
+	scanResults, _, err := s.dbHandler.ScanResultsTable().GetScanResultsAndTotal(database.GetScanResultsParams{})
+	if err != nil {
+		return err
+	}
+	targetsIDScanCount := make(map[string]int)
+	targetsIDSummary := make(map[string][]byte)
+	for _, result := range scanResults {
+		targetsIDScanCount[result.TargetID] = targetsIDScanCount[result.TargetID] + 1
+		targetsIDSummary[result.TargetID] = result.Summary // Temporary override just for demo
+	}
 
-	converted, err := dbtorest.ConvertTargets(dbTargets, total)
+	converted, err := dbtorest.ConvertTargets(dbTargets, targetsIDScanCount, targetsIDSummary, total)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert targets: %v", err))
 	}
@@ -60,7 +71,7 @@ func (s *ServerImpl) PostTargets(ctx echo.Context) error {
 	if err != nil {
 		var conflictErr *common.ConflictError
 		if errors.As(err, &conflictErr) {
-			convertedExist, err := dbtorest.ConvertTarget(createdTarget)
+			convertedExist, err := dbtorest.ConvertTarget(createdTarget, 0, nil)
 			if err != nil {
 				return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert existing target: %v", err))
 			}
@@ -73,7 +84,7 @@ func (s *ServerImpl) PostTargets(ctx echo.Context) error {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to create target in db: %v", err))
 	}
 
-	converted, err := dbtorest.ConvertTarget(createdTarget)
+	converted, err := dbtorest.ConvertTarget(createdTarget, 0, nil)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert target: %v", err))
 	}
@@ -94,7 +105,18 @@ func (s *ServerImpl) GetTargetsTargetID(ctx echo.Context, targetID models.Target
 		return sendError(ctx, http.StatusInternalServerError, fmt.Errorf("failed to get target from db. targetID=%v: %v", targetID, err).Error())
 	}
 
-	converted, err := dbtorest.ConvertTarget(target)
+	scanResults, _, err := s.dbHandler.ScanResultsTable().GetScanResultsAndTotal(database.GetScanResultsParams{})
+	if err != nil {
+		return err
+	}
+	targetsIDScanCount := make(map[string]int)
+	targetsIDSummary := make(map[string][]byte)
+	for _, result := range scanResults {
+		targetsIDScanCount[result.TargetID] = targetsIDScanCount[result.TargetID] + 1
+		targetsIDSummary[result.TargetID] = result.Summary // Temporary override just for demo
+	}
+
+	converted, err := dbtorest.ConvertTarget(target, targetsIDScanCount[targetID], targetsIDSummary[targetID])
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert target: %v", err))
 	}
@@ -125,7 +147,7 @@ func (s *ServerImpl) PutTargetsTargetID(ctx echo.Context, targetID models.Target
 		return sendError(ctx, http.StatusInternalServerError, fmt.Errorf("failed to update target in db. targetID=%v: %v", targetID, err).Error())
 	}
 
-	converted, err := dbtorest.ConvertTarget(updatedTarget)
+	converted, err := dbtorest.ConvertTarget(updatedTarget, 0, nil)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert target: %v", err))
 	}

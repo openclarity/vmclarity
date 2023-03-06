@@ -72,7 +72,7 @@ func (s *Scanner) GetScan(ctx context.Context, scanID string) (*models.Scan, err
 	}
 }
 
-func (s *Scanner) GetTargetScanSummary(ctx context.Context, scanResultID string) (*models.TargetScanResultSummary, error) {
+func (s *Scanner) GetTargetScanSummary(ctx context.Context, scanResultID string) (*models.ScanFindingsSummary, error) {
 	params := &models.GetScanResultsScanResultIDParams{
 		Select: runtimeScanUtils.StringPtr("summary"),
 	}
@@ -580,9 +580,13 @@ func (s *Scanner) createInitTargetScanStatus(ctx context.Context, scanID, target
 		},
 	}
 	scanResult := models.TargetScanResult{
-		ScanId:   scanID,
-		Status:   initScanStatus,
-		TargetId: targetID,
+		Scan: &models.Scan{
+			Id: &scanID,
+		},
+		Status: initScanStatus,
+		Target: &models.Target{
+			Id: &targetID,
+		},
 	}
 	resp, err := s.backendClient.PostScanResultsWithResponse(ctx, scanResult)
 	if err != nil {
