@@ -235,7 +235,7 @@ func Test_convertSecretsResultToAPIModel(t *testing.T) {
 			want: &models.SecretScan{},
 		},
 		{
-			name: "nil secretsResults.MergedResults",
+			name: "nil secretsResults.Malware",
 			args: args{
 				secretsResults: &secrets.Results{
 					MergedResults: nil,
@@ -244,7 +244,7 @@ func Test_convertSecretsResultToAPIModel(t *testing.T) {
 			want: &models.SecretScan{},
 		},
 		{
-			name: "empty secretsResults.MergedResults.Results",
+			name: "empty secretsResults.Malware.Results",
 			args: args{
 				secretsResults: &secrets.Results{
 					MergedResults: &secrets.MergedResults{

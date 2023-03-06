@@ -76,3 +76,11 @@ exploits:
   scanners_config:
     exploit_db:
       base_url: "http://localhost:1326"
+
+malware:
+  enabled: true
+  scanners_list:
+    - "clam"
+  inputs:
+    - input: "/"
+      input_type: "dir"

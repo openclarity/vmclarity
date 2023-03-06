@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/openclarity/vmclarity/cli/util"
 	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 
 	"github.com/openclarity/vmclarity/api/client"
@@ -449,14 +448,12 @@ func convertExploitsResultToAPIModel(exploitsResults *exploits.Results) *models.
 }
 
 func ConvertMalwareResultToAPIModel(malwareResults *malware.Results) *models.MalwareScan {
-	if malwareResults == nil || malwareResults.ClamAVOutput == "" {
+	if malwareResults == nil || malwareResults.MergedResults == nil {
 		return &models.MalwareScan{}
 	}
 
-	malwareList := util.ParseMalwareScanOutput(malwareResults)
-
 	return &models.MalwareScan{
-		Malware: &malwareList,
+		Malware: malwareResults.MergedResults.DetectedMalware,
 	}
 }
 
