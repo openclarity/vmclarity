@@ -131,6 +131,7 @@ func (s *Scanner) jobBatchManagement(ctx context.Context) {
 	scanComplete := false
 	for !scanComplete {
 		var scan *models.Scan
+		var err error
 		select {
 		case targetID := <-done:
 			numberOfCompletedJobs := numberOfCompletedJobs + 1
@@ -139,7 +140,7 @@ func (s *Scanner) jobBatchManagement(ctx context.Context) {
 				anyJobsFailed = true
 			}
 
-			scan, err := s.createScanWithUpdatedSummary(ctx, *data)
+			scan, err = s.createScanWithUpdatedSummary(ctx, *data)
 			if err != nil {
 				log.WithFields(s.logFields).Errorf("Failed to create a scan with updated summary: %v", err)
 				scan = &models.Scan{}

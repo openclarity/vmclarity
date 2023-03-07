@@ -22,6 +22,7 @@ import (
 
 	"github.com/openclarity/vmclarity/api/client"
 	"github.com/openclarity/vmclarity/api/models"
+	runtimeScanUtils "github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 	"github.com/openclarity/vmclarity/shared/pkg/families"
 	"github.com/openclarity/vmclarity/shared/pkg/families/exploits"
 	"github.com/openclarity/vmclarity/shared/pkg/families/results"
@@ -255,7 +256,15 @@ func (e *Exporter) ExportSbomResult(res *results.Results, famerr families.RunErr
 		} else {
 			scanResults.Sboms = convertSBOMResultToAPIModel(sbomResults)
 		}
-		scanResults.Summary.TotalPackages = utils.PointerTo[int](len(*scanResults.Sboms.Packages))
+		// update will not work properly if set only one value under summary,
+		// because the db update will set all other values to null which is not what we want.
+		// this is why we need to first get the current summary values in the db.
+		currentSummary, err := e.GetTargetScanResultSummary(context.TODO(), scanResultID)
+		if err != nil {
+			return err
+		}
+		currentSummary.TotalPackages = utils.PointerTo[int](len(*scanResults.Sboms.Packages))
+		scanResults.Summary = currentSummary
 	}
 
 	state := models.DONE
@@ -268,6 +277,31 @@ func (e *Exporter) ExportSbomResult(res *results.Results, famerr families.RunErr
 	}
 
 	return nil
+}
+
+func (e *Exporter) GetTargetScanResultSummary(ctx context.Context, scanResultID string) (*models.TargetScanResultSummary, error) {
+	params := &models.GetScanResultsScanResultIDParams{
+		Select: runtimeScanUtils.StringPtr("summary"),
+	}
+	resp, err := e.apiClient.GetScanResultsScanResultIDWithResponse(ctx, scanResultID, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get a target scan summary: %v", err)
+	}
+	switch resp.StatusCode() {
+	case http.StatusOK:
+		if resp.JSON200 == nil {
+			return nil, fmt.Errorf("failed to get a target scan summary: empty body")
+		}
+		if resp.JSON200.Summary == nil {
+			return nil, fmt.Errorf("failed to get a target scan summary: empty summary in body")
+		}
+		return resp.JSON200.Summary, nil
+	default:
+		if resp.JSONDefault != nil && resp.JSONDefault.Message != nil {
+			return nil, fmt.Errorf("failed to get a target scan summary. summary code=%v: %v", resp.StatusCode(), resp.JSONDefault.Message)
+		}
+		return nil, fmt.Errorf("failed to get a target scan summary. summary code=%v", resp.StatusCode())
+	}
 }
 
 func (e *Exporter) ExportVulResult(res *results.Results, famerr families.RunErrors) error {
@@ -297,7 +331,12 @@ func (e *Exporter) ExportVulResult(res *results.Results, famerr families.RunErro
 		} else {
 			scanResults.Vulnerabilities = convertVulnResultToAPIModel(vulnerabilitiesResults)
 		}
-		scanResults.Summary.TotalVulnerabilities = getVulnerabilityTotalsPerSeverity(scanResults.Vulnerabilities.Vulnerabilities)
+		currentSummary, err := e.GetTargetScanResultSummary(context.TODO(), scanResultID)
+		if err != nil {
+			return err
+		}
+		currentSummary.TotalVulnerabilities = getVulnerabilityTotalsPerSeverity(scanResults.Vulnerabilities.Vulnerabilities)
+		scanResults.Summary = currentSummary
 	}
 
 	state := models.DONE
@@ -367,7 +406,12 @@ func (e *Exporter) ExportSecretsResult(res *results.Results, famerr families.Run
 		} else {
 			scanResults.Secrets = convertSecretsResultToAPIModel(secretsResults)
 		}
-		scanResults.Summary.TotalSecrets = utils.PointerTo[int](len(*scanResults.Secrets.Secrets))
+		currentSummary, err := e.GetTargetScanResultSummary(context.TODO(), scanResultID)
+		if err != nil {
+			return err
+		}
+		currentSummary.TotalSecrets = utils.PointerTo[int](len(*scanResults.Secrets.Secrets))
+		scanResults.Summary = currentSummary
 	}
 
 	state := models.DONE
@@ -468,7 +512,12 @@ func (e *Exporter) ExportExploitsResult(res *results.Results) error {
 		errors = append(errors, fmt.Errorf("failed to get exploits results from scan: %w", err).Error())
 	} else {
 		scanResults.Exploits = convertExploitsResultToAPIModel(exploitsResults)
-		scanResults.Summary.TotalExploits = utils.PointerTo[int](len(*scanResults.Exploits.Exploits))
+		currentSummary, err := e.GetTargetScanResultSummary(context.TODO(), scanResultID)
+		if err != nil {
+			return err
+		}
+		currentSummary.TotalExploits = utils.PointerTo[int](len(*scanResults.Exploits.Exploits))
+		scanResults.Summary = currentSummary
 	}
 
 	state := models.DONE
