@@ -17,6 +17,7 @@ package configwatcher
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -214,6 +215,11 @@ func (scw *ScanConfigWatcher) createScan(ctx context.Context, scan *models.Scan)
 // nolint:cyclop
 func (scw *ScanConfigWatcher) patchScan(ctx context.Context, scanID models.ScanID, scan *models.Scan) (string, error) {
 	resp, err := scw.backendClient.PatchScansScanIDWithResponse(ctx, scanID, *scan)
+	scanJSON, err := json.Marshal(scan)
+	if err != nil {
+		return "", fmt.Errorf("failed to convert scan to json: %v", err)
+	}
+	log.Infof("Patching scan... scanID: %s\n, scan: %s", scanID, string(scanJSON))
 	if err != nil {
 		return "", fmt.Errorf("failed to patch a scan: %v", err)
 	}
