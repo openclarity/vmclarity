@@ -13,15 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package database
+package gorm
 
 import (
-	"encoding/json"
 	"fmt"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/backend/pkg/database/types"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 const (
@@ -50,42 +49,22 @@ type AwsVpcSecurityGroup struct {
 	GroupID string `gorm:"primarykey" faker:"-"`
 }
 
-type ScopesTable interface {
-	GetScopes() (*Scopes, error)
-	SetScopes(scopes *Scopes) (*Scopes, error)
-}
-
 type ScopesTableHandler struct {
 	scopesTable *gorm.DB
 }
 
-func (db *Handler) ScopesTable() ScopesTable {
+func (db *Handler) ScopesTable() types.ScopesTable {
 	return &ScopesTableHandler{
 		scopesTable: db.DB.Table(scopeTableName),
 	}
 }
 
-func (s ScopesTableHandler) GetScopes() (*Scopes, error) {
-	var scopes []Scopes
+func (s ScopesTableHandler) GetScopes() (models.ScopeType, error) {
+	var scopes models.ScopeType
 
-	if err := s.scopesTable.Preload("AwsScopesRegions.AwsRegionVpcs.AwsVpcSecurityGroups").Preload(clause.Associations).Find(&scopes).Error; err != nil {
-		return nil, fmt.Errorf("failed to get scopes: %w", err)
-	}
-
-	scopesB, err := json.Marshal(scopes)
-	if err != nil {
-		log.Errorf("Failed to marshal scopes: %v", err)
-	} else {
-		fmt.Printf("scopesB=%s\n\n", scopesB)
-	}
-
-	return &scopes[0], nil
+	return scopes, fmt.Errorf("GetScopes not implemented")
 }
 
-func (s ScopesTableHandler) SetScopes(scopes *Scopes) (*Scopes, error) {
-	if err := s.scopesTable.Session(&gorm.Session{FullSaveAssociations: true}).Save(scopes).Error; err != nil {
-		return nil, fmt.Errorf("failed to save scopes in db: %w", err)
-	}
-
-	return scopes, nil
+func (s ScopesTableHandler) SetScopes(scopes models.ScopeType) (models.ScopeType, error) {
+	return scopes, fmt.Errorf("GetScopes not implemented")
 }

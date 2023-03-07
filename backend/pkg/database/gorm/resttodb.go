@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/openclarity/vmclarity/backend/pkg/database"
 	uuid "github.com/satori/go.uuid"
 
 	"github.com/openclarity/vmclarity/api/models"
@@ -173,7 +172,7 @@ func ConvertToDBScan(scan models.Scan) (Scan, error) {
 	if scan.Summary != nil {
 		ret.Summary, err = json.Marshal(scan.Summary)
 		if err != nil {
-			return nil, fmt.Errorf("failed to marshal json: %w", err)
+			return ret, fmt.Errorf("failed to marshal json: %w", err)
 		}
 	}
 
@@ -189,8 +188,8 @@ func ConvertToDBScan(scan models.Scan) (Scan, error) {
 	return ret, nil
 }
 
-func ConvertScopes(scope *models.ScopeType) (*database.Scopes, error) {
-	var ret database.Scopes
+func ConvertToDbScopes(scope *models.ScopeType) (*Scopes, error) {
+	var ret Scopes
 	disc, err := scope.Discriminator()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get discriminator: %w", err)
@@ -202,38 +201,38 @@ func ConvertScopes(scope *models.ScopeType) (*database.Scopes, error) {
 			return nil, fmt.Errorf("failed to convert scope to aws scope: %w", err)
 		}
 		ret.Type = awsScope.ObjectType
-		ret.AwsScopesRegions = convertRegions(awsScope.Regions)
+		ret.AwsScopesRegions = convertToDbRegions(awsScope.Regions)
 		return &ret, nil
 	default:
 		return nil, fmt.Errorf("unknown scope type: %v", disc)
 	}
 }
 
-func convertRegions(regions *[]models.AwsRegion) []database.AwsScopesRegion {
-	var ret []database.AwsScopesRegion
+func convertToDbRegions(regions *[]models.AwsRegion) []AwsScopesRegion {
+	var ret []AwsScopesRegion
 	if regions != nil {
 		for _, region := range *regions {
-			ret = append(ret, convertRegion(region))
+			ret = append(ret, convertToDbRegion(region))
 		}
 	}
 
 	return ret
 }
 
-func convertRegion(region models.AwsRegion) database.AwsScopesRegion {
-	return database.AwsScopesRegion{
+func convertToDbRegion(region models.AwsRegion) AwsScopesRegion {
+	return AwsScopesRegion{
 		RegionID:      *region.Id,
-		AwsRegionVpcs: convertVPCs(region.Vpcs),
+		AwsRegionVpcs: convertToDbVPCs(region.Vpcs),
 	}
 }
 
-func convertVPCs(vpcs *[]models.AwsVPC) []database.AwsRegionVpc {
-	var ret []database.AwsRegionVpc
+func convertToDbVPCs(vpcs *[]models.AwsVPC) []AwsRegionVpc {
+	var ret []AwsRegionVpc
 	if vpcs != nil {
 		for _, vpc := range *vpcs {
-			ret = append(ret, database.AwsRegionVpc{
+			ret = append(ret, AwsRegionVpc{
 				VpcID:                *vpc.Id,
-				AwsVpcSecurityGroups: convertSecurityGroups(vpc.SecurityGroups),
+				AwsVpcSecurityGroups: convertToDbSecurityGroups(vpc.SecurityGroups),
 			})
 		}
 	}
@@ -241,11 +240,11 @@ func convertVPCs(vpcs *[]models.AwsVPC) []database.AwsRegionVpc {
 	return ret
 }
 
-func convertSecurityGroups(groups *[]models.AwsSecurityGroup) []database.AwsVpcSecurityGroup {
-	var ret []database.AwsVpcSecurityGroup
+func convertToDbSecurityGroups(groups *[]models.AwsSecurityGroup) []AwsVpcSecurityGroup {
+	var ret []AwsVpcSecurityGroup
 	if groups != nil {
 		for _, group := range *groups {
-			ret = append(ret, database.AwsVpcSecurityGroup{
+			ret = append(ret, AwsVpcSecurityGroup{
 				GroupID: *group.Id,
 			})
 		}

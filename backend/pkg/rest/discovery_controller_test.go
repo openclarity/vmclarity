@@ -19,20 +19,20 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/openclarity/vmclarity/backend/pkg/database"
+	"github.com/openclarity/vmclarity/backend/pkg/database/gorm"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 )
 
 func Test_getFakeScopes(t *testing.T) {
-	allScopes := &database.Scopes{
+	allScopes := &gorm.Scopes{
 		Type: "AwsScope",
-		AwsScopesRegions: []database.AwsScopesRegion{
+		AwsScopesRegions: []gorm.AwsScopesRegion{
 			{
 				RegionID: "eu-central-1",
-				AwsRegionVpcs: []database.AwsRegionVpc{
+				AwsRegionVpcs: []gorm.AwsRegionVpc{
 					{
 						VpcID: "vpc-1-from-eu-central-1",
-						AwsVpcSecurityGroups: []database.AwsVpcSecurityGroup{
+						AwsVpcSecurityGroups: []gorm.AwsVpcSecurityGroup{
 							{
 								GroupID: "sg-1-from-vpc-1-from-eu-central-1",
 							},
@@ -40,7 +40,7 @@ func Test_getFakeScopes(t *testing.T) {
 					},
 					{
 						VpcID: "vpc-2-from-eu-central-1",
-						AwsVpcSecurityGroups: []database.AwsVpcSecurityGroup{
+						AwsVpcSecurityGroups: []gorm.AwsVpcSecurityGroup{
 							{
 								GroupID: "sg-2-from-vpc-1-from-eu-central-1",
 							},
@@ -50,10 +50,10 @@ func Test_getFakeScopes(t *testing.T) {
 			},
 			{
 				RegionID: "us-east-1",
-				AwsRegionVpcs: []database.AwsRegionVpc{
+				AwsRegionVpcs: []gorm.AwsRegionVpc{
 					{
 						VpcID: "vpc-1-from-us-east-1",
-						AwsVpcSecurityGroups: []database.AwsVpcSecurityGroup{
+						AwsVpcSecurityGroups: []gorm.AwsVpcSecurityGroup{
 							{
 								GroupID: "sg-1-from-vpc-1-from-us-east-1",
 							},
@@ -61,7 +61,7 @@ func Test_getFakeScopes(t *testing.T) {
 					},
 					{
 						VpcID: "vpc-2-from-us-east-1",
-						AwsVpcSecurityGroups: []database.AwsVpcSecurityGroup{
+						AwsVpcSecurityGroups: []gorm.AwsVpcSecurityGroup{
 							{
 								GroupID: "sg-1-from-vpc-2-from-us-east-1",
 							},
@@ -82,7 +82,7 @@ func Test_getFakeScopes(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want *database.Scopes
+		want *gorm.Scopes
 	}{
 		{
 			name: "no filter and select",
@@ -98,9 +98,9 @@ func Test_getFakeScopes(t *testing.T) {
 				odataSelect: utils.StringPtr("AwsScope.Regions"),
 				odataFilter: nil,
 			},
-			want: &database.Scopes{
+			want: &gorm.Scopes{
 				Type: "AwsScope",
-				AwsScopesRegions: []database.AwsScopesRegion{
+				AwsScopesRegions: []gorm.AwsScopesRegion{
 					{
 						RegionID: "eu-central-1",
 					},
@@ -116,12 +116,12 @@ func Test_getFakeScopes(t *testing.T) {
 				odataSelect: utils.StringPtr("AwsScope.Regions.Vpcs"),
 				odataFilter: utils.StringPtr("AwsScope.Regions.ID eq 'eu-central-1'"),
 			},
-			want: &database.Scopes{
+			want: &gorm.Scopes{
 				Type: "AwsScope",
-				AwsScopesRegions: []database.AwsScopesRegion{
+				AwsScopesRegions: []gorm.AwsScopesRegion{
 					{
 						RegionID: "eu-central-1",
-						AwsRegionVpcs: []database.AwsRegionVpc{
+						AwsRegionVpcs: []gorm.AwsRegionVpc{
 							{
 								VpcID: "vpc-1-from-eu-central-1",
 							},
@@ -139,15 +139,15 @@ func Test_getFakeScopes(t *testing.T) {
 				odataSelect: utils.StringPtr("AwsScope.Regions.Vpcs.securityGroups"),
 				odataFilter: utils.StringPtr("AwsScope.Regions.ID eq 'us-east-1' and AwsScope.Regions.Vpcs.ID eq 'vpc-2-from-us-east-1'"),
 			},
-			want: &database.Scopes{
+			want: &gorm.Scopes{
 				Type: "AwsScope",
-				AwsScopesRegions: []database.AwsScopesRegion{
+				AwsScopesRegions: []gorm.AwsScopesRegion{
 					{
 						RegionID: "us-east-1",
-						AwsRegionVpcs: []database.AwsRegionVpc{
+						AwsRegionVpcs: []gorm.AwsRegionVpc{
 							{
 								VpcID: "vpc-2-from-us-east-1",
-								AwsVpcSecurityGroups: []database.AwsVpcSecurityGroup{
+								AwsVpcSecurityGroups: []gorm.AwsVpcSecurityGroup{
 									{
 										GroupID: "sg-1-from-vpc-2-from-us-east-1",
 									},

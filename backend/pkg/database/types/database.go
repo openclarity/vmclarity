@@ -44,6 +44,8 @@ type Database interface {
 	ScanConfigsTable() ScanConfigsTable
 	ScansTable() ScansTable
 	TargetsTable() TargetsTable
+	ScopesTable() ScopesTable
+	CreateDemoData()
 }
 
 type ScansTable interface {
@@ -88,4 +90,9 @@ type TargetsTable interface {
 	SaveTarget(target models.Target) (models.Target, error)
 
 	DeleteTarget(targetID models.TargetID) error
+}
+
+type ScopesTable interface {
+	GetScopes() (models.ScopeType, error)
+	SetScopes(scopes models.ScopeType) (models.ScopeType, error)
 }

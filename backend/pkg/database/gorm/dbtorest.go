@@ -48,26 +48,26 @@ func ConvertToRestTarget(target Target) (models.Target, error) {
 		return ret, fmt.Errorf("unknown target type: %v", target.Type)
 	}
 	ret.Id = utils.StringPtr(target.ID.String())
-	ret.ScansCount = &scanCount
-	if len(scanFindingsSummaryB) > 0 {
-		scanFindingsSummary := models.ScanFindingsSummary{}
-		err := json.Unmarshal(scanFindingsSummaryB, &scanFindingsSummary)
-		if err != nil {
-			return nil, fmt.Errorf("failed to unmarshal scan findings summary: %w", err)
-		}
-		ret.Summary = &scanFindingsSummary
-	}
+	//ret.ScansCount = &scanCount
+	//if len(scanFindingsSummaryB) > 0 {
+	//	scanFindingsSummary := models.ScanFindingsSummary{}
+	//	err := json.Unmarshal(scanFindingsSummaryB, &scanFindingsSummary)
+	//	if err != nil {
+	//		return nil, fmt.Errorf("failed to unmarshal scan findings summary: %w", err)
+	//	}
+	//	ret.Summary = &scanFindingsSummary
+	//}
 
 	return ret, nil
 }
 
-func ConvertToRestTargets(targets []*Target, scanCount map[string]int, summary map[string][]byte, total int64) (*models.Targets, error) {
+func ConvertToRestTargets(targets []Target) (models.Targets, error) {
 	ret := models.Targets{
 		Items: &[]models.Target{},
 	}
 
 	for _, target := range targets {
-		tr, err := ConvertToRestTarget(target, scanCount[target.ID.String()], summary[target.ID.String()])
+		tr, err := ConvertToRestTarget(target)
 		if err != nil {
 			return ret, fmt.Errorf("failed to convert target: %w", err)
 		}
@@ -80,7 +80,7 @@ func ConvertToRestTargets(targets []*Target, scanCount map[string]int, summary m
 }
 
 // nolint:cyclop
-func ConvertToRestScanResult(scanResult *database.ScanResult, scan *database.Scan, target *database.Target) (*models.TargetScanResult, error) {
+func ConvertToRestScanResult(scanResult ScanResult) (models.TargetScanResult, error) {
 	var ret models.TargetScanResult
 
 	if scanResult.Secrets != nil {
@@ -133,36 +133,23 @@ func ConvertToRestScanResult(scanResult *database.ScanResult, scan *database.Sca
 		}
 	}
 	ret.Id = utils.StringPtr(scanResult.ID.String())
-	if scan != nil {
-		convertScan, err := ConvertScan(scan)
-		if err != nil {
-			return nil, fmt.Errorf("failed to convert scan: %w", err)
-		}
-		ret.Scan = convertScan
-	} else {
-		ret.Scan = &models.Scan{Id: &scanResult.ScanID}
-	}
 
-	if target != nil {
-		convertTarget, err := ConvertTarget(target, 0, nil)
-		if err != nil {
-			return nil, fmt.Errorf("failed to convert scan: %w", err)
-		}
-		ret.Target = convertTarget
-	} else {
-		ret.Target = &models.Target{Id: &scanResult.TargetID}
-	}
+	// TODO: expand the scan
+	ret.Scan = &models.Scan{Id: &scanResult.ScanID}
+
+	// TODO: expand the target
+	ret.Target = &models.Target{Id: &scanResult.TargetID}
 
 	return ret, nil
 }
 
-func ConvertToRestScanResults(scanResults []*database.ScanResult, scans []*database.Scan, targets []*database.Target, total int64) (*models.TargetScanResults, error) {
+func ConvertToRestScanResults(scanResults []ScanResult) (models.TargetScanResults, error) {
 	ret := models.TargetScanResults{
 		Items: &[]models.TargetScanResult{},
 	}
 
 	for i := range scanResults {
-		sr, err := ConvertToRestScanResult(scanResults[i], scans[i], targets[i])
+		sr, err := ConvertToRestScanResult(scanResults[i])
 		if err != nil {
 			return ret, fmt.Errorf("failed to convert scan result: %w", err)
 		}
@@ -187,7 +174,7 @@ func ConvertToRestScan(scan Scan) (models.Scan, error) {
 	if scan.Summary != nil {
 		ret.Summary = &models.ScanSummary{}
 		if err := json.Unmarshal(scan.Summary, ret.Summary); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal json: %w", err)
+			return ret, fmt.Errorf("failed to unmarshal json: %w", err)
 		}
 	}
 
@@ -227,13 +214,13 @@ func ConvertToRestScans(scans []Scan) (models.Scans, error) {
 	return ret, nil
 }
 
-func ConvertScopes(scopes *database.Scopes) (*models.ScopeType, error) {
+func ConvertToRestScopes(scopes *Scopes) (*models.ScopeType, error) {
 	ret := models.ScopeType{}
 
 	switch scopes.Type {
 	case "AwsScope":
 		awsScope := models.AwsScope{
-			Regions: convertRegions(scopes.AwsScopesRegions),
+			Regions: convertToRestRegions(scopes.AwsScopesRegions),
 		}
 		if err := ret.FromAwsScope(awsScope); err != nil {
 			return nil, fmt.Errorf("FromAwsScope failed: %w", err)
@@ -245,35 +232,35 @@ func ConvertScopes(scopes *database.Scopes) (*models.ScopeType, error) {
 	return &ret, nil
 }
 
-func convertRegions(regions []database.AwsScopesRegion) *[]models.AwsRegion {
+func convertToRestRegions(regions []AwsScopesRegion) *[]models.AwsRegion {
 	var ret []models.AwsRegion
 	for _, region := range regions {
-		ret = append(ret, convertRegion(region))
+		ret = append(ret, convertToRestRegion(region))
 	}
 
 	return &ret
 }
 
-func convertRegion(region database.AwsScopesRegion) models.AwsRegion {
+func convertToRestRegion(region AwsScopesRegion) models.AwsRegion {
 	return models.AwsRegion{
 		Id:   &region.RegionID,
-		Vpcs: convertVPCs(region.AwsRegionVpcs),
+		Vpcs: convertToRestVPCs(region.AwsRegionVpcs),
 	}
 }
 
-func convertVPCs(vpcs []database.AwsRegionVpc) *[]models.AwsVPC {
+func convertToRestVPCs(vpcs []AwsRegionVpc) *[]models.AwsVPC {
 	var ret []models.AwsVPC
 	for i, _ := range vpcs {
 		ret = append(ret, models.AwsVPC{
 			Id:             &vpcs[i].VpcID,
-			SecurityGroups: convertSecurityGroups(vpcs[i].AwsVpcSecurityGroups),
+			SecurityGroups: convertToRestSecurityGroups(vpcs[i].AwsVpcSecurityGroups),
 		})
 	}
 
 	return &ret
 }
 
-func convertSecurityGroups(groups []database.AwsVpcSecurityGroup) *[]models.AwsSecurityGroup {
+func convertToRestSecurityGroups(groups []AwsVpcSecurityGroup) *[]models.AwsSecurityGroup {
 	var ret []models.AwsSecurityGroup
 
 	for i, _ := range groups {

@@ -21,7 +21,6 @@ import (
 
 	"github.com/openclarity/vmclarity/backend/pkg/database/gorm"
 	"github.com/openclarity/vmclarity/backend/pkg/database/types"
-	"gorm.io/gorm"
 )
 
 type DBDriver func(config types.DBConfig) (types.Database, error)
@@ -527,7 +526,7 @@ func RegisterDrivers() {
 //	}
 //}
 
-func InitaliseDatabase(config types.DBConfig) (types.Database, error) {
+func InitializeDatabase(config types.DBConfig) (types.Database, error) {
 	RegisterDrivers()
 
 	if driver, ok := DBDrivers[config.DriverType]; ok {

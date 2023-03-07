@@ -81,10 +81,14 @@ func TestConvertToRestScanResult(t *testing.T) {
 				},
 			},
 			want: models.TargetScanResult{
-				Id:              utils.StringPtr(uid.String()),
-				ScanId:          "1",
-				Status:          &status,
-				TargetId:        "2",
+				Id: utils.StringPtr(uid.String()),
+				Scan: &models.Scan{
+					Id: utils.PointerTo("1"),
+				},
+				Status: &status,
+				Target: &models.Target{
+					Id: utils.PointerTo("2"),
+				},
 				Vulnerabilities: &vulsScan,
 			},
 			wantErr: false,
@@ -142,6 +146,10 @@ func TestConvertToRestScan(t *testing.T) {
 					ScanEndTime:        nil,
 					ScanConfigID:       utils.StringPtr("1"),
 					ScanConfigSnapshot: scanSnapB,
+					State:              "test-state",
+					StateMessage:       "test-message",
+					StateReason:        "test-reason",
+					Summary:            nil,
 					TargetIDs:          targetIDsB,
 				},
 			},
@@ -151,6 +159,10 @@ func TestConvertToRestScan(t *testing.T) {
 					Id: "1",
 				},
 				ScanConfigSnapshot: &scanSnap,
+				State:              utils.PointerTo[models.ScanState]("test-state"),
+				StateMessage:       utils.PointerTo("test-message"),
+				StateReason:        utils.PointerTo[models.ScanStateReason]("test-reason"),
+				Summary:            nil,
 				TargetIDs:          &targetIDs,
 			},
 			wantErr: false,
@@ -164,7 +176,9 @@ func TestConvertToRestScan(t *testing.T) {
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ConvertToRestScan() got = %v, want %v", got, tt.want)
+				gotB, _ := json.Marshal(got)
+				wantB, _ := json.Marshal(tt.want)
+				t.Errorf("ConvertToRestScan() got = %s, want %s", gotB, wantB)
 			}
 		})
 	}

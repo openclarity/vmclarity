@@ -79,13 +79,13 @@ func Run() {
 	log.Info("VMClarity backend is running")
 
 	dbConfig := createDatabaseConfig(config)
-	dbHandler, err := database.InitaliseDatabase(dbConfig)
+	dbHandler, err := database.InitializeDatabase(dbConfig)
 	if err != nil {
 		log.Fatalf("Failed to initialise database: %v", err)
 	}
 
 	if config.EnableFakeData {
-		go dbHandler.CreateFakeData()
+		go dbHandler.CreateDemoData()
 	}
 
 	_ = CreateBackend(dbHandler)

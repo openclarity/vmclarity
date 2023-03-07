@@ -33,16 +33,16 @@ func (s *ServerImpl) GetTargets(ctx echo.Context, params models.GetTargetsParams
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get targets from db: %v", err))
 	}
-	scanResults, _, err := s.dbHandler.ScanResultsTable().GetScanResultsAndTotal(database.GetScanResultsParams{})
-	if err != nil {
-		return err
-	}
-	targetsIDScanCount := make(map[string]int)
-	targetsIDSummary := make(map[string][]byte)
-	for _, result := range scanResults {
-		targetsIDScanCount[result.TargetID] = targetsIDScanCount[result.TargetID] + 1
-		targetsIDSummary[result.TargetID] = result.Summary // Temporary override just for demo
-	}
+	//scanResults, _, err := s.dbHandler.ScanResultsTable().GetScanResultsAndTotal(database.GetScanResultsParams{})
+	//if err != nil {
+	//	return err
+	//}
+	//targetsIDScanCount := make(map[string]int)
+	//targetsIDSummary := make(map[string][]byte)
+	//for _, result := range scanResults {
+	//	targetsIDScanCount[result.TargetID] = targetsIDScanCount[result.TargetID] + 1
+	//	targetsIDSummary[result.TargetID] = result.Summary // Temporary override just for demo
+	//}
 
 	return sendResponse(ctx, http.StatusOK, dbTargets)
 }

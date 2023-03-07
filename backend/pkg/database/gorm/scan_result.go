@@ -45,6 +45,8 @@ type ScanResult struct {
 	Secrets           []byte `json:"secrets,omitempty" gorm:"column:secrets"`
 	Status            []byte `json:"status,omitempty" gorm:"column:status"`
 	Vulnerabilities   []byte `json:"vulnerabilities,omitempty" gorm:"column:vulnerabilities"`
+	// Summary A summary of the scan findings.
+	Summary []byte `json:"summary,omitempty" gorm:"column:summary"`
 }
 
 type ScanResultsTableHandler struct {
@@ -86,7 +88,7 @@ func (s *ScanResultsTableHandler) GetScanResult(scanResultID models.ScanResultID
 
 func (s *ScanResultsTableHandler) CreateScanResult(scanResult models.TargetScanResult) (models.TargetScanResult, error) {
 	// check if there is already a scanResult for that scan id and target id.
-	existingSR, exist, err := s.checkExist(scanResult.ScanId, scanResult.TargetId)
+	existingSR, exist, err := s.checkExist(*scanResult.Scan.Id, *scanResult.Target.Id)
 	if err != nil {
 		return models.TargetScanResult{}, fmt.Errorf("failed to check existing scan result: %w", err)
 	}
