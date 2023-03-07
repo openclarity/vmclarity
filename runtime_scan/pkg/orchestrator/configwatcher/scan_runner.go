@@ -27,7 +27,7 @@ import (
 	_scanner "github.com/openclarity/vmclarity/runtime_scan/pkg/scanner"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
-	"github.com/openclarity/vmclarity/shared/pkg/backend_client"
+	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 )
 
 func (scw *ScanConfigWatcher) runNewScans(ctx context.Context, scanConfigs []models.ScanConfig) {
@@ -73,7 +73,7 @@ func (scw *ScanConfigWatcher) initNewScan(ctx context.Context, scanConfig *model
 	var scanID string
 	createdScan, err := scw.backendClient.PostScan(ctx, *scan)
 	if err != nil {
-		var conErr backend_client.ScanConflictError
+		var conErr backendclient.ScanConflictError
 		if errors.As(err, &conErr) {
 			log.Infof("Scan already exist. scan id=%v.", *conErr.ConflictingScan.Id)
 			scanID = *conErr.ConflictingScan.Id
@@ -169,13 +169,12 @@ func (scw *ScanConfigWatcher) createTarget(ctx context.Context, instance types.I
 		TargetInfo: &info,
 	})
 	if err != nil {
-		var conErr backend_client.TargetConflictError
+		var conErr backendclient.TargetConflictError
 		if errors.As(err, &conErr) {
 			log.Infof("Target already exist. target id=%v.", *conErr.ConflictingTarget.Id)
 			return *conErr.ConflictingTarget.Id, nil
 		}
 		return "", fmt.Errorf("failed to post target: %v", err)
-	} else {
-		return *createdTarget.Id, nil
 	}
+	return *createdTarget.Id, nil
 }

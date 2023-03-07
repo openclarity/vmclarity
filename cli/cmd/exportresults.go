@@ -20,7 +20,7 @@ import (
 	"fmt"
 
 	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/shared/pkg/backend_client"
+	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 	"github.com/openclarity/vmclarity/shared/pkg/families"
 	"github.com/openclarity/vmclarity/shared/pkg/families/exploits"
 	"github.com/openclarity/vmclarity/shared/pkg/families/results"
@@ -32,11 +32,11 @@ import (
 )
 
 type Exporter struct {
-	client *backend_client.BackendClient
+	client *backendclient.BackendClient
 }
 
 func CreateExporter() (*Exporter, error) {
-	client, err := backend_client.Create(server)
+	client, err := backendclient.Create(server)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create VMClarity API client. server=%v: %w", server, err)
 	}
@@ -95,7 +95,7 @@ func convertVulnResultToAPIModel(vulnerabilitiesResults *vulnerabilities.Results
 func (e *Exporter) MarkScanResultInProgress() error {
 	scanResult, err := e.client.GetScanResult(context.TODO(), scanResultID, models.GetScanResultsScanResultIDParams{})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get scan result: %w", err)
 	}
 
 	if scanResult.Status == nil {
@@ -110,7 +110,7 @@ func (e *Exporter) MarkScanResultInProgress() error {
 
 	err = e.client.PatchScanResult(context.TODO(), scanResult, scanResultID)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to patch scan result: %w", err)
 	}
 
 	return nil
@@ -119,7 +119,7 @@ func (e *Exporter) MarkScanResultInProgress() error {
 func (e *Exporter) MarkScanResultDone(errors []error) error {
 	scanResult, err := e.client.GetScanResult(context.TODO(), scanResultID, models.GetScanResultsScanResultIDParams{})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get scan result: %w", err)
 	}
 
 	if scanResult.Status == nil {
@@ -154,7 +154,7 @@ func (e *Exporter) MarkScanResultDone(errors []error) error {
 
 	err = e.client.PatchScanResult(context.TODO(), scanResult, scanResultID)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to patch scan result: %w", err)
 	}
 
 	return nil
@@ -163,7 +163,7 @@ func (e *Exporter) MarkScanResultDone(errors []error) error {
 func (e *Exporter) ExportSbomResult(res *results.Results, famerr families.RunErrors) error {
 	scanResult, err := e.client.GetScanResult(context.TODO(), scanResultID, models.GetScanResultsScanResultIDParams{})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get scan result: %w", err)
 	}
 
 	if scanResult.Status == nil {
@@ -196,7 +196,7 @@ func (e *Exporter) ExportSbomResult(res *results.Results, famerr families.RunErr
 
 	err = e.client.PatchScanResult(context.TODO(), scanResult, scanResultID)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to patch scan result: %w", err)
 	}
 
 	return nil
@@ -205,7 +205,7 @@ func (e *Exporter) ExportSbomResult(res *results.Results, famerr families.RunErr
 func (e *Exporter) ExportVulResult(res *results.Results, famerr families.RunErrors) error {
 	scanResult, err := e.client.GetScanResult(context.TODO(), scanResultID, models.GetScanResultsScanResultIDParams{})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get scan result: %w", err)
 	}
 
 	if scanResult.Status == nil {
@@ -238,7 +238,7 @@ func (e *Exporter) ExportVulResult(res *results.Results, famerr families.RunErro
 
 	err = e.client.PatchScanResult(context.TODO(), scanResult, scanResultID)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to patch scan result: %w", err)
 	}
 
 	return nil
@@ -275,7 +275,7 @@ func getVulnerabilityTotalsPerSeverity(vulnerabilities *[]models.Vulnerability) 
 func (e *Exporter) ExportSecretsResult(res *results.Results, famerr families.RunErrors) error {
 	scanResult, err := e.client.GetScanResult(context.TODO(), scanResultID, models.GetScanResultsScanResultIDParams{})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get scan result: %w", err)
 	}
 
 	if scanResult.Status == nil {
@@ -308,7 +308,7 @@ func (e *Exporter) ExportSecretsResult(res *results.Results, famerr families.Run
 
 	err = e.client.PatchScanResult(context.TODO(), scanResult, scanResultID)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to patch scan result: %w", err)
 	}
 
 	return nil
@@ -380,7 +380,7 @@ func convertExploitsResultToAPIModel(exploitsResults *exploits.Results) *models.
 func (e *Exporter) ExportExploitsResult(res *results.Results) error {
 	scanResult, err := e.client.GetScanResult(context.TODO(), scanResultID, models.GetScanResultsScanResultIDParams{})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get scan result: %w", err)
 	}
 
 	if scanResult.Status == nil {
@@ -409,7 +409,7 @@ func (e *Exporter) ExportExploitsResult(res *results.Results) error {
 
 	err = e.client.PatchScanResult(context.TODO(), scanResult, scanResultID)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to patch scan result: %w", err)
 	}
 
 	return nil

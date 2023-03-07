@@ -24,7 +24,7 @@ import (
 	_config "github.com/openclarity/vmclarity/runtime_scan/pkg/config"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/orchestrator/configwatcher"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
-	"github.com/openclarity/vmclarity/shared/pkg/backend_client"
+	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 )
 
 type Orchestrator interface {
@@ -39,7 +39,7 @@ type orchestrator struct {
 }
 
 func Create(config *_config.OrchestratorConfig, providerClient provider.Client) (Orchestrator, error) {
-	backendClient, err := backend_client.Create(config.ScannerBackendAddress)
+	backendClient, err := backendclient.Create(config.ScannerBackendAddress)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create a backend client: %v", err)
 	}

@@ -29,7 +29,7 @@ import (
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
-	"github.com/openclarity/vmclarity/shared/pkg/backend_client"
+	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 )
 
 type Scanner struct {
@@ -38,7 +38,7 @@ type Scanner struct {
 	killSignal         chan bool
 	providerClient     provider.Client
 	logFields          log.Fields
-	backendClient      *backend_client.BackendClient
+	backendClient      *backendclient.BackendClient
 	scanID             string
 	targetInstances    []*types.TargetInstance
 	config             *_config.ScannerConfig
@@ -57,7 +57,7 @@ type scanData struct {
 func CreateScanner(
 	config *_config.ScannerConfig,
 	providerClient provider.Client,
-	backendClient *backend_client.BackendClient,
+	backendClient *backendclient.BackendClient,
 	scanConfig *models.ScanConfig,
 	targetInstances []*types.TargetInstance,
 	scanID string,

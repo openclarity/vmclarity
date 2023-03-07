@@ -32,7 +32,7 @@ import (
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
 	runtimeScanUtils "github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
-	"github.com/openclarity/vmclarity/shared/pkg/backend_client"
+	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 	"github.com/openclarity/vmclarity/shared/pkg/families"
 	familiesExploits "github.com/openclarity/vmclarity/shared/pkg/families/exploits"
 	exploitsCommon "github.com/openclarity/vmclarity/shared/pkg/families/exploits/common"
@@ -530,7 +530,7 @@ func (s *Scanner) createInitTargetScanStatus(ctx context.Context, scanID, target
 	}
 	createdScanResult, err := s.backendClient.PostScanResult(ctx, scanResult)
 	if err != nil {
-		var conErr backend_client.ScanResultConflictError
+		var conErr backendclient.ScanResultConflictError
 		if errors.As(err, &conErr) {
 			log.Infof("Scan results already exist. scan result id=%v.", *conErr.ConflictingScanResult.Id)
 			return *conErr.ConflictingScanResult.Id, nil

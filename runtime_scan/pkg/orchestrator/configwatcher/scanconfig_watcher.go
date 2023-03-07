@@ -25,7 +25,7 @@ import (
 	"github.com/openclarity/vmclarity/api/models"
 	_config "github.com/openclarity/vmclarity/runtime_scan/pkg/config"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
-	"github.com/openclarity/vmclarity/shared/pkg/backend_client"
+	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 )
 
 const (
@@ -33,13 +33,13 @@ const (
 )
 
 type ScanConfigWatcher struct {
-	backendClient  *backend_client.BackendClient
+	backendClient  *backendclient.BackendClient
 	providerClient provider.Client
 	scannerConfig  *_config.ScannerConfig
 }
 
 func CreateScanConfigWatcher(
-	backendClient *backend_client.BackendClient,
+	backendClient *backendclient.BackendClient,
 	providerClient provider.Client,
 	scannerConfig _config.ScannerConfig,
 ) *ScanConfigWatcher {
