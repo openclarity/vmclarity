@@ -101,20 +101,20 @@ func (scw *ScanConfigWatcher) initNewScan(ctx context.Context, scanConfig *model
 
 func createInitScanSummary() *models.ScanSummary {
 	return &models.ScanSummary{
-		JobsCompleted:          utils.PointerTo[int](0),
-		JobsLeftToRun:          utils.PointerTo[int](0),
-		TotalExploits:          utils.PointerTo[int](0),
-		TotalMalware:           utils.PointerTo[int](0),
-		TotalMisconfigurations: utils.PointerTo[int](0),
-		TotalPackages:          utils.PointerTo[int](0),
-		TotalRootkits:          utils.PointerTo[int](0),
-		TotalSecrets:           utils.PointerTo[int](0),
+		JobsCompleted:          utils.PointerTo(0),
+		JobsLeftToRun:          utils.PointerTo(0),
+		TotalExploits:          utils.PointerTo(0),
+		TotalMalware:           utils.PointerTo(0),
+		TotalMisconfigurations: utils.PointerTo(0),
+		TotalPackages:          utils.PointerTo(0),
+		TotalRootkits:          utils.PointerTo(0),
+		TotalSecrets:           utils.PointerTo(0),
 		TotalVulnerabilities: &models.VulnerabilityScanSummary{
-			TotalCriticalVulnerabilities:   utils.PointerTo[int](0),
-			TotalHighVulnerabilities:       utils.PointerTo[int](0),
-			TotalLowVulnerabilities:        utils.PointerTo[int](0),
-			TotalMediumVulnerabilities:     utils.PointerTo[int](0),
-			TotalNegligibleVulnerabilities: utils.PointerTo[int](0),
+			TotalCriticalVulnerabilities:   utils.PointerTo(0),
+			TotalHighVulnerabilities:       utils.PointerTo(0),
+			TotalLowVulnerabilities:        utils.PointerTo(0),
+			TotalMediumVulnerabilities:     utils.PointerTo(0),
+			TotalNegligibleVulnerabilities: utils.PointerTo(0),
 		},
 	}
 }
