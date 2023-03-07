@@ -177,6 +177,10 @@ func getExistingScanConfigbyID(db *gorm.DB, scanConfig models.ScanConfig) (ScanC
 }
 
 func (s *ScanConfigsTableHandler) SaveScanConfig(scanConfig models.ScanConfig) (models.ScanConfig, error) {
+	if scanConfig.Id == nil || *scanConfig.Id == "" {
+		return models.ScanConfig{}, fmt.Errorf("ID is required to update scan config in DB")
+	}
+
 	dbScanConfig, err := getExistingScanConfigbyID(s.DB, scanConfig)
 	if err != nil {
 		return models.ScanConfig{}, err
@@ -205,6 +209,10 @@ func (s *ScanConfigsTableHandler) SaveScanConfig(scanConfig models.ScanConfig) (
 }
 
 func (s *ScanConfigsTableHandler) UpdateScanConfig(scanConfig models.ScanConfig) (models.ScanConfig, error) {
+	if scanConfig.Id == nil || *scanConfig.Id == "" {
+		return models.ScanConfig{}, fmt.Errorf("ID is required to update scan config in DB")
+	}
+
 	dbScanConfig, err := getExistingScanConfigbyID(s.DB, scanConfig)
 	if err != nil {
 		return models.ScanConfig{}, err
