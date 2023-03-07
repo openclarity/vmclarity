@@ -542,24 +542,6 @@ func (s *Scanner) createInitTargetScanStatus(ctx context.Context, scanID, target
 
 func createInitScanResultSummary() *models.TargetScanResultSummary {
 	return &models.TargetScanResultSummary{
-		TotalExploits:          runtimeScanUtils.PointerTo(0),
-		TotalMalware:           runtimeScanUtils.PointerTo(0),
-		TotalMisconfigurations: runtimeScanUtils.PointerTo(0),
-		TotalPackages:          runtimeScanUtils.PointerTo(0),
-		TotalRootkits:          runtimeScanUtils.PointerTo(0),
-		TotalSecrets:           runtimeScanUtils.PointerTo(0),
-		TotalVulnerabilities: &models.VulnerabilityScanSummary{
-			TotalCriticalVulnerabilities:   runtimeScanUtils.PointerTo(0),
-			TotalHighVulnerabilities:       runtimeScanUtils.PointerTo(0),
-			TotalMediumVulnerabilities:     runtimeScanUtils.PointerTo(0),
-			TotalLowVulnerabilities:        runtimeScanUtils.PointerTo(0),
-			TotalNegligibleVulnerabilities: runtimeScanUtils.PointerTo(0),
-		},
-	}
-}
-
-func createInitScanResultSummary() *models.TargetScanResultSummary {
-	return &models.TargetScanResultSummary{
 		TotalExploits:          runtimeScanUtils.PointerTo[int](0),
 		TotalMalware:           runtimeScanUtils.PointerTo[int](0),
 		TotalMisconfigurations: runtimeScanUtils.PointerTo[int](0),
