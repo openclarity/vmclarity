@@ -600,6 +600,24 @@ func (s *Scanner) createInitTargetScanStatus(ctx context.Context, scanID, target
 	}
 }
 
+func createInitScanResultSummary() *models.TargetScanResultSummary {
+	return &models.TargetScanResultSummary{
+		TotalExploits:          runtimeScanUtils.PointerTo[int](0),
+		TotalMalware:           runtimeScanUtils.PointerTo[int](0),
+		TotalMisconfigurations: runtimeScanUtils.PointerTo[int](0),
+		TotalPackages:          runtimeScanUtils.PointerTo[int](0),
+		TotalRootkits:          runtimeScanUtils.PointerTo[int](0),
+		TotalSecrets:           runtimeScanUtils.PointerTo[int](0),
+		TotalVulnerabilities: &models.VulnerabilityScanSummary{
+			TotalCriticalVulnerabilities:   runtimeScanUtils.PointerTo[int](0),
+			TotalHighVulnerabilities:       runtimeScanUtils.PointerTo[int](0),
+			TotalMediumVulnerabilities:     runtimeScanUtils.PointerTo[int](0),
+			TotalLowVulnerabilities:        runtimeScanUtils.PointerTo[int](0),
+			TotalNegligibleVulnerabilities: runtimeScanUtils.PointerTo[int](0),
+		},
+	}
+}
+
 func getInitScanStatusVulnerabilitiesStateFromEnabled(config *models.VulnerabilitiesConfig) *models.TargetScanStateState {
 	if config == nil || config.Enabled == nil || !*config.Enabled {
 		return stateToPointer(models.NOTSCANNED)
