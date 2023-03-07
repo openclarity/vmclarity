@@ -568,6 +568,7 @@ func (s *Scanner) createInitTargetScanStatus(ctx context.Context, scanID, target
 		ScanId:   scanID,
 		Status:   initScanStatus,
 		TargetId: targetID,
+		Summary:  createInitScanResultSummary(),
 	}
 	resp, err := s.backendClient.PostScanResultsWithResponse(ctx, scanResult)
 	if err != nil {
