@@ -214,6 +214,7 @@ func (scw *ScanConfigWatcher) createScan(ctx context.Context, scan *models.Scan)
 
 // nolint:cyclop
 func (scw *ScanConfigWatcher) patchScan(ctx context.Context, scanID models.ScanID, scan *models.Scan) (string, error) {
+	scan.Id = &scanID
 	resp, err := scw.backendClient.PatchScansScanIDWithResponse(ctx, scanID, *scan)
 	scanJSON, err := json.Marshal(scan)
 	if err != nil {
