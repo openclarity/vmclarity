@@ -224,6 +224,12 @@ func (scw *ScanConfigWatcher) patchScan(ctx context.Context, scanID models.ScanI
 	if err != nil {
 		return "", fmt.Errorf("failed to patch a scan: %v", err)
 	}
+
+	respJSON, err := json.Marshal(resp)
+	if err != nil {
+		return "", fmt.Errorf("failed to convert scan to json: %v", err)
+	}
+	log.Infof("Response: %s\n", string(respJSON))
 	switch resp.StatusCode() {
 	case http.StatusOK:
 		if resp.JSON200 == nil {
