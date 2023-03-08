@@ -498,5 +498,14 @@ func (e *Exporter) ExportResults(res *results.Results, famerr families.RunErrors
 		}
 	}
 
+	if config.Malware.Enabled {
+		err := e.ExportMalwareResult(res)
+		if err != nil {
+			err = fmt.Errorf("failed to export malware results to server: %w", err)
+			logger.Error(err)
+			errors = append(errors, err)
+		}
+	}
+
 	return errors
 }
