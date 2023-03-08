@@ -44,6 +44,7 @@ type ScanResult struct {
 	Sboms             []byte `json:"sboms,omitempty" gorm:"column:sboms"`
 	Secrets           []byte `json:"secrets,omitempty" gorm:"column:secrets"`
 	Status            []byte `json:"status,omitempty" gorm:"column:status"`
+	Summary           []byte `json:"summary,omitempty" gorm:"column:summary"`
 	Vulnerabilities   []byte `json:"vulnerabilities,omitempty" gorm:"column:vulnerabilities"`
 }
 
@@ -117,6 +118,10 @@ func (s *ScanResultsTableHandler) CreateScanResult(scanResult models.TargetScanR
 }
 
 func (s *ScanResultsTableHandler) SaveScanResult(scanResult models.TargetScanResult) (models.TargetScanResult, error) {
+	if scanResult.Id == nil || *scanResult.Id == "" {
+		return models.TargetScanResult{}, fmt.Errorf("ID is required to update scan result in DB")
+	}
+
 	dbScanResult, err := ConvertToDBScanResult(scanResult)
 	if err != nil {
 		return models.TargetScanResult{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
@@ -134,6 +139,10 @@ func (s *ScanResultsTableHandler) SaveScanResult(scanResult models.TargetScanRes
 }
 
 func (s *ScanResultsTableHandler) UpdateScanResult(scanResult models.TargetScanResult) (models.TargetScanResult, error) {
+	if scanResult.Id == nil || *scanResult.Id == "" {
+		return models.TargetScanResult{}, fmt.Errorf("ID is required to update scan result in DB")
+	}
+
 	dbScanResult, err := ConvertToDBScanResult(scanResult)
 	if err != nil {
 		return models.TargetScanResult{}, fmt.Errorf("failed to convert API model to DB model: %w", err)

@@ -45,6 +45,7 @@ type Scan struct {
 
 	// TargetIDs List of target IDs that are targeted for scanning as part of this scan
 	TargetIDs []byte `json:"target_ids,omitempty" gorm:"column:target_ids"`
+	Summary   []byte `json:"summary,omitempty" gorm:"column:summary"`
 }
 
 type GetScansParams struct {
@@ -127,6 +128,10 @@ func (s *ScansTableHandler) CreateScan(scan models.Scan) (models.Scan, error) {
 }
 
 func (s *ScansTableHandler) SaveScan(scan models.Scan) (models.Scan, error) {
+	if scan.Id == nil || *scan.Id == "" {
+		return models.Scan{}, fmt.Errorf("ID is required to update scan in DB")
+	}
+
 	dbScan, err := ConvertToDBScan(scan)
 	if err != nil {
 		return models.Scan{}, fmt.Errorf("failed to create scan in db: %w", err)
@@ -144,6 +149,10 @@ func (s *ScansTableHandler) SaveScan(scan models.Scan) (models.Scan, error) {
 }
 
 func (s *ScansTableHandler) UpdateScan(scan models.Scan) (models.Scan, error) {
+	if scan.Id == nil || *scan.Id == "" {
+		return models.Scan{}, fmt.Errorf("ID is required to update scan in DB")
+	}
+
 	dbScan, err := ConvertToDBScan(scan)
 	if err != nil {
 		return models.Scan{}, fmt.Errorf("failed to create scan in db: %w", err)

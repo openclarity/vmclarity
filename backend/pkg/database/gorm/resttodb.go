@@ -127,6 +127,13 @@ func ConvertToDBScanResult(result models.TargetScanResult) (ScanResult, error) {
 		}
 	}
 
+	if result.Summary != nil {
+		ret.Summary, err = json.Marshal(result.Summary)
+		if err != nil {
+			return ret, fmt.Errorf("failed to marshal json: %w", err)
+		}
+	}
+
 	ret.Base = Base{ID: scanResultUUID}
 
 	return ret, nil
@@ -140,7 +147,7 @@ func ConvertToDBScan(scan models.Scan) (Scan, error) {
 	if scan.Id != nil {
 		scanUUID, err = uuid.FromString(*scan.Id)
 		if err != nil {
-			return ret, fmt.Errorf("failed to convert scanID %v to uuid: %v", scan.Id, err)
+			return ret, fmt.Errorf("failed to convert scanID %v to uuid: %v", *scan.Id, err)
 		}
 	}
 
@@ -161,6 +168,13 @@ func ConvertToDBScan(scan models.Scan) (Scan, error) {
 
 	if scan.TargetIDs != nil {
 		ret.TargetIDs, err = json.Marshal(scan.TargetIDs)
+		if err != nil {
+			return ret, fmt.Errorf("failed to marshal json: %w", err)
+		}
+	}
+
+	if scan.Summary != nil {
+		ret.Summary, err = json.Marshal(scan.Summary)
 		if err != nil {
 			return ret, fmt.Errorf("failed to marshal json: %w", err)
 		}
