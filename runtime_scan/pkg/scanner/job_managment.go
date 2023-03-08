@@ -19,9 +19,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 	"github.com/openclarity/vmclarity/shared/pkg/families/malware/common"
-	"time"
 
 	"github.com/anchore/syft/syft/source"
 	log "github.com/sirupsen/logrus"

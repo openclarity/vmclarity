@@ -18,8 +18,9 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 	"os"
+
+	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 
 	"github.com/ghodss/yaml"
 	"github.com/openclarity/kubeclarity/shared/pkg/utils"
@@ -108,7 +109,7 @@ var rootCmd = &cobra.Command{
 			}
 		}
 
-		if famerr != nil && len(famerr) > 0 {
+		if len(famerr) > 0 {
 			return fmt.Errorf("failed to run families: %+v", famerr)
 		}
 

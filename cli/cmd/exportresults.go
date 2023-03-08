@@ -18,6 +18,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+
 	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 
 	"github.com/openclarity/vmclarity/api/models"
@@ -318,7 +319,7 @@ func (e *Exporter) ExportSecretsResult(res *results.Results, famerr families.Run
 func (e *Exporter) ExportMalwareResult(res *results.Results) error {
 	scanResult, err := e.client.GetScanResult(context.TODO(), scanResultID, models.GetScanResultsScanResultIDParams{})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get scan result: %w", err)
 	}
 
 	if scanResult.Status == nil {
@@ -341,9 +342,8 @@ func (e *Exporter) ExportMalwareResult(res *results.Results) error {
 	scanResult.Status.Malware.State = &state
 	scanResult.Status.Malware.Errors = &errors
 
-	err = e.client.PatchScanResult(context.TODO(), scanResult, scanResultID)
-	if err != nil {
-		return err
+	if err = e.client.PatchScanResult(context.TODO(), scanResult, scanResultID); err != nil {
+		return fmt.Errorf("failed to patch scan result: %w", err)
 	}
 
 	return nil
@@ -460,52 +460,45 @@ func (e *Exporter) ExportExploitsResult(res *results.Results) error {
 	return nil
 }
 
+// nolint:cyclop
 func (e *Exporter) ExportResults(res *results.Results, famerr families.RunErrors) []error {
 	var errors []error
+
 	if config.SBOM.Enabled {
-		err := e.ExportSbomResult(res, famerr)
-		if err != nil {
-			err = fmt.Errorf("failed to export sbom to server: %w", err)
-			logger.Error(err)
-			errors = append(errors, err)
+		if err := e.ExportSbomResult(res, famerr); err != nil {
+			errors = appendExportError("sbom", err, errors)
 		}
 	}
 
 	if config.Vulnerabilities.Enabled {
-		err := e.ExportVulResult(res, famerr)
-		if err != nil {
-			err = fmt.Errorf("failed to export vulnerabilties to server: %w", err)
-			logger.Error(err)
-			errors = append(errors, err)
+		if err := e.ExportVulResult(res, famerr); err != nil {
+			errors = appendExportError("vulnerabilties", err, errors)
 		}
 	}
 
 	if config.Secrets.Enabled {
-		err := e.ExportSecretsResult(res, famerr)
-		if err != nil {
-			err = fmt.Errorf("failed to export secrets findings to server: %w", err)
-			logger.Error(err)
-			errors = append(errors, err)
+		if err := e.ExportSecretsResult(res, famerr); err != nil {
+			errors = appendExportError("secrets", err, errors)
 		}
 	}
 
 	if config.Exploits.Enabled {
-		err := e.ExportExploitsResult(res)
-		if err != nil {
-			err = fmt.Errorf("failed to export exploits results to server: %w", err)
-			logger.Error(err)
-			errors = append(errors, err)
+		if err := e.ExportExploitsResult(res); err != nil {
+			errors = appendExportError("exploits", err, errors)
 		}
 	}
 
 	if config.Malware.Enabled {
-		err := e.ExportMalwareResult(res)
-		if err != nil {
-			err = fmt.Errorf("failed to export malware results to server: %w", err)
-			logger.Error(err)
-			errors = append(errors, err)
+		if err := e.ExportMalwareResult(res); err != nil {
+			errors = appendExportError("malware", err, errors)
 		}
 	}
 
 	return errors
+}
+
+func appendExportError(family string, err error, errors []error) []error {
+	err = fmt.Errorf("failed to export %s result to server: %w", family, err)
+	logger.Error(err)
+	return append(errors, err)
 }
