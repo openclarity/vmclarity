@@ -22,45 +22,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 
 	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 )
-
-func ConvertToDBTarget(target models.Target) (Target, error) {
-	var targetUUID uuid.UUID
-	var err error
-	if target.Id != nil {
-		targetUUID, err = uuid.FromString(*target.Id)
-		if err != nil {
-			return Target{}, fmt.Errorf("failed to convert targetID %v to uuid: %v", *target.Id, err)
-		}
-	}
-	disc, err := target.TargetInfo.Discriminator()
-	if err != nil {
-		return Target{}, fmt.Errorf("failed to get discriminator: %w", err)
-	}
-	switch disc {
-	case "VMInfo":
-		vminfo, err := target.TargetInfo.AsVMInfo()
-		if err != nil {
-			return Target{}, fmt.Errorf("failed to convert target to vm info: %w", err)
-		}
-		var provider *string
-		if vminfo.InstanceProvider != nil {
-			provider = utils.StringPtr(string(*vminfo.InstanceProvider))
-		}
-		return Target{
-			Base: Base{
-				ID: targetUUID,
-			},
-			Type:             vminfo.ObjectType,
-			Location:         &vminfo.Location,
-			InstanceID:       utils.StringPtr(vminfo.InstanceID),
-			InstanceProvider: provider,
-		}, nil
-	default:
-		return Target{}, fmt.Errorf("unknown target type: %v", disc)
-	}
-}
 
 // nolint:cyclop
 func ConvertToDBScanResult(result models.TargetScanResult) (ScanResult, error) {

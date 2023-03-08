@@ -23,62 +23,6 @@ import (
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 )
 
-func ConvertToRestTarget(target Target) (models.Target, error) {
-	ret := models.Target{
-		TargetInfo: &models.TargetType{},
-	}
-
-	switch target.Type {
-	case targetTypeVM:
-		var cloudProvider *models.CloudProvider
-		if target.InstanceProvider != nil {
-			cp := models.CloudProvider(*target.InstanceProvider)
-			cloudProvider = &cp
-		}
-		if err := ret.TargetInfo.FromVMInfo(models.VMInfo{
-			InstanceID:       *target.InstanceID,
-			InstanceProvider: cloudProvider,
-			Location:         *target.Location,
-		}); err != nil {
-			return ret, fmt.Errorf("FromVMInfo failed: %w", err)
-		}
-	case targetTypeDir, targetTypePod:
-		fallthrough
-	default:
-		return ret, fmt.Errorf("unknown target type: %v", target.Type)
-	}
-	ret.Id = utils.StringPtr(target.ID.String())
-	//ret.ScansCount = &scanCount
-	//if len(scanFindingsSummaryB) > 0 {
-	//	scanFindingsSummary := models.ScanFindingsSummary{}
-	//	err := json.Unmarshal(scanFindingsSummaryB, &scanFindingsSummary)
-	//	if err != nil {
-	//		return nil, fmt.Errorf("failed to unmarshal scan findings summary: %w", err)
-	//	}
-	//	ret.Summary = &scanFindingsSummary
-	//}
-
-	return ret, nil
-}
-
-func ConvertToRestTargets(targets []Target) (models.Targets, error) {
-	ret := models.Targets{
-		Items: &[]models.Target{},
-	}
-
-	for _, target := range targets {
-		tr, err := ConvertToRestTarget(target)
-		if err != nil {
-			return ret, fmt.Errorf("failed to convert target: %w", err)
-		}
-		*ret.Items = append(*ret.Items, tr)
-	}
-
-	ret.Total = utils.IntPtr(len(targets))
-
-	return ret, nil
-}
-
 // nolint:cyclop
 func ConvertToRestScanResult(scanResult ScanResult) (models.TargetScanResult, error) {
 	var ret models.TargetScanResult

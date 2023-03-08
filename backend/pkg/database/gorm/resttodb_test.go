@@ -87,67 +87,6 @@ const id = "f12d1ca7-1048-4e31-899c-7a25b357bed1"
 //	}
 //}
 
-func TestConvertToDBTarget(t *testing.T) {
-	cloudProvider := models.CloudProvider("aws")
-	vmInfo := models.VMInfo{
-		InstanceID:       "instanceID",
-		InstanceProvider: &cloudProvider,
-		Location:         "location",
-	}
-
-	var targetType models.TargetType
-
-	err := targetType.FromVMInfo(vmInfo)
-	assert.NilError(t, err)
-
-	UUID, err := uuid.FromString(id)
-	assert.NilError(t, err)
-
-	idPtr := id
-
-	type args struct {
-		target models.Target
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    Target
-		wantErr bool
-	}{
-		{
-			name: "sanity",
-			args: args{
-				target: models.Target{
-					Id:         &idPtr,
-					TargetInfo: &targetType,
-				},
-			},
-			want: Target{
-				Base:             Base{ID: UUID},
-				Type:             "VMInfo",
-				Location:         utils.StringPtr("location"),
-				InstanceID:       utils.StringPtr("instanceID"),
-				InstanceProvider: utils.StringPtr("aws"),
-				PodName:          nil,
-				DirName:          nil,
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := ConvertToDBTarget(tt.args.target)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ConvertToDBTarget() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ConvertToDBTarget() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestConvertToDBScan(t *testing.T) {
 	scanFamiliesConfig := models.ScanConfigData{
 		ScanFamiliesConfig: &models.ScanFamiliesConfig{
