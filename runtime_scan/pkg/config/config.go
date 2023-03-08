@@ -117,6 +117,7 @@ func LoadConfig(backendAddress string, backendPort int, baseURL string) (*Orches
 			ScannerKeyPairName:        viper.GetString(ScannerKeyPairName),
 			GitleaksBinaryPath:        viper.GetString(GitleaksBinaryPath),
 			ExploitsDBAddress:         viper.GetString(ExploitDBAddress),
+			ClamBinaryPath:            viper.GetString(ClamBinaryPath),
 		},
 	}
 

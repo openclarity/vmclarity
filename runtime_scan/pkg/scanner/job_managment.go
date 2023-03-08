@@ -453,6 +453,8 @@ func userMalwareConfigToFamiliesMalwareConfig(malwareConfig *models.MalwareConfi
 	if malwareConfig == nil || malwareConfig.Enabled == nil || !*malwareConfig.Enabled {
 		return malware.Config{}
 	}
+
+	log.Infof("clam binary path: %s", clamBinaryPath)
 	return malware.Config{
 		Enabled:      true,
 		ScannersList: []string{"clam"},
