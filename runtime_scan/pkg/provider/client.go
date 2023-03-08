@@ -28,6 +28,8 @@ type ScanningJobConfig struct {
 	VMClarityAddress string // The backend address for the scanner CLI to export too
 	ScanResultID     string // The ID of the ScanResult that the scanner CLI should update
 	KeyPairName      string // The name of the key pair to set on the instance, ignored if not set, used mainly for debugging.
+	// TODO there is a task for spot instance configuration handling in backend
+	ScannerInstanceCreationConfig *models.ScannerInstanceCreationConfig
 }
 
 type Client interface {

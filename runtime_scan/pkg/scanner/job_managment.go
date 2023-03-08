@@ -335,6 +335,8 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 		VMClarityAddress: s.config.ScannerBackendAddress,
 		ScanResultID:     data.scanResultID,
 		KeyPairName:      s.config.ScannerKeyPairName,
+		// TODO there is a task for spot instance configuration handling ing backend
+		ScannerInstanceCreationConfig: s.scanConfig.ScannerInstanceCreationConfig,
 	}
 	launchInstance, err = s.providerClient.RunScanningJob(ctx, launchSnapshot.GetRegion(), launchSnapshot.GetID(), scanningJobConfig)
 	if err != nil {

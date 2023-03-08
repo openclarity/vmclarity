@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"strings"
 
+	awstype "github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -33,6 +34,8 @@ import (
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 )
+
+const retryDefaultMaxAttempts = 3
 
 type Client struct {
 	ec2Client *ec2.Client
@@ -286,6 +289,25 @@ func (c *Client) RunScanningJob(ctx context.Context, region, id string, config p
 		},
 	}
 
+	retryMaxAttempts := retryDefaultMaxAttempts
+	// use spot instances
+	// TODO there is a task to add spot configuration handling in backend.
+	if config.ScannerInstanceCreationConfig != nil && config.ScannerInstanceCreationConfig.Spot {
+		runInstancesInput.InstanceMarketOptions = &ec2types.InstanceMarketOptionsRequest{
+			MarketType: ec2types.MarketTypeSpot,
+			SpotOptions: &ec2types.SpotMarketOptions{
+				InstanceInterruptionBehavior: ec2types.InstanceInterruptionBehaviorTerminate,
+				SpotInstanceType:             ec2types.SpotInstanceTypeOneTime,
+			},
+		}
+		if config.ScannerInstanceCreationConfig.MaxPrice != nil {
+			runInstancesInput.InstanceMarketOptions.SpotOptions.MaxPrice = config.ScannerInstanceCreationConfig.MaxPrice
+		}
+		if config.ScannerInstanceCreationConfig.RetryMaxAttempts != nil {
+			retryMaxAttempts = *config.ScannerInstanceCreationConfig.RetryMaxAttempts
+		}
+	}
+
 	if config.KeyPairName != "" {
 		// Set a key-pair to the instance.
 		runInstancesInput.KeyName = &config.KeyPairName
@@ -293,6 +315,8 @@ func (c *Client) RunScanningJob(ctx context.Context, region, id string, config p
 
 	out, err := c.ec2Client.RunInstances(ctx, runInstancesInput, func(options *ec2.Options) {
 		options.Region = region
+		options.RetryMaxAttempts = retryMaxAttempts
+		options.RetryMode = awstype.RetryModeStandard
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to run instances: %v", err)
