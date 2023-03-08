@@ -19,6 +19,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
+	"github.com/openclarity/vmclarity/shared/pkg/families/malware/common"
 	"time"
 
 	"github.com/anchore/syft/syft/source"
@@ -37,9 +39,10 @@ import (
 	familiesExploits "github.com/openclarity/vmclarity/shared/pkg/families/exploits"
 	exploitsCommon "github.com/openclarity/vmclarity/shared/pkg/families/exploits/common"
 	exploitdbConfig "github.com/openclarity/vmclarity/shared/pkg/families/exploits/exploitdb/config"
+	malwareconfig "github.com/openclarity/vmclarity/shared/pkg/families/malware/clam/config"
 	familiesSbom "github.com/openclarity/vmclarity/shared/pkg/families/sbom"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
-	"github.com/openclarity/vmclarity/shared/pkg/families/secrets/common"
+	secretscommon "github.com/openclarity/vmclarity/shared/pkg/families/secrets/common"
 	gitleaksconfig "github.com/openclarity/vmclarity/shared/pkg/families/secrets/gitleaks/config"
 	familiesVulnerabilities "github.com/openclarity/vmclarity/shared/pkg/families/vulnerabilities"
 )
@@ -347,6 +350,7 @@ func (s *Scanner) generateFamiliesConfigurationYaml() (string, error) {
 		Vulnerabilities: userVulnConfigToFamiliesVulnConfig(s.scanConfig.ScanFamiliesConfig.Vulnerabilities),
 		Secrets:         userSecretsConfigToFamiliesSecretsConfig(s.scanConfig.ScanFamiliesConfig.Secrets, s.config.GitleaksBinaryPath),
 		Exploits:        userExploitsConfigToFamiliesExploitsConfig(s.scanConfig.ScanFamiliesConfig.Exploits, s.config.ExploitsDBAddress),
+		Malware:         userMalwareConfigToFamiliesMalwareConfig(s.scanConfig.ScanFamiliesConfig.Malware, s.config.ClamBinaryPath),
 		// TODO(sambetts) Configure other families once we've got the known working ones working e2e
 	}
 
@@ -367,7 +371,7 @@ func userSecretsConfigToFamiliesSecretsConfig(secretsConfig *models.SecretsConfi
 		// TODO(idanf) This choice should come from the user's configuration
 		ScannersList: []string{"gitleaks"},
 		Inputs:       nil, // rootfs directory will be determined by the CLI after mount.
-		ScannersConfig: &common.ScannersConfig{
+		ScannersConfig: &secretscommon.ScannersConfig{
 			Gitleaks: gitleaksconfig.Config{
 				BinaryPath: gitleaksBinaryPath,
 			},
@@ -440,6 +444,22 @@ func userExploitsConfigToFamiliesExploitsConfig(exploitsConfig *models.ExploitsC
 		ScannersConfig: &exploitsCommon.ScannersConfig{
 			ExploitDB: exploitdbConfig.Config{
 				BaseURL: baseURL,
+			},
+		},
+	}
+}
+
+func userMalwareConfigToFamiliesMalwareConfig(malwareConfig *models.MalwareConfig, clamBinaryPath string) malware.Config {
+	if malwareConfig == nil || malwareConfig.Enabled == nil || !*malwareConfig.Enabled {
+		return malware.Config{}
+	}
+	return malware.Config{
+		Enabled:      true,
+		ScannersList: []string{"clam"},
+		Inputs:       nil, // rootfs directory will be determined by the CLI after mount.
+		ScannersConfig: &common.ScannersConfig{
+			Clam: malwareconfig.Config{
+				BinaryPath: clamBinaryPath,
 			},
 		},
 	}

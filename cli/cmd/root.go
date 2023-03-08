@@ -18,6 +18,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 	"os"
 
 	"github.com/ghodss/yaml"
@@ -122,72 +123,123 @@ var rootCmd = &cobra.Command{
 // nolint:cyclop
 func outputResults(config *families.Config, res *results.Results) error {
 	if config.SBOM.Enabled {
-		sbomResults, err := results.GetResult[*sbom.Results](res)
-		if err != nil {
-			return fmt.Errorf("failed to get sbom results: %v", err)
-		}
-
-		outputFormat := config.SBOM.AnalyzersConfig.Analyzer.OutputFormat
-		sbomBytes, err := sbomResults.EncodeToBytes(outputFormat)
-		if err != nil {
-			return fmt.Errorf("failed to encode sbom results to bytes: %w", err)
-		}
-
-		// TODO: Need to implement a better presenter
-		err = Output(sbomBytes, "sbom")
-		if err != nil {
-			return fmt.Errorf("failed to output sbom results: %v", err)
+		if err := outputSBOMResults(config, res); err != nil {
+			return err
 		}
 	}
 
 	if config.Vulnerabilities.Enabled {
-		vulnerabilitiesResults, err := results.GetResult[*vulnerabilities.Results](res)
-		if err != nil {
-			return fmt.Errorf("failed to get sbom results: %v", err)
-		}
-
-		bytes, err := json.Marshal(vulnerabilitiesResults.MergedResults)
-		if err != nil {
-			return fmt.Errorf("failed to output vulnerabilities results: %v", err)
-		}
-		err = Output(bytes, "vulnerabilities")
-		if err != nil {
-			return fmt.Errorf("failed to output vulnerabilities results: %v", err)
+		if err := outputVulnerabilitiesResults(res); err != nil {
+			return err
 		}
 	}
 
 	if config.Secrets.Enabled {
-		secretsResults, err := results.GetResult[*secrets.Results](res)
-		if err != nil {
-			return fmt.Errorf("failed to get secrets results: %v", err)
-		}
-
-		bytes, err := json.Marshal(secretsResults)
-		if err != nil {
-			return fmt.Errorf("failed to output secrets results: %v", err)
-		}
-		err = Output(bytes, "secrets")
-		if err != nil {
-			return fmt.Errorf("failed to output secrets results: %v", err)
+		if err := outputSecretsResults(res); err != nil {
+			return err
 		}
 	}
 
 	if config.Exploits.Enabled {
-		exploitsResults, err := results.GetResult[*exploits.Results](res)
-		if err != nil {
-			return fmt.Errorf("failed to get exploits results: %v", err)
-		}
-
-		bytes, err := json.Marshal(exploitsResults)
-		if err != nil {
-			return fmt.Errorf("failed to marshal exploits results: %v", err)
-		}
-		err = Output(bytes, "exploits")
-		if err != nil {
-			return fmt.Errorf("failed to output exploits results: %v", err)
+		if err := outputExploitsResults(res); err != nil {
+			return err
 		}
 	}
 
+	if config.Malware.Enabled {
+		if err := outputMalwareResults(res); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func outputSBOMResults(config *families.Config, res *results.Results) error {
+	sbomResults, err := results.GetResult[*sbom.Results](res)
+	if err != nil {
+		return fmt.Errorf("failed to get sbom results: %v", err)
+	}
+
+	outputFormat := config.SBOM.AnalyzersConfig.Analyzer.OutputFormat
+	sbomBytes, err := sbomResults.EncodeToBytes(outputFormat)
+	if err != nil {
+		return fmt.Errorf("failed to encode sbom results to bytes: %w", err)
+	}
+
+	// TODO: Need to implement a better presenter
+	err = Output(sbomBytes, "sbom")
+	if err != nil {
+		return fmt.Errorf("failed to output sbom results: %v", err)
+	}
+	return nil
+}
+
+func outputVulnerabilitiesResults(res *results.Results) error {
+	vulnerabilitiesResults, err := results.GetResult[*vulnerabilities.Results](res)
+	if err != nil {
+		return fmt.Errorf("failed to get sbom results: %v", err)
+	}
+
+	bytes, err := json.Marshal(vulnerabilitiesResults.MergedResults)
+	if err != nil {
+		return fmt.Errorf("failed to output vulnerabilities results: %v", err)
+	}
+	err = Output(bytes, "vulnerabilities")
+	if err != nil {
+		return fmt.Errorf("failed to output vulnerabilities results: %v", err)
+	}
+	return nil
+}
+
+func outputSecretsResults(res *results.Results) error {
+	secretsResults, err := results.GetResult[*secrets.Results](res)
+	if err != nil {
+		return fmt.Errorf("failed to get secrets results: %v", err)
+	}
+
+	bytes, err := json.Marshal(secretsResults)
+	if err != nil {
+		return fmt.Errorf("failed to output secrets results: %v", err)
+	}
+	err = Output(bytes, "secrets")
+	if err != nil {
+		return fmt.Errorf("failed to output secrets results: %v", err)
+	}
+	return nil
+}
+
+func outputExploitsResults(res *results.Results) error {
+	exploitsResults, err := results.GetResult[*exploits.Results](res)
+	if err != nil {
+		return fmt.Errorf("failed to get exploits results: %v", err)
+	}
+
+	bytes, err := json.Marshal(exploitsResults)
+	if err != nil {
+		return fmt.Errorf("failed to marshal exploits results: %v", err)
+	}
+	err = Output(bytes, "exploits")
+	if err != nil {
+		return fmt.Errorf("failed to output exploits results: %v", err)
+	}
+	return nil
+}
+
+func outputMalwareResults(res *results.Results) error {
+	malwareResults, err := results.GetResult[*malware.Results](res)
+	if err != nil {
+		return fmt.Errorf("failed to get malware results: %v", err)
+	}
+
+	bytes, err := json.Marshal(malwareResults)
+	if err != nil {
+		return fmt.Errorf("failed to marshal malware results: %v", err)
+	}
+	err = Output(bytes, "malware")
+	if err != nil {
+		return fmt.Errorf("failed to output  %v", err)
+	}
 	return nil
 }
 
@@ -315,6 +367,12 @@ func setMountPointsForFamiliesInput(mountPoints []string, familiesConfig *famili
 		}
 		if familiesConfig.Secrets.Enabled {
 			familiesConfig.Secrets.Inputs = append(familiesConfig.Secrets.Inputs, secrets.Input{
+				Input:     mountDir,
+				InputType: string(utils.ROOTFS),
+			})
+		}
+		if familiesConfig.Malware.Enabled {
+			familiesConfig.Malware.Inputs = append(familiesConfig.Malware.Inputs, malware.Input{
 				Input:     mountDir,
 				InputType: string(utils.ROOTFS),
 			})

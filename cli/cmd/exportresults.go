@@ -18,6 +18,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
@@ -312,6 +313,50 @@ func (e *Exporter) ExportSecretsResult(res *results.Results, famerr families.Run
 	}
 
 	return nil
+}
+
+func (e *Exporter) ExportMalwareResult(res *results.Results) error {
+	scanResult, err := e.client.GetScanResult(context.TODO(), scanResultID, models.GetScanResultsScanResultIDParams{})
+	if err != nil {
+		return err
+	}
+
+	if scanResult.Status == nil {
+		scanResult.Status = &models.TargetScanStatus{}
+	}
+	if scanResult.Status.Malware == nil {
+		scanResult.Status.Malware = &models.TargetScanState{}
+	}
+
+	var errors []string
+
+	malwareResults, err := results.GetResult[*malware.Results](res)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("failed to get malware results from scan: %w", err).Error())
+	} else {
+		scanResult.Malware = ConvertMalwareResultToAPIModel(malwareResults)
+	}
+
+	state := models.DONE
+	scanResult.Status.Malware.State = &state
+	scanResult.Status.Malware.Errors = &errors
+
+	err = e.client.PatchScanResult(context.TODO(), scanResult, scanResultID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ConvertMalwareResultToAPIModel(malwareResults *malware.Results) *models.MalwareScan {
+	if malwareResults == nil || malwareResults.MergedResults == nil {
+		return &models.MalwareScan{}
+	}
+
+	return &models.MalwareScan{
+		Malware: malwareResults.MergedResults.DetectedMalware,
+	}
 }
 
 func convertSecretsResultToAPIModel(secretsResults *secrets.Results) *models.SecretScan {
