@@ -95,7 +95,7 @@ func setConfigDefaults(backendAddress string, backendPort int, backendBaseURL st
 	// https://github.com/openclarity/vmclarity-tools-base/blob/main/Dockerfile#L21-L23
 	viper.SetDefault(GitleaksBinaryPath, "/artifacts/gitleaks")
 	viper.SetDefault(ExploitDBAddress, fmt.Sprintf("http://%s", net.JoinHostPort(backendAddress, "1326")))
-	viper.SetDefault(ClamBinaryPath, "/artifacts/clamscan")
+	viper.SetDefault(ClamBinaryPath, "clamscan")
 
 	viper.AutomaticEnv()
 }

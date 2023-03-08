@@ -19,7 +19,10 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 
 FROM ${VMCLARITY_TOOLS_BASE}
 
+RUN apk upgrade
 RUN apk add util-linux
+RUN apk add clamav
+RUN freshclam
 
 WORKDIR /app
 
