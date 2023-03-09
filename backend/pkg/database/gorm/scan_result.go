@@ -55,13 +55,13 @@ func (s *ScanResultsTableHandler) GetScanResults(params models.GetScanResultsPar
 		return models.TargetScanResults{}, err
 	}
 
-	var items []models.TargetScanResult
-	for _, scanResult := range scanResults {
+	items := make([]models.TargetScanResult, len(scanResults))
+	for i, scanResult := range scanResults {
 		var sc models.TargetScanResult
 		if err = json.Unmarshal(scanResult.Data, &sc); err != nil {
 			return models.TargetScanResults{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 		}
-		items = append(items, sc)
+		items[i] = sc
 	}
 
 	output := models.TargetScanResults{Items: &items}
@@ -97,6 +97,7 @@ func (s *ScanResultsTableHandler) GetScanResult(scanResultID models.ScanResultID
 	return sc, nil
 }
 
+// nolint:cyclop
 func (s *ScanResultsTableHandler) CreateScanResult(scanResult models.TargetScanResult) (models.TargetScanResult, error) {
 	// Check the user provided scan id and target id fields
 	if scanResult.Scan == nil || *scanResult.Scan.Id == "" {
