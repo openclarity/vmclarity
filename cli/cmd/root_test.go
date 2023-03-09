@@ -16,6 +16,7 @@
 package cmd
 
 import (
+	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 	"reflect"
 	"testing"
 
@@ -78,7 +79,7 @@ func Test_setMountPointsForFamiliesInput(t *testing.T) {
 		want *families.Config
 	}{
 		{
-			name: "sbom, vuls and secrets are enabled",
+			name: "sbom, vuls, secrets and malware are enabled",
 			args: args{
 				mountPoints: []string{"/mnt/snapshot1"},
 				familiesConfig: &families.Config{
@@ -92,6 +93,10 @@ func Test_setMountPointsForFamiliesInput(t *testing.T) {
 						InputFromSbom: false,
 					},
 					Secrets: secrets.Config{
+						Enabled: true,
+						Inputs:  nil,
+					},
+					Malware: malware.Config{
 						Enabled: true,
 						Inputs:  nil,
 					},
@@ -114,6 +119,15 @@ func Test_setMountPointsForFamiliesInput(t *testing.T) {
 				Secrets: secrets.Config{
 					Enabled: true,
 					Inputs: []secrets.Input{
+						{
+							Input:     "/mnt/snapshot1",
+							InputType: string(utils.ROOTFS),
+						},
+					},
+				},
+				Malware: malware.Config{
+					Enabled: true,
+					Inputs: []malware.Input{
 						{
 							Input:     "/mnt/snapshot1",
 							InputType: string(utils.ROOTFS),
