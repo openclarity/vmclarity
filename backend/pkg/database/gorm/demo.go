@@ -16,6 +16,9 @@
 package gorm
 
 import (
+	"time"
+
+	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/api/models"
@@ -344,9 +347,11 @@ func (db *Handler) CreateDemoData() {
 		},
 	}
 	for i, target := range targets {
-		if _, err := db.TargetsTable().CreateTarget(target); err != nil {
+		retTarget, err := db.TargetsTable().CreateTarget(target)
+		if err != nil {
 			log.Fatalf("failed to save target [%d]: %v", i, err)
 		}
+		targets[i] = retTarget
 	}
 
 	// Create scans
@@ -470,69 +475,197 @@ func (db *Handler) CreateDemoData() {
 	//	log.Fatalf("failed to save scan 2: %v", err)
 	//}
 	//
-	//// Create scan results
-	//scanFindingsSummary := &models.ScanFindingsSummary{
-	//	TotalExploits:          utils.PointerTo[int](6),
-	//	TotalMalware:           utils.PointerTo[int](0),
-	//	TotalMisconfigurations: utils.PointerTo[int](75),
-	//	TotalPackages:          utils.PointerTo[int](9778),
-	//	TotalRootkits:          utils.PointerTo[int](5),
-	//	TotalSecrets:           utils.PointerTo[int](557),
-	//	TotalVulnerabilities: &models.VulnerabilityScanSummary{
-	//		TotalCriticalVulnerabilities:   utils.PointerTo[int](11),
-	//		TotalHighVulnerabilities:       utils.PointerTo[int](52),
-	//		TotalLowVulnerabilities:        utils.PointerTo[int](241),
-	//		TotalMediumVulnerabilities:     utils.PointerTo[int](8543),
-	//		TotalNegligibleVulnerabilities: utils.PointerTo[int](73),
-	//	},
-	//}
-	//scanFindingsSummaryB, err := json.Marshal(scanFindingsSummary)
-	//if err != nil {
-	//	log.Fatalf("failed to marshal scanFindingsSummary: %v", err)
-	//}
-	//ScanFindingsSummary2 := &models.ScanFindingsSummary{
-	//	TotalExploits:          utils.PointerTo[int](10),
-	//	TotalMalware:           utils.PointerTo[int](1),
-	//	TotalMisconfigurations: utils.PointerTo[int](0),
-	//	TotalPackages:          utils.PointerTo[int](10000001),
-	//	TotalRootkits:          utils.PointerTo[int](2),
-	//	TotalSecrets:           utils.PointerTo[int](666),
-	//	TotalVulnerabilities: &models.VulnerabilityScanSummary{
-	//		TotalCriticalVulnerabilities:   utils.PointerTo[int](1),
-	//		TotalHighVulnerabilities:       utils.PointerTo[int](3),
-	//		TotalLowVulnerabilities:        utils.PointerTo[int](5),
-	//		TotalMediumVulnerabilities:     utils.PointerTo[int](7),
-	//		TotalNegligibleVulnerabilities: utils.PointerTo[int](8),
-	//	},
-	//}
-	//ScanFindingsSummary2B, err := json.Marshal(ScanFindingsSummary2)
-	//if err != nil {
-	//	log.Fatalf("failed to marshal ScanFindingsSummary2: %v", err)
-	//}
-	//scanResults := []ScanResult{
-	//	{
-	//		Base: Base{
-	//			ID: uuid.NewV5(uuid.Nil, "1"),
-	//		},
-	//		ScanID:   scans[0].ID.String(),
-	//		TargetID: targets[0].ID.String(),
-	//		Summary:  scanFindingsSummaryB,
-	//	},
-	//	{
-	//		Base: Base{
-	//			ID: uuid.NewV5(uuid.Nil, "2"),
-	//		},
-	//		ScanID:   scans[1].ID.String(),
-	//		TargetID: targets[1].ID.String(),
-	//		Summary:  ScanFindingsSummary2B,
-	//	},
-	//}
-	//if _, err := db.ScanResultsTable().SaveScanResult(&scanResults[0]); err != nil {
-	//	log.Fatalf("failed to save scanResults 1: %v", err)
-	//}
-	//if _, err := db.ScanResultsTable().SaveScanResult(&scanResults[1]); err != nil {
-	//	log.Fatalf("failed to save scanResults 2: %v", err)
-	//}
+	// Create scan results
+	scanResults := []models.TargetScanResult{
+		{
+			Scan: &models.Scan{
+				EndTime: utils.PointerTo(time.Now().Add(24 * time.Hour)),
+				Id:      utils.PointerTo(uuid.NewV4().String()),
+				ScanConfig: &models.ScanConfigRelationship{
+					Id: uuid.NewV4().String(),
+				},
+				ScanConfigSnapshot: &models.ScanConfigData{
+					Name: utils.PointerTo("ScanConfigSnapshot-1-Name"),
+					ScanFamiliesConfig: &models.ScanFamiliesConfig{
+						Exploits: &models.ExploitsConfig{
+							Enabled: utils.PointerTo(true),
+						},
+						Malware: &models.MalwareConfig{
+							Enabled: utils.PointerTo(true),
+						},
+						Misconfigurations: &models.MisconfigurationsConfig{
+							Enabled: utils.PointerTo(false),
+						},
+						Rootkits: &models.RootkitsConfig{
+							Enabled: utils.PointerTo(true),
+						},
+						Sbom: &models.SBOMConfig{
+							Enabled: utils.PointerTo(false),
+						},
+						Secrets: &models.SecretsConfig{
+							Enabled: utils.PointerTo(true),
+						},
+						Vulnerabilities: &models.VulnerabilitiesConfig{
+							Enabled: utils.PointerTo(true),
+						},
+					},
+					Scheduled: createSingleScheduleScanConfig(time.Now()),
+					Scope: createAWSScanScopeType(models.AwsScanScope{
+						All: utils.PointerTo(true),
+						InstanceTagSelector: utils.PointerTo([]models.Tag{
+							{
+								Key:   utils.PointerTo("key"),
+								Value: utils.PointerTo("value"),
+							},
+						}),
+					}),
+				},
+				StartTime:   utils.PointerTo(time.Now()),
+				State:       utils.PointerTo(models.Done),
+				StateReason: utils.PointerTo(models.ScanStateReasonSuccess),
+				Summary: &models.ScanSummary{
+					JobsCompleted:          utils.PointerTo(77),
+					JobsLeftToRun:          utils.PointerTo(98),
+					TotalExploits:          utils.PointerTo(6),
+					TotalMalware:           utils.PointerTo(0),
+					TotalMisconfigurations: utils.PointerTo(75),
+					TotalPackages:          utils.PointerTo(9778),
+					TotalRootkits:          utils.PointerTo(5),
+					TotalSecrets:           utils.PointerTo(557),
+					TotalVulnerabilities: &models.VulnerabilityScanSummary{
+						TotalCriticalVulnerabilities:   utils.PointerTo(11),
+						TotalHighVulnerabilities:       utils.PointerTo(52),
+						TotalLowVulnerabilities:        utils.PointerTo(241),
+						TotalMediumVulnerabilities:     utils.PointerTo(8543),
+						TotalNegligibleVulnerabilities: utils.PointerTo(73),
+					},
+				},
+				TargetIDs: utils.PointerTo([]string{*targets[0].Id}),
+			},
+			Summary: &models.ScanFindingsSummary{
+				TotalExploits:          utils.PointerTo(6),
+				TotalMalware:           utils.PointerTo(0),
+				TotalMisconfigurations: utils.PointerTo(75),
+				TotalPackages:          utils.PointerTo(9778),
+				TotalRootkits:          utils.PointerTo(5),
+				TotalSecrets:           utils.PointerTo(557),
+				TotalVulnerabilities: &models.VulnerabilityScanSummary{
+					TotalCriticalVulnerabilities:   utils.PointerTo(11),
+					TotalHighVulnerabilities:       utils.PointerTo(52),
+					TotalLowVulnerabilities:        utils.PointerTo(241),
+					TotalMediumVulnerabilities:     utils.PointerTo(8543),
+					TotalNegligibleVulnerabilities: utils.PointerTo(73),
+				},
+			},
+			Target: &targets[0],
+		},
+		{
+			Scan: &models.Scan{
+				EndTime: utils.PointerTo(time.Now().Add(24 * time.Hour)),
+				Id:      utils.PointerTo(uuid.NewV4().String()),
+				ScanConfig: &models.ScanConfigRelationship{
+					Id: uuid.NewV4().String(),
+				},
+				ScanConfigSnapshot: &models.ScanConfigData{
+					Name: utils.PointerTo("ScanConfigSnapshot-2-Name"),
+					ScanFamiliesConfig: &models.ScanFamiliesConfig{
+						Exploits: &models.ExploitsConfig{
+							Enabled: utils.PointerTo(true),
+						},
+						Malware: &models.MalwareConfig{
+							Enabled: utils.PointerTo(true),
+						},
+						Misconfigurations: &models.MisconfigurationsConfig{
+							Enabled: utils.PointerTo(false),
+						},
+						Rootkits: &models.RootkitsConfig{
+							Enabled: utils.PointerTo(true),
+						},
+						Sbom: &models.SBOMConfig{
+							Enabled: utils.PointerTo(false),
+						},
+						Secrets: &models.SecretsConfig{
+							Enabled: utils.PointerTo(true),
+						},
+						Vulnerabilities: &models.VulnerabilitiesConfig{
+							Enabled: utils.PointerTo(true),
+						},
+					},
+					Scheduled: createSingleScheduleScanConfig(time.Now()),
+					Scope: createAWSScanScopeType(models.AwsScanScope{
+						All: utils.PointerTo(true),
+						InstanceTagSelector: utils.PointerTo([]models.Tag{
+							{
+								Key:   utils.PointerTo("key2"),
+								Value: utils.PointerTo("value2"),
+							},
+						}),
+					}),
+				},
+				StartTime:   utils.PointerTo(time.Now()),
+				State:       utils.PointerTo(models.Done),
+				StateReason: utils.PointerTo(models.ScanStateReasonSuccess),
+				Summary: &models.ScanSummary{
+					JobsCompleted:          utils.PointerTo(77),
+					JobsLeftToRun:          utils.PointerTo(98),
+					TotalExploits:          utils.PointerTo(6),
+					TotalMalware:           utils.PointerTo(0),
+					TotalMisconfigurations: utils.PointerTo(75),
+					TotalPackages:          utils.PointerTo(9778),
+					TotalRootkits:          utils.PointerTo(5),
+					TotalSecrets:           utils.PointerTo(557),
+					TotalVulnerabilities: &models.VulnerabilityScanSummary{
+						TotalCriticalVulnerabilities:   utils.PointerTo(11),
+						TotalHighVulnerabilities:       utils.PointerTo(52),
+						TotalLowVulnerabilities:        utils.PointerTo(241),
+						TotalMediumVulnerabilities:     utils.PointerTo(8543),
+						TotalNegligibleVulnerabilities: utils.PointerTo(73),
+					},
+				},
+				TargetIDs: utils.PointerTo([]string{*targets[1].Id}),
+			},
+			Summary: &models.ScanFindingsSummary{
+				TotalExploits:          utils.PointerTo(6),
+				TotalMalware:           utils.PointerTo(0),
+				TotalMisconfigurations: utils.PointerTo(75),
+				TotalPackages:          utils.PointerTo(9778),
+				TotalRootkits:          utils.PointerTo(5),
+				TotalSecrets:           utils.PointerTo(557),
+				TotalVulnerabilities: &models.VulnerabilityScanSummary{
+					TotalCriticalVulnerabilities:   utils.PointerTo(11),
+					TotalHighVulnerabilities:       utils.PointerTo(52),
+					TotalLowVulnerabilities:        utils.PointerTo(241),
+					TotalMediumVulnerabilities:     utils.PointerTo(8543),
+					TotalNegligibleVulnerabilities: utils.PointerTo(73),
+				},
+			},
+			Target: &targets[1],
+		},
+	}
+	for i, scanResult := range scanResults {
+		if _, err := db.ScanResultsTable().CreateScanResult(scanResult); err != nil {
+			log.Fatalf("failed to save scan results [%d]: %v", i, err)
+		}
+	}
+}
+
+func createAWSScanScopeType(scope models.AwsScanScope) *models.ScanScopeType {
+	var scopeType models.ScanScopeType
+
+	if err := scopeType.FromAwsScanScope(scope); err != nil {
+		panic(err)
+	}
+	return &scopeType
+}
+
+func createSingleScheduleScanConfig(operationTime time.Time) *models.RuntimeScheduleScanConfigType {
+	var scanConfigScheduled models.RuntimeScheduleScanConfigType
+	if err := scanConfigScheduled.FromSingleScheduleScanConfig(models.SingleScheduleScanConfig{
+		OperationTime: operationTime,
+	}); err != nil {
+		panic(err)
+	}
+	return &scanConfigScheduled
 }
 
 func createVMInfo(instanceID, location string, instanceProvider models.CloudProvider) *models.TargetType {

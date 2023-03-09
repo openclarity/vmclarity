@@ -120,8 +120,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/odataFilter'
         - $ref: '#/components/parameters/odataSelect'
-        - $ref: '#/components/parameters/page'
-        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/odataCount'
+        - $ref: '#/components/parameters/odataTop'
+        - $ref: '#/components/parameters/odataSkip'
+        - $ref: '#/components/parameters/odataExpand'
       responses:
         200:
           description: Success
@@ -163,6 +165,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/scanResultID'
         - $ref: '#/components/parameters/odataSelect'
+        - $ref: '#/components/parameters/odataExpand'
       responses:
         200:
           description: Success
@@ -1000,8 +1003,6 @@ components:
           items:
             $ref: '#/components/schemas/Target'
           readOnly: true
-      required:
-        - total
 
     Target:
       type: object
@@ -1083,7 +1084,7 @@ components:
     TargetScanResults:
       type: object
       properties:
-        total:
+        count:
           type: integer
           description: Total scan results count according to the given filters
           readOnly: true
@@ -1094,8 +1095,6 @@ components:
           items:
             $ref: '#/components/schemas/TargetScanResult'
           readOnly: true
-      required:
-        - total
 
     TargetScanResult:
       type: object
