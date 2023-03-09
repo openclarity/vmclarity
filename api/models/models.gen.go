@@ -20,9 +20,11 @@ const (
 const (
 	ADWARE     MalwareType = "ADWARE"
 	RANSOMWARE MalwareType = "RANSOMWARE"
+	BACKDOOR   MalwareType = "BACKDOOR"
 	SPYWARE    MalwareType = "SPYWARE"
 	TROJAN     MalwareType = "TROJAN"
 	VIRUS      MalwareType = "VIRUS"
+	PHISHING   MalwareType = "PHISING"
 	WORM       MalwareType = "WORM"
 )
 
