@@ -302,11 +302,11 @@ func (c *Client) RunScanningJob(ctx context.Context, region, id string, config p
 					MaxPrice:                     config.ScannerInstanceCreationConfig.MaxPrice,
 				},
 			}
-			// In the case of spot instances, we have higher probability to start an instance
-			// by increasing RetryMaxAttempts
-			if config.ScannerInstanceCreationConfig.RetryMaxAttempts != nil {
-				retryMaxAttempts = *config.ScannerInstanceCreationConfig.RetryMaxAttempts
-			}
+		}
+		// In the case of spot instances, we have higher probability to start an instance
+		// by increasing RetryMaxAttempts
+		if config.ScannerInstanceCreationConfig.RetryMaxAttempts != nil {
+			retryMaxAttempts = *config.ScannerInstanceCreationConfig.RetryMaxAttempts
 		}
 	}
 
