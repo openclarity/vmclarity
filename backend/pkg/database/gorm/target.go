@@ -54,14 +54,14 @@ func (t *TargetsTableHandler) GetTargets(params models.GetTargetsParams) (models
 		return models.Targets{}, err
 	}
 
-	var items []models.Target
-	for _, t := range targets {
+	items := make([]models.Target, len(targets))
+	for i, tr := range targets {
 		var target models.Target
-		err = json.Unmarshal(t.Data, &target)
+		err = json.Unmarshal(tr.Data, &target)
 		if err != nil {
 			return models.Targets{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 		}
-		items = append(items, target)
+		items[i] = target
 	}
 
 	output := models.Targets{Items: &items}
