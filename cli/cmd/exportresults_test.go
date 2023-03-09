@@ -396,7 +396,7 @@ func Test_convertMalwareResultToAPIModel(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ConvertMalwareResultToAPIModel(tt.args.mergedResults)
+			got := convertMalwareResultToAPIModel(tt.args.mergedResults)
 			if diff := cmp.Diff(tt.want, got, cmpopts.SortSlices(func(a, b models.Exploit) bool { return *a.Id < *b.Id })); diff != "" {
 				t.Errorf("convertExploitsResultToAPIModel() mismatch (-want +got):\n%s", diff)
 			}

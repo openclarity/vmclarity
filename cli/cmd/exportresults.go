@@ -322,7 +322,7 @@ func (e *Exporter) ExportSecretsResult(res *results.Results, famerr families.Run
 	return nil
 }
 
-func (e *Exporter) ExportMalwareResult(res *results.Results) error {
+func (e *Exporter) ExportMalwareResult(res *results.Results, famerr families.RunErrors) error {
 	scanResult, err := e.client.GetScanResult(context.TODO(), scanResultID, models.GetScanResultsScanResultIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get scan result: %w", err)
@@ -335,13 +335,23 @@ func (e *Exporter) ExportMalwareResult(res *results.Results) error {
 		scanResult.Status.Malware = &models.TargetScanState{}
 	}
 
+	if scanResult.Summary == nil {
+		scanResult.Summary = &models.TargetScanResultSummary{}
+	}
+
 	var errors []string
 
-	malwareResults, err := results.GetResult[*malware.Results](res)
-	if err != nil {
-		errors = append(errors, fmt.Errorf("failed to get malware results from scan: %w", err).Error())
+	if err, ok := famerr[types.Secrets]; ok {
+		errors = append(errors, err.Error())
 	} else {
-		scanResult.Malware = ConvertMalwareResultToAPIModel(malwareResults)
+		malwareResults, err := results.GetResult[*malware.Results](res)
+		if err != nil {
+			errors = append(errors, fmt.Errorf("failed to get malware results from scan: %w", err).Error())
+		} else {
+			scanResult.Malware = convertMalwareResultToAPIModel(malwareResults)
+		}
+
+		scanResult.Summary.TotalMalware = utils.PointerTo[int](len(*scanResult.Malware.Malware))
 	}
 
 	state := models.DONE
@@ -355,7 +365,7 @@ func (e *Exporter) ExportMalwareResult(res *results.Results) error {
 	return nil
 }
 
-func ConvertMalwareResultToAPIModel(malwareResults *malware.Results) *models.MalwareScan {
+func convertMalwareResultToAPIModel(malwareResults *malware.Results) *models.MalwareScan {
 	if malwareResults == nil || malwareResults.MergedResults == nil {
 		return &models.MalwareScan{}
 	}
@@ -501,7 +511,7 @@ func (e *Exporter) ExportResults(res *results.Results, famerr families.RunErrors
 	}
 
 	if config.Malware.Enabled {
-		if err := e.ExportMalwareResult(res); err != nil {
+		if err := e.ExportMalwareResult(res, famerr); err != nil {
 			errors = appendExportError("malware", err, errors)
 		}
 	}
