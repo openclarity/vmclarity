@@ -16,9 +16,10 @@
 package cmd
 
 import (
-	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 	"reflect"
 	"testing"
+
+	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 
 	"github.com/openclarity/kubeclarity/shared/pkg/utils"
 

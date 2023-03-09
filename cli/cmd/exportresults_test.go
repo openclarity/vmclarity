@@ -16,9 +16,10 @@
 package cmd
 
 import (
-	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 	"reflect"
 	"testing"
+
+	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 
 	cdx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/google/go-cmp/cmp"
