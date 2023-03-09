@@ -571,11 +571,11 @@ type TargetType struct {
 
 // Targets defines model for Targets.
 type Targets struct {
+	// Count Total targets count according the given filters
+	Count *int `json:"count,omitempty"`
+
 	// Items List of targets in the given filters and page. List length must be lower or equal to pageSize.
 	Items *[]Target `json:"items,omitempty"`
-
-	// Total Total targets count according the given filters
-	Total *int `json:"total,omitempty"`
 }
 
 // TimeOfDay defines model for TimeOfDay.
@@ -731,12 +731,14 @@ type GetScansParams struct {
 type GetTargetsParams struct {
 	Filter *OdataFilter `form:"$filter,omitempty" json:"$filter,omitempty"`
 	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
+	Count  *OdataCount  `form:"$count,omitempty" json:"$count,omitempty"`
+	Top    *OdataTop    `form:"$top,omitempty" json:"$top,omitempty"`
+	Skip   *OdataSkip   `form:"$skip,omitempty" json:"$skip,omitempty"`
+}
 
-	// Page Page number of the query
-	Page *Page `form:"page,omitempty" json:"page,omitempty"`
-
-	// PageSize Maximum items to return
-	PageSize *PageSize `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+// GetTargetsTargetIDParams defines parameters for GetTargetsTargetID.
+type GetTargetsTargetIDParams struct {
+	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
 }
 
 // PutDiscoveryScopesJSONRequestBody defines body for PutDiscoveryScopes for application/json ContentType.

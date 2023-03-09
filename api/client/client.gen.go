@@ -179,7 +179,7 @@ type ClientInterface interface {
 	DeleteTargetsTargetID(ctx context.Context, targetID TargetID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetTargetsTargetID request
-	GetTargetsTargetID(ctx context.Context, targetID TargetID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetTargetsTargetID(ctx context.Context, targetID TargetID, params *GetTargetsTargetIDParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PutTargetsTargetID request with any body
 	PutTargetsTargetIDWithBody(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -583,8 +583,8 @@ func (c *Client) DeleteTargetsTargetID(ctx context.Context, targetID TargetID, r
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetTargetsTargetID(ctx context.Context, targetID TargetID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetTargetsTargetIDRequest(c.Server, targetID)
+func (c *Client) GetTargetsTargetID(ctx context.Context, targetID TargetID, params *GetTargetsTargetIDParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTargetsTargetIDRequest(c.Server, targetID, params)
 	if err != nil {
 		return nil, err
 	}
@@ -1704,9 +1704,9 @@ func NewGetTargetsRequest(server string, params *GetTargetsParams) (*http.Reques
 
 	}
 
-	if params.Page != nil {
+	if params.Count != nil {
 
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$count", runtime.ParamLocationQuery, *params.Count); err != nil {
 			return nil, err
 		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 			return nil, err
@@ -1720,9 +1720,25 @@ func NewGetTargetsRequest(server string, params *GetTargetsParams) (*http.Reques
 
 	}
 
-	if params.PageSize != nil {
+	if params.Top != nil {
 
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageSize", runtime.ParamLocationQuery, *params.PageSize); err != nil {
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$top", runtime.ParamLocationQuery, *params.Top); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Skip != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$skip", runtime.ParamLocationQuery, *params.Skip); err != nil {
 			return nil, err
 		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 			return nil, err
@@ -1821,7 +1837,7 @@ func NewDeleteTargetsTargetIDRequest(server string, targetID TargetID) (*http.Re
 }
 
 // NewGetTargetsTargetIDRequest generates requests for GetTargetsTargetID
-func NewGetTargetsTargetIDRequest(server string, targetID TargetID) (*http.Request, error) {
+func NewGetTargetsTargetIDRequest(server string, targetID TargetID, params *GetTargetsTargetIDParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1845,6 +1861,26 @@ func NewGetTargetsTargetIDRequest(server string, targetID TargetID) (*http.Reque
 	if err != nil {
 		return nil, err
 	}
+
+	queryValues := queryURL.Query()
+
+	if params.Select != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$select", runtime.ParamLocationQuery, *params.Select); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
 	if err != nil {
@@ -2033,7 +2069,7 @@ type ClientWithResponsesInterface interface {
 	DeleteTargetsTargetIDWithResponse(ctx context.Context, targetID TargetID, reqEditors ...RequestEditorFn) (*DeleteTargetsTargetIDResponse, error)
 
 	// GetTargetsTargetID request
-	GetTargetsTargetIDWithResponse(ctx context.Context, targetID TargetID, reqEditors ...RequestEditorFn) (*GetTargetsTargetIDResponse, error)
+	GetTargetsTargetIDWithResponse(ctx context.Context, targetID TargetID, params *GetTargetsTargetIDParams, reqEditors ...RequestEditorFn) (*GetTargetsTargetIDResponse, error)
 
 	// PutTargetsTargetID request with any body
 	PutTargetsTargetIDWithBodyWithResponse(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutTargetsTargetIDResponse, error)
@@ -2898,8 +2934,8 @@ func (c *ClientWithResponses) DeleteTargetsTargetIDWithResponse(ctx context.Cont
 }
 
 // GetTargetsTargetIDWithResponse request returning *GetTargetsTargetIDResponse
-func (c *ClientWithResponses) GetTargetsTargetIDWithResponse(ctx context.Context, targetID TargetID, reqEditors ...RequestEditorFn) (*GetTargetsTargetIDResponse, error) {
-	rsp, err := c.GetTargetsTargetID(ctx, targetID, reqEditors...)
+func (c *ClientWithResponses) GetTargetsTargetIDWithResponse(ctx context.Context, targetID TargetID, params *GetTargetsTargetIDParams, reqEditors ...RequestEditorFn) (*GetTargetsTargetIDResponse, error) {
+	rsp, err := c.GetTargetsTargetID(ctx, targetID, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}

@@ -18,6 +18,7 @@ package gorm
 import (
 	"fmt"
 
+	log "github.com/sirupsen/logrus"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
@@ -31,6 +32,53 @@ type ODataObject struct {
 }
 
 var schemaMetas = map[string]odatasql.SchemaMeta{
+	targetSchemaName: {
+		Table: "targets",
+		Fields: odatasql.Schema{
+			"id":         odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"scansCount": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"targetInfo": odatasql.FieldMeta{
+				FieldType:             odatasql.ComplexFieldType,
+				ComplexFieldSchemas:   []string{"VMInfo"},
+				DescriminatorProperty: "objectType",
+			},
+			"summary": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"ScanFindingsSummary"},
+			},
+		},
+	},
+	"VMInfo": {
+		Fields: odatasql.Schema{
+			"objectType":       odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"instanceID":       odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"location":         odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"instanceProvider": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+		},
+	},
+	"ScanFindingsSummary": {
+		Fields: odatasql.Schema{
+			"totalPackages":          odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"totalExploits":          odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"totalMalware":           odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"totalMisconfigurations": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"totalRootkits":          odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"totalSecrets":           odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"totalVulnerabilities": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"VulnerabilityScanSummary"},
+			},
+		},
+	},
+	"VulnerabilityScanSummary": {
+		Fields: odatasql.Schema{
+			"totalCriticalVulnerabilities":   odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"totalHighVulnerabilities":       odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"totalMediumVulnerabilities":     odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"totalLowVulnerabilities":        odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"totalNegligibleVulnerabilities": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+		},
+	},
 	"ScanConfig": {
 		Table: "scan_configs",
 		Fields: odatasql.Schema{
@@ -207,6 +255,8 @@ func ODataQuery(db *gorm.DB, schema string, filterString, selectString, expandSt
 	if err != nil {
 		return fmt.Errorf("failed to build query for DB: %w", err)
 	}
+
+	log.Debugf("Running query - %q", query)
 
 	// Use the query to populate "result" using the gorm finalisers so that
 	// the gorm error handling processes things like no results found.
