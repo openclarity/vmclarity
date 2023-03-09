@@ -57,11 +57,11 @@ func (s *ScanResultsTableHandler) GetScanResults(params models.GetScanResultsPar
 
 	items := make([]models.TargetScanResult, len(scanResults))
 	for i, scanResult := range scanResults {
-		var sc models.TargetScanResult
-		if err = json.Unmarshal(scanResult.Data, &sc); err != nil {
+		var tsr models.TargetScanResult
+		if err = json.Unmarshal(scanResult.Data, &tsr); err != nil {
 			return models.TargetScanResults{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 		}
-		items[i] = sc
+		items[i] = tsr
 	}
 
 	output := models.TargetScanResults{Items: &items}
@@ -88,13 +88,13 @@ func (s *ScanResultsTableHandler) GetScanResult(scanResultID models.ScanResultID
 		return models.TargetScanResult{}, err
 	}
 
-	var sc models.TargetScanResult
-	err = json.Unmarshal(dbScanResult.Data, &sc)
+	var tsr models.TargetScanResult
+	err = json.Unmarshal(dbScanResult.Data, &tsr)
 	if err != nil {
 		return models.TargetScanResult{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
-	return sc, nil
+	return tsr, nil
 }
 
 // nolint:cyclop
@@ -136,11 +136,11 @@ func (s *ScanResultsTableHandler) CreateScanResult(scanResult models.TargetScanR
 	}
 
 	if len(scanResults) > 0 {
-		var sc models.TargetScanResult
-		if err = json.Unmarshal(scanResults[0].Data, &sc); err != nil {
+		var tsr models.TargetScanResult
+		if err = json.Unmarshal(scanResults[0].Data, &tsr); err != nil {
 			return models.TargetScanResult{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 		}
-		return sc, &common.ConflictError{
+		return tsr, &common.ConflictError{
 			Reason: fmt.Sprintf("Scan results exists with scan id=%s and target id=%s", *scanResult.Target.Id, *scanResult.Scan.Id),
 		}
 	}
@@ -150,18 +150,18 @@ func (s *ScanResultsTableHandler) CreateScanResult(scanResult models.TargetScanR
 		return models.TargetScanResult{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
 	}
 
-	newScanConfig := ScanResult{}
-	newScanConfig.Data = marshaled
+	newScanResult := ScanResult{}
+	newScanResult.Data = marshaled
 
-	if err := s.DB.Create(&newScanConfig).Error; err != nil {
-		return models.TargetScanResult{}, fmt.Errorf("failed to create scan config in db: %w", err)
+	if err := s.DB.Create(&newScanResult).Error; err != nil {
+		return models.TargetScanResult{}, fmt.Errorf("failed to create scan result in db: %w", err)
 	}
 
 	// TODO(sambetts) Maybe this isn't required now because the DB isn't
 	// creating any of the data (like the ID) so we can just return the
 	// scanResult pre-marshal above.
 	var tsr models.TargetScanResult
-	err = json.Unmarshal(newScanConfig.Data, &tsr)
+	err = json.Unmarshal(newScanResult.Data, &tsr)
 	if err != nil {
 		return models.TargetScanResult{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
@@ -188,7 +188,7 @@ func (s *ScanResultsTableHandler) SaveScanResult(scanResult models.TargetScanRes
 	dbScanResult.Data = marshaled
 
 	if err := s.DB.Save(&dbScanResult).Error; err != nil {
-		return models.TargetScanResult{}, fmt.Errorf("failed to save scan config in db: %w", err)
+		return models.TargetScanResult{}, fmt.Errorf("failed to save scan result in db: %w", err)
 	}
 
 	// TODO(sambetts) Maybe this isn't required now because the DB isn't
@@ -206,7 +206,7 @@ func (s *ScanResultsTableHandler) SaveScanResult(scanResult models.TargetScanRes
 func (s *ScanResultsTableHandler) UpdateScanResult(scanResult models.TargetScanResult) (models.TargetScanResult, error) {
 	// Check the user provide an ID
 	if scanResult.Id == nil {
-		return models.TargetScanResult{}, fmt.Errorf("must specify ID field when updateing a ScanResult")
+		return models.TargetScanResult{}, fmt.Errorf("must specify ID field when updating a ScanResult")
 	}
 
 	var dbScanResult ScanResult
@@ -234,16 +234,16 @@ func (s *ScanResultsTableHandler) UpdateScanResult(scanResult models.TargetScanR
 	dbScanResult.Data = updated
 
 	if err := s.DB.Save(&dbScanResult).Error; err != nil {
-		return models.TargetScanResult{}, fmt.Errorf("failed to save scan config in db: %w", err)
+		return models.TargetScanResult{}, fmt.Errorf("failed to save scan result in db: %w", err)
 	}
 
 	// TODO(sambetts) Maybe this isn't required now because the DB isn't
 	// creating any of the data (like the ID) so we can just return the
 	// scanResult pre-marshal above.
-	var sc models.TargetScanResult
-	err = json.Unmarshal(dbScanResult.Data, &sc)
+	var tsr models.TargetScanResult
+	err = json.Unmarshal(dbScanResult.Data, &tsr)
 	if err != nil {
 		return models.TargetScanResult{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
-	return sc, nil
+	return tsr, nil
 }
