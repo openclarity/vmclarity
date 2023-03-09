@@ -21,9 +21,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
-	"github.com/openclarity/vmclarity/shared/pkg/families/malware/common"
-
 	"github.com/anchore/syft/syft/source"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
@@ -40,7 +37,9 @@ import (
 	familiesExploits "github.com/openclarity/vmclarity/shared/pkg/families/exploits"
 	exploitsCommon "github.com/openclarity/vmclarity/shared/pkg/families/exploits/common"
 	exploitdbConfig "github.com/openclarity/vmclarity/shared/pkg/families/exploits/exploitdb/config"
+	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 	malwareconfig "github.com/openclarity/vmclarity/shared/pkg/families/malware/clam/config"
+	"github.com/openclarity/vmclarity/shared/pkg/families/malware/common"
 	familiesSbom "github.com/openclarity/vmclarity/shared/pkg/families/sbom"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
 	secretscommon "github.com/openclarity/vmclarity/shared/pkg/families/secrets/common"
@@ -455,7 +454,7 @@ func userMalwareConfigToFamiliesMalwareConfig(malwareConfig *models.MalwareConfi
 		return malware.Config{}
 	}
 
-	log.Infof("clam binary path: %s", clamBinaryPath)
+	log.Debugf("clam binary path: %s", clamBinaryPath)
 	return malware.Config{
 		Enabled:      true,
 		ScannersList: []string{"clam"},

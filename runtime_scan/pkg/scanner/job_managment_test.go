@@ -18,19 +18,17 @@ package scanner
 import (
 	"testing"
 
-	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
-	"github.com/openclarity/vmclarity/shared/pkg/families/malware/clam/config"
-
 	"github.com/anchore/syft/syft/source"
 	"github.com/google/go-cmp/cmp"
-	kubeclarityConfig "github.com/openclarity/kubeclarity/shared/pkg/config"
 
+	kubeclarityConfig "github.com/openclarity/kubeclarity/shared/pkg/config"
 	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
+	"github.com/openclarity/vmclarity/shared/pkg/families/malware/clam/config"
 	malwarecommon "github.com/openclarity/vmclarity/shared/pkg/families/malware/common"
 	familiesSbom "github.com/openclarity/vmclarity/shared/pkg/families/sbom"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
 	secretscommon "github.com/openclarity/vmclarity/shared/pkg/families/secrets/common"
-
 	gitleaksconfig "github.com/openclarity/vmclarity/shared/pkg/families/secrets/gitleaks/config"
 	familiesVulnerabilities "github.com/openclarity/vmclarity/shared/pkg/families/vulnerabilities"
 	"github.com/openclarity/vmclarity/shared/pkg/utils"

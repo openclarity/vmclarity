@@ -19,17 +19,15 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
-
 	cdx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
 	"github.com/openclarity/kubeclarity/shared/pkg/scanner"
-
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/shared/pkg/families/exploits"
 	exploitscommon "github.com/openclarity/vmclarity/shared/pkg/families/exploits/common"
+	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 	"github.com/openclarity/vmclarity/shared/pkg/families/sbom"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets/common"
