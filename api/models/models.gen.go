@@ -536,11 +536,11 @@ type TargetScanResultExists struct {
 
 // TargetScanResults defines model for TargetScanResults.
 type TargetScanResults struct {
+	// Count Total scan results count according to the given filters
+	Count *int `json:"count,omitempty"`
+
 	// Items List of scan results according to the given filters and page. List length must be lower or equal to pageSize.
 	Items *[]TargetScanResult `json:"items,omitempty"`
-
-	// Total Total scan results count according to the given filters
-	Total *int `json:"total,omitempty"`
 }
 
 // TargetScanState defines model for TargetScanState.
@@ -703,17 +703,16 @@ type GetScanConfigsScanConfigIDParams struct {
 type GetScanResultsParams struct {
 	Filter *OdataFilter `form:"$filter,omitempty" json:"$filter,omitempty"`
 	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
-
-	// Page Page number of the query
-	Page *Page `form:"page,omitempty" json:"page,omitempty"`
-
-	// PageSize Maximum items to return
-	PageSize *PageSize `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	Count  *OdataCount  `form:"$count,omitempty" json:"$count,omitempty"`
+	Top    *OdataTop    `form:"$top,omitempty" json:"$top,omitempty"`
+	Skip   *OdataSkip   `form:"$skip,omitempty" json:"$skip,omitempty"`
+	Expand *OdataExpand `form:"$expand,omitempty" json:"$expand,omitempty"`
 }
 
 // GetScanResultsScanResultIDParams defines parameters for GetScanResultsScanResultID.
 type GetScanResultsScanResultIDParams struct {
 	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
+	Expand *OdataExpand `form:"$expand,omitempty" json:"$expand,omitempty"`
 }
 
 // GetScansParams defines parameters for GetScans.
