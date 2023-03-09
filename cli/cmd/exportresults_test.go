@@ -16,6 +16,7 @@
 package cmd
 
 import (
+	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 	"reflect"
 	"testing"
 
@@ -27,7 +28,7 @@ import (
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/shared/pkg/families/exploits"
-	common2 "github.com/openclarity/vmclarity/shared/pkg/families/exploits/common"
+	exploitscommon "github.com/openclarity/vmclarity/shared/pkg/families/exploits/common"
 	"github.com/openclarity/vmclarity/shared/pkg/families/sbom"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets/common"
@@ -324,8 +325,86 @@ func Test_convertSecretsResultToAPIModel(t *testing.T) {
 	}
 }
 
+func Test_convertMalwareResultToAPIModel(t *testing.T) {
+	malware1 := models.Malware{
+		Id: utils.StringPtr("id1"),
+		MalwareInfo: &models.MalwareInfo{
+			MalwareName: utils.StringPtr("Worm<3"),
+			MalwareType: utils.PointerTo[models.MalwareType]("WORM"),
+			Path:        utils.StringPtr("/somepath/innocent.exe"),
+		},
+	}
+	malware2 := models.Malware{
+		Id: utils.StringPtr("id2"),
+		MalwareInfo: &models.MalwareInfo{
+			MalwareName: utils.StringPtr("Trojan:)"),
+			MalwareType: utils.PointerTo[models.MalwareType]("TROJAN"),
+			Path:        utils.StringPtr("/somepath/gift.exe"),
+		},
+	}
+	malware3 := models.Malware{
+		Id: utils.StringPtr("id3"),
+		MalwareInfo: &models.MalwareInfo{
+			MalwareName: utils.StringPtr("Ransom!"),
+			MalwareType: utils.PointerTo[models.MalwareType]("RANSOMWARE"),
+			Path:        utils.StringPtr("/somepath/givememoney.exe"),
+		},
+	}
+
+	type args struct {
+		mergedResults *malware.Results
+	}
+	tests := []struct {
+		name string
+		args args
+		want *models.MalwareScan
+	}{
+		{
+			name: "nil mergedResults",
+			args: args{
+				mergedResults: nil,
+			},
+			want: &models.MalwareScan{},
+		},
+		{
+			name: "nil exploitsResults.Exploits",
+			args: args{
+				mergedResults: &malware.Results{
+					MergedResults: nil,
+				},
+			},
+			want: &models.MalwareScan{},
+		},
+		{
+			name: "sanity",
+			args: args{
+				mergedResults: &malware.Results{
+					MergedResults: &malware.MergedResults{
+						DetectedMalware: &[]models.Malware{
+							malware1, malware2, malware3,
+						},
+					},
+				},
+			},
+			want: &models.MalwareScan{
+				Malware: &[]models.Malware{
+					malware1, malware2, malware3,
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ConvertMalwareResultToAPIModel(tt.args.mergedResults)
+			if diff := cmp.Diff(tt.want, got, cmpopts.SortSlices(func(a, b models.Exploit) bool { return *a.Id < *b.Id })); diff != "" {
+				t.Errorf("convertExploitsResultToAPIModel() mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
 func Test_convertExploitsResultToAPIModel(t *testing.T) {
-	exploit1 := common2.Exploit{
+	exploit1 := exploitscommon.Exploit{
 		ID:          "id1",
 		Name:        "name1",
 		Title:       "title1",
@@ -334,7 +413,7 @@ func Test_convertExploitsResultToAPIModel(t *testing.T) {
 		URLs:        []string{"url1"},
 		SourceDB:    "db1",
 	}
-	exploit2 := common2.Exploit{
+	exploit2 := exploitscommon.Exploit{
 		ID:          "id2",
 		Name:        "name2",
 		Title:       "title2",
@@ -343,7 +422,7 @@ func Test_convertExploitsResultToAPIModel(t *testing.T) {
 		URLs:        []string{"url2"},
 		SourceDB:    "db2",
 	}
-	exploit3 := common2.Exploit{
+	exploit3 := exploitscommon.Exploit{
 		ID:          "id3",
 		Name:        "name3",
 		Title:       "title3",
