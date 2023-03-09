@@ -26,6 +26,7 @@ const (
 	VIRUS      MalwareType = "VIRUS"
 	PHISHING   MalwareType = "PHISING"
 	WORM       MalwareType = "WORM"
+	UNKNOWN    MalwareType = "UNKNOWN"
 )
 
 // Defines values for RootkitType.
