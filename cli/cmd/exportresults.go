@@ -349,9 +349,10 @@ func (e *Exporter) ExportMalwareResult(res *results.Results, famerr families.Run
 			errors = append(errors, fmt.Errorf("failed to get malware results from scan: %w", err).Error())
 		} else {
 			scanResult.Malware = convertMalwareResultToAPIModel(malwareResults)
+			if scanResult.Malware.Malware != nil {
+				scanResult.Summary.TotalMalware = utils.PointerTo[int](len(*scanResult.Malware.Malware))
+			}
 		}
-
-		scanResult.Summary.TotalMalware = utils.PointerTo[int](len(*scanResult.Malware.Malware))
 	}
 
 	state := models.DONE
