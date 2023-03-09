@@ -298,10 +298,8 @@ func (c *Client) RunScanningJob(ctx context.Context, region, id string, config p
 			SpotOptions: &ec2types.SpotMarketOptions{
 				InstanceInterruptionBehavior: ec2types.InstanceInterruptionBehaviorTerminate,
 				SpotInstanceType:             ec2types.SpotInstanceTypeOneTime,
+				MaxPrice:                     config.ScannerInstanceCreationConfig.MaxPrice,
 			},
-		}
-		if config.ScannerInstanceCreationConfig.MaxPrice != nil {
-			runInstancesInput.InstanceMarketOptions.SpotOptions.MaxPrice = config.ScannerInstanceCreationConfig.MaxPrice
 		}
 		if config.ScannerInstanceCreationConfig.RetryMaxAttempts != nil {
 			retryMaxAttempts = *config.ScannerInstanceCreationConfig.RetryMaxAttempts
