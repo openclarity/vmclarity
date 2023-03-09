@@ -371,7 +371,7 @@ func convertMalwareResultToAPIModel(malwareResults *malware.Results) *models.Mal
 	}
 
 	return &models.MalwareScan{
-		Malware: malwareResults.MergedResults.DetectedMalware,
+		Malware: &malwareResults.MergedResults.DetectedMalware,
 	}
 }
 

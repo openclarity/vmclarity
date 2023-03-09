@@ -22,6 +22,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	kubeclarityConfig "github.com/openclarity/kubeclarity/shared/pkg/config"
+
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 	"github.com/openclarity/vmclarity/shared/pkg/families/malware/clam/config"

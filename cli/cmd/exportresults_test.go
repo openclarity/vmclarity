@@ -24,6 +24,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 
 	"github.com/openclarity/kubeclarity/shared/pkg/scanner"
+
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/shared/pkg/families/exploits"
 	exploitscommon "github.com/openclarity/vmclarity/shared/pkg/families/exploits/common"
@@ -379,7 +380,7 @@ func Test_convertMalwareResultToAPIModel(t *testing.T) {
 			args: args{
 				mergedResults: &malware.Results{
 					MergedResults: &malware.MergedResults{
-						DetectedMalware: &[]models.Malware{
+						DetectedMalware: []models.Malware{
 							malware1, malware2, malware3,
 						},
 					},
