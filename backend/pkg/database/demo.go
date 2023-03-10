@@ -13,11 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gorm
+package database
 
 import (
 	"time"
 
+	"github.com/openclarity/vmclarity/backend/pkg/database/types"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 
@@ -25,7 +26,7 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/utils"
 )
 
-func (db *Handler) CreateDemoData() {
+func CreateDemoData(db types.Database) {
 	// Create scopes
 	scopesType := models.ScopeType{}
 	err := scopesType.FromAwsScope(models.AwsScope{

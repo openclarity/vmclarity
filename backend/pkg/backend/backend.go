@@ -85,7 +85,7 @@ func Run() {
 	}
 
 	if config.EnableFakeData {
-		go dbHandler.CreateDemoData()
+		go database.CreateDemoData(dbHandler)
 	}
 	_ = CreateBackend(dbHandler)
 
@@ -105,7 +105,7 @@ func Run() {
 		log.Fatalf("Failed to create provider client: %v", err)
 	}
 
-	if _, ok := os.LookupEnv("FAKE_SCOPES"); !ok {
+	if _, ok := os.LookupEnv("DISABLE_ORCHESTRATOR"); !ok {
 		orc, err := createRuntimeScanOrchestrator(providerClient, runtimeScanConfig)
 		if err != nil {
 			log.Fatalf("Failed to create runtime scan orchestrator: %v", err)

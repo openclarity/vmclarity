@@ -45,7 +45,6 @@ type Database interface {
 	ScansTable() ScansTable
 	TargetsTable() TargetsTable
 	ScopesTable() ScopesTable
-	CreateDemoData()
 }
 
 type ScansTable interface {
