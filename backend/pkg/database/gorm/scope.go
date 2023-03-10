@@ -16,6 +16,8 @@
 package gorm
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/openclarity/vmclarity/api/models"
@@ -24,47 +26,66 @@ import (
 )
 
 const (
-	scopeTableName = "scopes"
+	scopesSchemaName = "Scopes"
 )
 
 type Scopes struct {
-	Base
-	Type string `json:"type,omitempty" gorm:"column:type" faker:"-"`
-
-	// AWS Scope
-	AwsScopesRegions []AwsScopesRegion `gorm:"foreignKey:RegionID"`
-}
-
-type AwsScopesRegion struct {
-	RegionID      string         `gorm:"primarykey" faker:"-"`
-	AwsRegionVpcs []AwsRegionVpc `gorm:"foreignKey:VpcID"`
-}
-
-type AwsRegionVpc struct {
-	VpcID                string                `gorm:"primarykey" faker:"-"`
-	AwsVpcSecurityGroups []AwsVpcSecurityGroup `gorm:"foreignKey:GroupID"`
-}
-
-type AwsVpcSecurityGroup struct {
-	GroupID string `gorm:"primarykey" faker:"-"`
+	ODataObject
 }
 
 type ScopesTableHandler struct {
-	scopesTable *gorm.DB
+	DB *gorm.DB
 }
 
 func (db *Handler) ScopesTable() types.ScopesTable {
 	return &ScopesTableHandler{
-		scopesTable: db.DB.Table(scopeTableName),
+		DB: db.DB,
 	}
 }
 
-func (s ScopesTableHandler) GetScopes() (models.ScopeType, error) {
-	var scopes models.ScopeType
+func (s ScopesTableHandler) GetScopes(params models.GetDiscoveryScopesParams) (models.Scopes, error) {
+	var dbScopes Scopes
+	err := ODataQuery(s.DB, scopesSchemaName, params.Filter, params.Select, nil, nil, nil, false, &dbScopes)
+	if err != nil {
+		return models.Scopes{}, err
+	}
 
-	return scopes, fmt.Errorf("GetScopes not implemented")
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return models.Scopes{}, types.ErrNotFound
+		}
+		return models.Scopes{}, err
+	}
+
+	var scopes models.Scopes
+	err = json.Unmarshal(dbScopes.Data, &scopes)
+	if err != nil {
+		return models.Scopes{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+	}
+
+	return scopes, nil
 }
 
-func (s ScopesTableHandler) SetScopes(scopes models.ScopeType) (models.ScopeType, error) {
-	return scopes, fmt.Errorf("GetScopes not implemented")
+func (s ScopesTableHandler) SetScopes(scopes models.Scopes) (models.Scopes, error) {
+	marshaled, err := json.Marshal(scopes)
+	if err != nil {
+		return models.Scopes{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
+	}
+
+	var dbScopes Scopes
+	dbScopes.Data = marshaled
+
+	if err = s.DB.Save(&dbScopes).Error; err != nil {
+		return models.Scopes{}, fmt.Errorf("failed to save scopes in db: %w", err)
+	}
+
+	// TODO(sambetts) Maybe this isn't required now because the DB isn't
+	// creating any of the data (like the ID) so we can just return the
+	// target pre-marshal above.
+	var apiScopes models.Scopes
+	if err = json.Unmarshal(dbScopes.Data, &apiScopes); err != nil {
+		return models.Scopes{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+	}
+
+	return apiScopes, nil
 }

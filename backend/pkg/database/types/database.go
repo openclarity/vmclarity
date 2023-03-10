@@ -93,6 +93,6 @@ type TargetsTable interface {
 }
 
 type ScopesTable interface {
-	GetScopes() (models.ScopeType, error)
-	SetScopes(scopes models.ScopeType) (models.ScopeType, error)
+	GetScopes(params models.GetDiscoveryScopesParams) (models.Scopes, error)
+	SetScopes(scopes models.Scopes) (models.Scopes, error)
 }

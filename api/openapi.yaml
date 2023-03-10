@@ -510,7 +510,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ScopeType'
+                $ref: '#/components/schemas/Scopes'
         default:
           $ref: '#/components/responses/UnknownError'
     put:
@@ -519,7 +519,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ScopeType'
+              $ref: '#/components/schemas/Scopes'
         required: true
       responses:
         200:
@@ -527,7 +527,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ScopeType'
+                $ref: '#/components/schemas/Scopes'
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
@@ -806,6 +806,13 @@ components:
           readOnly: true
         scanConfig:
           $ref: '#/components/schemas/ScanConfig'
+
+    Scopes:
+      type: object
+      description: Scopes discovery
+      properties:
+        scopes:
+          $ref: '#/components/schemas/ScopeType'
 
     ScanScopeType:
       type: object

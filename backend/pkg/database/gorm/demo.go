@@ -27,61 +27,71 @@ import (
 
 func (db *Handler) CreateDemoData() {
 	// Create scopes
+	scopesType := models.ScopeType{}
+	err := scopesType.FromAwsScope(models.AwsScope{
+		Regions: utils.PointerTo([]models.AwsRegion{
+			{
+				Id: utils.PointerTo("eu-central-1"),
+				Vpcs: utils.PointerTo([]models.AwsVPC{
+					{
+						Id: utils.PointerTo("vpc-1-from-eu-central-1"),
+						SecurityGroups: utils.PointerTo([]models.AwsSecurityGroup{
+							{
+								Id: utils.PointerTo("sg-1-from-vpc-1-from-eu-central-1"),
+							},
+						}),
+					},
+					{
+						Id: utils.PointerTo("vpc-2-from-eu-central-1"),
+						SecurityGroups: utils.PointerTo([]models.AwsSecurityGroup{
+							{
+								Id: utils.PointerTo("sg-1-from-vpc-2-from-eu-central-1"),
+							},
+						}),
+					},
+				}),
+			},
+			{
+				Id: utils.PointerTo("us-east-1"),
+				Vpcs: utils.PointerTo([]models.AwsVPC{
+					{
+						Id: utils.PointerTo("vpc-1-from-us-east-1"),
+						SecurityGroups: utils.PointerTo([]models.AwsSecurityGroup{
+							{
+								Id: utils.PointerTo("sg-1-from-vpc-1-from-us-east-1"),
+							},
+						}),
+					},
+					{
+						Id: utils.PointerTo("vpc-2-from-us-east-1"),
+						SecurityGroups: utils.PointerTo([]models.AwsSecurityGroup{
+							{
+								Id: utils.PointerTo("sg-1-from-vpc-2-from-us-east-1"),
+							},
+						}),
+					},
+					{
+						Id: utils.PointerTo("vpc-2-from-us-east-1"),
+						SecurityGroups: utils.PointerTo([]models.AwsSecurityGroup{
+							{
+								Id: utils.PointerTo("sg-2-from-vpc-2-from-us-east-1"),
+							},
+						}),
+					},
+				}),
+			},
+		}),
+	})
+	if err != nil {
+		log.Fatalf("failed to create scopes FromAwsScope: %v", err)
+	}
+	scopes := models.Scopes{
+		Scopes: &scopesType,
+	}
+	if _, err := db.ScopesTable().SetScopes(scopes); err != nil {
+		log.Fatalf("failed to save scopes: %v", err)
+	}
 
-	//var scopes = &Scopes{
-	//	Type: "AwsScope",
-	//	AwsScopesRegions: []AwsScopesRegion{
-	//		{
-	//			RegionID: "eu-central-1",
-	//			AwsRegionVpcs: []AwsRegionVpc{
-	//				{
-	//					VpcID: "vpc-1-from-eu-central-1",
-	//					AwsVpcSecurityGroups: []AwsVpcSecurityGroup{
-	//						{
-	//							GroupID: "sg-1-from-vpc-1-from-eu-central-1",
-	//						},
-	//					},
-	//				},
-	//				{
-	//					VpcID: "vpc-2-from-eu-central-1",
-	//					AwsVpcSecurityGroups: []AwsVpcSecurityGroup{
-	//						{
-	//							GroupID: "sg-2-from-vpc-1-from-eu-central-1",
-	//						},
-	//					},
-	//				},
-	//			},
-	//		},
-	//		{
-	//			RegionID: "us-east-1",
-	//			AwsRegionVpcs: []AwsRegionVpc{
-	//				{
-	//					VpcID: "vpc-1-from-us-east-1",
-	//					AwsVpcSecurityGroups: []AwsVpcSecurityGroup{
-	//						{
-	//							GroupID: "sg-1-from-vpc-1-from-us-east-1",
-	//						},
-	//					},
-	//				},
-	//				{
-	//					VpcID: "vpc-2-from-us-east-1",
-	//					AwsVpcSecurityGroups: []AwsVpcSecurityGroup{
-	//						{
-	//							GroupID: "sg-1-from-vpc-2-from-us-east-1",
-	//						},
-	//						{
-	//							GroupID: "sg-2-from-vpc-2-from-us-east-1",
-	//						},
-	//					},
-	//				},
-	//			},
-	//		},
-	//	},
-	//}
-	//if _, err := db.ScopesTable().SetScopes(scopes); err != nil {
-	//	log.Fatalf("failed to set scopes: %v", err)
-	//}
-	//
 	//// Create scan configs
 	//
 	//// Scan config 1

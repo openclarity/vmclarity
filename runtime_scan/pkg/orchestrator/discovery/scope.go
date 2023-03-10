@@ -45,7 +45,7 @@ func CreateScopeDiscoverer(backendClient *client.ClientWithResponses, providerCl
 	}
 }
 
-func (sd *ScopeDiscoverer) setScopes(scopes *models.ScopeType) (*models.ScopeType, error) {
+func (sd *ScopeDiscoverer) setScopes(scopes *models.Scopes) (*models.Scopes, error) {
 	scopesB, err := json.Marshal(scopes)
 	if err != nil {
 		log.Errorf("Failed to marshal scopes: %v", err)

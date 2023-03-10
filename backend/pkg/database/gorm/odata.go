@@ -492,6 +492,28 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 			"operationTime": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 		},
 	},
+	scopesSchemaName: {
+		Table: "scopes",
+		Fields: odatasql.Schema{
+			"scopes": odatasql.FieldMeta{
+				FieldType:             odatasql.ComplexFieldType,
+				ComplexFieldSchemas:   []string{"AwsScope"},
+				DescriminatorProperty: "objectType",
+			},
+		},
+	},
+	"AwsScope": {
+		Fields: odatasql.Schema{
+			"objectType": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"regions": odatasql.FieldMeta{
+				FieldType: odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{
+					FieldType:           odatasql.ComplexFieldType,
+					ComplexFieldSchemas: []string{"AwsRegion"},
+				},
+			},
+		},
+	},
 	"AwsScanScope": {
 		Fields: odatasql.Schema{
 			"objectType":                 odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
@@ -528,8 +550,7 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 	},
 	"AwsRegion": {
 		Fields: odatasql.Schema{
-			"id":   odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
-			"name": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"id": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"vpcs": odatasql.FieldMeta{
 				FieldType: odatasql.CollectionFieldType,
 				CollectionItemMeta: &odatasql.FieldMeta{
@@ -541,8 +562,7 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 	},
 	"AwsVPC": {
 		Fields: odatasql.Schema{
-			"id":   odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
-			"name": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"id": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"securityGroups": odatasql.FieldMeta{
 				FieldType: odatasql.CollectionFieldType,
 				CollectionItemMeta: &odatasql.FieldMeta{
@@ -554,8 +574,7 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 	},
 	"AwsSecurityGroup": {
 		Fields: odatasql.Schema{
-			"id":   odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
-			"name": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"id": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 		},
 	},
 }

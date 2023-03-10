@@ -69,7 +69,7 @@ func Create(ctx context.Context, config *aws.Config) (*Client, error) {
 	return &awsClient, nil
 }
 
-func (c *Client) DiscoverScopes(ctx context.Context) (*models.ScopeType, error) {
+func (c *Client) DiscoverScopes(ctx context.Context) (*models.Scopes, error) {
 	regions, err := c.ListAllRegions(ctx, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list all regions: %v", err)
@@ -81,15 +81,17 @@ func (c *Client) DiscoverScopes(ctx context.Context) (*models.ScopeType, error) 
 		fmt.Printf("regionsB=%s\n\n", regionsB)
 	}
 
-	ret := models.ScopeType{}
-	err = ret.FromAwsScope(models.AwsScope{
+	scopes := models.ScopeType{}
+	err = scopes.FromAwsScope(models.AwsScope{
 		Regions: convertToAPIRegions(regions),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("FromAwsScope failed: %w", err)
 	}
 
-	return &ret, nil
+	return &models.Scopes{
+		Scopes: &scopes,
+	}, nil
 }
 
 func (c *Client) DiscoverInstances(ctx context.Context, scanScope *models.ScanScopeType) ([]types.Instance, error) {

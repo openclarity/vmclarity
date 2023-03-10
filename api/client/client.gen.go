@@ -2128,7 +2128,7 @@ type ClientWithResponsesInterface interface {
 type GetDiscoveryScopesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ScopeType
+	JSON200      *Scopes
 	JSONDefault  *ApiResponse
 }
 
@@ -2151,7 +2151,7 @@ func (r GetDiscoveryScopesResponse) StatusCode() int {
 type PutDiscoveryScopesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ScopeType
+	JSON200      *Scopes
 	JSONDefault  *ApiResponse
 }
 
@@ -3022,7 +3022,7 @@ func ParseGetDiscoveryScopesResponse(rsp *http.Response) (*GetDiscoveryScopesRes
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ScopeType
+		var dest Scopes
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -3055,7 +3055,7 @@ func ParsePutDiscoveryScopesResponse(rsp *http.Response) (*PutDiscoveryScopesRes
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ScopeType
+		var dest Scopes
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

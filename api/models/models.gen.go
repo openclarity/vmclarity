@@ -442,6 +442,11 @@ type ScopeType struct {
 	union json.RawMessage
 }
 
+// Scopes Scopes discovery
+type Scopes struct {
+	Scopes *ScopeType `json:"scopes,omitempty"`
+}
+
 // Secret defines model for Secret.
 type Secret struct {
 	Id         *string     `json:"id,omitempty"`
@@ -741,7 +746,7 @@ type GetTargetsTargetIDParams struct {
 }
 
 // PutDiscoveryScopesJSONRequestBody defines body for PutDiscoveryScopes for application/json ContentType.
-type PutDiscoveryScopesJSONRequestBody = ScopeType
+type PutDiscoveryScopesJSONRequestBody = Scopes
 
 // PostScanConfigsJSONRequestBody defines body for PostScanConfigs for application/json ContentType.
 type PostScanConfigsJSONRequestBody = ScanConfig
