@@ -18,7 +18,6 @@ package aws
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -73,12 +72,6 @@ func (c *Client) DiscoverScopes(ctx context.Context) (*models.Scopes, error) {
 	regions, err := c.ListAllRegions(ctx, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list all regions: %v", err)
-	}
-	regionsB, err := json.Marshal(regions)
-	if err != nil {
-		log.Errorf("Failed to marshal regions: %v", err)
-	} else {
-		fmt.Printf("regionsB=%s\n\n", regionsB)
 	}
 
 	scopes := models.ScopeType{}
@@ -487,12 +480,7 @@ func (c *Client) ListAllRegions(ctx context.Context, isRecursive bool) ([]Region
 	if err != nil {
 		return nil, fmt.Errorf("failed to describe regions: %v", err)
 	}
-	outRegionsB, err := json.Marshal(out.Regions)
-	if err != nil {
-		log.Errorf("Failed to marshal out.Regions: %v", err)
-	} else {
-		fmt.Printf("outRegionsB=%s\n\n", outRegionsB)
-	}
+
 	for _, region := range out.Regions {
 		ret = append(ret, Region{
 			ID: *region.RegionName,
@@ -532,12 +520,6 @@ func (c *Client) ListAllRegions(ctx context.Context, isRecursive bool) ([]Region
 				ret[i].VPCs[i2].SecurityGroups = convertAwsSecurityGroups(securityGroups.SecurityGroups)
 			}
 		}
-	}
-	retB, err := json.Marshal(ret)
-	if err != nil {
-		log.Errorf("Failed to marshal ret: %v", err)
-	} else {
-		fmt.Printf("retB=%s\n\n", retB)
 	}
 
 	return ret, nil

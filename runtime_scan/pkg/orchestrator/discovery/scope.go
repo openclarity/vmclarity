@@ -17,7 +17,6 @@ package discovery
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -45,14 +44,8 @@ func CreateScopeDiscoverer(backendClient *client.ClientWithResponses, providerCl
 	}
 }
 
-func (sd *ScopeDiscoverer) setScopes(scopes *models.Scopes) (*models.Scopes, error) {
-	scopesB, err := json.Marshal(scopes)
-	if err != nil {
-		log.Errorf("Failed to marshal scopes: %v", err)
-	} else {
-		fmt.Printf("scopesB=%s\n\n", scopesB)
-	}
-	resp, err := sd.backendClient.PutDiscoveryScopesWithResponse(context.TODO(), *scopes)
+func (sd *ScopeDiscoverer) setScopes(ctx context.Context, scopes *models.Scopes) (*models.Scopes, error) {
+	resp, err := sd.backendClient.PutDiscoveryScopesWithResponse(ctx, *scopes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to put scopes: %v", err)
 	}
@@ -79,7 +72,7 @@ func (sd *ScopeDiscoverer) Start(ctx context.Context) {
 			if err != nil {
 				log.Warnf("Failed to discover scopes: %v", err)
 			} else {
-				_, err := sd.setScopes(scopes)
+				_, err := sd.setScopes(ctx, scopes)
 				if err != nil {
 					log.Warnf("Failed to set scopes: %v", err)
 				}
