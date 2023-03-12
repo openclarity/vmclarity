@@ -22,8 +22,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
-
 	"github.com/ghodss/yaml"
 	kubeclarityutils "github.com/openclarity/kubeclarity/shared/pkg/utils"
 	uuid "github.com/satori/go.uuid"
@@ -36,6 +34,7 @@ import (
 	"github.com/openclarity/vmclarity/cli/pkg/mount"
 	"github.com/openclarity/vmclarity/shared/pkg/families"
 	"github.com/openclarity/vmclarity/shared/pkg/families/exploits"
+	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 	"github.com/openclarity/vmclarity/shared/pkg/families/results"
 	"github.com/openclarity/vmclarity/shared/pkg/families/sbom"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
@@ -406,7 +405,7 @@ func setMountPointsForFamiliesInput(mountPoints []string, familiesConfig *famili
 		if familiesConfig.Malware.Enabled {
 			familiesConfig.Malware.Inputs = append(familiesConfig.Malware.Inputs, malware.Input{
 				Input:     mountDir,
-				InputType: string(utils.ROOTFS),
+				InputType: string(kubeclarityutils.ROOTFS),
 			})
 		}
 	}

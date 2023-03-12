@@ -192,7 +192,6 @@ func (e *Exporter) ExportSbomResult(res *results.Results, famerr families.RunErr
 				scanResult.Summary.TotalPackages = utils.PointerTo(len(*scanResult.Sboms.Packages))
 			}
 		}
-		scanResult.Summary.TotalPackages = utils.PointerTo[int](len(*scanResult.Sboms.Packages))
 	}
 
 	state := models.DONE
@@ -307,7 +306,6 @@ func (e *Exporter) ExportSecretsResult(res *results.Results, famerr families.Run
 				scanResult.Summary.TotalSecrets = utils.PointerTo(len(*scanResult.Secrets.Secrets))
 			}
 		}
-		scanResult.Summary.TotalSecrets = utils.PointerTo[int](len(*scanResult.Secrets.Secrets))
 	}
 
 	state := models.DONE
