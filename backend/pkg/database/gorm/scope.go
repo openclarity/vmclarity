@@ -20,9 +20,10 @@ import (
 	"errors"
 	"fmt"
 
+	"gorm.io/gorm"
+
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/backend/pkg/database/types"
-	"gorm.io/gorm"
 )
 
 const (

@@ -19,10 +19,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
+	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 )
 
 const (

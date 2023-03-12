@@ -18,13 +18,14 @@ package database
 import (
 	"time"
 
-	"github.com/openclarity/vmclarity/backend/pkg/database/types"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/backend/pkg/database/types"
 	"github.com/openclarity/vmclarity/shared/pkg/utils"
 )
 
+// nolint:gomnd,maintidx
 func CreateDemoData(db types.Database) {
 	// Create scopes
 	scopesType := models.ScopeType{}
@@ -296,7 +297,6 @@ func CreateDemoData(db types.Database) {
 	// Create targets
 	targets := []models.Target{
 		{
-			//Id:         utils.PointerTo(uuid.NewV5(uuid.Nil, "1").String()),
 			ScansCount: utils.PointerTo(100),
 			Summary: &models.ScanFindingsSummary{
 				TotalExploits:          utils.PointerTo(1),
@@ -316,7 +316,6 @@ func CreateDemoData(db types.Database) {
 			TargetInfo: createVMInfo("i-instance-1-from-eu-central-1", "eu-central-1", models.AWS),
 		},
 		{
-			//Id:         utils.PointerTo(uuid.NewV5(uuid.Nil, "2").String()),
 			ScansCount: utils.PointerTo(102),
 			Summary: &models.ScanFindingsSummary{
 				TotalExploits:          utils.PointerTo(12),
@@ -336,7 +335,6 @@ func CreateDemoData(db types.Database) {
 			TargetInfo: createVMInfo("i-instance-2-from-eu-central-1", "eu-central-1", models.AWS),
 		},
 		{
-			//Id:         utils.PointerTo(uuid.NewV5(uuid.Nil, "3").String()),
 			ScansCount: utils.PointerTo(103),
 			Summary: &models.ScanFindingsSummary{
 				TotalExploits:          utils.PointerTo(13),

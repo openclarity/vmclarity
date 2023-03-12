@@ -197,11 +197,10 @@ func (t *TargetsTableHandler) checkUniqueness(target models.Target) (*models.Tar
 		return nil, fmt.Errorf("failed to get value by discriminator: %w", err)
 	}
 
-	switch discriminator.(type) {
+	switch info := discriminator.(type) {
 	case models.VMInfo:
-		vmInfo := discriminator.(models.VMInfo)
 		var targets []Target
-		filter := fmt.Sprintf("targetInfo/instanceID eq '%s' and targetInfo/location eq '%s'", vmInfo.InstanceID, vmInfo.Location)
+		filter := fmt.Sprintf("targetInfo/instanceID eq '%s' and targetInfo/location eq '%s'", info.InstanceID, info.Location)
 		err = ODataQuery(t.DB, targetSchemaName, &filter, nil, nil, nil, nil, true, &targets)
 		if err != nil {
 			return nil, err
@@ -213,12 +212,12 @@ func (t *TargetsTableHandler) checkUniqueness(target models.Target) (*models.Tar
 				return nil, fmt.Errorf("failed to convert DB model to API model: %w", err)
 			}
 			return &apiTarget, &common.ConflictError{
-				Reason: fmt.Sprintf("Target VM exists with instanceID=%q and location=%q", vmInfo.InstanceID, vmInfo.Location),
+				Reason: fmt.Sprintf("Target VM exists with instanceID=%q and location=%q", info.InstanceID, info.Location),
 			}
 		}
 	default:
 		return nil, fmt.Errorf("target type is not supported (%T): %w", discriminator, err)
 	}
 
-	return nil, nil
+	return nil, nil // nolint:nilnil
 }
