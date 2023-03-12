@@ -202,7 +202,7 @@ func convertFromAPISecurityGroups(securityGroups *[]models.AwsSecurityGroup) []S
 
 func convertToAPIRegions(regions []Region) *[]models.AwsRegion {
 	ret := make([]models.AwsRegion, len(regions))
-	for i, _ := range regions {
+	for i := range regions {
 		ret[i] = models.AwsRegion{
 			Name: regions[i].Name,
 			Vpcs: convertToAPIVPCs(regions[i].VPCs),
@@ -213,9 +213,8 @@ func convertToAPIRegions(regions []Region) *[]models.AwsRegion {
 }
 
 func convertToAPIVPCs(vpcs []VPC) *[]models.AwsVPC {
-
 	ret := make([]models.AwsVPC, len(vpcs))
-	for i, _ := range vpcs {
+	for i := range vpcs {
 		ret[i] = models.AwsVPC{
 			Id:             vpcs[i].ID,
 			SecurityGroups: convertToAPISecurityGroups(vpcs[i].SecurityGroups),
@@ -227,7 +226,7 @@ func convertToAPIVPCs(vpcs []VPC) *[]models.AwsVPC {
 
 func convertToAPISecurityGroups(securityGroups []SecurityGroup) *[]models.AwsSecurityGroup {
 	ret := make([]models.AwsSecurityGroup, len(securityGroups))
-	for i, _ := range securityGroups {
+	for i := range securityGroups {
 		ret[i] = models.AwsSecurityGroup{
 			Id: securityGroups[i].ID,
 		}

@@ -24,6 +24,7 @@ import (
 	"github.com/openclarity/vmclarity/api/models"
 )
 
+// nolint:cyclop
 func ConvertToDBScan(scan models.Scan) (Scan, error) {
 	var ret Scan
 	var err error

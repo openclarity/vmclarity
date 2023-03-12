@@ -19,11 +19,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/openclarity/vmclarity/runtime_scan/pkg/orchestrator/discovery"
 	log "github.com/sirupsen/logrus"
 
 	_config "github.com/openclarity/vmclarity/runtime_scan/pkg/config"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/orchestrator/configwatcher"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/orchestrator/discovery"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 )
