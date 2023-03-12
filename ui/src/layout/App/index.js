@@ -6,10 +6,12 @@ import IconTemplates from 'components/Icon/IconTemplates';
 import Notification from 'components/Notification';
 import { TooltipWrapper } from 'components/Tooltip';
 import Title from 'components/Title';
-import Scans from 'layout/Scans';
-import Findings from 'layout/Findings';
 import { NotificationProvider, useNotificationState, useNotificationDispatch, removeNotification } from 'context/NotificationProvider';
 import { ROUTES } from 'utils/systemConsts';
+import Scans from 'layout/Scans';
+import Findings from 'layout/Findings';
+import Assets from 'layout/Assets';
+import AssetScans from 'layout/AssetScans';
 
 import brandImage from 'utils/images/brand.svg';
 
@@ -18,28 +20,34 @@ import './app.scss';
 const ROUTES_CONFIG = [
     {
 		path: ROUTES.DEFAULT,
-		component: () => "TBD",
+		component: () => <div style={{margin: "30px"}}>TBD</div>,
         icon: ICON_NAMES.DASHBOARD,
         isIndex: true,
         title: "Dashboard"
 	},
 	{
-		path: ROUTES.SCANS,
-		component: Scans,
-        icon: ICON_NAMES.SCANS,
-        title: "Scans"
-	},
-	{
 		path: ROUTES.ASSETS,
-		component: () => "TBD",
+		component: Assets,
         icon: ICON_NAMES.ASSETS,
         title: "Assets"
+	},
+    {
+		path: ROUTES.ASSET_SCANS,
+		component: AssetScans,
+        icon: ICON_NAMES.ASSET_SCANS,
+        title: "Asset scans"
 	},
 	{
 		path: ROUTES.FINDINGS,
 		component: Findings,
         icon: ICON_NAMES.FINDINGS,
         title: "Findings"
+	},
+    {
+		path: ROUTES.SCANS,
+		component: Scans,
+        icon: ICON_NAMES.SCANS,
+        title: "Scans"
 	}
 ];
 

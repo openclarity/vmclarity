@@ -2,8 +2,7 @@ import React, { useEffect } from 'react';
 import { usePrevious, useFetch } from 'hooks';
 import { TextField, RadioField, MultiselectField, SelectField, FieldsPair, useFormikContext, CheckboxField,
     FieldLabel, validators } from 'components/Form';
-
-const DISCOVERY_URL = "discovery/scopes";
+import { APIS } from 'utils/systemConsts';
 
 const idToValueLabel = items => items?.map(({id}) => ({value: id, label: id}));
 
@@ -20,7 +19,7 @@ const SecurityGroupField = ({index, name, placeholder, disabled, regionData}) =>
     const vpcId = vpcs[index]?.id;
     const prevVpsId = usePrevious(vpcId);
 
-    const [{data, loading, error}, fetchSecurityGroups] = useFetch(DISCOVERY_URL, {loadOnMount: false});
+    const [{data, loading, error}, fetchSecurityGroups] = useFetch(APIS.SCOPES_DISCOVERY, {loadOnMount: false});
 
     useEffect(() => {
         if (!!vpcId && prevVpsId !== vpcId) {
@@ -55,7 +54,7 @@ const RegionFields = ({index, name, disabled}) => {
     const regionId = regions[index]?.id;
     const prevRegionId = usePrevious(regionId);
 
-    const [{data, loading, error}, fetchVpcs] = useFetch(DISCOVERY_URL, {loadOnMount: false});
+    const [{data, loading, error}, fetchVpcs] = useFetch(APIS.SCOPES_DISCOVERY, {loadOnMount: false});
 
     useEffect(() => {
         if (!!regionId && prevRegionId !== regionId) {
@@ -94,7 +93,7 @@ const RegionFields = ({index, name, disabled}) => {
 }
 
 const DefinedScopeFields = () => {
-    const [{data, loading, error}] = useFetch(DISCOVERY_URL, {queryParams: {"$select": "AwsScope.Regions"}});
+    const [{data, loading, error}] = useFetch(APIS.SCOPES_DISCOVERY, {queryParams: {"$select": "scopes/regions/name"}});
 
     if (error) {
         return null;
@@ -151,7 +150,7 @@ const StepGeneralProperties = () => {
                 <FieldLabel>Instances</FieldLabel>
                 <CheckboxField
                     name="scope.shouldScanStoppedInstances"
-                    title="Scan non-running instances"
+                    title="Scan also non-running instances"
                 />
                 <MultiselectField
                     name="scope.instanceTagSelector"

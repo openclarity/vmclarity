@@ -1,5 +1,10 @@
 import { isEmpty, isNull } from 'lodash';
 
+export const SCANS_PATHS = {
+    SCANS: "scans",
+    CONFIGURATIONS: "configurations"
+}
+
 export const formatStringInstancesToTags = items => items.map(item => {
     const [key, value] = item.split("=");
 
