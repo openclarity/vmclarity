@@ -16,8 +16,6 @@
 package database
 
 import (
-	"time"
-
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/api/models"
@@ -487,7 +485,7 @@ func CreateDemoData(db types.Database) {
 	scanResults := []models.TargetScanResult{
 		{
 			Scan: models.ScanRelationship{
-				Id: "demo-id", //utils.PointerTo(uuid.NewV4().String()),
+				Id: "demo-id",
 				//EndTime: utils.PointerTo(time.Now().Add(24 * time.Hour)),
 				//ScanConfig: &models.ScanConfigRelationship{
 				//	Id: uuid.NewV4().String(),
@@ -571,7 +569,7 @@ func CreateDemoData(db types.Database) {
 		},
 		{
 			Scan: models.ScanRelationship{
-				Id: "demo-id2", //utils.PointerTo(uuid.NewV4().String()),
+				Id: "demo-id2",
 				//EndTime: utils.PointerTo(time.Now().Add(24 * time.Hour)),
 				//ScanConfig: &models.ScanConfigRelationship{
 				//	Id: uuid.NewV4().String(),
@@ -661,24 +659,24 @@ func CreateDemoData(db types.Database) {
 	}
 }
 
-func createAWSScanScopeType(scope models.AwsScanScope) *models.ScanScopeType {
-	var scopeType models.ScanScopeType
-
-	if err := scopeType.FromAwsScanScope(scope); err != nil {
-		panic(err)
-	}
-	return &scopeType
-}
-
-func createSingleScheduleScanConfig(operationTime time.Time) *models.RuntimeScheduleScanConfigType {
-	var scanConfigScheduled models.RuntimeScheduleScanConfigType
-	if err := scanConfigScheduled.FromSingleScheduleScanConfig(models.SingleScheduleScanConfig{
-		OperationTime: operationTime,
-	}); err != nil {
-		panic(err)
-	}
-	return &scanConfigScheduled
-}
+//func createAWSScanScopeType(scope models.AwsScanScope) *models.ScanScopeType {
+//	var scopeType models.ScanScopeType
+//
+//	if err := scopeType.FromAwsScanScope(scope); err != nil {
+//		panic(err)
+//	}
+//	return &scopeType
+//}
+//
+//func createSingleScheduleScanConfig(operationTime time.Time) *models.RuntimeScheduleScanConfigType {
+//	var scanConfigScheduled models.RuntimeScheduleScanConfigType
+//	if err := scanConfigScheduled.FromSingleScheduleScanConfig(models.SingleScheduleScanConfig{
+//		OperationTime: operationTime,
+//	}); err != nil {
+//		panic(err)
+//	}
+//	return &scanConfigScheduled
+//}
 
 func createVMInfo(instanceID, location string, instanceProvider models.CloudProvider) *models.TargetType {
 	info := models.TargetType{}
