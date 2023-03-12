@@ -88,9 +88,15 @@ type ApiResponse struct {
 	Message *string `json:"message,omitempty"`
 }
 
+// AwsAccountScope AWS cloud account scope
+type AwsAccountScope struct {
+	ObjectType string       `json:"objectType"`
+	Regions    *[]AwsRegion `json:"regions,omitempty"`
+}
+
 // AwsRegion AWS region
 type AwsRegion struct {
-	Name *string   `json:"name,omitempty"`
+	Name string    `json:"name"`
 	Vpcs *[]AwsVPC `json:"vpcs,omitempty"`
 }
 
@@ -109,12 +115,6 @@ type AwsScanScope struct {
 	ShouldScanStoppedInstances *bool        `json:"shouldScanStoppedInstances,omitempty"`
 }
 
-// AwsScope AWS cloud scope
-type AwsScope struct {
-	ObjectType string       `json:"objectType"`
-	Regions    *[]AwsRegion `json:"regions,omitempty"`
-}
-
 // AwsSecurityGroup AWS security group
 type AwsSecurityGroup struct {
 	Id string `json:"id"`
@@ -122,7 +122,7 @@ type AwsSecurityGroup struct {
 
 // AwsVPC AWS VPC
 type AwsVPC struct {
-	Id             *string             `json:"id,omitempty"`
+	Id             string              `json:"id"`
 	SecurityGroups *[]AwsSecurityGroup `json:"securityGroups,omitempty"`
 }
 
@@ -407,6 +407,20 @@ type ScanFindingsSummary struct {
 	TotalVulnerabilities *VulnerabilityScanSummary `json:"totalVulnerabilities,omitempty"`
 }
 
+// ScanRelationship defines model for ScanRelationship.
+type ScanRelationship struct {
+	EndTime            *interface{} `json:"endTime,omitempty"`
+	Id                 string       `json:"id"`
+	ScanConfig         *interface{} `json:"scanConfig,omitempty"`
+	ScanConfigSnapshot *interface{} `json:"scanConfigSnapshot,omitempty"`
+	StartTime          *interface{} `json:"startTime,omitempty"`
+	State              *interface{} `json:"state,omitempty"`
+	StateMessage       *interface{} `json:"stateMessage,omitempty"`
+	StateReason        *interface{} `json:"stateReason,omitempty"`
+	Summary            *interface{} `json:"summary,omitempty"`
+	TargetIDs          *interface{} `json:"targetIDs,omitempty"`
+}
+
 // ScanScopeType defines model for ScanScopeType.
 type ScanScopeType struct {
 	union json.RawMessage
@@ -446,7 +460,7 @@ type ScopeType struct {
 
 // Scopes Scopes discovery
 type Scopes struct {
-	Scopes *ScopeType `json:"scopes,omitempty"`
+	ScopeInfo *ScopeType `json:"scopeInfo,omitempty"`
 }
 
 // Secret defines model for Secret.
@@ -499,7 +513,7 @@ type Tag struct {
 type Target struct {
 	Id *string `json:"id,omitempty"`
 
-	// ScansCount Total number of target scans
+	// ScansCount Total number of scans that have ever run for this target
 	ScansCount *int `json:"scansCount,omitempty"`
 
 	// Summary A summary of the scan findings.
@@ -514,6 +528,17 @@ type TargetExists struct {
 	Target  *Target `json:"target,omitempty"`
 }
 
+// TargetRelationship defines model for TargetRelationship.
+type TargetRelationship struct {
+	Id        string       `json:"id"`
+	ScanCount *interface{} `json:"scanCount,omitempty"`
+
+	// ScansCount Total number of scans that have ever run for this target
+	ScansCount *int         `json:"scansCount,omitempty"`
+	Summary    *interface{} `json:"summary,omitempty"`
+	TargetInfo *interface{} `json:"targetInfo,omitempty"`
+}
+
 // TargetScanResult defines model for TargetScanResult.
 type TargetScanResult struct {
 	Exploits          *ExploitScan          `json:"exploits,omitempty"`
@@ -523,15 +548,17 @@ type TargetScanResult struct {
 	Rootkits          *RootkitScan          `json:"rootkits,omitempty"`
 	Sboms             *SbomScan             `json:"sboms,omitempty"`
 
-	// Scan Describes a multi-target scheduled scan.
-	Scan    *Scan             `json:"scan,omitempty"`
+	// Scan Describes a relationship to a scan which can be expanded.
+	Scan    ScanRelationship  `json:"scan"`
 	Secrets *SecretScan       `json:"secrets,omitempty"`
 	Status  *TargetScanStatus `json:"status,omitempty"`
 
 	// Summary A summary of the scan findings.
-	Summary         *ScanFindingsSummary `json:"summary,omitempty"`
-	Target          *Target              `json:"target,omitempty"`
-	Vulnerabilities *VulnerabilityScan   `json:"vulnerabilities,omitempty"`
+	Summary *ScanFindingsSummary `json:"summary,omitempty"`
+
+	// Target Describes a relationship to a target which can be expanded.
+	Target          TargetRelationship `json:"target"`
+	Vulnerabilities *VulnerabilityScan `json:"vulnerabilities,omitempty"`
 }
 
 // TargetScanResultExists defines model for TargetScanResultExists.
@@ -991,24 +1018,24 @@ func (t *ScanScopeType) UnmarshalJSON(b []byte) error {
 	return err
 }
 
-// AsAwsScope returns the union data inside the ScopeType as a AwsScope
-func (t ScopeType) AsAwsScope() (AwsScope, error) {
-	var body AwsScope
+// AsAwsAccountScope returns the union data inside the ScopeType as a AwsAccountScope
+func (t ScopeType) AsAwsAccountScope() (AwsAccountScope, error) {
+	var body AwsAccountScope
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromAwsScope overwrites any union data inside the ScopeType as the provided AwsScope
-func (t *ScopeType) FromAwsScope(v AwsScope) error {
-	v.ObjectType = "AwsScope"
+// FromAwsAccountScope overwrites any union data inside the ScopeType as the provided AwsAccountScope
+func (t *ScopeType) FromAwsAccountScope(v AwsAccountScope) error {
+	v.ObjectType = "AwsAccountScope"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeAwsScope performs a merge with any union data inside the ScopeType, using the provided AwsScope
-func (t *ScopeType) MergeAwsScope(v AwsScope) error {
-	v.ObjectType = "AwsScope"
+// MergeAwsAccountScope performs a merge with any union data inside the ScopeType, using the provided AwsAccountScope
+func (t *ScopeType) MergeAwsAccountScope(v AwsAccountScope) error {
+	v.ObjectType = "AwsAccountScope"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -1033,8 +1060,8 @@ func (t ScopeType) ValueByDiscriminator() (interface{}, error) {
 		return nil, err
 	}
 	switch discriminator {
-	case "AwsScope":
-		return t.AsAwsScope()
+	case "AwsAccountScope":
+		return t.AsAwsAccountScope()
 	default:
 		return nil, errors.New("unknown discriminator value: " + discriminator)
 	}

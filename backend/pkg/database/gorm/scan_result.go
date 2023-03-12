@@ -1,4 +1,4 @@
-// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -100,10 +100,10 @@ func (s *ScanResultsTableHandler) GetScanResult(scanResultID models.ScanResultID
 // nolint:cyclop
 func (s *ScanResultsTableHandler) CreateScanResult(scanResult models.TargetScanResult) (models.TargetScanResult, error) {
 	// Check the user provided scan id and target id fields
-	if scanResult.Scan == nil || *scanResult.Scan.Id == "" {
+	if scanResult.Scan.Id == "" {
 		return models.TargetScanResult{}, fmt.Errorf("scan.id is a required field")
 	}
-	if scanResult.Target == nil || *scanResult.Target.Id == "" {
+	if scanResult.Target.Id == "" {
 		return models.TargetScanResult{}, fmt.Errorf("target.id is a required field")
 	}
 
@@ -129,7 +129,7 @@ func (s *ScanResultsTableHandler) CreateScanResult(scanResult models.TargetScanR
 
 	// Check the existing DB entries to ensure that the scan id and target id fields are unique
 	var scanResults []ScanResult
-	filter := fmt.Sprintf("target/id eq '%s' and scan/id eq '%s'", *scanResult.Target.Id, *scanResult.Scan.Id)
+	filter := fmt.Sprintf("target/id eq '%s' and scan/id eq '%s'", scanResult.Target.Id, scanResult.Scan.Id)
 	err := ODataQuery(s.DB, targetScanResultsSchemaName, &filter, nil, nil, nil, nil, true, &scanResults)
 	if err != nil {
 		return models.TargetScanResult{}, err
@@ -141,7 +141,7 @@ func (s *ScanResultsTableHandler) CreateScanResult(scanResult models.TargetScanR
 			return models.TargetScanResult{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 		}
 		return tsr, &common.ConflictError{
-			Reason: fmt.Sprintf("Scan results exists with scan id=%s and target id=%s", *scanResult.Target.Id, *scanResult.Scan.Id),
+			Reason: fmt.Sprintf("Scan results exists with scan id=%s and target id=%s", scanResult.Target.Id, scanResult.Scan.Id),
 		}
 	}
 

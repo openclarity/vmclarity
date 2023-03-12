@@ -1,4 +1,4 @@
-// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,64 +28,6 @@ import (
 )
 
 const id = "f12d1ca7-1048-4e31-899c-7a25b357bed1"
-
-//func TestConvertToDBScanResult(t *testing.T) {
-//	vulnerabilities := []models.Vulnerability{
-//		{
-//			VulnerabilityInfo: &models.VulnerabilityInfo{
-//				Description:       utils.StringPtr("desc"),
-//				VulnerabilityName: utils.StringPtr("name"),
-//			},
-//			Id: utils.StringPtr("1"),
-//		},
-//	}
-//	vulScan := models.VulnerabilityScan{Vulnerabilities: &vulnerabilities}
-//
-//	vulScanB, err := json.Marshal(vulScan)
-//	assert.NilError(t, err)
-//
-//	UUID, err := uuid.FromString(id)
-//	assert.NilError(t, err)
-//
-//	idPtr := id
-//
-//	type args struct {
-//		result models.TargetScanResult
-//	}
-//	tests := []struct {
-//		name    string
-//		args    args
-//		want    ScanResult
-//		wantErr bool
-//	}{
-//		{
-//			name: "sanity",
-//			args: args{
-//				result: models.TargetScanResult{},
-//			},
-//			},
-//			want: ScanResult{
-//				Base:            Base{ID: UUID},
-//				ScanID:          "3",
-//				TargetID:        "2",
-//				Vulnerabilities: vulScanB,
-//			},
-//			wantErr: false,
-//		},
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			got, err := ConvertToDBScanResult(tt.args.result)
-//			if (err != nil) != tt.wantErr {
-//				t.Errorf("ConvertToDBScanResult() error = %v, wantErr %v", err, tt.wantErr)
-//				return
-//			}
-//			if !reflect.DeepEqual(got, tt.want) {
-//				t.Errorf("ConvertToDBScanResult() got = %v, want %v", got, tt.want)
-//			}
-//		})
-//	}
-//}
 
 func TestConvertToDBScan(t *testing.T) {
 	scanFamiliesConfig := models.ScanConfigData{

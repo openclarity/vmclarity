@@ -1,4 +1,4 @@
-// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,30 +35,6 @@ func (s *ServerImpl) GetScanResults(ctx echo.Context, params models.GetScanResul
 	}
 
 	return sendResponse(ctx, http.StatusOK, dbScanResults)
-
-	//var dbScans []*database.Scan
-	//var dbTargets []*database.Target
-	//for _, result := range dbScanResults {
-	//	scanUUID, err := uuid.FromString(result.ScanID)
-	//	if err != nil {
-	//		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert ScanID %v to uuid: %v", result.ScanID, err))
-	//	}
-	//	scan, err := s.dbHandler.ScansTable().GetScan(scanUUID)
-	//	if err != nil {
-	//		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scan by uuid %v: %v", scanUUID, err))
-	//	}
-	//	dbScans = append(dbScans, scan)
-	//
-	//	TargetUUID, err := uuid.FromString(result.TargetID)
-	//	if err != nil {
-	//		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert TargetID %v to uuid: %v", result.TargetID, err))
-	//	}
-	//	target, err := s.dbHandler.TargetsTable().GetTarget(TargetUUID)
-	//	if err != nil {
-	//		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get target by uuid %v: %v", TargetUUID, err))
-	//	}
-	//	dbTargets = append(dbTargets, target)
-	//}
 }
 
 func (s *ServerImpl) PostScanResults(ctx echo.Context) error {
@@ -94,28 +70,10 @@ func (s *ServerImpl) GetScanResultsScanResultID(ctx echo.Context, scanResultID m
 	}
 
 	return sendResponse(ctx, http.StatusOK, dbScanResult)
-
-	//scanUUID, err := uuid.FromString(dbScanResult.ScanID)
-	//if err != nil {
-	//	return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert ScanID %v to uuid: %v", dbScanResult.ScanID, err))
-	//}
-	//scan, err := s.dbHandler.ScansTable().GetScan(scanUUID)
-	//if err != nil {
-	//	return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scan by uuid %v: %v", scanUUID, err))
-	//}
-	//
-	//TargetUUID, err := uuid.FromString(dbScanResult.TargetID)
-	//if err != nil {
-	//	return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to convert TargetID %v to uuid: %v", dbScanResult.TargetID, err))
-	//}
-	//target, err := s.dbHandler.TargetsTable().GetTarget(TargetUUID)
-	//if err != nil {
-	//	return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get target by uuid %v: %v", TargetUUID, err))
-	//}
-
 }
 
 func (s *ServerImpl) PatchScanResultsScanResultID(ctx echo.Context, scanResultID models.ScanResultID) error {
+	// TODO: check that the provided scan and target IDs are valid
 	var scanResult models.TargetScanResult
 	err := ctx.Bind(&scanResult)
 	if err != nil {
@@ -141,6 +99,7 @@ func (s *ServerImpl) PatchScanResultsScanResultID(ctx echo.Context, scanResultID
 }
 
 func (s *ServerImpl) PutScanResultsScanResultID(ctx echo.Context, scanResultID models.ScanResultID) error {
+	// TODO: check that the provided scan and target IDs are valid
 	var scanResult models.TargetScanResult
 	err := ctx.Bind(&scanResult)
 	if err != nil {

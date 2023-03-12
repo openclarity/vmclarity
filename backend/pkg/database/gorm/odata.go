@@ -36,18 +36,13 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 		Table: "scan_results",
 		Fields: odatasql.Schema{
 			"id": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
-			"targetInfo": odatasql.FieldMeta{
-				FieldType:             odatasql.ComplexFieldType,
-				ComplexFieldSchemas:   []string{"VMInfo"},
-				DiscriminatorProperty: "objectType",
-			},
 			"target": odatasql.FieldMeta{
-				FieldType:           odatasql.ComplexFieldType,
-				ComplexFieldSchemas: []string{targetSchemaName},
+				FieldType:          odatasql.RelationshipFieldType,
+				RelationshipSchema: "Target",
 			},
 			"scan": odatasql.FieldMeta{
-				FieldType:           odatasql.ComplexFieldType,
-				ComplexFieldSchemas: []string{"Scan"},
+				FieldType:          odatasql.RelationshipFieldType,
+				RelationshipSchema: "Scan",
 			},
 			"status": odatasql.FieldMeta{
 				FieldType:           odatasql.ComplexFieldType,
@@ -495,14 +490,14 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 	scopesSchemaName: {
 		Table: "scopes",
 		Fields: odatasql.Schema{
-			"scopes": odatasql.FieldMeta{
+			"scopeInfo": odatasql.FieldMeta{
 				FieldType:             odatasql.ComplexFieldType,
-				ComplexFieldSchemas:   []string{"AwsScope"},
+				ComplexFieldSchemas:   []string{"AwsAccountScope"},
 				DiscriminatorProperty: "objectType",
 			},
 		},
 	},
-	"AwsScope": {
+	"AwsAccountScope": {
 		Fields: odatasql.Schema{
 			"objectType": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"regions": odatasql.FieldMeta{

@@ -1,4 +1,4 @@
-// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -569,12 +569,12 @@ func (s *Scanner) createInitTargetScanStatus(ctx context.Context, scanID, target
 	}
 	scanResult := models.TargetScanResult{
 		Summary: createInitScanResultSummary(),
-		Scan: &models.Scan{
-			Id: &scanID,
+		Scan: models.ScanRelationship{
+			Id: scanID,
 		},
 		Status: initScanStatus,
-		Target: &models.Target{
-			Id: &targetID,
+		Target: models.TargetRelationship{
+			Id: targetID,
 		},
 	}
 	createdScanResult, err := s.backendClient.PostScanResult(ctx, scanResult)

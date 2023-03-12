@@ -620,6 +620,35 @@ components:
         summary:
           $ref: '#/components/schemas/ScanSummary'
 
+    ScanRelationship:
+      type: object
+      description: Describes a relationship to a scan which can be expanded.
+      allOf:
+        - $ref: '#/components/schemas/Scan'
+        - type: object
+          properties:
+            id:
+              type: string
+            startTime:
+              readOnly: true
+            endTime:
+              readOnly: true
+            scanConfig:
+              readOnly: true
+            scanConfigSnapshot:
+              readOnly: true
+            targetIDs:
+              readOnly: true
+            state:
+              readOnly: true
+            stateMessage:
+              readOnly: true
+            stateReason:
+              readOnly: true
+            summary:
+              readOnly: true
+          required: ['id']
+
     ScanSummary:
       description: A summary of the progress of a scan for informational purposes.
       allOf:
@@ -813,7 +842,7 @@ components:
       type: object
       description: Scopes discovery
       properties:
-        scopes:
+        scopeInfo:
           $ref: '#/components/schemas/ScopeType'
 
     ScanScopeType:
@@ -857,15 +886,15 @@ components:
     ScopeType:
       type: object
       anyOf:
-        - $ref: '#/components/schemas/AwsScope'
+        - $ref: '#/components/schemas/AwsAccountScope'
       discriminator:
         propertyName: objectType
         mapping:
-          AwsScope: '#/components/schemas/AwsScope'
+          AwsAccountScope: '#/components/schemas/AwsAccountScope'
 
-    AwsScope:
+    AwsAccountScope:
       type: object
-      description: AWS cloud scope
+      description: AWS cloud account scope
       properties:
         objectType:
           type: string
@@ -882,7 +911,6 @@ components:
       properties:
         name:
           type: string
-          readOnly: true
         vpcs:
           type: array
           items:
@@ -897,7 +925,6 @@ components:
       properties:
         id:
           type: string
-          readOnly: true
         securityGroups:
           type: array
           items:
@@ -1036,10 +1063,27 @@ components:
         targetInfo:
           $ref: '#/components/schemas/TargetType'
         scansCount:
-          description: Total number of target scans
+          description: Total number of scans that have ever run for this target
           type: integer
         summary:
           $ref: '#/components/schemas/ScanFindingsSummary'
+
+    TargetRelationship:
+      type: object
+      description: Describes a relationship to a target which can be expanded.
+      allOf:
+        - $ref: '#/components/schemas/Target'
+        - type: object
+          properties:
+            id:
+              type: string
+            targetInfo:
+              readOnly: true
+            scanCount:
+              readOnly: true
+            summary:
+              readOnly: true
+          required: ['id']
 
     TargetExists:
       type: object
@@ -1126,9 +1170,9 @@ components:
           type: string
           readOnly: true
         target:
-          $ref: '#/components/schemas/Target'
+          $ref: '#/components/schemas/TargetRelationship'
         scan:
-          $ref: '#/components/schemas/Scan'
+          $ref: '#/components/schemas/ScanRelationship'
         status:
           $ref: '#/components/schemas/TargetScanStatus'
         sboms:
@@ -1147,6 +1191,9 @@ components:
           $ref: '#/components/schemas/ExploitScan'
         summary:
           $ref: '#/components/schemas/ScanFindingsSummary'
+      required:
+        - target
+        - scan
 
     TargetScanResultExists:
       type: object

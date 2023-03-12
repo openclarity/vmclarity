@@ -19,7 +19,6 @@ import (
 	"time"
 
 	"github.com/openclarity/vmclarity/backend/pkg/database/types"
-	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/api/models"
@@ -29,13 +28,13 @@ import (
 func CreateDemoData(db types.Database) {
 	// Create scopes
 	scopesType := models.ScopeType{}
-	err := scopesType.FromAwsScope(models.AwsScope{
+	err := scopesType.FromAwsAccountScope(models.AwsAccountScope{
 		Regions: utils.PointerTo([]models.AwsRegion{
 			{
-				Name: utils.PointerTo("eu-central-1"),
+				Name: "eu-central-1",
 				Vpcs: utils.PointerTo([]models.AwsVPC{
 					{
-						Id: utils.PointerTo("vpc-1-from-eu-central-1"),
+						Id: "vpc-1-from-eu-central-1",
 						SecurityGroups: utils.PointerTo([]models.AwsSecurityGroup{
 							{
 								Id: "sg-1-from-vpc-1-from-eu-central-1",
@@ -43,7 +42,7 @@ func CreateDemoData(db types.Database) {
 						}),
 					},
 					{
-						Id: utils.PointerTo("vpc-2-from-eu-central-1"),
+						Id: "vpc-2-from-eu-central-1",
 						SecurityGroups: utils.PointerTo([]models.AwsSecurityGroup{
 							{
 								Id: "sg-1-from-vpc-2-from-eu-central-1",
@@ -53,10 +52,10 @@ func CreateDemoData(db types.Database) {
 				}),
 			},
 			{
-				Name: utils.PointerTo("us-east-1"),
+				Name: "us-east-1",
 				Vpcs: utils.PointerTo([]models.AwsVPC{
 					{
-						Id: utils.PointerTo("vpc-1-from-us-east-1"),
+						Id: "vpc-1-from-us-east-1",
 						SecurityGroups: utils.PointerTo([]models.AwsSecurityGroup{
 							{
 								Id: "sg-1-from-vpc-1-from-us-east-1",
@@ -64,7 +63,7 @@ func CreateDemoData(db types.Database) {
 						}),
 					},
 					{
-						Id: utils.PointerTo("vpc-2-from-us-east-1"),
+						Id: "vpc-2-from-us-east-1",
 						SecurityGroups: utils.PointerTo([]models.AwsSecurityGroup{
 							{
 								Id: "sg-1-from-vpc-2-from-us-east-1",
@@ -72,7 +71,7 @@ func CreateDemoData(db types.Database) {
 						}),
 					},
 					{
-						Id: utils.PointerTo("vpc-2-from-us-east-1"),
+						Id: "vpc-2-from-us-east-1",
 						SecurityGroups: utils.PointerTo([]models.AwsSecurityGroup{
 							{
 								Id: "sg-2-from-vpc-2-from-us-east-1",
@@ -87,7 +86,7 @@ func CreateDemoData(db types.Database) {
 		log.Fatalf("failed to create scopes FromAwsScope: %v", err)
 	}
 	scopes := models.Scopes{
-		Scopes: &scopesType,
+		ScopeInfo: &scopesType,
 	}
 	if _, err := db.ScopesTable().SetScopes(scopes); err != nil {
 		log.Fatalf("failed to save scopes: %v", err)
@@ -489,69 +488,69 @@ func CreateDemoData(db types.Database) {
 	// Create scan results
 	scanResults := []models.TargetScanResult{
 		{
-			Scan: &models.Scan{
-				EndTime: utils.PointerTo(time.Now().Add(24 * time.Hour)),
-				Id:      utils.PointerTo(uuid.NewV4().String()),
-				ScanConfig: &models.ScanConfigRelationship{
-					Id: uuid.NewV4().String(),
-				},
-				ScanConfigSnapshot: &models.ScanConfigData{
-					Name: utils.PointerTo("ScanConfigSnapshot-1-Name"),
-					ScanFamiliesConfig: &models.ScanFamiliesConfig{
-						Exploits: &models.ExploitsConfig{
-							Enabled: utils.PointerTo(true),
-						},
-						Malware: &models.MalwareConfig{
-							Enabled: utils.PointerTo(true),
-						},
-						Misconfigurations: &models.MisconfigurationsConfig{
-							Enabled: utils.PointerTo(false),
-						},
-						Rootkits: &models.RootkitsConfig{
-							Enabled: utils.PointerTo(true),
-						},
-						Sbom: &models.SBOMConfig{
-							Enabled: utils.PointerTo(false),
-						},
-						Secrets: &models.SecretsConfig{
-							Enabled: utils.PointerTo(true),
-						},
-						Vulnerabilities: &models.VulnerabilitiesConfig{
-							Enabled: utils.PointerTo(true),
-						},
-					},
-					Scheduled: createSingleScheduleScanConfig(time.Now()),
-					Scope: createAWSScanScopeType(models.AwsScanScope{
-						AllRegions: utils.PointerTo(true),
-						InstanceTagSelector: utils.PointerTo([]models.Tag{
-							{
-								Key:   "key",
-								Value: "value",
-							},
-						}),
-					}),
-				},
-				StartTime:   utils.PointerTo(time.Now()),
-				State:       utils.PointerTo(models.Done),
-				StateReason: utils.PointerTo(models.ScanStateReasonSuccess),
-				Summary: &models.ScanSummary{
-					JobsCompleted:          utils.PointerTo(77),
-					JobsLeftToRun:          utils.PointerTo(98),
-					TotalExploits:          utils.PointerTo(6),
-					TotalMalware:           utils.PointerTo(0),
-					TotalMisconfigurations: utils.PointerTo(75),
-					TotalPackages:          utils.PointerTo(9778),
-					TotalRootkits:          utils.PointerTo(5),
-					TotalSecrets:           utils.PointerTo(557),
-					TotalVulnerabilities: &models.VulnerabilityScanSummary{
-						TotalCriticalVulnerabilities:   utils.PointerTo(11),
-						TotalHighVulnerabilities:       utils.PointerTo(52),
-						TotalLowVulnerabilities:        utils.PointerTo(241),
-						TotalMediumVulnerabilities:     utils.PointerTo(8543),
-						TotalNegligibleVulnerabilities: utils.PointerTo(73),
-					},
-				},
-				TargetIDs: utils.PointerTo([]string{*targets[0].Id}),
+			Scan: models.ScanRelationship{
+				Id: "demo-id", //utils.PointerTo(uuid.NewV4().String()),
+				//EndTime: utils.PointerTo(time.Now().Add(24 * time.Hour)),
+				//ScanConfig: &models.ScanConfigRelationship{
+				//	Id: uuid.NewV4().String(),
+				//},
+				//ScanConfigSnapshot: &models.ScanConfigData{
+				//	Name: utils.PointerTo("ScanConfigSnapshot-1-Name"),
+				//	ScanFamiliesConfig: &models.ScanFamiliesConfig{
+				//		Exploits: &models.ExploitsConfig{
+				//			Enabled: utils.PointerTo(true),
+				//		},
+				//		Malware: &models.MalwareConfig{
+				//			Enabled: utils.PointerTo(true),
+				//		},
+				//		Misconfigurations: &models.MisconfigurationsConfig{
+				//			Enabled: utils.PointerTo(false),
+				//		},
+				//		Rootkits: &models.RootkitsConfig{
+				//			Enabled: utils.PointerTo(true),
+				//		},
+				//		Sbom: &models.SBOMConfig{
+				//			Enabled: utils.PointerTo(false),
+				//		},
+				//		Secrets: &models.SecretsConfig{
+				//			Enabled: utils.PointerTo(true),
+				//		},
+				//		Vulnerabilities: &models.VulnerabilitiesConfig{
+				//			Enabled: utils.PointerTo(true),
+				//		},
+				//	},
+				//	Scheduled: createSingleScheduleScanConfig(time.Now()),
+				//	Scope: createAWSScanScopeType(models.AwsScanScope{
+				//		AllRegions: utils.PointerTo(true),
+				//		InstanceTagSelector: utils.PointerTo([]models.Tag{
+				//			{
+				//				Key:   "key",
+				//				Value: "value",
+				//			},
+				//		}),
+				//	}),
+				//},
+				//StartTime:   utils.PointerTo(time.Now()),
+				//State:       utils.PointerTo(models.Done),
+				//StateReason: utils.PointerTo(models.ScanStateReasonSuccess),
+				//Summary: &models.ScanSummary{
+				//	JobsCompleted:          utils.PointerTo(77),
+				//	JobsLeftToRun:          utils.PointerTo(98),
+				//	TotalExploits:          utils.PointerTo(6),
+				//	TotalMalware:           utils.PointerTo(0),
+				//	TotalMisconfigurations: utils.PointerTo(75),
+				//	TotalPackages:          utils.PointerTo(9778),
+				//	TotalRootkits:          utils.PointerTo(5),
+				//	TotalSecrets:           utils.PointerTo(557),
+				//	TotalVulnerabilities: &models.VulnerabilityScanSummary{
+				//		TotalCriticalVulnerabilities:   utils.PointerTo(11),
+				//		TotalHighVulnerabilities:       utils.PointerTo(52),
+				//		TotalLowVulnerabilities:        utils.PointerTo(241),
+				//		TotalMediumVulnerabilities:     utils.PointerTo(8543),
+				//		TotalNegligibleVulnerabilities: utils.PointerTo(73),
+				//	},
+				//},
+				//TargetIDs: utils.PointerTo([]string{*targets[0].Id}),
 			},
 			Summary: &models.ScanFindingsSummary{
 				TotalExploits:          utils.PointerTo(6),
@@ -568,72 +567,74 @@ func CreateDemoData(db types.Database) {
 					TotalNegligibleVulnerabilities: utils.PointerTo(73),
 				},
 			},
-			Target: &targets[0],
+			Target: models.TargetRelationship{
+				Id: *targets[0].Id,
+			},
 		},
 		{
-			Scan: &models.Scan{
-				EndTime: utils.PointerTo(time.Now().Add(24 * time.Hour)),
-				Id:      utils.PointerTo(uuid.NewV4().String()),
-				ScanConfig: &models.ScanConfigRelationship{
-					Id: uuid.NewV4().String(),
-				},
-				ScanConfigSnapshot: &models.ScanConfigData{
-					Name: utils.PointerTo("ScanConfigSnapshot-2-Name"),
-					ScanFamiliesConfig: &models.ScanFamiliesConfig{
-						Exploits: &models.ExploitsConfig{
-							Enabled: utils.PointerTo(true),
-						},
-						Malware: &models.MalwareConfig{
-							Enabled: utils.PointerTo(true),
-						},
-						Misconfigurations: &models.MisconfigurationsConfig{
-							Enabled: utils.PointerTo(false),
-						},
-						Rootkits: &models.RootkitsConfig{
-							Enabled: utils.PointerTo(true),
-						},
-						Sbom: &models.SBOMConfig{
-							Enabled: utils.PointerTo(false),
-						},
-						Secrets: &models.SecretsConfig{
-							Enabled: utils.PointerTo(true),
-						},
-						Vulnerabilities: &models.VulnerabilitiesConfig{
-							Enabled: utils.PointerTo(true),
-						},
-					},
-					Scheduled: createSingleScheduleScanConfig(time.Now()),
-					Scope: createAWSScanScopeType(models.AwsScanScope{
-						AllRegions: utils.PointerTo(true),
-						InstanceTagSelector: utils.PointerTo([]models.Tag{
-							{
-								Key:   "key2",
-								Value: "value2",
-							},
-						}),
-					}),
-				},
-				StartTime:   utils.PointerTo(time.Now()),
-				State:       utils.PointerTo(models.Done),
-				StateReason: utils.PointerTo(models.ScanStateReasonSuccess),
-				Summary: &models.ScanSummary{
-					JobsCompleted:          utils.PointerTo(77),
-					JobsLeftToRun:          utils.PointerTo(98),
-					TotalExploits:          utils.PointerTo(6),
-					TotalMalware:           utils.PointerTo(0),
-					TotalMisconfigurations: utils.PointerTo(75),
-					TotalPackages:          utils.PointerTo(9778),
-					TotalRootkits:          utils.PointerTo(5),
-					TotalSecrets:           utils.PointerTo(557),
-					TotalVulnerabilities: &models.VulnerabilityScanSummary{
-						TotalCriticalVulnerabilities:   utils.PointerTo(11),
-						TotalHighVulnerabilities:       utils.PointerTo(52),
-						TotalLowVulnerabilities:        utils.PointerTo(241),
-						TotalMediumVulnerabilities:     utils.PointerTo(8543),
-						TotalNegligibleVulnerabilities: utils.PointerTo(73),
-					},
-				},
-				TargetIDs: utils.PointerTo([]string{*targets[1].Id}),
+			Scan: models.ScanRelationship{
+				Id: "demo-id2", //utils.PointerTo(uuid.NewV4().String()),
+				//EndTime: utils.PointerTo(time.Now().Add(24 * time.Hour)),
+				//ScanConfig: &models.ScanConfigRelationship{
+				//	Id: uuid.NewV4().String(),
+				//},
+				//ScanConfigSnapshot: &models.ScanConfigData{
+				//	Name: utils.PointerTo("ScanConfigSnapshot-2-Name"),
+				//	ScanFamiliesConfig: &models.ScanFamiliesConfig{
+				//		Exploits: &models.ExploitsConfig{
+				//			Enabled: utils.PointerTo(true),
+				//		},
+				//		Malware: &models.MalwareConfig{
+				//			Enabled: utils.PointerTo(true),
+				//		},
+				//		Misconfigurations: &models.MisconfigurationsConfig{
+				//			Enabled: utils.PointerTo(false),
+				//		},
+				//		Rootkits: &models.RootkitsConfig{
+				//			Enabled: utils.PointerTo(true),
+				//		},
+				//		Sbom: &models.SBOMConfig{
+				//			Enabled: utils.PointerTo(false),
+				//		},
+				//		Secrets: &models.SecretsConfig{
+				//			Enabled: utils.PointerTo(true),
+				//		},
+				//		Vulnerabilities: &models.VulnerabilitiesConfig{
+				//			Enabled: utils.PointerTo(true),
+				//		},
+				//	},
+				//	Scheduled: createSingleScheduleScanConfig(time.Now()),
+				//	Scope: createAWSScanScopeType(models.AwsScanScope{
+				//		AllRegions: utils.PointerTo(true),
+				//		InstanceTagSelector: utils.PointerTo([]models.Tag{
+				//			{
+				//				Key:   "key2",
+				//				Value: "value2",
+				//			},
+				//		}),
+				//	}),
+				//},
+				//StartTime:   utils.PointerTo(time.Now()),
+				//State:       utils.PointerTo(models.Done),
+				//StateReason: utils.PointerTo(models.ScanStateReasonSuccess),
+				//Summary: &models.ScanSummary{
+				//	JobsCompleted:          utils.PointerTo(77),
+				//	JobsLeftToRun:          utils.PointerTo(98),
+				//	TotalExploits:          utils.PointerTo(6),
+				//	TotalMalware:           utils.PointerTo(0),
+				//	TotalMisconfigurations: utils.PointerTo(75),
+				//	TotalPackages:          utils.PointerTo(9778),
+				//	TotalRootkits:          utils.PointerTo(5),
+				//	TotalSecrets:           utils.PointerTo(557),
+				//	TotalVulnerabilities: &models.VulnerabilityScanSummary{
+				//		TotalCriticalVulnerabilities:   utils.PointerTo(11),
+				//		TotalHighVulnerabilities:       utils.PointerTo(52),
+				//		TotalLowVulnerabilities:        utils.PointerTo(241),
+				//		TotalMediumVulnerabilities:     utils.PointerTo(8543),
+				//		TotalNegligibleVulnerabilities: utils.PointerTo(73),
+				//	},
+				//},
+				//TargetIDs: utils.PointerTo([]string{*targets[1].Id}),
 			},
 			Summary: &models.ScanFindingsSummary{
 				TotalExploits:          utils.PointerTo(6),
@@ -650,7 +651,9 @@ func CreateDemoData(db types.Database) {
 					TotalNegligibleVulnerabilities: utils.PointerTo(73),
 				},
 			},
-			Target: &targets[1],
+			Target: models.TargetRelationship{
+				Id: *targets[1].Id,
+			},
 		},
 	}
 	for i, scanResult := range scanResults {

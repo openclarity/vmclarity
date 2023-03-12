@@ -1,4 +1,4 @@
-// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -75,7 +75,7 @@ func (c *Client) DiscoverScopes(ctx context.Context) (*models.Scopes, error) {
 	}
 
 	scopes := models.ScopeType{}
-	err = scopes.FromAwsScope(models.AwsScope{
+	err = scopes.FromAwsAccountScope(models.AwsAccountScope{
 		Regions: convertToAPIRegions(regions),
 	})
 	if err != nil {
@@ -83,7 +83,7 @@ func (c *Client) DiscoverScopes(ctx context.Context) (*models.Scopes, error) {
 	}
 
 	return &models.Scopes{
-		Scopes: &scopes,
+		ScopeInfo: &scopes,
 	}, nil
 }
 
@@ -162,7 +162,7 @@ func convertFromAPIRegions(regions *[]models.AwsRegion) []Region {
 	if regions != nil {
 		for _, region := range *regions {
 			ret = append(ret, Region{
-				Name: *region.Name,
+				Name: region.Name,
 				VPCs: convertFromAPIVPCs(region.Vpcs),
 			})
 		}
@@ -178,7 +178,7 @@ func convertFromAPIVPCs(vpcs *[]models.AwsVPC) []VPC {
 	ret := make([]VPC, len(*vpcs))
 	for i, vpc := range *vpcs {
 		ret[i] = VPC{
-			ID:             *vpc.Id,
+			ID:             vpc.Id,
 			SecurityGroups: convertFromAPISecurityGroups(vpc.SecurityGroups),
 		}
 	}
@@ -204,7 +204,7 @@ func convertToAPIRegions(regions []Region) *[]models.AwsRegion {
 	ret := make([]models.AwsRegion, len(regions))
 	for i, _ := range regions {
 		ret[i] = models.AwsRegion{
-			Name: &regions[i].Name,
+			Name: regions[i].Name,
 			Vpcs: convertToAPIVPCs(regions[i].VPCs),
 		}
 	}
@@ -217,7 +217,7 @@ func convertToAPIVPCs(vpcs []VPC) *[]models.AwsVPC {
 	ret := make([]models.AwsVPC, len(vpcs))
 	for i, _ := range vpcs {
 		ret[i] = models.AwsVPC{
-			Id:             &vpcs[i].ID,
+			Id:             vpcs[i].ID,
 			SecurityGroups: convertToAPISecurityGroups(vpcs[i].SecurityGroups),
 		}
 	}
