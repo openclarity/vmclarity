@@ -16,19 +16,22 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 
 	"github.com/ghodss/yaml"
-	"github.com/openclarity/kubeclarity/shared/pkg/utils"
+	kubeclarityutils "github.com/openclarity/kubeclarity/shared/pkg/utils"
 	uuid "github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/cli/pkg"
 	"github.com/openclarity/vmclarity/cli/pkg/mount"
 	"github.com/openclarity/vmclarity/shared/pkg/families"
@@ -37,6 +40,7 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/families/sbom"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
 	"github.com/openclarity/vmclarity/shared/pkg/families/vulnerabilities"
+	"github.com/openclarity/vmclarity/shared/pkg/utils"
 )
 
 var (
@@ -65,14 +69,6 @@ var rootCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		logger.Infof("Running...")
 
-		if mountVolume {
-			mountPoints, err := mountAttachedVolume()
-			if err != nil {
-				return fmt.Errorf("failed to mount attached volume: %v", err)
-			}
-			setMountPointsForFamiliesInput(mountPoints, config)
-		}
-
 		var exporter *Exporter
 		if server != "" {
 			exp, err := CreateExporter()
@@ -80,6 +76,20 @@ var rootCmd = &cobra.Command{
 				return fmt.Errorf("failed to create a result exporter: %w", err)
 			}
 			exporter = exp
+		}
+
+		if mountVolume {
+			// wait for volume to be attached.
+			if err := waitForAttached(exporter); err != nil {
+				return fmt.Errorf("failed to wait for volume attached: %v", err)
+			}
+			logger.Infof("got volume attached state")
+
+			mountPoints, err := mountAttachedVolume()
+			if err != nil {
+				return fmt.Errorf("failed to mount attached volume: %v", err)
+			}
+			setMountPointsForFamiliesInput(mountPoints, config)
 		}
 
 		if exporter != nil {
@@ -119,6 +129,27 @@ var rootCmd = &cobra.Command{
 
 		return nil
 	},
+}
+
+func waitForAttached(exporter *Exporter) error {
+	// nolint:govet
+	ctxWithTimeout, _ := context.WithTimeout(context.Background(), utils.DefaultResourceReadyWaitTimeoutMin*time.Minute)
+
+	for {
+		select {
+		case <-time.After(utils.DefaultResourceReadyCheckIntervalSec * time.Second):
+			status, err := exporter.client.GetScanResultStatus(ctxWithTimeout, scanResultID)
+			if err != nil {
+				return fmt.Errorf("failed to get scan result status: %v", err)
+			}
+			// wait for status attached (meaning volume was attached and can be mounted).
+			if *status.General.State == models.ATTACHED {
+				return nil
+			}
+		case <-ctxWithTimeout.Done():
+			return fmt.Errorf("waiting for volume ready was canceled: %v", ctxWithTimeout.Err())
+		}
+	}
 }
 
 // nolint:cyclop
@@ -353,7 +384,7 @@ func setMountPointsForFamiliesInput(mountPoints []string, familiesConfig *famili
 		if familiesConfig.SBOM.Enabled {
 			familiesConfig.SBOM.Inputs = append(familiesConfig.SBOM.Inputs, sbom.Input{
 				Input:     mountDir,
-				InputType: string(utils.ROOTFS),
+				InputType: string(kubeclarityutils.ROOTFS),
 			})
 		}
 		if familiesConfig.Vulnerabilities.Enabled {
@@ -362,14 +393,14 @@ func setMountPointsForFamiliesInput(mountPoints []string, familiesConfig *famili
 			} else {
 				familiesConfig.Vulnerabilities.Inputs = append(familiesConfig.Vulnerabilities.Inputs, vulnerabilities.Input{
 					Input:     mountDir,
-					InputType: string(utils.ROOTFS),
+					InputType: string(kubeclarityutils.ROOTFS),
 				})
 			}
 		}
 		if familiesConfig.Secrets.Enabled {
 			familiesConfig.Secrets.Inputs = append(familiesConfig.Secrets.Inputs, secrets.Input{
 				Input:     mountDir,
-				InputType: string(utils.ROOTFS),
+				InputType: string(kubeclarityutils.ROOTFS),
 			})
 		}
 		if familiesConfig.Malware.Enabled {

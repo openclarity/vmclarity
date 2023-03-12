@@ -19,10 +19,13 @@ import (
 	"context"
 )
 
+// Job represents a scan process of a target.
 type Job struct {
-	Instance    Instance
-	SrcSnapshot Snapshot
-	DstSnapshot Snapshot
+	// Resources that was created as part of the scan:
+	Instance    Instance // Instance the scanner job instance.
+	SrcSnapshot Snapshot // SrcSnapshot the snapshot of the target root volume.
+	DstSnapshot Snapshot // DstSnapshot copy of SrcSnapshot in the scanner region.
+	Volume      Volume   // Volume created from the DstSnapshot to be attached to the scanner job.
 }
 
 type ScanJobRunConfig struct {
@@ -37,8 +40,10 @@ type Instance interface {
 	GetID() string
 	GetLocation() string
 	GetRootVolume(ctx context.Context) (Volume, error)
+	GetAvailabilityZone() string
 	WaitForReady(ctx context.Context) error
 	Delete(ctx context.Context) error
+	AttachVolume(ctx context.Context, volume Volume, deviceName string) error
 }
 
 type TargetInstance struct {
@@ -48,6 +53,10 @@ type TargetInstance struct {
 
 type Volume interface {
 	TakeSnapshot(ctx context.Context) (Snapshot, error)
+	GetID() string
+	Delete(ctx context.Context) error
+	WaitForReady(ctx context.Context) error
+	WaitForAttached(ctx context.Context) error
 }
 
 type Snapshot interface {
@@ -56,6 +65,7 @@ type Snapshot interface {
 	Copy(ctx context.Context, dstRegion string) (Snapshot, error)
 	Delete(ctx context.Context) error
 	WaitForReady(ctx context.Context) error
+	CreateVolume(ctx context.Context, availabilityZone string) (Volume, error)
 }
 
 type ScannerJobConfig struct {

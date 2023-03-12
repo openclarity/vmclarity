@@ -270,6 +270,7 @@ func scanStatusHasErrors(status *models.TargetScanStatus) bool {
 
 // TODO: need to understand how to destroy the job in case the scanner dies until it gets the results
 // We can put the targetID on the scanner VM for easy deletion.
+// nolint:cyclop
 func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error) {
 	var launchInstance types.Instance
 	var launchSnapshot types.Snapshot
@@ -306,6 +307,8 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 		return types.Job{}, fmt.Errorf("failed to wait for snapshot to be ready. snapshotID=%v: %v", snapshot.GetID(), err)
 	}
 
+	// we need the snapshot to be in the scanner region in order to create
+	// a volume and attach it.
 	if s.config.Region != snapshot.GetRegion() {
 		cpySnapshot, err = snapshot.Copy(ctx, s.config.Region)
 		if err != nil {
@@ -335,11 +338,48 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 		ScanResultID:     data.scanResultID,
 		KeyPairName:      s.config.ScannerKeyPairName,
 	}
-	launchInstance, err = s.providerClient.RunScanningJob(ctx, launchSnapshot, scanningJobConfig)
+	launchInstance, err = s.providerClient.RunScanningJob(ctx, launchSnapshot.GetID(), launchSnapshot.GetRegion(), scanningJobConfig)
 	if err != nil {
 		return types.Job{}, fmt.Errorf("failed to launch a new instance: %v", err)
 	}
 	job.Instance = launchInstance
+
+	// create a volume from the snapshot.
+	newVolume, err := launchSnapshot.CreateVolume(ctx, launchInstance.GetAvailabilityZone())
+	if err != nil {
+		return types.Job{}, fmt.Errorf("failed to create volume: %v", err)
+	}
+
+	// wait for instance to be in a running state.
+	if err := job.Instance.WaitForReady(ctx); err != nil {
+		return types.Job{}, fmt.Errorf("failed to wait for instance ready: %v", err)
+	}
+
+	// wait for volume to be available.
+	if err := newVolume.WaitForReady(ctx); err != nil {
+		return types.Job{}, fmt.Errorf("failed to wait for volume to be ready: %v", err)
+	}
+
+	// attach the volume to the scanning job instance.
+	err = launchInstance.AttachVolume(ctx, newVolume, s.config.DeviceName)
+	if err != nil {
+		return types.Job{}, fmt.Errorf("failed to attach volume: %v", err)
+	}
+
+	// wait for the volume to be attached.
+	if err := newVolume.WaitForAttached(ctx); err != nil {
+		return types.Job{}, fmt.Errorf("failed to wait for volume attached: %v", err)
+	}
+
+	// mark attached state in the backend.
+	err = s.backendClient.PatchTargetScanStatus(ctx, data.scanResultID, &models.TargetScanStatus{
+		General: &models.TargetScanState{
+			State: runtimeScanUtils.PointerTo(models.ATTACHED),
+		},
+	})
+	if err != nil {
+		return types.Job{}, fmt.Errorf("failed to patch target scan status: %v", err)
+	}
 
 	return job, nil
 }
@@ -504,6 +544,11 @@ func (s *Scanner) deleteJob(ctx context.Context, job *types.Job) {
 	if job.DstSnapshot != nil {
 		if err := job.DstSnapshot.Delete(ctx); err != nil {
 			log.Errorf("Failed to delete destination snapshot. snapshotID=%v: %v", job.DstSnapshot.GetID(), err)
+		}
+	}
+	if job.Volume != nil {
+		if err := job.Volume.Delete(ctx); err != nil {
+			log.Errorf("Failed to delete volume. volumeID=%v: %v", job.Volume.GetID(), err)
 		}
 	}
 }

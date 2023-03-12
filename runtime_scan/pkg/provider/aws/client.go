@@ -92,7 +92,7 @@ func (c *Client) Discover(ctx context.Context, scanScope *models.ScanScopeType) 
 	for _, region := range regions {
 		// if no vpcs, that mean that we don't need any vpc filters
 		if len(region.vpcs) == 0 {
-			instances, err := c.GetInstances(ctx, filters, scope.ExcludeTags, region.id)
+			instances, err := c.GetInstances(ctx, filters, scope.ExcludeTags, region.name)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get instances: %v", err)
 			}
@@ -104,7 +104,7 @@ func (c *Client) Discover(ctx context.Context, scanScope *models.ScanScopeType) 
 		for _, vpc := range region.vpcs {
 			vpcFilters := append(filters, createVPCFilters(vpc)...)
 
-			instances, err := c.GetInstances(ctx, vpcFilters, scope.ExcludeTags, region.id)
+			instances, err := c.GetInstances(ctx, vpcFilters, scope.ExcludeTags, region.name)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get instances: %v", err)
 			}
@@ -115,8 +115,13 @@ func (c *Client) Discover(ctx context.Context, scanScope *models.ScanScopeType) 
 }
 
 func convertScope(scope *models.AwsScanScope) *ScanScope {
+	allRegions := false
+	if scope.AllRegions != nil {
+		allRegions = *scope.AllRegions
+	}
+
 	return &ScanScope{
-		All:         convertBool(scope.All),
+		AllRegions:  allRegions,
 		Regions:     convertRegions(scope.Regions),
 		ScanStopped: convertBool(scope.ShouldScanStoppedInstances),
 		TagSelector: convertTags(scope.InstanceTagSelector),
@@ -129,8 +134,8 @@ func convertTags(tags *[]models.Tag) []Tag {
 	if tags != nil {
 		for _, tag := range *tags {
 			ret = append(ret, Tag{
-				Key: *tag.Key,
-				Val: *tag.Value,
+				Key: tag.Key,
+				Val: tag.Value,
 			})
 		}
 	}
@@ -143,7 +148,7 @@ func convertRegions(regions *[]models.AwsRegion) []Region {
 	if regions != nil {
 		for _, region := range *regions {
 			ret = append(ret, Region{
-				id:   *region.Id,
+				name: region.Name,
 				vpcs: convertVPCs(region.Vpcs),
 			})
 		}
@@ -159,7 +164,7 @@ func convertVPCs(vpcs *[]models.AwsVPC) []VPC {
 	ret := make([]VPC, len(*vpcs))
 	for i, vpc := range *vpcs {
 		ret[i] = VPC{
-			id:             *vpc.Id,
+			id:             vpc.Id,
 			securityGroups: convertSecurityGroups(vpc.SecurityGroups),
 		}
 	}
@@ -174,7 +179,7 @@ func convertSecurityGroups(securityGroups *[]models.AwsSecurityGroup) []Security
 	ret := make([]SecurityGroup, len(*securityGroups))
 	for i, securityGroup := range *securityGroups {
 		ret[i] = SecurityGroup{
-			id: *securityGroup.Id,
+			id: securityGroup.Id,
 		}
 	}
 
@@ -188,9 +193,8 @@ func convertBool(all *bool) bool {
 	return false
 }
 
-func (c *Client) RunScanningJob(ctx context.Context, snapshot types.Snapshot, config provider.ScanningJobConfig) (types.Instance, error) {
+func (c *Client) RunScanningJob(ctx context.Context, region, id string, config provider.ScanningJobConfig) (types.Instance, error) {
 	cloudInitData := cloudinit.Data{
-		Volume:           c.awsConfig.DeviceName,
 		ScannerCLIConfig: config.ScannerCLIConfig,
 		ScannerImage:     config.ScannerImage,
 		ServerAddress:    config.VMClarityAddress,
@@ -201,26 +205,13 @@ func (c *Client) RunScanningJob(ctx context.Context, snapshot types.Snapshot, co
 		return nil, fmt.Errorf("failed to generate cloud-init: %v", err)
 	}
 
-	instanceTags := createInstanceTags(snapshot.GetID())
+	instanceTags := createInstanceTags(id)
 	userDataBase64 := base64.StdEncoding.EncodeToString([]byte(userData))
 
 	runInstancesInput := &ec2.RunInstancesInput{
-		MaxCount: utils.Int32Ptr(1),
-		MinCount: utils.Int32Ptr(1),
-		ImageId:  &c.awsConfig.AmiID,
-		BlockDeviceMappings: []ec2types.BlockDeviceMapping{
-			{
-				// attach the snapshot to the instance at launch (a new volume will be created)
-				DeviceName: &c.awsConfig.DeviceName,
-				Ebs: &ec2types.EbsBlockDevice{
-					DeleteOnTermination: utils.BoolPtr(true),
-					Encrypted:           nil, // ?
-					SnapshotId:          utils.StringPtr(snapshot.GetID()),
-					VolumeSize:          nil,                    // default is snapshot size
-					VolumeType:          ec2types.VolumeTypeGp2, // TODO need to decide volume type
-				},
-			},
-		},
+		MaxCount:     utils.Int32Ptr(1),
+		MinCount:     utils.Int32Ptr(1),
+		ImageId:      &c.awsConfig.AmiID,
 		InstanceType: ec2types.InstanceTypeT2Large, // TODO need to decide instance type
 		TagSpecifications: []ec2types.TagSpecification{
 			{
@@ -252,16 +243,17 @@ func (c *Client) RunScanningJob(ctx context.Context, snapshot types.Snapshot, co
 	}
 
 	out, err := c.ec2Client.RunInstances(ctx, runInstancesInput, func(options *ec2.Options) {
-		options.Region = snapshot.GetRegion()
+		options.Region = region
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to run instances: %v", err)
 	}
 
 	return &InstanceImpl{
-		ec2Client: c.ec2Client,
-		id:        *out.Instances[0].InstanceId,
-		region:    snapshot.GetRegion(),
+		ec2Client:        c.ec2Client,
+		id:               *out.Instances[0].InstanceId,
+		region:           region,
+		availabilityZone: *out.Instances[0].Placement.AvailabilityZone,
 	}, nil
 }
 
@@ -410,7 +402,7 @@ func createInclusionTagsFilters(tags []Tag) []ec2types.Filter {
 }
 
 func (c *Client) getRegionsToScan(ctx context.Context, scope *ScanScope) ([]Region, error) {
-	if scope.All {
+	if scope.AllRegions {
 		return c.ListAllRegions(ctx)
 	}
 
@@ -427,7 +419,7 @@ func (c *Client) ListAllRegions(ctx context.Context) ([]Region, error) {
 	}
 	for _, region := range out.Regions {
 		ret = append(ret, Region{
-			id: *region.RegionName,
+			name: *region.RegionName,
 		})
 	}
 	return ret, nil

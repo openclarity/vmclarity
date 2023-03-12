@@ -37,6 +37,8 @@ const (
 	ScannerKeyPairName        = "SCANNER_KEY_PAIR_NAME"
 	GitleaksBinaryPath        = "GITLEAKS_BINARY_PATH"
 	ClamBinaryPath            = "CLAM_BINARY_PATH"
+	AttachedVolumeDeviceName        = "ATTACHED_VOLUME_DEVICE_NAME"
+	defaultAttachedVolumeDeviceName = "xvdh"
 	ScannerBackendAddress     = "SCANNER_VMCLARITY_BACKEND_ADDRESS"
 	ScanConfigWatchInterval   = "SCAN_CONFIG_WATCH_INTERVAL"
 	ExploitDBAddress          = "EXPLOIT_DB_ADDRESS"
@@ -83,6 +85,9 @@ type ScannerConfig struct {
 
 	// The clam binary path in the scanner image container.
 	ClamBinaryPath string
+
+	// the name of the block device to attach to the scanner job
+	DeviceName string
 }
 
 func setConfigDefaults(backendAddress string, backendPort int, backendBaseURL string) {
@@ -95,6 +100,7 @@ func setConfigDefaults(backendAddress string, backendPort int, backendBaseURL st
 	// https://github.com/openclarity/vmclarity-tools-base/blob/main/Dockerfile#L21-L23
 	viper.SetDefault(GitleaksBinaryPath, "/artifacts/gitleaks")
 	viper.SetDefault(ExploitDBAddress, fmt.Sprintf("http://%s", net.JoinHostPort(backendAddress, "1326")))
+	viper.SetDefault(AttachedVolumeDeviceName, defaultAttachedVolumeDeviceName)
 	viper.SetDefault(ClamBinaryPath, "clamscan")
 
 	viper.AutomaticEnv()
@@ -116,6 +122,7 @@ func LoadConfig(backendAddress string, backendPort int, baseURL string) (*Orches
 			ScannerBackendAddress:     viper.GetString(ScannerBackendAddress),
 			ScannerKeyPairName:        viper.GetString(ScannerKeyPairName),
 			GitleaksBinaryPath:        viper.GetString(GitleaksBinaryPath),
+			DeviceName:                viper.GetString(AttachedVolumeDeviceName),
 			ExploitsDBAddress:         viper.GetString(ExploitDBAddress),
 			ClamBinaryPath:            viper.GetString(ClamBinaryPath),
 		},
