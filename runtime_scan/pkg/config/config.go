@@ -28,20 +28,20 @@ import (
 )
 
 const (
-	ScannerAWSRegion          = "SCANNER_AWS_REGION"
-	defaultScannerAWSRegion   = "us-east-1"
-	JobResultTimeout          = "JOB_RESULT_TIMEOUT"
-	JobResultsPollingInterval = "JOB_RESULT_POLLING_INTERVAL"
-	DeleteJobPolicy           = "DELETE_JOB_POLICY"
-	ScannerContainerImage     = "SCANNER_CONTAINER_IMAGE"
-	ScannerKeyPairName        = "SCANNER_KEY_PAIR_NAME"
-	GitleaksBinaryPath        = "GITLEAKS_BINARY_PATH"
-	ClamBinaryPath            = "CLAM_BINARY_PATH"
+	ScannerAWSRegion                = "SCANNER_AWS_REGION"
+	defaultScannerAWSRegion         = "us-east-1"
+	JobResultTimeout                = "JOB_RESULT_TIMEOUT"
+	JobResultsPollingInterval       = "JOB_RESULT_POLLING_INTERVAL"
+	DeleteJobPolicy                 = "DELETE_JOB_POLICY"
+	ScannerContainerImage           = "SCANNER_CONTAINER_IMAGE"
+	ScannerKeyPairName              = "SCANNER_KEY_PAIR_NAME"
+	GitleaksBinaryPath              = "GITLEAKS_BINARY_PATH"
+	ClamBinaryPath                  = "CLAM_BINARY_PATH"
 	AttachedVolumeDeviceName        = "ATTACHED_VOLUME_DEVICE_NAME"
 	defaultAttachedVolumeDeviceName = "xvdh"
-	ScannerBackendAddress     = "SCANNER_VMCLARITY_BACKEND_ADDRESS"
-	ScanConfigWatchInterval   = "SCAN_CONFIG_WATCH_INTERVAL"
-	ExploitDBAddress          = "EXPLOIT_DB_ADDRESS"
+	ScannerBackendAddress           = "SCANNER_VMCLARITY_BACKEND_ADDRESS"
+	ScanConfigWatchInterval         = "SCAN_CONFIG_WATCH_INTERVAL"
+	ExploitDBAddress                = "EXPLOIT_DB_ADDRESS"
 )
 
 type OrchestratorConfig struct {
