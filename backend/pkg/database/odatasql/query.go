@@ -336,7 +336,7 @@ func buildSelectFieldsForCollectionFieldType(schemaMetas map[string]SchemaMeta, 
 			conditions, err := buildOrderByFromOdata(newSource, st.orderby.OrderByItems)
 			// TODO(sambetts) Add error handling to buildSelectFields
 			if err != nil {
-				log.Errorf("Failed to build DB query from $orderby: %w", err)
+				log.Errorf("Failed to build DB query from $orderby: %v", err)
 			}
 
 			orderby = fmt.Sprintf("ORDER BY %s", conditions)
