@@ -22,6 +22,7 @@ import (
 	"sync"
 
 	"github.com/CiscoM31/godata"
+	log "github.com/sirupsen/logrus"
 )
 
 var fixSelectToken sync.Once
@@ -170,6 +171,7 @@ func buildSelectFields(schemaMetas map[string]SchemaMeta, field FieldMeta, ident
 	case RelationshipCollectionFieldType:
 		return buildSelectFieldsForRelationshipCollectionFieldType(schemaMetas, field, identifier, source, path, st)
 	default:
+		log.Errorf("Unsupported field type %v", field.FieldType)
 		// TODO(sambetts) Return an error here
 		return ""
 	}
@@ -331,11 +333,11 @@ func buildSelectFieldsForCollectionFieldType(schemaMetas map[string]SchemaMeta, 
 		}
 
 		if st.orderby != nil {
-			conditions, _ := buildOrderByFromOdata(newSource, st.orderby.OrderByItems)
+			conditions, err := buildOrderByFromOdata(newSource, st.orderby.OrderByItems)
 			// TODO(sambetts) Add error handling to buildSelectFields
-			// if err != nil {
-			// 	return "", fmt.Errorf("failed to build DB query from $orderby: %w", err)
-			// }
+			if err != nil {
+				log.Errorf("Failed to build DB query from $orderby: %w", err)
+			}
 
 			orderby = fmt.Sprintf("ORDER BY %s", conditions)
 		}
