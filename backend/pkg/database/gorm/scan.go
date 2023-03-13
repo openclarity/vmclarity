@@ -229,22 +229,18 @@ func (s *ScansTableHandler) DeleteScan(scanID models.ScanID) error {
 
 func (s *ScansTableHandler) checkUniqueness(scanConfigID string) (*models.Scan, error) {
 	var scans []Scan
-	filter := fmt.Sprintf("scanConfig/id eq '%s'", scanConfigID)
+	filter := fmt.Sprintf("scanConfig/id eq '%s' and endTime eq null", scanConfigID)
 	err := ODataQuery(s.DB, scanSchemaName, &filter, nil, nil, nil, nil, true, &scans)
 	if err != nil {
 		return nil, err
 	}
-
-	// check if there is a running scan (end time not set)
-	for _, scan := range scans {
+	if len(scans) > 0 {
 		var apiScan models.Scan
-		if err = json.Unmarshal(scan.Data, &apiScan); err != nil {
+		if err = json.Unmarshal(scans[0].Data, &apiScan); err != nil {
 			return nil, fmt.Errorf("failed to convert DB model to API model: %w", err)
 		}
-		if apiScan.EndTime == nil {
-			return &apiScan, &common.ConflictError{
-				Reason: fmt.Sprintf("Scan with scanConfigID=%q exists and already running", scanConfigID),
-			}
+		return &apiScan, &common.ConflictError{
+			Reason: fmt.Sprintf("Scan with scanConfigID=%q exists and already running", scanConfigID),
 		}
 	}
 
