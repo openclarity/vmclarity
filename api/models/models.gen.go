@@ -39,11 +39,11 @@ const (
 
 // Defines values for ScanState.
 const (
-	Discovered ScanState = "Discovered"
-	Done       ScanState = "Done"
-	Failed     ScanState = "Failed"
-	InProgress ScanState = "InProgress"
-	Pending    ScanState = "Pending"
+	ScanStateDiscovered ScanState = "Discovered"
+	ScanStateDone       ScanState = "Done"
+	ScanStateFailed     ScanState = "Failed"
+	ScanStateInProgress ScanState = "InProgress"
+	ScanStatePending    ScanState = "Pending"
 )
 
 // Defines values for ScanStateReason.
@@ -55,6 +55,26 @@ const (
 	ScanStateReasonSuccess                     ScanStateReason = "Success"
 	ScanStateReasonTimedOut                    ScanStateReason = "TimedOut"
 	ScanStateReasonUnexpected                  ScanStateReason = "Unexpected"
+)
+
+// Defines values for ScanDataState.
+const (
+	ScanDataStateDiscovered ScanDataState = "Discovered"
+	ScanDataStateDone       ScanDataState = "Done"
+	ScanDataStateFailed     ScanDataState = "Failed"
+	ScanDataStateInProgress ScanDataState = "InProgress"
+	ScanDataStatePending    ScanDataState = "Pending"
+)
+
+// Defines values for ScanDataStateReason.
+const (
+	ScanDataStateReasonAborted                     ScanDataStateReason = "Aborted"
+	ScanDataStateReasonDiscoveryFailed             ScanDataStateReason = "DiscoveryFailed"
+	ScanDataStateReasonNothingToScan               ScanDataStateReason = "NothingToScan"
+	ScanDataStateReasonOneOrMoreTargetFailedToScan ScanDataStateReason = "OneOrMoreTargetFailedToScan"
+	ScanDataStateReasonSuccess                     ScanDataStateReason = "Success"
+	ScanDataStateReasonTimedOut                    ScanDataStateReason = "TimedOut"
+	ScanDataStateReasonUnexpected                  ScanDataStateReason = "Unexpected"
 )
 
 // Defines values for ScanType.
@@ -89,6 +109,12 @@ const (
 // ApiResponse An object that is returned in all cases of failures.
 type ApiResponse struct {
 	Message *string `json:"message,omitempty"`
+}
+
+// AwsAccountScope AWS cloud account scope
+type AwsAccountScope struct {
+	ObjectType string       `json:"objectType"`
+	Regions    *[]AwsRegion `json:"regions,omitempty"`
 }
 
 // AwsRegion AWS region
@@ -152,6 +178,17 @@ type Exploit struct {
 	Id          *string      `json:"id,omitempty"`
 }
 
+// ExploitFindingInfo defines model for ExploitFindingInfo.
+type ExploitFindingInfo struct {
+	CveID       *string   `json:"cveID,omitempty"`
+	Description *string   `json:"description,omitempty"`
+	Name        *string   `json:"name,omitempty"`
+	ObjectType  string    `json:"objectType"`
+	SourceDB    *string   `json:"sourceDB,omitempty"`
+	Title       *string   `json:"title,omitempty"`
+	Urls        *[]string `json:"urls,omitempty"`
+}
+
 // ExploitInfo defines model for ExploitInfo.
 type ExploitInfo struct {
 	CveID       *string   `json:"cveID,omitempty"`
@@ -172,6 +209,45 @@ type ExploitsConfig struct {
 	Enabled *bool `json:"enabled,omitempty"`
 }
 
+// Finding defines model for Finding.
+type Finding struct {
+	// Asset Describes a relationship to a target which can be expanded.
+	Asset       *TargetRelationship  `json:"asset,omitempty"`
+	FindingInfo *Finding_FindingInfo `json:"findingInfo,omitempty"`
+
+	// FoundOn When this finding was discovered by a scan
+	FoundOn *time.Time `json:"foundOn,omitempty"`
+	Id      *string    `json:"id,omitempty"`
+
+	// InvalidatedOn When this finding was invalidated by a newer scan
+	InvalidatedOn *time.Time `json:"invalidatedOn,omitempty"`
+
+	// Scan Describes an expandable relationship to Scan object
+	Scan *ScanRelationship `json:"scan,omitempty"`
+}
+
+// Finding_FindingInfo defines model for Finding.FindingInfo.
+type Finding_FindingInfo struct {
+	union json.RawMessage
+}
+
+// FindingExists defines model for FindingExists.
+type FindingExists struct {
+	Finding *Finding `json:"finding,omitempty"`
+
+	// Message Describes which unique constraint combination causes the conflict.
+	Message *string `json:"message,omitempty"`
+}
+
+// Findings defines model for Findings.
+type Findings struct {
+	// Count Total scans count according to the given filters
+	Count *int `json:"count,omitempty"`
+
+	// Items List of findings according to the given filters
+	Items *[]Finding `json:"items,omitempty"`
+}
+
 // Malware defines model for Malware.
 type Malware struct {
 	Id          *string      `json:"id,omitempty"`
@@ -181,6 +257,16 @@ type Malware struct {
 // MalwareConfig defines model for MalwareConfig.
 type MalwareConfig struct {
 	Enabled *bool `json:"enabled,omitempty"`
+}
+
+// MalwareFindingInfo defines model for MalwareFindingInfo.
+type MalwareFindingInfo struct {
+	MalwareName *string      `json:"malwareName,omitempty"`
+	MalwareType *MalwareType `json:"malwareType,omitempty"`
+	ObjectType  string       `json:"objectType"`
+
+	// Path Path of the file that contains malware
+	Path *string `json:"path,omitempty"`
 }
 
 // MalwareInfo defines model for MalwareInfo.
@@ -204,6 +290,15 @@ type MalwareType string
 type Misconfiguration struct {
 	Id                   *string               `json:"id,omitempty"`
 	MisconfigurationInfo *MisconfigurationInfo `json:"misconfigurationInfo,omitempty"`
+}
+
+// MisconfigurationFindingInfo defines model for MisconfigurationFindingInfo.
+type MisconfigurationFindingInfo struct {
+	Description *string `json:"description,omitempty"`
+	ObjectType  string  `json:"objectType"`
+
+	// Path Path of the file that contains misconfigurations
+	Path *string `json:"path,omitempty"`
 }
 
 // MisconfigurationInfo defines model for MisconfigurationInfo.
@@ -230,6 +325,13 @@ type Package struct {
 	PackageInfo *PackageInfo `json:"packageInfo,omitempty"`
 }
 
+// PackageFindingInfo defines model for PackageFindingInfo.
+type PackageFindingInfo struct {
+	ObjectType     string  `json:"objectType"`
+	PackageName    *string `json:"packageName,omitempty"`
+	PackageVersion *string `json:"packageVersion,omitempty"`
+}
+
 // PackageInfo defines model for PackageInfo.
 type PackageInfo struct {
 	PackageName    *string `json:"packageName,omitempty"`
@@ -247,6 +349,16 @@ type PodInfo struct {
 type Rootkit struct {
 	Id          *string      `json:"id,omitempty"`
 	RootkitInfo *RootkitInfo `json:"rootkitInfo,omitempty"`
+}
+
+// RootkitFindingInfo defines model for RootkitFindingInfo.
+type RootkitFindingInfo struct {
+	ObjectType string `json:"objectType"`
+
+	// Path Path of the file that contains rootkit
+	Path        *string      `json:"path,omitempty"`
+	RootkitName *string      `json:"rootkitName,omitempty"`
+	RootkitType *RootkitType `json:"rootkitType,omitempty"`
 }
 
 // RootkitInfo defines model for RootkitInfo.
@@ -285,7 +397,7 @@ type SbomScan struct {
 	Packages *[]Package `json:"packages,omitempty"`
 }
 
-// Scan Describes a multi-target scheduled scan.
+// Scan defines model for Scan.
 type Scan struct {
 	EndTime *time.Time `json:"endTime,omitempty"`
 	Id      *string    `json:"id,omitempty"`
@@ -371,6 +483,41 @@ type ScanConfigs struct {
 	Items *[]ScanConfig `json:"items,omitempty"`
 }
 
+// ScanData defines model for ScanData.
+type ScanData struct {
+	EndTime *time.Time `json:"endTime,omitempty"`
+
+	// ScanConfig Describes a relationship to a scan config which can be expanded.
+	ScanConfig *ScanConfigRelationship `json:"scanConfig,omitempty"`
+
+	// ScanConfigSnapshot Fields for a ScanConfig so they can be shared between the ScanConfig,
+	// ScanConfigRelationship and used for the ScanConfig snapshot in the
+	// scan.
+	ScanConfigSnapshot *ScanConfigData `json:"scanConfigSnapshot,omitempty"`
+	StartTime          *time.Time      `json:"startTime,omitempty"`
+
+	// State The lifecycle state of this scan.
+	State *ScanDataState `json:"state,omitempty"`
+
+	// StateMessage Human-readable message indicating details about the last state transition.
+	StateMessage *string `json:"stateMessage,omitempty"`
+
+	// StateReason Machine-readable, UpperCamelCase text indicating the reason for the condition's last transition.
+	StateReason *ScanDataStateReason `json:"stateReason,omitempty"`
+
+	// Summary A summary of the progress of a scan for informational purposes.
+	Summary *ScanSummary `json:"summary,omitempty"`
+
+	// TargetIDs List of target IDs that are targeted for scanning as part of this scan
+	TargetIDs *[]string `json:"targetIDs,omitempty"`
+}
+
+// ScanDataState The lifecycle state of this scan.
+type ScanDataState string
+
+// ScanDataStateReason Machine-readable, UpperCamelCase text indicating the reason for the condition's last transition.
+type ScanDataStateReason string
+
 // ScanExists defines model for ScanExists.
 type ScanExists struct {
 	// Message Describes which unique constraint combination causes the conflict.
@@ -391,12 +538,39 @@ type ScanFamiliesConfig struct {
 	Vulnerabilities   *VulnerabilitiesConfig   `json:"vulnerabilities,omitempty"`
 }
 
+// ScanFindingsSummary A summary of the scan findings.
+type ScanFindingsSummary struct {
+	TotalExploits          *int `json:"totalExploits,omitempty"`
+	TotalMalware           *int `json:"totalMalware,omitempty"`
+	TotalMisconfigurations *int `json:"totalMisconfigurations,omitempty"`
+	TotalPackages          *int `json:"totalPackages,omitempty"`
+	TotalRootkits          *int `json:"totalRootkits,omitempty"`
+	TotalSecrets           *int `json:"totalSecrets,omitempty"`
+
+	// TotalVulnerabilities A summary of number of vulnerabilities found per severity.
+	TotalVulnerabilities *VulnerabilityScanSummary `json:"totalVulnerabilities,omitempty"`
+}
+
+// ScanRelationship defines model for ScanRelationship.
+type ScanRelationship struct {
+	EndTime            *interface{} `json:"endTime,omitempty"`
+	Id                 string       `json:"id"`
+	ScanConfig         *interface{} `json:"scanConfig,omitempty"`
+	ScanConfigSnapshot *interface{} `json:"scanConfigSnapshot,omitempty"`
+	StartTime          *interface{} `json:"startTime,omitempty"`
+	State              *interface{} `json:"state,omitempty"`
+	StateMessage       *interface{} `json:"stateMessage,omitempty"`
+	StateReason        *interface{} `json:"stateReason,omitempty"`
+	Summary            *interface{} `json:"summary,omitempty"`
+	TargetIDs          *interface{} `json:"targetIDs,omitempty"`
+}
+
 // ScanScopeType defines model for ScanScopeType.
 type ScanScopeType struct {
 	union json.RawMessage
 }
 
-// ScanSummary A summary of the progress of a scan for informational purposes.
+// ScanSummary defines model for ScanSummary.
 type ScanSummary struct {
 	JobsCompleted          *int `json:"jobsCompleted,omitempty"`
 	JobsLeftToRun          *int `json:"jobsLeftToRun,omitempty"`
@@ -423,10 +597,34 @@ type Scans struct {
 	Total *int `json:"total,omitempty"`
 }
 
+// ScopeType defines model for ScopeType.
+type ScopeType struct {
+	union json.RawMessage
+}
+
+// Scopes Scopes discovery
+type Scopes struct {
+	ScopeInfo *ScopeType `json:"scopeInfo,omitempty"`
+}
+
 // Secret defines model for Secret.
 type Secret struct {
 	Id         *string     `json:"id,omitempty"`
 	SecretInfo *SecretInfo `json:"secretInfo,omitempty"`
+}
+
+// SecretFindingInfo defines model for SecretFindingInfo.
+type SecretFindingInfo struct {
+	Description *string `json:"description,omitempty"`
+	EndLine     *int    `json:"endLine,omitempty"`
+
+	// FilePath Name of the file containing the secret
+	FilePath *string `json:"filePath,omitempty"`
+
+	// Fingerprint Unique identification of the SecretInfo
+	Fingerprint *string `json:"fingerprint,omitempty"`
+	ObjectType  string  `json:"objectType"`
+	StartLine   *int    `json:"startLine,omitempty"`
 }
 
 // SecretInfo defines model for SecretInfo.
@@ -471,8 +669,14 @@ type Tag struct {
 
 // Target defines model for Target.
 type Target struct {
-	Id         *string     `json:"id,omitempty"`
-	TargetInfo *TargetType `json:"targetInfo,omitempty"`
+	Id *string `json:"id,omitempty"`
+
+	// ScansCount Total number of scans that have ever run for this target
+	ScansCount *int `json:"scansCount,omitempty"`
+
+	// Summary A summary of the scan findings.
+	Summary    *ScanFindingsSummary `json:"summary,omitempty"`
+	TargetInfo *TargetType          `json:"targetInfo,omitempty"`
 }
 
 // TargetExists defines model for TargetExists.
@@ -480,6 +684,17 @@ type TargetExists struct {
 	// Message Describes which unique constraint combination causes the conflict.
 	Message *string `json:"message,omitempty"`
 	Target  *Target `json:"target,omitempty"`
+}
+
+// TargetRelationship defines model for TargetRelationship.
+type TargetRelationship struct {
+	Id        string       `json:"id"`
+	ScanCount *interface{} `json:"scanCount,omitempty"`
+
+	// ScansCount Total number of scans that have ever run for this target
+	ScansCount *int         `json:"scansCount,omitempty"`
+	Summary    *interface{} `json:"summary,omitempty"`
+	TargetInfo *interface{} `json:"targetInfo,omitempty"`
 }
 
 // TargetScanResult defines model for TargetScanResult.
@@ -490,14 +705,18 @@ type TargetScanResult struct {
 	Misconfigurations *MisconfigurationScan `json:"misconfigurations,omitempty"`
 	Rootkits          *RootkitScan          `json:"rootkits,omitempty"`
 	Sboms             *SbomScan             `json:"sboms,omitempty"`
-	ScanId            string                `json:"scanId"`
-	Secrets           *SecretScan           `json:"secrets,omitempty"`
-	Status            *TargetScanStatus     `json:"status,omitempty"`
 
-	// Summary A summary of target scan result for informational purposes.
-	Summary         *TargetScanResultSummary `json:"summary,omitempty"`
-	TargetId        string                   `json:"targetId"`
-	Vulnerabilities *VulnerabilityScan       `json:"vulnerabilities,omitempty"`
+	// Scan Describes an expandable relationship to Scan object
+	Scan    ScanRelationship  `json:"scan"`
+	Secrets *SecretScan       `json:"secrets,omitempty"`
+	Status  *TargetScanStatus `json:"status,omitempty"`
+
+	// Summary A summary of the scan findings.
+	Summary *ScanFindingsSummary `json:"summary,omitempty"`
+
+	// Target Describes a relationship to a target which can be expanded.
+	Target          TargetRelationship `json:"target"`
+	Vulnerabilities *VulnerabilityScan `json:"vulnerabilities,omitempty"`
 }
 
 // TargetScanResultExists defines model for TargetScanResultExists.
@@ -507,26 +726,13 @@ type TargetScanResultExists struct {
 	TargetScanResult *TargetScanResult `json:"targetScanResult,omitempty"`
 }
 
-// TargetScanResultSummary A summary of target scan result for informational purposes.
-type TargetScanResultSummary struct {
-	TotalExploits          *int `json:"totalExploits,omitempty"`
-	TotalMalware           *int `json:"totalMalware,omitempty"`
-	TotalMisconfigurations *int `json:"totalMisconfigurations,omitempty"`
-	TotalPackages          *int `json:"totalPackages,omitempty"`
-	TotalRootkits          *int `json:"totalRootkits,omitempty"`
-	TotalSecrets           *int `json:"totalSecrets,omitempty"`
-
-	// TotalVulnerabilities A summary of number of vulnerabilities found per severity.
-	TotalVulnerabilities *VulnerabilityScanSummary `json:"totalVulnerabilities,omitempty"`
-}
-
 // TargetScanResults defines model for TargetScanResults.
 type TargetScanResults struct {
+	// Count Total scan results count according to the given filters
+	Count *int `json:"count,omitempty"`
+
 	// Items List of scan results according to the given filters and page. List length must be lower or equal to pageSize.
 	Items *[]TargetScanResult `json:"items,omitempty"`
-
-	// Total Total scan results count according to the given filters
-	Total *int `json:"total,omitempty"`
 }
 
 // TargetScanState defines model for TargetScanState.
@@ -557,11 +763,11 @@ type TargetType struct {
 
 // Targets defines model for Targets.
 type Targets struct {
+	// Count Total targets count according the given filters
+	Count *int `json:"count,omitempty"`
+
 	// Items List of targets in the given filters and page. List length must be lower or equal to pageSize.
 	Items *[]Target `json:"items,omitempty"`
-
-	// Total Total targets count according the given filters
-	Total *int `json:"total,omitempty"`
 }
 
 // TimeOfDay defines model for TimeOfDay.
@@ -587,6 +793,14 @@ type VulnerabilitiesConfig struct {
 type Vulnerability struct {
 	Id                *string            `json:"id,omitempty"`
 	VulnerabilityInfo *VulnerabilityInfo `json:"vulnerabilityInfo,omitempty"`
+}
+
+// VulnerabilityFindingInfo defines model for VulnerabilityFindingInfo.
+type VulnerabilityFindingInfo struct {
+	Description       *string                `json:"description,omitempty"`
+	ObjectType        string                 `json:"objectType"`
+	Severity          *VulnerabilitySeverity `json:"severity,omitempty"`
+	VulnerabilityName *string                `json:"vulnerabilityName,omitempty"`
 }
 
 // VulnerabilityInfo defines model for VulnerabilityInfo.
@@ -620,6 +834,9 @@ type WeeklyScheduleScanConfig struct {
 	ObjectType string     `json:"objectType"`
 	TimeOfDay  *TimeOfDay `json:"timeOfDay,omitempty"`
 }
+
+// FindingID defines model for findingID.
+type FindingID = string
 
 // OdataCount defines model for odataCount.
 type OdataCount = bool
@@ -663,6 +880,28 @@ type Success = SuccessResponse
 // UnknownError An object that is returned in all cases of failures.
 type UnknownError = ApiResponse
 
+// GetDiscoveryScopesParams defines parameters for GetDiscoveryScopes.
+type GetDiscoveryScopesParams struct {
+	Filter *OdataFilter `form:"$filter,omitempty" json:"$filter,omitempty"`
+	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
+}
+
+// GetFindingsParams defines parameters for GetFindings.
+type GetFindingsParams struct {
+	Filter *OdataFilter `form:"$filter,omitempty" json:"$filter,omitempty"`
+	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
+	Count  *OdataCount  `form:"$count,omitempty" json:"$count,omitempty"`
+	Top    *OdataTop    `form:"$top,omitempty" json:"$top,omitempty"`
+	Skip   *OdataSkip   `form:"$skip,omitempty" json:"$skip,omitempty"`
+	Expand *OdataExpand `form:"$expand,omitempty" json:"$expand,omitempty"`
+}
+
+// GetFindingsFindingIDParams defines parameters for GetFindingsFindingID.
+type GetFindingsFindingIDParams struct {
+	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
+	Expand *OdataExpand `form:"$expand,omitempty" json:"$expand,omitempty"`
+}
+
 // GetScanConfigsParams defines parameters for GetScanConfigs.
 type GetScanConfigsParams struct {
 	Filter *OdataFilter `form:"$filter,omitempty" json:"$filter,omitempty"`
@@ -683,17 +922,16 @@ type GetScanConfigsScanConfigIDParams struct {
 type GetScanResultsParams struct {
 	Filter *OdataFilter `form:"$filter,omitempty" json:"$filter,omitempty"`
 	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
-
-	// Page Page number of the query
-	Page *Page `form:"page,omitempty" json:"page,omitempty"`
-
-	// PageSize Maximum items to return
-	PageSize *PageSize `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	Count  *OdataCount  `form:"$count,omitempty" json:"$count,omitempty"`
+	Top    *OdataTop    `form:"$top,omitempty" json:"$top,omitempty"`
+	Skip   *OdataSkip   `form:"$skip,omitempty" json:"$skip,omitempty"`
+	Expand *OdataExpand `form:"$expand,omitempty" json:"$expand,omitempty"`
 }
 
 // GetScanResultsScanResultIDParams defines parameters for GetScanResultsScanResultID.
 type GetScanResultsScanResultIDParams struct {
 	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
+	Expand *OdataExpand `form:"$expand,omitempty" json:"$expand,omitempty"`
 }
 
 // GetScansParams defines parameters for GetScans.
@@ -710,13 +948,28 @@ type GetScansParams struct {
 // GetTargetsParams defines parameters for GetTargets.
 type GetTargetsParams struct {
 	Filter *OdataFilter `form:"$filter,omitempty" json:"$filter,omitempty"`
-
-	// Page Page number of the query
-	Page *Page `form:"page,omitempty" json:"page,omitempty"`
-
-	// PageSize Maximum items to return
-	PageSize *PageSize `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
+	Count  *OdataCount  `form:"$count,omitempty" json:"$count,omitempty"`
+	Top    *OdataTop    `form:"$top,omitempty" json:"$top,omitempty"`
+	Skip   *OdataSkip   `form:"$skip,omitempty" json:"$skip,omitempty"`
 }
+
+// GetTargetsTargetIDParams defines parameters for GetTargetsTargetID.
+type GetTargetsTargetIDParams struct {
+	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
+}
+
+// PutDiscoveryScopesJSONRequestBody defines body for PutDiscoveryScopes for application/json ContentType.
+type PutDiscoveryScopesJSONRequestBody = Scopes
+
+// PostFindingsJSONRequestBody defines body for PostFindings for application/json ContentType.
+type PostFindingsJSONRequestBody = Finding
+
+// PatchFindingsFindingIDJSONRequestBody defines body for PatchFindingsFindingID for application/json ContentType.
+type PatchFindingsFindingIDJSONRequestBody = Finding
+
+// PutFindingsFindingIDJSONRequestBody defines body for PutFindingsFindingID for application/json ContentType.
+type PutFindingsFindingIDJSONRequestBody = Finding
 
 // PostScanConfigsJSONRequestBody defines body for PostScanConfigs for application/json ContentType.
 type PostScanConfigsJSONRequestBody = ScanConfig
@@ -750,6 +1003,245 @@ type PostTargetsJSONRequestBody = Target
 
 // PutTargetsTargetIDJSONRequestBody defines body for PutTargetsTargetID for application/json ContentType.
 type PutTargetsTargetIDJSONRequestBody = Target
+
+// AsPackageFindingInfo returns the union data inside the Finding_FindingInfo as a PackageFindingInfo
+func (t Finding_FindingInfo) AsPackageFindingInfo() (PackageFindingInfo, error) {
+	var body PackageFindingInfo
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromPackageFindingInfo overwrites any union data inside the Finding_FindingInfo as the provided PackageFindingInfo
+func (t *Finding_FindingInfo) FromPackageFindingInfo(v PackageFindingInfo) error {
+	v.ObjectType = "Package"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergePackageFindingInfo performs a merge with any union data inside the Finding_FindingInfo, using the provided PackageFindingInfo
+func (t *Finding_FindingInfo) MergePackageFindingInfo(v PackageFindingInfo) error {
+	v.ObjectType = "Package"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+// AsVulnerabilityFindingInfo returns the union data inside the Finding_FindingInfo as a VulnerabilityFindingInfo
+func (t Finding_FindingInfo) AsVulnerabilityFindingInfo() (VulnerabilityFindingInfo, error) {
+	var body VulnerabilityFindingInfo
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromVulnerabilityFindingInfo overwrites any union data inside the Finding_FindingInfo as the provided VulnerabilityFindingInfo
+func (t *Finding_FindingInfo) FromVulnerabilityFindingInfo(v VulnerabilityFindingInfo) error {
+	v.ObjectType = "Vulnerability"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeVulnerabilityFindingInfo performs a merge with any union data inside the Finding_FindingInfo, using the provided VulnerabilityFindingInfo
+func (t *Finding_FindingInfo) MergeVulnerabilityFindingInfo(v VulnerabilityFindingInfo) error {
+	v.ObjectType = "Vulnerability"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+// AsMalwareFindingInfo returns the union data inside the Finding_FindingInfo as a MalwareFindingInfo
+func (t Finding_FindingInfo) AsMalwareFindingInfo() (MalwareFindingInfo, error) {
+	var body MalwareFindingInfo
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromMalwareFindingInfo overwrites any union data inside the Finding_FindingInfo as the provided MalwareFindingInfo
+func (t *Finding_FindingInfo) FromMalwareFindingInfo(v MalwareFindingInfo) error {
+	v.ObjectType = "Malware"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeMalwareFindingInfo performs a merge with any union data inside the Finding_FindingInfo, using the provided MalwareFindingInfo
+func (t *Finding_FindingInfo) MergeMalwareFindingInfo(v MalwareFindingInfo) error {
+	v.ObjectType = "Malware"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+// AsSecretFindingInfo returns the union data inside the Finding_FindingInfo as a SecretFindingInfo
+func (t Finding_FindingInfo) AsSecretFindingInfo() (SecretFindingInfo, error) {
+	var body SecretFindingInfo
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSecretFindingInfo overwrites any union data inside the Finding_FindingInfo as the provided SecretFindingInfo
+func (t *Finding_FindingInfo) FromSecretFindingInfo(v SecretFindingInfo) error {
+	v.ObjectType = "Secret"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSecretFindingInfo performs a merge with any union data inside the Finding_FindingInfo, using the provided SecretFindingInfo
+func (t *Finding_FindingInfo) MergeSecretFindingInfo(v SecretFindingInfo) error {
+	v.ObjectType = "Secret"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+// AsMisconfigurationFindingInfo returns the union data inside the Finding_FindingInfo as a MisconfigurationFindingInfo
+func (t Finding_FindingInfo) AsMisconfigurationFindingInfo() (MisconfigurationFindingInfo, error) {
+	var body MisconfigurationFindingInfo
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromMisconfigurationFindingInfo overwrites any union data inside the Finding_FindingInfo as the provided MisconfigurationFindingInfo
+func (t *Finding_FindingInfo) FromMisconfigurationFindingInfo(v MisconfigurationFindingInfo) error {
+	v.ObjectType = "Misconfiguration"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeMisconfigurationFindingInfo performs a merge with any union data inside the Finding_FindingInfo, using the provided MisconfigurationFindingInfo
+func (t *Finding_FindingInfo) MergeMisconfigurationFindingInfo(v MisconfigurationFindingInfo) error {
+	v.ObjectType = "Misconfiguration"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+// AsRootkitFindingInfo returns the union data inside the Finding_FindingInfo as a RootkitFindingInfo
+func (t Finding_FindingInfo) AsRootkitFindingInfo() (RootkitFindingInfo, error) {
+	var body RootkitFindingInfo
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromRootkitFindingInfo overwrites any union data inside the Finding_FindingInfo as the provided RootkitFindingInfo
+func (t *Finding_FindingInfo) FromRootkitFindingInfo(v RootkitFindingInfo) error {
+	v.ObjectType = "Rootkit"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeRootkitFindingInfo performs a merge with any union data inside the Finding_FindingInfo, using the provided RootkitFindingInfo
+func (t *Finding_FindingInfo) MergeRootkitFindingInfo(v RootkitFindingInfo) error {
+	v.ObjectType = "Rootkit"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+// AsExploitFindingInfo returns the union data inside the Finding_FindingInfo as a ExploitFindingInfo
+func (t Finding_FindingInfo) AsExploitFindingInfo() (ExploitFindingInfo, error) {
+	var body ExploitFindingInfo
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromExploitFindingInfo overwrites any union data inside the Finding_FindingInfo as the provided ExploitFindingInfo
+func (t *Finding_FindingInfo) FromExploitFindingInfo(v ExploitFindingInfo) error {
+	v.ObjectType = "Exploit"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeExploitFindingInfo performs a merge with any union data inside the Finding_FindingInfo, using the provided ExploitFindingInfo
+func (t *Finding_FindingInfo) MergeExploitFindingInfo(v ExploitFindingInfo) error {
+	v.ObjectType = "Exploit"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+func (t Finding_FindingInfo) Discriminator() (string, error) {
+	var discriminator struct {
+		Discriminator string `json:"objectType"`
+	}
+	err := json.Unmarshal(t.union, &discriminator)
+	return discriminator.Discriminator, err
+}
+
+func (t Finding_FindingInfo) ValueByDiscriminator() (interface{}, error) {
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return nil, err
+	}
+	switch discriminator {
+	case "Exploit":
+		return t.AsExploitFindingInfo()
+	case "Malware":
+		return t.AsMalwareFindingInfo()
+	case "Misconfiguration":
+		return t.AsMisconfigurationFindingInfo()
+	case "Package":
+		return t.AsPackageFindingInfo()
+	case "Rootkit":
+		return t.AsRootkitFindingInfo()
+	case "Secret":
+		return t.AsSecretFindingInfo()
+	case "Vulnerability":
+		return t.AsVulnerabilityFindingInfo()
+	default:
+		return nil, errors.New("unknown discriminator value: " + discriminator)
+	}
+}
+
+func (t Finding_FindingInfo) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *Finding_FindingInfo) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
 
 // AsSingleScheduleScanConfig returns the union data inside the RuntimeScheduleScanConfigType as a SingleScheduleScanConfig
 func (t RuntimeScheduleScanConfigType) AsSingleScheduleScanConfig() (SingleScheduleScanConfig, error) {
@@ -955,6 +1447,65 @@ func (t ScanScopeType) MarshalJSON() ([]byte, error) {
 }
 
 func (t *ScanScopeType) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsAwsAccountScope returns the union data inside the ScopeType as a AwsAccountScope
+func (t ScopeType) AsAwsAccountScope() (AwsAccountScope, error) {
+	var body AwsAccountScope
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAwsAccountScope overwrites any union data inside the ScopeType as the provided AwsAccountScope
+func (t *ScopeType) FromAwsAccountScope(v AwsAccountScope) error {
+	v.ObjectType = "AwsAccountScope"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAwsAccountScope performs a merge with any union data inside the ScopeType, using the provided AwsAccountScope
+func (t *ScopeType) MergeAwsAccountScope(v AwsAccountScope) error {
+	v.ObjectType = "AwsAccountScope"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+func (t ScopeType) Discriminator() (string, error) {
+	var discriminator struct {
+		Discriminator string `json:"objectType"`
+	}
+	err := json.Unmarshal(t.union, &discriminator)
+	return discriminator.Discriminator, err
+}
+
+func (t ScopeType) ValueByDiscriminator() (interface{}, error) {
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return nil, err
+	}
+	switch discriminator {
+	case "AwsAccountScope":
+		return t.AsAwsAccountScope()
+	default:
+		return nil, errors.New("unknown discriminator value: " + discriminator)
+	}
+}
+
+func (t ScopeType) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *ScopeType) UnmarshalJSON(b []byte) error {
 	err := t.union.UnmarshalJSON(b)
 	return err
 }

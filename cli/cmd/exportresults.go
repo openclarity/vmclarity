@@ -1,4 +1,4 @@
-// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -175,7 +175,7 @@ func (e *Exporter) ExportSbomResult(res *results.Results, famerr families.RunErr
 		scanResult.Status.Sbom = &models.TargetScanState{}
 	}
 	if scanResult.Summary == nil {
-		scanResult.Summary = &models.TargetScanResultSummary{}
+		scanResult.Summary = &models.ScanFindingsSummary{}
 	}
 
 	var errors []string
@@ -219,7 +219,7 @@ func (e *Exporter) ExportVulResult(res *results.Results, famerr families.RunErro
 		scanResult.Status.Vulnerabilities = &models.TargetScanState{}
 	}
 	if scanResult.Summary == nil {
-		scanResult.Summary = &models.TargetScanResultSummary{}
+		scanResult.Summary = &models.ScanFindingsSummary{}
 	}
 
 	var errors []string
@@ -288,8 +288,9 @@ func (e *Exporter) ExportSecretsResult(res *results.Results, famerr families.Run
 	if scanResult.Status.Secrets == nil {
 		scanResult.Status.Secrets = &models.TargetScanState{}
 	}
+
 	if scanResult.Summary == nil {
-		scanResult.Summary = &models.TargetScanResultSummary{}
+		scanResult.Summary = &models.ScanFindingsSummary{}
 	}
 
 	var errors []string
@@ -476,7 +477,7 @@ func (e *Exporter) ExportExploitsResult(res *results.Results, famerr families.Ru
 		scanResult.Status.Exploits = &models.TargetScanState{}
 	}
 	if scanResult.Summary == nil {
-		scanResult.Summary = &models.TargetScanResultSummary{}
+		scanResult.Summary = &models.ScanFindingsSummary{}
 	}
 
 	var errors []string

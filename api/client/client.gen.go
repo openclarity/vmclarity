@@ -90,6 +90,38 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
+	// GetDiscoveryScopes request
+	GetDiscoveryScopes(ctx context.Context, params *GetDiscoveryScopesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutDiscoveryScopes request with any body
+	PutDiscoveryScopesWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PutDiscoveryScopes(ctx context.Context, body PutDiscoveryScopesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetFindings request
+	GetFindings(ctx context.Context, params *GetFindingsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostFindings request with any body
+	PostFindingsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostFindings(ctx context.Context, body PostFindingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteFindingsFindingID request
+	DeleteFindingsFindingID(ctx context.Context, findingID FindingID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetFindingsFindingID request
+	GetFindingsFindingID(ctx context.Context, findingID FindingID, params *GetFindingsFindingIDParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PatchFindingsFindingID request with any body
+	PatchFindingsFindingIDWithBody(ctx context.Context, findingID FindingID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PatchFindingsFindingID(ctx context.Context, findingID FindingID, body PatchFindingsFindingIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutFindingsFindingID request with any body
+	PutFindingsFindingIDWithBody(ctx context.Context, findingID FindingID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PutFindingsFindingID(ctx context.Context, findingID FindingID, body PutFindingsFindingIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetScanConfigs request
 	GetScanConfigs(ctx context.Context, params *GetScanConfigsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -171,12 +203,156 @@ type ClientInterface interface {
 	DeleteTargetsTargetID(ctx context.Context, targetID TargetID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetTargetsTargetID request
-	GetTargetsTargetID(ctx context.Context, targetID TargetID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetTargetsTargetID(ctx context.Context, targetID TargetID, params *GetTargetsTargetIDParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PutTargetsTargetID request with any body
 	PutTargetsTargetIDWithBody(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PutTargetsTargetID(ctx context.Context, targetID TargetID, body PutTargetsTargetIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+}
+
+func (c *Client) GetDiscoveryScopes(ctx context.Context, params *GetDiscoveryScopesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetDiscoveryScopesRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutDiscoveryScopesWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutDiscoveryScopesRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutDiscoveryScopes(ctx context.Context, body PutDiscoveryScopesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutDiscoveryScopesRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetFindings(ctx context.Context, params *GetFindingsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetFindingsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostFindingsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostFindingsRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostFindings(ctx context.Context, body PostFindingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostFindingsRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteFindingsFindingID(ctx context.Context, findingID FindingID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteFindingsFindingIDRequest(c.Server, findingID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetFindingsFindingID(ctx context.Context, findingID FindingID, params *GetFindingsFindingIDParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetFindingsFindingIDRequest(c.Server, findingID, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchFindingsFindingIDWithBody(ctx context.Context, findingID FindingID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchFindingsFindingIDRequestWithBody(c.Server, findingID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchFindingsFindingID(ctx context.Context, findingID FindingID, body PatchFindingsFindingIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchFindingsFindingIDRequest(c.Server, findingID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutFindingsFindingIDWithBody(ctx context.Context, findingID FindingID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutFindingsFindingIDRequestWithBody(c.Server, findingID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutFindingsFindingID(ctx context.Context, findingID FindingID, body PutFindingsFindingIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutFindingsFindingIDRequest(c.Server, findingID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
 }
 
 func (c *Client) GetScanConfigs(ctx context.Context, params *GetScanConfigsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -539,8 +715,8 @@ func (c *Client) DeleteTargetsTargetID(ctx context.Context, targetID TargetID, r
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetTargetsTargetID(ctx context.Context, targetID TargetID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetTargetsTargetIDRequest(c.Server, targetID)
+func (c *Client) GetTargetsTargetID(ctx context.Context, targetID TargetID, params *GetTargetsTargetIDParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTargetsTargetIDRequest(c.Server, targetID, params)
 	if err != nil {
 		return nil, err
 	}
@@ -573,6 +749,474 @@ func (c *Client) PutTargetsTargetID(ctx context.Context, targetID TargetID, body
 		return nil, err
 	}
 	return c.Client.Do(req)
+}
+
+// NewGetDiscoveryScopesRequest generates requests for GetDiscoveryScopes
+func NewGetDiscoveryScopesRequest(server string, params *GetDiscoveryScopesParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/discovery/scopes")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	queryValues := queryURL.Query()
+
+	if params.Filter != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$filter", runtime.ParamLocationQuery, *params.Filter); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Select != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$select", runtime.ParamLocationQuery, *params.Select); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutDiscoveryScopesRequest calls the generic PutDiscoveryScopes builder with application/json body
+func NewPutDiscoveryScopesRequest(server string, body PutDiscoveryScopesJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutDiscoveryScopesRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPutDiscoveryScopesRequestWithBody generates requests for PutDiscoveryScopes with any type of body
+func NewPutDiscoveryScopesRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/discovery/scopes")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetFindingsRequest generates requests for GetFindings
+func NewGetFindingsRequest(server string, params *GetFindingsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/findings")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	queryValues := queryURL.Query()
+
+	if params.Filter != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$filter", runtime.ParamLocationQuery, *params.Filter); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Select != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$select", runtime.ParamLocationQuery, *params.Select); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Count != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$count", runtime.ParamLocationQuery, *params.Count); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Top != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$top", runtime.ParamLocationQuery, *params.Top); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Skip != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$skip", runtime.ParamLocationQuery, *params.Skip); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Expand != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$expand", runtime.ParamLocationQuery, *params.Expand); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostFindingsRequest calls the generic PostFindings builder with application/json body
+func NewPostFindingsRequest(server string, body PostFindingsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostFindingsRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostFindingsRequestWithBody generates requests for PostFindings with any type of body
+func NewPostFindingsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/findings")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteFindingsFindingIDRequest generates requests for DeleteFindingsFindingID
+func NewDeleteFindingsFindingIDRequest(server string, findingID FindingID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "findingID", runtime.ParamLocationPath, findingID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/findings/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetFindingsFindingIDRequest generates requests for GetFindingsFindingID
+func NewGetFindingsFindingIDRequest(server string, findingID FindingID, params *GetFindingsFindingIDParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "findingID", runtime.ParamLocationPath, findingID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/findings/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	queryValues := queryURL.Query()
+
+	if params.Select != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$select", runtime.ParamLocationQuery, *params.Select); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Expand != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$expand", runtime.ParamLocationQuery, *params.Expand); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPatchFindingsFindingIDRequest calls the generic PatchFindingsFindingID builder with application/json body
+func NewPatchFindingsFindingIDRequest(server string, findingID FindingID, body PatchFindingsFindingIDJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPatchFindingsFindingIDRequestWithBody(server, findingID, "application/json", bodyReader)
+}
+
+// NewPatchFindingsFindingIDRequestWithBody generates requests for PatchFindingsFindingID with any type of body
+func NewPatchFindingsFindingIDRequestWithBody(server string, findingID FindingID, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "findingID", runtime.ParamLocationPath, findingID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/findings/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPutFindingsFindingIDRequest calls the generic PutFindingsFindingID builder with application/json body
+func NewPutFindingsFindingIDRequest(server string, findingID FindingID, body PutFindingsFindingIDJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutFindingsFindingIDRequestWithBody(server, findingID, "application/json", bodyReader)
+}
+
+// NewPutFindingsFindingIDRequestWithBody generates requests for PutFindingsFindingID with any type of body
+func NewPutFindingsFindingIDRequestWithBody(server string, findingID FindingID, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "findingID", runtime.ParamLocationPath, findingID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/findings/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
 }
 
 // NewGetScanConfigsRequest generates requests for GetScanConfigs
@@ -993,9 +1637,9 @@ func NewGetScanResultsRequest(server string, params *GetScanResultsParams) (*htt
 
 	}
 
-	if params.Page != nil {
+	if params.Count != nil {
 
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$count", runtime.ParamLocationQuery, *params.Count); err != nil {
 			return nil, err
 		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 			return nil, err
@@ -1009,9 +1653,41 @@ func NewGetScanResultsRequest(server string, params *GetScanResultsParams) (*htt
 
 	}
 
-	if params.PageSize != nil {
+	if params.Top != nil {
 
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageSize", runtime.ParamLocationQuery, *params.PageSize); err != nil {
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$top", runtime.ParamLocationQuery, *params.Top); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Skip != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$skip", runtime.ParamLocationQuery, *params.Skip); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Expand != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$expand", runtime.ParamLocationQuery, *params.Expand); err != nil {
 			return nil, err
 		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 			return nil, err
@@ -1106,6 +1782,22 @@ func NewGetScanResultsScanResultIDRequest(server string, scanResultID ScanResult
 	if params.Select != nil {
 
 		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$select", runtime.ParamLocationQuery, *params.Select); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Expand != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$expand", runtime.ParamLocationQuery, *params.Expand); err != nil {
 			return nil, err
 		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 			return nil, err
@@ -1541,9 +2233,9 @@ func NewGetTargetsRequest(server string, params *GetTargetsParams) (*http.Reques
 
 	}
 
-	if params.Page != nil {
+	if params.Select != nil {
 
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$select", runtime.ParamLocationQuery, *params.Select); err != nil {
 			return nil, err
 		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 			return nil, err
@@ -1557,9 +2249,41 @@ func NewGetTargetsRequest(server string, params *GetTargetsParams) (*http.Reques
 
 	}
 
-	if params.PageSize != nil {
+	if params.Count != nil {
 
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageSize", runtime.ParamLocationQuery, *params.PageSize); err != nil {
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$count", runtime.ParamLocationQuery, *params.Count); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Top != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$top", runtime.ParamLocationQuery, *params.Top); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Skip != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$skip", runtime.ParamLocationQuery, *params.Skip); err != nil {
 			return nil, err
 		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 			return nil, err
@@ -1658,7 +2382,7 @@ func NewDeleteTargetsTargetIDRequest(server string, targetID TargetID) (*http.Re
 }
 
 // NewGetTargetsTargetIDRequest generates requests for GetTargetsTargetID
-func NewGetTargetsTargetIDRequest(server string, targetID TargetID) (*http.Request, error) {
+func NewGetTargetsTargetIDRequest(server string, targetID TargetID, params *GetTargetsTargetIDParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1682,6 +2406,26 @@ func NewGetTargetsTargetIDRequest(server string, targetID TargetID) (*http.Reque
 	if err != nil {
 		return nil, err
 	}
+
+	queryValues := queryURL.Query()
+
+	if params.Select != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$select", runtime.ParamLocationQuery, *params.Select); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
 	if err != nil {
@@ -1781,6 +2525,38 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
+	// GetDiscoveryScopes request
+	GetDiscoveryScopesWithResponse(ctx context.Context, params *GetDiscoveryScopesParams, reqEditors ...RequestEditorFn) (*GetDiscoveryScopesResponse, error)
+
+	// PutDiscoveryScopes request with any body
+	PutDiscoveryScopesWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutDiscoveryScopesResponse, error)
+
+	PutDiscoveryScopesWithResponse(ctx context.Context, body PutDiscoveryScopesJSONRequestBody, reqEditors ...RequestEditorFn) (*PutDiscoveryScopesResponse, error)
+
+	// GetFindings request
+	GetFindingsWithResponse(ctx context.Context, params *GetFindingsParams, reqEditors ...RequestEditorFn) (*GetFindingsResponse, error)
+
+	// PostFindings request with any body
+	PostFindingsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostFindingsResponse, error)
+
+	PostFindingsWithResponse(ctx context.Context, body PostFindingsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostFindingsResponse, error)
+
+	// DeleteFindingsFindingID request
+	DeleteFindingsFindingIDWithResponse(ctx context.Context, findingID FindingID, reqEditors ...RequestEditorFn) (*DeleteFindingsFindingIDResponse, error)
+
+	// GetFindingsFindingID request
+	GetFindingsFindingIDWithResponse(ctx context.Context, findingID FindingID, params *GetFindingsFindingIDParams, reqEditors ...RequestEditorFn) (*GetFindingsFindingIDResponse, error)
+
+	// PatchFindingsFindingID request with any body
+	PatchFindingsFindingIDWithBodyWithResponse(ctx context.Context, findingID FindingID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchFindingsFindingIDResponse, error)
+
+	PatchFindingsFindingIDWithResponse(ctx context.Context, findingID FindingID, body PatchFindingsFindingIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchFindingsFindingIDResponse, error)
+
+	// PutFindingsFindingID request with any body
+	PutFindingsFindingIDWithBodyWithResponse(ctx context.Context, findingID FindingID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutFindingsFindingIDResponse, error)
+
+	PutFindingsFindingIDWithResponse(ctx context.Context, findingID FindingID, body PutFindingsFindingIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PutFindingsFindingIDResponse, error)
+
 	// GetScanConfigs request
 	GetScanConfigsWithResponse(ctx context.Context, params *GetScanConfigsParams, reqEditors ...RequestEditorFn) (*GetScanConfigsResponse, error)
 
@@ -1862,12 +2638,201 @@ type ClientWithResponsesInterface interface {
 	DeleteTargetsTargetIDWithResponse(ctx context.Context, targetID TargetID, reqEditors ...RequestEditorFn) (*DeleteTargetsTargetIDResponse, error)
 
 	// GetTargetsTargetID request
-	GetTargetsTargetIDWithResponse(ctx context.Context, targetID TargetID, reqEditors ...RequestEditorFn) (*GetTargetsTargetIDResponse, error)
+	GetTargetsTargetIDWithResponse(ctx context.Context, targetID TargetID, params *GetTargetsTargetIDParams, reqEditors ...RequestEditorFn) (*GetTargetsTargetIDResponse, error)
 
 	// PutTargetsTargetID request with any body
 	PutTargetsTargetIDWithBodyWithResponse(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutTargetsTargetIDResponse, error)
 
 	PutTargetsTargetIDWithResponse(ctx context.Context, targetID TargetID, body PutTargetsTargetIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PutTargetsTargetIDResponse, error)
+}
+
+type GetDiscoveryScopesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Scopes
+	JSONDefault  *ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetDiscoveryScopesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetDiscoveryScopesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PutDiscoveryScopesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Scopes
+	JSONDefault  *ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PutDiscoveryScopesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutDiscoveryScopesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetFindingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Findings
+	JSONDefault  *ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetFindingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetFindingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostFindingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *Finding
+	JSON409      *FindingExists
+	JSONDefault  *ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostFindingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostFindingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteFindingsFindingIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON204      *SuccessResponse
+	JSON404      *ApiResponse
+	JSONDefault  *ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteFindingsFindingIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteFindingsFindingIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetFindingsFindingIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Finding
+	JSON404      *ApiResponse
+	JSONDefault  *ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetFindingsFindingIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetFindingsFindingIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PatchFindingsFindingIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Finding
+	JSON404      *ApiResponse
+	JSONDefault  *ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PatchFindingsFindingIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PatchFindingsFindingIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PutFindingsFindingIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Finding
+	JSON404      *ApiResponse
+	JSONDefault  *ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PutFindingsFindingIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutFindingsFindingIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
 }
 
 type GetScanConfigsResponse struct {
@@ -2394,6 +3359,110 @@ func (r PutTargetsTargetIDResponse) StatusCode() int {
 	return 0
 }
 
+// GetDiscoveryScopesWithResponse request returning *GetDiscoveryScopesResponse
+func (c *ClientWithResponses) GetDiscoveryScopesWithResponse(ctx context.Context, params *GetDiscoveryScopesParams, reqEditors ...RequestEditorFn) (*GetDiscoveryScopesResponse, error) {
+	rsp, err := c.GetDiscoveryScopes(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetDiscoveryScopesResponse(rsp)
+}
+
+// PutDiscoveryScopesWithBodyWithResponse request with arbitrary body returning *PutDiscoveryScopesResponse
+func (c *ClientWithResponses) PutDiscoveryScopesWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutDiscoveryScopesResponse, error) {
+	rsp, err := c.PutDiscoveryScopesWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutDiscoveryScopesResponse(rsp)
+}
+
+func (c *ClientWithResponses) PutDiscoveryScopesWithResponse(ctx context.Context, body PutDiscoveryScopesJSONRequestBody, reqEditors ...RequestEditorFn) (*PutDiscoveryScopesResponse, error) {
+	rsp, err := c.PutDiscoveryScopes(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutDiscoveryScopesResponse(rsp)
+}
+
+// GetFindingsWithResponse request returning *GetFindingsResponse
+func (c *ClientWithResponses) GetFindingsWithResponse(ctx context.Context, params *GetFindingsParams, reqEditors ...RequestEditorFn) (*GetFindingsResponse, error) {
+	rsp, err := c.GetFindings(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetFindingsResponse(rsp)
+}
+
+// PostFindingsWithBodyWithResponse request with arbitrary body returning *PostFindingsResponse
+func (c *ClientWithResponses) PostFindingsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostFindingsResponse, error) {
+	rsp, err := c.PostFindingsWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostFindingsResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostFindingsWithResponse(ctx context.Context, body PostFindingsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostFindingsResponse, error) {
+	rsp, err := c.PostFindings(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostFindingsResponse(rsp)
+}
+
+// DeleteFindingsFindingIDWithResponse request returning *DeleteFindingsFindingIDResponse
+func (c *ClientWithResponses) DeleteFindingsFindingIDWithResponse(ctx context.Context, findingID FindingID, reqEditors ...RequestEditorFn) (*DeleteFindingsFindingIDResponse, error) {
+	rsp, err := c.DeleteFindingsFindingID(ctx, findingID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteFindingsFindingIDResponse(rsp)
+}
+
+// GetFindingsFindingIDWithResponse request returning *GetFindingsFindingIDResponse
+func (c *ClientWithResponses) GetFindingsFindingIDWithResponse(ctx context.Context, findingID FindingID, params *GetFindingsFindingIDParams, reqEditors ...RequestEditorFn) (*GetFindingsFindingIDResponse, error) {
+	rsp, err := c.GetFindingsFindingID(ctx, findingID, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetFindingsFindingIDResponse(rsp)
+}
+
+// PatchFindingsFindingIDWithBodyWithResponse request with arbitrary body returning *PatchFindingsFindingIDResponse
+func (c *ClientWithResponses) PatchFindingsFindingIDWithBodyWithResponse(ctx context.Context, findingID FindingID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchFindingsFindingIDResponse, error) {
+	rsp, err := c.PatchFindingsFindingIDWithBody(ctx, findingID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchFindingsFindingIDResponse(rsp)
+}
+
+func (c *ClientWithResponses) PatchFindingsFindingIDWithResponse(ctx context.Context, findingID FindingID, body PatchFindingsFindingIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchFindingsFindingIDResponse, error) {
+	rsp, err := c.PatchFindingsFindingID(ctx, findingID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchFindingsFindingIDResponse(rsp)
+}
+
+// PutFindingsFindingIDWithBodyWithResponse request with arbitrary body returning *PutFindingsFindingIDResponse
+func (c *ClientWithResponses) PutFindingsFindingIDWithBodyWithResponse(ctx context.Context, findingID FindingID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutFindingsFindingIDResponse, error) {
+	rsp, err := c.PutFindingsFindingIDWithBody(ctx, findingID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutFindingsFindingIDResponse(rsp)
+}
+
+func (c *ClientWithResponses) PutFindingsFindingIDWithResponse(ctx context.Context, findingID FindingID, body PutFindingsFindingIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PutFindingsFindingIDResponse, error) {
+	rsp, err := c.PutFindingsFindingID(ctx, findingID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutFindingsFindingIDResponse(rsp)
+}
+
 // GetScanConfigsWithResponse request returning *GetScanConfigsResponse
 func (c *ClientWithResponses) GetScanConfigsWithResponse(ctx context.Context, params *GetScanConfigsParams, reqEditors ...RequestEditorFn) (*GetScanConfigsResponse, error) {
 	rsp, err := c.GetScanConfigs(ctx, params, reqEditors...)
@@ -2655,8 +3724,8 @@ func (c *ClientWithResponses) DeleteTargetsTargetIDWithResponse(ctx context.Cont
 }
 
 // GetTargetsTargetIDWithResponse request returning *GetTargetsTargetIDResponse
-func (c *ClientWithResponses) GetTargetsTargetIDWithResponse(ctx context.Context, targetID TargetID, reqEditors ...RequestEditorFn) (*GetTargetsTargetIDResponse, error) {
-	rsp, err := c.GetTargetsTargetID(ctx, targetID, reqEditors...)
+func (c *ClientWithResponses) GetTargetsTargetIDWithResponse(ctx context.Context, targetID TargetID, params *GetTargetsTargetIDParams, reqEditors ...RequestEditorFn) (*GetTargetsTargetIDResponse, error) {
+	rsp, err := c.GetTargetsTargetID(ctx, targetID, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -2678,6 +3747,305 @@ func (c *ClientWithResponses) PutTargetsTargetIDWithResponse(ctx context.Context
 		return nil, err
 	}
 	return ParsePutTargetsTargetIDResponse(rsp)
+}
+
+// ParseGetDiscoveryScopesResponse parses an HTTP response from a GetDiscoveryScopesWithResponse call
+func ParseGetDiscoveryScopesResponse(rsp *http.Response) (*GetDiscoveryScopesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetDiscoveryScopesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Scopes
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutDiscoveryScopesResponse parses an HTTP response from a PutDiscoveryScopesWithResponse call
+func ParsePutDiscoveryScopesResponse(rsp *http.Response) (*PutDiscoveryScopesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutDiscoveryScopesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Scopes
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetFindingsResponse parses an HTTP response from a GetFindingsWithResponse call
+func ParseGetFindingsResponse(rsp *http.Response) (*GetFindingsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetFindingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Findings
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostFindingsResponse parses an HTTP response from a PostFindingsWithResponse call
+func ParsePostFindingsResponse(rsp *http.Response) (*PostFindingsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostFindingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest Finding
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest FindingExists
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteFindingsFindingIDResponse parses an HTTP response from a DeleteFindingsFindingIDWithResponse call
+func ParseDeleteFindingsFindingIDResponse(rsp *http.Response) (*DeleteFindingsFindingIDResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteFindingsFindingIDResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 204:
+		var dest SuccessResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON204 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetFindingsFindingIDResponse parses an HTTP response from a GetFindingsFindingIDWithResponse call
+func ParseGetFindingsFindingIDResponse(rsp *http.Response) (*GetFindingsFindingIDResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetFindingsFindingIDResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Finding
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePatchFindingsFindingIDResponse parses an HTTP response from a PatchFindingsFindingIDWithResponse call
+func ParsePatchFindingsFindingIDResponse(rsp *http.Response) (*PatchFindingsFindingIDResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PatchFindingsFindingIDResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Finding
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutFindingsFindingIDResponse parses an HTTP response from a PutFindingsFindingIDWithResponse call
+func ParsePutFindingsFindingIDResponse(rsp *http.Response) (*PutFindingsFindingIDResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutFindingsFindingIDResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Finding
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
 }
 
 // ParseGetScanConfigsResponse parses an HTTP response from a GetScanConfigsWithResponse call

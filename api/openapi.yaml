@@ -13,8 +13,10 @@ paths:
       summary: Get targets
       parameters:
         - $ref: '#/components/parameters/odataFilter'
-        - $ref: '#/components/parameters/page'
-        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/odataSelect'
+        - $ref: '#/components/parameters/odataCount'
+        - $ref: '#/components/parameters/odataTop'
+        - $ref: '#/components/parameters/odataSkip'
       responses:
         200:
           description: Success
@@ -54,6 +56,7 @@ paths:
       summary: Get target.
       parameters:
         - $ref: '#/components/parameters/targetID'
+        - $ref: '#/components/parameters/odataSelect'
       responses:
         200:
           description: Success
@@ -117,8 +120,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/odataFilter'
         - $ref: '#/components/parameters/odataSelect'
-        - $ref: '#/components/parameters/page'
-        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/odataCount'
+        - $ref: '#/components/parameters/odataTop'
+        - $ref: '#/components/parameters/odataSkip'
+        - $ref: '#/components/parameters/odataExpand'
       responses:
         200:
           description: Success
@@ -160,6 +165,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/scanResultID'
         - $ref: '#/components/parameters/odataSelect'
+        - $ref: '#/components/parameters/odataExpand'
       responses:
         200:
           description: Success
@@ -492,6 +498,174 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
 
+  /findings:
+    get:
+      summary: Get all findings.
+      parameters:
+        - $ref: '#/components/parameters/odataFilter'
+        - $ref: '#/components/parameters/odataSelect'
+        - $ref: '#/components/parameters/odataCount'
+        - $ref: '#/components/parameters/odataTop'
+        - $ref: '#/components/parameters/odataSkip'
+        - $ref: '#/components/parameters/odataExpand'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Findings'
+        default:
+          $ref: '#/components/responses/UnknownError'
+    post:
+      summary: Create a finding
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Finding'
+        required: true
+      responses:
+        201:
+          description: A new finding was created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Finding'
+        409:
+          description: Finding conflict.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FindingExists'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      x-codegen-request-body-name: body
+
+  /discovery/scopes:
+    get:
+      summary: Get all available scopes
+      parameters:
+        - $ref: '#/components/parameters/odataFilter'
+        - $ref: '#/components/parameters/odataSelect'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scopes'
+        default:
+          $ref: '#/components/responses/UnknownError'
+    put:
+      summary: Set all available scopes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Scopes'
+        required: true
+      responses:
+        200:
+          description: All scopes were set successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scopes'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      x-codegen-request-body-name: body
+
+  /findings/{findingID}:
+    get:
+      summary: Get the details for a finding.
+      parameters:
+        - $ref: '#/components/parameters/findingID'
+        - $ref: '#/components/parameters/odataSelect'
+        - $ref: '#/components/parameters/odataExpand'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Finding'
+        404:
+          description: Finding ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+    put:
+      summary: Update a finding.
+      parameters:
+        - $ref: '#/components/parameters/findingID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Finding'
+        required: true
+      responses:
+        200:
+          description: Updated finding successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Finding'
+        404:
+          description: Finding ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      x-codegen-request-body-name: body
+    patch:
+      summary: Patch a finding.
+      parameters:
+        - $ref: '#/components/parameters/findingID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Finding'
+        required: true
+      responses:
+        200:
+          description: Patched finding successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Finding'
+        404:
+          description: Finding ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      x-codegen-request-body-name: body
+    delete:
+      summary: Delete a finding.
+      parameters:
+        - $ref: '#/components/parameters/findingID'
+      responses:
+        204:
+          $ref: '#/components/responses/Success'
+        404:
+          description: Finding ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+
 components:
   schemas:
     ApiResponse:
@@ -532,13 +706,9 @@ components:
       required:
         - total
 
-    Scan:
+    ScanData:
       type: object
-      description: Describes a multi-target scheduled scan.
       properties:
-        id:
-          type: string
-          readOnly: true
         startTime:
           type: string
           format: date-time
@@ -580,14 +750,61 @@ components:
         summary:
           $ref: '#/components/schemas/ScanSummary'
 
+    ScanRelationship:
+      type: object
+      description: Describes an expandable relationship to Scan object
+      allOf:
+        - $ref: '#/components/schemas/ScanData'
+        - type: object
+          properties:
+            id:
+              type: string
+            startTime:
+              readOnly: true
+            endTime:
+              readOnly: true
+            scanConfig:
+              readOnly: true
+            scanConfigSnapshot:
+              readOnly: true
+            targetIDs:
+              readOnly: true
+            state:
+              readOnly: true
+            stateMessage:
+              readOnly: true
+            stateReason:
+              readOnly: true
+            summary:
+              readOnly: true
+          required: ['id']
+
+    Scan:
+      type: object
+      description: Describes a multi-target scheduled scan.
+      allOf:
+        - $ref: '#/components/schemas/ScanData'
+        - type: object
+          properties:
+            id:
+              type: string
+              readOnly: true
+
     ScanSummary:
       description: A summary of the progress of a scan for informational purposes.
+      allOf:
+        - $ref: '#/components/schemas/ScanFindingsSummary'
+        - type: object
+          properties:
+            jobsLeftToRun:
+              type: integer
+            jobsCompleted:
+              type: integer
+
+    ScanFindingsSummary:
+      description: A summary of the scan findings.
       type: object
       properties:
-        jobsLeftToRun:
-          type: integer
-        jobsCompleted:
-          type: integer
         totalPackages:
           type: integer
         totalExploits:
@@ -762,6 +979,13 @@ components:
         scanConfig:
           $ref: '#/components/schemas/ScanConfig'
 
+    Scopes:
+      type: object
+      description: Scopes discovery
+      properties:
+        scopeInfo:
+          $ref: '#/components/schemas/ScopeType'
+
     ScanScopeType:
       type: object
       anyOf:
@@ -799,6 +1023,28 @@ components:
       required:
         - objectType
       additionalProperties: false
+
+    ScopeType:
+      type: object
+      anyOf:
+        - $ref: '#/components/schemas/AwsAccountScope'
+      discriminator:
+        propertyName: objectType
+        mapping:
+          AwsAccountScope: '#/components/schemas/AwsAccountScope'
+
+    AwsAccountScope:
+      type: object
+      description: AWS cloud account scope
+      properties:
+        objectType:
+          type: string
+        regions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AwsRegion'
+      required:
+        - objectType
 
     AwsRegion:
       type: object
@@ -937,7 +1183,7 @@ components:
     Targets:
       type: object
       properties:
-        total:
+        count:
           type: integer
           description: Total targets count according the given filters
           readOnly: true
@@ -948,8 +1194,6 @@ components:
           items:
             $ref: '#/components/schemas/Target'
           readOnly: true
-      required:
-        - total
 
     Target:
       type: object
@@ -959,6 +1203,28 @@ components:
           readOnly: true
         targetInfo:
           $ref: '#/components/schemas/TargetType'
+        scansCount:
+          description: Total number of scans that have ever run for this target
+          type: integer
+        summary:
+          $ref: '#/components/schemas/ScanFindingsSummary'
+
+    TargetRelationship:
+      type: object
+      description: Describes a relationship to a target which can be expanded.
+      allOf:
+        - $ref: '#/components/schemas/Target'
+        - type: object
+          properties:
+            id:
+              type: string
+            targetInfo:
+              readOnly: true
+            scanCount:
+              readOnly: true
+            summary:
+              readOnly: true
+          required: ['id']
 
     TargetExists:
       type: object
@@ -1026,7 +1292,7 @@ components:
     TargetScanResults:
       type: object
       properties:
-        total:
+        count:
           type: integer
           description: Total scan results count according to the given filters
           readOnly: true
@@ -1037,8 +1303,6 @@ components:
           items:
             $ref: '#/components/schemas/TargetScanResult'
           readOnly: true
-      required:
-        - total
 
     TargetScanResult:
       type: object
@@ -1046,10 +1310,10 @@ components:
         id:
           type: string
           readOnly: true
-        targetId:
-          type: string
-        scanId:
-          type: string
+        target:
+          $ref: '#/components/schemas/TargetRelationship'
+        scan:
+          $ref: '#/components/schemas/ScanRelationship'
         status:
           $ref: '#/components/schemas/TargetScanStatus'
         sboms:
@@ -1067,29 +1331,10 @@ components:
         exploits:
           $ref: '#/components/schemas/ExploitScan'
         summary:
-          $ref: '#/components/schemas/TargetScanResultSummary'
+          $ref: '#/components/schemas/ScanFindingsSummary'
       required:
-        - targetId
-        - scanId
-
-    TargetScanResultSummary:
-      description: A summary of target scan result for informational purposes.
-      type: object
-      properties:
-        totalPackages:
-          type: integer
-        totalExploits:
-          type: integer
-        totalMalware:
-          type: integer
-        totalMisconfigurations:
-          type: integer
-        totalRootkits:
-          type: integer
-        totalSecrets:
-          type: integer
-        totalVulnerabilities:
-          $ref: '#/components/schemas/VulnerabilityScanSummary'
+        - target
+        - scan
 
     TargetScanResultExists:
       type: object
@@ -1373,6 +1618,135 @@ components:
         - ROOTKIT
         - EXPLOIT
 
+    FindingExists:
+      type: object
+      properties:
+        message:
+          description: Describes which unique constraint combination causes the conflict.
+          type: string
+          readOnly: true
+        finding:
+          $ref: '#/components/schemas/Finding'
+
+    Findings:
+      type: object
+      properties:
+        count:
+          description: Total scans count according to the given filters
+          type: integer
+        items:
+          description: List of findings according to the given filters
+          type: array
+          items:
+            $ref: '#/components/schemas/Finding'
+
+    PackageFindingInfo:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/PackageInfo'
+        - type: object
+          properties:
+            objectType:
+              type: string
+          required: [objectType]
+
+    VulnerabilityFindingInfo:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/VulnerabilityInfo'
+        - type: object
+          properties:
+            objectType:
+              type: string
+          required: [objectType]
+
+    MalwareFindingInfo:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/MalwareInfo'
+        - type: object
+          properties:
+            objectType:
+              type: string
+          required: [objectType]
+
+    SecretFindingInfo:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/SecretInfo'
+        - type: object
+          properties:
+            objectType:
+              type: string
+          required: [objectType]
+
+    MisconfigurationFindingInfo:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/MisconfigurationInfo'
+        - type: object
+          properties:
+            objectType:
+              type: string
+          required: [objectType]
+
+    RootkitFindingInfo:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/RootkitInfo'
+        - type: object
+          properties:
+            objectType:
+              type: string
+          required: [objectType]
+
+    ExploitFindingInfo:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ExploitInfo'
+        - type: object
+          properties:
+            objectType:
+              type: string
+          required: [objectType]
+
+    Finding:
+      type: object
+      properties:
+        id:
+          type: string
+        scan:
+          $ref: '#/components/schemas/ScanRelationship'
+        asset:
+          $ref: '#/components/schemas/TargetRelationship'
+        foundOn:
+          description: When this finding was discovered by a scan
+          type: string
+          format: date-time
+        invalidatedOn:
+          description: When this finding was invalidated by a newer scan
+          type: string
+          format: date-time
+        findingInfo:
+          anyOf:
+            - $ref: '#/components/schemas/PackageFindingInfo'
+            - $ref: '#/components/schemas/VulnerabilityFindingInfo'
+            - $ref: '#/components/schemas/MalwareFindingInfo'
+            - $ref: '#/components/schemas/SecretFindingInfo'
+            - $ref: '#/components/schemas/MisconfigurationFindingInfo'
+            - $ref: '#/components/schemas/RootkitFindingInfo'
+            - $ref: '#/components/schemas/ExploitFindingInfo'
+          discriminator:
+            propertyName: objectType
+            mapping:
+              Package: '#/components/schemas/PackageFindingInfo'
+              Vulnerability: '#/components/schemas/VulnerabilityFindingInfo'
+              Malware: '#/components/schemas/MalwareFindingInfo'
+              Secret: '#/components/schemas/SecretFindingInfo'
+              Misconfiguration: '#/components/schemas/MisconfigurationFindingInfo'
+              Rootkit: '#/components/schemas/RootkitFindingInfo'
+              Exploit: '#/components/schemas/ExploitFindingInfo'
+
   responses:
     Success:
       description: Success message
@@ -1448,6 +1822,13 @@ components:
 
     scanConfigID:
       name: scanConfigID
+      in: path
+      required: true
+      schema:
+        type: string
+
+    findingID:
+      name: findingID
       in: path
       required: true
       schema:

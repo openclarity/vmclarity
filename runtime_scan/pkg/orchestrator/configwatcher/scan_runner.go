@@ -67,7 +67,7 @@ func (scw *ScanConfigWatcher) initNewScan(ctx context.Context, scanConfig *model
 			ScanFamiliesConfig: scanConfig.ScanFamiliesConfig,
 		},
 		StartTime: &now,
-		State:     utils.PointerTo[models.ScanState](models.Pending),
+		State:     utils.PointerTo(models.ScanStatePending),
 		Summary:   createInitScanSummary(),
 	}
 	var scanID string
@@ -85,7 +85,7 @@ func (scw *ScanConfigWatcher) initNewScan(ctx context.Context, scanConfig *model
 	}
 
 	// Do discovery of targets
-	instances, err := scw.providerClient.Discover(ctx, scan.ScanConfigSnapshot.Scope)
+	instances, err := scw.providerClient.DiscoverInstances(ctx, scan.ScanConfigSnapshot.Scope)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to discover instances to scan: %v", err)
 	}
@@ -98,8 +98,8 @@ func (scw *ScanConfigWatcher) initNewScan(ctx context.Context, scanConfig *model
 	targetIds := getTargetIDs(targetInstances)
 	scan = &models.Scan{
 		TargetIDs:    targetIds,
-		State:        utils.PointerTo[models.ScanState](models.Discovered),
-		StateMessage: utils.PointerTo[string]("Targets for scan successfully discovered"),
+		State:        utils.PointerTo(models.ScanStateDiscovered),
+		StateMessage: utils.PointerTo("Targets for scan successfully discovered"),
 	}
 	err = scw.backendClient.PatchScan(ctx, scanID, scan)
 	if err != nil {
