@@ -211,12 +211,12 @@ func (s *ScansTableHandler) UpdateScan(scan models.Scan) (models.Scan, error) {
 		return models.Scan{}, fmt.Errorf("failed to save scan in db: %w", err)
 	}
 
-	var sc models.Scan
-	err = json.Unmarshal(dbScan.Data, &sc)
+	var ret models.Scan
+	err = json.Unmarshal(dbScan.Data, &ret)
 	if err != nil {
 		return models.Scan{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
-	return sc, nil
+	return ret, nil
 }
 
 func (s *ScansTableHandler) DeleteScan(scanID models.ScanID) error {
