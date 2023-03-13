@@ -334,10 +334,6 @@ func (e *Exporter) ExportMalwareResult(res *results.Results, famerr families.Run
 		scanResult.Status.Malware = &models.TargetScanState{}
 	}
 
-	if scanResult.Summary == nil {
-		scanResult.Summary = &models.TargetScanResultSummary{}
-	}
-
 	var errors []string
 
 	if err, ok := famerr[types.Secrets]; ok {
