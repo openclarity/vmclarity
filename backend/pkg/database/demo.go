@@ -90,7 +90,7 @@ var regions = []models.AwsRegion{
 	},
 }
 
-// nolint:gomnd,maintidx
+// nolint:gomnd,maintidx,cyclop
 func CreateDemoData(db types.Database) {
 	// Create scopes:
 	scopes, err := createScopes()
@@ -160,6 +160,7 @@ func createScopes() (models.Scopes, error) {
 	err := scopesType.FromAwsAccountScope(models.AwsAccountScope{
 		Regions: utils.PointerTo(regions),
 	})
+	// nolint:wrapcheck
 	return models.Scopes{
 		ScopeInfo: &scopesType,
 	}, err
