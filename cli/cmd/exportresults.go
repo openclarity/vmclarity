@@ -369,8 +369,34 @@ func convertMalwareResultToAPIModel(malwareResults *malware.Results) *models.Mal
 		return &models.MalwareScan{}
 	}
 
+	malwareList := []models.Malware{}
+	for _, m := range malwareResults.MergedResults.DetectedMalware {
+		var malwareType models.MalwareType
+		if !isMalwareTypeValid(m.MalwareType) {
+			logger.Debugf("invalid malware type: %s", m.MalwareType)
+			malwareType = models.UNKNOWN
+		}
+
+		malwareList = append(malwareList, models.Malware{
+			MalwareInfo: &models.MalwareInfo{
+				MalwareName: &m.MalwareName,
+				MalwareType: &malwareType,
+				Path:        &m.Path,
+			},
+		})
+	}
 	return &models.MalwareScan{
-		Malware: &malwareResults.MergedResults.DetectedMalware,
+		Malware: &malwareList,
+	}
+}
+
+func isMalwareTypeValid(malwareType string) bool {
+	switch models.MalwareType(malwareType) {
+	case models.ADWARE, models.RANSOMWARE, models.BACKDOOR, models.SPYWARE, models.TROJAN,
+		models.VIRUS, models.PHISHING, models.WORM, models.UNKNOWN:
+		return true
+	default:
+		return false
 	}
 }
 
