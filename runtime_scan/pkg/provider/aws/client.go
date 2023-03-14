@@ -35,8 +35,6 @@ import (
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 )
 
-const retryDefaultMaxAttempts = 3
-
 type Client struct {
 	ec2Client *ec2.Client
 	awsConfig *aws.Config
@@ -289,11 +287,12 @@ func (c *Client) RunScanningJob(ctx context.Context, region, id string, config p
 		},
 	}
 
-	retryMaxAttempts := retryDefaultMaxAttempts
+	//
+	var retryMaxAttempts int
 	// use spot instances
 	// TODO there is a task to add spot configuration handling in backend.
 	if config.ScannerInstanceCreationConfig != nil {
-		if config.ScannerInstanceCreationConfig.Spot {
+		if config.ScannerInstanceCreationConfig.UseSpotInstances {
 			runInstancesInput.InstanceMarketOptions = &ec2types.InstanceMarketOptionsRequest{
 				MarketType: ec2types.MarketTypeSpot,
 				SpotOptions: &ec2types.SpotMarketOptions{
@@ -302,11 +301,11 @@ func (c *Client) RunScanningJob(ctx context.Context, region, id string, config p
 					MaxPrice:                     config.ScannerInstanceCreationConfig.MaxPrice,
 				},
 			}
-		}
-		// In the case of spot instances, we have higher probability to start an instance
-		// by increasing RetryMaxAttempts
-		if config.ScannerInstanceCreationConfig.RetryMaxAttempts != nil {
-			retryMaxAttempts = *config.ScannerInstanceCreationConfig.RetryMaxAttempts
+			// In the case of spot instances, we have higher probability to start an instance
+			// by increasing RetryMaxAttempts
+			if config.ScannerInstanceCreationConfig.RetryMaxAttempts != nil {
+				retryMaxAttempts = *config.ScannerInstanceCreationConfig.RetryMaxAttempts
+			}
 		}
 	}
 
@@ -315,6 +314,7 @@ func (c *Client) RunScanningJob(ctx context.Context, region, id string, config p
 		runInstancesInput.KeyName = &config.KeyPairName
 	}
 
+	// if retryMaxAttempts value is 0 it will be ignored
 	out, err := c.ec2Client.RunInstances(ctx, runInstancesInput, func(options *ec2.Options) {
 		options.Region = region
 		options.RetryMaxAttempts = retryMaxAttempts

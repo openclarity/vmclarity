@@ -582,7 +582,7 @@ type ScanType string
 type ScannerInstanceCreationConfig struct {
 	MaxPrice         *string `json:"maxPrice,omitempty"`
 	RetryMaxAttempts *int    `json:"retryMaxAttempts,omitempty"`
-	Spot             bool    `json:"spot"`
+	UseSpotInstances bool    `json:"useSpotInstances"`
 }
 
 // Scans defines model for Scans.

@@ -967,14 +967,14 @@ components:
       type: object
       description: Configuration of scanner instance
       properties:
-        spot:
+        useSpotInstances:
           type: boolean
         retryMaxAttempts:
           type: integer
         maxPrice:
           type: string
       required:
-        - spot
+        - useSpotInstances
 
     ScanConfigRelationship:
       type: object
