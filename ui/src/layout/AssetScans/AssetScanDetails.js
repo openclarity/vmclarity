@@ -48,7 +48,7 @@ const DetailsContent = ({data}) => {
 const AssetScanDetails = () => (
     <DetailsPageWrapper
         backTitle="Asset scans"
-        url={APIS.ASSET_SCANS}
+        getUrl={({id}) => `${APIS.ASSET_SCANS}/${id}?$expand=scan,scan/scanConfig,target`}
         getTitleData={({scan, target}) => {
             const {startTime, scanConfigSnapshot} = scan || {};
 

@@ -7,8 +7,8 @@ import ScanProgressBar from 'components/ScanProgressBar';
 import { ExpandableScopeDisplay } from 'layout/Scans/scopeDisplayUtils';
 import { useModalDisplayDispatch, MODAL_DISPLAY_ACTIONS } from 'layout/Scans/ScanConfigWizardModal/ModalDisplayProvider';
 import { APIS } from 'utils/systemConsts';
-import { SCANS_PATHS } from '../utils';
 import { formatDate, getFindingsColumnsConfigList, getVulnerabilitiesColumnConfigItem } from 'utils/utils';
+import { SCANS_PATHS } from '../utils';
 // import ScanActionsDisplay from '../ScanActionsDisplay';
 
 const TABLE_TITLE = "scans";
@@ -94,34 +94,32 @@ const ScansTable = () => {
     ], []);
 
     return (
-        <div className="scans-table-page-wrapper">
-            <ContentContainer>
-                <Table
-                    columns={columns}
-                    paginationItemsName={TABLE_TITLE.toLowerCase()}
-                    url={APIS.SCANS}
-                    noResultsTitle={TABLE_TITLE}
-                    onLineClick={({id}) => navigate(`${pathname}/${id}`)}
-                    // actionsComponent={({original}) => (
-                    //     <ScanActionsDisplay data={original} />
-                    // )}
-                    customEmptyResultsDisplay={() => (
-                        <EmptyDisplay
-                            message={(
-                                <>
-                                    <div>No scans detected.</div>
-                                    <div>Start your first scan to see your VM's issues.</div>
-                                </>
-                            )}
-                            title="New scan configuration"
-                            onClick={() => modalDisplayDispatch({type: MODAL_DISPLAY_ACTIONS.SET_MODAL_DISPLAY_DATA, payload: {}})}
-                            subTitle="Start scan from config"
-                            onSubClick={() => navigate(SCANS_PATHS.CONFIGURATIONS)}
-                        />
-                    )}
-                />
-            </ContentContainer>
-        </div>
+        <ContentContainer>
+            <Table
+                columns={columns}
+                paginationItemsName={TABLE_TITLE.toLowerCase()}
+                url={APIS.SCANS}
+                noResultsTitle={TABLE_TITLE}
+                onLineClick={({id}) => navigate(`${pathname}/${id}`)}
+                // actionsComponent={({original}) => (
+                //     <ScanActionsDisplay data={original} />
+                // )}
+                customEmptyResultsDisplay={() => (
+                    <EmptyDisplay
+                        message={(
+                            <>
+                                <div>No scans detected.</div>
+                                <div>Start your first scan to see your VM's issues.</div>
+                            </>
+                        )}
+                        title="New scan configuration"
+                        onClick={() => modalDisplayDispatch({type: MODAL_DISPLAY_ACTIONS.SET_MODAL_DISPLAY_DATA, payload: {}})}
+                        subTitle="Start scan from config"
+                        onSubClick={() => navigate(SCANS_PATHS.CONFIGURATIONS)}
+                    />
+                )}
+            />
+        </ContentContainer>
     )
 }
 

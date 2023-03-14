@@ -46,7 +46,7 @@ const ScanDetails = () => (
     <DetailsPageWrapper
         className="scan-details-page-wrapper"
         backTitle="Scans"
-        getUrl={({id}) => `${APIS.SCANS}/${id}?$expand=ScanConfig`}
+        getUrl={({id}) => `${APIS.SCANS}/${id}?$expand=scanConfig`}
         getTitleData={({scanConfigSnapshot, startTime}) => ({title: scanConfigSnapshot?.name, subTitle: formatDate(startTime)})}
         detailsContent={props => <DetailsContent {...props} />}
     />

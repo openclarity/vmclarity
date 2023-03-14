@@ -31,7 +31,7 @@ const Table = props => {
     const [{loading, data, error}, fetchData] = useFetch(url, {loadOnMount: false, formatFetchedData});
     const prevLoading = usePrevious(loading);
     const tableData = !!url ? data : externalData;
-    const {items, total} = tableData || {};
+    const {items, count} = tableData || {};
     const tableItems = useMemo(() => items || [], [items]);
 
     const withRowActions = !!ActionsComponent;
@@ -144,7 +144,7 @@ const Table = props => {
             return;
         }
         
-        fetchData({queryParams: getQueryParams()});
+        fetchData({queryParams: {...getQueryParams(), "$count": true}});
     }, [fetchData, getQueryParams, loading])
 
     useEffect(() => {
@@ -196,7 +196,7 @@ const Table = props => {
     
     return (
         <div className="table-wrapper">
-            {!withPagination ? <div className="no-pagination-results-total">{`Showing ${total} entries`}</div> :
+            {!withPagination ? <div className="no-pagination-results-total">{`Showing ${count} entries`}</div> :
                 <Pagination
                     canPreviousPage={canPreviousPage}
                     nextPage={nextPage}
@@ -206,7 +206,7 @@ const Table = props => {
                     displayName={paginationItemsName}
                     gotoPage={gotoPage}
                     loading={loading}
-                    total={total}
+                    total={count}
                     page={page}
                 />
             }

@@ -41,7 +41,7 @@ const ScansTabbedPage = () => {
 
     return (
         <>
-            {(!scans?.total && !scanConfigs?.total) ?
+            {(scans?.length === 0 && scanConfigs?.total === 0) ?
                 <EmptyDisplay
                     message={(
                         <>

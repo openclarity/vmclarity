@@ -20,8 +20,8 @@ const CONFIGURATION_ALERT_TEXT = (
 const ConfigurationAlertLink = ({scanConfigData, updatedConfigData}) => {
     const navigate = useNavigate();
 
-    const {id, dataToCompare} = updatedConfigData;
-    
+    const {id, ...dataToCompare} = updatedConfigData || {};
+
     return (
         <div className="configuration-alert-link">
             <Title medium removeMargin onClick={() => navigate(`${ROUTES.SCANS}/${SCANS_PATHS.CONFIGURATIONS}/${id}`)}>Configuration</Title>

@@ -88,7 +88,7 @@ const Wizard = ({steps, onClose, submitUrl, onSubmitSuccess, getSubmitParams}) =
             </div>
             <div className="wizard-action-buttons">
                 <Button tertiary onClick={onClose}>Cancel</Button>
-                <Button onClick={handleSubmit} disabled={disableStepDone}>Save</Button>
+                <Button type="submit" onClick={handleSubmit} disabled={disableStepDone}>Save</Button>
             </div>
         </Form>
     )

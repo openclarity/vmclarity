@@ -49,7 +49,8 @@ const AssetScansTable = () => {
             <Table
                 columns={columns}
                 paginationItemsName={TABLE_TITLE.toLowerCase()}
-                url={APIS.ASSET_SCANS}
+                url={`${APIS.ASSET_SCANS}`}
+                filters={{"$expand": "scan,target"}}
                 noResultsTitle={TABLE_TITLE}
                 onLineClick={({id}) => navigate(`${pathname}/${id}`)}
             />

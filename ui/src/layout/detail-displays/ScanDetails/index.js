@@ -1,19 +1,20 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import moment from 'moment';
 import TitleValueDisplay, { TitleValueDisplayColumn, TitleValueDisplayRow } from 'components/TitleValueDisplay';
 import DoublePaneDisplay from 'components/DoublePaneDisplay';
 import Title from 'components/Title';
 import ScanProgressBar from 'components/ScanProgressBar';
+import Button from 'components/Button';
 import { ScopeDisplay, ScanTypesDisplay, InstancesDisplay } from 'layout/Scans/scopeDisplayUtils';
 import { formatDate } from 'utils/utils';
+import { ROUTES } from 'utils/systemConsts';
 import ConfigurationAlertLink from './ConfigurationAlertLink';
-import Button from 'components/Button';
-import { useNavigate } from 'react-router-dom';
 
 export const calculateDuration = (startTime, endTime) => {
     const startMoment = moment(startTime);
     const endMoment = moment(endTime);
-
+    
     const range = ["days", "hours", "minutes", "seconds"].map(item => ({diff: endMoment.diff(startMoment, item), label: item}))
         .find(({diff}) => diff > 1);
 
@@ -62,7 +63,7 @@ const ScanDetails = ({scanData, withAssetScansLink=false}) => {
                     {withAssetScansLink &&
                         <div style={{marginTop: "50px"}}>
                             <Title medium>Asset scans</Title>
-                            <Button onClick={() => navigate(0)}>See asset scans (221/340)</Button>
+                            <Button onClick={() => navigate(ROUTES.ASSET_SCANS)}>{`See asset scans (${jobsCompleted || 0})`}</Button>
                         </div>
                     }
                 </>
