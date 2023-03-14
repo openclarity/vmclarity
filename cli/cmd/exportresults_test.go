@@ -19,6 +19,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
+
 	cdx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -28,7 +30,7 @@ import (
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/shared/pkg/families/exploits"
 	exploitscommon "github.com/openclarity/vmclarity/shared/pkg/families/exploits/common"
-	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
+	malwarecommon "github.com/openclarity/vmclarity/shared/pkg/families/malware/common"
 	"github.com/openclarity/vmclarity/shared/pkg/families/sbom"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets/common"
@@ -326,29 +328,20 @@ func Test_convertSecretsResultToAPIModel(t *testing.T) {
 }
 
 func Test_convertMalwareResultToAPIModel(t *testing.T) {
-	malware1 := models.Malware{
-		Id: utils.StringPtr("id1"),
-		MalwareInfo: &models.MalwareInfo{
-			MalwareName: utils.StringPtr("Worm<3"),
-			MalwareType: utils.PointerTo[models.MalwareType]("WORM"),
-			Path:        utils.StringPtr("/somepath/innocent.exe"),
-		},
+	malware1 := malwarecommon.DetectedMalware{
+		MalwareName: "Worm<3",
+		MalwareType: "WORM",
+		Path:        "/somepath/innocent.exe",
 	}
-	malware2 := models.Malware{
-		Id: utils.StringPtr("id2"),
-		MalwareInfo: &models.MalwareInfo{
-			MalwareName: utils.StringPtr("Trojan:)"),
-			MalwareType: utils.PointerTo[models.MalwareType]("TROJAN"),
-			Path:        utils.StringPtr("/somepath/gift.exe"),
-		},
+	malware2 := malwarecommon.DetectedMalware{
+		MalwareName: "Trojan:)",
+		MalwareType: "TROJAN",
+		Path:        "/somepath/gift.jar",
 	}
-	malware3 := models.Malware{
-		Id: utils.StringPtr("id3"),
-		MalwareInfo: &models.MalwareInfo{
-			MalwareName: utils.StringPtr("Ransom!"),
-			MalwareType: utils.PointerTo[models.MalwareType]("RANSOMWARE"),
-			Path:        utils.StringPtr("/somepath/givememoney.exe"),
-		},
+	malware3 := malwarecommon.DetectedMalware{
+		MalwareName: "Ransom!",
+		MalwareType: "RANSOMWARE",
+		Path:        "/somepath/givememoney.exe",
 	}
 
 	type args struct {
@@ -380,7 +373,7 @@ func Test_convertMalwareResultToAPIModel(t *testing.T) {
 			args: args{
 				mergedResults: &malware.Results{
 					MergedResults: &malware.MergedResults{
-						DetectedMalware: []models.Malware{
+						DetectedMalware: []malwarecommon.DetectedMalware{
 							malware1, malware2, malware3,
 						},
 					},
@@ -388,7 +381,27 @@ func Test_convertMalwareResultToAPIModel(t *testing.T) {
 			},
 			want: &models.MalwareScan{
 				Malware: &[]models.Malware{
-					malware1, malware2, malware3,
+					{
+						MalwareInfo: &models.MalwareInfo{
+							MalwareName: utils.StringPtr("Worm<3"),
+							MalwareType: utils.PointerTo[models.MalwareType]("WORM"),
+							Path:        utils.StringPtr("/somepath/innocent.exe"),
+						},
+					},
+					{
+						MalwareInfo: &models.MalwareInfo{
+							MalwareName: utils.StringPtr("Trojan:)"),
+							MalwareType: utils.PointerTo[models.MalwareType]("TROJAN"),
+							Path:        utils.StringPtr("/somepath/gift.jar"),
+						},
+					},
+					{
+						MalwareInfo: &models.MalwareInfo{
+							MalwareName: utils.StringPtr("Ransom!"),
+							MalwareType: utils.PointerTo[models.MalwareType]("RANSOMWARE"),
+							Path:        utils.StringPtr("/somepath/givememoney.exe"),
+						},
+					},
 				},
 			},
 		},
