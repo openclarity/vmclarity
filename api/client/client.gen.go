@@ -179,7 +179,7 @@ type ClientInterface interface {
 	DeleteScansScanID(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetScansScanID request
-	GetScansScanID(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetScansScanID(ctx context.Context, scanID ScanID, params *GetScansScanIDParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PatchScansScanID request with any body
 	PatchScansScanIDWithBody(ctx context.Context, scanID ScanID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -607,8 +607,8 @@ func (c *Client) DeleteScansScanID(ctx context.Context, scanID ScanID, reqEditor
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetScansScanID(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetScansScanIDRequest(c.Server, scanID)
+func (c *Client) GetScansScanID(ctx context.Context, scanID ScanID, params *GetScansScanIDParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetScansScanIDRequest(c.Server, scanID, params)
 	if err != nil {
 		return nil, err
 	}
@@ -804,6 +804,22 @@ func NewGetDiscoveryScopesRequest(server string, params *GetDiscoveryScopesParam
 
 	}
 
+	if params.OrderBy != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$orderby", runtime.ParamLocationQuery, *params.OrderBy); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
 	queryURL.RawQuery = queryValues.Encode()
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
@@ -958,6 +974,22 @@ func NewGetFindingsRequest(server string, params *GetFindingsParams) (*http.Requ
 	if params.Expand != nil {
 
 		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$expand", runtime.ParamLocationQuery, *params.Expand); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.OrderBy != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$orderby", runtime.ParamLocationQuery, *params.OrderBy); err != nil {
 			return nil, err
 		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 			return nil, err
@@ -1336,6 +1368,22 @@ func NewGetScanConfigsRequest(server string, params *GetScanConfigsParams) (*htt
 
 	}
 
+	if params.OrderBy != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$orderby", runtime.ParamLocationQuery, *params.OrderBy); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
 	queryURL.RawQuery = queryValues.Encode()
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
@@ -1701,6 +1749,22 @@ func NewGetScanResultsRequest(server string, params *GetScanResultsParams) (*htt
 
 	}
 
+	if params.OrderBy != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$orderby", runtime.ParamLocationQuery, *params.OrderBy); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
 	queryURL.RawQuery = queryValues.Encode()
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
@@ -1952,9 +2016,9 @@ func NewGetScansRequest(server string, params *GetScansParams) (*http.Request, e
 
 	}
 
-	if params.Page != nil {
+	if params.Select != nil {
 
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$select", runtime.ParamLocationQuery, *params.Select); err != nil {
 			return nil, err
 		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 			return nil, err
@@ -1968,9 +2032,73 @@ func NewGetScansRequest(server string, params *GetScansParams) (*http.Request, e
 
 	}
 
-	if params.PageSize != nil {
+	if params.Count != nil {
 
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageSize", runtime.ParamLocationQuery, *params.PageSize); err != nil {
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$count", runtime.ParamLocationQuery, *params.Count); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Top != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$top", runtime.ParamLocationQuery, *params.Top); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Skip != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$skip", runtime.ParamLocationQuery, *params.Skip); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Expand != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$expand", runtime.ParamLocationQuery, *params.Expand); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.OrderBy != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$orderby", runtime.ParamLocationQuery, *params.OrderBy); err != nil {
 			return nil, err
 		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 			return nil, err
@@ -2069,7 +2197,7 @@ func NewDeleteScansScanIDRequest(server string, scanID ScanID) (*http.Request, e
 }
 
 // NewGetScansScanIDRequest generates requests for GetScansScanID
-func NewGetScansScanIDRequest(server string, scanID ScanID) (*http.Request, error) {
+func NewGetScansScanIDRequest(server string, scanID ScanID, params *GetScansScanIDParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -2093,6 +2221,42 @@ func NewGetScansScanIDRequest(server string, scanID ScanID) (*http.Request, erro
 	if err != nil {
 		return nil, err
 	}
+
+	queryValues := queryURL.Query()
+
+	if params.Select != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$select", runtime.ParamLocationQuery, *params.Select); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Expand != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$expand", runtime.ParamLocationQuery, *params.Expand); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
 	if err != nil {
@@ -2297,6 +2461,38 @@ func NewGetTargetsRequest(server string, params *GetTargetsParams) (*http.Reques
 
 	}
 
+	if params.Expand != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$expand", runtime.ParamLocationQuery, *params.Expand); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.OrderBy != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$orderby", runtime.ParamLocationQuery, *params.OrderBy); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
 	queryURL.RawQuery = queryValues.Encode()
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
@@ -2412,6 +2608,22 @@ func NewGetTargetsTargetIDRequest(server string, targetID TargetID, params *GetT
 	if params.Select != nil {
 
 		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$select", runtime.ParamLocationQuery, *params.Select); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Expand != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$expand", runtime.ParamLocationQuery, *params.Expand); err != nil {
 			return nil, err
 		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 			return nil, err
@@ -2614,7 +2826,7 @@ type ClientWithResponsesInterface interface {
 	DeleteScansScanIDWithResponse(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*DeleteScansScanIDResponse, error)
 
 	// GetScansScanID request
-	GetScansScanIDWithResponse(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*GetScansScanIDResponse, error)
+	GetScansScanIDWithResponse(ctx context.Context, scanID ScanID, params *GetScansScanIDParams, reqEditors ...RequestEditorFn) (*GetScansScanIDResponse, error)
 
 	// PatchScansScanID request with any body
 	PatchScansScanIDWithBodyWithResponse(ctx context.Context, scanID ScanID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchScansScanIDResponse, error)
@@ -3646,8 +3858,8 @@ func (c *ClientWithResponses) DeleteScansScanIDWithResponse(ctx context.Context,
 }
 
 // GetScansScanIDWithResponse request returning *GetScansScanIDResponse
-func (c *ClientWithResponses) GetScansScanIDWithResponse(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*GetScansScanIDResponse, error) {
-	rsp, err := c.GetScansScanID(ctx, scanID, reqEditors...)
+func (c *ClientWithResponses) GetScansScanIDWithResponse(ctx context.Context, scanID ScanID, params *GetScansScanIDParams, reqEditors ...RequestEditorFn) (*GetScansScanIDResponse, error) {
+	rsp, err := c.GetScansScanID(ctx, scanID, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}

@@ -37,12 +37,14 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 		Fields: odatasql.Schema{
 			"id": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"target": odatasql.FieldMeta{
-				FieldType:          odatasql.RelationshipFieldType,
-				RelationshipSchema: targetSchemaName,
+				FieldType:            odatasql.RelationshipFieldType,
+				RelationshipSchema:   targetSchemaName,
+				RelationshipProperty: "id",
 			},
 			"scan": odatasql.FieldMeta{
-				FieldType:          odatasql.RelationshipFieldType,
-				RelationshipSchema: "Scan",
+				FieldType:            odatasql.RelationshipFieldType,
+				RelationshipSchema:   "Scan",
+				RelationshipProperty: "id",
 			},
 			"status": odatasql.FieldMeta{
 				FieldType:           odatasql.ComplexFieldType,
@@ -277,14 +279,16 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 			},
 		},
 	},
-	"Scan": {
+	scanSchemaName: {
+		Table: "scans",
 		Fields: odatasql.Schema{
 			"id":        odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"startTime": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"endTime":   odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"scanConfig": odatasql.FieldMeta{
-				FieldType:          odatasql.RelationshipFieldType,
-				RelationshipSchema: "ScanConfig",
+				FieldType:            odatasql.RelationshipFieldType,
+				RelationshipSchema:   "ScanConfig",
+				RelationshipProperty: "id",
 			},
 			"scanConfigSnapshot": odatasql.FieldMeta{
 				FieldType:           odatasql.ComplexFieldType,
@@ -577,12 +581,14 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 		Fields: odatasql.Schema{
 			"id": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"scan": odatasql.FieldMeta{
-				FieldType:          odatasql.RelationshipFieldType,
-				RelationshipSchema: "Scan",
+				FieldType:            odatasql.RelationshipFieldType,
+				RelationshipSchema:   "Scan",
+				RelationshipProperty: "id",
 			},
 			"asset": odatasql.FieldMeta{
-				FieldType:          odatasql.RelationshipFieldType,
-				RelationshipSchema: targetSchemaName,
+				FieldType:            odatasql.RelationshipFieldType,
+				RelationshipSchema:   targetSchemaName,
+				RelationshipProperty: "id",
 			},
 			"foundOn":       odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"invalidatedOn": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
@@ -665,7 +671,7 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 	},
 }
 
-func ODataQuery(db *gorm.DB, schema string, filterString, selectString, expandString *string, top, skip *int, collection bool, result interface{}) error {
+func ODataQuery(db *gorm.DB, schema string, filterString, selectString, expandString, orderby *string, top, skip *int, collection bool, result interface{}) error {
 	// If we're not getting a collection, make sure the result is limited
 	// to 1 item.
 	if !collection {
@@ -675,7 +681,7 @@ func ODataQuery(db *gorm.DB, schema string, filterString, selectString, expandSt
 
 	// Build the raw SQL query using the odatasql library, this will also
 	// parse and validate the ODATA query params.
-	query, err := odatasql.BuildSQLQuery(schemaMetas, schema, filterString, selectString, expandString, top, skip)
+	query, err := odatasql.BuildSQLQuery(schemaMetas, schema, filterString, selectString, expandString, orderby, top, skip)
 	if err != nil {
 		return fmt.Errorf("failed to build query for DB: %w", err)
 	}
