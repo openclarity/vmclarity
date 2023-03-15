@@ -319,7 +319,7 @@ func (e *Exporter) ExportVulResult(res *results.Results, famerr families.RunErro
 		} else {
 			scanResult.Vulnerabilities = convertVulnResultToAPIModel(vulnerabilitiesResults)
 		}
-		scanResult.Summary.TotalVulnerabilities = getVulnerabilityTotalsPerSeverity(scanResult.Vulnerabilities.Vulnerabilities)
+		scanResult.Summary.TotalVulnerabilities = utils.GetVulnerabilityTotalsPerSeverity(scanResult.Vulnerabilities.Vulnerabilities)
 	}
 
 	state := models.DONE
@@ -332,34 +332,6 @@ func (e *Exporter) ExportVulResult(res *results.Results, famerr families.RunErro
 	}
 
 	return nil
-}
-
-func getVulnerabilityTotalsPerSeverity(vulnerabilities *[]models.Vulnerability) *models.VulnerabilityScanSummary {
-	ret := &models.VulnerabilityScanSummary{
-		TotalCriticalVulnerabilities:   utils.PointerTo[int](0),
-		TotalHighVulnerabilities:       utils.PointerTo[int](0),
-		TotalMediumVulnerabilities:     utils.PointerTo[int](0),
-		TotalLowVulnerabilities:        utils.PointerTo[int](0),
-		TotalNegligibleVulnerabilities: utils.PointerTo[int](0),
-	}
-	if vulnerabilities == nil {
-		return ret
-	}
-	for _, vulnerability := range *vulnerabilities {
-		switch *vulnerability.VulnerabilityInfo.Severity {
-		case models.CRITICAL:
-			ret.TotalCriticalVulnerabilities = utils.PointerTo[int](*ret.TotalCriticalVulnerabilities + 1)
-		case models.HIGH:
-			ret.TotalHighVulnerabilities = utils.PointerTo[int](*ret.TotalHighVulnerabilities + 1)
-		case models.MEDIUM:
-			ret.TotalMediumVulnerabilities = utils.PointerTo[int](*ret.TotalMediumVulnerabilities + 1)
-		case models.LOW:
-			ret.TotalLowVulnerabilities = utils.PointerTo[int](*ret.TotalLowVulnerabilities + 1)
-		case models.NEGLIGIBLE:
-			ret.TotalNegligibleVulnerabilities = utils.PointerTo[int](*ret.TotalNegligibleVulnerabilities + 1)
-		}
-	}
-	return ret
 }
 
 func (e *Exporter) ExportSecretsResult(res *results.Results, famerr families.RunErrors) error {

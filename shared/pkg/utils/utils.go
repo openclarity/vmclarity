@@ -19,6 +19,9 @@ import (
 	"bytes"
 	"fmt"
 	"os/exec"
+
+	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 )
 
 const (
@@ -53,4 +56,32 @@ func Int32Ptr(val int32) *int32 {
 
 func PointerTo[T any](value T) *T {
 	return &value
+}
+
+func GetVulnerabilityTotalsPerSeverity(vulnerabilities *[]models.Vulnerability) *models.VulnerabilityScanSummary {
+	ret := &models.VulnerabilityScanSummary{
+		TotalCriticalVulnerabilities:   utils.PointerTo[int](0),
+		TotalHighVulnerabilities:       utils.PointerTo[int](0),
+		TotalMediumVulnerabilities:     utils.PointerTo[int](0),
+		TotalLowVulnerabilities:        utils.PointerTo[int](0),
+		TotalNegligibleVulnerabilities: utils.PointerTo[int](0),
+	}
+	if vulnerabilities == nil {
+		return ret
+	}
+	for _, vulnerability := range *vulnerabilities {
+		switch *vulnerability.VulnerabilityInfo.Severity {
+		case models.CRITICAL:
+			ret.TotalCriticalVulnerabilities = utils.PointerTo[int](*ret.TotalCriticalVulnerabilities + 1)
+		case models.HIGH:
+			ret.TotalHighVulnerabilities = utils.PointerTo[int](*ret.TotalHighVulnerabilities + 1)
+		case models.MEDIUM:
+			ret.TotalMediumVulnerabilities = utils.PointerTo[int](*ret.TotalMediumVulnerabilities + 1)
+		case models.LOW:
+			ret.TotalLowVulnerabilities = utils.PointerTo[int](*ret.TotalLowVulnerabilities + 1)
+		case models.NEGLIGIBLE:
+			ret.TotalNegligibleVulnerabilities = utils.PointerTo[int](*ret.TotalNegligibleVulnerabilities + 1)
+		}
+	}
+	return ret
 }

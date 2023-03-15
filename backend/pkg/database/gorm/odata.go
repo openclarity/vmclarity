@@ -615,9 +615,20 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 	},
 	"PackageFindingInfo": {
 		Fields: odatasql.Schema{
-			"objectType":     odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
-			"packageName":    odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
-			"packageVersion": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"objectType": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"name":       odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"version":    odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"language":   odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"purl":       odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"type":       odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"cpes": odatasql.FieldMeta{
+				FieldType:          odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			},
+			"licenses": odatasql.FieldMeta{
+				FieldType:          odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			},
 		},
 	},
 	"VulnerabilityFindingInfo": {
@@ -626,6 +637,54 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 			"vulnerabilityName": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"description":       odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"severity":          odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"layerId":           odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"path":              odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"links": odatasql.FieldMeta{
+				FieldType:          odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			},
+			"cvss": odatasql.FieldMeta{
+				FieldType: odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{
+					FieldType:           odatasql.ComplexFieldType,
+					ComplexFieldSchemas: []string{"VulnerabilityCvss"},
+				},
+			},
+			"distro": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"VulnerabilityDistro"},
+			},
+			"package": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"PackageInfo"},
+			},
+		},
+	},
+	"VulnerabilityCvss": {
+		Fields: odatasql.Schema{
+			"metrics": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"VulnerabilityCvssMetrics"},
+			},
+			"vector":  odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"version": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+		},
+	},
+	"VulnerabilityCvssMetrics": {
+		Fields: odatasql.Schema{
+			"baseScore":           odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"exploitabilityScore": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"impactScore":         odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+		},
+	},
+	"VulnerabilityDistro": {
+		Fields: odatasql.Schema{
+			"iDLike": odatasql.FieldMeta{
+				FieldType:          odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			},
+			"name":    odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"version": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 		},
 	},
 	"MalwareFindingInfo": {
