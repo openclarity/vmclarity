@@ -324,15 +324,25 @@ type Package struct {
 
 // PackageFindingInfo defines model for PackageFindingInfo.
 type PackageFindingInfo struct {
-	ObjectType     string  `json:"objectType"`
-	PackageName    *string `json:"packageName,omitempty"`
-	PackageVersion *string `json:"packageVersion,omitempty"`
+	Cpes       *[]string `json:"cpes,omitempty"`
+	Language   *string   `json:"language,omitempty"`
+	Licenses   *[]string `json:"licenses,omitempty"`
+	Name       *string   `json:"name,omitempty"`
+	ObjectType string    `json:"objectType"`
+	Purl       *string   `json:"purl,omitempty"`
+	Type       *string   `json:"type,omitempty"`
+	Version    *string   `json:"version,omitempty"`
 }
 
 // PackageInfo defines model for PackageInfo.
 type PackageInfo struct {
-	PackageName    *string `json:"packageName,omitempty"`
-	PackageVersion *string `json:"packageVersion,omitempty"`
+	Cpes     *[]string `json:"cpes,omitempty"`
+	Language *string   `json:"language,omitempty"`
+	Licenses *[]string `json:"licenses,omitempty"`
+	Name     *string   `json:"name,omitempty"`
+	Purl     *string   `json:"purl,omitempty"`
+	Type     *string   `json:"type,omitempty"`
+	Version  *string   `json:"version,omitempty"`
 }
 
 // PodInfo defines model for PodInfo.
@@ -808,17 +818,67 @@ type Vulnerability struct {
 	VulnerabilityInfo *VulnerabilityInfo `json:"vulnerabilityInfo,omitempty"`
 }
 
+// VulnerabilityCvss defines model for VulnerabilityCvss.
+type VulnerabilityCvss struct {
+	Metrics *VulnerabilityCvssMetrics `json:"metrics,omitempty"`
+	Vector  *string                   `json:"vector,omitempty"`
+	Version *string                   `json:"version,omitempty"`
+}
+
+// VulnerabilityCvssMetrics defines model for VulnerabilityCvssMetrics.
+type VulnerabilityCvssMetrics struct {
+	BaseScore           *float32 `json:"baseScore,omitempty"`
+	ExploitabilityScore *float32 `json:"exploitabilityScore,omitempty"`
+	ImpactScore         *float32 `json:"impactScore,omitempty"`
+}
+
+// VulnerabilityDistro Distro provides information about a detected Linux distribution.
+type VulnerabilityDistro struct {
+	// IDLike the ID_LIKE field found within the /etc/os-release file
+	IDLike *[]string `json:"IDLike,omitempty"`
+
+	// Name Name of the Linux distribution
+	Name *string `json:"name,omitempty"`
+
+	// Version Version of the Linux distribution (major or major.minor version)
+	Version *string `json:"version,omitempty"`
+}
+
 // VulnerabilityFindingInfo defines model for VulnerabilityFindingInfo.
 type VulnerabilityFindingInfo struct {
-	Description       *string                `json:"description,omitempty"`
+	Cvss        *[]VulnerabilityCvss `json:"cvss,omitempty"`
+	Description *string              `json:"description,omitempty"`
+
+	// Distro Distro provides information about a detected Linux distribution.
+	Distro            *VulnerabilityDistro   `json:"distro,omitempty"`
+	Fix               *VulnerabilityFix      `json:"fix,omitempty"`
+	LayerId           *string                `json:"layerId,omitempty"`
+	Links             *[]string              `json:"links,omitempty"`
 	ObjectType        string                 `json:"objectType"`
+	Package           *PackageInfo           `json:"package,omitempty"`
+	Path              *string                `json:"path,omitempty"`
 	Severity          *VulnerabilitySeverity `json:"severity,omitempty"`
 	VulnerabilityName *string                `json:"vulnerabilityName,omitempty"`
 }
 
+// VulnerabilityFix defines model for VulnerabilityFix.
+type VulnerabilityFix struct {
+	State    *string   `json:"state,omitempty"`
+	Versions *[]string `json:"versions,omitempty"`
+}
+
 // VulnerabilityInfo defines model for VulnerabilityInfo.
 type VulnerabilityInfo struct {
-	Description       *string                `json:"description,omitempty"`
+	Cvss        *[]VulnerabilityCvss `json:"cvss,omitempty"`
+	Description *string              `json:"description,omitempty"`
+
+	// Distro Distro provides information about a detected Linux distribution.
+	Distro            *VulnerabilityDistro   `json:"distro,omitempty"`
+	Fix               *VulnerabilityFix      `json:"fix,omitempty"`
+	LayerId           *string                `json:"layerId,omitempty"`
+	Links             *[]string              `json:"links,omitempty"`
+	Package           *PackageInfo           `json:"package,omitempty"`
+	Path              *string                `json:"path,omitempty"`
 	Severity          *VulnerabilitySeverity `json:"severity,omitempty"`
 	VulnerabilityName *string                `json:"vulnerabilityName,omitempty"`
 }

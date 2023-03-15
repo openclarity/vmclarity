@@ -57,15 +57,41 @@ func Test_convertSBOMResultToAPIModel(t *testing.T) {
 								BOMRef:     "bomref1",
 								Type:       cdx.ComponentTypeLibrary,
 								Name:       "testcomponent1",
-								Version:    "v10.0.0-foo",
+								Version:    "v10.0.0-foo1",
 								PackageURL: "pkg:pypi/testcomponent1@v10.0.0-foo",
+								CPE:        "cpe1",
+								Licenses: utils.PointerTo[cdx.Licenses]([]cdx.LicenseChoice{
+									{
+										License: &cdx.License{
+											Name: "lic1",
+										},
+									},
+									{
+										License: &cdx.License{
+											Name: "lic2",
+										},
+									},
+								}),
 							},
 							{
 								BOMRef:     "bomref2",
 								Type:       cdx.ComponentTypeLibrary,
 								Name:       "testcomponent2",
-								Version:    "v10.0.0-foo",
+								Version:    "v10.0.0-foo2",
 								PackageURL: "pkg:pypi/testcomponent2@v10.0.0-foo",
+								CPE:        "cpe2",
+								Licenses: utils.PointerTo[cdx.Licenses]([]cdx.LicenseChoice{
+									{
+										License: &cdx.License{
+											Name: "lic3",
+										},
+									},
+									{
+										License: &cdx.License{
+											Name: "lic4",
+										},
+									},
+								}),
 							},
 						},
 					},
@@ -77,15 +103,25 @@ func Test_convertSBOMResultToAPIModel(t *testing.T) {
 						{
 							Id: utils.StringPtr("bomref1"),
 							PackageInfo: &models.PackageInfo{
-								PackageName:    utils.StringPtr("testcomponent1"),
-								PackageVersion: utils.StringPtr("v10.0.0-foo"),
+								Cpes:     utils.PointerTo([]string{"cpe1"}),
+								Language: utils.PointerTo(""),
+								Licenses: utils.PointerTo([]string{"lic1", "lic2"}),
+								Name:     utils.StringPtr("testcomponent1"),
+								Purl:     utils.StringPtr("pkg:pypi/testcomponent1@v10.0.0-foo"),
+								Type:     utils.PointerTo(string(cdx.ComponentTypeLibrary)),
+								Version:  utils.StringPtr("v10.0.0-foo1"),
 							},
 						},
 						{
 							Id: utils.StringPtr("bomref2"),
 							PackageInfo: &models.PackageInfo{
-								PackageName:    utils.StringPtr("testcomponent2"),
-								PackageVersion: utils.StringPtr("v10.0.0-foo"),
+								Cpes:     utils.PointerTo([]string{"cpe2"}),
+								Language: utils.PointerTo(""),
+								Licenses: utils.PointerTo([]string{"lic3", "lic4"}),
+								Name:     utils.StringPtr("testcomponent2"),
+								Purl:     utils.StringPtr("pkg:pypi/testcomponent2@v10.0.0-foo"),
+								Type:     utils.PointerTo(string(cdx.ComponentTypeLibrary)),
+								Version:  utils.StringPtr("v10.0.0-foo2"),
 							},
 						},
 					},
@@ -143,7 +179,48 @@ func Test_convertVulnResultToAPIModel(t *testing.T) {
 									Vulnerability: scanner.Vulnerability{
 										ID:          "CVE-test-test-foo",
 										Description: "testbleed",
-										Severity:    string(models.CRITICAL),
+										Links:       []string{"link1", "link2"},
+										Distro: scanner.Distro{
+											Name:    "distro1",
+											Version: "distrov1",
+											IDLike:  []string{"IDLike1", "IDLike2"},
+										},
+										CVSS: []scanner.CVSS{
+											{
+												Version: "v1",
+												Vector:  "vector1",
+												Metrics: scanner.CvssMetrics{
+													BaseScore:           1,
+													ExploitabilityScore: nil,
+													ImpactScore:         nil,
+												},
+											},
+											{
+												Version: "v2",
+												Vector:  "vector2",
+												Metrics: scanner.CvssMetrics{
+													BaseScore:           2,
+													ExploitabilityScore: utils.PointerTo(2.1),
+													ImpactScore:         utils.PointerTo(2.2),
+												},
+											},
+										},
+										Fix: scanner.Fix{
+											Versions: []string{"fv1", "fv2"},
+											State:    "fixed",
+										},
+										Severity: string(models.CRITICAL),
+										Package: scanner.Package{
+											Name:     "package1",
+											Version:  "pv1",
+											Type:     "pt1",
+											Language: "pl1",
+											Licenses: []string{"plic1", "plic2"},
+											CPEs:     []string{"cpe1", "cpe2"},
+											PURL:     "purl1",
+										},
+										LayerID: "lid1",
+										Path:    "path1",
 									},
 								},
 							},
@@ -153,7 +230,48 @@ func Test_convertVulnResultToAPIModel(t *testing.T) {
 									Vulnerability: scanner.Vulnerability{
 										ID:          "CVE-test-test-bar",
 										Description: "solartest",
-										Severity:    string(models.HIGH),
+										Links:       []string{"link3", "link4"},
+										Distro: scanner.Distro{
+											Name:    "distro2",
+											Version: "distrov2",
+											IDLike:  []string{"IDLike3", "IDLike4"},
+										},
+										CVSS: []scanner.CVSS{
+											{
+												Version: "v3",
+												Vector:  "vector3",
+												Metrics: scanner.CvssMetrics{
+													BaseScore:           3,
+													ExploitabilityScore: nil,
+													ImpactScore:         nil,
+												},
+											},
+											{
+												Version: "v4",
+												Vector:  "vector4",
+												Metrics: scanner.CvssMetrics{
+													BaseScore:           4,
+													ExploitabilityScore: utils.PointerTo(4.1),
+													ImpactScore:         utils.PointerTo(4.2),
+												},
+											},
+										},
+										Fix: scanner.Fix{
+											Versions: []string{"fv3", "fv4"},
+											State:    "not-fixed",
+										},
+										Severity: string(models.HIGH),
+										Package: scanner.Package{
+											Name:     "package2",
+											Version:  "pv2",
+											Type:     "pt2",
+											Language: "pl2",
+											Licenses: []string{"plic3", "plic4"},
+											CPEs:     []string{"cpe3", "cpe4"},
+											PURL:     "purl2",
+										},
+										LayerID: "lid2",
+										Path:    "path2",
 									},
 								},
 							},
@@ -168,17 +286,99 @@ func Test_convertVulnResultToAPIModel(t *testing.T) {
 						{
 							Id: utils.StringPtr("id1"),
 							VulnerabilityInfo: &models.VulnerabilityInfo{
-								VulnerabilityName: utils.StringPtr("CVE-test-test-foo"),
-								Description:       utils.StringPtr("testbleed"),
+								Cvss: utils.PointerTo([]models.VulnerabilityCvss{
+									{
+										Metrics: &models.VulnerabilityCvssMetrics{
+											BaseScore:           utils.PointerTo[float32](1),
+											ExploitabilityScore: nil,
+											ImpactScore:         nil,
+										},
+										Vector:  utils.PointerTo("vector1"),
+										Version: utils.PointerTo("v1"),
+									},
+									{
+										Metrics: &models.VulnerabilityCvssMetrics{
+											BaseScore:           utils.PointerTo[float32](2),
+											ExploitabilityScore: utils.PointerTo[float32](2.1),
+											ImpactScore:         utils.PointerTo[float32](2.2),
+										},
+										Vector:  utils.PointerTo("vector2"),
+										Version: utils.PointerTo("v2"),
+									},
+								}),
+								Description: utils.StringPtr("testbleed"),
+								Distro: &models.VulnerabilityDistro{
+									IDLike:  utils.PointerTo([]string{"IDLike1", "IDLike2"}),
+									Name:    utils.PointerTo("distro1"),
+									Version: utils.PointerTo("distrov1"),
+								},
+								Fix: &models.VulnerabilityFix{
+									State:    utils.PointerTo("fixed"),
+									Versions: utils.PointerTo([]string{"fv1", "fv2"}),
+								},
+								LayerId: utils.PointerTo("lid1"),
+								Links:   utils.PointerTo([]string{"link1", "link2"}),
+								Package: &models.PackageInfo{
+									Cpes:     utils.PointerTo([]string{"cpe1", "cpe2"}),
+									Language: utils.PointerTo("pl1"),
+									Licenses: utils.PointerTo([]string{"plic1", "plic2"}),
+									Name:     utils.PointerTo("package1"),
+									Purl:     utils.PointerTo("purl1"),
+									Type:     utils.PointerTo("pt1"),
+									Version:  utils.PointerTo("pv1"),
+								},
+								Path:              utils.PointerTo("path1"),
 								Severity:          utils.PointerTo[models.VulnerabilitySeverity](models.CRITICAL),
+								VulnerabilityName: utils.StringPtr("CVE-test-test-foo"),
 							},
 						},
 						{
 							Id: utils.StringPtr("id2"),
 							VulnerabilityInfo: &models.VulnerabilityInfo{
-								VulnerabilityName: utils.StringPtr("CVE-test-test-bar"),
-								Description:       utils.StringPtr("solartest"),
+								Cvss: utils.PointerTo([]models.VulnerabilityCvss{
+									{
+										Metrics: &models.VulnerabilityCvssMetrics{
+											BaseScore:           utils.PointerTo[float32](3),
+											ExploitabilityScore: nil,
+											ImpactScore:         nil,
+										},
+										Vector:  utils.PointerTo("vector3"),
+										Version: utils.PointerTo("v3"),
+									},
+									{
+										Metrics: &models.VulnerabilityCvssMetrics{
+											BaseScore:           utils.PointerTo[float32](4),
+											ExploitabilityScore: utils.PointerTo[float32](4.1),
+											ImpactScore:         utils.PointerTo[float32](4.2),
+										},
+										Vector:  utils.PointerTo("vector4"),
+										Version: utils.PointerTo("v4"),
+									},
+								}),
+								Description: utils.StringPtr("solartest"),
+								Distro: &models.VulnerabilityDistro{
+									IDLike:  utils.PointerTo([]string{"IDLike3", "IDLike4"}),
+									Name:    utils.PointerTo("distro2"),
+									Version: utils.PointerTo("distrov2"),
+								},
+								Fix: &models.VulnerabilityFix{
+									State:    utils.PointerTo("not-fixed"),
+									Versions: utils.PointerTo([]string{"fv3", "fv4"}),
+								},
+								LayerId: utils.PointerTo("lid2"),
+								Links:   utils.PointerTo([]string{"link3", "link4"}),
+								Package: &models.PackageInfo{
+									Cpes:     utils.PointerTo([]string{"cpe3", "cpe4"}),
+									Language: utils.PointerTo("pl2"),
+									Licenses: utils.PointerTo([]string{"plic3", "plic4"}),
+									Name:     utils.PointerTo("package2"),
+									Purl:     utils.PointerTo("purl2"),
+									Type:     utils.PointerTo("pt2"),
+									Version:  utils.PointerTo("pv2"),
+								},
+								Path:              utils.PointerTo("path2"),
 								Severity:          utils.PointerTo[models.VulnerabilitySeverity](models.HIGH),
+								VulnerabilityName: utils.StringPtr("CVE-test-test-bar"),
 							},
 						},
 					},
