@@ -1461,10 +1461,25 @@ components:
     PackageInfo:
       type: object
       properties:
-        packageName:
+        name:
           type: string
-        packageVersion:
+        version:
           type: string
+        type:
+          type: string
+        language:
+          type: string
+        licenses:
+          type: array
+          items:
+            type: string
+        cpes:
+          type: array
+          items:
+            type: string
+        purl:
+          type: string
+
 
     VulnerabilityInfo:
       type: object
@@ -1475,6 +1490,70 @@ components:
           type: string
         severity:
           $ref: '#/components/schemas/VulnerabilitySeverity'
+        links:
+          type: array
+          items:
+            type: string
+        distro:
+          $ref: '#/components/schemas/VulnerabilityDistro'
+        cvss:
+          type: array
+          items:
+            $ref: '#/components/schemas/VulnerabilityCvss'
+        package:
+          $ref: '#/components/schemas/PackageInfo'
+        fix:
+          $ref: '#/components/schemas/VulnerabilityFix'
+        layerId:
+          type: string
+        path:
+          type: string
+
+    VulnerabilityFix:
+      type: object
+      properties:
+        versions:
+          type: array
+          items:
+            type: string
+        state:
+          type: string
+
+    VulnerabilityCvss:
+      type: object
+      properties:
+        version:
+          type: string
+        vector:
+          type: string
+        metrics:
+          $ref: '#/components/schemas/VulnerabilityCvssMetrics'
+
+    VulnerabilityCvssMetrics:
+      type: object
+      properties:
+        baseScore:
+          type: number
+        exploitabilityScore:
+          type: number
+        impactScore:
+          type: number
+
+    VulnerabilityDistro:
+      type: object
+      description: Distro provides information about a detected Linux distribution.
+      properties:
+        name:
+          description: Name of the Linux distribution
+          type: string
+        version:
+          description: Version of the Linux distribution (major or major.minor version)
+          type: string
+        IDLike:
+          description: the ID_LIKE field found within the /etc/os-release file
+          type: array
+          items:
+            type: string
 
     VulnerabilitySeverity:
       type: string
