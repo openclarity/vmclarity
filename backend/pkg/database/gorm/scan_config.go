@@ -95,8 +95,8 @@ func (s *ScanConfigsTableHandler) GetScanConfig(scanConfigID models.ScanConfigID
 
 func (s *ScanConfigsTableHandler) CreateScanConfig(scanConfig models.ScanConfig) (models.ScanConfig, error) {
 	// Check the user provided the name field
-	if scanConfig.Name == "" {
-		return models.ScanConfig{}, fmt.Errorf("name can not be empty")
+	if scanConfig.Name != nil && *scanConfig.Name == "" {
+		return models.ScanConfig{}, fmt.Errorf("name must be provided and can not be empty")
 	}
 
 	// Check the user didn't provide an ID
@@ -121,7 +121,7 @@ func (s *ScanConfigsTableHandler) CreateScanConfig(scanConfig models.ScanConfig)
 
 	// Check the existing DB entries to ensure that the name field is unique
 	var scanConfigs []ScanConfig
-	filter := fmt.Sprintf("name eq '%s'", scanConfig.Name)
+	filter := fmt.Sprintf("name eq '%s'", *scanConfig.Name)
 	err := ODataQuery(s.DB, "ScanConfig", &filter, nil, nil, nil, nil, nil, true, &scanConfigs)
 	if err != nil {
 		return models.ScanConfig{}, err
@@ -134,7 +134,7 @@ func (s *ScanConfigsTableHandler) CreateScanConfig(scanConfig models.ScanConfig)
 			return models.ScanConfig{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 		}
 		return sc, &common.ConflictError{
-			Reason: fmt.Sprintf("Scan config exists with name=%s", sc.Name),
+			Reason: fmt.Sprintf("Scan config exists with name=%s", *sc.Name),
 		}
 	}
 
@@ -178,6 +178,11 @@ func getExistingScanConfigByID(db *gorm.DB, scanConfigID models.ScanConfigID) (S
 func (s *ScanConfigsTableHandler) SaveScanConfig(scanConfig models.ScanConfig) (models.ScanConfig, error) {
 	if scanConfig.Id == nil || *scanConfig.Id == "" {
 		return models.ScanConfig{}, fmt.Errorf("ID is required to update scan config in DB")
+	}
+
+	// Check the user provided the name field
+	if scanConfig.Name != nil && *scanConfig.Name == "" {
+		return models.ScanConfig{}, fmt.Errorf("name must be provided and can not be empty")
 	}
 
 	dbScanConfig, err := getExistingScanConfigByID(s.DB, *scanConfig.Id)

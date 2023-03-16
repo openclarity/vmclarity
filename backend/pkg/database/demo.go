@@ -142,7 +142,7 @@ func CreateDemoData(db types.Database) {
 	}
 }
 
-func createVMInfo(instanceID, location string, instanceProvider models.CloudProvider) models.TargetType {
+func createVMInfo(instanceID, location string, instanceProvider models.CloudProvider) *models.TargetType {
 	info := models.TargetType{}
 	err := info.FromVMInfo(models.VMInfo{
 		InstanceID:       instanceID,
@@ -152,7 +152,7 @@ func createVMInfo(instanceID, location string, instanceProvider models.CloudProv
 	if err != nil {
 		panic(err)
 	}
-	return info
+	return &info
 }
 
 func createScopes() (models.Scopes, error) {
@@ -384,13 +384,13 @@ func createScanConfigs() []models.ScanConfig {
 
 	return []models.ScanConfig{
 		{
-			Name:               "demo scan 1",
+			Name:               utils.PointerTo("demo scan 1"),
 			ScanFamiliesConfig: scanFamiliesConfig1,
 			Scheduled:          &scheduled1,
 			Scope:              &scanScopeType1,
 		},
 		{
-			Name:               "demo scan 2",
+			Name:               utils.PointerTo("demo scan 2"),
 			ScanFamiliesConfig: scanFamiliesConfig2,
 			Scheduled:          &scanConfig2Scheduled,
 			Scope:              &scanScopeType2,

@@ -436,7 +436,7 @@ type ScanStateReason string
 // ScanConfig defines model for ScanConfig.
 type ScanConfig struct {
 	Id   *string `json:"id,omitempty"`
-	Name string  `json:"name"`
+	Name *string `json:"name,omitempty"`
 
 	// ScanFamiliesConfig The configuration of the scanner families within a scan config
 	ScanFamiliesConfig *ScanFamiliesConfig            `json:"scanFamiliesConfig,omitempty"`
@@ -676,7 +676,7 @@ type Target struct {
 
 	// Summary A summary of the scan findings.
 	Summary    *ScanFindingsSummary `json:"summary,omitempty"`
-	TargetInfo TargetType           `json:"targetInfo"`
+	TargetInfo *TargetType          `json:"targetInfo,omitempty"`
 }
 
 // TargetCommon defines model for TargetCommon.

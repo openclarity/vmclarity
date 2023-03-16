@@ -799,7 +799,15 @@ components:
           properties:
             id:
               type: string
-              readOnly: true
+              # TODO(sambetts) Decide if we want the validation here by having
+              # separate schemas for GET, POST and PATCH
+              #
+              # We can't make anything readOnly or required here if we want to
+              # use the same schema for PATCH otherwise it will require you
+              # always send the required fields and remove the readOnly fields
+              # on the client side.
+              #
+              # readOnly: true
 
     ScanSummary:
       description: A summary of the progress of a scan for informational purposes.
@@ -976,9 +984,17 @@ components:
           properties:
             id:
               type: string
-              readOnly: true
-          required:
-            - name
+              # TODO(sambetts) Decide if we want the validation here by having
+              # separate schemas for GET, POST and PATCH
+              #
+              # We can't make anything readOnly or required here if we want to
+              # use the same schema for PATCH otherwise it will require you
+              # always send the required fields and remove the readOnly fields
+              # on the client side.
+              #
+              # readOnly: true
+          # required:
+          #   - name
 
     ScanConfigExists:
       type: object
@@ -1226,8 +1242,16 @@ components:
           properties:
             id:
               type: string
-              readOnly: true
-          required: ['targetInfo']
+              # TODO(sambetts) Decide if we want the validation here by having
+              # separate schemas for GET, POST and PATCH.
+              #
+              # We can't make anything readOnly or required here if we want to
+              # use the same schema for PATCH otherwise it will require you
+              # always send the required fields and remove the readOnly fields
+              # on the client side.
+              #
+              # readOnly: true
+          # required: ['targetInfo']
 
     TargetRelationship:
       type: object
@@ -1329,7 +1353,15 @@ components:
       properties:
         id:
           type: string
-          readOnly: true
+          # TODO(sambetts) Decide if we want the validation here by having
+          # separate schemas for GET, POST and PATCH.
+          #
+          # We can't make anything readOnly or required here if we want to
+          # use the same schema for PATCH otherwise it will require you
+          # always send the required fields and remove the readOnly fields
+          # on the client side.
+          #
+          # readOnly: true
         target:
           $ref: '#/components/schemas/TargetRelationship'
         scan:
@@ -1401,6 +1433,7 @@ components:
           type: array
           items:
             type: string
+          default: []
 
     Package:
       type: object
@@ -1735,6 +1768,15 @@ components:
       properties:
         id:
           type: string
+          # TODO(sambetts) Decide if we want the validation here by having
+          # separate schemas for GET, POST and PATCH
+          #
+          # We can't make anything readOnly or required here if we want to
+          # use the same schema for PATCH otherwise it will require you
+          # always send the required fields and remove the readOnly fields
+          # on the client side.
+          #
+          # readOnly: true
         scan:
           $ref: '#/components/schemas/ScanRelationship'
         asset:

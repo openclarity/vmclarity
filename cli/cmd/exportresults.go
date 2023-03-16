@@ -178,7 +178,7 @@ func (e *Exporter) ExportSbomResult(res *results.Results, famerr families.RunErr
 		scanResult.Summary = &models.ScanFindingsSummary{}
 	}
 
-	var errors []string
+	errors := []string{}
 
 	if err, ok := famerr[types.SBOM]; ok {
 		errors = append(errors, err.Error())
@@ -222,7 +222,7 @@ func (e *Exporter) ExportVulResult(res *results.Results, famerr families.RunErro
 		scanResult.Summary = &models.ScanFindingsSummary{}
 	}
 
-	var errors []string
+	errors := []string{}
 
 	if err, ok := famerr[types.Vulnerabilities]; ok {
 		errors = append(errors, err.Error())
@@ -293,7 +293,7 @@ func (e *Exporter) ExportSecretsResult(res *results.Results, famerr families.Run
 		scanResult.Summary = &models.ScanFindingsSummary{}
 	}
 
-	var errors []string
+	errors := []string{}
 
 	if err, ok := famerr[types.Secrets]; ok {
 		errors = append(errors, err.Error())
@@ -478,7 +478,7 @@ func (e *Exporter) ExportExploitsResult(res *results.Results, famerr families.Ru
 		scanResult.Summary = &models.ScanFindingsSummary{}
 	}
 
-	var errors []string
+	errors := []string{}
 
 	if err, ok := famerr[types.Exploits]; ok {
 		errors = append(errors, err.Error())
