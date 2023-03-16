@@ -22,7 +22,7 @@ import (
 	"github.com/openclarity/vmclarity/api/ui_backend/models"
 )
 
-// nolint:wrapcheck
+// nolint:wrapcheck,unused
 func sendError(ctx echo.Context, code int, message string) error {
 	log.Error(message)
 	response := &models.ApiResponse{Message: &message}

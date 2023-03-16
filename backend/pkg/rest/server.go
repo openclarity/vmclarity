@@ -92,16 +92,16 @@ func createEchoServer(dbHandler databaseTypes.Database, client *backendclient.Ba
 		return nil, fmt.Errorf("failed to load UI swagger spec: %v", err)
 	}
 	// Create a router group for the UI backend /ui/api base URL
-	uiBackendApiGroup := e.Group(UIBackendBaseURL)
+	uiBackendAPIGroup := e.Group(UIBackendBaseURL)
 
-	uiBackendApiGroup.Use(middleware.OapiRequestValidator(uiBackendSwagger))
+	uiBackendAPIGroup.Use(middleware.OapiRequestValidator(uiBackendSwagger))
 
-	uiBackendApiImpl := &uirest.ServerImpl{
+	uiBackendAPIImpl := &uirest.ServerImpl{
 		BackendClient: client,
 	}
 
 	// Register paths with the UI backend implementation
-	uiserver.RegisterHandlers(uiBackendApiGroup, uiBackendApiImpl)
+	uiserver.RegisterHandlers(uiBackendAPIGroup, uiBackendAPIImpl)
 
 	// set the static UI site path.
 	uiSitePath, ok := os.LookupEnv("UI_SITE_PATH")
