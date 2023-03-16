@@ -676,6 +676,16 @@ type Target struct {
 
 	// Summary A summary of the scan findings.
 	Summary    *ScanFindingsSummary `json:"summary,omitempty"`
+	TargetInfo TargetType           `json:"targetInfo"`
+}
+
+// TargetCommon defines model for TargetCommon.
+type TargetCommon struct {
+	// ScansCount Total number of scans that have ever run for this target
+	ScansCount *int `json:"scansCount,omitempty"`
+
+	// Summary A summary of the scan findings.
+	Summary    *ScanFindingsSummary `json:"summary,omitempty"`
 	TargetInfo *TargetType          `json:"targetInfo,omitempty"`
 }
 
@@ -683,7 +693,9 @@ type Target struct {
 type TargetExists struct {
 	// Message Describes which unique constraint combination causes the conflict.
 	Message *string `json:"message,omitempty"`
-	Target  *Target `json:"target,omitempty"`
+
+	// Target Describes a target object.
+	Target *Target `json:"target,omitempty"`
 }
 
 // TargetRelationship defines model for TargetRelationship.
