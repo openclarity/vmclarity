@@ -153,6 +153,7 @@ func CreateDemoData(db types.Database) {
 	}
 }
 
+// nolint:gocognit,prealloc
 func createFindings(scanResults []models.TargetScanResult) []models.Finding {
 	var ret []models.Finding
 
@@ -203,6 +204,7 @@ func createFindings(scanResults []models.TargetScanResult) []models.Finding {
 	return ret
 }
 
+// nolint:gocognit,prealloc
 func createExploitFindings(base models.Finding, exploits []models.Exploit) []models.Finding {
 	var ret []models.Finding
 	for _, exploit := range exploits {
@@ -230,6 +232,7 @@ func createExploitFindings(base models.Finding, exploits []models.Exploit) []mod
 	return ret
 }
 
+// nolint:gocognit,prealloc
 func createPackageFindings(base models.Finding, packages []models.Package) []models.Finding {
 	var ret []models.Finding
 	for _, pkg := range packages {
@@ -257,6 +260,7 @@ func createPackageFindings(base models.Finding, packages []models.Package) []mod
 	return ret
 }
 
+// nolint:gocognit,prealloc
 func createMalwareFindings(base models.Finding, malware []models.Malware) []models.Finding {
 	var ret []models.Finding
 	for _, mal := range malware {
@@ -284,6 +288,7 @@ func createMalwareFindings(base models.Finding, malware []models.Malware) []mode
 	return ret
 }
 
+// nolint:gocognit,prealloc
 func createSecretFindings(base models.Finding, secrets []models.Secret) []models.Finding {
 	var ret []models.Finding
 	for _, secret := range secrets {
@@ -311,6 +316,7 @@ func createSecretFindings(base models.Finding, secrets []models.Secret) []models
 	return ret
 }
 
+// nolint:gocognit,prealloc
 func createMisconfigurationFindings(base models.Finding, misconfigurations []models.Misconfiguration) []models.Finding {
 	var ret []models.Finding
 	for _, misconfiguration := range misconfigurations {
@@ -338,6 +344,7 @@ func createMisconfigurationFindings(base models.Finding, misconfigurations []mod
 	return ret
 }
 
+// nolint:gocognit,prealloc
 func createRootkitFindings(base models.Finding, rootkits []models.Rootkit) []models.Finding {
 	var ret []models.Finding
 	for _, rootkit := range rootkits {
@@ -365,6 +372,7 @@ func createRootkitFindings(base models.Finding, rootkits []models.Rootkit) []mod
 	return ret
 }
 
+// nolint:gocognit,prealloc
 func createVulnerabilityFindings(base models.Finding, vulnerabilities []models.Vulnerability) []models.Finding {
 	var ret []models.Finding
 	for _, vulnerability := range vulnerabilities {
@@ -737,6 +745,7 @@ func createScans(targets []models.Target, scanConfigs []models.ScanConfig) []mod
 	}
 }
 
+// nolint:gocognit
 func createScanResults(scans []models.Scan) []models.TargetScanResult {
 	var scanResults []models.TargetScanResult
 	for _, scan := range scans {
