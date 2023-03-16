@@ -403,6 +403,8 @@ type ScanStateReason string
 
 // ScanConfig defines model for ScanConfig.
 type ScanConfig struct {
+	// Disabled if true, the scan config is disabled and no scan should run from it
+	Disabled            *bool   `json:"disabled,omitempty"`
 	Id                  *string `json:"id,omitempty"`
 	MaxParallelScanners *int    `json:"maxParallelScanners,omitempty"`
 	Name                *string `json:"name,omitempty"`
@@ -419,6 +421,9 @@ type ScanConfig struct {
 // ScanConfigRelationship and used for the ScanConfig snapshot in the
 // scan.
 type ScanConfigData struct {
+	// Disabled if true, the scan config is disabled and no scan should run from it
+	Disabled *bool `json:"disabled,omitempty"`
+
 	// MaxParallelScanners The maximum number of scanners that can run in parallel for each scan
 	MaxParallelScanners *int    `json:"maxParallelScanners,omitempty"`
 	Name                *string `json:"name,omitempty"`
@@ -442,6 +447,7 @@ type ScanConfigExists struct {
 
 // ScanConfigRelationship defines model for ScanConfigRelationship.
 type ScanConfigRelationship struct {
+	Disabled            *interface{} `json:"disabled,omitempty"`
 	Id                  string       `json:"id"`
 	MaxParallelScanners *interface{} `json:"maxParallelScanners,omitempty"`
 	Name                *interface{} `json:"name,omitempty"`

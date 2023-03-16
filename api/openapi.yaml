@@ -960,6 +960,9 @@ components:
           minimum: 1
           maximum: 20
           description: "The maximum number of scanners that can run in parallel for each scan"
+        disabled:
+          description: 'if true, the scan config is disabled and no scan should run from it'
+          type: boolean
 
     ScanConfigRelationship:
       type: object
@@ -979,6 +982,8 @@ components:
             scheduled:
               readOnly: true
             maxParallelScanners:
+              readOnly: true
+            disabled:
               readOnly: true
           required: ['id']
 
@@ -1005,6 +1010,9 @@ components:
               default: 2
           # required:
           #   - name
+          #   - scanFamiliesConfig
+          #   - scope
+          #   - scheduled
 
     ScanConfigExists:
       type: object

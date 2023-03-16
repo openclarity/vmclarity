@@ -20,11 +20,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/aptible/supercronic/cronexpr"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/api/models"
 	_config "github.com/openclarity/vmclarity/runtime_scan/pkg/config"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 )
 
@@ -50,79 +52,86 @@ func CreateScanConfigWatcher(
 	}
 }
 
-func (scw *ScanConfigWatcher) hasRunningScansByScanConfigIDAndOperationTime(scanConfigID string, operationTime time.Time) (bool, error) {
-	// TODO(sambetts) Once we can validate that gte/eq works with times
-	// correctly then we can add them to the filter like:
-	//
-	//	scanConfig/id eq '%s' and (endTime eq null or startTime gte '%s')
-	//
-	filter := fmt.Sprintf("scanConfig/id eq '%s'", scanConfigID)
-	scans, err := scw.backendClient.GetScans(context.TODO(), models.GetScansParams{
-		Filter: &filter,
-	})
+func (scw *ScanConfigWatcher) hasRunningScan(scanConfigID string) (bool, error) {
+	// We want to check if there is an existing scan related to the given scan config ID that is still running (not done or failed).
+	odataFilter := fmt.Sprintf("scanConfig/id eq '%s' and state ne '%s' and state ne '%s'",
+		scanConfigID, models.ScanStateDone, models.ScanStateFailed)
+	params := models.GetScansParams{
+		Filter: &odataFilter,
+		Count:  utils.PointerTo(true),
+	}
+
+	scans, err := scw.backendClient.GetScans(context.TODO(), params)
 	if err != nil {
 		return false, fmt.Errorf("failed to get a scans: %v", err)
 	}
 
-	return anyScansRunningOrCompleted(scans, operationTime), nil
+	return *scans.Count > 0, nil
 }
 
 func (scw *ScanConfigWatcher) getScanConfigsToScan() ([]models.ScanConfig, error) {
 	scanConfigsToScan := make([]models.ScanConfig, 0)
-	scanConfigs, err := scw.backendClient.GetScanConfigs(context.TODO(), models.GetScanConfigsParams{})
+	// Get all enabled scan configs
+	scanConfigs, err := scw.backendClient.GetScanConfigs(context.TODO(), models.GetScanConfigsParams{
+		Filter: utils.PointerTo(fmt.Sprintf("disabled eq null or disabled eq false")),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to check new scan configs: %v", err)
 	}
 
-	log.Infof("Found %d ScanConfigs from the backend", len(*scanConfigs.Items))
+	log.Infof("Got %d enabled ScanConfigs objects.", len(*scanConfigs.Items))
 
 	now := time.Now()
 	for _, scanConfig := range *scanConfigs.Items {
-		// Check only the SingleScheduledScanConfigs at the moment
 		shouldScan := false
-		scheduled, err := scanConfig.Scheduled.ValueByDiscriminator()
+		scanConfigID := *scanConfig.Id
+		operationTime := *scanConfig.Scheduled.OperationTime
+		shouldScan, err = scw.shouldScan(scanConfigID, operationTime, now)
 		if err != nil {
-			log.Errorf("failed to determine scheduled scan config type: %v", err)
+			log.Errorf("Failed to get scans for scan config ID=%s: %v", scanConfigID, err)
 			continue
-		}
-		switch singleSchedule := scheduled.(type) {
-		case models.SingleScheduleScanConfig:
-			shouldScan, err = scw.shouldStartSingleScheduleScanConfig(*scanConfig.Id, singleSchedule, now)
-			if err != nil {
-				log.Errorf("Failed to get scans for scan config ID=%s: %v", *scanConfig.Id, err)
-				continue
-			}
-		default:
 		}
 
 		if shouldScan {
-			log.Debugf("ScanConfig %s should start to scan", *scanConfig.Id)
+			log.Infof("A new scan should be started from ScanConfig %s", scanConfigID)
 			scanConfigsToScan = append(scanConfigsToScan, scanConfig)
+			if scanConfig.Scheduled.CronLine != nil {
+				// calculate next operation time based on current operation time
+				nextOperationTime := cronexpr.MustParse(*scanConfig.Scheduled.CronLine).Next(operationTime)
+				scanConfig.Scheduled.OperationTime = &nextOperationTime
+				log.Debugf("Patching ScanConfig %s with a new operation time (%s)", scanConfigID, nextOperationTime.String())
+			} else {
+				// not a periodic scan, we should disable the scan config, so it will not be fetched again.
+				scanConfig.Disabled = utils.PointerTo(false)
+				log.Debugf("Patching ScanConfig %s with disabled (%v)", scanConfigID, *scanConfig.Disabled)
+			}
+			if err = scw.backendClient.PatchScanConfig(context.TODO(), scanConfigID, &scanConfig); err != nil {
+				log.Errorf("Failed to patch scan config: %v", err)
+			}
 		} else {
-			log.Debugf("ScanConfig %s should not start to scan", *scanConfig.Id)
+			log.Debugf("No scan should be started from ScanConfig %s", scanConfigID)
+			if operationTime.Before(now) && scanConfig.Scheduled.CronLine != nil {
+				// If operationTime is not within the window, and it was in the past,
+				// we will calculate the next operation time until we will find one that is in the future.
+				nextOperationTime := findFirstOperationTimeInTheFuture(operationTime, now, *scanConfig.Scheduled.CronLine)
+				scanConfig.Scheduled.OperationTime = &nextOperationTime
+				log.Debugf("Patching ScanConfig %s with a new operation time (%s)", scanConfigID, nextOperationTime.String())
+				if err = scw.backendClient.PatchScanConfig(context.TODO(), scanConfigID, &scanConfig); err != nil {
+					log.Errorf("Failed to patch scan config: %v", err)
+				}
+			}
 		}
 	}
+
 	return scanConfigsToScan, nil
 }
 
-func anyScansRunningOrCompleted(scans *models.Scans, operationTime time.Time) bool {
-	if scans.Items == nil {
-		return false
+func findFirstOperationTimeInTheFuture(operationTime time.Time, now time.Time, cronLine string) time.Time {
+	expr := cronexpr.MustParse(cronLine)
+	for operationTime.Before(now) {
+		operationTime = expr.Next(operationTime)
 	}
-	for _, scan := range *scans.Items {
-		if scan.EndTime == nil {
-			// There is a running scan for this scanConfig
-			return true
-		}
-
-		// If StartTime isn't set on a Scan then it is assumed that its
-		// not started, this should never happen.
-		if scan.StartTime != nil && scan.StartTime.After(operationTime) {
-			// There is a completed scan that started after the operation time
-			return true
-		}
-	}
-	return false
+	return operationTime
 }
 
 // isWithinTheWindow checks if `checkTime` is within the window (after `now` and before `now + window`).
@@ -135,21 +144,25 @@ func isWithinTheWindow(checkTime, now time.Time, window time.Duration) bool {
 	return checkTime.Before(endWindowTime)
 }
 
-func (scw *ScanConfigWatcher) shouldStartSingleScheduleScanConfig(scanConfigID string, schedule models.SingleScheduleScanConfig, now time.Time) (bool, error) {
+func (scw *ScanConfigWatcher) shouldScan(scanConfigID string, operationTime time.Time, now time.Time) (bool, error) {
 	// Skip processing ScanConfig because its operationTime is not within the start window
-	if !isWithinTheWindow(schedule.OperationTime, now, timeWindow) {
-		log.Debugf("ScanConfig %s start time %v outside of the start window %v - %v", scanConfigID, schedule.OperationTime.Format(time.RFC3339), now.Format(time.RFC3339), now.Add(timeWindow).Format(time.RFC3339))
+	if !isWithinTheWindow(operationTime, now, timeWindow) {
+		log.Debugf("ScanConfig %s start time %v outside of the start window %v - %v",
+			scanConfigID, operationTime.Format(time.RFC3339), now.Format(time.RFC3339), now.Add(timeWindow).Format(time.RFC3339))
 		return false, nil
 	}
-	// Check running or completed scan for specific scan config
-	hasRunningOrCompletedScan, err := scw.hasRunningScansByScanConfigIDAndOperationTime(scanConfigID, schedule.OperationTime)
+
+	// Check running scans for specific scan config
+	hasRunningScan, err := scw.hasRunningScan(scanConfigID)
 	if err != nil {
-		return false, fmt.Errorf("failed to get scans: %v", err)
+		return false, fmt.Errorf("failed to check if there are running or completed scans: %v", err)
 	}
-	if hasRunningOrCompletedScan {
-		log.Debugf("ScanConfig %s has a running or completed scan", scanConfigID)
+	if hasRunningScan {
+		log.Debugf("ScanConfig %s has a running scan", scanConfigID)
 	}
-	return !hasRunningOrCompletedScan, nil
+
+	// If operation time is withing the window and there is no running scan we should run a scan.
+	return !hasRunningScan, nil
 }
 
 func (scw *ScanConfigWatcher) Start(ctx context.Context) {
