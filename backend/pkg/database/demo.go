@@ -395,7 +395,7 @@ func createScanConfigs() []models.ScanConfig {
 			ScanFamiliesConfig:  scanFamiliesConfig2,
 			Scheduled:           &scanConfig2Scheduled,
 			Scope:               &scanScopeType2,
-			MaxParallelScanners: utils.PointerTo(2),
+			MaxParallelScanners: utils.PointerTo(3),
 		},
 	}
 }
