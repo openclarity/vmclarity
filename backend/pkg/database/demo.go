@@ -661,7 +661,7 @@ func createScanConfigs() []models.ScanConfig {
 func createScans(targets []models.Target, scanConfigs []models.ScanConfig) []models.Scan {
 	// Create scan 1: already ended
 	scan1Start := time.Now().Add(-10 * time.Hour)
-	scan1End := scan1Start.Add(-5 * time.Hour)
+	scan1End := scan1Start.Add(5*time.Hour + 27*time.Minute + 56*time.Second)
 	scan1Targets := []string{*targets[0].Id, *targets[1].Id}
 
 	scan1Summary := &models.ScanSummary{
@@ -887,7 +887,7 @@ func createPackagesResult() *[]models.Package {
 	return &[]models.Package{
 		{
 			Cpes:     utils.PointerTo([]string{"cpe:2.3:a:curl:curl:7.74.0-1.3+deb11u3:*:*:*:*:*:*:*"}),
-			Language: utils.PointerTo("pl1"),
+			Language: utils.PointerTo(""),
 			Licenses: utils.PointerTo([]string{"BSD-3-Clause", "BSD-4-Clause"}),
 			Name:     utils.PointerTo("curl"),
 			Purl:     utils.PointerTo("pkg:deb/debian/curl@7.74.0-1.3+deb11u3?arch=amd64&distro=debian-11"),
@@ -896,7 +896,7 @@ func createPackagesResult() *[]models.Package {
 		},
 		{
 			Cpes:     utils.PointerTo([]string{"cpe:2.3:a:libtasn1-6:libtasn1-6:4.16.0-2:*:*:*:*:*:*:*", "cpe:2.3:a:libtasn1-6:libtasn1_6:4.16.0-2:*:*:*:*:*:*:*"}),
-			Language: utils.PointerTo(""),
+			Language: utils.PointerTo("python"),
 			Licenses: utils.PointerTo([]string{"GFDL-1.3-only", "GPL-3.0-only", "LGPL-2.1-only"}),
 			Name:     utils.PointerTo("libtasn1-6"),
 			Purl:     utils.PointerTo("pkg:deb/debian/libtasn1-6@4.16.0-2?arch=amd64&distro=debian-11"),
@@ -1020,8 +1020,8 @@ func createVulnerabilitiesResult() *[]models.Vulnerability {
 						ExploitabilityScore: utils.PointerTo[float32](4.1),
 						ImpactScore:         utils.PointerTo[float32](4.2),
 					},
-					Vector:  utils.PointerTo("vector4"),
-					Version: utils.PointerTo("v4"),
+					Vector:  utils.PointerTo("AV:N/AC:L/Au:N/C:P/I:P/A:P"),
+					Version: utils.PointerTo("2.0"),
 				},
 			}),
 			Description: utils.StringPtr("GNU Libtasn1 before 4.19.0 has an ETYPE_OK off-by-one array size check that affects asn1_encode_simple_der."),
@@ -1048,6 +1048,52 @@ func createVulnerabilitiesResult() *[]models.Vulnerability {
 			Path:              utils.PointerTo("/var/lib/dpkg/status"),
 			Severity:          utils.PointerTo[models.VulnerabilitySeverity](models.CRITICAL),
 			VulnerabilityName: utils.StringPtr("CVE-2021-46848"),
+		},
+		{
+			Cvss: utils.PointerTo([]models.VulnerabilityCvss{
+				{
+					Metrics: &models.VulnerabilityCvssMetrics{
+						BaseScore:           utils.PointerTo[float32](9.8),
+						ExploitabilityScore: utils.PointerTo[float32](3.9),
+						ImpactScore:         utils.PointerTo[float32](5.9),
+					},
+					Vector:  utils.PointerTo("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"),
+					Version: utils.PointerTo("3.1"),
+				},
+				{
+					Metrics: &models.VulnerabilityCvssMetrics{
+						BaseScore:           utils.PointerTo[float32](7.5),
+						ExploitabilityScore: utils.PointerTo[float32](10),
+						ImpactScore:         utils.PointerTo[float32](6.4),
+					},
+					Vector:  utils.PointerTo("AV:N/AC:L/Au:N/C:P/I:P/A:P"),
+					Version: utils.PointerTo("2.0"),
+				},
+			}),
+			Description: utils.StringPtr("SQLite3 from 3.6.0 to and including 3.27.2 is vulnerable to heap out-of-bound read in the rtreenode() function when handling invalid rtree tables."),
+			Distro: &models.VulnerabilityDistro{
+				IDLike:  utils.PointerTo([]string{"debian"}),
+				Name:    utils.PointerTo("ubuntu"),
+				Version: utils.PointerTo("11"),
+			},
+			Fix: &models.VulnerabilityFix{
+				State:    utils.PointerTo("wont-fix"),
+				Versions: utils.PointerTo([]string{""}),
+			},
+			LayerId: utils.PointerTo(""),
+			Links:   utils.PointerTo([]string{"https://security-tracker.debian.org/tracker/CVE-2019-8457"}),
+			Package: &models.Package{
+				Cpes:     utils.PointerTo([]string{"cpe:2.3:a:libdb5.3:libdb5.3:5.3.28+dfsg1-0.8:*:*:*:*:*:*:*"}),
+				Language: utils.PointerTo(""),
+				Licenses: utils.PointerTo([]string{}),
+				Name:     utils.PointerTo("libdb5.3"),
+				Purl:     utils.PointerTo("pkg:deb/debian/libdb5.3@5.3.28+dfsg1-0.8?arch=amd64&upstream=db5.3&distro=debian-11"),
+				Type:     utils.PointerTo("deb"),
+				Version:  utils.PointerTo("5.3.28+dfsg1-0.8"),
+			},
+			Path:              utils.PointerTo("/var/lib/dpkg/status"),
+			Severity:          utils.PointerTo[models.VulnerabilitySeverity](models.LOW),
+			VulnerabilityName: utils.StringPtr("CVE-2019-8457"),
 		},
 	}
 }
