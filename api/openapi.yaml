@@ -1433,6 +1433,7 @@ components:
           type: array
           items:
             type: string
+          default: []
 
     Package:
       type: object
