@@ -1456,62 +1456,6 @@ components:
     Package:
       type: object
       properties:
-        id:
-          type: string
-        packageInfo:
-          $ref: '#/components/schemas/PackageInfo'
-
-    Vulnerability:
-      type: object
-      properties:
-        id:
-          type: string
-        vulnerabilityInfo:
-          $ref: '#/components/schemas/VulnerabilityInfo'
-
-    Secret:
-      type: object
-      properties:
-        id:
-          type: string
-        secretInfo:
-          $ref: '#/components/schemas/SecretInfo'
-
-    Malware:
-      type: object
-      properties:
-        id:
-          type: string
-        malwareInfo:
-          $ref: '#/components/schemas/MalwareInfo'
-
-    Rootkit:
-      type: object
-      properties:
-        id:
-          type: string
-        rootkitInfo:
-          $ref: '#/components/schemas/RootkitInfo'
-
-    Misconfiguration:
-      type: object
-      properties:
-        id:
-          type: string
-        misconfigurationInfo:
-          $ref: '#/components/schemas/MisconfigurationInfo'
-
-    Exploit:
-      type: object
-      properties:
-        id:
-          type: string
-        exploitInfo:
-          $ref: '#/components/schemas/ExploitInfo'
-
-    PackageInfo:
-      type: object
-      properties:
         name:
           type: string
         version:
@@ -1532,7 +1476,7 @@ components:
           type: string
 
 
-    VulnerabilityInfo:
+    Vulnerability:
       type: object
       properties:
         vulnerabilityName:
@@ -1552,7 +1496,7 @@ components:
           items:
             $ref: '#/components/schemas/VulnerabilityCvss'
         package:
-          $ref: '#/components/schemas/PackageInfo'
+          $ref: '#/components/schemas/Package'
         fix:
           $ref: '#/components/schemas/VulnerabilityFix'
         layerId:
@@ -1615,7 +1559,7 @@ components:
         - LOW
         - NEGLIGIBLE
 
-    MalwareInfo:
+    Malware:
       type: object
       properties:
         malwareName:
@@ -1626,7 +1570,7 @@ components:
           type: string
           description: Path of the file that contains malware
 
-    RootkitInfo:
+    Rootkit:
       type: object
       properties:
         rootkitName:
@@ -1637,7 +1581,7 @@ components:
           type: string
           description: Path of the file that contains rootkit
 
-    MisconfigurationInfo:
+    Misconfiguration:
       type: object
       properties:
         description:
@@ -1646,7 +1590,7 @@ components:
           type: string
           description: Path of the file that contains misconfigurations
 
-    SecretInfo:
+    Secret:
       type: object
       properties:
         description:
@@ -1662,7 +1606,7 @@ components:
           description: "Unique identification of the SecretInfo"
           type: string
 
-    ExploitInfo:
+    Exploit:
       type: object
       properties:
         name:
@@ -1790,7 +1734,7 @@ components:
     PackageFindingInfo:
       type: object
       allOf:
-        - $ref: '#/components/schemas/PackageInfo'
+        - $ref: '#/components/schemas/Package'
         - type: object
           properties:
             objectType:
@@ -1800,7 +1744,7 @@ components:
     VulnerabilityFindingInfo:
       type: object
       allOf:
-        - $ref: '#/components/schemas/VulnerabilityInfo'
+        - $ref: '#/components/schemas/Vulnerability'
         - type: object
           properties:
             objectType:
@@ -1810,7 +1754,7 @@ components:
     MalwareFindingInfo:
       type: object
       allOf:
-        - $ref: '#/components/schemas/MalwareInfo'
+        - $ref: '#/components/schemas/Malware'
         - type: object
           properties:
             objectType:
@@ -1820,7 +1764,7 @@ components:
     SecretFindingInfo:
       type: object
       allOf:
-        - $ref: '#/components/schemas/SecretInfo'
+        - $ref: '#/components/schemas/Secret'
         - type: object
           properties:
             objectType:
@@ -1830,7 +1774,7 @@ components:
     MisconfigurationFindingInfo:
       type: object
       allOf:
-        - $ref: '#/components/schemas/MisconfigurationInfo'
+        - $ref: '#/components/schemas/Misconfiguration'
         - type: object
           properties:
             objectType:
@@ -1840,7 +1784,7 @@ components:
     RootkitFindingInfo:
       type: object
       allOf:
-        - $ref: '#/components/schemas/RootkitInfo'
+        - $ref: '#/components/schemas/Rootkit'
         - type: object
           properties:
             objectType:
@@ -1850,7 +1794,7 @@ components:
     ExploitFindingInfo:
       type: object
       allOf:
-        - $ref: '#/components/schemas/ExploitInfo'
+        - $ref: '#/components/schemas/Exploit'
         - type: object
           properties:
             objectType:

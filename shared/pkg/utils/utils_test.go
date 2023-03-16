@@ -23,87 +23,69 @@ func TestGetVulnerabilityTotalsPerSeverity(t *testing.T) {
 				vulnerabilities: nil,
 			},
 			want: &models.VulnerabilityScanSummary{
-				TotalCriticalVulnerabilities:   utils.PointerTo[int](0),
-				TotalHighVulnerabilities:       utils.PointerTo[int](0),
-				TotalMediumVulnerabilities:     utils.PointerTo[int](0),
-				TotalLowVulnerabilities:        utils.PointerTo[int](0),
-				TotalNegligibleVulnerabilities: utils.PointerTo[int](0),
+				TotalCriticalVulnerabilities:   utils.PointerTo(0),
+				TotalHighVulnerabilities:       utils.PointerTo(0),
+				TotalMediumVulnerabilities:     utils.PointerTo(0),
+				TotalLowVulnerabilities:        utils.PointerTo(0),
+				TotalNegligibleVulnerabilities: utils.PointerTo(0),
 			},
 		},
 		{
 			name: "check one type",
 			args: args{
-				vulnerabilities: utils.PointerTo[[]models.Vulnerability]([]models.Vulnerability{
+				vulnerabilities: utils.PointerTo([]models.Vulnerability{
 					{
-						Id: utils.PointerTo[string]("id1"),
-						VulnerabilityInfo: &models.VulnerabilityInfo{
-							Description:       utils.StringPtr("desc1"),
-							Severity:          utils.PointerTo[models.VulnerabilitySeverity](models.CRITICAL),
-							VulnerabilityName: utils.StringPtr("CVE-1"),
-						},
+						Description:       utils.PointerTo("desc1"),
+						Severity:          utils.PointerTo(models.CRITICAL),
+						VulnerabilityName: utils.PointerTo("CVE-1"),
 					},
 				}),
 			},
 			want: &models.VulnerabilityScanSummary{
-				TotalCriticalVulnerabilities:   utils.PointerTo[int](1),
-				TotalHighVulnerabilities:       utils.PointerTo[int](0),
-				TotalMediumVulnerabilities:     utils.PointerTo[int](0),
-				TotalLowVulnerabilities:        utils.PointerTo[int](0),
-				TotalNegligibleVulnerabilities: utils.PointerTo[int](0),
+				TotalCriticalVulnerabilities:   utils.PointerTo(1),
+				TotalHighVulnerabilities:       utils.PointerTo(0),
+				TotalMediumVulnerabilities:     utils.PointerTo(0),
+				TotalLowVulnerabilities:        utils.PointerTo(0),
+				TotalNegligibleVulnerabilities: utils.PointerTo(0),
 			},
 		},
 		{
 			name: "check all severity types",
 			args: args{
-				vulnerabilities: utils.PointerTo[[]models.Vulnerability]([]models.Vulnerability{
+				vulnerabilities: utils.PointerTo([]models.Vulnerability{
 					{
-						Id: utils.PointerTo[string]("id1"),
-						VulnerabilityInfo: &models.VulnerabilityInfo{
-							Description:       utils.StringPtr("desc1"),
-							Severity:          utils.PointerTo[models.VulnerabilitySeverity](models.CRITICAL),
-							VulnerabilityName: utils.StringPtr("CVE-1"),
-						},
+						Description:       utils.PointerTo("desc1"),
+						Severity:          utils.PointerTo(models.CRITICAL),
+						VulnerabilityName: utils.PointerTo("CVE-1"),
 					},
 					{
-						Id: utils.PointerTo[string]("id2"),
-						VulnerabilityInfo: &models.VulnerabilityInfo{
-							Description:       utils.StringPtr("desc2"),
-							Severity:          utils.PointerTo[models.VulnerabilitySeverity](models.HIGH),
-							VulnerabilityName: utils.StringPtr("CVE-2"),
-						},
+						Description:       utils.PointerTo("desc2"),
+						Severity:          utils.PointerTo(models.HIGH),
+						VulnerabilityName: utils.PointerTo("CVE-2"),
 					},
 					{
-						Id: utils.PointerTo[string]("id3"),
-						VulnerabilityInfo: &models.VulnerabilityInfo{
-							Description:       utils.StringPtr("desc3"),
-							Severity:          utils.PointerTo[models.VulnerabilitySeverity](models.MEDIUM),
-							VulnerabilityName: utils.StringPtr("CVE-3"),
-						},
+						Description:       utils.PointerTo("desc3"),
+						Severity:          utils.PointerTo(models.MEDIUM),
+						VulnerabilityName: utils.PointerTo("CVE-3"),
 					},
 					{
-						Id: utils.PointerTo[string]("id4"),
-						VulnerabilityInfo: &models.VulnerabilityInfo{
-							Description:       utils.StringPtr("desc4"),
-							Severity:          utils.PointerTo[models.VulnerabilitySeverity](models.LOW),
-							VulnerabilityName: utils.StringPtr("CVE-4"),
-						},
+						Description:       utils.PointerTo("desc4"),
+						Severity:          utils.PointerTo(models.LOW),
+						VulnerabilityName: utils.PointerTo("CVE-4"),
 					},
 					{
-						Id: utils.PointerTo[string]("id5"),
-						VulnerabilityInfo: &models.VulnerabilityInfo{
-							Description:       utils.StringPtr("desc5"),
-							Severity:          utils.PointerTo[models.VulnerabilitySeverity](models.NEGLIGIBLE),
-							VulnerabilityName: utils.StringPtr("CVE-5"),
-						},
+						Description:       utils.PointerTo("desc5"),
+						Severity:          utils.PointerTo(models.NEGLIGIBLE),
+						VulnerabilityName: utils.PointerTo("CVE-5"),
 					},
 				}),
 			},
 			want: &models.VulnerabilityScanSummary{
-				TotalCriticalVulnerabilities:   utils.PointerTo[int](1),
-				TotalHighVulnerabilities:       utils.PointerTo[int](1),
-				TotalMediumVulnerabilities:     utils.PointerTo[int](1),
-				TotalLowVulnerabilities:        utils.PointerTo[int](1),
-				TotalNegligibleVulnerabilities: utils.PointerTo[int](1),
+				TotalCriticalVulnerabilities:   utils.PointerTo(1),
+				TotalHighVulnerabilities:       utils.PointerTo(1),
+				TotalMediumVulnerabilities:     utils.PointerTo(1),
+				TotalLowVulnerabilities:        utils.PointerTo(1),
+				TotalNegligibleVulnerabilities: utils.PointerTo(1),
 			},
 		},
 	}

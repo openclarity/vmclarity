@@ -171,8 +171,12 @@ type DirInfo struct {
 
 // Exploit defines model for Exploit.
 type Exploit struct {
-	ExploitInfo *ExploitInfo `json:"exploitInfo,omitempty"`
-	Id          *string      `json:"id,omitempty"`
+	CveID       *string   `json:"cveID,omitempty"`
+	Description *string   `json:"description,omitempty"`
+	Name        *string   `json:"name,omitempty"`
+	SourceDB    *string   `json:"sourceDB,omitempty"`
+	Title       *string   `json:"title,omitempty"`
+	Urls        *[]string `json:"urls,omitempty"`
 }
 
 // ExploitFindingInfo defines model for ExploitFindingInfo.
@@ -181,16 +185,6 @@ type ExploitFindingInfo struct {
 	Description *string   `json:"description,omitempty"`
 	Name        *string   `json:"name,omitempty"`
 	ObjectType  string    `json:"objectType"`
-	SourceDB    *string   `json:"sourceDB,omitempty"`
-	Title       *string   `json:"title,omitempty"`
-	Urls        *[]string `json:"urls,omitempty"`
-}
-
-// ExploitInfo defines model for ExploitInfo.
-type ExploitInfo struct {
-	CveID       *string   `json:"cveID,omitempty"`
-	Description *string   `json:"description,omitempty"`
-	Name        *string   `json:"name,omitempty"`
 	SourceDB    *string   `json:"sourceDB,omitempty"`
 	Title       *string   `json:"title,omitempty"`
 	Urls        *[]string `json:"urls,omitempty"`
@@ -247,8 +241,11 @@ type Findings struct {
 
 // Malware defines model for Malware.
 type Malware struct {
-	Id          *string      `json:"id,omitempty"`
-	MalwareInfo *MalwareInfo `json:"malwareInfo,omitempty"`
+	MalwareName *string      `json:"malwareName,omitempty"`
+	MalwareType *MalwareType `json:"malwareType,omitempty"`
+
+	// Path Path of the file that contains malware
+	Path *string `json:"path,omitempty"`
 }
 
 // MalwareConfig defines model for MalwareConfig.
@@ -266,15 +263,6 @@ type MalwareFindingInfo struct {
 	Path *string `json:"path,omitempty"`
 }
 
-// MalwareInfo defines model for MalwareInfo.
-type MalwareInfo struct {
-	MalwareName *string      `json:"malwareName,omitempty"`
-	MalwareType *MalwareType `json:"malwareType,omitempty"`
-
-	// Path Path of the file that contains malware
-	Path *string `json:"path,omitempty"`
-}
-
 // MalwareScan defines model for MalwareScan.
 type MalwareScan struct {
 	Malware *[]Malware `json:"malware,omitempty"`
@@ -285,22 +273,16 @@ type MalwareType string
 
 // Misconfiguration defines model for Misconfiguration.
 type Misconfiguration struct {
-	Id                   *string               `json:"id,omitempty"`
-	MisconfigurationInfo *MisconfigurationInfo `json:"misconfigurationInfo,omitempty"`
+	Description *string `json:"description,omitempty"`
+
+	// Path Path of the file that contains misconfigurations
+	Path *string `json:"path,omitempty"`
 }
 
 // MisconfigurationFindingInfo defines model for MisconfigurationFindingInfo.
 type MisconfigurationFindingInfo struct {
 	Description *string `json:"description,omitempty"`
 	ObjectType  string  `json:"objectType"`
-
-	// Path Path of the file that contains misconfigurations
-	Path *string `json:"path,omitempty"`
-}
-
-// MisconfigurationInfo defines model for MisconfigurationInfo.
-type MisconfigurationInfo struct {
-	Description *string `json:"description,omitempty"`
 
 	// Path Path of the file that contains misconfigurations
 	Path *string `json:"path,omitempty"`
@@ -318,8 +300,13 @@ type MisconfigurationsConfig struct {
 
 // Package defines model for Package.
 type Package struct {
-	Id          *string      `json:"id,omitempty"`
-	PackageInfo *PackageInfo `json:"packageInfo,omitempty"`
+	Cpes     *[]string `json:"cpes,omitempty"`
+	Language *string   `json:"language,omitempty"`
+	Licenses *[]string `json:"licenses,omitempty"`
+	Name     *string   `json:"name,omitempty"`
+	Purl     *string   `json:"purl,omitempty"`
+	Type     *string   `json:"type,omitempty"`
+	Version  *string   `json:"version,omitempty"`
 }
 
 // PackageFindingInfo defines model for PackageFindingInfo.
@@ -334,17 +321,6 @@ type PackageFindingInfo struct {
 	Version    *string   `json:"version,omitempty"`
 }
 
-// PackageInfo defines model for PackageInfo.
-type PackageInfo struct {
-	Cpes     *[]string `json:"cpes,omitempty"`
-	Language *string   `json:"language,omitempty"`
-	Licenses *[]string `json:"licenses,omitempty"`
-	Name     *string   `json:"name,omitempty"`
-	Purl     *string   `json:"purl,omitempty"`
-	Type     *string   `json:"type,omitempty"`
-	Version  *string   `json:"version,omitempty"`
-}
-
 // PodInfo defines model for PodInfo.
 type PodInfo struct {
 	Location   *string `json:"location,omitempty"`
@@ -354,22 +330,16 @@ type PodInfo struct {
 
 // Rootkit defines model for Rootkit.
 type Rootkit struct {
-	Id          *string      `json:"id,omitempty"`
-	RootkitInfo *RootkitInfo `json:"rootkitInfo,omitempty"`
-}
-
-// RootkitFindingInfo defines model for RootkitFindingInfo.
-type RootkitFindingInfo struct {
-	ObjectType string `json:"objectType"`
-
 	// Path Path of the file that contains rootkit
 	Path        *string      `json:"path,omitempty"`
 	RootkitName *string      `json:"rootkitName,omitempty"`
 	RootkitType *RootkitType `json:"rootkitType,omitempty"`
 }
 
-// RootkitInfo defines model for RootkitInfo.
-type RootkitInfo struct {
+// RootkitFindingInfo defines model for RootkitFindingInfo.
+type RootkitFindingInfo struct {
+	ObjectType string `json:"objectType"`
+
 	// Path Path of the file that contains rootkit
 	Path        *string      `json:"path,omitempty"`
 	RootkitName *string      `json:"rootkitName,omitempty"`
@@ -620,8 +590,15 @@ type Scopes struct {
 
 // Secret defines model for Secret.
 type Secret struct {
-	Id         *string     `json:"id,omitempty"`
-	SecretInfo *SecretInfo `json:"secretInfo,omitempty"`
+	Description *string `json:"description,omitempty"`
+	EndLine     *int    `json:"endLine,omitempty"`
+
+	// FilePath Name of the file containing the secret
+	FilePath *string `json:"filePath,omitempty"`
+
+	// Fingerprint Unique identification of the SecretInfo
+	Fingerprint *string `json:"fingerprint,omitempty"`
+	StartLine   *int    `json:"startLine,omitempty"`
 }
 
 // SecretFindingInfo defines model for SecretFindingInfo.
@@ -635,19 +612,6 @@ type SecretFindingInfo struct {
 	// Fingerprint Unique identification of the SecretInfo
 	Fingerprint *string `json:"fingerprint,omitempty"`
 	ObjectType  string  `json:"objectType"`
-	StartLine   *int    `json:"startLine,omitempty"`
-}
-
-// SecretInfo defines model for SecretInfo.
-type SecretInfo struct {
-	Description *string `json:"description,omitempty"`
-	EndLine     *int    `json:"endLine,omitempty"`
-
-	// FilePath Name of the file containing the secret
-	FilePath *string `json:"filePath,omitempty"`
-
-	// Fingerprint Unique identification of the SecretInfo
-	Fingerprint *string `json:"fingerprint,omitempty"`
 	StartLine   *int    `json:"startLine,omitempty"`
 }
 
@@ -814,8 +778,18 @@ type VulnerabilitiesConfig struct {
 
 // Vulnerability defines model for Vulnerability.
 type Vulnerability struct {
-	Id                *string            `json:"id,omitempty"`
-	VulnerabilityInfo *VulnerabilityInfo `json:"vulnerabilityInfo,omitempty"`
+	Cvss        *[]VulnerabilityCvss `json:"cvss,omitempty"`
+	Description *string              `json:"description,omitempty"`
+
+	// Distro Distro provides information about a detected Linux distribution.
+	Distro            *VulnerabilityDistro   `json:"distro,omitempty"`
+	Fix               *VulnerabilityFix      `json:"fix,omitempty"`
+	LayerId           *string                `json:"layerId,omitempty"`
+	Links             *[]string              `json:"links,omitempty"`
+	Package           *Package               `json:"package,omitempty"`
+	Path              *string                `json:"path,omitempty"`
+	Severity          *VulnerabilitySeverity `json:"severity,omitempty"`
+	VulnerabilityName *string                `json:"vulnerabilityName,omitempty"`
 }
 
 // VulnerabilityCvss defines model for VulnerabilityCvss.
@@ -855,7 +829,7 @@ type VulnerabilityFindingInfo struct {
 	LayerId           *string                `json:"layerId,omitempty"`
 	Links             *[]string              `json:"links,omitempty"`
 	ObjectType        string                 `json:"objectType"`
-	Package           *PackageInfo           `json:"package,omitempty"`
+	Package           *Package               `json:"package,omitempty"`
 	Path              *string                `json:"path,omitempty"`
 	Severity          *VulnerabilitySeverity `json:"severity,omitempty"`
 	VulnerabilityName *string                `json:"vulnerabilityName,omitempty"`
@@ -865,22 +839,6 @@ type VulnerabilityFindingInfo struct {
 type VulnerabilityFix struct {
 	State    *string   `json:"state,omitempty"`
 	Versions *[]string `json:"versions,omitempty"`
-}
-
-// VulnerabilityInfo defines model for VulnerabilityInfo.
-type VulnerabilityInfo struct {
-	Cvss        *[]VulnerabilityCvss `json:"cvss,omitempty"`
-	Description *string              `json:"description,omitempty"`
-
-	// Distro Distro provides information about a detected Linux distribution.
-	Distro            *VulnerabilityDistro   `json:"distro,omitempty"`
-	Fix               *VulnerabilityFix      `json:"fix,omitempty"`
-	LayerId           *string                `json:"layerId,omitempty"`
-	Links             *[]string              `json:"links,omitempty"`
-	Package           *PackageInfo           `json:"package,omitempty"`
-	Path              *string                `json:"path,omitempty"`
-	Severity          *VulnerabilitySeverity `json:"severity,omitempty"`
-	VulnerabilityName *string                `json:"vulnerabilityName,omitempty"`
 }
 
 // VulnerabilityScan defines model for VulnerabilityScan.

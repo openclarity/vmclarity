@@ -21,6 +21,7 @@ import (
 
 	cdx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/openclarity/kubeclarity/shared/pkg/scanner"
+	"github.com/openclarity/kubeclarity/shared/pkg/utils/cyclonedx_helper"
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 	"github.com/openclarity/vmclarity/shared/pkg/families"
@@ -53,11 +54,7 @@ func convertSBOMResultToAPIModel(sbomResults *sbom.Results) *models.SbomScan {
 
 	if sbomResults.SBOM.Components != nil {
 		for _, component := range *sbomResults.SBOM.Components {
-			pkg := models.Package{
-				Id:          utils.PointerTo(component.BOMRef),
-				PackageInfo: convertPackageInfoToAPIModel(component),
-			}
-			packages = append(packages, pkg)
+			packages = append(packages, *convertPackageInfoToAPIModel(component))
 		}
 	}
 
@@ -66,10 +63,10 @@ func convertSBOMResultToAPIModel(sbomResults *sbom.Results) *models.SbomScan {
 	}
 }
 
-func convertPackageInfoToAPIModel(component cdx.Component) *models.PackageInfo {
-	return &models.PackageInfo{
+func convertPackageInfoToAPIModel(component cdx.Component) *models.Package {
+	return &models.Package{
 		Cpes:     utils.PointerTo([]string{component.CPE}),
-		Language: utils.PointerTo(""), // TODO: Where do we get the language from?
+		Language: utils.PointerTo(cyclonedx_helper.GetComponentLanguage(component)),
 		Licenses: convertPackageLicencesToAPIModel(component.Licenses),
 		Name:     utils.PointerTo(component.Name),
 		Purl:     utils.PointerTo(component.PackageURL),
@@ -94,7 +91,7 @@ func convertPackageLicencesToAPIModel(licenses *cdx.Licenses) *[]string {
 }
 
 func convertVulnResultToAPIModel(vulnerabilitiesResults *vulnerabilities.Results) *models.VulnerabilityScan {
-	vulnerabilities := []models.Vulnerability{}
+	var vuls []models.Vulnerability
 	for _, vulCandidates := range vulnerabilitiesResults.MergedResults.MergedVulnerabilitiesByKey {
 		if len(vulCandidates) < 1 {
 			continue
@@ -103,25 +100,22 @@ func convertVulnResultToAPIModel(vulnerabilitiesResults *vulnerabilities.Results
 		vulCandidate := vulCandidates[0]
 
 		vul := models.Vulnerability{
-			Id: utils.StringPtr(vulCandidate.ID),
-			VulnerabilityInfo: &models.VulnerabilityInfo{
-				Cvss:              convertVulnCvssToAPIModel(vulCandidate.Vulnerability.CVSS),
-				Description:       utils.PointerTo(vulCandidate.Vulnerability.Description),
-				Distro:            convertVulnDistroToAPIModel(vulCandidate.Vulnerability.Distro),
-				Fix:               convertVulnFixToAPIModel(vulCandidate.Vulnerability.Fix),
-				LayerId:           utils.PointerTo(vulCandidate.Vulnerability.LayerID),
-				Links:             utils.PointerTo(vulCandidate.Vulnerability.Links),
-				Package:           convertVulnPackageToAPIModel(vulCandidate.Vulnerability.Package),
-				Path:              utils.PointerTo(vulCandidate.Vulnerability.Path),
-				Severity:          utils.PointerTo(models.VulnerabilitySeverity(vulCandidate.Vulnerability.Severity)),
-				VulnerabilityName: utils.PointerTo(vulCandidate.Vulnerability.ID),
-			},
+			Cvss:              convertVulnCvssToAPIModel(vulCandidate.Vulnerability.CVSS),
+			Description:       utils.PointerTo(vulCandidate.Vulnerability.Description),
+			Distro:            convertVulnDistroToAPIModel(vulCandidate.Vulnerability.Distro),
+			Fix:               convertVulnFixToAPIModel(vulCandidate.Vulnerability.Fix),
+			LayerId:           utils.PointerTo(vulCandidate.Vulnerability.LayerID),
+			Links:             utils.PointerTo(vulCandidate.Vulnerability.Links),
+			Package:           convertVulnPackageToAPIModel(vulCandidate.Vulnerability.Package),
+			Path:              utils.PointerTo(vulCandidate.Vulnerability.Path),
+			Severity:          utils.PointerTo(models.VulnerabilitySeverity(vulCandidate.Vulnerability.Severity)),
+			VulnerabilityName: utils.PointerTo(vulCandidate.Vulnerability.ID),
 		}
-		vulnerabilities = append(vulnerabilities, vul)
+		vuls = append(vuls, vul)
 	}
 
 	return &models.VulnerabilityScan{
-		Vulnerabilities: &vulnerabilities,
+		Vulnerabilities: &vuls,
 	}
 }
 
@@ -140,8 +134,8 @@ func convertVulnDistroToAPIModel(distro scanner.Distro) *models.VulnerabilityDis
 	}
 }
 
-func convertVulnPackageToAPIModel(p scanner.Package) *models.PackageInfo {
-	return &models.PackageInfo{
+func convertVulnPackageToAPIModel(p scanner.Package) *models.Package {
+	return &models.Package{
 		Cpes:     utils.PointerTo(p.CPEs),
 		Language: utils.PointerTo(p.Language),
 		Licenses: utils.PointerTo(p.Licenses),
@@ -389,14 +383,11 @@ func convertSecretsResultToAPIModel(secretsResults *secrets.Results) *models.Sec
 		for i := range resultsCandidate.Findings {
 			finding := resultsCandidate.Findings[i]
 			secretsSlice = append(secretsSlice, models.Secret{
-				SecretInfo: &models.SecretInfo{
-					Description: &finding.Description,
-					EndLine:     &finding.EndLine,
-					FilePath:    &finding.File,
-					Fingerprint: &finding.Fingerprint,
-					StartLine:   &finding.StartLine,
-				},
-				Id: &finding.Fingerprint, // TODO: Do we need the ID in the secret?
+				Description: &finding.Description,
+				EndLine:     &finding.EndLine,
+				FilePath:    &finding.File,
+				Fingerprint: &finding.Fingerprint,
+				StartLine:   &finding.StartLine,
 			})
 		}
 	}
@@ -421,15 +412,12 @@ func convertExploitsResultToAPIModel(exploitsResults *exploits.Results) *models.
 	for i := range exploitsResults.Exploits {
 		exploit := exploitsResults.Exploits[i]
 		retExploits = append(retExploits, models.Exploit{
-			ExploitInfo: &models.ExploitInfo{
-				CveID:       &exploit.CveID,
-				Description: &exploit.Description,
-				Name:        &exploit.Name,
-				SourceDB:    &exploit.SourceDB,
-				Title:       &exploit.Title,
-				Urls:        &exploit.URLs,
-			},
-			Id: &exploit.ID,
+			CveID:       &exploit.CveID,
+			Description: &exploit.Description,
+			Name:        &exploit.Name,
+			SourceDB:    &exploit.SourceDB,
+			Title:       &exploit.Title,
+			Urls:        &exploit.URLs,
 		})
 	}
 

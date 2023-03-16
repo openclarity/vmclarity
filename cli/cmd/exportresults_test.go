@@ -100,28 +100,22 @@ func Test_convertSBOMResultToAPIModel(t *testing.T) {
 				sbomScan: &models.SbomScan{
 					Packages: &[]models.Package{
 						{
-							Id: utils.StringPtr("bomref1"),
-							PackageInfo: &models.PackageInfo{
-								Cpes:     utils.PointerTo([]string{"cpe1"}),
-								Language: utils.PointerTo(""),
-								Licenses: utils.PointerTo([]string{"lic1", "lic2"}),
-								Name:     utils.StringPtr("testcomponent1"),
-								Purl:     utils.StringPtr("pkg:pypi/testcomponent1@v10.0.0-foo"),
-								Type:     utils.PointerTo(string(cdx.ComponentTypeLibrary)),
-								Version:  utils.StringPtr("v10.0.0-foo1"),
-							},
+							Cpes:     utils.PointerTo([]string{"cpe1"}),
+							Language: utils.PointerTo("python"),
+							Licenses: utils.PointerTo([]string{"lic1", "lic2"}),
+							Name:     utils.StringPtr("testcomponent1"),
+							Purl:     utils.StringPtr("pkg:pypi/testcomponent1@v10.0.0-foo"),
+							Type:     utils.PointerTo(string(cdx.ComponentTypeLibrary)),
+							Version:  utils.StringPtr("v10.0.0-foo1"),
 						},
 						{
-							Id: utils.StringPtr("bomref2"),
-							PackageInfo: &models.PackageInfo{
-								Cpes:     utils.PointerTo([]string{"cpe2"}),
-								Language: utils.PointerTo(""),
-								Licenses: utils.PointerTo([]string{"lic3", "lic4"}),
-								Name:     utils.StringPtr("testcomponent2"),
-								Purl:     utils.StringPtr("pkg:pypi/testcomponent2@v10.0.0-foo"),
-								Type:     utils.PointerTo(string(cdx.ComponentTypeLibrary)),
-								Version:  utils.StringPtr("v10.0.0-foo2"),
-							},
+							Cpes:     utils.PointerTo([]string{"cpe2"}),
+							Language: utils.PointerTo("python"),
+							Licenses: utils.PointerTo([]string{"lic3", "lic4"}),
+							Name:     utils.StringPtr("testcomponent2"),
+							Purl:     utils.StringPtr("pkg:pypi/testcomponent2@v10.0.0-foo"),
+							Type:     utils.PointerTo(string(cdx.ComponentTypeLibrary)),
+							Version:  utils.StringPtr("v10.0.0-foo2"),
 						},
 					},
 				},
@@ -147,7 +141,7 @@ func Test_convertSBOMResultToAPIModel(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := convertSBOMResultToAPIModel(tt.args.result)
-			if diff := cmp.Diff(tt.want.sbomScan, got, cmpopts.SortSlices(func(a, b models.Package) bool { return *a.Id < *b.Id })); diff != "" {
+			if diff := cmp.Diff(tt.want.sbomScan, got, cmpopts.SortSlices(func(a, b models.Package) bool { return *a.Purl < *b.Purl })); diff != "" {
 				t.Errorf("convertSBOMResultToAPIModel() mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -283,103 +277,96 @@ func Test_convertVulnResultToAPIModel(t *testing.T) {
 				vulScan: &models.VulnerabilityScan{
 					Vulnerabilities: &[]models.Vulnerability{
 						{
-							Id: utils.StringPtr("id1"),
-							VulnerabilityInfo: &models.VulnerabilityInfo{
-								Cvss: utils.PointerTo([]models.VulnerabilityCvss{
-									{
-										Metrics: &models.VulnerabilityCvssMetrics{
-											BaseScore:           utils.PointerTo[float32](1),
-											ExploitabilityScore: nil,
-											ImpactScore:         nil,
-										},
-										Vector:  utils.PointerTo("vector1"),
-										Version: utils.PointerTo("v1"),
+							Cvss: utils.PointerTo([]models.VulnerabilityCvss{
+								{
+									Metrics: &models.VulnerabilityCvssMetrics{
+										BaseScore:           utils.PointerTo[float32](1),
+										ExploitabilityScore: nil,
+										ImpactScore:         nil,
 									},
-									{
-										Metrics: &models.VulnerabilityCvssMetrics{
-											BaseScore:           utils.PointerTo[float32](2),
-											ExploitabilityScore: utils.PointerTo[float32](2.1),
-											ImpactScore:         utils.PointerTo[float32](2.2),
-										},
-										Vector:  utils.PointerTo("vector2"),
-										Version: utils.PointerTo("v2"),
+									Vector:  utils.PointerTo("vector1"),
+									Version: utils.PointerTo("v1"),
+								},
+								{
+									Metrics: &models.VulnerabilityCvssMetrics{
+										BaseScore:           utils.PointerTo[float32](2),
+										ExploitabilityScore: utils.PointerTo[float32](2.1),
+										ImpactScore:         utils.PointerTo[float32](2.2),
 									},
-								}),
-								Description: utils.StringPtr("testbleed"),
-								Distro: &models.VulnerabilityDistro{
-									IDLike:  utils.PointerTo([]string{"IDLike1", "IDLike2"}),
-									Name:    utils.PointerTo("distro1"),
-									Version: utils.PointerTo("distrov1"),
+									Vector:  utils.PointerTo("vector2"),
+									Version: utils.PointerTo("v2"),
 								},
-								Fix: &models.VulnerabilityFix{
-									State:    utils.PointerTo("fixed"),
-									Versions: utils.PointerTo([]string{"fv1", "fv2"}),
-								},
-								LayerId: utils.PointerTo("lid1"),
-								Links:   utils.PointerTo([]string{"link1", "link2"}),
-								Package: &models.PackageInfo{
-									Cpes:     utils.PointerTo([]string{"cpe1", "cpe2"}),
-									Language: utils.PointerTo("pl1"),
-									Licenses: utils.PointerTo([]string{"plic1", "plic2"}),
-									Name:     utils.PointerTo("package1"),
-									Purl:     utils.PointerTo("purl1"),
-									Type:     utils.PointerTo("pt1"),
-									Version:  utils.PointerTo("pv1"),
-								},
-								Path:              utils.PointerTo("path1"),
-								Severity:          utils.PointerTo[models.VulnerabilitySeverity](models.CRITICAL),
-								VulnerabilityName: utils.StringPtr("CVE-test-test-foo"),
+							}),
+							Description: utils.StringPtr("testbleed"),
+							Distro: &models.VulnerabilityDistro{
+								IDLike:  utils.PointerTo([]string{"IDLike1", "IDLike2"}),
+								Name:    utils.PointerTo("distro1"),
+								Version: utils.PointerTo("distrov1"),
 							},
+							Fix: &models.VulnerabilityFix{
+								State:    utils.PointerTo("fixed"),
+								Versions: utils.PointerTo([]string{"fv1", "fv2"}),
+							},
+							LayerId: utils.PointerTo("lid1"),
+							Links:   utils.PointerTo([]string{"link1", "link2"}),
+							Package: &models.Package{
+								Cpes:     utils.PointerTo([]string{"cpe1", "cpe2"}),
+								Language: utils.PointerTo("pl1"),
+								Licenses: utils.PointerTo([]string{"plic1", "plic2"}),
+								Name:     utils.PointerTo("package1"),
+								Purl:     utils.PointerTo("purl1"),
+								Type:     utils.PointerTo("pt1"),
+								Version:  utils.PointerTo("pv1"),
+							},
+							Path:              utils.PointerTo("path1"),
+							Severity:          utils.PointerTo[models.VulnerabilitySeverity](models.CRITICAL),
+							VulnerabilityName: utils.StringPtr("CVE-test-test-foo"),
 						},
 						{
-							Id: utils.StringPtr("id2"),
-							VulnerabilityInfo: &models.VulnerabilityInfo{
-								Cvss: utils.PointerTo([]models.VulnerabilityCvss{
-									{
-										Metrics: &models.VulnerabilityCvssMetrics{
-											BaseScore:           utils.PointerTo[float32](3),
-											ExploitabilityScore: nil,
-											ImpactScore:         nil,
-										},
-										Vector:  utils.PointerTo("vector3"),
-										Version: utils.PointerTo("v3"),
+							Cvss: utils.PointerTo([]models.VulnerabilityCvss{
+								{
+									Metrics: &models.VulnerabilityCvssMetrics{
+										BaseScore:           utils.PointerTo[float32](3),
+										ExploitabilityScore: nil,
+										ImpactScore:         nil,
 									},
-									{
-										Metrics: &models.VulnerabilityCvssMetrics{
-											BaseScore:           utils.PointerTo[float32](4),
-											ExploitabilityScore: utils.PointerTo[float32](4.1),
-											ImpactScore:         utils.PointerTo[float32](4.2),
-										},
-										Vector:  utils.PointerTo("vector4"),
-										Version: utils.PointerTo("v4"),
+									Vector:  utils.PointerTo("vector3"),
+									Version: utils.PointerTo("v3"),
+								},
+								{
+									Metrics: &models.VulnerabilityCvssMetrics{
+										BaseScore:           utils.PointerTo[float32](4),
+										ExploitabilityScore: utils.PointerTo[float32](4.1),
+										ImpactScore:         utils.PointerTo[float32](4.2),
 									},
-								}),
-								Description: utils.StringPtr("solartest"),
-								Distro: &models.VulnerabilityDistro{
-									IDLike:  utils.PointerTo([]string{"IDLike3", "IDLike4"}),
-									Name:    utils.PointerTo("distro2"),
-									Version: utils.PointerTo("distrov2"),
+									Vector:  utils.PointerTo("vector4"),
+									Version: utils.PointerTo("v4"),
 								},
-								Fix: &models.VulnerabilityFix{
-									State:    utils.PointerTo("not-fixed"),
-									Versions: utils.PointerTo([]string{"fv3", "fv4"}),
-								},
-								LayerId: utils.PointerTo("lid2"),
-								Links:   utils.PointerTo([]string{"link3", "link4"}),
-								Package: &models.PackageInfo{
-									Cpes:     utils.PointerTo([]string{"cpe3", "cpe4"}),
-									Language: utils.PointerTo("pl2"),
-									Licenses: utils.PointerTo([]string{"plic3", "plic4"}),
-									Name:     utils.PointerTo("package2"),
-									Purl:     utils.PointerTo("purl2"),
-									Type:     utils.PointerTo("pt2"),
-									Version:  utils.PointerTo("pv2"),
-								},
-								Path:              utils.PointerTo("path2"),
-								Severity:          utils.PointerTo[models.VulnerabilitySeverity](models.HIGH),
-								VulnerabilityName: utils.StringPtr("CVE-test-test-bar"),
+							}),
+							Description: utils.StringPtr("solartest"),
+							Distro: &models.VulnerabilityDistro{
+								IDLike:  utils.PointerTo([]string{"IDLike3", "IDLike4"}),
+								Name:    utils.PointerTo("distro2"),
+								Version: utils.PointerTo("distrov2"),
 							},
-						},
+							Fix: &models.VulnerabilityFix{
+								State:    utils.PointerTo("not-fixed"),
+								Versions: utils.PointerTo([]string{"fv3", "fv4"}),
+							},
+							LayerId: utils.PointerTo("lid2"),
+							Links:   utils.PointerTo([]string{"link3", "link4"}),
+							Package: &models.Package{
+								Cpes:     utils.PointerTo([]string{"cpe3", "cpe4"}),
+								Language: utils.PointerTo("pl2"),
+								Licenses: utils.PointerTo([]string{"plic3", "plic4"}),
+								Name:     utils.PointerTo("package2"),
+								Purl:     utils.PointerTo("purl2"),
+								Type:     utils.PointerTo("pt2"),
+								Version:  utils.PointerTo("pv2"),
+							},
+							Path:              utils.PointerTo("path2"),
+							Severity:          utils.PointerTo[models.VulnerabilitySeverity](models.HIGH),
+							VulnerabilityName: utils.StringPtr("CVE-test-test-bar")},
 					},
 				},
 			},
@@ -389,7 +376,7 @@ func Test_convertVulnResultToAPIModel(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := convertVulnResultToAPIModel(tt.args.result)
-			if diff := cmp.Diff(tt.want.vulScan, got, cmpopts.SortSlices(func(a, b models.Vulnerability) bool { return *a.Id < *b.Id })); diff != "" {
+			if diff := cmp.Diff(tt.want.vulScan, got, cmpopts.SortSlices(func(a, b models.Vulnerability) bool { return *a.VulnerabilityName < *b.VulnerabilityName })); diff != "" {
 				t.Errorf("convertVulnResultToAPIModel() mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -480,34 +467,25 @@ func Test_convertSecretsResultToAPIModel(t *testing.T) {
 			want: &models.SecretScan{
 				Secrets: &[]models.Secret{
 					{
-						SecretInfo: &models.SecretInfo{
-							Description: &finding1.Description,
-							EndLine:     &finding1.EndLine,
-							FilePath:    &finding1.File,
-							Fingerprint: &finding1.Fingerprint,
-							StartLine:   &finding1.StartLine,
-						},
-						Id: &finding1.Fingerprint,
+						Description: &finding1.Description,
+						EndLine:     &finding1.EndLine,
+						FilePath:    &finding1.File,
+						Fingerprint: &finding1.Fingerprint,
+						StartLine:   &finding1.StartLine,
 					},
 					{
-						SecretInfo: &models.SecretInfo{
-							Description: &finding2.Description,
-							EndLine:     &finding2.EndLine,
-							FilePath:    &finding2.File,
-							Fingerprint: &finding2.Fingerprint,
-							StartLine:   &finding2.StartLine,
-						},
-						Id: &finding2.Fingerprint,
+						Description: &finding2.Description,
+						EndLine:     &finding2.EndLine,
+						FilePath:    &finding2.File,
+						Fingerprint: &finding2.Fingerprint,
+						StartLine:   &finding2.StartLine,
 					},
 					{
-						SecretInfo: &models.SecretInfo{
-							Description: &finding3.Description,
-							EndLine:     &finding3.EndLine,
-							FilePath:    &finding3.File,
-							Fingerprint: &finding3.Fingerprint,
-							StartLine:   &finding3.StartLine,
-						},
-						Id: &finding3.Fingerprint,
+						Description: &finding3.Description,
+						EndLine:     &finding3.EndLine,
+						FilePath:    &finding3.File,
+						Fingerprint: &finding3.Fingerprint,
+						StartLine:   &finding3.StartLine,
 					},
 				},
 			},
@@ -516,7 +494,7 @@ func Test_convertSecretsResultToAPIModel(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := convertSecretsResultToAPIModel(tt.args.secretsResults)
-			if diff := cmp.Diff(tt.want, got, cmpopts.SortSlices(func(a, b models.Secret) bool { return *a.Id < *b.Id })); diff != "" {
+			if diff := cmp.Diff(tt.want, got, cmpopts.SortSlices(func(a, b models.Secret) bool { return *a.Fingerprint < *b.Fingerprint })); diff != "" {
 				t.Errorf("convertSBOMResultToAPIModel() mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -595,37 +573,28 @@ func Test_convertExploitsResultToAPIModel(t *testing.T) {
 			want: &models.ExploitScan{
 				Exploits: &[]models.Exploit{
 					{
-						ExploitInfo: &models.ExploitInfo{
-							CveID:       utils.StringPtr(exploit1.CveID),
-							Description: utils.StringPtr(exploit1.Description),
-							Name:        utils.StringPtr(exploit1.Name),
-							SourceDB:    utils.StringPtr(exploit1.SourceDB),
-							Title:       utils.StringPtr(exploit1.Title),
-							Urls:        &exploit1.URLs,
-						},
-						Id: utils.StringPtr(exploit1.ID),
+						CveID:       utils.StringPtr(exploit1.CveID),
+						Description: utils.StringPtr(exploit1.Description),
+						Name:        utils.StringPtr(exploit1.Name),
+						SourceDB:    utils.StringPtr(exploit1.SourceDB),
+						Title:       utils.StringPtr(exploit1.Title),
+						Urls:        &exploit1.URLs,
 					},
 					{
-						ExploitInfo: &models.ExploitInfo{
-							CveID:       utils.StringPtr(exploit2.CveID),
-							Description: utils.StringPtr(exploit2.Description),
-							Name:        utils.StringPtr(exploit2.Name),
-							SourceDB:    utils.StringPtr(exploit2.SourceDB),
-							Title:       utils.StringPtr(exploit2.Title),
-							Urls:        &exploit2.URLs,
-						},
-						Id: utils.StringPtr(exploit2.ID),
+						CveID:       utils.StringPtr(exploit2.CveID),
+						Description: utils.StringPtr(exploit2.Description),
+						Name:        utils.StringPtr(exploit2.Name),
+						SourceDB:    utils.StringPtr(exploit2.SourceDB),
+						Title:       utils.StringPtr(exploit2.Title),
+						Urls:        &exploit2.URLs,
 					},
 					{
-						ExploitInfo: &models.ExploitInfo{
-							CveID:       utils.StringPtr(exploit3.CveID),
-							Description: utils.StringPtr(exploit3.Description),
-							Name:        utils.StringPtr(exploit3.Name),
-							SourceDB:    utils.StringPtr(exploit3.SourceDB),
-							Title:       utils.StringPtr(exploit3.Title),
-							Urls:        &exploit3.URLs,
-						},
-						Id: utils.StringPtr(exploit3.ID),
+						CveID:       utils.StringPtr(exploit3.CveID),
+						Description: utils.StringPtr(exploit3.Description),
+						Name:        utils.StringPtr(exploit3.Name),
+						SourceDB:    utils.StringPtr(exploit3.SourceDB),
+						Title:       utils.StringPtr(exploit3.Title),
+						Urls:        &exploit3.URLs,
 					},
 				},
 			},
@@ -634,7 +603,7 @@ func Test_convertExploitsResultToAPIModel(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := convertExploitsResultToAPIModel(tt.args.exploitsResults)
-			if diff := cmp.Diff(tt.want, got, cmpopts.SortSlices(func(a, b models.Exploit) bool { return *a.Id < *b.Id })); diff != "" {
+			if diff := cmp.Diff(tt.want, got, cmpopts.SortSlices(func(a, b models.Exploit) bool { return *a.CveID < *b.CveID })); diff != "" {
 				t.Errorf("convertExploitsResultToAPIModel() mismatch (-want +got):\n%s", diff)
 			}
 		})
