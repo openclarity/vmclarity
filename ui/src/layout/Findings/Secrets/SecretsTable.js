@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import ContentContainer from 'components/ContentContainer';
 import Table from 'components/Table';
 import { APIS } from 'utils/systemConsts';
+import { getAssetAndScanColumnsConfigList } from 'layout/Findings/utils';
 
 const TABLE_TITLE = "secrets";
 
@@ -14,39 +15,22 @@ const SecretsTable = () => {
         {
             Header: "Fingerprint",
             id: "fingerprint",
-            accessor: "id",
+            accessor: "findingInfo.fingerprint",
             disableSort: true
         },
         {
             Header: "Description",
             id: "description",
-            accessor: "description",
+            accessor: "findingInfo.description",
             disableSort: true
         },
         {
             Header: "FilePath",
-            id: "filePath",
-            accessor: "filePath",
+            id: "findingInfo",
+            accessor: "findingInfo.filePath",
             disableSort: true
         },
-        {
-            Header: "Asset name",
-            id: "assetName",
-            accessor: "assetName",
-            disableSort: true
-        },
-        {
-            Header: "Asset location",
-            id: "assetLocation",
-            accessor: "assetLocation",
-            disableSort: true
-        },
-        {
-            Header: "Scan",
-            id: "scan",
-            accessor: "scan",
-            disableSort: true
-        }
+        ...getAssetAndScanColumnsConfigList()
     ], []);
 
     return (
@@ -54,7 +38,8 @@ const SecretsTable = () => {
             <Table
                 columns={columns}
                 paginationItemsName={TABLE_TITLE.toLowerCase()}
-                url={APIS.SCANS}
+                url={APIS.FINDINGS}
+                filters={{"$filter": `findingInfo/objectType eq 'Secret'`, "$expand": "asset,scan"}}
                 noResultsTitle={TABLE_TITLE}
                 onLineClick={({id}) => navigate(`${pathname}/${id}`)}
             />

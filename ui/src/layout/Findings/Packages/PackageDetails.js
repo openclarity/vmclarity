@@ -15,7 +15,7 @@ const PACKAGE_DETAILS_PATHS = {
 const DetailsContent = ({data}) => {
     const {pathname} = useLocation();
     
-    const {id} = data;
+    const {id, scan, asset} = data;
     
     return (
         <TabbedPage
@@ -31,13 +31,13 @@ const DetailsContent = ({data}) => {
                     id: "asset",
                     title: "Asset details",
                     path: PACKAGE_DETAILS_PATHS.ASSET_DETAILS,
-                    component: () => <AssetDetails assetData={data} />
+                    component: () => <AssetDetails assetData={asset} />
                 },
                 {
                     id: "scan",
                     title: "Scan details",
                     path: PACKAGE_DETAILS_PATHS.SCAN_DETAILS,
-                    component: () => <ScanDetails scanData={data} />
+                    component: () => <ScanDetails scanData={scan} />
                 }
             ]}
             withInnerPadding={false}
@@ -47,10 +47,9 @@ const DetailsContent = ({data}) => {
 
 const PackageDetails = () => (
     <DetailsPageWrapper
-        // className="asset-details-page-wrapper"
         backTitle="Packages"
-        getUrl={({id}) => `${APIS.SCANS}/${id}?$expand=ScanConfig`}
-        getTitleData={({scanConfigSnapshot, startTime}) => ({title: "zlib1g", subTitle: "1.2.11+deb1"})}
+        getUrl={({id}) => `${APIS.FINDINGS}/${id}?$expand=asset,scan`}
+        getTitleData={({findingInfo}) => ({title: findingInfo.name, subTitle: findingInfo.version})}
         detailsContent={props => <DetailsContent {...props} />}
     />
 )

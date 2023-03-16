@@ -15,7 +15,8 @@ export const APIS = {
     SCAN_CONFIGS: "scanConfigs",
     ASSETS: "targets",
     ASSET_SCANS: "scanResults",
-    SCOPES_DISCOVERY: "discovery/scopes"
+    SCOPES_DISCOVERY: "discovery/scopes",
+    FINDINGS: "findings"
 }
 
 export const FINDINGS_MAPPING = {

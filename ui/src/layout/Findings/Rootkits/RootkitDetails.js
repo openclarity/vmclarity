@@ -4,10 +4,10 @@ import DetailsPageWrapper from 'components/DetailsPageWrapper';
 import TabbedPage from 'components/TabbedPage';
 import { APIS } from 'utils/systemConsts';
 import { AssetDetails, ScanDetails } from 'layout/detail-displays';
-import TabSecretDetails from './TabSecretDetails';
+import TabRootkitDetails from './TabRootkitDetails';
 
-const SECRET_DETAILS_PATHS = {
-    SECRET_DETAILS: "",
+const ROOTKIT_DETAILS_PATHS = {
+    PACKAGE_DETAILS: "",
     ASSET_DETAILS: "asset",
     SCAN_DETAILS: "scan"
 }
@@ -23,20 +23,20 @@ const DetailsContent = ({data}) => {
             items={[
                 {
                     id: "general",
-                    title: "Secret details",
+                    title: "Rootkit details",
                     isIndex: true,
-                    component: () => <TabSecretDetails data={data} />
+                    component: () => <TabRootkitDetails data={data} />
                 },
                 {
                     id: "asset",
                     title: "Asset details",
-                    path: SECRET_DETAILS_PATHS.ASSET_DETAILS,
+                    path: ROOTKIT_DETAILS_PATHS.ASSET_DETAILS,
                     component: () => <AssetDetails assetData={asset} />
                 },
                 {
                     id: "scan",
                     title: "Scan details",
-                    path: SECRET_DETAILS_PATHS.SCAN_DETAILS,
+                    path: ROOTKIT_DETAILS_PATHS.SCAN_DETAILS,
                     component: () => <ScanDetails scanData={scan} />
                 }
             ]}
@@ -45,13 +45,13 @@ const DetailsContent = ({data}) => {
     )
 }
 
-const SecretDetails = () => (
+const RootkitDetails = () => (
     <DetailsPageWrapper
-        backTitle="Secrets"
+        backTitle="Rootkits"
         getUrl={({id}) => `${APIS.FINDINGS}/${id}?$expand=asset,scan`}
-        getTitleData={({findingInfo}) => ({title: findingInfo.fingerprint})}
+        getTitleData={({findingInfo}) => ({title: findingInfo.rootkitName})}
         detailsContent={props => <DetailsContent {...props} />}
     />
 )
 
-export default SecretDetails;
+export default RootkitDetails;

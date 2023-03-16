@@ -2,7 +2,11 @@ import React, { useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ContentContainer from 'components/ContentContainer';
 import Table from 'components/Table';
+import ExpandableList from 'components/ExpandableList';
 import { APIS } from 'utils/systemConsts';
+import { getAssetAndScanColumnsConfigList } from 'layout/Findings/utils';
+import SeverityWithCvssDisplay from './SeverityWithCvssDisplay';
+import { getHigestVersionCvssData } from './utils';
 
 const TABLE_TITLE = "vulnerabilities";
 
@@ -14,57 +18,53 @@ const VulnerabilitiesTable = () => {
         {
             Header: "Vulnerability name",
             id: "name",
-            accessor: "id",
+            accessor: "findingInfo.vulnerabilityName",
             disableSort: true
         },
         {
             Header: "Severity",
             id: "severity",
-            accessor: "severity",
+            Cell: ({row}) => {
+                const {id, findingInfo} = row.original;
+                const {severity, cvss} = findingInfo || {};
+                const cvssScoreData = getHigestVersionCvssData(cvss);
+                
+                return (
+                    <SeverityWithCvssDisplay
+                        severity={severity}
+                        cvssScore={cvssScoreData.score}
+                        cvssSeverity={cvssScoreData.severity.toLocaleUpperCase()}
+                        compareTooltipId={`severity-compare-tooltip-${id}`}
+                    />
+                )
+            },
             disableSort: true
         },
         {
             Header: "Package name",
             id: "packageName",
-            accessor: "packageName",
+            accessor: "findingInfo.package.name",
             disableSort: true
         },
         {
             Header: "Package version",
             id: "packageVersion",
-            accessor: "packageVersion",
+            accessor: "findingInfo.package.version",
             disableSort: true
         },
         {
-            Header: "Fix version",
-            id: "fixVersion",
-            accessor: "fixVersion",
+            Header: "Fix versions",
+            id: "fixVersions",
+            Cell: ({row}) => {
+                const {versions} = row.original.findingInfo?.fix || {};
+
+                return (
+                    <ExpandableList items={versions || []} />
+                )
+            },
             disableSort: true
         },
-        {
-            Header: "Exploits",
-            id: "exploits",
-            accessor: "exploits",
-            disableSort: true
-        },
-        {
-            Header: "Asset name",
-            id: "assetName",
-            accessor: "assetName",
-            disableSort: true
-        },
-        {
-            Header: "Asset location",
-            id: "assetLocation",
-            accessor: "assetLocation",
-            disableSort: true
-        },
-        {
-            Header: "Scan",
-            id: "scan",
-            accessor: "scan",
-            disableSort: true
-        }
+        ...getAssetAndScanColumnsConfigList()
     ], []);
 
     return (
@@ -72,7 +72,8 @@ const VulnerabilitiesTable = () => {
             <Table
                 columns={columns}
                 paginationItemsName={TABLE_TITLE.toLowerCase()}
-                url={APIS.SCANS}
+                url={APIS.FINDINGS}
+                filters={{"$filter": `findingInfo/objectType eq 'Vulnerability'`, "$expand": "asset,scan"}}
                 noResultsTitle={TABLE_TITLE}
                 onLineClick={({id}) => navigate(`${pathname}/${id}`)}
             />

@@ -2,8 +2,9 @@ import React, { useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ContentContainer from 'components/ContentContainer';
 import Table from 'components/Table';
+import ExpandableList from 'components/ExpandableList';
 import { APIS } from 'utils/systemConsts';
-import { getVulnerabilitiesColumnConfigItem } from 'utils/utils';
+import { getAssetAndScanColumnsConfigList } from 'layout/Findings/utils';
 
 const TABLE_TITLE = "packages";
 
@@ -15,46 +16,34 @@ const PackagesTable = () => {
         {
             Header: "Package name",
             id: "name",
-            accessor: "id",
+            accessor: "findingInfo.name",
             disableSort: true
         },
         {
             Header: "Version",
             id: "version",
-            accessor: "version",
+            accessor: "findingInfo.version",
             disableSort: true
         },
         {
             Header: "Languege",
             id: "languege",
-            accessor: "languege",
+            accessor: "findingInfo.language",
             disableSort: true
         },
         {
-            Header: "License",
-            id: "license",
-            accessor: "license",
+            Header: "Licenses",
+            id: "licenses",
+            Cell: ({row}) => {
+                const {licenses} = row.original.findingInfo || {};
+
+                return (
+                    <ExpandableList items={licenses || []} />
+                )
+            },
             disableSort: true
         },
-        getVulnerabilitiesColumnConfigItem({tableTitle: TABLE_TITLE}),
-        {
-            Header: "Asset name",
-            id: "assetName",
-            accessor: "assetName",
-            disableSort: true
-        },
-        {
-            Header: "Asset location",
-            id: "assetLocation",
-            accessor: "assetLocation",
-            disableSort: true
-        },
-        {
-            Header: "Scan",
-            id: "scan",
-            accessor: "scan",
-            disableSort: true
-        }
+        ...getAssetAndScanColumnsConfigList()
     ], []);
 
     return (
@@ -62,7 +51,8 @@ const PackagesTable = () => {
             <Table
                 columns={columns}
                 paginationItemsName={TABLE_TITLE.toLowerCase()}
-                url={APIS.SCANS}
+                url={APIS.FINDINGS}
+                filters={{"$filter": `findingInfo/objectType eq 'Package'`, "$expand": "asset,scan"}}
                 noResultsTitle={TABLE_TITLE}
                 onLineClick={({id}) => navigate(`${pathname}/${id}`)}
             />

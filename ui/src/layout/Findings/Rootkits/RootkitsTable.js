@@ -5,22 +5,22 @@ import Table from 'components/Table';
 import { APIS } from 'utils/systemConsts';
 import { getAssetAndScanColumnsConfigList } from 'layout/Findings/utils';
 
-const TABLE_TITLE = "malware";
+const TABLE_TITLE = "rootkits";
 
-const MalwareTable = () => {
+const RootkitsTable = () => {
     const navigate = useNavigate();
     const {pathname} = useLocation();
     
     const columns = useMemo(() => [
         {
-            Header: "Name",
-            id: "name",
-            accessor: "findingInfo.malwareName",
+            Header: "Rootkit name",
+            id: "rootkitName",
+            accessor: "findingInfo.rootkitName",
             disableSort: true
         },
         {
-            Header: "File path",
-            id: "filePath",
+            Header: "path",
+            id: "path",
             accessor: "findingInfo.path",
             disableSort: true
         },
@@ -33,7 +33,7 @@ const MalwareTable = () => {
                 columns={columns}
                 paginationItemsName={TABLE_TITLE.toLowerCase()}
                 url={APIS.FINDINGS}
-                filters={{"$filter": `findingInfo/objectType eq 'Malware'`, "$expand": "asset,scan"}}
+                filters={{"$filter": `findingInfo/objectType eq 'Rootkit'`, "$expand": "asset,scan"}}
                 noResultsTitle={TABLE_TITLE}
                 onLineClick={({id}) => navigate(`${pathname}/${id}`)}
             />
@@ -41,4 +41,4 @@ const MalwareTable = () => {
     )
 }
 
-export default MalwareTable;
+export default RootkitsTable;

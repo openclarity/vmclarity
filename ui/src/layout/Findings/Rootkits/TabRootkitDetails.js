@@ -2,18 +2,18 @@ import React from 'react';
 import TitleValueDisplay, { TitleValueDisplayRow } from 'components/TitleValueDisplay';
 import DoublePaneDisplay from 'components/DoublePaneDisplay';
 
-const TabMalwareDetails = ({data}) => {
-    const {malwareName, path} = data.findingInfo;
+const TabPackageDetails = ({data}) => {
+    const {rootkitName, path} = data.findingInfo;
 
     return (
         <DoublePaneDisplay
             leftPaneDisplay={() => (
                 <>
                     <TitleValueDisplayRow>
-                        <TitleValueDisplay title="Name">{malwareName}</TitleValueDisplay>
+                        <TitleValueDisplay title="Rootkit name">{rootkitName}</TitleValueDisplay>
                     </TitleValueDisplayRow>
                     <TitleValueDisplayRow>
-                    <TitleValueDisplay title="File path">{path}</TitleValueDisplay>
+                        <TitleValueDisplay title="Path">{path}</TitleValueDisplay>
                     </TitleValueDisplayRow>
                 </>  
             )}
@@ -21,4 +21,4 @@ const TabMalwareDetails = ({data}) => {
     )
 }
 
-export default TabMalwareDetails;
+export default TabPackageDetails;
