@@ -23,6 +23,7 @@ export const FINDINGS_PATHS = Object.keys(FINDINGS_TAB_ITEMS).reduce((acc, curr)
 
 const Findings = () => {
     const {pathname} = useLocation();
+    
     return (
         <TabbedPage
             redirectTo={`${pathname}/${FINDINGS_PATHS.VULNERABILITIES}`}
