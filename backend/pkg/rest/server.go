@@ -37,7 +37,7 @@ import (
 const (
 	shutdownTimeoutSec = 10
 	BaseURL            = "/api"
-	UIBackendBaseURL   = "/ui/backend"
+	UIBackendBaseURL   = "/ui/api"
 )
 
 type ServerImpl struct {
@@ -91,7 +91,7 @@ func createEchoServer(dbHandler databaseTypes.Database, client *backendclient.Ba
 	if err != nil {
 		return nil, fmt.Errorf("failed to load UI swagger spec: %v", err)
 	}
-	// Create a router group for the UI backend /ui/backend base URL
+	// Create a router group for the UI backend /ui/api base URL
 	uiBackendApiGroup := e.Group(UIBackendBaseURL)
 
 	uiBackendApiGroup.Use(middleware.OapiRequestValidator(uiBackendSwagger))

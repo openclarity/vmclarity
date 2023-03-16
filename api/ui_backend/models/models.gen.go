@@ -13,13 +13,13 @@ type RiskiestRegions struct {
 	Message *string `json:"message,omitempty"`
 }
 
-// OdataFilter defines model for odataFilter.
-type OdataFilter = string
+// ExampleFilter defines model for exampleFilter.
+type ExampleFilter = string
 
 // UnknownError An object that is returned in all cases of failures.
 type UnknownError = ApiResponse
 
 // GetDashboardRiskiestRegionsParams defines parameters for GetDashboardRiskiestRegions.
 type GetDashboardRiskiestRegionsParams struct {
-	Filter *OdataFilter `form:"$filter,omitempty" json:"$filter,omitempty"`
+	Example *ExampleFilter `form:"example,omitempty" json:"example,omitempty"`
 }

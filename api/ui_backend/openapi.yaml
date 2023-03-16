@@ -5,14 +5,14 @@ info:
   version: 1.0.0
 
 servers:
-  - url: /ui/backend
+  - url: /ui/api
 
 paths:
   /dashboard/riskiestRegions:
     get:
       summary: Get a list of riskiest regions for the dashboard.
       parameters:
-        - $ref: '#/components/parameters/odataFilter'
+        - $ref: '#/components/parameters/exampleFilter'
       responses:
         200:
           description: Success
@@ -49,8 +49,8 @@ components:
             $ref: '#/components/schemas/ApiResponse'
 
   parameters:
-    odataFilter:
-      name: "$filter"
+    exampleFilter:
+      name: "example"
       in: query
       schema:
         type: string

@@ -126,9 +126,9 @@ func NewGetDashboardRiskiestRegionsRequest(server string, params *GetDashboardRi
 
 	queryValues := queryURL.Query()
 
-	if params.Filter != nil {
+	if params.Example != nil {
 
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$filter", runtime.ParamLocationQuery, *params.Filter); err != nil {
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "example", runtime.ParamLocationQuery, *params.Example); err != nil {
 			return nil, err
 		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 			return nil, err

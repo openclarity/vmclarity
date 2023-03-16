@@ -37,11 +37,11 @@ func (w *ServerInterfaceWrapper) GetDashboardRiskiestRegions(ctx echo.Context) e
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetDashboardRiskiestRegionsParams
-	// ------------- Optional query parameter "$filter" -------------
+	// ------------- Optional query parameter "example" -------------
 
-	err = runtime.BindQueryParameter("form", true, false, "$filter", ctx.QueryParams(), &params.Filter)
+	err = runtime.BindQueryParameter("form", true, false, "example", ctx.QueryParams(), &params.Example)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter $filter: %s", err))
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter example: %s", err))
 	}
 
 	// Invoke the callback with all the unmarshalled arguments
@@ -84,14 +84,14 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/6xTT2/bPgz9KgJ/PRp2+tvNt2D/kMOwIUN3GXpgbDpRI0saSXcIAn/3QXKTtE63XXaz",
-	"+Mj3nqjnIzShj8GTV4H6CBEZe1LifAotKn6wTonT0Xqo4cdAfIACPPYENdx0E1yANDvqMfXpISZIlK3f",
-	"wjiOBTBJDF4o0975vQ8//XvmkHmb4JW8pk+M0dkG1QZfPUjwqXYhvmHqoIb/qovpakKlWka7fhKZJFuS",
-	"hm1MVFCfNA1l0YQ/DSbe57P1cTa59CZsHqhRoztUY8Uw6cCeWmO9QedMg0JiQmc6tG5gkhIKiBwisdrp",
-	"yj2J4DazM2H72bsD1MoDFVfbOlcmVRgLWFvZWxJd09YGL9ceTw2Gp44/GvirYCpZ34XcbNUl7Nuntw7Z",
-	"6sHcrczyy0qggEdimfRvy0W5SE5DJI/RQg1vykV5m2yg7rKDqkXZbQJyW/H1fbaU3z9Zzq+/aqGGj6Tv",
-	"TkPzHRQvsvr99XBcWqrnWR7vZ4n8f7H4Z0GcG30ljF+HpiERyECHg9PfkZ5dVi9+mpzfoe+RD9OaDBpn",
-	"RVMIeZYF0wU2uiNz3n85eRLix9PyBnZQQzXYaoPNnnwL4/34KwAA//9lcmw5HQQAAA==",
+	"H4sIAAAAAAAC/6xTTY/TQAz9KyPDMUq6cJvbii/1gEBFywXtwZs47exOZgbbWaiq/Hc0k21L2wUu3Fr7",
+	"+b039ssO2jikGCiogN1BQsaBlLj8o584JE/vnVfiXHABLHwfibdQQcCBwO5BUIG0Gxow43SbckuUXVjD",
+	"NE0VMEmKQagQ34SHEH+Ed8yx8LYxKAXNPzEl71pUF0NzLzHk2pH4JVMPFl40R9vN3JXmOrnVk8gs2ZG0",
+	"7FKmArvXNFREc/9pMPP+Pmt3Z5PXwcS7e2rV6AbVODFMOnKgzrhg0HvTopCY2JsenR+ZpIYKEsdErG5+",
+	"8kAiuC7sTNh9Cn4LVnmk6mJbh8qsClMFKycPjkRXtHYxyKXHPcDwjPirgX8K5pILfSxgpz73vn5845Gd",
+	"bs3N0lx/XgpU8Egss/5VvagX2WlMFDA5sPC6XtRX2QbqpjhoOpTNXUTuGr58z5rK/bPlcv1lBxY+kL7d",
+	"D53voDpJ67fnw3GENKdpnm7PMvlqsfhvUTy3+kwcv4xtSyJQGj2OXv9EenDZnHw2JcHjMCBv50UZNN6J",
+	"5hjyWRpMH9nohszhAvXsSYgf9+sb2YOFZnRNvt90O/0KAAD//+9O9F4dBAAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
