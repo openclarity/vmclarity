@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"time"
 
-	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/api/models"
@@ -208,7 +207,7 @@ func createExploitFindings(base models.Finding, exploits []models.Exploit) []mod
 	var ret []models.Finding
 	for _, exploit := range exploits {
 		val := base
-		convB, err := json.Marshal(*exploit.ExploitInfo)
+		convB, err := json.Marshal(exploit)
 		if err != nil {
 			log.Errorf("Failed to marshal: %v", err)
 			continue
@@ -235,7 +234,7 @@ func createPackageFindings(base models.Finding, packages []models.Package) []mod
 	var ret []models.Finding
 	for _, pkg := range packages {
 		val := base
-		convB, err := json.Marshal(*pkg.PackageInfo)
+		convB, err := json.Marshal(pkg)
 		if err != nil {
 			log.Errorf("Failed to marshal: %v", err)
 			continue
@@ -262,7 +261,7 @@ func createMalwareFindings(base models.Finding, malware []models.Malware) []mode
 	var ret []models.Finding
 	for _, mal := range malware {
 		val := base
-		convB, err := json.Marshal(*mal.MalwareInfo)
+		convB, err := json.Marshal(mal)
 		if err != nil {
 			log.Errorf("Failed to marshal: %v", err)
 			continue
@@ -289,7 +288,7 @@ func createSecretFindings(base models.Finding, secrets []models.Secret) []models
 	var ret []models.Finding
 	for _, secret := range secrets {
 		val := base
-		convB, err := json.Marshal(*secret.SecretInfo)
+		convB, err := json.Marshal(secret)
 		if err != nil {
 			log.Errorf("Failed to marshal: %v", err)
 			continue
@@ -316,7 +315,7 @@ func createMisconfigurationFindings(base models.Finding, misconfigurations []mod
 	var ret []models.Finding
 	for _, misconfiguration := range misconfigurations {
 		val := base
-		convB, err := json.Marshal(*misconfiguration.MisconfigurationInfo)
+		convB, err := json.Marshal(misconfiguration)
 		if err != nil {
 			log.Errorf("Failed to marshal: %v", err)
 			continue
@@ -343,7 +342,7 @@ func createRootkitFindings(base models.Finding, rootkits []models.Rootkit) []mod
 	var ret []models.Finding
 	for _, rootkit := range rootkits {
 		val := base
-		convB, err := json.Marshal(*rootkit.RootkitInfo)
+		convB, err := json.Marshal(rootkit)
 		if err != nil {
 			log.Errorf("Failed to marshal: %v", err)
 			continue
@@ -370,7 +369,7 @@ func createVulnerabilityFindings(base models.Finding, vulnerabilities []models.V
 	var ret []models.Finding
 	for _, vulnerability := range vulnerabilities {
 		val := base
-		convB, err := json.Marshal(*vulnerability.VulnerabilityInfo)
+		convB, err := json.Marshal(vulnerability)
 		if err != nil {
 			log.Errorf("Failed to marshal: %v", err)
 			continue
@@ -833,34 +832,25 @@ func createScanResults(scans []models.Scan) []models.TargetScanResult {
 func createSecretsResult() *[]models.Secret {
 	return &[]models.Secret{
 		{
-			Id: utils.PointerTo(uuid.NewV4().String()),
-			SecretInfo: &models.SecretInfo{
-				Description: utils.PointerTo("AWS Credentials"),
-				EndLine:     utils.PointerTo(43),
-				FilePath:    utils.PointerTo("/.aws/credentials"),
-				Fingerprint: utils.PointerTo("credentials:aws-access-token:4"),
-				StartLine:   utils.PointerTo(43),
-			},
+			Description: utils.PointerTo("AWS Credentials"),
+			EndLine:     utils.PointerTo(43),
+			FilePath:    utils.PointerTo("/.aws/credentials"),
+			Fingerprint: utils.PointerTo("credentials:aws-access-token:4"),
+			StartLine:   utils.PointerTo(43),
 		},
 		{
-			Id: utils.PointerTo(uuid.NewV4().String()),
-			SecretInfo: &models.SecretInfo{
-				Description: utils.PointerTo("export BUNDLE_ENTERPRISE__CONTRIBSYS__COM=cafebabe:deadbeef"),
-				EndLine:     utils.PointerTo(26),
-				FilePath:    utils.PointerTo("cmd/generate/config/rules/sidekiq.go"),
-				Fingerprint: utils.PointerTo("cd5226711335c68be1e720b318b7bc3135a30eb2:cmd/generate/config/rules/sidekiq.go:sidekiq-secret:23"),
-				StartLine:   utils.PointerTo(23),
-			},
+			Description: utils.PointerTo("export BUNDLE_ENTERPRISE__CONTRIBSYS__COM=cafebabe:deadbeef"),
+			EndLine:     utils.PointerTo(26),
+			FilePath:    utils.PointerTo("cmd/generate/config/rules/sidekiq.go"),
+			Fingerprint: utils.PointerTo("cd5226711335c68be1e720b318b7bc3135a30eb2:cmd/generate/config/rules/sidekiq.go:sidekiq-secret:23"),
+			StartLine:   utils.PointerTo(23),
 		},
 		{
-			Id: utils.PointerTo(uuid.NewV4().String()),
-			SecretInfo: &models.SecretInfo{
-				Description: utils.PointerTo("GitLab Personal Access Token"),
-				EndLine:     utils.PointerTo(7),
-				FilePath:    utils.PointerTo("Applications/Firefox.app/Contents/Resources/browser/omni.ja"),
-				Fingerprint: utils.PointerTo("Applications/Firefox.app/Contents/Resources/browser/omni.ja:generic-api-key:sfs2"),
-				StartLine:   utils.PointerTo(7),
-			},
+			Description: utils.PointerTo("GitLab Personal Access Token"),
+			EndLine:     utils.PointerTo(7),
+			FilePath:    utils.PointerTo("Applications/Firefox.app/Contents/Resources/browser/omni.ja"),
+			Fingerprint: utils.PointerTo("Applications/Firefox.app/Contents/Resources/browser/omni.ja:generic-api-key:sfs2"),
+			StartLine:   utils.PointerTo(7),
 		},
 	}
 }
@@ -868,25 +858,16 @@ func createSecretsResult() *[]models.Secret {
 func createRootkitsResult() *[]models.Rootkit {
 	return &[]models.Rootkit{
 		{
-			Id: utils.PointerTo(uuid.NewV4().String()),
-			RootkitInfo: &models.RootkitInfo{
-				Path:        utils.PointerTo("/usr/lwp-request"),
-				RootkitName: utils.PointerTo("Ambient's Rootkit (ARK)"),
-			},
+			Path:        utils.PointerTo("/usr/lwp-request"),
+			RootkitName: utils.PointerTo("Ambient's Rootkit (ARK)"),
 		},
 		{
-			Id: utils.PointerTo(uuid.NewV4().String()),
-			RootkitInfo: &models.RootkitInfo{
-				Path:        utils.PointerTo("/var/log/lastlog"),
-				RootkitName: utils.PointerTo("Linux.Xor.DDoS Malware"),
-			},
+			Path:        utils.PointerTo("/var/log/lastlog"),
+			RootkitName: utils.PointerTo("Linux.Xor.DDoS Malware"),
 		},
 		{
-			Id: utils.PointerTo(uuid.NewV4().String()),
-			RootkitInfo: &models.RootkitInfo{
-				Path:        utils.PointerTo("/var/adm/wtmpx"),
-				RootkitName: utils.PointerTo("Mumblehard backdoor/botnet"),
-			},
+			Path:        utils.PointerTo("/var/adm/wtmpx"),
+			RootkitName: utils.PointerTo("Mumblehard backdoor/botnet"),
 		},
 	}
 }
@@ -894,8 +875,111 @@ func createRootkitsResult() *[]models.Rootkit {
 func createPackagesResult() *[]models.Package {
 	return &[]models.Package{
 		{
-			Id: utils.PointerTo(uuid.NewV4().String()),
-			PackageInfo: &models.PackageInfo{
+			Cpes:     utils.PointerTo([]string{"cpe:2.3:a:curl:curl:7.74.0-1.3+deb11u3:*:*:*:*:*:*:*"}),
+			Language: utils.PointerTo("pl1"),
+			Licenses: utils.PointerTo([]string{"BSD-3-Clause", "BSD-4-Clause"}),
+			Name:     utils.PointerTo("curl"),
+			Purl:     utils.PointerTo("pkg:deb/debian/curl@7.74.0-1.3+deb11u3?arch=amd64&distro=debian-11"),
+			Type:     utils.PointerTo("deb"),
+			Version:  utils.PointerTo("7.74.0-1.3+deb11u3"),
+		},
+		{
+			Cpes:     utils.PointerTo([]string{"cpe:2.3:a:libtasn1-6:libtasn1-6:4.16.0-2:*:*:*:*:*:*:*", "cpe:2.3:a:libtasn1-6:libtasn1_6:4.16.0-2:*:*:*:*:*:*:*"}),
+			Language: utils.PointerTo(""),
+			Licenses: utils.PointerTo([]string{"GFDL-1.3-only", "GPL-3.0-only", "LGPL-2.1-only"}),
+			Name:     utils.PointerTo("libtasn1-6"),
+			Purl:     utils.PointerTo("pkg:deb/debian/libtasn1-6@4.16.0-2?arch=amd64&distro=debian-11"),
+			Type:     utils.PointerTo("deb"),
+			Version:  utils.PointerTo("4.16.0-2"),
+		},
+	}
+}
+
+func createExploitsResult() *[]models.Exploit {
+	return &[]models.Exploit{
+		{
+			CveID:       utils.PointerTo("CVE-2009-4091"),
+			Description: utils.PointerTo("Simplog 0.9.3.2 - Multiple Vulnerabilities"),
+			Name:        utils.PointerTo("10180"),
+			SourceDB:    utils.PointerTo("OffensiveSecurity"),
+			Title:       utils.PointerTo("10180"),
+			Urls:        utils.PointerTo([]string{"https://www.exploit-db.com/exploits/10180"}),
+		},
+		{
+			CveID:       utils.PointerTo("CVE-2006-2896"),
+			Description: utils.PointerTo("FunkBoard CF0.71 - 'profile.php' Remote User Pass Change"),
+			Name:        utils.PointerTo("1875"),
+			SourceDB:    utils.PointerTo("OffensiveSecurity"),
+			Title:       utils.PointerTo("1875"),
+			Urls:        utils.PointerTo([]string{"https://gitlab.com/exploit-database/exploitdb/-/tree/main/exploits/php/webapps/1875.html"}),
+		},
+	}
+}
+
+func createMalwareResult() *[]models.Malware {
+	return &[]models.Malware{
+		{
+			MalwareName: utils.PointerTo("Pdf.Exploit.CVE_2009_4324-1"),
+			MalwareType: utils.PointerTo(models.WORM),
+			Path:        utils.PointerTo("/test/metasploit-framework/modules/exploits/windows/browser/asus_net4switch_ipswcom.rb"),
+		},
+		{
+			MalwareName: utils.PointerTo("Xml.Malware.Squiblydoo-6728833-0"),
+			MalwareType: utils.PointerTo(models.SPYWARE),
+			Path:        utils.PointerTo("/test/metasploit-framework/modules/exploits/windows/fileformat/office_ms17_11882.rb"),
+		},
+		{
+			MalwareName: utils.PointerTo("Unix.Trojan.MSShellcode-27"),
+			MalwareType: utils.PointerTo(models.TROJAN),
+			Path:        utils.PointerTo("/test/metasploit-framework/documentation/modules/exploit/multi/http/makoserver_cmd_exec.md"),
+		},
+	}
+}
+
+func createMisconfigurationsResult() *[]models.Misconfiguration {
+	return &[]models.Misconfiguration{
+		{
+			Description: utils.PointerTo("AUTH-9262|Install a PAM module for password strength testing like pam_cracklib or pam_passwdqc"),
+			Path:        utils.PointerTo("/home/ubuntu/debian11/lib/x86_64-linux-gnu/security/pam_access.so"),
+		},
+		{
+			Description: utils.PointerTo("FILE-6362|Set the sticky bit on /home/ubuntu/debian11/tmp, to prevent users deleting (by other owned) files in the /tmp directory.|/tmp|text:Set sticky bit"),
+			Path:        utils.PointerTo("home/ubuntu/debian11/tmp"),
+		},
+		{
+			Description: utils.PointerTo("USB-1000|Disable drivers like USB storage when not used, to prevent unauthorized storage or data theft"),
+			Path:        utils.PointerTo("/home/ubuntu/debian11/etc/cron.d/e2scrub_all"),
+		},
+	}
+}
+
+func createVulnerabilitiesResult() *[]models.Vulnerability {
+	return &[]models.Vulnerability{
+		{
+			Cvss: utils.PointerTo([]models.VulnerabilityCvss{
+				{
+					Metrics: &models.VulnerabilityCvssMetrics{
+						BaseScore:           utils.PointerTo[float32](7.5),
+						ExploitabilityScore: utils.PointerTo[float32](3.9),
+						ImpactScore:         utils.PointerTo[float32](3.6),
+					},
+					Vector:  utils.PointerTo("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"),
+					Version: utils.PointerTo("3.1"),
+				},
+			}),
+			Description: utils.StringPtr("A vulnerability exists in curl <7.87.0 HSTS check that could be bypassed to trick it to keep using HTTP. Using its HSTS support, curl can be instructed to use HTTPS instead of using an insecure clear-text HTTP step even when HTTP is provided in the\nURL. However, the HSTS mechanism could be bypassed if the host name in the given URL first uses IDN characters that get replaced to ASCII counterparts as part of the IDN conversion. Like using the character UTF-8 U+3002 (IDEOGRAPHIC FULL STOP) instead of the common ASCI\nI full stop (U+002E) `.`. Then in a subsequent request, it does not detect the HSTS state and makes a clear text transfer. Because it would store the info IDN encoded but look for it IDN decoded."),
+			Distro: &models.VulnerabilityDistro{
+				IDLike:  utils.PointerTo([]string{"debian"}),
+				Name:    utils.PointerTo("ubuntu"),
+				Version: utils.PointerTo("11"),
+			},
+			Fix: &models.VulnerabilityFix{
+				State:    utils.PointerTo("wont-fix"),
+				Versions: utils.PointerTo([]string{}),
+			},
+			LayerId: utils.PointerTo(""),
+			Links:   utils.PointerTo([]string{"https://security-tracker.debian.org/tracker/CVE-2022-43551"}),
+			Package: &models.Package{
 				Cpes:     utils.PointerTo([]string{"cpe:2.3:a:curl:curl:7.74.0-1.3+deb11u3:*:*:*:*:*:*:*"}),
 				Language: utils.PointerTo("pl1"),
 				Licenses: utils.PointerTo([]string{"BSD-3-Clause", "BSD-4-Clause"}),
@@ -904,10 +988,44 @@ func createPackagesResult() *[]models.Package {
 				Type:     utils.PointerTo("deb"),
 				Version:  utils.PointerTo("7.74.0-1.3+deb11u3"),
 			},
+			Path:              utils.PointerTo("/var/lib/dpkg/status"),
+			Severity:          utils.PointerTo[models.VulnerabilitySeverity](models.HIGH),
+			VulnerabilityName: utils.StringPtr("CVE-2022-43551"),
 		},
 		{
-			Id: utils.PointerTo(uuid.NewV4().String()),
-			PackageInfo: &models.PackageInfo{
+			Cvss: utils.PointerTo([]models.VulnerabilityCvss{
+				{
+					Metrics: &models.VulnerabilityCvssMetrics{
+						BaseScore:           utils.PointerTo[float32](9.1),
+						ExploitabilityScore: utils.PointerTo[float32](3.9),
+						ImpactScore:         utils.PointerTo[float32](5.2),
+					},
+					Vector:  utils.PointerTo("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:H"),
+					Version: utils.PointerTo("3.1"),
+				},
+				{
+					Metrics: &models.VulnerabilityCvssMetrics{
+						BaseScore:           utils.PointerTo[float32](4),
+						ExploitabilityScore: utils.PointerTo[float32](4.1),
+						ImpactScore:         utils.PointerTo[float32](4.2),
+					},
+					Vector:  utils.PointerTo("vector4"),
+					Version: utils.PointerTo("v4"),
+				},
+			}),
+			Description: utils.StringPtr("GNU Libtasn1 before 4.19.0 has an ETYPE_OK off-by-one array size check that affects asn1_encode_simple_der."),
+			Distro: &models.VulnerabilityDistro{
+				IDLike:  utils.PointerTo([]string{"debian"}),
+				Name:    utils.PointerTo("ubuntu"),
+				Version: utils.PointerTo("11"),
+			},
+			Fix: &models.VulnerabilityFix{
+				State:    utils.PointerTo("fixed"),
+				Versions: utils.PointerTo([]string{"4.16.0-2+deb11u1"}),
+			},
+			LayerId: utils.PointerTo(""),
+			Links:   utils.PointerTo([]string{"https://security-tracker.debian.org/tracker/CVE-2021-46848", "https://security-tracker.debian.org/tracker/CVE-2021-46848_new"}),
+			Package: &models.Package{
 				Cpes:     utils.PointerTo([]string{"cpe:2.3:a:libtasn1-6:libtasn1-6:4.16.0-2:*:*:*:*:*:*:*", "cpe:2.3:a:libtasn1-6:libtasn1_6:4.16.0-2:*:*:*:*:*:*:*"}),
 				Language: utils.PointerTo(""),
 				Licenses: utils.PointerTo([]string{"GFDL-1.3-only", "GPL-3.0-only", "LGPL-2.1-only"}),
@@ -916,182 +1034,9 @@ func createPackagesResult() *[]models.Package {
 				Type:     utils.PointerTo("deb"),
 				Version:  utils.PointerTo("4.16.0-2"),
 			},
-		},
-	}
-}
-
-func createExploitsResult() *[]models.Exploit {
-	return &[]models.Exploit{
-		{
-			ExploitInfo: &models.ExploitInfo{
-				CveID:       utils.PointerTo("CVE-2009-4091"),
-				Description: utils.PointerTo("Simplog 0.9.3.2 - Multiple Vulnerabilities"),
-				Name:        utils.PointerTo("10180"),
-				SourceDB:    utils.PointerTo("OffensiveSecurity"),
-				Title:       utils.PointerTo("10180"),
-				Urls:        utils.PointerTo([]string{"https://www.exploit-db.com/exploits/10180"}),
-			},
-			Id: utils.PointerTo(uuid.NewV4().String()),
-		},
-		{
-			ExploitInfo: &models.ExploitInfo{
-				CveID:       utils.PointerTo("CVE-2006-2896"),
-				Description: utils.PointerTo("FunkBoard CF0.71 - 'profile.php' Remote User Pass Change"),
-				Name:        utils.PointerTo("1875"),
-				SourceDB:    utils.PointerTo("OffensiveSecurity"),
-				Title:       utils.PointerTo("1875"),
-				Urls:        utils.PointerTo([]string{"https://gitlab.com/exploit-database/exploitdb/-/tree/main/exploits/php/webapps/1875.html"}),
-			},
-			Id: utils.PointerTo(uuid.NewV4().String()),
-		},
-	}
-}
-
-func createMalwareResult() *[]models.Malware {
-	return &[]models.Malware{
-		{
-			Id: utils.PointerTo(uuid.NewV4().String()),
-			MalwareInfo: &models.MalwareInfo{
-				MalwareName: utils.PointerTo("Pdf.Exploit.CVE_2009_4324-1"),
-				MalwareType: utils.PointerTo(models.WORM),
-				Path:        utils.PointerTo("/test/metasploit-framework/modules/exploits/windows/browser/asus_net4switch_ipswcom.rb"),
-			},
-		},
-		{
-			Id: utils.PointerTo(uuid.NewV4().String()),
-			MalwareInfo: &models.MalwareInfo{
-				MalwareName: utils.PointerTo("Xml.Malware.Squiblydoo-6728833-0"),
-				MalwareType: utils.PointerTo(models.SPYWARE),
-				Path:        utils.PointerTo("/test/metasploit-framework/modules/exploits/windows/fileformat/office_ms17_11882.rb"),
-			},
-		},
-		{
-			Id: utils.PointerTo(uuid.NewV4().String()),
-			MalwareInfo: &models.MalwareInfo{
-				MalwareName: utils.PointerTo("Unix.Trojan.MSShellcode-27"),
-				MalwareType: utils.PointerTo(models.TROJAN),
-				Path:        utils.PointerTo("/test/metasploit-framework/documentation/modules/exploit/multi/http/makoserver_cmd_exec.md"),
-			},
-		},
-	}
-}
-
-func createMisconfigurationsResult() *[]models.Misconfiguration {
-	return &[]models.Misconfiguration{
-		{
-			Id: utils.PointerTo(uuid.NewV4().String()),
-			MisconfigurationInfo: &models.MisconfigurationInfo{
-				Description: utils.PointerTo("AUTH-9262|Install a PAM module for password strength testing like pam_cracklib or pam_passwdqc"),
-				Path:        utils.PointerTo("/home/ubuntu/debian11/lib/x86_64-linux-gnu/security/pam_access.so"),
-			},
-		},
-		{
-			Id: utils.PointerTo(uuid.NewV4().String()),
-			MisconfigurationInfo: &models.MisconfigurationInfo{
-				Description: utils.PointerTo("FILE-6362|Set the sticky bit on /home/ubuntu/debian11/tmp, to prevent users deleting (by other owned) files in the /tmp directory.|/tmp|text:Set sticky bit"),
-				Path:        utils.PointerTo("home/ubuntu/debian11/tmp"),
-			},
-		},
-		{
-			Id: utils.PointerTo(uuid.NewV4().String()),
-			MisconfigurationInfo: &models.MisconfigurationInfo{
-				Description: utils.PointerTo("USB-1000|Disable drivers like USB storage when not used, to prevent unauthorized storage or data theft"),
-				Path:        utils.PointerTo("/home/ubuntu/debian11/etc/cron.d/e2scrub_all"),
-			},
-		},
-	}
-}
-
-func createVulnerabilitiesResult() *[]models.Vulnerability {
-	return &[]models.Vulnerability{
-		{
-			Id: utils.StringPtr("9e6a15d9-4df9-4676-9176-e2e35cc47bb1"),
-			VulnerabilityInfo: &models.VulnerabilityInfo{
-				Cvss: utils.PointerTo([]models.VulnerabilityCvss{
-					{
-						Metrics: &models.VulnerabilityCvssMetrics{
-							BaseScore:           utils.PointerTo[float32](7.5),
-							ExploitabilityScore: utils.PointerTo[float32](3.9),
-							ImpactScore:         utils.PointerTo[float32](3.6),
-						},
-						Vector:  utils.PointerTo("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"),
-						Version: utils.PointerTo("3.1"),
-					},
-				}),
-				Description: utils.StringPtr("A vulnerability exists in curl <7.87.0 HSTS check that could be bypassed to trick it to keep using HTTP. Using its HSTS support, curl can be instructed to use HTTPS instead of using an insecure clear-text HTTP step even when HTTP is provided in the\nURL. However, the HSTS mechanism could be bypassed if the host name in the given URL first uses IDN characters that get replaced to ASCII counterparts as part of the IDN conversion. Like using the character UTF-8 U+3002 (IDEOGRAPHIC FULL STOP) instead of the common ASCI\nI full stop (U+002E) `.`. Then in a subsequent request, it does not detect the HSTS state and makes a clear text transfer. Because it would store the info IDN encoded but look for it IDN decoded."),
-				Distro: &models.VulnerabilityDistro{
-					IDLike:  utils.PointerTo([]string{"debian"}),
-					Name:    utils.PointerTo("ubuntu"),
-					Version: utils.PointerTo("11"),
-				},
-				Fix: &models.VulnerabilityFix{
-					State:    utils.PointerTo("wont-fix"),
-					Versions: utils.PointerTo([]string{}),
-				},
-				LayerId: utils.PointerTo(""),
-				Links:   utils.PointerTo([]string{"https://security-tracker.debian.org/tracker/CVE-2022-43551"}),
-				Package: &models.PackageInfo{
-					Cpes:     utils.PointerTo([]string{"cpe:2.3:a:curl:curl:7.74.0-1.3+deb11u3:*:*:*:*:*:*:*"}),
-					Language: utils.PointerTo("pl1"),
-					Licenses: utils.PointerTo([]string{"BSD-3-Clause", "BSD-4-Clause"}),
-					Name:     utils.PointerTo("curl"),
-					Purl:     utils.PointerTo("pkg:deb/debian/curl@7.74.0-1.3+deb11u3?arch=amd64&distro=debian-11"),
-					Type:     utils.PointerTo("deb"),
-					Version:  utils.PointerTo("7.74.0-1.3+deb11u3"),
-				},
-				Path:              utils.PointerTo("/var/lib/dpkg/status"),
-				Severity:          utils.PointerTo[models.VulnerabilitySeverity](models.HIGH),
-				VulnerabilityName: utils.StringPtr("CVE-2022-43551"),
-			},
-		},
-		{
-			Id: utils.StringPtr("8850f81a-7ebe-419e-a6f7-8e981142193d"),
-			VulnerabilityInfo: &models.VulnerabilityInfo{
-				Cvss: utils.PointerTo([]models.VulnerabilityCvss{
-					{
-						Metrics: &models.VulnerabilityCvssMetrics{
-							BaseScore:           utils.PointerTo[float32](9.1),
-							ExploitabilityScore: utils.PointerTo[float32](3.9),
-							ImpactScore:         utils.PointerTo[float32](5.2),
-						},
-						Vector:  utils.PointerTo("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:H"),
-						Version: utils.PointerTo("3.1"),
-					},
-					{
-						Metrics: &models.VulnerabilityCvssMetrics{
-							BaseScore:           utils.PointerTo[float32](4),
-							ExploitabilityScore: utils.PointerTo[float32](4.1),
-							ImpactScore:         utils.PointerTo[float32](4.2),
-						},
-						Vector:  utils.PointerTo("vector4"),
-						Version: utils.PointerTo("v4"),
-					},
-				}),
-				Description: utils.StringPtr("GNU Libtasn1 before 4.19.0 has an ETYPE_OK off-by-one array size check that affects asn1_encode_simple_der."),
-				Distro: &models.VulnerabilityDistro{
-					IDLike:  utils.PointerTo([]string{"debian"}),
-					Name:    utils.PointerTo("ubuntu"),
-					Version: utils.PointerTo("11"),
-				},
-				Fix: &models.VulnerabilityFix{
-					State:    utils.PointerTo("fixed"),
-					Versions: utils.PointerTo([]string{"4.16.0-2+deb11u1"}),
-				},
-				LayerId: utils.PointerTo(""),
-				Links:   utils.PointerTo([]string{"https://security-tracker.debian.org/tracker/CVE-2021-46848", "https://security-tracker.debian.org/tracker/CVE-2021-46848_new"}),
-				Package: &models.PackageInfo{
-					Cpes:     utils.PointerTo([]string{"cpe:2.3:a:libtasn1-6:libtasn1-6:4.16.0-2:*:*:*:*:*:*:*", "cpe:2.3:a:libtasn1-6:libtasn1_6:4.16.0-2:*:*:*:*:*:*:*"}),
-					Language: utils.PointerTo(""),
-					Licenses: utils.PointerTo([]string{"GFDL-1.3-only", "GPL-3.0-only", "LGPL-2.1-only"}),
-					Name:     utils.PointerTo("libtasn1-6"),
-					Purl:     utils.PointerTo("pkg:deb/debian/libtasn1-6@4.16.0-2?arch=amd64&distro=debian-11"),
-					Type:     utils.PointerTo("deb"),
-					Version:  utils.PointerTo("4.16.0-2"),
-				},
-				Path:              utils.PointerTo("/var/lib/dpkg/status"),
-				Severity:          utils.PointerTo[models.VulnerabilitySeverity](models.CRITICAL),
-				VulnerabilityName: utils.StringPtr("CVE-2021-46848"),
-			},
+			Path:              utils.PointerTo("/var/lib/dpkg/status"),
+			Severity:          utils.PointerTo[models.VulnerabilitySeverity](models.CRITICAL),
+			VulnerabilityName: utils.StringPtr("CVE-2021-46848"),
 		},
 	}
 }
