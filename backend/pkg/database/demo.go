@@ -153,7 +153,7 @@ func CreateDemoData(db types.Database) {
 	}
 }
 
-// nolint:gocognit,prealloc
+// nolint:gocognit,prealloc,cyclop
 func createFindings(scanResults []models.TargetScanResult) []models.Finding {
 	var ret []models.Finding
 

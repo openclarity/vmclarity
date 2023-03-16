@@ -22,6 +22,7 @@ import (
 	cdx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/openclarity/kubeclarity/shared/pkg/scanner"
 	"github.com/openclarity/kubeclarity/shared/pkg/utils/cyclonedx_helper"
+
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 	"github.com/openclarity/vmclarity/shared/pkg/families"
@@ -29,6 +30,7 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/families/results"
 	"github.com/openclarity/vmclarity/shared/pkg/families/sbom"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
+
 	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 	"github.com/openclarity/vmclarity/shared/pkg/families/vulnerabilities"
 	"github.com/openclarity/vmclarity/shared/pkg/utils"
@@ -79,6 +81,7 @@ func convertPackageLicencesToAPIModel(licenses *cdx.Licenses) *[]string {
 	if licenses == nil {
 		return nil
 	}
+	// nolint:prealloc
 	var ret []string
 	for _, lic := range *licenses {
 		if lic.License == nil {
@@ -91,6 +94,7 @@ func convertPackageLicencesToAPIModel(licenses *cdx.Licenses) *[]string {
 }
 
 func convertVulnResultToAPIModel(vulnerabilitiesResults *vulnerabilities.Results) *models.VulnerabilityScan {
+	// nolint:prealloc
 	var vuls []models.Vulnerability
 	for _, vulCandidates := range vulnerabilitiesResults.MergedResults.MergedVulnerabilitiesByKey {
 		if len(vulCandidates) < 1 {
@@ -150,6 +154,7 @@ func convertVulnCvssToAPIModel(cvss []scanner.CVSS) *[]models.VulnerabilityCvss 
 	if cvss == nil {
 		return nil
 	}
+	// nolint:prealloc
 	var ret []models.VulnerabilityCvss
 	for _, c := range cvss {
 		var exploitabilityScore *float32
