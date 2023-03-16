@@ -23,12 +23,11 @@ import (
 )
 
 type ScanningJobConfig struct {
-	ScannerImage     string // Scanner Container Image to use containing the vmclarity-cli and tools
-	ScannerCLIConfig string // Scanner CLI config yaml (families config yaml)
-	VMClarityAddress string // The backend address for the scanner CLI to export too
-	ScanResultID     string // The ID of the ScanResult that the scanner CLI should update
-	KeyPairName      string // The name of the key pair to set on the instance, ignored if not set, used mainly for debugging.
-	// TODO there is a task for spot instance configuration handling in backend
+	ScannerImage                  string // Scanner Container Image to use containing the vmclarity-cli and tools
+	ScannerCLIConfig              string // Scanner CLI config yaml (families config yaml)
+	VMClarityAddress              string // The backend address for the scanner CLI to export too
+	ScanResultID                  string // The ID of the ScanResult that the scanner CLI should update
+	KeyPairName                   string // The name of the key pair to set on the instance, ignored if not set, used mainly for debugging.
 	ScannerInstanceCreationConfig *models.ScannerInstanceCreationConfig
 }
 
