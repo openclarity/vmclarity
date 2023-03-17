@@ -22,10 +22,10 @@ import (
 	"time"
 
 	"github.com/anchore/syft/syft/source"
+	kubeclarityConfig "github.com/openclarity/kubeclarity/shared/pkg/config"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
-	kubeclarityConfig "github.com/openclarity/kubeclarity/shared/pkg/config"
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/config"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
