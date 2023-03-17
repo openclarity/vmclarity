@@ -26,7 +26,6 @@ import (
 	"gopkg.in/yaml.v3"
 
 	kubeclarityConfig "github.com/openclarity/kubeclarity/shared/pkg/config"
-
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/config"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
@@ -330,12 +329,11 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 	}
 
 	scanningJobConfig := provider.ScanningJobConfig{
-		ScannerImage:     s.config.ScannerImage,
-		ScannerCLIConfig: familiesConfiguration,
-		VMClarityAddress: s.config.ScannerBackendAddress,
-		ScanResultID:     data.scanResultID,
-		KeyPairName:      s.config.ScannerKeyPairName,
-		// TODO there is a task for spot instance configuration handling ing backend
+		ScannerImage:                  s.config.ScannerImage,
+		ScannerCLIConfig:              familiesConfiguration,
+		VMClarityAddress:              s.config.ScannerBackendAddress,
+		ScanResultID:                  data.scanResultID,
+		KeyPairName:                   s.config.ScannerKeyPairName,
 		ScannerInstanceCreationConfig: s.scanConfig.ScannerInstanceCreationConfig,
 	}
 	launchInstance, err = s.providerClient.RunScanningJob(ctx, launchSnapshot.GetRegion(), launchSnapshot.GetID(), scanningJobConfig)

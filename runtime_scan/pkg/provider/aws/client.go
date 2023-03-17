@@ -287,7 +287,6 @@ func (c *Client) RunScanningJob(ctx context.Context, region, id string, config p
 		},
 	}
 
-	//
 	var retryMaxAttempts int
 	// Use spot instances if there is a configuration for it.
 	if config.ScannerInstanceCreationConfig != nil && config.ScannerInstanceCreationConfig.UseSpotInstances {
