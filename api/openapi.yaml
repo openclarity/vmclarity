@@ -1650,7 +1650,7 @@ components:
         - RANSOMWARE
         - BACKDOOR
         - PHISHING
-        - EICAR-SIGNATURE
+        - EICAR
         - UNKNOWN
 
     RootkitType:
