@@ -27,7 +27,7 @@ import (
 )
 
 type ODataObject struct {
-	gorm.Model
+	ID   uint `gorm:"primarykey"`
 	Data datatypes.JSON
 }
 
@@ -397,6 +397,9 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 				ComplexFieldSchemas:   []string{"AwsScanScope"},
 				DiscriminatorProperty: "objectType",
 			},
+			"maxParallelScanners": odatasql.FieldMeta{
+				FieldType: odatasql.PrimitiveFieldType,
+			},
 		},
 	},
 	"ScanConfigData": {
@@ -415,6 +418,9 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 				FieldType:             odatasql.ComplexFieldType,
 				ComplexFieldSchemas:   []string{"AwsScanScope"},
 				DiscriminatorProperty: "objectType",
+			},
+			"maxParallelScanners": odatasql.FieldMeta{
+				FieldType: odatasql.PrimitiveFieldType,
 			},
 		},
 	},

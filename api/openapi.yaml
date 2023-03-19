@@ -106,7 +106,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/targetID'
       responses:
-        204:
+        200:
           $ref: '#/components/responses/Success'
         404:
           description: Target ID not found
@@ -362,7 +362,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/scanID'
       responses:
-        204:
+        200:
           $ref: '#/components/responses/Success'
         404:
           description: Scan ID not found
@@ -498,7 +498,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/scanConfigID'
       responses:
-        204:
+        200:
           $ref: '#/components/responses/Success'
         404:
           description: Scan config ID not found
@@ -668,7 +668,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/findingID'
       responses:
-        204:
+        200:
           $ref: '#/components/responses/Success'
         404:
           description: Finding ID not found
@@ -955,6 +955,12 @@ components:
           $ref: '#/components/schemas/ScanScopeType'
         scheduled:
           $ref: '#/components/schemas/RuntimeScheduleScanConfigType'
+        maxParallelScanners:
+          type: 'integer'
+          minimum: 1
+          maximum: 20
+          default: 2
+          description: "The maximum number of scanners that can run in parallel for each scan"
 
     ScanConfigRelationship:
       type: object
@@ -972,6 +978,8 @@ components:
             scope:
               readOnly: true
             scheduled:
+              readOnly: true
+            maxParallelScanners:
               readOnly: true
           required: ['id']
 
@@ -1384,9 +1392,17 @@ components:
           $ref: '#/components/schemas/ExploitScan'
         summary:
           $ref: '#/components/schemas/ScanFindingsSummary'
-      required:
-        - target
-        - scan
+      # TODO(sambetts) Decide if we want the validation here by having
+      # separate schemas for GET, POST and PATCH.
+      #
+      # We can't make anything readOnly or required here if we want to
+      # use the same schema for PATCH otherwise it will require you
+      # always send the required fields and remove the readOnly fields
+      # on the client side.
+      #
+      # required:
+      #  - target
+      #  - scan
 
     TargetScanResultExists:
       type: object

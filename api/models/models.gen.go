@@ -18,16 +18,12 @@ const (
 
 // Defines values for MalwareType.
 const (
-	ADWARE          MalwareType = "ADWARE"
-	RANSOMWARE      MalwareType = "RANSOMWARE"
-	BACKDOOR        MalwareType = "BACKDOOR"
-	SPYWARE         MalwareType = "SPYWARE"
-	TROJAN          MalwareType = "TROJAN"
-	VIRUS           MalwareType = "VIRUS"
-	PHISHING        MalwareType = "PHISING"
-	EICAR_SIGNATURE MalwareType = "EICAR-SIGNATURE"
-	WORM            MalwareType = "WORM"
-	UNKNOWN         MalwareType = "UNKNOWN"
+	ADWARE     MalwareType = "ADWARE"
+	RANSOMWARE MalwareType = "RANSOMWARE"
+	SPYWARE    MalwareType = "SPYWARE"
+	TROJAN     MalwareType = "TROJAN"
+	VIRUS      MalwareType = "VIRUS"
+	WORM       MalwareType = "WORM"
 )
 
 // Defines values for RootkitType.
@@ -436,8 +432,11 @@ type ScanStateReason string
 
 // ScanConfig defines model for ScanConfig.
 type ScanConfig struct {
-	Id   *string `json:"id,omitempty"`
-	Name *string `json:"name,omitempty"`
+	Id *string `json:"id,omitempty"`
+
+	// MaxParallelScanners The maximum number of scanners that can run in parallel for each scan
+	MaxParallelScanners *int    `json:"maxParallelScanners,omitempty"`
+	Name                *string `json:"name,omitempty"`
 
 	// ScanFamiliesConfig The configuration of the scanner families within a scan config
 	ScanFamiliesConfig *ScanFamiliesConfig            `json:"scanFamiliesConfig,omitempty"`
@@ -449,7 +448,9 @@ type ScanConfig struct {
 // ScanConfigRelationship and used for the ScanConfig snapshot in the
 // scan.
 type ScanConfigData struct {
-	Name *string `json:"name,omitempty"`
+	// MaxParallelScanners The maximum number of scanners that can run in parallel for each scan
+	MaxParallelScanners *int    `json:"maxParallelScanners,omitempty"`
+	Name                *string `json:"name,omitempty"`
 
 	// ScanFamiliesConfig The configuration of the scanner families within a scan config
 	ScanFamiliesConfig *ScanFamiliesConfig            `json:"scanFamiliesConfig,omitempty"`
@@ -468,11 +469,12 @@ type ScanConfigExists struct {
 
 // ScanConfigRelationship defines model for ScanConfigRelationship.
 type ScanConfigRelationship struct {
-	Id                 string       `json:"id"`
-	Name               *interface{} `json:"name,omitempty"`
-	ScanFamiliesConfig *interface{} `json:"scanFamiliesConfig,omitempty"`
-	Scheduled          *interface{} `json:"scheduled,omitempty"`
-	Scope              *interface{} `json:"scope,omitempty"`
+	Id                  string       `json:"id"`
+	MaxParallelScanners *interface{} `json:"maxParallelScanners,omitempty"`
+	Name                *interface{} `json:"name,omitempty"`
+	ScanFamiliesConfig  *interface{} `json:"scanFamiliesConfig,omitempty"`
+	Scheduled           *interface{} `json:"scheduled,omitempty"`
+	Scope               *interface{} `json:"scope,omitempty"`
 }
 
 // ScanConfigs defines model for ScanConfigs.
@@ -720,7 +722,7 @@ type TargetScanResult struct {
 	Sboms             *SbomScan             `json:"sboms,omitempty"`
 
 	// Scan Describes an expandable relationship to Scan object
-	Scan    ScanRelationship  `json:"scan"`
+	Scan    *ScanRelationship `json:"scan,omitempty"`
 	Secrets *SecretScan       `json:"secrets,omitempty"`
 	Status  *TargetScanStatus `json:"status,omitempty"`
 
@@ -728,8 +730,8 @@ type TargetScanResult struct {
 	Summary *ScanFindingsSummary `json:"summary,omitempty"`
 
 	// Target Describes a relationship to a target which can be expanded.
-	Target          TargetRelationship `json:"target"`
-	Vulnerabilities *VulnerabilityScan `json:"vulnerabilities,omitempty"`
+	Target          *TargetRelationship `json:"target,omitempty"`
+	Vulnerabilities *VulnerabilityScan  `json:"vulnerabilities,omitempty"`
 }
 
 // TargetScanResultExists defines model for TargetScanResultExists.

@@ -384,16 +384,18 @@ func createScanConfigs() []models.ScanConfig {
 
 	return []models.ScanConfig{
 		{
-			Name:               utils.PointerTo("demo scan 1"),
-			ScanFamiliesConfig: scanFamiliesConfig1,
-			Scheduled:          &scheduled1,
-			Scope:              &scanScopeType1,
+			Name:                utils.PointerTo("demo scan 1"),
+			ScanFamiliesConfig:  scanFamiliesConfig1,
+			Scheduled:           &scheduled1,
+			Scope:               &scanScopeType1,
+			MaxParallelScanners: utils.PointerTo(2),
 		},
 		{
-			Name:               utils.PointerTo("demo scan 2"),
-			ScanFamiliesConfig: scanFamiliesConfig2,
-			Scheduled:          &scanConfig2Scheduled,
-			Scope:              &scanScopeType2,
+			Name:                utils.PointerTo("demo scan 2"),
+			ScanFamiliesConfig:  scanFamiliesConfig2,
+			Scheduled:           &scanConfig2Scheduled,
+			Scope:               &scanScopeType2,
+			MaxParallelScanners: utils.PointerTo(3),
 		},
 	}
 }
@@ -498,7 +500,7 @@ func createScanResults(scans []models.Scan) []models.TargetScanResult {
 				Misconfigurations: nil,
 				Rootkits:          nil,
 				Sboms:             nil,
-				Scan: models.ScanRelationship{
+				Scan: &models.ScanRelationship{
 					Id: *scan.Id,
 				},
 				Secrets: nil,
@@ -518,7 +520,7 @@ func createScanResults(scans []models.Scan) []models.TargetScanResult {
 						TotalNegligibleVulnerabilities: utils.PointerTo(73),
 					},
 				},
-				Target: models.TargetRelationship{
+				Target: &models.TargetRelationship{
 					Id: targetID,
 				},
 				Vulnerabilities: nil,

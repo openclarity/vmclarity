@@ -61,7 +61,8 @@ const (
 func (s *Scanner) jobBatchManagement(ctx context.Context) {
 	s.Lock()
 	targetIDToScanData := s.targetIDToScanData
-	numberOfWorkers := 2 // TODO: create this in the API
+	// Since this value has a default in the API, I assume it is safe to dereference it.
+	numberOfWorkers := *s.scanConfig.MaxParallelScanners
 	s.Unlock()
 
 	// queue of scan data
@@ -591,11 +592,11 @@ func (s *Scanner) createInitTargetScanStatus(ctx context.Context, scanID, target
 	}
 	scanResult := models.TargetScanResult{
 		Summary: createInitScanResultSummary(),
-		Scan: models.ScanRelationship{
+		Scan: &models.ScanRelationship{
 			Id: scanID,
 		},
 		Status: initScanStatus,
-		Target: models.TargetRelationship{
+		Target: &models.TargetRelationship{
 			Id: targetID,
 		},
 	}
