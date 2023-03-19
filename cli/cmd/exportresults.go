@@ -336,7 +336,7 @@ func (e *Exporter) ExportMalwareResult(res *results.Results, famerr families.Run
 
 	var errors []string
 
-	if err, ok := famerr[types.Secrets]; ok {
+	if err, ok := famerr[types.Malware]; ok {
 		errors = append(errors, err.Error())
 	} else {
 		malwareResults, err := results.GetResult[*malware.Results](res)
@@ -372,7 +372,7 @@ func convertMalwareResultToAPIModel(malwareResults *malware.Results) *models.Mal
 		if isMalwareTypeValid(m.MalwareType) {
 			malwareType = models.MalwareType(m.MalwareType)
 		} else {
-			logger.Debugf("invalid malware type: %s", m.MalwareType)
+			logger.Infof("invalid malware type: %s", m.MalwareType)
 			malwareType = models.UNKNOWN
 		}
 
