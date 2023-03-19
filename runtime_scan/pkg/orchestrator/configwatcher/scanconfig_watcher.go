@@ -73,7 +73,7 @@ func (scw *ScanConfigWatcher) getScanConfigsToScan() ([]models.ScanConfig, error
 	scanConfigsToScan := make([]models.ScanConfig, 0)
 	// Get all enabled scan configs
 	scanConfigs, err := scw.backendClient.GetScanConfigs(context.TODO(), models.GetScanConfigsParams{
-		Filter: utils.PointerTo(fmt.Sprintf("disabled eq null or disabled eq false")),
+		Filter: utils.PointerTo("disabled eq null or disabled eq false"),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to check new scan configs: %v", err)
@@ -82,7 +82,8 @@ func (scw *ScanConfigWatcher) getScanConfigsToScan() ([]models.ScanConfig, error
 	log.Infof("Got %d enabled ScanConfigs objects.", len(*scanConfigs.Items))
 
 	now := time.Now()
-	for _, scanConfig := range *scanConfigs.Items {
+	for _, sc := range *scanConfigs.Items {
+		scanConfig := sc
 		shouldScan := false
 		scanConfigID := *scanConfig.Id
 		operationTime := *scanConfig.Scheduled.OperationTime
@@ -161,7 +162,7 @@ func (scw *ScanConfigWatcher) shouldScan(scanConfigID string, operationTime time
 		log.Debugf("ScanConfig %s has a running scan", scanConfigID)
 	}
 
-	// If operation time is withing the window and there is no running scan we should run a scan.
+	// If operation time is within the window and there is no running scan we should run a scan.
 	return !hasRunningScan, nil
 }
 

@@ -278,6 +278,7 @@ func (b *BackendClient) GetScanConfigs(ctx context.Context, params models.GetSca
 	}
 }
 
+// nolint:cyclop
 func (b *BackendClient) PatchScanConfig(ctx context.Context, scanConfigID string, scanConfig *models.ScanConfig) error {
 	newPatchScanConfigResultError := func(err error) error {
 		return fmt.Errorf("failed to patch scan config %v: %w", scanConfigID, err)

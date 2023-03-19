@@ -95,6 +95,7 @@ func (s *ScanConfigsTableHandler) GetScanConfig(scanConfigID models.ScanConfigID
 	return sc, nil
 }
 
+// nolint:cyclop
 func (s *ScanConfigsTableHandler) CreateScanConfig(scanConfig models.ScanConfig) (models.ScanConfig, error) {
 	// Check the user provided the name field
 	if scanConfig.Name != nil && *scanConfig.Name == "" {
