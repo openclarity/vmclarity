@@ -1659,17 +1659,6 @@ components:
 
     MalwareType:
       type: string
-      enum:
-        - ADWARE
-        - VIRUS
-        - TROJAN
-        - WORM
-        - SPYWARE
-        - RANSOMWARE
-        - BACKDOOR
-        - PHISHING
-        - EICAR-SIGNATURE
-        - UNKNOWN
 
     RootkitType:
       type: string

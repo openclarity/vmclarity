@@ -16,20 +16,6 @@ const (
 	AWS CloudProvider = "AWS"
 )
 
-// Defines values for MalwareType.
-const (
-	ADWARE         MalwareType = "ADWARE"
-	BACKDOOR       MalwareType = "BACKDOOR"
-	EICARSIGNATURE MalwareType = "EICAR-SIGNATURE"
-	PHISHING       MalwareType = "PHISHING"
-	RANSOMWARE     MalwareType = "RANSOMWARE"
-	SPYWARE        MalwareType = "SPYWARE"
-	TROJAN         MalwareType = "TROJAN"
-	UNKNOWN        MalwareType = "UNKNOWN"
-	VIRUS          MalwareType = "VIRUS"
-	WORM           MalwareType = "WORM"
-)
-
 // Defines values for RootkitType.
 const (
 	APPLICATION RootkitType = "APPLICATION"
@@ -285,7 +271,7 @@ type MalwareScan struct {
 }
 
 // MalwareType defines model for MalwareType.
-type MalwareType string
+type MalwareType = string
 
 // Misconfiguration defines model for Misconfiguration.
 type Misconfiguration struct {

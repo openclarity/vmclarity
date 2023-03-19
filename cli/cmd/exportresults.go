@@ -368,19 +368,11 @@ func convertMalwareResultToAPIModel(malwareResults *malware.Results) *models.Mal
 
 	malwareList := []models.Malware{}
 	for _, m := range malwareResults.MergedResults.DetectedMalware {
-		var malwareType models.MalwareType
-		if isMalwareTypeValid(m.MalwareType) {
-			malwareType = models.MalwareType(m.MalwareType)
-		} else {
-			logger.Infof("invalid malware type: %s", m.MalwareType)
-			malwareType = models.UNKNOWN
-		}
-
 		mal := m // Prevent loop variable export
 		malwareList = append(malwareList, models.Malware{
 			MalwareInfo: &models.MalwareInfo{
 				MalwareName: &mal.MalwareName,
-				MalwareType: &malwareType,
+				MalwareType: &m.MalwareType,
 				Path:        &mal.Path,
 			},
 		})
@@ -388,16 +380,6 @@ func convertMalwareResultToAPIModel(malwareResults *malware.Results) *models.Mal
 
 	return &models.MalwareScan{
 		Malware: &malwareList,
-	}
-}
-
-func isMalwareTypeValid(malwareType string) bool {
-	switch models.MalwareType(malwareType) {
-	case models.ADWARE, models.RANSOMWARE, models.BACKDOOR, models.SPYWARE, models.TROJAN,
-		models.VIRUS, models.PHISHING, models.WORM, models.EICARSIGNATURE, models.UNKNOWN:
-		return true
-	default:
-		return false
 	}
 }
 
