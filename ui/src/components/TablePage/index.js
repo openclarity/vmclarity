@@ -6,7 +6,7 @@ import SystemFilterBanner from 'components/SystemFiltersBanner';
 import { toCapitalized, BoldText } from 'utils/utils';
 import { useFilterState, useFilterDispatch, resetSystemFilters } from 'context/FiltersProvider';
 
-const TablePage = ({tableTitle, filterType, filters, expand, withMargin, absoluteSystemBanner=false, ...tableProps}) => {
+const TablePage = ({tableTitle, filterType, filters, expand, withMargin, ...tableProps}) => {
     const navigate = useNavigate();
     const {pathname} = useLocation();
 
@@ -24,13 +24,12 @@ const TablePage = ({tableTitle, filterType, filters, expand, withMargin, absolut
     ]
     
     return (
-        <>
+        <div style={!!withMargin && !!systemFilterName ? {marginTop: "80px"} : {}}>
             {!!systemFilterName &&
                 <SystemFilterBanner
                     displayText={<span>{`${toCapitalized(tableTitle)} for `}<BoldText>{systemFilterName}</BoldText>{` ${systemSuffix}`}</span>}
                     onClose={onSystemFilterClose}
                     backPath={systemFilterBackPath}
-                    absolute={absoluteSystemBanner}
                     customDisplay={customDisplay}
                 />
             }
@@ -46,7 +45,7 @@ const TablePage = ({tableTitle, filterType, filters, expand, withMargin, absolut
                     {...tableProps}
                 />
             </ContentContainer>
-        </>
+        </div>
     )
 }
 

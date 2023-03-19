@@ -12,14 +12,12 @@
     justify-content: space-between;
     font-weight: 400;
     font-size: 12px;
+    position: fixed;
+    top: $top-bar-height;
+    left: $side-bar-width;
+    width: calc(100% - #{$side-bar-width});
+    z-index: 1;
     
-    &.absolute {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 1;
-    }
     .system-filter-content {
         display: flex;
         align-items: center;

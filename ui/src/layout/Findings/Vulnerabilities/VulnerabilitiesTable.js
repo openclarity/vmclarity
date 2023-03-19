@@ -1,13 +1,9 @@
 import React, { useMemo } from 'react';
-import TablePage from 'components/TablePage';
 import ExpandableList from 'components/ExpandableList';
-import { APIS } from 'utils/systemConsts';
 import { getAssetAndScanColumnsConfigList } from 'layout/Findings/utils';
-import { FILTER_TYPES } from 'context/FiltersProvider';
+import FindingsTablePage from '../FindingsTablePage';
 import SeverityWithCvssDisplay from './SeverityWithCvssDisplay';
 import { getHigestVersionCvssData } from './utils';
-
-const TABLE_TITLE = "vulnerabilities";
 
 const VulnerabilitiesTable = () => {
     const columns = useMemo(() => [
@@ -64,14 +60,10 @@ const VulnerabilitiesTable = () => {
     ], []);
 
     return (
-        <TablePage
+        <FindingsTablePage
             columns={columns}
-            url={APIS.FINDINGS}
-            tableTitle={TABLE_TITLE}
-            filterType={FILTER_TYPES.FINDINGS}
-            filters="findingInfo/objectType eq 'Vulnerability'"
-            expand="asset,scan"
-            absoluteSystemBanner
+            tableTitle="vulnerabilities"
+            findingsObjectType="Vulnerability"
         />
     )
 }

@@ -123,17 +123,17 @@ const Table = props => {
 
     const getQueryParams = useCallback(() => {
         const queryParams = {
-            ...cleanFilters
+            ...cleanFilters,
+            "$count": true
         }
 
         if (withPagination) {
-            queryParams.page = pageIndex + 1;
-            queryParams.pageSize = pageSize;
+            queryParams["$skip"] = pageIndex * pageSize;
+            queryParams["$top"] = pageSize;
         }
 
         if (!isEmpty(sortKey)) {
-            queryParams.sortKey = sortKey;
-            queryParams.sortDir = sortDesc ? "DESC" : "ASC";
+            queryParams["$orderby"] = `${sortKey} ${sortDesc ? "desc" : "asc"}`;
         }
 
         return queryParams;
@@ -144,7 +144,7 @@ const Table = props => {
             return;
         }
         
-        fetchData({queryParams: {...getQueryParams(), "$count": true}});
+        fetchData({queryParams: {...getQueryParams()}});
     }, [fetchData, getQueryParams, loading])
 
     useEffect(() => {
