@@ -29,7 +29,7 @@ const ScanDetails = ({scanData, withAssetScansLink=false}) => {
 
     const {id, scanConfig, scanConfigSnapshot, startTime, endTime, summary, state, stateMessage, stateReason} = scanData || {};
     const {scope, scanFamiliesConfig} = scanConfigSnapshot;
-    const {all, regions, instanceTagSelector, instanceTagExclusion, shouldScanStoppedInstances} = scope;
+    const {allRegions, regions, instanceTagSelector, instanceTagExclusion, shouldScanStoppedInstances} = scope;
     const {jobsCompleted, jobsLeftToRun} = summary;
 
     const formattedStartTime = formatDate(startTime);
@@ -54,7 +54,7 @@ const ScanDetails = ({scanData, withAssetScansLink=false}) => {
             leftPaneDisplay={() => (
                 <TitleValueDisplayColumn>
                     <ConfigurationAlertLink updatedConfigData={scanConfig} scanConfigData={scanConfigSnapshot} />
-                    <TitleValueDisplay title="Scope"><ScopeDisplay all={all} regions={regions} /></TitleValueDisplay>
+                    <TitleValueDisplay title="Scope"><ScopeDisplay all={allRegions} regions={regions} /></TitleValueDisplay>
                     <TitleValueDisplay title="Instances">
                         <div style={{margin: "10px 0 20px 0"}}>
                             {shouldScanStoppedInstances ? "Running and non-running instances" : "Running instances only"}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { isEmpty } from 'lodash';
 import { FETCH_METHODS } from 'hooks';
 import WizardModal from 'components/WizardModal';
 import { formatStringInstancesToTags, formatTagsToStringInstances } from '../utils';
@@ -42,7 +43,7 @@ const ScanConfigWizardModal = ({initialData, onClose, onSubmitSuccess}) => {
         }
     }
     
-    if (!!regions) {
+    if (!isEmpty(regions)) {
         initialValues.scope.regions = regions.map(({name, vpcs}) => {
             return {name, vpcs: !vpcs ? VPCS_EMPTY_VALUE : vpcs.map(({id, securityGroups}) => {
                 return {id: id || "", securityGroups: (securityGroups || []).map(({id}) => id)}
@@ -96,7 +97,7 @@ const ScanConfigWizardModal = ({initialData, onClose, onSubmitSuccess}) => {
                 submitData.scope = {
                     objectType: "AwsScanScope",
                     allRegions: isAllScope,
-                    regions: isAllScope ? null : regions.map(({name, vpcs}) => {
+                    regions: isAllScope ? [] : regions.map(({name, vpcs}) => {
                         return {name, vpcs: vpcs.map(({id, securityGroups}) => {
                             return {id, securityGroups: securityGroups.map(id => ({id}))}
                         })}

@@ -49,9 +49,9 @@ const ScansTable = () => {
             Header: "Scope",
             id: "scope",
             Cell: ({row}) => {
-                const {all, regions} = row.original.scanConfigSnapshot?.scope;
+                const {allRegions, regions} = row.original.scanConfigSnapshot?.scope;
 
-                return <ExpandableScopeDisplay all={all} regions={regions || []} />
+                return <ExpandableScopeDisplay all={allRegions} regions={regions || []} />
             },
             width: 260,
             disableSort: true

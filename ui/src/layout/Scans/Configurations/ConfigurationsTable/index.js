@@ -32,10 +32,10 @@ const ConfigurationsTable = () => {
             Header: "Scope",
             id: "scope",
             Cell: ({row}) => {
-                const {all, regions} = row.original.scope;
+                const {allRegions, regions} = row.original.scope;
 
                 return (
-                    <ExpandableScopeDisplay all={all} regions={regions} />
+                    <ExpandableScopeDisplay all={allRegions} regions={regions} />
                 )
             },
             alignToTop: true,

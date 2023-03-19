@@ -11,7 +11,7 @@ const SCORE_ITEMS = {
 }
 
 const ScoreTag = ({score}) => {
-    const {icon, style} = SCORE_ITEMS[score];
+    const {icon, style} = SCORE_ITEMS[score] || {};
 
     return (
         <div className="score-tag">

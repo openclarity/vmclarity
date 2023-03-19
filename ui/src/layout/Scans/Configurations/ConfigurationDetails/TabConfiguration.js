@@ -52,7 +52,7 @@ const ConfigurationScansDisplay = ({configId, configName}) => {
 
 const TabConfiguration = ({data}) => {
     const {id, name, scope, scanFamiliesConfig} = data || {};
-    const {all, regions, instanceTagSelector, instanceTagExclusion} = scope;
+    const {allRegions, regions, instanceTagSelector, instanceTagExclusion} = scope;
     
     return (
         <DoublePaneDisplay
@@ -60,7 +60,7 @@ const TabConfiguration = ({data}) => {
                 <>
                     <Title medium>Configuration</Title>
                     <TitleValueDisplayColumn>
-                        <TitleValueDisplay title="Scope"><ScopeDisplay all={all} regions={regions} /></TitleValueDisplay>
+                        <TitleValueDisplay title="Scope"><ScopeDisplay all={allRegions} regions={regions} /></TitleValueDisplay>
                         <TitleValueDisplay title="Included instances"><InstancesDisplay tags={instanceTagSelector}/></TitleValueDisplay>
                         <TitleValueDisplay title="Excluded instances"><InstancesDisplay tags={instanceTagExclusion}/></TitleValueDisplay>
                         <TitleValueDisplay title="Scan types"><ScanTypesDisplay scanFamiliesConfig={scanFamiliesConfig} /></TitleValueDisplay>
