@@ -428,11 +428,9 @@ func convertMalwareResultToAPIModel(malwareResults *malware.Results) *models.Mal
 	for _, m := range malwareResults.MergedResults.DetectedMalware {
 		mal := m // Prevent loop variable export
 		malwareList = append(malwareList, models.Malware{
-			MalwareInfo: &models.MalwareInfo{
-				MalwareName: &mal.MalwareName,
-				MalwareType: &m.MalwareType,
-				Path:        &mal.Path,
-			},
+			MalwareName: &mal.MalwareName,
+			MalwareType: &m.MalwareType,
+			Path:        &mal.Path,
 		})
 	}
 
