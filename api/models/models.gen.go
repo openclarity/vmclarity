@@ -18,12 +18,16 @@ const (
 
 // Defines values for MalwareType.
 const (
-	ADWARE     MalwareType = "ADWARE"
-	RANSOMWARE MalwareType = "RANSOMWARE"
-	SPYWARE    MalwareType = "SPYWARE"
-	TROJAN     MalwareType = "TROJAN"
-	VIRUS      MalwareType = "VIRUS"
-	WORM       MalwareType = "WORM"
+	ADWARE         MalwareType = "ADWARE"
+	BACKDOOR       MalwareType = "BACKDOOR"
+	EICARSIGNATURE MalwareType = "EICAR-SIGNATURE"
+	PHISHING       MalwareType = "PHISHING"
+	RANSOMWARE     MalwareType = "RANSOMWARE"
+	SPYWARE        MalwareType = "SPYWARE"
+	TROJAN         MalwareType = "TROJAN"
+	UNKNOWN        MalwareType = "UNKNOWN"
+	VIRUS          MalwareType = "VIRUS"
+	WORM           MalwareType = "WORM"
 )
 
 // Defines values for RootkitType.

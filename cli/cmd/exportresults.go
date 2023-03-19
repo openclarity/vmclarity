@@ -394,7 +394,7 @@ func convertMalwareResultToAPIModel(malwareResults *malware.Results) *models.Mal
 func isMalwareTypeValid(malwareType string) bool {
 	switch models.MalwareType(malwareType) {
 	case models.ADWARE, models.RANSOMWARE, models.BACKDOOR, models.SPYWARE, models.TROJAN,
-		models.VIRUS, models.PHISHING, models.WORM, models.EICAR_SIGNATURE, models.UNKNOWN:
+		models.VIRUS, models.PHISHING, models.WORM, models.EICARSIGNATURE, models.UNKNOWN:
 		return true
 	default:
 		return false
