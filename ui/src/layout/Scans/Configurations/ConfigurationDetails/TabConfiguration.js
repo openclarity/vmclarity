@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useFetch } from 'hooks';
 import TitleValueDisplay, { TitleValueDisplayColumn } from 'components/TitleValueDisplay';
 import DoublePaneDisplay from 'components/DoublePaneDisplay';
@@ -8,11 +8,31 @@ import Title from 'components/Title';
 import Loader from 'components/Loader';
 import { ScopeDisplay, ScanTypesDisplay, InstancesDisplay } from 'layout/Scans/scopeDisplayUtils';
 import { ROUTES, APIS } from 'utils/systemConsts';
+import { useFilterDispatch, setFilters, FILTER_TYPES } from 'context/FiltersProvider';
 
-const ConfigurationScansDisplay = ({configId}) => {
+const ConfigurationScansDisplay = ({configId, configName}) => {
+    const {pathname} = useLocation();
     const navigate = useNavigate();
+    const filtersDispatch = useFilterDispatch();
 
-    const [{loading, data, error}] = useFetch(APIS.SCANS, {queryParams: {"$filter": `scanConfig/id eq '${configId}'`, "$count": true}});
+    const scansFilter = `scanConfig/id eq '${configId}'`;
+
+    const onScansClick = () => {
+        setFilters(filtersDispatch, {
+            type: FILTER_TYPES.SCANS,
+            filters: {
+                filter: scansFilter,
+                name: configName,
+                suffix: "configuration",
+                backPath: pathname
+            },
+            isSystem: true
+        });
+
+        navigate(ROUTES.SCANS);
+    }
+
+    const [{loading, data, error}] = useFetch(APIS.SCANS, {queryParams: {"$filter": scansFilter, "$count": true}});
     
     if (error) {
         return null;
@@ -25,13 +45,13 @@ const ConfigurationScansDisplay = ({configId}) => {
     return (
         <>
             <Title medium>Configuration's scans</Title>
-            <Button onClick={() => navigate(ROUTES.SCANS)}>{`See all scans (${data?.count || 0})`}</Button>
+            <Button onClick={onScansClick}>{`See all scans (${data?.count || 0})`}</Button>
         </>
     )
 }
 
 const TabConfiguration = ({data}) => {
-    const {id, scope, scanFamiliesConfig} = data || {};
+    const {id, name, scope, scanFamiliesConfig} = data || {};
     const {all, regions, instanceTagSelector, instanceTagExclusion} = scope;
     
     return (
@@ -48,7 +68,7 @@ const TabConfiguration = ({data}) => {
                 </>
             )}
             rightPlaneDisplay={() => (
-                <ConfigurationScansDisplay configId={id} />
+                <ConfigurationScansDisplay configId={id} configName={name} />
             )}
         />
     )

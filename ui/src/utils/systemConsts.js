@@ -33,7 +33,7 @@ export const FINDINGS_MAPPING = {
         title: "Misconfigurations",
         icon: ICON_NAMES.COG,
         color: COLORS["color-findings-1"],
-        appRoute: `${APIS.ROUTES}/${FINDINGS_PATHS.MISCONFIGURATIONS}`
+        appRoute: `${ROUTES.FINDINGS}/${FINDINGS_PATHS.MISCONFIGURATIONS}`
     },
     SECRETS: {
         dataKey: "totalSecrets",
@@ -64,3 +64,5 @@ export const FINDINGS_MAPPING = {
         appRoute: `${ROUTES.FINDINGS}/${FINDINGS_PATHS.PACKAGES}`
     }
 }
+
+export const VULNERABILITIES_ICON_NAME = ICON_NAMES.SHIELD;

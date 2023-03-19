@@ -1,11 +1,18 @@
 import React from 'react';
 import { TooltipWrapper } from 'components/Tooltip';
-import Icon, { ICON_NAMES } from 'components/Icon';
+import Icon from 'components/Icon';
 import { SEVERITY_ITEMS } from 'components/SeverityDisplay';
+import { VULNERABILITIES_ICON_NAME } from 'utils/systemConsts';
 
 import COLORS from 'utils/scss_variables.module.scss';
 
 import './vulnerabilities-display.scss';
+
+export const getTotlalVulnerabilitiesFromCounters = counters => (
+    Object.values(VULNERABILITY_SEVERITY_ITEMS).reduce((acc, curr) => {
+        return acc + counters[curr.totalKey];
+    }, 0)
+)
 
 const VULNERABILITY_SEVERITY_ITEMS = {
     totalCriticalVulnerabilities: {
@@ -48,7 +55,7 @@ const TooltipContentDisplay = ({total, counters}) => (
             {
                 Object.values(VULNERABILITY_SEVERITY_ITEMS).map(({totalKey, color}) => (
                     <div key={totalKey} className="vulnerabilities-tooltip-counters-item">
-                        <Icon name={ICON_NAMES.SHIELD} style={{color}} size={18} /><span>{counters[totalKey] || 0}</span>
+                        <Icon name={VULNERABILITIES_ICON_NAME} style={{color}} size={18} /><span>{counters[totalKey] || 0}</span>
                     </div>
                 ))
             }
@@ -82,7 +89,7 @@ const VulnerabilitiesDisplay = ({highestSeverity, total, counters}) => {
     return (
         <div className="vulnerabilities-display-wrapper">
             <div className="vulnerabilities-display-summary">
-                <Icon name={ICON_NAMES.SHIELD} style={{color}} size={30} />
+                <Icon name={VULNERABILITIES_ICON_NAME} style={{color}} size={30} />
                 <CounterItemDisplay count={total} title="Vulnerabilities" color={COLORS["color-main"]} />
             </div>
             <div className="vulnerabilities-display-counters">
@@ -98,9 +105,7 @@ const VulnerabilitiesDisplay = ({highestSeverity, total, counters}) => {
 
 
 const VulnerabilitiesDisplayWrapper = ({counters={}, isMinimized=false, minimizedTooltipId=null}) => {
-    const total = Object.values(VULNERABILITY_SEVERITY_ITEMS).reduce((acc, curr) => {
-        return acc + counters[curr.totalKey];
-    }, 0);
+    const total = getTotlalVulnerabilitiesFromCounters(counters);
     
     const highestSeverity = (Object.values(VULNERABILITY_SEVERITY_ITEMS).find(({totalKey}) =>
         !!counters[totalKey] && counters[totalKey] > 0) || VULNERABILITY_SEVERITY_ITEMS.totalNegligibleVulnerabilities).totalKey;

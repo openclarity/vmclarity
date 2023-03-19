@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import moment from 'moment';
 import TitleValueDisplay, { TitleValueDisplayColumn, TitleValueDisplayRow } from 'components/TitleValueDisplay';
 import DoublePaneDisplay from 'components/DoublePaneDisplay';
@@ -9,6 +9,7 @@ import Button from 'components/Button';
 import { ScopeDisplay, ScanTypesDisplay, InstancesDisplay } from 'layout/Scans/scopeDisplayUtils';
 import { formatDate } from 'utils/utils';
 import { ROUTES } from 'utils/systemConsts';
+import { useFilterDispatch, setFilters, FILTER_TYPES } from 'context/FiltersProvider';
 import ConfigurationAlertLink from './ConfigurationAlertLink';
 
 export const calculateDuration = (startTime, endTime) => {
@@ -22,12 +23,31 @@ export const calculateDuration = (startTime, endTime) => {
 }
 
 const ScanDetails = ({scanData, withAssetScansLink=false}) => {
+    const {pathname} = useLocation();
     const navigate = useNavigate();
+    const filtersDispatch = useFilterDispatch();
 
-    const {scanConfig, scanConfigSnapshot, startTime, endTime, summary, state, stateMessage, stateReason} = scanData || {};
+    const {id, scanConfig, scanConfigSnapshot, startTime, endTime, summary, state, stateMessage, stateReason} = scanData || {};
     const {scope, scanFamiliesConfig} = scanConfigSnapshot;
     const {all, regions, instanceTagSelector, instanceTagExclusion, shouldScanStoppedInstances} = scope;
     const {jobsCompleted, jobsLeftToRun} = summary;
+
+    const formattedStartTime = formatDate(startTime);
+    
+    const onAssetScansClick = () => {
+        setFilters(filtersDispatch, {
+            type: FILTER_TYPES.ASSET_SCANS,
+            filters: {
+                filter: `scan/id eq '${id}'`,
+                name: `${scanConfigSnapshot.name} - ${formattedStartTime}`,
+                suffix: "scan",
+                backPath: pathname
+            },
+            isSystem: true
+        });
+
+        navigate(ROUTES.ASSET_SCANS);
+    }
     
     return (
         <DoublePaneDisplay
@@ -56,14 +76,14 @@ const ScanDetails = ({scanData, withAssetScansLink=false}) => {
                         itemsLeft={jobsLeftToRun}
                     />
                     <TitleValueDisplayRow>
-                        <TitleValueDisplay title="Started">{formatDate(startTime)}</TitleValueDisplay>
+                        <TitleValueDisplay title="Started">{formattedStartTime}</TitleValueDisplay>
                         <TitleValueDisplay title="Ended">{formatDate(endTime)}</TitleValueDisplay>
                         <TitleValueDisplay title="Duration">{calculateDuration(startTime, endTime)}</TitleValueDisplay>
                     </TitleValueDisplayRow>
                     {withAssetScansLink &&
                         <div style={{marginTop: "50px"}}>
                             <Title medium>Asset scans</Title>
-                            <Button onClick={() => navigate(ROUTES.ASSET_SCANS)}>{`See asset scans (${jobsCompleted || 0})`}</Button>
+                            <Button onClick={onAssetScansClick}>{`See asset scans (${jobsCompleted || 0})`}</Button>
                         </div>
                     }
                 </>

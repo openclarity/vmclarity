@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import DetailsPageWrapper from 'components/DetailsPageWrapper';
 import TabbedPage from 'components/TabbedPage';
 import { APIS } from 'utils/systemConsts';
-import { formatDate } from 'utils/utils';
+import { formatDate, getScanName } from 'utils/utils';
 // import ScanActionsDisplay from '../ScanActionsDisplay';
 import { ScanDetails as ScanDetailsTab, Findings } from 'layout/detail-displays';
 
@@ -15,8 +15,8 @@ export const SCAN_DETAILS_PATHS = {
 const DetailsContent = ({data}) => {
     const {pathname} = useLocation();
     
-    const {id} = data;
-    
+    const {id, scanConfigSnapshot, startTime} = data;
+
     return (
         <TabbedPage
             basePath={`${pathname.substring(0, pathname.indexOf(id))}${id}`}
@@ -31,7 +31,13 @@ const DetailsContent = ({data}) => {
                     id: "findings",
                     title: "Findings",
                     path: SCAN_DETAILS_PATHS.FINDINGS,
-                    component: () => <Findings findingsSummary={data?.summary} />
+                    component: () => (
+                        <Findings
+                            findingsSummary={data?.summary}
+                            findingsFilter={`scan/id eq '${id}'`}
+                            findingsFilterTitle={getScanName({name: scanConfigSnapshot.name, startTime})}
+                        />
+                    )
                 }
             ]}
             // headerCustomDisplay={() => (

@@ -17,7 +17,7 @@ export const formatRegionsToStrings = regions => {
     const SEPARATOR = "/";
     
     return regions.reduce((acc, curr) => {
-        const {id: region, vpcs} = curr;
+        const {name: region, vpcs} = curr;
 
         const formattedVpcs = vpcs.reduce((acc, curr) => {
             const {id: vpc, securityGroups} = curr;

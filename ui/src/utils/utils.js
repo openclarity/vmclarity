@@ -1,7 +1,6 @@
 import moment from 'moment';
 import { get } from 'lodash';
-import { FINDINGS_MAPPING } from 'utils/systemConsts';
-import { ICON_NAMES } from 'components/Icon';
+import { FINDINGS_MAPPING, VULNERABILITIES_ICON_NAME } from 'utils/systemConsts';
 import IconWithTooltip from 'components/IconWithTooltip';
 import VulnerabilitiesDisplay from 'components/VulnerabilitiesDisplay';
 
@@ -31,7 +30,13 @@ export const getFindingsColumnsConfigList = ({tableTitle, summaryKey="summary"})
 });
 
 export const getVulnerabilitiesColumnConfigItem = ({tableTitle, idKey="id", summaryKey="summary"}) => ({
-    Header: <IconWithTooltip tooltipId={`table-header-${tableTitle}-vulnerabilities`} tooltipText="Vulnerabilities" name={ICON_NAMES.SHIELD} />,
+    Header: (
+        <IconWithTooltip
+            tooltipId={`table-header-${tableTitle}-vulnerabilities`}
+            tooltipText="Vulnerabilities"
+            name={VULNERABILITIES_ICON_NAME}
+        />
+    ),
     id: "vulnerabilities",
     Cell: ({row}) => {
         const id  = get(row.original, idKey) || {};

@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import DetailsPageWrapper from 'components/DetailsPageWrapper';
 import TabbedPage from 'components/TabbedPage';
 import { APIS } from 'utils/systemConsts';
-import { formatDate } from 'utils/utils';
+import { formatDate, getScanName } from 'utils/utils';
 import { AssetDetails as AssetDetailsTab, Findings, ScanDetails as ScanDetailsTab } from 'layout/detail-displays';
 
 const ASSET_SCAN_DETAILS_PATHS = {
@@ -16,6 +16,8 @@ const DetailsContent = ({data}) => {
     const {pathname} = useLocation();
     
     const {id, scan, target} = data;
+    const {scanConfigSnapshot, startTime} = scan;
+    const {id: targetId, targetInfo} = target;
     
     return (
         <TabbedPage
@@ -37,7 +39,13 @@ const DetailsContent = ({data}) => {
                     id: "findings",
                     title: "Findings",
                     path: ASSET_SCAN_DETAILS_PATHS.FINDINGHS,
-                    component: () => <Findings findingsSummary={scan?.summary} />
+                    component: () => (
+                        <Findings
+                            findingsSummary={scan?.summary}
+                            findingsFilter={`scan/id eq '${id}' and asset/id eq '${targetId}'`}
+                            findingsFilterTitle={`${targetInfo.instanceID} scanned by ${getScanName({name: scanConfigSnapshot.name, startTime})}`}
+                        />
+                    )
                 }
             ]}
             withInnerPadding={false}

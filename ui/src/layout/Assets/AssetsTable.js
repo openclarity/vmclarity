@@ -1,16 +1,12 @@
 import React, { useMemo } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import ContentContainer from 'components/ContentContainer';
-import Table from 'components/Table';
+import TablePage from 'components/TablePage';
 import { APIS } from 'utils/systemConsts';
 import { getFindingsColumnsConfigList, getVulnerabilitiesColumnConfigItem } from 'utils/utils';
+import { FILTER_TYPES } from 'context/FiltersProvider';
 
 const TABLE_TITLE = "assets";
 
 const AssetsTable = () => {
-    const navigate = useNavigate();
-    const {pathname} = useLocation();
-
     const columns = useMemo(() => [
         {
             Header: "Name",
@@ -35,15 +31,13 @@ const AssetsTable = () => {
     ], []);
 
     return (
-        <ContentContainer withMargin>
-            <Table
-                columns={columns}
-                paginationItemsName={TABLE_TITLE.toLowerCase()}
-                url={APIS.ASSETS}
-                noResultsTitle={TABLE_TITLE}
-                onLineClick={({id}) => navigate(`${pathname}/${id}`)}
-            />
-        </ContentContainer>
+        <TablePage
+            columns={columns}
+            url={APIS.ASSETS}
+            tableTitle={TABLE_TITLE}
+            filterType={FILTER_TYPES.ASSETS}
+            withMargin
+        />
     )
 }
 

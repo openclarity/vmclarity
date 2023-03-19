@@ -1,16 +1,12 @@
 import React, { useMemo } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import ContentContainer from 'components/ContentContainer';
-import Table from 'components/Table';
+import TablePage from 'components/TablePage';
 import { APIS } from 'utils/systemConsts';
 import { getScanName, getFindingsColumnsConfigList, getVulnerabilitiesColumnConfigItem } from 'utils/utils';
+import { FILTER_TYPES } from 'context/FiltersProvider';
 
 const TABLE_TITLE = "asset scans";
 
 const AssetScansTable = () => {
-    const navigate = useNavigate();
-    const {pathname} = useLocation();
-
     const columns = useMemo(() => [
         {
             Header: "Asset name",
@@ -45,16 +41,14 @@ const AssetScansTable = () => {
     ], []);
 
     return (
-        <ContentContainer withMargin>
-            <Table
-                columns={columns}
-                paginationItemsName={TABLE_TITLE.toLowerCase()}
-                url={`${APIS.ASSET_SCANS}`}
-                filters={{"$expand": "scan,target"}}
-                noResultsTitle={TABLE_TITLE}
-                onLineClick={({id}) => navigate(`${pathname}/${id}`)}
-            />
-        </ContentContainer>
+        <TablePage
+            columns={columns}
+            url={APIS.ASSET_SCANS}
+            expand="scan,target"
+            tableTitle={TABLE_TITLE}
+            filterType={FILTER_TYPES.ASSET_SCANS}
+            withMargin
+        />
     )
 }
 

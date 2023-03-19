@@ -13,7 +13,7 @@ const ASSET_DETAILS_PATHS = {
 const DetailsContent = ({data}) => {
     const {pathname} = useLocation();
     
-    const {id} = data;
+    const {id, targetInfo} = data;
     
     return (
         <TabbedPage
@@ -29,7 +29,14 @@ const DetailsContent = ({data}) => {
                     id: "findings",
                     title: "Findings",
                     path: ASSET_DETAILS_PATHS.FINDINGS,
-                    component: () => <Findings findingsSummary={data?.summary} />
+                    component: () => (
+                        <Findings
+                            findingsSummary={data?.summary}
+                            findingsFilter={`asset/id eq '${id}'`}
+                            findingsFilterTitle={targetInfo.instanceID}
+                            findingsFilterSuffix="asset"
+                        />
+                    )
                 }
             ]}
             withInnerPadding={false}
