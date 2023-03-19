@@ -18,7 +18,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-
 	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 
 	"github.com/openclarity/vmclarity/api/models"
@@ -378,8 +377,28 @@ func convertMalwareResultToAPIModel(malwareResults *malware.Results) *models.Mal
 		})
 	}
 
+	metadata := []models.ScannerMetadata{}
+	for name, summary := range malwareResults.MergedResults.Metadata {
+		metadata = append(metadata, models.ScannerMetadata{
+			ScannerName: &name,
+			ScanSummary: &models.ScannerSummary{
+				DataRead:           &summary.DataRead,
+				DataScanned:        &summary.DataScanned,
+				EngineVersion:      &summary.EngineVersion,
+				InfectedFiles:      &summary.InfectedFiles,
+				KnownViruses:       &summary.KnownViruses,
+				ScannedDirectories: &summary.ScannedDirectories,
+				ScannedFiles:       &summary.ScannedFiles,
+				SuspectedFiles:     &summary.SuspectedFiles,
+				TimeTaken:          &summary.TimeTaken,
+				Warnings:           &summary.Warnings,
+			},
+		})
+	}
+
 	return &models.MalwareScan{
-		Malware: &malwareList,
+		Malware:  &malwareList,
+		Metadata: &metadata,
 	}
 }
 

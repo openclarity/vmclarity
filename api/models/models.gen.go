@@ -267,7 +267,8 @@ type MalwareInfo struct {
 
 // MalwareScan defines model for MalwareScan.
 type MalwareScan struct {
-	Malware *[]Malware `json:"malware,omitempty"`
+	Malware  *[]Malware         `json:"malware,omitempty"`
+	Metadata *[]ScannerMetadata `json:"metadata,omitempty"`
 }
 
 // MalwareType defines model for MalwareType.
@@ -578,6 +579,26 @@ type ScanSummary struct {
 
 // ScanType defines model for ScanType.
 type ScanType string
+
+// ScannerMetadata defines model for ScannerMetadata.
+type ScannerMetadata struct {
+	ScanSummary *ScannerSummary `json:"scanSummary,omitempty"`
+	ScannerName *string         `json:"scannerName,omitempty"`
+}
+
+// ScannerSummary defines model for ScannerSummary.
+type ScannerSummary struct {
+	DataRead           *string `json:"DataRead,omitempty"`
+	DataScanned        *string `json:"DataScanned,omitempty"`
+	EngineVersion      *string `json:"EngineVersion,omitempty"`
+	InfectedFiles      *int    `json:"InfectedFiles,omitempty"`
+	KnownViruses       *int    `json:"KnownViruses,omitempty"`
+	ScannedDirectories *int    `json:"ScannedDirectories,omitempty"`
+	ScannedFiles       *int    `json:"ScannedFiles,omitempty"`
+	SuspectedFiles     *int    `json:"SuspectedFiles,omitempty"`
+	TimeTaken          *string `json:"TimeTaken,omitempty"`
+	Warnings           *int    `json:"Warnings,omitempty"`
+}
 
 // Scans defines model for Scans.
 type Scans struct {

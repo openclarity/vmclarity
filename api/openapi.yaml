@@ -1617,6 +1617,39 @@ components:
           items:
             $ref: '#/components/schemas/Vulnerability'
 
+    ScannerSummary:
+      type: object
+      properties:
+        KnownViruses:
+          type: integer
+        EngineVersion:
+          type: string
+        ScannedDirectories:
+          type: integer
+        ScannedFiles:
+          type: integer
+        InfectedFiles:
+          type: integer
+        SuspectedFiles:
+          type: integer
+        Warnings:
+          type: integer
+        DataScanned:
+          type: string
+        DataRead:
+          type: string
+        TimeTaken:
+          type: string
+
+    ScannerMetadata:
+      type: object
+      properties:
+        scannerName:
+          type: string
+        scanSummary:
+          $ref: '#/components/schemas/ScannerSummary'
+
+
     MalwareScan:
       type: object
       properties:
@@ -1624,6 +1657,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Malware'
+        metadata:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScannerMetadata'
 
     RootkitScan:
       type: object
