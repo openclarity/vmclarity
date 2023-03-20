@@ -248,9 +248,12 @@ func (s *ScanConfigsTableHandler) UpdateScanConfig(scanConfig models.ScanConfig)
 		return models.ScanConfig{}, fmt.Errorf("ID is required to update scan config in DB")
 	}
 
-	if err := validateRuntimeScheduleScanConfig(scanConfig.Scheduled); err != nil {
-		// Should we return a BadRequest error here?
-		return models.ScanConfig{}, fmt.Errorf("failed to validate runtime schedule scan config: %v", err)
+	// we will want to validate Scheduled upon update only if exists.
+	if scanConfig.Scheduled != nil {
+		if err := validateRuntimeScheduleScanConfig(scanConfig.Scheduled); err != nil {
+			// Should we return a BadRequest error here?
+			return models.ScanConfig{}, fmt.Errorf("failed to validate runtime schedule scan config: %v", err)
+		}
 	}
 
 	var dbScanConfig ScanConfig

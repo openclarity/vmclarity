@@ -292,7 +292,7 @@ func (b *BackendClient) PatchScanConfig(ctx context.Context, scanConfigID string
 	switch resp.StatusCode() {
 	case http.StatusOK:
 		if resp.JSON200 == nil {
-			return fmt.Errorf("failed to patch a scan: empty body")
+			return newPatchScanConfigResultError(fmt.Errorf("empty body"))
 		}
 		return nil
 	case http.StatusNotFound:
