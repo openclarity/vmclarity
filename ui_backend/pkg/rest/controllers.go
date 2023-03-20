@@ -40,7 +40,6 @@ func (s *ServerImpl) GetDashboardRiskiestRegions(ctx echo.Context) error {
 	// get all targets, and add their findings count from the last time
 	// they were scanned to the total region findings count.
 	// target/ScanFindingsSummary should contain the latest results per family.
-	// TODO ScanFindingsSummary is currently not containing the latest results per family, but all results ever found.
 	for _, target := range *targets.Items {
 		location, err := getTargetLocation(target)
 		if err != nil {
