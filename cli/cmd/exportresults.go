@@ -18,6 +18,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+
 	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 
 	cdx "github.com/CycloneDX/cyclonedx-go"
@@ -426,7 +427,7 @@ func convertMalwareResultToAPIModel(malwareResults *malware.Results) *models.Mal
 
 	malwareList := []models.Malware{}
 	for _, m := range malwareResults.MergedResults.DetectedMalware {
-		mal := m // Prevent loop variable export
+		mal := m // Prevent loop variable pointer export
 		malwareList = append(malwareList, models.Malware{
 			MalwareName: &mal.MalwareName,
 			MalwareType: &mal.MalwareType,
@@ -436,8 +437,9 @@ func convertMalwareResultToAPIModel(malwareResults *malware.Results) *models.Mal
 
 	metadata := []models.ScannerMetadata{}
 	for name, summary := range malwareResults.MergedResults.Metadata {
+		nameVal := name // Prevent loop variable pointer export
 		metadata = append(metadata, models.ScannerMetadata{
-			ScannerName: &name,
+			ScannerName: &nameVal,
 			ScanSummary: &models.ScannerSummary{
 				DataRead:           &summary.DataRead,
 				DataScanned:        &summary.DataScanned,
