@@ -429,7 +429,7 @@ func convertMalwareResultToAPIModel(malwareResults *malware.Results) *models.Mal
 		mal := m // Prevent loop variable export
 		malwareList = append(malwareList, models.Malware{
 			MalwareName: &mal.MalwareName,
-			MalwareType: &m.MalwareType,
+			MalwareType: &mal.MalwareType,
 			Path:        &mal.Path,
 		})
 	}

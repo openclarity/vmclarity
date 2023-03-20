@@ -506,22 +506,6 @@ func Test_convertSecretsResultToAPIModel(t *testing.T) {
 }
 
 func Test_convertMalwareResultToAPIModel(t *testing.T) {
-	malware1 := malwarecommon.DetectedMalware{
-		MalwareName: "Worm<3",
-		MalwareType: "WORM",
-		Path:        "/somepath/innocent.exe",
-	}
-	malware2 := malwarecommon.DetectedMalware{
-		MalwareName: "Trojan:)",
-		MalwareType: "TROJAN",
-		Path:        "/somepath/gift.jar",
-	}
-	malware3 := malwarecommon.DetectedMalware{
-		MalwareName: "Ransom!",
-		MalwareType: "RANSOMWARE",
-		Path:        "/somepath/givememoney.exe",
-	}
-
 	type args struct {
 		mergedResults *malware.Results
 	}
@@ -538,7 +522,7 @@ func Test_convertMalwareResultToAPIModel(t *testing.T) {
 			want: &models.MalwareScan{},
 		},
 		{
-			name: "nil exploitsResults.Exploits",
+			name: "nil malwareResults.Malware",
 			args: args{
 				mergedResults: &malware.Results{
 					MergedResults: nil,
@@ -552,7 +536,21 @@ func Test_convertMalwareResultToAPIModel(t *testing.T) {
 				mergedResults: &malware.Results{
 					MergedResults: &malware.MergedResults{
 						DetectedMalware: []malwarecommon.DetectedMalware{
-							malware1, malware2, malware3,
+							{
+								MalwareName: "Worm<3",
+								MalwareType: "WORM",
+								Path:        "/somepath/innocent.exe",
+							},
+							{
+								MalwareName: "Trojan:)",
+								MalwareType: "TROJAN",
+								Path:        "/somepath/gift.jar",
+							},
+							{
+								MalwareName: "Ransom!",
+								MalwareType: "RANSOMWARE",
+								Path:        "/somepath/givememoney.exe",
+							},
 						},
 						Metadata: map[string]*malwarecommon.ScanSummary{
 							"clam": {
@@ -574,25 +572,19 @@ func Test_convertMalwareResultToAPIModel(t *testing.T) {
 			want: &models.MalwareScan{
 				Malware: &[]models.Malware{
 					{
-						MalwareInfo: &models.MalwareInfo{
-							MalwareName: utils.StringPtr("Worm<3"),
-							MalwareType: utils.PointerTo[models.MalwareType]("WORM"),
-							Path:        utils.StringPtr("/somepath/innocent.exe"),
-						},
+						MalwareName: utils.StringPtr("Ransom!"),
+						MalwareType: utils.PointerTo[models.MalwareType]("RANSOMWARE"),
+						Path:        utils.StringPtr("/somepath/givememoney.exe"),
 					},
 					{
-						MalwareInfo: &models.MalwareInfo{
-							MalwareName: utils.StringPtr("Trojan:)"),
-							MalwareType: utils.PointerTo[models.MalwareType]("TROJAN"),
-							Path:        utils.StringPtr("/somepath/gift.jar"),
-						},
+						MalwareName: utils.StringPtr("Trojan:)"),
+						MalwareType: utils.PointerTo[models.MalwareType]("TROJAN"),
+						Path:        utils.StringPtr("/somepath/gift.jar"),
 					},
 					{
-						MalwareInfo: &models.MalwareInfo{
-							MalwareName: utils.StringPtr("Ransom!"),
-							MalwareType: utils.PointerTo[models.MalwareType]("RANSOMWARE"),
-							Path:        utils.StringPtr("/somepath/givememoney.exe"),
-						},
+						MalwareName: utils.StringPtr("Worm<3"),
+						MalwareType: utils.PointerTo[models.MalwareType]("WORM"),
+						Path:        utils.StringPtr("/somepath/innocent.exe"),
 					},
 				},
 				Metadata: &[]models.ScannerMetadata{
@@ -618,8 +610,8 @@ func Test_convertMalwareResultToAPIModel(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := convertMalwareResultToAPIModel(tt.args.mergedResults)
-			if diff := cmp.Diff(tt.want, got, cmpopts.SortSlices(func(a, b models.Exploit) bool { return *a.Id < *b.Id })); diff != "" {
-				t.Errorf("convertExploitsResultToAPIModel() mismatch (-want +got):\n%s", diff)
+			if diff := cmp.Diff(tt.want, got, cmpopts.SortSlices(func(a, b models.Malware) bool { return *a.MalwareType < *b.MalwareType })); diff != "" {
+				t.Errorf("convertMalwareResultToAPIModel() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
