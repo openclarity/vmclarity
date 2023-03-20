@@ -289,14 +289,16 @@ func (c *Client) RunScanningJob(ctx context.Context, region, id string, config p
 
 	var retryMaxAttempts int
 	// Use spot instances if there is a configuration for it.
-	if config.ScannerInstanceCreationConfig != nil && config.ScannerInstanceCreationConfig.UseSpotInstances {
-		runInstancesInput.InstanceMarketOptions = &ec2types.InstanceMarketOptionsRequest{
-			MarketType: ec2types.MarketTypeSpot,
-			SpotOptions: &ec2types.SpotMarketOptions{
-				InstanceInterruptionBehavior: ec2types.InstanceInterruptionBehaviorTerminate,
-				SpotInstanceType:             ec2types.SpotInstanceTypeOneTime,
-				MaxPrice:                     config.ScannerInstanceCreationConfig.MaxPrice,
-			},
+	if config.ScannerInstanceCreationConfig != nil {
+		if config.ScannerInstanceCreationConfig.UseSpotInstances {
+			runInstancesInput.InstanceMarketOptions = &ec2types.InstanceMarketOptionsRequest{
+				MarketType: ec2types.MarketTypeSpot,
+				SpotOptions: &ec2types.SpotMarketOptions{
+					InstanceInterruptionBehavior: ec2types.InstanceInterruptionBehaviorTerminate,
+					SpotInstanceType:             ec2types.SpotInstanceTypeOneTime,
+					MaxPrice:                     config.ScannerInstanceCreationConfig.MaxPrice,
+				},
+			}
 		}
 		// In the case of spot instances, we have higher probability to start an instance
 		// by increasing RetryMaxAttempts
