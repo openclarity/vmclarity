@@ -1,14 +1,15 @@
 package rest
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 
+	"github.com/openclarity/vmclarity/shared/pkg/utils"
+	"github.com/openclarity/vmclarity/ui_backend/api/models"
 	"gotest.tools/v3/assert"
 
 	backendmodels "github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/shared/pkg/utils"
-	"github.com/openclarity/vmclarity/ui_backend/api/models"
 )
 
 func Test_getTargetLocation(t *testing.T) {
@@ -28,7 +29,7 @@ func Test_getTargetLocation(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "",
+			name: "sanity",
 			args: args{
 				target: backendmodels.Target{
 					TargetInfo: &targetInfo,
@@ -52,129 +53,10 @@ func Test_getTargetLocation(t *testing.T) {
 	}
 }
 
-func Test_addTargetFindingsCount(t *testing.T) {
+func Test_addTargetSummaryToFindingsCount(t *testing.T) {
 	type args struct {
-		findingsCount map[backendmodels.ScanType]int
+		findingsCount *models.FindingsCount
 		summary       *backendmodels.ScanFindingsSummary
-	}
-	tests := []struct {
-		name              string
-		args              args
-		wantFindingsCount map[backendmodels.ScanType]int
-	}{
-		{
-			name: "from empty findings count",
-			args: args{
-				findingsCount: map[backendmodels.ScanType]int{},
-				summary: &backendmodels.ScanFindingsSummary{
-					TotalExploits:          utils.PointerTo(2),
-					TotalMalware:           utils.PointerTo(3),
-					TotalMisconfigurations: utils.PointerTo(4),
-					TotalPackages:          utils.PointerTo(5),
-					TotalRootkits:          utils.PointerTo(6),
-					TotalSecrets:           utils.PointerTo(7),
-					TotalVulnerabilities: &backendmodels.VulnerabilityScanSummary{
-						TotalCriticalVulnerabilities:   utils.PointerTo(1),
-						TotalHighVulnerabilities:       utils.PointerTo(2),
-						TotalLowVulnerabilities:        utils.PointerTo(3),
-						TotalMediumVulnerabilities:     utils.PointerTo(4),
-						TotalNegligibleVulnerabilities: utils.PointerTo(5),
-					},
-				},
-			},
-			wantFindingsCount: map[backendmodels.ScanType]int{
-				"Exploits":          2,
-				"Malware":           3,
-				"Misconfigurations": 4,
-				"Rootkits":          6,
-				"Secrets":           7,
-				"Vulnerabilities":   15,
-			},
-		},
-		{
-			name: "from empty findings - only exploits",
-			args: args{
-				findingsCount: map[backendmodels.ScanType]int{},
-				summary: &backendmodels.ScanFindingsSummary{
-					TotalExploits: utils.PointerTo(2),
-				},
-			},
-			wantFindingsCount: map[backendmodels.ScanType]int{
-				"Exploits": 2,
-			},
-		},
-		{
-			name: "from existing findings - only exploits in summary",
-			args: args{
-				findingsCount: map[backendmodels.ScanType]int{
-					"Exploits":          2,
-					"Malware":           3,
-					"Misconfigurations": 4,
-					"Rootkits":          6,
-					"Secrets":           7,
-					"Vulnerabilities":   15,
-				},
-				summary: &backendmodels.ScanFindingsSummary{
-					TotalExploits: utils.PointerTo(2),
-				},
-			},
-			wantFindingsCount: map[backendmodels.ScanType]int{
-				"Exploits":          4,
-				"Malware":           3,
-				"Misconfigurations": 4,
-				"Rootkits":          6,
-				"Secrets":           7,
-				"Vulnerabilities":   15,
-			},
-		},
-		{
-			name: "from existing findings - add to all",
-			args: args{
-				findingsCount: map[backendmodels.ScanType]int{
-					"Exploits":          2,
-					"Malware":           3,
-					"Misconfigurations": 4,
-					"Rootkits":          6,
-					"Secrets":           7,
-					"Vulnerabilities":   15,
-				},
-				summary: &backendmodels.ScanFindingsSummary{
-					TotalExploits:          utils.PointerTo(2),
-					TotalMalware:           utils.PointerTo(3),
-					TotalMisconfigurations: utils.PointerTo(4),
-					TotalPackages:          utils.PointerTo(5),
-					TotalRootkits:          utils.PointerTo(6),
-					TotalSecrets:           utils.PointerTo(7),
-					TotalVulnerabilities: &backendmodels.VulnerabilityScanSummary{
-						TotalCriticalVulnerabilities:   utils.PointerTo(1),
-						TotalHighVulnerabilities:       utils.PointerTo(2),
-						TotalLowVulnerabilities:        utils.PointerTo(3),
-						TotalMediumVulnerabilities:     utils.PointerTo(4),
-						TotalNegligibleVulnerabilities: utils.PointerTo(5),
-					},
-				},
-			},
-			wantFindingsCount: map[backendmodels.ScanType]int{
-				"Exploits":          4,
-				"Malware":           6,
-				"Misconfigurations": 8,
-				"Rootkits":          12,
-				"Secrets":           14,
-				"Vulnerabilities":   30,
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			addTargetFindingsCount(tt.args.findingsCount, tt.args.summary)
-			assert.DeepEqual(t, tt.args.findingsCount, tt.wantFindingsCount)
-		})
-	}
-}
-
-func Test_createFindingsCount(t *testing.T) {
-	type args struct {
-		findings map[backendmodels.ScanType]int
 	}
 	tests := []struct {
 		name string
@@ -182,49 +64,254 @@ func Test_createFindingsCount(t *testing.T) {
 		want *models.FindingsCount
 	}{
 		{
-			name: "all values exists",
+			name: "nil",
 			args: args{
-				findings: map[backendmodels.ScanType]int{
-					"Exploits":          2,
-					"Malware":           3,
-					"Misconfigurations": 4,
-					"Rootkits":          6,
-					"Secrets":           7,
-					"Vulnerabilities":   15,
+				findingsCount: &models.FindingsCount{
+					Exploits:          utils.PointerTo(1),
+					Malware:           utils.PointerTo(2),
+					Misconfigurations: utils.PointerTo(3),
+					Rootkits:          utils.PointerTo(4),
+					Secrets:           utils.PointerTo(5),
+					Vulnerabilities:   utils.PointerTo(6),
 				},
+				summary: nil,
 			},
 			want: &models.FindingsCount{
-				Exploits:          utils.PointerTo(2),
-				Malware:           utils.PointerTo(3),
-				Misconfigurations: utils.PointerTo(4),
-				Rootkits:          utils.PointerTo(6),
-				Secrets:           utils.PointerTo(7),
-				Vulnerabilities:   utils.PointerTo(15),
+				Exploits:          utils.PointerTo(1),
+				Malware:           utils.PointerTo(2),
+				Misconfigurations: utils.PointerTo(3),
+				Rootkits:          utils.PointerTo(4),
+				Secrets:           utils.PointerTo(5),
+				Vulnerabilities:   utils.PointerTo(6),
 			},
 		},
 		{
-			name: "not all values exists",
+			name: "sanity",
 			args: args{
-				findings: map[backendmodels.ScanType]int{
-					"Exploits":          2,
-					"Misconfigurations": 4,
-					"Vulnerabilities":   15,
+				findingsCount: &models.FindingsCount{
+					Exploits:          utils.PointerTo(1),
+					Malware:           utils.PointerTo(2),
+					Misconfigurations: utils.PointerTo(3),
+					Rootkits:          utils.PointerTo(4),
+					Secrets:           utils.PointerTo(5),
+					Vulnerabilities:   utils.PointerTo(6),
+				},
+				summary: &backendmodels.ScanFindingsSummary{
+					TotalExploits:          utils.PointerTo(2),
+					TotalMalware:           utils.PointerTo(3),
+					TotalMisconfigurations: utils.PointerTo(4),
+					TotalPackages:          utils.PointerTo(5),
+					TotalRootkits:          utils.PointerTo(6),
+					TotalSecrets:           utils.PointerTo(7),
+					TotalVulnerabilities: &backendmodels.VulnerabilityScanSummary{
+						TotalCriticalVulnerabilities:   utils.PointerTo(10),
+						TotalHighVulnerabilities:       utils.PointerTo(11),
+						TotalLowVulnerabilities:        utils.PointerTo(12),
+						TotalMediumVulnerabilities:     utils.PointerTo(13),
+						TotalNegligibleVulnerabilities: utils.PointerTo(14),
+					},
 				},
 			},
 			want: &models.FindingsCount{
-				Exploits:          utils.PointerTo(2),
-				Malware:           utils.PointerTo(0),
-				Misconfigurations: utils.PointerTo(4),
-				Rootkits:          utils.PointerTo(0),
-				Secrets:           utils.PointerTo(0),
-				Vulnerabilities:   utils.PointerTo(15),
+				Exploits:          utils.PointerTo(3),
+				Malware:           utils.PointerTo(5),
+				Misconfigurations: utils.PointerTo(7),
+				Rootkits:          utils.PointerTo(10),
+				Secrets:           utils.PointerTo(12),
+				Vulnerabilities:   utils.PointerTo(66),
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := createFindingsCount(tt.args.findings); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("createFindingsCount() = %v, want %v", got, tt.want)
+			if got := addTargetSummaryToFindingsCount(tt.args.findingsCount, tt.args.summary); !reflect.DeepEqual(got, tt.want) {
+				gotB, _ := json.Marshal(got)
+				wantB, _ := json.Marshal(tt.want)
+				t.Errorf("addTargetSummaryToFindingsCount() = %v, want %v", string(gotB), string(wantB))
+			}
+		})
+	}
+}
+
+func Test_getTotalVulnerabilities(t *testing.T) {
+	type args struct {
+		summary *backendmodels.VulnerabilityScanSummary
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{
+			name: "sanity",
+			args: args{
+				summary: &backendmodels.VulnerabilityScanSummary{
+					TotalCriticalVulnerabilities:   utils.PointerTo(1),
+					TotalHighVulnerabilities:       utils.PointerTo(2),
+					TotalLowVulnerabilities:        utils.PointerTo(3),
+					TotalMediumVulnerabilities:     utils.PointerTo(4),
+					TotalNegligibleVulnerabilities: utils.PointerTo(5),
+				},
+			},
+			want: 15,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getTotalVulnerabilities(tt.args.summary); got != tt.want {
+				t.Errorf("getTotalVulnerabilities() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_createRegionFindingsFromTargets(t *testing.T) {
+	dirTarget := backendmodels.TargetType{}
+	dirTarget.FromDirInfo(backendmodels.DirInfo{
+		DirName:  utils.PointerTo("test-name"),
+		Location: utils.PointerTo("location-test"),
+	})
+
+	vmFromRegion1 := backendmodels.TargetType{}
+	vmFromRegion1.FromVMInfo(backendmodels.VMInfo{
+		Location: "region1",
+	})
+	vm1FromRegion2 := backendmodels.TargetType{}
+	vm1FromRegion2.FromVMInfo(backendmodels.VMInfo{
+		Location: "region2",
+	})
+	type args struct {
+		targets *backendmodels.Targets
+	}
+	tests := []struct {
+		name string
+		args args
+		want []models.RegionFindings
+	}{
+		{
+			name: "Unsupported target is skipped",
+			args: args{
+				targets: &backendmodels.Targets{
+					Count: utils.PointerTo(1),
+					Items: utils.PointerTo([]backendmodels.Target{
+						{
+							Summary: &backendmodels.ScanFindingsSummary{
+								TotalExploits:          utils.PointerTo(1),
+								TotalMalware:           utils.PointerTo(1),
+								TotalMisconfigurations: utils.PointerTo(1),
+								TotalPackages:          utils.PointerTo(1),
+								TotalRootkits:          utils.PointerTo(1),
+								TotalSecrets:           utils.PointerTo(1),
+								TotalVulnerabilities: &backendmodels.VulnerabilityScanSummary{
+									TotalCriticalVulnerabilities:   utils.PointerTo(1),
+									TotalHighVulnerabilities:       utils.PointerTo(1),
+									TotalLowVulnerabilities:        utils.PointerTo(1),
+									TotalMediumVulnerabilities:     utils.PointerTo(1),
+									TotalNegligibleVulnerabilities: utils.PointerTo(1),
+								},
+							},
+							TargetInfo: &dirTarget,
+						},
+					}),
+				},
+			},
+			want: []models.RegionFindings{},
+		},
+		{
+			name: "sanity",
+			args: args{
+				targets: &backendmodels.Targets{
+					Count: utils.PointerTo(3),
+					Items: &[]backendmodels.Target{
+						{
+							Summary: &backendmodels.ScanFindingsSummary{
+								TotalExploits:          utils.PointerTo(1),
+								TotalMalware:           utils.PointerTo(2),
+								TotalMisconfigurations: utils.PointerTo(3),
+								TotalPackages:          utils.PointerTo(4),
+								TotalRootkits:          utils.PointerTo(5),
+								TotalSecrets:           utils.PointerTo(6),
+								TotalVulnerabilities: &backendmodels.VulnerabilityScanSummary{
+									TotalCriticalVulnerabilities:   utils.PointerTo(7),
+									TotalHighVulnerabilities:       utils.PointerTo(8),
+									TotalLowVulnerabilities:        utils.PointerTo(9),
+									TotalMediumVulnerabilities:     utils.PointerTo(10),
+									TotalNegligibleVulnerabilities: utils.PointerTo(11),
+								},
+							},
+							TargetInfo: &vmFromRegion1,
+						},
+						{
+							Summary: &backendmodels.ScanFindingsSummary{
+								TotalExploits:          utils.PointerTo(2),
+								TotalMalware:           utils.PointerTo(3),
+								TotalMisconfigurations: utils.PointerTo(4),
+								TotalPackages:          utils.PointerTo(5),
+								TotalRootkits:          utils.PointerTo(6),
+								TotalSecrets:           utils.PointerTo(7),
+								TotalVulnerabilities: &backendmodels.VulnerabilityScanSummary{
+									TotalCriticalVulnerabilities:   utils.PointerTo(8),
+									TotalHighVulnerabilities:       utils.PointerTo(9),
+									TotalLowVulnerabilities:        utils.PointerTo(10),
+									TotalMediumVulnerabilities:     utils.PointerTo(11),
+									TotalNegligibleVulnerabilities: utils.PointerTo(12),
+								},
+							},
+							TargetInfo: &vmFromRegion1,
+						},
+						{
+							Summary: &backendmodels.ScanFindingsSummary{
+								TotalExploits:          utils.PointerTo(3),
+								TotalMalware:           utils.PointerTo(4),
+								TotalMisconfigurations: utils.PointerTo(5),
+								TotalPackages:          utils.PointerTo(6),
+								TotalRootkits:          utils.PointerTo(7),
+								TotalSecrets:           utils.PointerTo(8),
+								TotalVulnerabilities: &backendmodels.VulnerabilityScanSummary{
+									TotalCriticalVulnerabilities:   utils.PointerTo(9),
+									TotalHighVulnerabilities:       utils.PointerTo(10),
+									TotalLowVulnerabilities:        utils.PointerTo(11),
+									TotalMediumVulnerabilities:     utils.PointerTo(12),
+									TotalNegligibleVulnerabilities: utils.PointerTo(13),
+								},
+							},
+							TargetInfo: &vm1FromRegion2,
+						},
+					},
+				},
+			},
+			want: []models.RegionFindings{
+				{
+					FindingsCount: &models.FindingsCount{
+						Exploits:          utils.PointerTo(3),
+						Malware:           utils.PointerTo(5),
+						Misconfigurations: utils.PointerTo(7),
+						Rootkits:          utils.PointerTo(11),
+						Secrets:           utils.PointerTo(13),
+						Vulnerabilities:   utils.PointerTo(95),
+					},
+					RegionName: utils.PointerTo("region1"),
+				},
+				{
+					FindingsCount: &models.FindingsCount{
+						Exploits:          utils.PointerTo(3),
+						Malware:           utils.PointerTo(4),
+						Misconfigurations: utils.PointerTo(5),
+						Rootkits:          utils.PointerTo(7),
+						Secrets:           utils.PointerTo(8),
+						Vulnerabilities:   utils.PointerTo(55),
+					},
+					RegionName: utils.PointerTo("region2"),
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := createRegionFindingsFromTargets(tt.args.targets); !reflect.DeepEqual(got, tt.want) {
+				gotB, _ := json.Marshal(got)
+				wantB, _ := json.Marshal(tt.want)
+				t.Errorf("createRegionFindingsFromTargets() = %v, want %v", string(gotB), string(wantB))
 			}
 		})
 	}

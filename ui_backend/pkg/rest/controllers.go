@@ -34,48 +34,49 @@ func (s *ServerImpl) GetDashboardRiskiestRegions(ctx echo.Context) error {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get targets: %v", err))
 	}
 
-	// map region to findings count per finding type
-	var findingsPerRegion = make(map[string]map[backendmodels.ScanType]int)
+	regionFindings := createRegionFindingsFromTargets(targets)
+	return sendResponse(ctx, http.StatusOK, &models.RiskiestRegions{
+		Count: utils.PointerTo(len(regionFindings)),
+		Items: &regionFindings,
+	})
+}
 
-	// get all targets, and add their findings count from the last time
-	// they were scanned to the total region findings count.
+func createRegionFindingsFromTargets(targets *backendmodels.Targets) []models.RegionFindings {
+	// Map regions to findings count per finding type
+	var findingsPerRegion = make(map[string]*models.FindingsCount)
+
+	// Sum all asset findings counts (the latest findings per asset) to the total region findings count.
 	// target/ScanFindingsSummary should contain the latest results per family.
 	for _, target := range *targets.Items {
 		location, err := getTargetLocation(target)
 		if err != nil {
-			log.Errorf("Failed to get target location, skipping target: %v", err)
+			log.Infof("Couldn't get target location, skipping target: %v", err)
 			continue
 		}
 		if _, ok := findingsPerRegion[location]; !ok {
-			findingsPerRegion[location] = make(map[backendmodels.ScanType]int)
+			findingsPerRegion[location] = &models.FindingsCount{
+				Exploits:          utils.PointerTo(0),
+				Malware:           utils.PointerTo(0),
+				Misconfigurations: utils.PointerTo(0),
+				Rootkits:          utils.PointerTo(0),
+				Secrets:           utils.PointerTo(0),
+				Vulnerabilities:   utils.PointerTo(0),
+			}
 		}
-		addTargetFindingsCount(findingsPerRegion[location], target.Summary)
+		regionFindings := findingsPerRegion[location]
+		findingsPerRegion[location] = addTargetSummaryToFindingsCount(regionFindings, target.Summary)
 	}
 
 	items := []models.RegionFindings{}
 	for region, findings := range findingsPerRegion {
+		r := region
 		items = append(items, models.RegionFindings{
-			FindingsCount: createFindingsCount(findings),
-			RegionName:    &region,
+			FindingsCount: findings,
+			RegionName:    &r,
 		})
 	}
 
-	return sendResponse(ctx, http.StatusOK, &models.RiskiestRegions{
-		Count: utils.PointerTo(len(items)),
-		Items: &items,
-	})
-}
-
-func createFindingsCount(findings map[backendmodels.ScanType]int) *models.FindingsCount {
-	var ret models.FindingsCount
-	ret.Malware = utils.PointerTo(findings["Malware"])
-	ret.Exploits = utils.PointerTo(findings["Exploits"])
-	ret.Vulnerabilities = utils.PointerTo(findings["Vulnerabilities"])
-	ret.Rootkits = utils.PointerTo(findings["Rootkits"])
-	ret.Misconfigurations = utils.PointerTo(findings["Misconfigurations"])
-	ret.Secrets = utils.PointerTo(findings["Secrets"])
-
-	return &ret
+	return items
 }
 
 func getTargetLocation(target backendmodels.Target) (string, error) {
@@ -92,27 +93,24 @@ func getTargetLocation(target backendmodels.Target) (string, error) {
 	}
 }
 
-func addTargetFindingsCount(findingsCount map[backendmodels.ScanType]int, summary *backendmodels.ScanFindingsSummary) {
+func addTargetSummaryToFindingsCount(findingsCount *models.FindingsCount, summary *backendmodels.ScanFindingsSummary) *models.FindingsCount {
 	if summary == nil {
-		return
+		return findingsCount
 	}
-	if summary.TotalExploits != nil {
-		findingsCount["Exploits"] += *summary.TotalExploits
-	}
-	if summary.TotalMisconfigurations != nil {
-		findingsCount["Misconfigurations"] += *summary.TotalMisconfigurations
-	}
-	if summary.TotalRootkits != nil {
-		findingsCount["Rootkits"] += *summary.TotalRootkits
-	}
-	if summary.TotalSecrets != nil {
-		findingsCount["Secrets"] += *summary.TotalSecrets
-	}
-	if summary.TotalMalware != nil {
-		findingsCount["Malware"] += *summary.TotalMalware
-	}
-	if summary.TotalVulnerabilities != nil {
-		findingsCount["Vulnerabilities"] += getTotalVulnerabilities(summary.TotalVulnerabilities)
+
+	secrets := *findingsCount.Secrets + *summary.TotalSecrets
+	exploits := *findingsCount.Exploits + *summary.TotalExploits
+	vulnerabilities := *findingsCount.Vulnerabilities + getTotalVulnerabilities(summary.TotalVulnerabilities)
+	rootkits := *findingsCount.Rootkits + *summary.TotalRootkits
+	malware := *findingsCount.Malware + *summary.TotalMalware
+	misconfigurations := *findingsCount.Misconfigurations + *summary.TotalMisconfigurations
+	return &models.FindingsCount{
+		Exploits:          &exploits,
+		Malware:           &malware,
+		Misconfigurations: &misconfigurations,
+		Rootkits:          &rootkits,
+		Secrets:           &secrets,
+		Vulnerabilities:   &vulnerabilities,
 	}
 }
 
