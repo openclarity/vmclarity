@@ -21,6 +21,19 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
 
+  /dashboard/riskiestAssets:
+    get:
+      summary: Get a list of riskiest assets for the dashboard.
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskiestAssets'
+        default:
+          $ref: '#/components/responses/UnknownError'
+
 components:
   schemas:
     ApiResponse:
@@ -67,6 +80,93 @@ components:
           type: integer
         exploits:
           type: integer
+
+    RiskiestAssets:
+      type: object
+      properties:
+        vulnerabilities:
+          type: array
+          description: Top 5 assets sorted by max vulnerabilites count
+          items:
+            $ref: '#/components/schemas/VulnerabilityRiskyAsset'
+          readOnly: true
+        malware:
+          type: array
+          description: Top 5 assets sorted by max malware count
+          items:
+            $ref: '#/components/schemas/RiskyAsset'
+          readOnly: true
+        rootkits:
+          type: array
+          description: Top 5 assets sorted by max rootkits count
+          items:
+            $ref: '#/components/schemas/RiskyAsset'
+          readOnly: true
+        secrets:
+          type: array
+          description: Top 5 assets sorted by max secrets count
+          items:
+            $ref: '#/components/schemas/RiskyAsset'
+          readOnly: true
+        misconfigurations:
+          type: array
+          description: Top 5 assets sorted by max misconfigurations count
+          items:
+            $ref: '#/components/schemas/RiskyAsset'
+          readOnly: true
+        exploits:
+          type: array
+          description: Top 5 assets sorted by max exploits count
+          items:
+            $ref: '#/components/schemas/RiskyAsset'
+          readOnly: true
+
+    RiskyAsset:
+      type: object
+      description: Total findings for an asset
+      properties:
+        assetInfo:
+          $ref: '#/components/schemas/AssetInfo'
+        count:
+          type: integer
+
+    VulnerabilityRiskyAsset:
+      type: object
+      description: Total vulnerabilities findings for an asset
+      properties:
+        assetInfo:
+          $ref: '#/components/schemas/AssetInfo'
+        count:
+          $ref: '#/components/schemas/VulnerabilityCount'
+
+    VulnerabilityCount:
+      type: object
+      properties:
+        criticalVulnerabilitiesCount:
+          type: integer
+        highVulnerabilitiesCount:
+          type: integer
+        mediumVulnerabilitiesCount:
+          type: integer
+        lowVulnerabilitiesCount:
+          type: integer
+        negligibleVulnerabilitiesCount:
+          type: integer
+
+    AssetInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        location:
+          type: string
+        type:
+          $ref: '#/components/schemas/AssetType'
+
+    AssetType:
+      type: string
+      enum:
+        - 'AWS EC2 Instance'
 
   responses:
     UnknownError:
