@@ -104,6 +104,14 @@ func (s *ServerImpl) PatchScanConfigsScanConfigID(ctx echo.Context, scanConfigID
 		if errors.Is(err, databaseTypes.ErrNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("ScanConfig with ID %v not found", scanConfigID))
 		}
+		var conflictErr *common.ConflictError
+		if errors.As(err, &conflictErr) {
+			existResponse := &models.ScanConfigExists{
+				Message:    utils.StringPtr(conflictErr.Reason),
+				ScanConfig: &updatedScanConfig,
+			}
+			return sendResponse(ctx, http.StatusConflict, existResponse)
+		}
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update scan config in db. scanConfigID=%v: %v", scanConfigID, err))
 	}
 
@@ -128,6 +136,14 @@ func (s *ServerImpl) PutScanConfigsScanConfigID(ctx echo.Context, scanConfigID m
 	if err != nil {
 		if errors.Is(err, databaseTypes.ErrNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("ScanConfig with ID %v not found", scanConfigID))
+		}
+		var conflictErr *common.ConflictError
+		if errors.As(err, &conflictErr) {
+			existResponse := &models.ScanConfigExists{
+				Message:    utils.StringPtr(conflictErr.Reason),
+				ScanConfig: &updatedScanConfig,
+			}
+			return sendResponse(ctx, http.StatusConflict, existResponse)
 		}
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update scan config in db. scanConfigID=%v: %v", scanConfigID, err))
 	}

@@ -98,6 +98,14 @@ func (s *ServerImpl) PatchScanResultsScanResultID(ctx echo.Context, scanResultID
 
 	updatedScanResult, err := s.dbHandler.ScanResultsTable().UpdateScanResult(scanResult)
 	if err != nil {
+		var conflictErr *common.ConflictError
+		if errors.As(err, &conflictErr) {
+			existResponse := &models.TargetScanResultExists{
+				Message:          utils.StringPtr(conflictErr.Reason),
+				TargetScanResult: &updatedScanResult,
+			}
+			return sendResponse(ctx, http.StatusConflict, existResponse)
+		}
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update scan result in db. scanResultID=%v: %v", scanResultID, err))
 	}
 
@@ -130,6 +138,14 @@ func (s *ServerImpl) PutScanResultsScanResultID(ctx echo.Context, scanResultID m
 
 	updatedScanResult, err := s.dbHandler.ScanResultsTable().SaveScanResult(scanResult)
 	if err != nil {
+		var conflictErr *common.ConflictError
+		if errors.As(err, &conflictErr) {
+			existResponse := &models.TargetScanResultExists{
+				Message:          utils.StringPtr(conflictErr.Reason),
+				TargetScanResult: &updatedScanResult,
+			}
+			return sendResponse(ctx, http.StatusConflict, existResponse)
+		}
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update scan result in db. scanResultID=%v: %v", scanResultID, err))
 	}
 

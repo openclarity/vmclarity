@@ -92,6 +92,14 @@ func (s *ServerImpl) PutTargetsTargetID(ctx echo.Context, targetID models.Target
 		if errors.Is(err, databaseTypes.ErrNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Target with ID %v not found", targetID))
 		}
+		var conflictErr *common.ConflictError
+		if errors.As(err, &conflictErr) {
+			existResponse := &models.TargetExists{
+				Message: utils.StringPtr(conflictErr.Reason),
+				Target:  &updatedTarget,
+			}
+			return sendResponse(ctx, http.StatusConflict, existResponse)
+		}
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get target from db. targetID=%v: %v", targetID, err))
 	}
 

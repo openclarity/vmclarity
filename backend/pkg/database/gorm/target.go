@@ -123,7 +123,7 @@ func (t *TargetsTableHandler) CreateTarget(target models.Target) (models.Target,
 	// record in the DB, and should be treated safely by the DB without
 	// locking the table.
 
-	existingTarget, err := t.checkUniqueness(target)
+	existingTarget, err := t.checkUniqueness(target, false)
 	if err != nil {
 		var conflictErr *common.ConflictError
 		if errors.As(err, &conflictErr) {
@@ -171,6 +171,15 @@ func (t *TargetsTableHandler) SaveTarget(target models.Target) (models.Target, e
 		return models.Target{}, fmt.Errorf("failed to get target from db: %w", err)
 	}
 
+	existingTarget, err := t.checkUniqueness(target, false)
+	if err != nil {
+		var conflictErr *common.ConflictError
+		if errors.As(err, &conflictErr) {
+			return *existingTarget, err
+		}
+		return models.Target{}, fmt.Errorf("failed to check existing target: %w", err)
+	}
+
 	marshaled, err := json.Marshal(target)
 	if err != nil {
 		return models.Target{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
@@ -201,7 +210,7 @@ func (t *TargetsTableHandler) DeleteTarget(targetID models.TargetID) error {
 	return nil
 }
 
-func (t *TargetsTableHandler) checkUniqueness(target models.Target) (*models.Target, error) {
+func (t *TargetsTableHandler) checkUniqueness(target models.Target, isUpdate bool) (*models.Target, error) {
 	discriminator, err := target.TargetInfo.ValueByDiscriminator()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get value by discriminator: %w", err)
@@ -220,6 +229,15 @@ func (t *TargetsTableHandler) checkUniqueness(target models.Target) (*models.Tar
 			var apiTarget models.Target
 			if err = json.Unmarshal(targets[0].Data, &apiTarget); err != nil {
 				return nil, fmt.Errorf("failed to convert DB model to API model: %w", err)
+			}
+			// In the case of updating a target, needs to be checked whether other target exists with same InstanceID and Location.
+			if isUpdate {
+				if *apiTarget.Id != *target.Id {
+					return &apiTarget, &common.ConflictError{
+						Reason: fmt.Sprintf("Target VM exists with different id=%q. (instanceID=%q, location=%q)", *apiTarget.Id, info.InstanceID, info.Location),
+					}
+				}
+				return nil, nil // nolint:nilnil
 			}
 			return &apiTarget, &common.ConflictError{
 				Reason: fmt.Sprintf("Target VM exists with instanceID=%q and location=%q", info.InstanceID, info.Location),

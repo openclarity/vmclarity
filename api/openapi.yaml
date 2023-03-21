@@ -98,6 +98,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+        409:
+          description: Target already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetExists'
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
@@ -208,6 +214,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+        409:
+          description: Scan results already exist for target and scan.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetScanResultExists'
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
@@ -234,6 +246,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+        409:
+          description: Scan results already exist for target and scan.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetScanResultExists'
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
@@ -328,6 +346,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+        409:
+          description: Scan already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanExists'
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
@@ -354,6 +378,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+        409:
+          description: Scan already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanExists'
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
@@ -464,6 +494,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+        409:
+          description: Scan config already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanConfigExists'
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
@@ -490,6 +526,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+        409:
+          description: Scan config already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanConfigExists'
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body

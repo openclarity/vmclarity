@@ -108,7 +108,7 @@ func (s *ScansTableHandler) CreateScan(scan models.Scan) (models.Scan, error) {
 
 	// TODO do we want ScanConfig to be required in the api?
 	if scan.ScanConfig != nil {
-		existingScan, err := s.checkUniqueness(scan.ScanConfig.Id)
+		existingScan, err := s.checkUniqueness(scan, false)
 		if err != nil {
 			var conflictErr *common.ConflictError
 			if errors.As(err, &conflictErr) {
@@ -149,6 +149,17 @@ func (s *ScansTableHandler) SaveScan(scan models.Scan) (models.Scan, error) {
 		return models.Scan{}, fmt.Errorf("failed to get scan from db: %w", err)
 	}
 
+	if scan.ScanConfig != nil {
+		existingScan, err := s.checkUniqueness(scan, true)
+		if err != nil {
+			var conflictErr *common.ConflictError
+			if errors.As(err, &conflictErr) {
+				return *existingScan, err
+			}
+			return models.Scan{}, fmt.Errorf("failed to check existing scan: %w", err)
+		}
+	}
+
 	marshaled, err := json.Marshal(scan)
 	if err != nil {
 		return models.Scan{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
@@ -178,6 +189,17 @@ func (s *ScansTableHandler) UpdateScan(scan models.Scan) (models.Scan, error) {
 		return models.Scan{}, err
 	}
 
+	if scan.ScanConfig != nil {
+		existingScan, err := s.checkUniqueness(scan, true)
+		if err != nil {
+			var conflictErr *common.ConflictError
+			if errors.As(err, &conflictErr) {
+				return *existingScan, err
+			}
+			return models.Scan{}, fmt.Errorf("failed to check existing scan: %w", err)
+		}
+	}
+
 	var err error
 	dbScan.Data, err = patchObject(dbScan.Data, scan)
 	if err != nil {
@@ -204,9 +226,9 @@ func (s *ScansTableHandler) DeleteScan(scanID models.ScanID) error {
 	return nil
 }
 
-func (s *ScansTableHandler) checkUniqueness(scanConfigID string) (*models.Scan, error) {
+func (s *ScansTableHandler) checkUniqueness(scan models.Scan, isUpdate bool) (*models.Scan, error) {
 	var scans []Scan
-	filter := fmt.Sprintf("scanConfig/id eq '%s' and endTime eq null", scanConfigID)
+	filter := fmt.Sprintf("scanConfig/id eq '%s' and endTime eq null", scan.ScanConfig.Id)
 	err := ODataQuery(s.DB, scanSchemaName, &filter, nil, nil, nil, nil, nil, true, &scans)
 	if err != nil {
 		return nil, err
@@ -216,8 +238,17 @@ func (s *ScansTableHandler) checkUniqueness(scanConfigID string) (*models.Scan, 
 		if err = json.Unmarshal(scans[0].Data, &apiScan); err != nil {
 			return nil, fmt.Errorf("failed to convert DB model to API model: %w", err)
 		}
+		// In the case of updating a scan, needs to be checked whether other running scan exists with same scan config id.
+		if isUpdate {
+			if *apiScan.Id != *scan.Id {
+				return nil, &common.ConflictError{
+					Reason: fmt.Sprintf("Other runnig scan with scanConfigID=%q exists", scan.ScanConfig.Id),
+				}
+			}
+			return nil, nil // nolint:nilnil
+		}
 		return &apiScan, &common.ConflictError{
-			Reason: fmt.Sprintf("Scan with scanConfigID=%q exists and already running", scanConfigID),
+			Reason: fmt.Sprintf("Scan with scanConfigID=%q exists and already running", scan.ScanConfig.Id),
 		}
 	}
 
