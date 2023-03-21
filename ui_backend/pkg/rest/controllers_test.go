@@ -5,11 +5,14 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	backendmodels "github.com/openclarity/vmclarity/api/models"
+
 	"github.com/openclarity/vmclarity/shared/pkg/utils"
 	"github.com/openclarity/vmclarity/ui_backend/api/models"
-	"gotest.tools/v3/assert"
 
-	backendmodels "github.com/openclarity/vmclarity/api/models"
+	"gotest.tools/v3/assert"
 )
 
 func Test_getTargetLocation(t *testing.T) {
@@ -165,6 +168,7 @@ func Test_getTotalVulnerabilities(t *testing.T) {
 	}
 }
 
+// nolint:errcheck
 func Test_createRegionFindingsFromTargets(t *testing.T) {
 	dirTarget := backendmodels.TargetType{}
 	dirTarget.FromDirInfo(backendmodels.DirInfo{
@@ -308,10 +312,9 @@ func Test_createRegionFindingsFromTargets(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := createRegionFindingsFromTargets(tt.args.targets); !reflect.DeepEqual(got, tt.want) {
-				gotB, _ := json.Marshal(got)
-				wantB, _ := json.Marshal(tt.want)
-				t.Errorf("createRegionFindingsFromTargets() = %v, want %v", string(gotB), string(wantB))
+			got := createRegionFindingsFromTargets(tt.args.targets)
+			if diff := cmp.Diff(tt.want, got, cmpopts.SortSlices(func(a, b models.RegionFindings) bool { return *a.RegionName < *b.RegionName })); diff != "" {
+				t.Errorf("createRegionFindingsFromTargets() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}

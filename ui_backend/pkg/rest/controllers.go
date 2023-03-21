@@ -43,7 +43,7 @@ func (s *ServerImpl) GetDashboardRiskiestRegions(ctx echo.Context) error {
 
 func createRegionFindingsFromTargets(targets *backendmodels.Targets) []models.RegionFindings {
 	// Map regions to findings count per finding type
-	var findingsPerRegion = make(map[string]*models.FindingsCount)
+	findingsPerRegion := make(map[string]*models.FindingsCount)
 
 	// Sum all asset findings counts (the latest findings per asset) to the total region findings count.
 	// target/ScanFindingsSummary should contain the latest results per family.
