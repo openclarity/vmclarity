@@ -44,15 +44,13 @@ const (
 	totalNegligibleVulnerabilitiesFieldName      = "totalNegligibleVulnerabilities"
 )
 
-var (
-	orderedSeveritiesFields = []string{
-		totalCriticalVulnerabilitiesSummaryFieldName,
-		totalHighVulnerabilitiesSummaryFieldName,
-		totalMediumVulnerabilitiesSummaryFieldName,
-		totalLowVulnerabilitiesFieldName,
-		totalNegligibleVulnerabilitiesFieldName,
-	}
-)
+var orderedSeveritiesFields = []string{
+	totalCriticalVulnerabilitiesSummaryFieldName,
+	totalHighVulnerabilitiesSummaryFieldName,
+	totalMediumVulnerabilitiesSummaryFieldName,
+	totalLowVulnerabilitiesFieldName,
+	totalNegligibleVulnerabilitiesFieldName,
+}
 
 func (s *ServerImpl) GetDashboardRiskiestAssets(ctx echo.Context) error {
 	reqCtx := ctx.Request().Context()
@@ -259,6 +257,8 @@ func getCount(summary *backendmodels.ScanFindingsSummary, findingType backendmod
 		return summary.TotalRootkits, nil
 	case backendmodels.SECRET:
 		return summary.TotalSecrets, nil
+	case backendmodels.VULNERABILITY, backendmodels.SBOM:
+		fallthrough
 	default:
 		return nil, fmt.Errorf("unsupported finding type: %v", findingType)
 	}
@@ -278,6 +278,8 @@ func getTotalFindingField(findingType backendmodels.ScanType) (string, error) {
 		return totalSecretsSummaryFieldName, nil
 	case backendmodels.VULNERABILITY:
 		return totalVulnerabilitiesSummaryFieldName, nil
+	case backendmodels.SBOM:
+		fallthrough
 	default:
 		return "", fmt.Errorf("unsupported finding type: %v", findingType)
 	}

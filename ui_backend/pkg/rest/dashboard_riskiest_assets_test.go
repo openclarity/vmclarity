@@ -259,6 +259,7 @@ func Test_getAssetInfo(t *testing.T) {
 }
 
 func createVMInfo(t *testing.T, instanceID, location string) *backendmodels.TargetType {
+	t.Helper()
 	info := backendmodels.TargetType{}
 	err := info.FromVMInfo(backendmodels.VMInfo{
 		InstanceID:       instanceID,
@@ -270,6 +271,7 @@ func createVMInfo(t *testing.T, instanceID, location string) *backendmodels.Targ
 }
 
 func createPodInfo(t *testing.T, podName, location string) *backendmodels.TargetType {
+	t.Helper()
 	info := backendmodels.TargetType{}
 	err := info.FromPodInfo(backendmodels.PodInfo{
 		Location: &location,
@@ -490,7 +492,7 @@ func Test_getOrderByOData(t *testing.T) {
 			args: args{
 				totalFindingField: totalMisconfigurationsSummaryFieldName,
 			},
-			want: fmt.Sprintf("summary/totalMisconfigurations desc"),
+			want: "summary/totalMisconfigurations desc",
 		},
 	}
 	for _, tt := range tests {
