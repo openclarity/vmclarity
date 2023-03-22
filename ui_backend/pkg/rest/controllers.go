@@ -129,7 +129,6 @@ func getTotalVulnerabilities(summary *backendmodels.VulnerabilityScanSummary) in
 	if summary.TotalLowVulnerabilities != nil {
 		total += *summary.TotalLowVulnerabilities
 	}
-	// TODO add also negligible?
 	if summary.TotalNegligibleVulnerabilities != nil {
 		total += *summary.TotalNegligibleVulnerabilities
 	}
