@@ -1,0 +1,84 @@
+openapi: 3.0.1
+
+info:
+  title: VMClarity UI APIs
+  version: 1.0.0
+
+servers:
+  - url: /ui/api
+
+paths:
+  /dashboard/riskiestRegions:
+    get:
+      summary: Get a list of riskiest regions for the dashboard.
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskiestRegions'
+        default:
+          $ref: '#/components/responses/UnknownError'
+
+components:
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          readOnly: true
+      description: An object that is returned in all cases of failures.
+
+    RiskiestRegions:
+      type: object
+      properties:
+        regions:
+          type: array
+          description: List of regions with the findings that was found on them. 
+            Regions with no findings will not be reported.
+          items:
+            $ref: '#/components/schemas/RegionFindings'
+          readOnly: true
+
+    RegionFindings:
+      type: object
+      description: Total findings for a region
+      properties:
+        regionName:
+          type: string
+        findingsCount:
+          $ref: '#/components/schemas/FindingsCount'
+
+    FindingsCount:
+      type: object
+      description: total count of each finding type
+      properties:
+        vulnerabilities:
+          type: integer
+        malware:
+          type: integer
+        rootkits:
+          type: integer
+        secrets:
+          type: integer
+        misconfigurations:
+          type: integer
+        exploits:
+          type: integer
+
+  responses:
+    UnknownError:
+      description: Unknown error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponse'
+
+  parameters:
+    exampleFilter:
+      name: "example"
+      in: query
+      schema:
+        type: string

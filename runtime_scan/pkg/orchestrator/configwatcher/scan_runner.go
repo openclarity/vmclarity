@@ -30,15 +30,6 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 )
 
-func (scw *ScanConfigWatcher) runNewScans(ctx context.Context, scanConfigs []models.ScanConfig) {
-	for _, sc := range scanConfigs {
-		scanConfig := sc
-		if err := scw.scan(ctx, &scanConfig); err != nil {
-			log.Errorf("Failed to schedule a scan with scan config ID=%s: %v", *scanConfig.Id, err)
-		}
-	}
-}
-
 func (scw *ScanConfigWatcher) scan(ctx context.Context, scanConfig *models.ScanConfig) error {
 	// TODO: check if existing scan or a new scan
 	targetInstances, scanID, err := scw.initNewScan(ctx, scanConfig)
@@ -63,8 +54,11 @@ func (scw *ScanConfigWatcher) initNewScan(ctx context.Context, scanConfig *model
 			Id: *scanConfig.Id,
 		},
 		ScanConfigSnapshot: &models.ScanConfigData{
-			Scope:              scanConfig.Scope,
-			ScanFamiliesConfig: scanConfig.ScanFamiliesConfig,
+			MaxParallelScanners: scanConfig.MaxParallelScanners,
+			Name:                scanConfig.Name,
+			ScanFamiliesConfig:  scanConfig.ScanFamiliesConfig,
+			Scheduled:           scanConfig.Scheduled,
+			Scope:               scanConfig.Scope,
 		},
 		StartTime: &now,
 		State:     utils.PointerTo(models.ScanStatePending),

@@ -111,13 +111,13 @@ type ApiResponse struct {
 // AwsAccountScope AWS cloud account scope
 type AwsAccountScope struct {
 	ObjectType string       `json:"objectType"`
-	Regions    *[]AwsRegion `json:"regions,omitempty"`
+	Regions    *[]AwsRegion `json:"regions"`
 }
 
 // AwsRegion AWS region
 type AwsRegion struct {
 	Name string    `json:"name"`
-	Vpcs *[]AwsVPC `json:"vpcs,omitempty"`
+	Vpcs *[]AwsVPC `json:"vpcs"`
 }
 
 // AwsScanScope The scope of a configured scan.
@@ -126,12 +126,12 @@ type AwsScanScope struct {
 	AllRegions *bool `json:"allRegions,omitempty"`
 
 	// InstanceTagExclusion VM instances will not be scanned if they contain all of these tags (even if they match instanceTagSelector). If empty, not taken into account.
-	InstanceTagExclusion *[]Tag `json:"instanceTagExclusion,omitempty"`
+	InstanceTagExclusion *[]Tag `json:"instanceTagExclusion"`
 
 	// InstanceTagSelector VM instances will be scanned if they contain all of these tags. If empty, not taken into account.
-	InstanceTagSelector        *[]Tag       `json:"instanceTagSelector,omitempty"`
+	InstanceTagSelector        *[]Tag       `json:"instanceTagSelector"`
 	ObjectType                 string       `json:"objectType"`
-	Regions                    *[]AwsRegion `json:"regions,omitempty"`
+	Regions                    *[]AwsRegion `json:"regions"`
 	ShouldScanStoppedInstances *bool        `json:"shouldScanStoppedInstances,omitempty"`
 }
 
@@ -143,20 +143,7 @@ type AwsSecurityGroup struct {
 // AwsVPC AWS VPC
 type AwsVPC struct {
 	Id             string              `json:"id"`
-	SecurityGroups *[]AwsSecurityGroup `json:"securityGroups,omitempty"`
-}
-
-// ByDaysScheduleScanConfig defines model for ByDaysScheduleScanConfig.
-type ByDaysScheduleScanConfig struct {
-	DaysInterval *int       `json:"daysInterval,omitempty"`
-	ObjectType   string     `json:"objectType"`
-	TimeOfDay    *TimeOfDay `json:"timeOfDay,omitempty"`
-}
-
-// ByHoursScheduleScanConfig defines model for ByHoursScheduleScanConfig.
-type ByHoursScheduleScanConfig struct {
-	HoursInterval *int   `json:"hoursInterval,omitempty"`
-	ObjectType    string `json:"objectType"`
+	SecurityGroups *[]AwsSecurityGroup `json:"securityGroups"`
 }
 
 // CloudProvider defines model for CloudProvider.
@@ -176,7 +163,7 @@ type Exploit struct {
 	Name        *string   `json:"name,omitempty"`
 	SourceDB    *string   `json:"sourceDB,omitempty"`
 	Title       *string   `json:"title,omitempty"`
-	Urls        *[]string `json:"urls,omitempty"`
+	Urls        *[]string `json:"urls"`
 }
 
 // ExploitFindingInfo defines model for ExploitFindingInfo.
@@ -187,12 +174,12 @@ type ExploitFindingInfo struct {
 	ObjectType  string    `json:"objectType"`
 	SourceDB    *string   `json:"sourceDB,omitempty"`
 	Title       *string   `json:"title,omitempty"`
-	Urls        *[]string `json:"urls,omitempty"`
+	Urls        *[]string `json:"urls"`
 }
 
 // ExploitScan defines model for ExploitScan.
 type ExploitScan struct {
-	Exploits *[]Exploit `json:"exploits,omitempty"`
+	Exploits *[]Exploit `json:"exploits"`
 }
 
 // ExploitsConfig defines model for ExploitsConfig.
@@ -232,7 +219,7 @@ type FindingExists struct {
 
 // Findings defines model for Findings.
 type Findings struct {
-	// Count Total scans count according to the given filters
+	// Count Total findings count according to the given filters
 	Count *int `json:"count,omitempty"`
 
 	// Items List of findings according to the given filters
@@ -265,7 +252,7 @@ type MalwareFindingInfo struct {
 
 // MalwareScan defines model for MalwareScan.
 type MalwareScan struct {
-	Malware *[]Malware `json:"malware,omitempty"`
+	Malware *[]Malware `json:"malware"`
 }
 
 // MalwareType defines model for MalwareType.
@@ -290,7 +277,7 @@ type MisconfigurationFindingInfo struct {
 
 // MisconfigurationScan defines model for MisconfigurationScan.
 type MisconfigurationScan struct {
-	Misconfigurations *[]Misconfiguration `json:"misconfigurations,omitempty"`
+	Misconfigurations *[]Misconfiguration `json:"misconfigurations"`
 }
 
 // MisconfigurationsConfig defines model for MisconfigurationsConfig.
@@ -300,9 +287,9 @@ type MisconfigurationsConfig struct {
 
 // Package defines model for Package.
 type Package struct {
-	Cpes     *[]string `json:"cpes,omitempty"`
+	Cpes     *[]string `json:"cpes"`
 	Language *string   `json:"language,omitempty"`
-	Licenses *[]string `json:"licenses,omitempty"`
+	Licenses *[]string `json:"licenses"`
 	Name     *string   `json:"name,omitempty"`
 	Purl     *string   `json:"purl,omitempty"`
 	Type     *string   `json:"type,omitempty"`
@@ -311,9 +298,9 @@ type Package struct {
 
 // PackageFindingInfo defines model for PackageFindingInfo.
 type PackageFindingInfo struct {
-	Cpes       *[]string `json:"cpes,omitempty"`
+	Cpes       *[]string `json:"cpes"`
 	Language   *string   `json:"language,omitempty"`
-	Licenses   *[]string `json:"licenses,omitempty"`
+	Licenses   *[]string `json:"licenses"`
 	Name       *string   `json:"name,omitempty"`
 	ObjectType string    `json:"objectType"`
 	Purl       *string   `json:"purl,omitempty"`
@@ -348,7 +335,7 @@ type RootkitFindingInfo struct {
 
 // RootkitScan defines model for RootkitScan.
 type RootkitScan struct {
-	Rootkits *[]Rootkit `json:"rootkits,omitempty"`
+	Rootkits *[]Rootkit `json:"rootkits"`
 }
 
 // RootkitType defines model for RootkitType.
@@ -359,9 +346,13 @@ type RootkitsConfig struct {
 	Enabled *bool `json:"enabled,omitempty"`
 }
 
-// RuntimeScheduleScanConfigType defines model for RuntimeScheduleScanConfigType.
-type RuntimeScheduleScanConfigType struct {
-	union json.RawMessage
+// RuntimeScheduleScanConfig Runtime schedule scan configuration. If only operationTime is set, it will be a single scan scheduled for the operationTime. If only cronLine is set, the current time will be the "from time" to start the scheduling according to the cronLine. If both operationTime and cronLine are set, the first scan will run at operationTime and the operationTime will be the first time that the cronLine will be effective from.
+type RuntimeScheduleScanConfig struct {
+	// CronLine Cron schedule expressions.
+	CronLine *string `json:"cronLine,omitempty"`
+
+	// OperationTime The next time this ScanConfig should trigger a scan.
+	OperationTime *time.Time `json:"operationTime,omitempty"`
 }
 
 // SBOMConfig defines model for SBOMConfig.
@@ -371,7 +362,7 @@ type SBOMConfig struct {
 
 // SbomScan defines model for SbomScan.
 type SbomScan struct {
-	Packages *[]Package `json:"packages,omitempty"`
+	Packages *[]Package `json:"packages"`
 }
 
 // Scan defines model for Scan.
@@ -401,7 +392,7 @@ type Scan struct {
 	Summary *ScanSummary `json:"summary,omitempty"`
 
 	// TargetIDs List of target IDs that are targeted for scanning as part of this scan
-	TargetIDs *[]string `json:"targetIDs,omitempty"`
+	TargetIDs *[]string `json:"targetIDs"`
 }
 
 // ScanState The lifecycle state of this scan.
@@ -412,28 +403,43 @@ type ScanStateReason string
 
 // ScanConfig defines model for ScanConfig.
 type ScanConfig struct {
+	// Disabled if true, the scan config is disabled and no scan should run from it
+	Disabled            *bool   `json:"disabled,omitempty"`
 	Id                  *string `json:"id,omitempty"`
 	MaxParallelScanners *int    `json:"maxParallelScanners,omitempty"`
 	Name                *string `json:"name,omitempty"`
 
 	// ScanFamiliesConfig The configuration of the scanner families within a scan config
-	ScanFamiliesConfig *ScanFamiliesConfig            `json:"scanFamiliesConfig,omitempty"`
-	Scheduled          *RuntimeScheduleScanConfigType `json:"scheduled,omitempty"`
-	Scope              *ScanScopeType                 `json:"scope,omitempty"`
+	ScanFamiliesConfig *ScanFamiliesConfig `json:"scanFamiliesConfig,omitempty"`
+
+	// ScannerInstanceCreationConfig Configuration of scanner instance
+	ScannerInstanceCreationConfig *ScannerInstanceCreationConfig `json:"scannerInstanceCreationConfig,omitempty"`
+
+	// Scheduled Runtime schedule scan configuration. If only operationTime is set, it will be a single scan scheduled for the operationTime. If only cronLine is set, the current time will be the "from time" to start the scheduling according to the cronLine. If both operationTime and cronLine are set, the first scan will run at operationTime and the operationTime will be the first time that the cronLine will be effective from.
+	Scheduled *RuntimeScheduleScanConfig `json:"scheduled,omitempty"`
+	Scope     *ScanScopeType             `json:"scope,omitempty"`
 }
 
 // ScanConfigData Fields for a ScanConfig so they can be shared between the ScanConfig,
 // ScanConfigRelationship and used for the ScanConfig snapshot in the
 // scan.
 type ScanConfigData struct {
+	// Disabled if true, the scan config is disabled and no scan should run from it
+	Disabled *bool `json:"disabled,omitempty"`
+
 	// MaxParallelScanners The maximum number of scanners that can run in parallel for each scan
 	MaxParallelScanners *int    `json:"maxParallelScanners,omitempty"`
 	Name                *string `json:"name,omitempty"`
 
 	// ScanFamiliesConfig The configuration of the scanner families within a scan config
-	ScanFamiliesConfig *ScanFamiliesConfig            `json:"scanFamiliesConfig,omitempty"`
-	Scheduled          *RuntimeScheduleScanConfigType `json:"scheduled,omitempty"`
-	Scope              *ScanScopeType                 `json:"scope,omitempty"`
+	ScanFamiliesConfig *ScanFamiliesConfig `json:"scanFamiliesConfig,omitempty"`
+
+	// ScannerInstanceCreationConfig Configuration of scanner instance
+	ScannerInstanceCreationConfig *ScannerInstanceCreationConfig `json:"scannerInstanceCreationConfig,omitempty"`
+
+	// Scheduled Runtime schedule scan configuration. If only operationTime is set, it will be a single scan scheduled for the operationTime. If only cronLine is set, the current time will be the "from time" to start the scheduling according to the cronLine. If both operationTime and cronLine are set, the first scan will run at operationTime and the operationTime will be the first time that the cronLine will be effective from.
+	Scheduled *RuntimeScheduleScanConfig `json:"scheduled,omitempty"`
+	Scope     *ScanScopeType             `json:"scope,omitempty"`
 }
 
 // ScanConfigExists defines model for ScanConfigExists.
@@ -447,12 +453,16 @@ type ScanConfigExists struct {
 
 // ScanConfigRelationship defines model for ScanConfigRelationship.
 type ScanConfigRelationship struct {
+	Disabled            *interface{} `json:"disabled,omitempty"`
 	Id                  string       `json:"id"`
 	MaxParallelScanners *interface{} `json:"maxParallelScanners,omitempty"`
 	Name                *interface{} `json:"name,omitempty"`
 	ScanFamiliesConfig  *interface{} `json:"scanFamiliesConfig,omitempty"`
-	Scheduled           *interface{} `json:"scheduled,omitempty"`
-	Scope               *interface{} `json:"scope,omitempty"`
+
+	// ScannerInstanceCreationConfig Configuration of scanner instance
+	ScannerInstanceCreationConfig *ScannerInstanceCreationConfig `json:"scannerInstanceCreationConfig,omitempty"`
+	Scheduled                     *interface{}                   `json:"scheduled,omitempty"`
+	Scope                         *interface{}                   `json:"scope,omitempty"`
 }
 
 // ScanConfigs defines model for ScanConfigs.
@@ -490,7 +500,7 @@ type ScanData struct {
 	Summary *ScanSummary `json:"summary,omitempty"`
 
 	// TargetIDs List of target IDs that are targeted for scanning as part of this scan
-	TargetIDs *[]string `json:"targetIDs,omitempty"`
+	TargetIDs *[]string `json:"targetIDs"`
 }
 
 // ScanDataState The lifecycle state of this scan.
@@ -569,6 +579,13 @@ type ScanSummary struct {
 // ScanType defines model for ScanType.
 type ScanType string
 
+// ScannerInstanceCreationConfig Configuration of scanner instance
+type ScannerInstanceCreationConfig struct {
+	MaxPrice         *string `json:"maxPrice,omitempty"`
+	RetryMaxAttempts *int    `json:"retryMaxAttempts,omitempty"`
+	UseSpotInstances bool    `json:"useSpotInstances"`
+}
+
 // Scans defines model for Scans.
 type Scans struct {
 	// Count Total scans count according to the given filters
@@ -617,18 +634,12 @@ type SecretFindingInfo struct {
 
 // SecretScan defines model for SecretScan.
 type SecretScan struct {
-	Secrets *[]Secret `json:"secrets,omitempty"`
+	Secrets *[]Secret `json:"secrets"`
 }
 
 // SecretsConfig defines model for SecretsConfig.
 type SecretsConfig struct {
 	Enabled *bool `json:"enabled,omitempty"`
-}
-
-// SingleScheduleScanConfig defines model for SingleScheduleScanConfig.
-type SingleScheduleScanConfig struct {
-	ObjectType    string    `json:"objectType"`
-	OperationTime time.Time `json:"operationTime"`
 }
 
 // SuccessResponse An object that is returned in cases of success that returns nothing.
@@ -675,11 +686,8 @@ type TargetExists struct {
 
 // TargetRelationship defines model for TargetRelationship.
 type TargetRelationship struct {
-	Id        string       `json:"id"`
-	ScanCount *interface{} `json:"scanCount,omitempty"`
-
-	// ScansCount Total number of scans that have ever run for this target
-	ScansCount *int         `json:"scansCount,omitempty"`
+	Id         string       `json:"id"`
+	ScansCount *interface{} `json:"scansCount,omitempty"`
 	Summary    *interface{} `json:"summary,omitempty"`
 	TargetInfo *interface{} `json:"targetInfo,omitempty"`
 }
@@ -724,7 +732,7 @@ type TargetScanResults struct {
 
 // TargetScanState defines model for TargetScanState.
 type TargetScanState struct {
-	Errors *[]string             `json:"errors,omitempty"`
+	Errors *[]string             `json:"errors"`
 	State  *TargetScanStateState `json:"state,omitempty"`
 }
 
@@ -757,12 +765,6 @@ type Targets struct {
 	Items *[]Target `json:"items,omitempty"`
 }
 
-// TimeOfDay defines model for TimeOfDay.
-type TimeOfDay struct {
-	Hour   *int `json:"hour,omitempty"`
-	Minute *int `json:"minute,omitempty"`
-}
-
 // VMInfo defines model for VMInfo.
 type VMInfo struct {
 	InstanceID       string         `json:"instanceID"`
@@ -778,14 +780,14 @@ type VulnerabilitiesConfig struct {
 
 // Vulnerability defines model for Vulnerability.
 type Vulnerability struct {
-	Cvss        *[]VulnerabilityCvss `json:"cvss,omitempty"`
+	Cvss        *[]VulnerabilityCvss `json:"cvss"`
 	Description *string              `json:"description,omitempty"`
 
 	// Distro Distro provides information about a detected Linux distribution.
 	Distro            *VulnerabilityDistro   `json:"distro,omitempty"`
 	Fix               *VulnerabilityFix      `json:"fix,omitempty"`
 	LayerId           *string                `json:"layerId,omitempty"`
-	Links             *[]string              `json:"links,omitempty"`
+	Links             *[]string              `json:"links"`
 	Package           *Package               `json:"package,omitempty"`
 	Path              *string                `json:"path,omitempty"`
 	Severity          *VulnerabilitySeverity `json:"severity,omitempty"`
@@ -809,7 +811,7 @@ type VulnerabilityCvssMetrics struct {
 // VulnerabilityDistro Distro provides information about a detected Linux distribution.
 type VulnerabilityDistro struct {
 	// IDLike the ID_LIKE field found within the /etc/os-release file
-	IDLike *[]string `json:"IDLike,omitempty"`
+	IDLike *[]string `json:"IDLike"`
 
 	// Name Name of the Linux distribution
 	Name *string `json:"name,omitempty"`
@@ -820,14 +822,14 @@ type VulnerabilityDistro struct {
 
 // VulnerabilityFindingInfo defines model for VulnerabilityFindingInfo.
 type VulnerabilityFindingInfo struct {
-	Cvss        *[]VulnerabilityCvss `json:"cvss,omitempty"`
+	Cvss        *[]VulnerabilityCvss `json:"cvss"`
 	Description *string              `json:"description,omitempty"`
 
 	// Distro Distro provides information about a detected Linux distribution.
 	Distro            *VulnerabilityDistro   `json:"distro,omitempty"`
 	Fix               *VulnerabilityFix      `json:"fix,omitempty"`
 	LayerId           *string                `json:"layerId,omitempty"`
-	Links             *[]string              `json:"links,omitempty"`
+	Links             *[]string              `json:"links"`
 	ObjectType        string                 `json:"objectType"`
 	Package           *Package               `json:"package,omitempty"`
 	Path              *string                `json:"path,omitempty"`
@@ -843,7 +845,7 @@ type VulnerabilityFix struct {
 
 // VulnerabilityScan defines model for VulnerabilityScan.
 type VulnerabilityScan struct {
-	Vulnerabilities *[]Vulnerability `json:"vulnerabilities,omitempty"`
+	Vulnerabilities *[]Vulnerability `json:"vulnerabilities"`
 }
 
 // VulnerabilityScanSummary A summary of number of vulnerabilities found per severity.
@@ -857,14 +859,6 @@ type VulnerabilityScanSummary struct {
 
 // VulnerabilitySeverity defines model for VulnerabilitySeverity.
 type VulnerabilitySeverity string
-
-// WeeklyScheduleScanConfig defines model for WeeklyScheduleScanConfig.
-type WeeklyScheduleScanConfig struct {
-	// DayInWeek 1 - 7 which represents sun- sat
-	DayInWeek  *int       `json:"dayInWeek,omitempty"`
-	ObjectType string     `json:"objectType"`
-	TimeOfDay  *TimeOfDay `json:"timeOfDay,omitempty"`
-}
 
 // FindingID defines model for findingID.
 type FindingID = string
@@ -1280,155 +1274,6 @@ func (t Finding_FindingInfo) MarshalJSON() ([]byte, error) {
 }
 
 func (t *Finding_FindingInfo) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	return err
-}
-
-// AsSingleScheduleScanConfig returns the union data inside the RuntimeScheduleScanConfigType as a SingleScheduleScanConfig
-func (t RuntimeScheduleScanConfigType) AsSingleScheduleScanConfig() (SingleScheduleScanConfig, error) {
-	var body SingleScheduleScanConfig
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromSingleScheduleScanConfig overwrites any union data inside the RuntimeScheduleScanConfigType as the provided SingleScheduleScanConfig
-func (t *RuntimeScheduleScanConfigType) FromSingleScheduleScanConfig(v SingleScheduleScanConfig) error {
-	v.ObjectType = "SingleScheduleScanConfig"
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeSingleScheduleScanConfig performs a merge with any union data inside the RuntimeScheduleScanConfigType, using the provided SingleScheduleScanConfig
-func (t *RuntimeScheduleScanConfigType) MergeSingleScheduleScanConfig(v SingleScheduleScanConfig) error {
-	v.ObjectType = "SingleScheduleScanConfig"
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JsonMerge(b, t.union)
-	t.union = merged
-	return err
-}
-
-// AsByHoursScheduleScanConfig returns the union data inside the RuntimeScheduleScanConfigType as a ByHoursScheduleScanConfig
-func (t RuntimeScheduleScanConfigType) AsByHoursScheduleScanConfig() (ByHoursScheduleScanConfig, error) {
-	var body ByHoursScheduleScanConfig
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromByHoursScheduleScanConfig overwrites any union data inside the RuntimeScheduleScanConfigType as the provided ByHoursScheduleScanConfig
-func (t *RuntimeScheduleScanConfigType) FromByHoursScheduleScanConfig(v ByHoursScheduleScanConfig) error {
-	v.ObjectType = "ByHoursScheduleScanConfig"
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeByHoursScheduleScanConfig performs a merge with any union data inside the RuntimeScheduleScanConfigType, using the provided ByHoursScheduleScanConfig
-func (t *RuntimeScheduleScanConfigType) MergeByHoursScheduleScanConfig(v ByHoursScheduleScanConfig) error {
-	v.ObjectType = "ByHoursScheduleScanConfig"
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JsonMerge(b, t.union)
-	t.union = merged
-	return err
-}
-
-// AsByDaysScheduleScanConfig returns the union data inside the RuntimeScheduleScanConfigType as a ByDaysScheduleScanConfig
-func (t RuntimeScheduleScanConfigType) AsByDaysScheduleScanConfig() (ByDaysScheduleScanConfig, error) {
-	var body ByDaysScheduleScanConfig
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromByDaysScheduleScanConfig overwrites any union data inside the RuntimeScheduleScanConfigType as the provided ByDaysScheduleScanConfig
-func (t *RuntimeScheduleScanConfigType) FromByDaysScheduleScanConfig(v ByDaysScheduleScanConfig) error {
-	v.ObjectType = "ByDaysScheduleScanConfig"
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeByDaysScheduleScanConfig performs a merge with any union data inside the RuntimeScheduleScanConfigType, using the provided ByDaysScheduleScanConfig
-func (t *RuntimeScheduleScanConfigType) MergeByDaysScheduleScanConfig(v ByDaysScheduleScanConfig) error {
-	v.ObjectType = "ByDaysScheduleScanConfig"
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JsonMerge(b, t.union)
-	t.union = merged
-	return err
-}
-
-// AsWeeklyScheduleScanConfig returns the union data inside the RuntimeScheduleScanConfigType as a WeeklyScheduleScanConfig
-func (t RuntimeScheduleScanConfigType) AsWeeklyScheduleScanConfig() (WeeklyScheduleScanConfig, error) {
-	var body WeeklyScheduleScanConfig
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromWeeklyScheduleScanConfig overwrites any union data inside the RuntimeScheduleScanConfigType as the provided WeeklyScheduleScanConfig
-func (t *RuntimeScheduleScanConfigType) FromWeeklyScheduleScanConfig(v WeeklyScheduleScanConfig) error {
-	v.ObjectType = "WeeklyScheduleScanConfig"
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeWeeklyScheduleScanConfig performs a merge with any union data inside the RuntimeScheduleScanConfigType, using the provided WeeklyScheduleScanConfig
-func (t *RuntimeScheduleScanConfigType) MergeWeeklyScheduleScanConfig(v WeeklyScheduleScanConfig) error {
-	v.ObjectType = "WeeklyScheduleScanConfig"
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JsonMerge(b, t.union)
-	t.union = merged
-	return err
-}
-
-func (t RuntimeScheduleScanConfigType) Discriminator() (string, error) {
-	var discriminator struct {
-		Discriminator string `json:"objectType"`
-	}
-	err := json.Unmarshal(t.union, &discriminator)
-	return discriminator.Discriminator, err
-}
-
-func (t RuntimeScheduleScanConfigType) ValueByDiscriminator() (interface{}, error) {
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return nil, err
-	}
-	switch discriminator {
-	case "ByDaysScheduleScanConfig":
-		return t.AsByDaysScheduleScanConfig()
-	case "ByHoursScheduleScanConfig":
-		return t.AsByHoursScheduleScanConfig()
-	case "SingleScheduleScanConfig":
-		return t.AsSingleScheduleScanConfig()
-	case "WeeklyScheduleScanConfig":
-		return t.AsWeeklyScheduleScanConfig()
-	default:
-		return nil, errors.New("unknown discriminator value: " + discriminator)
-	}
-}
-
-func (t RuntimeScheduleScanConfigType) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	return b, err
-}
-
-func (t *RuntimeScheduleScanConfigType) UnmarshalJSON(b []byte) error {
 	err := t.union.UnmarshalJSON(b)
 	return err
 }
