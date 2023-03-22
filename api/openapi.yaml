@@ -1613,7 +1613,7 @@ components:
       properties:
         scannerName:
           type: string
-        scanSummary:
+        scannerSummary:
           $ref: '#/components/schemas/ScannerSummary'
 
     Malware:
