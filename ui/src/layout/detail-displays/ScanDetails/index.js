@@ -6,7 +6,7 @@ import DoublePaneDisplay from 'components/DoublePaneDisplay';
 import Title from 'components/Title';
 import ScanProgressBar from 'components/ScanProgressBar';
 import Button from 'components/Button';
-import { ConfigurationReadOnlyDisplay } from 'layout/Scans/scopeDisplayUtils';
+import ConfigurationReadOnlyDisplay from 'layout/Scans/ConfigurationReadOnlyDisplay';
 import { formatDate } from 'utils/utils';
 import { ROUTES } from 'utils/systemConsts';
 import { useFilterDispatch, setFilters, FILTER_TYPES } from 'context/FiltersProvider';
@@ -28,7 +28,6 @@ const ScanDetails = ({scanData, withAssetScansLink=false}) => {
     const filtersDispatch = useFilterDispatch();
 
     const {id, scanConfig, scanConfigSnapshot, startTime, endTime, summary, state, stateMessage, stateReason} = scanData || {};
-    const {scope, scanFamiliesConfig} = scanConfigSnapshot;
     const {jobsCompleted, jobsLeftToRun} = summary;
 
     const formattedStartTime = formatDate(startTime);
@@ -53,7 +52,7 @@ const ScanDetails = ({scanData, withAssetScansLink=false}) => {
             leftPaneDisplay={() => (
                 <TitleValueDisplayColumn>
                     <ConfigurationAlertLink updatedConfigData={scanConfig} scanConfigData={scanConfigSnapshot} />
-                    <ConfigurationReadOnlyDisplay scope={scope} scanFamiliesConfig={scanFamiliesConfig} />
+                    <ConfigurationReadOnlyDisplay configData={scanConfigSnapshot} />
                 </TitleValueDisplayColumn>
             )}
             rightPlaneDisplay={() => (

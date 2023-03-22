@@ -1,4 +1,5 @@
 import moment from 'moment';
+import cronstrue from 'cronstrue';
 import { FINDINGS_MAPPING, VULNERABILITIES_ICON_NAME } from 'utils/systemConsts';
 import IconWithTooltip from 'components/IconWithTooltip';
 import VulnerabilitiesDisplay from 'components/VulnerabilitiesDisplay';
@@ -9,6 +10,8 @@ export const formatDate = (date) => formatDateBy(date, "MMM Do, YYYY HH:mm:ss");
 export const toCapitalized = string => string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 
 export const BoldText = ({children, style={}}) => <span style={{fontWeight: "bold", ...style}}>{children}</span>;
+
+export const cronExpressionToHuman = value => cronstrue.toString(value, {use24HourTimeFormat: true});
 
 export const getScanName = ({name, startTime}) => `${name} ${formatDate(startTime)}`;
 
