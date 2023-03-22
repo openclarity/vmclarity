@@ -7,7 +7,7 @@ import ExpandableList from 'components/ExpandableList';
 import TablePage from 'components/TablePage';
 import { BoldText, toCapitalized, formatDate } from 'utils/utils';
 import { APIS } from 'utils/systemConsts';
-import { formatTagsToStringInstances } from 'layout/Scans/utils';
+import { formatTagsToStringInstances, getScanTimeTypeTag } from 'layout/Scans/utils';
 import { ExpandableScopeDisplay } from 'layout/Scans/scopeDisplayUtils';
 import { useModalDisplayDispatch, MODAL_DISPLAY_ACTIONS } from 'layout/Scans/ScanConfigWizardModal/ModalDisplayProvider';
 import { FILTER_TYPES } from 'context/FiltersProvider';
@@ -72,13 +72,11 @@ const ConfigurationsTable = () => {
             id: "timeConfig",
             Cell: ({row}) => {
                 const {operationTime, cronLine} = row.original.scheduled;
-                const isPeriodic = !!cronLine;
-                const isScheduled = !isPeriodic && (Date.now() - (new Date(operationTime)).valueOf() <= 0);
+                const scanType = getScanTimeTypeTag({operationTime, cronLine});
                 
                 return (
                     <div>
-                        {!!isPeriodic && <BoldText>Periodic</BoldText>}
-                        {!!isScheduled && <BoldText>Scheduled</BoldText>}
+                        {!!scanType && <BoldText>{scanType}</BoldText>}
                         <div>{formatDate(operationTime)}</div>
                     </div>
                 )

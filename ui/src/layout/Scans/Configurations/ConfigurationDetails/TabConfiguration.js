@@ -6,7 +6,7 @@ import DoublePaneDisplay from 'components/DoublePaneDisplay';
 import Button from 'components/Button';
 import Title from 'components/Title';
 import Loader from 'components/Loader';
-import { ConfigurationReadOnlyDisplay } from 'layout/Scans/scopeDisplayUtils';
+import ConfigurationReadOnlyDisplay from 'layout/Scans/ConfigurationReadOnlyDisplay';
 import { ROUTES, APIS } from 'utils/systemConsts';
 import { useFilterDispatch, setFilters, FILTER_TYPES } from 'context/FiltersProvider';
 
@@ -51,7 +51,7 @@ const ConfigurationScansDisplay = ({configId, configName}) => {
 }
 
 const TabConfiguration = ({data}) => {
-    const {id, name, scope, scanFamiliesConfig} = data || {};
+    const {id, name} = data || {};
     
     return (
         <DoublePaneDisplay
@@ -59,7 +59,7 @@ const TabConfiguration = ({data}) => {
                 <>
                     <Title medium>Configuration</Title>
                     <TitleValueDisplayColumn>
-                        <ConfigurationReadOnlyDisplay scope={scope} scanFamiliesConfig={scanFamiliesConfig} />
+                        <ConfigurationReadOnlyDisplay configData={data} />
                     </TitleValueDisplayColumn>
                 </>
             )}
