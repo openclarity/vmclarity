@@ -48,8 +48,8 @@ type FindingTrend struct {
 type FindingTrends struct {
 	FindingType *FindingType `json:"findingType,omitempty"`
 
-	// Trend Array of the total number of findings at a given time for the specific findingType.
-	Trend *[]FindingTrend `json:"trend,omitempty"`
+	// Trends Array of the total number of findings at a given time for the specific findingType.
+	Trends *[]FindingTrend `json:"trends,omitempty"`
 }
 
 // FindingType defines model for FindingType.

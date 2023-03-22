@@ -73,7 +73,7 @@ components:
       properties:
         findingType:
           $ref: '#/components/schemas/FindingType'
-        trend:
+        trends:
           type: array
           description: Array of the total number of findings at a given time for the specific findingType.
           items:
