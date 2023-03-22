@@ -593,7 +593,6 @@ type ScannerSummary struct {
 	ScannedFiles       *int    `json:"ScannedFiles,omitempty"`
 	SuspectedFiles     *int    `json:"SuspectedFiles,omitempty"`
 	TimeTaken          *string `json:"TimeTaken,omitempty"`
-	Warnings           *int    `json:"Warnings,omitempty"`
 }
 
 // Scans defines model for Scans.

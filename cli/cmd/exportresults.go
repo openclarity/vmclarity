@@ -450,7 +450,6 @@ func convertMalwareResultToAPIModel(malwareResults *malware.Results) *models.Mal
 				ScannedFiles:       &summary.ScannedFiles,
 				SuspectedFiles:     &summary.SuspectedFiles,
 				TimeTaken:          &summary.TimeTaken,
-				Warnings:           &summary.Warnings,
 			},
 		})
 	}

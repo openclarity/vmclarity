@@ -1670,8 +1670,6 @@ components:
           type: integer
         SuspectedFiles:
           type: integer
-        Warnings:
-          type: integer
         DataScanned:
           type: string
         DataRead:
