@@ -16,6 +16,16 @@ const (
 	AWS CloudProvider = "AWS"
 )
 
+// Defines values for MalwareType.
+const (
+	ADWARE     MalwareType = "ADWARE"
+	RANSOMWARE MalwareType = "RANSOMWARE"
+	SPYWARE    MalwareType = "SPYWARE"
+	TROJAN     MalwareType = "TROJAN"
+	VIRUS      MalwareType = "VIRUS"
+	WORM       MalwareType = "WORM"
+)
+
 // Defines values for RootkitType.
 const (
 	APPLICATION RootkitType = "APPLICATION"
@@ -255,12 +265,11 @@ type MalwareFindingInfo struct {
 
 // MalwareScan defines model for MalwareScan.
 type MalwareScan struct {
-	Malware  *[]Malware         `json:"malware,omitempty"`
-	Metadata *[]ScannerMetadata `json:"metadata,omitempty"`
+	Malware *[]Malware `json:"malware,omitempty"`
 }
 
 // MalwareType defines model for MalwareType.
-type MalwareType = string
+type MalwareType string
 
 // Misconfiguration defines model for Misconfiguration.
 type Misconfiguration struct {
@@ -408,9 +417,12 @@ type ScanConfig struct {
 	Name                *string `json:"name,omitempty"`
 
 	// ScanFamiliesConfig The configuration of the scanner families within a scan config
-	ScanFamiliesConfig *ScanFamiliesConfig            `json:"scanFamiliesConfig,omitempty"`
-	Scheduled          *RuntimeScheduleScanConfigType `json:"scheduled,omitempty"`
-	Scope              *ScanScopeType                 `json:"scope,omitempty"`
+	ScanFamiliesConfig *ScanFamiliesConfig `json:"scanFamiliesConfig,omitempty"`
+
+	// ScannerInstanceCreationConfig Configuration of scanner instance
+	ScannerInstanceCreationConfig *ScannerInstanceCreationConfig `json:"scannerInstanceCreationConfig,omitempty"`
+	Scheduled                     *RuntimeScheduleScanConfigType `json:"scheduled,omitempty"`
+	Scope                         *ScanScopeType                 `json:"scope,omitempty"`
 }
 
 // ScanConfigData Fields for a ScanConfig so they can be shared between the ScanConfig,
@@ -422,9 +434,12 @@ type ScanConfigData struct {
 	Name                *string `json:"name,omitempty"`
 
 	// ScanFamiliesConfig The configuration of the scanner families within a scan config
-	ScanFamiliesConfig *ScanFamiliesConfig            `json:"scanFamiliesConfig,omitempty"`
-	Scheduled          *RuntimeScheduleScanConfigType `json:"scheduled,omitempty"`
-	Scope              *ScanScopeType                 `json:"scope,omitempty"`
+	ScanFamiliesConfig *ScanFamiliesConfig `json:"scanFamiliesConfig,omitempty"`
+
+	// ScannerInstanceCreationConfig Configuration of scanner instance
+	ScannerInstanceCreationConfig *ScannerInstanceCreationConfig `json:"scannerInstanceCreationConfig,omitempty"`
+	Scheduled                     *RuntimeScheduleScanConfigType `json:"scheduled,omitempty"`
+	Scope                         *ScanScopeType                 `json:"scope,omitempty"`
 }
 
 // ScanConfigExists defines model for ScanConfigExists.
@@ -442,8 +457,11 @@ type ScanConfigRelationship struct {
 	MaxParallelScanners *interface{} `json:"maxParallelScanners,omitempty"`
 	Name                *interface{} `json:"name,omitempty"`
 	ScanFamiliesConfig  *interface{} `json:"scanFamiliesConfig,omitempty"`
-	Scheduled           *interface{} `json:"scheduled,omitempty"`
-	Scope               *interface{} `json:"scope,omitempty"`
+
+	// ScannerInstanceCreationConfig Configuration of scanner instance
+	ScannerInstanceCreationConfig *ScannerInstanceCreationConfig `json:"scannerInstanceCreationConfig,omitempty"`
+	Scheduled                     *interface{}                   `json:"scheduled,omitempty"`
+	Scope                         *interface{}                   `json:"scope,omitempty"`
 }
 
 // ScanConfigs defines model for ScanConfigs.
@@ -560,24 +578,11 @@ type ScanSummary struct {
 // ScanType defines model for ScanType.
 type ScanType string
 
-// ScannerMetadata defines model for ScannerMetadata.
-type ScannerMetadata struct {
-	ScanSummary *ScannerSummary `json:"scanSummary,omitempty"`
-	ScannerName *string         `json:"scannerName,omitempty"`
-}
-
-// ScannerSummary defines model for ScannerSummary.
-type ScannerSummary struct {
-	DataRead           *string `json:"DataRead,omitempty"`
-	DataScanned        *string `json:"DataScanned,omitempty"`
-	EngineVersion      *string `json:"EngineVersion,omitempty"`
-	InfectedFiles      *int    `json:"InfectedFiles,omitempty"`
-	KnownViruses       *int    `json:"KnownViruses,omitempty"`
-	ScannedDirectories *int    `json:"ScannedDirectories,omitempty"`
-	ScannedFiles       *int    `json:"ScannedFiles,omitempty"`
-	SuspectedFiles     *int    `json:"SuspectedFiles,omitempty"`
-	TimeTaken          *string `json:"TimeTaken,omitempty"`
-	Warnings           *int    `json:"Warnings,omitempty"`
+// ScannerInstanceCreationConfig Configuration of scanner instance
+type ScannerInstanceCreationConfig struct {
+	MaxPrice         *string `json:"maxPrice,omitempty"`
+	RetryMaxAttempts *int    `json:"retryMaxAttempts,omitempty"`
+	UseSpotInstances bool    `json:"useSpotInstances"`
 }
 
 // Scans defines model for Scans.

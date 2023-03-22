@@ -22,10 +22,9 @@ import (
 	"time"
 
 	"github.com/anchore/syft/syft/source"
+	kubeclarityConfig "github.com/openclarity/kubeclarity/shared/pkg/config"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
-
-	kubeclarityConfig "github.com/openclarity/kubeclarity/shared/pkg/config"
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/config"
@@ -333,11 +332,12 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 	}
 
 	scanningJobConfig := provider.ScanningJobConfig{
-		ScannerImage:     s.config.ScannerImage,
-		ScannerCLIConfig: familiesConfiguration,
-		VMClarityAddress: s.config.ScannerBackendAddress,
-		ScanResultID:     data.scanResultID,
-		KeyPairName:      s.config.ScannerKeyPairName,
+		ScannerImage:                  s.config.ScannerImage,
+		ScannerCLIConfig:              familiesConfiguration,
+		VMClarityAddress:              s.config.ScannerBackendAddress,
+		ScanResultID:                  data.scanResultID,
+		KeyPairName:                   s.config.ScannerKeyPairName,
+		ScannerInstanceCreationConfig: s.scanConfig.ScannerInstanceCreationConfig,
 	}
 	launchInstance, err = s.providerClient.RunScanningJob(ctx, launchSnapshot.GetRegion(), launchSnapshot.GetID(), scanningJobConfig)
 	if err != nil {
