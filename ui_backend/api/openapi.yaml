@@ -34,11 +34,7 @@ components:
     RiskiestRegions:
       type: object
       properties:
-        count:
-          type: integer
-          description: Total regions count.
-          readOnly: true
-        items:
+        regions:
           type: array
           description: List of regions with the findings that was found on them. 
             Regions with no findings will not be reported.

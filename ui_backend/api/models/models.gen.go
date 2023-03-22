@@ -27,11 +27,8 @@ type RegionFindings struct {
 
 // RiskiestRegions defines model for RiskiestRegions.
 type RiskiestRegions struct {
-	// Count Total regions count.
-	Count *int `json:"count,omitempty"`
-
-	// Items List of regions with the findings that was found on them. Regions with no findings will not be reported.
-	Items *[]RegionFindings `json:"items,omitempty"`
+	// Regions List of regions with the findings that was found on them. Regions with no findings will not be reported.
+	Regions *[]RegionFindings `json:"regions,omitempty"`
 }
 
 // ExampleFilter defines model for exampleFilter.

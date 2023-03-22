@@ -29,15 +29,16 @@ import (
 )
 
 func (s *ServerImpl) GetDashboardRiskiestRegions(ctx echo.Context) error {
-	targets, err := s.BackendClient.GetTargets(context.TODO(), backendmodels.GetTargetsParams{})
+	targets, err := s.BackendClient.GetTargets(context.TODO(), backendmodels.GetTargetsParams{
+		Filter: utils.StringPtr("targetInfo/objectType eq 'VMInfo'"),
+	})
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get targets: %v", err))
 	}
 
 	regionFindings := createRegionFindingsFromTargets(targets)
 	return sendResponse(ctx, http.StatusOK, &models.RiskiestRegions{
-		Count: utils.PointerTo(len(regionFindings)),
-		Items: &regionFindings,
+		Regions: &regionFindings,
 	})
 }
 
@@ -50,7 +51,7 @@ func createRegionFindingsFromTargets(targets *backendmodels.Targets) []models.Re
 	for _, target := range *targets.Items {
 		location, err := getTargetLocation(target)
 		if err != nil {
-			log.Infof("Couldn't get target location, skipping target: %v", err)
+			log.Warnf("Couldn't get target location, skipping target: %v", err)
 			continue
 		}
 		if _, ok := findingsPerRegion[location]; !ok {

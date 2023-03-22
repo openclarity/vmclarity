@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+
 	backendmodels "github.com/openclarity/vmclarity/api/models"
 
 	"github.com/openclarity/vmclarity/shared/pkg/utils"
@@ -20,6 +21,9 @@ func Test_getTargetLocation(t *testing.T) {
 	err := targetInfo.FromVMInfo(backendmodels.VMInfo{
 		Location: "us-east-1",
 	})
+	assert.NilError(t, err)
+	nonSupportedTargetInfo := backendmodels.TargetType{}
+	err = nonSupportedTargetInfo.FromDirInfo(backendmodels.DirInfo{})
 	assert.NilError(t, err)
 
 	type args struct {
@@ -40,6 +44,16 @@ func Test_getTargetLocation(t *testing.T) {
 			},
 			want:    "us-east-1",
 			wantErr: false,
+		},
+		{
+			name: "non supported target",
+			args: args{
+				target: backendmodels.Target{
+					TargetInfo: &nonSupportedTargetInfo,
+				},
+			},
+			want:    "",
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
