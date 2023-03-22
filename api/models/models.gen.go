@@ -578,8 +578,8 @@ type ScannerInstanceCreationConfig struct {
 
 // ScannerMetadata defines model for ScannerMetadata.
 type ScannerMetadata struct {
-	ScanSummary *ScannerSummary `json:"scanSummary,omitempty"`
-	ScannerName *string         `json:"scannerName,omitempty"`
+	ScannerName    *string         `json:"scannerName,omitempty"`
+	ScannerSummary *ScannerSummary `json:"scannerSummary,omitempty"`
 }
 
 // ScannerSummary defines model for ScannerSummary.
