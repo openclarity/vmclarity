@@ -589,7 +589,7 @@ func Test_convertMalwareResultToAPIModel(t *testing.T) {
 				Metadata: &[]models.ScannerMetadata{
 					{
 						ScannerName: utils.StringPtr("clam"),
-						ScanSummary: &models.ScannerSummary{
+						ScannerSummary: &models.ScannerSummary{
 							KnownViruses:       utils.PointerTo(100),
 							EngineVersion:      utils.StringPtr("1"),
 							ScannedDirectories: utils.PointerTo(10),

@@ -440,7 +440,7 @@ func convertMalwareResultToAPIModel(malwareResults *malware.Results) *models.Mal
 		nameVal := name // Prevent loop variable pointer export
 		metadata = append(metadata, models.ScannerMetadata{
 			ScannerName: &nameVal,
-			ScanSummary: &models.ScannerSummary{
+			ScannerSummary: &models.ScannerSummary{
 				DataRead:           &summary.DataRead,
 				DataScanned:        &summary.DataScanned,
 				EngineVersion:      &summary.EngineVersion,
