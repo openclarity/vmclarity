@@ -171,7 +171,7 @@ func (t *TargetsTableHandler) SaveTarget(target models.Target) (models.Target, e
 		return models.Target{}, fmt.Errorf("failed to get target from db: %w", err)
 	}
 
-	existingTarget, err := t.checkUniqueness(target, false)
+	existingTarget, err := t.checkUniqueness(target, true)
 	if err != nil {
 		var conflictErr *common.ConflictError
 		if errors.As(err, &conflictErr) {
