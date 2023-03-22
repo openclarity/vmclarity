@@ -9,11 +9,13 @@ require (
 	github.com/Portshift/go-utils v0.0.0-20220421083203-89265d8a6487
 	github.com/anchore/syft v0.60.3
 	github.com/aptible/supercronic v0.2.2
+	github.com/aws/aws-sdk-go-v2 v1.17.4
 	github.com/aws/aws-sdk-go-v2/config v1.17.10
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.63.1
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/deepmap/oapi-codegen v1.12.3
 	github.com/evanphx/json-patch v5.6.0+incompatible
+	github.com/getkin/kin-openapi v0.107.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.3.0
@@ -33,6 +35,7 @@ require (
 	gorm.io/datatypes v1.1.0
 	gorm.io/driver/sqlite v1.3.6
 	gorm.io/gorm v1.23.8
+	gotest.tools/v3 v3.4.0
 	k8s.io/mount-utils v0.26.2
 )
 
@@ -98,7 +101,6 @@ require (
 	github.com/aquasecurity/trivy-db v0.0.0-20220627104749-930461748b63 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/aws/aws-sdk-go v1.44.114 // indirect
-	github.com/aws/aws-sdk-go-v2 v1.17.4 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.12 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.22 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.28 // indirect
@@ -170,7 +172,6 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/fullstorydev/grpcurl v1.8.7 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.0 // indirect
-	github.com/getkin/kin-openapi v0.107.0 // indirect
 	github.com/go-chi/chi v4.1.2+incompatible // indirect
 	github.com/go-enry/go-license-detector/v4 v4.3.0 // indirect
 	github.com/go-errors/errors v1.0.1 // indirect
@@ -425,12 +426,12 @@ require (
 	go.uber.org/zap v1.23.0 // indirect
 	golang.org/x/crypto v0.3.0 // indirect
 	golang.org/x/mod v0.6.0 // indirect
-	golang.org/x/net v0.2.0 // indirect
+	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/oauth2 v0.1.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
-	golang.org/x/term v0.2.0 // indirect
-	golang.org/x/text v0.4.0 // indirect
+	golang.org/x/term v0.5.0 // indirect
+	golang.org/x/text v0.7.0 // indirect
 	golang.org/x/time v0.0.0-20220922220347-f3bd1da661af // indirect
 	golang.org/x/tools v0.2.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
@@ -449,7 +450,6 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gorm.io/driver/mysql v1.4.4 // indirect
-	gotest.tools/v3 v3.4.0 // indirect
 	helm.sh/helm/v3 v3.10.3 // indirect
 	k8s.io/api v0.25.3 // indirect
 	k8s.io/apiextensions-apiserver v0.25.2 // indirect
