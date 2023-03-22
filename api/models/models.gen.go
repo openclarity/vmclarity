@@ -16,16 +16,6 @@ const (
 	AWS CloudProvider = "AWS"
 )
 
-// Defines values for MalwareType.
-const (
-	ADWARE     MalwareType = "ADWARE"
-	RANSOMWARE MalwareType = "RANSOMWARE"
-	SPYWARE    MalwareType = "SPYWARE"
-	TROJAN     MalwareType = "TROJAN"
-	VIRUS      MalwareType = "VIRUS"
-	WORM       MalwareType = "WORM"
-)
-
 // Defines values for RootkitType.
 const (
 	APPLICATION RootkitType = "APPLICATION"
@@ -265,11 +255,12 @@ type MalwareFindingInfo struct {
 
 // MalwareScan defines model for MalwareScan.
 type MalwareScan struct {
-	Malware *[]Malware `json:"malware,omitempty"`
+	Malware  *[]Malware         `json:"malware,omitempty"`
+	Metadata *[]ScannerMetadata `json:"metadata,omitempty"`
 }
 
 // MalwareType defines model for MalwareType.
-type MalwareType string
+type MalwareType = string
 
 // Misconfiguration defines model for Misconfiguration.
 type Misconfiguration struct {
@@ -583,6 +574,26 @@ type ScannerInstanceCreationConfig struct {
 	MaxPrice         *string `json:"maxPrice,omitempty"`
 	RetryMaxAttempts *int    `json:"retryMaxAttempts,omitempty"`
 	UseSpotInstances bool    `json:"useSpotInstances"`
+}
+
+// ScannerMetadata defines model for ScannerMetadata.
+type ScannerMetadata struct {
+	ScanSummary *ScannerSummary `json:"scanSummary,omitempty"`
+	ScannerName *string         `json:"scannerName,omitempty"`
+}
+
+// ScannerSummary defines model for ScannerSummary.
+type ScannerSummary struct {
+	DataRead           *string `json:"DataRead,omitempty"`
+	DataScanned        *string `json:"DataScanned,omitempty"`
+	EngineVersion      *string `json:"EngineVersion,omitempty"`
+	InfectedFiles      *int    `json:"InfectedFiles,omitempty"`
+	KnownViruses       *int    `json:"KnownViruses,omitempty"`
+	ScannedDirectories *int    `json:"ScannedDirectories,omitempty"`
+	ScannedFiles       *int    `json:"ScannedFiles,omitempty"`
+	SuspectedFiles     *int    `json:"SuspectedFiles,omitempty"`
+	TimeTaken          *string `json:"TimeTaken,omitempty"`
+	Warnings           *int    `json:"Warnings,omitempty"`
 }
 
 // Scans defines model for Scans.
