@@ -80,7 +80,8 @@ func (a *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 		// nolint:gosec
 		cmd := exec.Command(a.config.BinaryPath, "detect", fmt.Sprintf("--source=%v", userInput), "--no-git", "-r", reportPath, "-f", "json", "--exit-code", "0")
 		a.logger.Infof("Running gitleaks command: %v", cmd.String())
-		_, err = sharedutils.RunCommand(cmd)
+		_, runCommandErr := sharedutils.RunCommand(cmd)
+		err = runCommandErr.Err
 		if err != nil {
 			a.sendResults(retResults, fmt.Errorf("failed to run gitleaks command: %v", err))
 			return
