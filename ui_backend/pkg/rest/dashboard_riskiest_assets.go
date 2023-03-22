@@ -54,37 +54,37 @@ var orderedSeveritiesFields = []string{
 
 func (s *ServerImpl) GetDashboardRiskiestAssets(ctx echo.Context) error {
 	reqCtx := ctx.Request().Context()
-	exploits, err := s.getRiskyAsset(reqCtx, backendmodels.EXPLOIT)
+	exploits, err := s.getRiskiestAssetsForFindingType(reqCtx, backendmodels.EXPLOIT)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError,
 			fmt.Sprintf("failed to get riskiest assets for exploits: %v", err))
 	}
 
-	malware, err := s.getRiskyAsset(reqCtx, backendmodels.MALWARE)
+	malware, err := s.getRiskiestAssetsForFindingType(reqCtx, backendmodels.MALWARE)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError,
 			fmt.Sprintf("failed to get riskiest assets for malware: %v", err))
 	}
 
-	misconfigurations, err := s.getRiskyAsset(reqCtx, backendmodels.MISCONFIGURATION)
+	misconfigurations, err := s.getRiskiestAssetsForFindingType(reqCtx, backendmodels.MISCONFIGURATION)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError,
 			fmt.Sprintf("failed to get riskiest assets for misconfigurations: %v", err))
 	}
 
-	rootkits, err := s.getRiskyAsset(reqCtx, backendmodels.ROOTKIT)
+	rootkits, err := s.getRiskiestAssetsForFindingType(reqCtx, backendmodels.ROOTKIT)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError,
 			fmt.Sprintf("failed to get riskiest assets for rootkits: %v", err))
 	}
 
-	secrets, err := s.getRiskyAsset(reqCtx, backendmodels.SECRET)
+	secrets, err := s.getRiskiestAssetsForFindingType(reqCtx, backendmodels.SECRET)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError,
 			fmt.Sprintf("failed to get riskiest assets for secrets: %v", err))
 	}
 
-	vulnerabilities, err := s.getVulnerabilityRiskyAsset(reqCtx)
+	vulnerabilities, err := s.getRiskiestAssetsForVulnerabilityType(reqCtx)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError,
 			fmt.Sprintf("failed to get riskiest assets for vulnerabilities: %v", err))
@@ -100,7 +100,7 @@ func (s *ServerImpl) GetDashboardRiskiestAssets(ctx echo.Context) error {
 	})
 }
 
-func (s *ServerImpl) getRiskyAsset(ctx context.Context, findingType backendmodels.ScanType) ([]models.RiskyAsset, error) {
+func (s *ServerImpl) getRiskiestAssetsForFindingType(ctx context.Context, findingType backendmodels.ScanType) ([]models.RiskyAsset, error) {
 	riskiestAssets, err := s.getRiskiestAssetsPerFinding(ctx, findingType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get riskiest assets: %v", err)
@@ -109,17 +109,17 @@ func (s *ServerImpl) getRiskyAsset(ctx context.Context, findingType backendmodel
 	return toAPIRiskyAssets(*riskiestAssets.Items, findingType), nil
 }
 
-func (s *ServerImpl) getVulnerabilityRiskyAsset(ctx context.Context) ([]models.VulnerabilityRiskyAsset, error) {
+func (s *ServerImpl) getRiskiestAssetsForVulnerabilityType(ctx context.Context) ([]models.VulnerabilityRiskyAsset, error) {
 	targets, err := s.getRiskiestAssetsPerFinding(ctx, backendmodels.VULNERABILITY)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get riskiest assets: %v", err)
 	}
 
-	return toAPIVulnerabilityRiskyAsset(*targets.Items), nil
+	return toAPIVulnerabilityRiskyAssets(*targets.Items), nil
 }
 
 func (s *ServerImpl) getRiskiestAssetsPerFinding(ctx context.Context, findingType backendmodels.ScanType) (*backendmodels.Targets, error) {
-	totalFindingField, err := getTotalFindingField(findingType)
+	totalFindingField, err := getTotalFindingFieldName(findingType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get total findings field name: %v", err)
 	}
@@ -153,13 +153,13 @@ func getOrderByOdataForVulnerabilities() string {
 	return strings.Join(ret, ",")
 }
 
-func toAPIVulnerabilityRiskyAsset(targets []backendmodels.Target) []models.VulnerabilityRiskyAsset {
+func toAPIVulnerabilityRiskyAssets(targets []backendmodels.Target) []models.VulnerabilityRiskyAsset {
 	ret := make([]models.VulnerabilityRiskyAsset, 0, len(targets))
 
 	for _, target := range targets {
 		assetInfo, err := getAssetInfo(target.TargetInfo)
 		if err != nil {
-			log.Warningf("Failed to asset info, skipping target: %v", err)
+			log.Warningf("Failed to get asset info, skipping target: %v", err)
 			continue
 		}
 
@@ -188,13 +188,13 @@ func toAPIRiskyAssets(targets []backendmodels.Target, findingType backendmodels.
 	for _, target := range targets {
 		assetInfo, err := getAssetInfo(target.TargetInfo)
 		if err != nil {
-			log.Warningf("Failed to asset info, skipping target: %v", err)
+			log.Warningf("Failed to get asset info, skipping target: %v", err)
 			continue
 		}
 
-		count, err := getCount(target.Summary, findingType)
+		count, err := getCountForFindingType(target.Summary, findingType)
 		if err != nil {
-			log.Warningf("Failed to get count from summary, skipping target (%v/%v): %v", *assetInfo.Name, *assetInfo.Location, err)
+			log.Warningf("Failed to get count from summary, skipping target (%v/%v): %v", *assetInfo.Location, *assetInfo.Name, err)
 			continue
 		}
 
@@ -245,7 +245,7 @@ func getAssetType(provider *backendmodels.CloudProvider) (*models.AssetType, err
 	}
 }
 
-func getCount(summary *backendmodels.ScanFindingsSummary, findingType backendmodels.ScanType) (*int, error) {
+func getCountForFindingType(summary *backendmodels.ScanFindingsSummary, findingType backendmodels.ScanType) (*int, error) {
 	switch findingType {
 	case backendmodels.EXPLOIT:
 		return summary.TotalExploits, nil
@@ -264,7 +264,7 @@ func getCount(summary *backendmodels.ScanFindingsSummary, findingType backendmod
 	}
 }
 
-func getTotalFindingField(findingType backendmodels.ScanType) (string, error) {
+func getTotalFindingFieldName(findingType backendmodels.ScanType) (string, error) {
 	switch findingType {
 	case backendmodels.EXPLOIT:
 		return totalExploitsSummaryFieldName, nil

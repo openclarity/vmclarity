@@ -86,44 +86,44 @@ components:
       properties:
         vulnerabilities:
           type: array
-          description: Top 5 assets sorted by max vulnerabilites count
+          description: Top 5 riskiest assets sorted by vulnerabilities
           items:
             $ref: '#/components/schemas/VulnerabilityRiskyAsset'
           readOnly: true
         malware:
           type: array
-          description: Top 5 assets sorted by max malware count
+          description: Top 5 riskiest assets sorted by malware count
           items:
             $ref: '#/components/schemas/RiskyAsset'
           readOnly: true
         rootkits:
           type: array
-          description: Top 5 assets sorted by max rootkits count
+          description: Top 5 riskiest assets sorted by rootkits count
           items:
             $ref: '#/components/schemas/RiskyAsset'
           readOnly: true
         secrets:
           type: array
-          description: Top 5 assets sorted by max secrets count
+          description: Top 5 riskiest assets sorted by secrets count
           items:
             $ref: '#/components/schemas/RiskyAsset'
           readOnly: true
         misconfigurations:
           type: array
-          description: Top 5 assets sorted by max misconfigurations count
+          description: Top 5 riskiest assets sorted by misconfigurations count
           items:
             $ref: '#/components/schemas/RiskyAsset'
           readOnly: true
         exploits:
           type: array
-          description: Top 5 assets sorted by max exploits count
+          description: Top 5 riskiest assets sorted by exploits count
           items:
             $ref: '#/components/schemas/RiskyAsset'
           readOnly: true
 
     RiskyAsset:
       type: object
-      description: Total findings for an asset
+      description: Total number of findings for an asset
       properties:
         assetInfo:
           $ref: '#/components/schemas/AssetInfo'
@@ -132,7 +132,7 @@ components:
 
     VulnerabilityRiskyAsset:
       type: object
-      description: Total vulnerabilities findings for an asset
+      description: Total number of vulnerability findings for an asset
       properties:
         assetInfo:
           $ref: '#/components/schemas/AssetInfo'

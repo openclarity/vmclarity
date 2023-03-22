@@ -42,22 +42,22 @@ type RegionFindings struct {
 
 // RiskiestAssets defines model for RiskiestAssets.
 type RiskiestAssets struct {
-	// Exploits Top 5 assets sorted by max exploits count
+	// Exploits Top 5 riskiest assets sorted by exploits count
 	Exploits *[]RiskyAsset `json:"exploits,omitempty"`
 
-	// Malware Top 5 assets sorted by max malware count
+	// Malware Top 5 riskiest assets sorted by malware count
 	Malware *[]RiskyAsset `json:"malware,omitempty"`
 
-	// Misconfigurations Top 5 assets sorted by max misconfigurations count
+	// Misconfigurations Top 5 riskiest assets sorted by misconfigurations count
 	Misconfigurations *[]RiskyAsset `json:"misconfigurations,omitempty"`
 
-	// Rootkits Top 5 assets sorted by max rootkits count
+	// Rootkits Top 5 riskiest assets sorted by rootkits count
 	Rootkits *[]RiskyAsset `json:"rootkits,omitempty"`
 
-	// Secrets Top 5 assets sorted by max secrets count
+	// Secrets Top 5 riskiest assets sorted by secrets count
 	Secrets *[]RiskyAsset `json:"secrets,omitempty"`
 
-	// Vulnerabilities Top 5 assets sorted by max vulnerabilites count
+	// Vulnerabilities Top 5 riskiest assets sorted by vulnerabilities
 	Vulnerabilities *[]VulnerabilityRiskyAsset `json:"vulnerabilities,omitempty"`
 }
 
@@ -67,7 +67,7 @@ type RiskiestRegions struct {
 	Regions *[]RegionFindings `json:"regions,omitempty"`
 }
 
-// RiskyAsset Total findings for an asset
+// RiskyAsset Total number of findings for an asset
 type RiskyAsset struct {
 	AssetInfo *AssetInfo `json:"assetInfo,omitempty"`
 	Count     *int       `json:"count,omitempty"`
@@ -82,7 +82,7 @@ type VulnerabilityCount struct {
 	NegligibleVulnerabilitiesCount *int `json:"negligibleVulnerabilitiesCount,omitempty"`
 }
 
-// VulnerabilityRiskyAsset Total vulnerabilities findings for an asset
+// VulnerabilityRiskyAsset Total number of vulnerability findings for an asset
 type VulnerabilityRiskyAsset struct {
 	AssetInfo *AssetInfo          `json:"assetInfo,omitempty"`
 	Count     *VulnerabilityCount `json:"count,omitempty"`

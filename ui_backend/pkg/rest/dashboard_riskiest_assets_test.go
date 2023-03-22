@@ -97,13 +97,13 @@ func Test_getTotalFindingField(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getTotalFindingField(tt.args.findingType)
+			got, err := getTotalFindingFieldName(tt.args.findingType)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("getTotalFindingField() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("getTotalFindingFieldName() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("getTotalFindingField() got = %v, want %v", got, tt.want)
+				t.Errorf("getTotalFindingFieldName() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -201,13 +201,13 @@ func Test_getCount(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getCount(tt.args.summary, tt.args.findingType)
+			got, err := getCountForFindingType(tt.args.summary, tt.args.findingType)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("getCount() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("getCountForFindingType() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("getCount() got = %v, want %v", got, tt.want)
+				t.Errorf("getCountForFindingType() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -343,8 +343,8 @@ func Test_toAPIVulnerabilityRiskyAsset(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := toAPIVulnerabilityRiskyAsset(tt.args.targets); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("toAPIVulnerabilityRiskyAsset() = %v, want %v", got, tt.want)
+			if got := toAPIVulnerabilityRiskyAssets(tt.args.targets); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("toAPIVulnerabilityRiskyAssets() = %v, want %v", got, tt.want)
 			}
 		})
 	}
