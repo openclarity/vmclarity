@@ -101,13 +101,13 @@ type ApiResponse struct {
 // AwsAccountScope AWS cloud account scope
 type AwsAccountScope struct {
 	ObjectType string       `json:"objectType"`
-	Regions    *[]AwsRegion `json:"regions,omitempty"`
+	Regions    *[]AwsRegion `json:"regions"`
 }
 
 // AwsRegion AWS region
 type AwsRegion struct {
 	Name string    `json:"name"`
-	Vpcs *[]AwsVPC `json:"vpcs,omitempty"`
+	Vpcs *[]AwsVPC `json:"vpcs"`
 }
 
 // AwsScanScope The scope of a configured scan.
@@ -116,12 +116,12 @@ type AwsScanScope struct {
 	AllRegions *bool `json:"allRegions,omitempty"`
 
 	// InstanceTagExclusion VM instances will not be scanned if they contain all of these tags (even if they match instanceTagSelector). If empty, not taken into account.
-	InstanceTagExclusion *[]Tag `json:"instanceTagExclusion,omitempty"`
+	InstanceTagExclusion *[]Tag `json:"instanceTagExclusion"`
 
 	// InstanceTagSelector VM instances will be scanned if they contain all of these tags. If empty, not taken into account.
-	InstanceTagSelector        *[]Tag       `json:"instanceTagSelector,omitempty"`
+	InstanceTagSelector        *[]Tag       `json:"instanceTagSelector"`
 	ObjectType                 string       `json:"objectType"`
-	Regions                    *[]AwsRegion `json:"regions,omitempty"`
+	Regions                    *[]AwsRegion `json:"regions"`
 	ShouldScanStoppedInstances *bool        `json:"shouldScanStoppedInstances,omitempty"`
 }
 
@@ -133,7 +133,7 @@ type AwsSecurityGroup struct {
 // AwsVPC AWS VPC
 type AwsVPC struct {
 	Id             string              `json:"id"`
-	SecurityGroups *[]AwsSecurityGroup `json:"securityGroups,omitempty"`
+	SecurityGroups *[]AwsSecurityGroup `json:"securityGroups"`
 }
 
 // ByDaysScheduleScanConfig defines model for ByDaysScheduleScanConfig.
@@ -166,7 +166,7 @@ type Exploit struct {
 	Name        *string   `json:"name,omitempty"`
 	SourceDB    *string   `json:"sourceDB,omitempty"`
 	Title       *string   `json:"title,omitempty"`
-	Urls        *[]string `json:"urls,omitempty"`
+	Urls        *[]string `json:"urls"`
 }
 
 // ExploitFindingInfo defines model for ExploitFindingInfo.
@@ -177,12 +177,12 @@ type ExploitFindingInfo struct {
 	ObjectType  string    `json:"objectType"`
 	SourceDB    *string   `json:"sourceDB,omitempty"`
 	Title       *string   `json:"title,omitempty"`
-	Urls        *[]string `json:"urls,omitempty"`
+	Urls        *[]string `json:"urls"`
 }
 
 // ExploitScan defines model for ExploitScan.
 type ExploitScan struct {
-	Exploits *[]Exploit `json:"exploits,omitempty"`
+	Exploits *[]Exploit `json:"exploits"`
 }
 
 // ExploitsConfig defines model for ExploitsConfig.
@@ -255,7 +255,7 @@ type MalwareFindingInfo struct {
 
 // MalwareScan defines model for MalwareScan.
 type MalwareScan struct {
-	Malware  *[]Malware         `json:"malware,omitempty"`
+	Malware  *[]Malware         `json:"malware"`
 	Metadata *[]ScannerMetadata `json:"metadata,omitempty"`
 }
 
@@ -281,7 +281,7 @@ type MisconfigurationFindingInfo struct {
 
 // MisconfigurationScan defines model for MisconfigurationScan.
 type MisconfigurationScan struct {
-	Misconfigurations *[]Misconfiguration `json:"misconfigurations,omitempty"`
+	Misconfigurations *[]Misconfiguration `json:"misconfigurations"`
 }
 
 // MisconfigurationsConfig defines model for MisconfigurationsConfig.
@@ -291,9 +291,9 @@ type MisconfigurationsConfig struct {
 
 // Package defines model for Package.
 type Package struct {
-	Cpes     *[]string `json:"cpes,omitempty"`
+	Cpes     *[]string `json:"cpes"`
 	Language *string   `json:"language,omitempty"`
-	Licenses *[]string `json:"licenses,omitempty"`
+	Licenses *[]string `json:"licenses"`
 	Name     *string   `json:"name,omitempty"`
 	Purl     *string   `json:"purl,omitempty"`
 	Type     *string   `json:"type,omitempty"`
@@ -302,9 +302,9 @@ type Package struct {
 
 // PackageFindingInfo defines model for PackageFindingInfo.
 type PackageFindingInfo struct {
-	Cpes       *[]string `json:"cpes,omitempty"`
+	Cpes       *[]string `json:"cpes"`
 	Language   *string   `json:"language,omitempty"`
-	Licenses   *[]string `json:"licenses,omitempty"`
+	Licenses   *[]string `json:"licenses"`
 	Name       *string   `json:"name,omitempty"`
 	ObjectType string    `json:"objectType"`
 	Purl       *string   `json:"purl,omitempty"`
@@ -339,7 +339,7 @@ type RootkitFindingInfo struct {
 
 // RootkitScan defines model for RootkitScan.
 type RootkitScan struct {
-	Rootkits *[]Rootkit `json:"rootkits,omitempty"`
+	Rootkits *[]Rootkit `json:"rootkits"`
 }
 
 // RootkitType defines model for RootkitType.
@@ -362,7 +362,7 @@ type SBOMConfig struct {
 
 // SbomScan defines model for SbomScan.
 type SbomScan struct {
-	Packages *[]Package `json:"packages,omitempty"`
+	Packages *[]Package `json:"packages"`
 }
 
 // Scan defines model for Scan.
@@ -392,7 +392,7 @@ type Scan struct {
 	Summary *ScanSummary `json:"summary,omitempty"`
 
 	// TargetIDs List of target IDs that are targeted for scanning as part of this scan
-	TargetIDs *[]string `json:"targetIDs,omitempty"`
+	TargetIDs *[]string `json:"targetIDs"`
 }
 
 // ScanState The lifecycle state of this scan.
@@ -490,7 +490,7 @@ type ScanData struct {
 	Summary *ScanSummary `json:"summary,omitempty"`
 
 	// TargetIDs List of target IDs that are targeted for scanning as part of this scan
-	TargetIDs *[]string `json:"targetIDs,omitempty"`
+	TargetIDs *[]string `json:"targetIDs"`
 }
 
 // ScanDataState The lifecycle state of this scan.
@@ -643,7 +643,7 @@ type SecretFindingInfo struct {
 
 // SecretScan defines model for SecretScan.
 type SecretScan struct {
-	Secrets *[]Secret `json:"secrets,omitempty"`
+	Secrets *[]Secret `json:"secrets"`
 }
 
 // SecretsConfig defines model for SecretsConfig.
@@ -747,7 +747,7 @@ type TargetScanResults struct {
 
 // TargetScanState defines model for TargetScanState.
 type TargetScanState struct {
-	Errors *[]string             `json:"errors,omitempty"`
+	Errors *[]string             `json:"errors"`
 	State  *TargetScanStateState `json:"state,omitempty"`
 }
 
@@ -801,14 +801,14 @@ type VulnerabilitiesConfig struct {
 
 // Vulnerability defines model for Vulnerability.
 type Vulnerability struct {
-	Cvss        *[]VulnerabilityCvss `json:"cvss,omitempty"`
+	Cvss        *[]VulnerabilityCvss `json:"cvss"`
 	Description *string              `json:"description,omitempty"`
 
 	// Distro Distro provides information about a detected Linux distribution.
 	Distro            *VulnerabilityDistro   `json:"distro,omitempty"`
 	Fix               *VulnerabilityFix      `json:"fix,omitempty"`
 	LayerId           *string                `json:"layerId,omitempty"`
-	Links             *[]string              `json:"links,omitempty"`
+	Links             *[]string              `json:"links"`
 	Package           *Package               `json:"package,omitempty"`
 	Path              *string                `json:"path,omitempty"`
 	Severity          *VulnerabilitySeverity `json:"severity,omitempty"`
@@ -832,7 +832,7 @@ type VulnerabilityCvssMetrics struct {
 // VulnerabilityDistro Distro provides information about a detected Linux distribution.
 type VulnerabilityDistro struct {
 	// IDLike the ID_LIKE field found within the /etc/os-release file
-	IDLike *[]string `json:"IDLike,omitempty"`
+	IDLike *[]string `json:"IDLike"`
 
 	// Name Name of the Linux distribution
 	Name *string `json:"name,omitempty"`
@@ -843,14 +843,14 @@ type VulnerabilityDistro struct {
 
 // VulnerabilityFindingInfo defines model for VulnerabilityFindingInfo.
 type VulnerabilityFindingInfo struct {
-	Cvss        *[]VulnerabilityCvss `json:"cvss,omitempty"`
+	Cvss        *[]VulnerabilityCvss `json:"cvss"`
 	Description *string              `json:"description,omitempty"`
 
 	// Distro Distro provides information about a detected Linux distribution.
 	Distro            *VulnerabilityDistro   `json:"distro,omitempty"`
 	Fix               *VulnerabilityFix      `json:"fix,omitempty"`
 	LayerId           *string                `json:"layerId,omitempty"`
-	Links             *[]string              `json:"links,omitempty"`
+	Links             *[]string              `json:"links"`
 	ObjectType        string                 `json:"objectType"`
 	Package           *Package               `json:"package,omitempty"`
 	Path              *string                `json:"path,omitempty"`
@@ -866,7 +866,7 @@ type VulnerabilityFix struct {
 
 // VulnerabilityScan defines model for VulnerabilityScan.
 type VulnerabilityScan struct {
-	Vulnerabilities *[]Vulnerability `json:"vulnerabilities,omitempty"`
+	Vulnerabilities *[]Vulnerability `json:"vulnerabilities"`
 }
 
 // VulnerabilityScanSummary A summary of number of vulnerabilities found per severity.

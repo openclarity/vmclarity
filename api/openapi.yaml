@@ -735,6 +735,7 @@ components:
           type: array
           items:
             type: string
+          nullable: true
         state:
           description: The lifecycle state of this scan.
           type: string
@@ -1060,6 +1061,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AwsRegion'
+          nullable: true
         shouldScanStoppedInstances:
           type: boolean
         instanceTagSelector:
@@ -1067,11 +1069,13 @@ components:
           description: VM instances will be scanned if they contain all of these tags. If empty, not taken into account.
           items:
             $ref: '#/components/schemas/Tag'
+          nullable: true
         instanceTagExclusion:
           type: array
           description: VM instances will not be scanned if they contain all of these tags (even if they match instanceTagSelector). If empty, not taken into account.
           items:
             $ref: '#/components/schemas/Tag'
+          nullable: true
       required:
         - objectType
       additionalProperties: false
@@ -1095,6 +1099,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AwsRegion'
+          nullable: true
       required:
         - objectType
 
@@ -1108,6 +1113,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AwsVPC'
+          nullable: true
       required:
         - name
       additionalProperties: false
@@ -1122,6 +1128,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AwsSecurityGroup'
+          nullable: true
       required:
         - id
       additionalProperties: false
@@ -1466,7 +1473,7 @@ components:
           type: array
           items:
             type: string
-          default: []
+          nullable: true
 
     Package:
       type: object
@@ -1483,10 +1490,12 @@ components:
           type: array
           items:
             type: string
+          nullable: true
         cpes:
           type: array
           items:
             type: string
+          nullable: true
         purl:
           type: string
 
@@ -1504,12 +1513,14 @@ components:
           type: array
           items:
             type: string
+          nullable: true
         distro:
           $ref: '#/components/schemas/VulnerabilityDistro'
         cvss:
           type: array
           items:
             $ref: '#/components/schemas/VulnerabilityCvss'
+          nullable: true
         package:
           $ref: '#/components/schemas/Package'
         fix:
@@ -1564,6 +1575,7 @@ components:
           type: array
           items:
             type: string
+          nullable: true
 
     VulnerabilitySeverity:
       type: string
@@ -1573,6 +1585,36 @@ components:
         - MEDIUM
         - LOW
         - NEGLIGIBLE
+
+    ScannerSummary:
+      type: object
+      properties:
+        KnownViruses:
+          type: integer
+        EngineVersion:
+          type: string
+        ScannedDirectories:
+          type: integer
+        ScannedFiles:
+          type: integer
+        InfectedFiles:
+          type: integer
+        SuspectedFiles:
+          type: integer
+        DataScanned:
+          type: string
+        DataRead:
+          type: string
+        TimeTaken:
+          type: string
+
+    ScannerMetadata:
+      type: object
+      properties:
+        scannerName:
+          type: string
+        scanSummary:
+          $ref: '#/components/schemas/ScannerSummary'
 
     Malware:
       type: object
@@ -1638,6 +1680,7 @@ components:
           type: array
           items:
             type: string
+          nullable: true
 
     SbomScan:
       type: object
@@ -1646,6 +1689,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Package'
+          nullable: true
 
     VulnerabilityScan:
       type: object
@@ -1654,37 +1698,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Vulnerability'
-
-    ScannerSummary:
-      type: object
-      properties:
-        KnownViruses:
-          type: integer
-        EngineVersion:
-          type: string
-        ScannedDirectories:
-          type: integer
-        ScannedFiles:
-          type: integer
-        InfectedFiles:
-          type: integer
-        SuspectedFiles:
-          type: integer
-        DataScanned:
-          type: string
-        DataRead:
-          type: string
-        TimeTaken:
-          type: string
-
-    ScannerMetadata:
-      type: object
-      properties:
-        scannerName:
-          type: string
-        scanSummary:
-          $ref: '#/components/schemas/ScannerSummary'
-
+          nullable: true
 
     MalwareScan:
       type: object
@@ -1693,6 +1707,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Malware'
+          nullable: true
         metadata:
           type: array
           items:
@@ -1705,6 +1720,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Rootkit'
+          nullable: true
 
     SecretScan:
       type: object
@@ -1713,6 +1729,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Secret'
+          nullable: true
 
     MisconfigurationScan:
       type: object
@@ -1721,6 +1738,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Misconfiguration'
+          nullable: true
 
     ExploitScan:
       type: object
@@ -1729,6 +1747,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Exploit'
+          nullable: true
 
     MalwareType:
       type: string
