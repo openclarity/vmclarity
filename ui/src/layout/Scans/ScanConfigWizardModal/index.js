@@ -6,8 +6,6 @@ import { APIS } from 'utils/systemConsts';
 import { formatStringInstancesToTags, formatTagsToStringInstances } from '../utils';
 import StepGeneralProperties, { REGIONS_EMPTY_VALUE, VPCS_EMPTY_VALUE, SCOPE_ITEMS } from './StepGeneralProperties';
 import StepScanTypes from './StepScanTypes';
-import StepTimeConfiguration, { SCHEDULE_TYPES_ITEMS } from './StepTimeConfiguration';
-import StepAdvancedSettings from './StepAdvancedSettings';
 import StepTimeConfiguration, { SCHEDULE_TYPES_ITEMS, CRON_QUICK_OPTIONS } from './StepTimeConfiguration';
 import StepAdvancedSettings from './StepAdvancedSettings';
 
