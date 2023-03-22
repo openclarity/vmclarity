@@ -2,18 +2,21 @@ import React from 'react';
 import { isEmpty } from 'lodash';
 import { FETCH_METHODS } from 'hooks';
 import WizardModal from 'components/WizardModal';
+import { APIS } from 'utils/systemConsts';
 import { formatStringInstancesToTags, formatTagsToStringInstances } from '../utils';
 import StepGeneralProperties, { REGIONS_EMPTY_VALUE, VPCS_EMPTY_VALUE, SCOPE_ITEMS } from './StepGeneralProperties';
 import StepScanTypes from './StepScanTypes';
 import StepTimeConfiguration, { SCHEDULE_TYPES_ITEMS } from './StepTimeConfiguration';
+import StepAdvancedSettings from './StepAdvancedSettings';
 
 import './scan-config-wizard-modal.scss';
 
 const padDateTime = time => String(time).padStart(2, "0");
 
 const ScanConfigWizardModal = ({initialData, onClose, onSubmitSuccess}) => {
-    const {id, name, scope, scanFamiliesConfig, scheduled} = initialData || {};
+    const {id, name, scope, scanFamiliesConfig, scheduled, maxParallelScanners, scannerInstanceCreationConfig} = initialData || {};
     const {allRegions, regions, shouldScanStoppedInstances, instanceTagSelector, instanceTagExclusion} = scope || {};
+    const {useSpotInstances} = scannerInstanceCreationConfig || {};
     
     const isEditForm = !!id;
     
@@ -40,6 +43,10 @@ const ScanConfigWizardModal = ({initialData, onClose, onSubmitSuccess}) => {
             scheduledSelect: !!scheduled?.objectType ? SCHEDULE_TYPES_ITEMS.LATER.value : SCHEDULE_TYPES_ITEMS.NOW.value,
             laterDate: "",
             laterTime: ""
+        },
+        maxParallelScanners: maxParallelScanners || 1,
+        scannerInstanceCreationConfig: {
+            useSpotInstances: useSpotInstances || false
         }
     }
     
@@ -78,6 +85,11 @@ const ScanConfigWizardModal = ({initialData, onClose, onSubmitSuccess}) => {
             id: "time",
             title: "Time configuration",
             component: StepTimeConfiguration
+        },
+        {
+            id: "advance",
+            title: "Advanced settings",
+            component: StepAdvancedSettings
         }
     ];
 
@@ -87,7 +99,7 @@ const ScanConfigWizardModal = ({initialData, onClose, onSubmitSuccess}) => {
             onClose={onClose}
             steps={steps}
             initialValues={initialValues}
-            submitUrl="scanConfigs"
+            submitUrl={APIS.SCAN_CONFIGS}
             getSubmitParams={formValues => {
                 const {id, scope, scheduled, ...submitData} = formValues;
 

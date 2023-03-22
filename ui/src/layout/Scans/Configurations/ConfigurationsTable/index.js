@@ -68,7 +68,7 @@ const ConfigurationsTable = () => {
             disableSort: true
         },
         {
-            Header: "Time config",
+            Header: "Scan time",
             id: "timeConfig",
             Cell: ({row}) => {
                 const {operationTime} = row.original.scheduled;
