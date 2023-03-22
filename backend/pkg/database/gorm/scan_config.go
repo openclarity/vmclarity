@@ -166,6 +166,7 @@ func getExistingScanConfigByID(db *gorm.DB, scanConfigID models.ScanConfigID) (S
 	return dbScanConfig, nil
 }
 
+// nolint: cyclop
 func (s *ScanConfigsTableHandler) SaveScanConfig(scanConfig models.ScanConfig) (models.ScanConfig, error) {
 	if scanConfig.Id == nil || *scanConfig.Id == "" {
 		return models.ScanConfig{}, fmt.Errorf("ID is required to update scan config in DB")
