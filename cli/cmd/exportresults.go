@@ -18,6 +18,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+
 	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 
 	cdx "github.com/CycloneDX/cyclonedx-go"
