@@ -9,6 +9,7 @@ import StepScanTypes from './StepScanTypes';
 import StepTimeConfiguration, { SCHEDULE_TYPES_ITEMS } from './StepTimeConfiguration';
 import StepAdvancedSettings from './StepAdvancedSettings';
 import StepTimeConfiguration, { SCHEDULE_TYPES_ITEMS, CRON_QUICK_OPTIONS } from './StepTimeConfiguration';
+import StepAdvancedSettings from './StepAdvancedSettings';
 
 import './scan-config-wizard-modal.scss';
 
@@ -17,8 +18,8 @@ const padDateTime = time => String(time).padStart(2, "0");
 const ScanConfigWizardModal = ({initialData, onClose, onSubmitSuccess}) => {
     const {id, name, scope, scanFamiliesConfig, scheduled, maxParallelScanners, scannerInstanceCreationConfig} = initialData || {};
     const {allRegions, regions, shouldScanStoppedInstances, instanceTagSelector, instanceTagExclusion} = scope || {};
-    const {useSpotInstances} = scannerInstanceCreationConfig || {};
     const {operationTime, cronLine} = scheduled || {};
+    const {useSpotInstances} = scannerInstanceCreationConfig || {};
     
     const isEditForm = !!id;
     
