@@ -393,7 +393,7 @@ func (e *Exporter) ExportMalwareResult(res *results.Results, famerr families.Run
 		scanResult.Status.Malware = &models.TargetScanState{}
 	}
 
-	var errors []string
+	errors := []string{}
 
 	if err, ok := famerr[types.Malware]; ok {
 		errors = append(errors, err.Error())

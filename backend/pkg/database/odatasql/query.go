@@ -306,7 +306,7 @@ func buildSelectFieldsForComplexFieldType(schemaMetas map[string]SchemaMeta, fie
 		return objects[0]
 	}
 
-	// TODO(sambetts) Error, if multiple schema there must be a
+	// TODO(sambetts) Err, if multiple schema there must be a
 	// descriminator, this would be a developer error. Might be
 	// avoidable if we create a schema builder thing instead of
 	// just defining it as a variable.
