@@ -19,8 +19,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
-
 	cdx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/openclarity/kubeclarity/shared/pkg/scanner"
 	"github.com/openclarity/kubeclarity/shared/pkg/utils/cyclonedx_helper"
