@@ -34,6 +34,22 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
 
+  /dashboard/findingsTrends:
+    get:
+      summary: Get a findings trends.
+      parameters:
+        - $ref: '#/components/parameters/startTime'
+        - $ref: '#/components/parameters/endTime'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FindingsTrends'
+        default:
+          $ref: '#/components/responses/UnknownError'
+
 components:
   schemas:
     ApiResponse:
@@ -43,6 +59,47 @@ components:
           type: string
           readOnly: true
       description: An object that is returned in all cases of failures.
+
+    FindingsTrends:
+      description: Array of the total number of findings at a given time per finding type.
+      type: array
+      items:
+        $ref: '#/components/schemas/FindingTrends'
+      readOnly: true
+
+    FindingTrends:
+      description: Holds the total number of findings per finding type at a given time.
+      type: object
+      properties:
+        findingType:
+          $ref: '#/components/schemas/FindingType'
+        trend:
+          type: array
+          description: Array of the total number of findings at a given time for the specific findingType.
+          items:
+            $ref: '#/components/schemas/FindingTrend'
+          readOnly: true
+
+    FindingTrend:
+      description: Holds the total number of findings at a given time.
+      type: object
+      properties:
+        time:
+          type: string
+          format: date-time
+        count:
+          type: integer
+
+    FindingType:
+      type: string
+      enum:
+        - PACKAGE
+        - VULNERABILITY
+        - MALWARE
+        - SECRET
+        - MISCONFIGURATION
+        - ROOTKIT
+        - EXPLOIT
 
     RiskiestRegions:
       type: object
@@ -176,3 +233,19 @@ components:
       in: query
       schema:
         type: string
+
+    startTime:
+      name: 'startTime'
+      in: query
+      schema:
+        type: string
+        format: date-time
+      required: true
+
+    endTime:
+      name: 'endTime'
+      in: query
+      schema:
+        type: string
+        format: date-time
+      required: true
