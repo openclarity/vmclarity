@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"time"
 
+	malwarecommon "github.com/openclarity/vmclarity/shared/pkg/families/malware/common"
+
 	"github.com/anchore/syft/syft/source"
 	kubeclarityConfig "github.com/openclarity/kubeclarity/shared/pkg/config"
 	log "github.com/sirupsen/logrus"
@@ -38,7 +40,6 @@ import (
 	exploitdbConfig "github.com/openclarity/vmclarity/shared/pkg/families/exploits/exploitdb/config"
 	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 	malwareconfig "github.com/openclarity/vmclarity/shared/pkg/families/malware/clam/config"
-	"github.com/openclarity/vmclarity/shared/pkg/families/malware/common"
 	misconfigurationTypes "github.com/openclarity/vmclarity/shared/pkg/families/misconfiguration/types"
 	familiesSbom "github.com/openclarity/vmclarity/shared/pkg/families/sbom"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
@@ -393,7 +394,7 @@ func (s *Scanner) generateFamiliesConfigurationYaml() (string, error) {
 		Secrets:          userSecretsConfigToFamiliesSecretsConfig(s.scanConfig.ScanFamiliesConfig.Secrets, s.config.GitleaksBinaryPath),
 		Exploits:         userExploitsConfigToFamiliesExploitsConfig(s.scanConfig.ScanFamiliesConfig.Exploits, s.config.ExploitsDBAddress),
 		Misconfiguration: userMisconfigurationConfigToFamiliesMisconfigurationConfig(s.scanConfig.ScanFamiliesConfig.Misconfigurations),
-		Malware:         userMalwareConfigToFamiliesMalwareConfig(s.scanConfig.ScanFamiliesConfig.Malware, s.config.ClamBinaryPath),
+		Malware:          userMalwareConfigToFamiliesMalwareConfig(s.scanConfig.ScanFamiliesConfig.Malware, s.config.ClamBinaryPath),
 		// TODO(sambetts) Configure other families once we've got the known working ones working e2e
 	}
 
@@ -517,7 +518,7 @@ func userMalwareConfigToFamiliesMalwareConfig(malwareConfig *models.MalwareConfi
 		Enabled:      true,
 		ScannersList: []string{"clam"},
 		Inputs:       nil, // rootfs directory will be determined by the CLI after mount.
-		ScannersConfig: &common.ScannersConfig{
+		ScannersConfig: &malwarecommon.ScannersConfig{
 			Clam: malwareconfig.Config{
 				BinaryPath: clamBinaryPath,
 			},
