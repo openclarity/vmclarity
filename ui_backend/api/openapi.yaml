@@ -136,12 +136,6 @@ components:
       properties:
         assetInfo:
           $ref: '#/components/schemas/AssetInfo'
-        count:
-          $ref: '#/components/schemas/VulnerabilityCount'
-
-    VulnerabilityCount:
-      type: object
-      properties:
         criticalVulnerabilitiesCount:
           type: integer
         highVulnerabilitiesCount:

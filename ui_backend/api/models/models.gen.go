@@ -73,19 +73,14 @@ type RiskyAsset struct {
 	Count     *int       `json:"count,omitempty"`
 }
 
-// VulnerabilityCount defines model for VulnerabilityCount.
-type VulnerabilityCount struct {
-	CriticalVulnerabilitiesCount   *int `json:"criticalVulnerabilitiesCount,omitempty"`
-	HighVulnerabilitiesCount       *int `json:"highVulnerabilitiesCount,omitempty"`
-	LowVulnerabilitiesCount        *int `json:"lowVulnerabilitiesCount,omitempty"`
-	MediumVulnerabilitiesCount     *int `json:"mediumVulnerabilitiesCount,omitempty"`
-	NegligibleVulnerabilitiesCount *int `json:"negligibleVulnerabilitiesCount,omitempty"`
-}
-
 // VulnerabilityRiskyAsset Total number of vulnerability findings for an asset
 type VulnerabilityRiskyAsset struct {
-	AssetInfo *AssetInfo          `json:"assetInfo,omitempty"`
-	Count     *VulnerabilityCount `json:"count,omitempty"`
+	AssetInfo                      *AssetInfo `json:"assetInfo,omitempty"`
+	CriticalVulnerabilitiesCount   *int       `json:"criticalVulnerabilitiesCount,omitempty"`
+	HighVulnerabilitiesCount       *int       `json:"highVulnerabilitiesCount,omitempty"`
+	LowVulnerabilitiesCount        *int       `json:"lowVulnerabilitiesCount,omitempty"`
+	MediumVulnerabilitiesCount     *int       `json:"mediumVulnerabilitiesCount,omitempty"`
+	NegligibleVulnerabilitiesCount *int       `json:"negligibleVulnerabilitiesCount,omitempty"`
 }
 
 // ExampleFilter defines model for exampleFilter.

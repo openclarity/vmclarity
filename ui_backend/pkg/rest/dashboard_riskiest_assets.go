@@ -163,23 +163,18 @@ func toAPIVulnerabilityRiskyAssets(targets []backendmodels.Target) []models.Vuln
 			continue
 		}
 
+		summary := target.Summary.TotalVulnerabilities
 		ret = append(ret, models.VulnerabilityRiskyAsset{
-			AssetInfo: assetInfo,
-			Count:     toVulnerabilityCount(target.Summary.TotalVulnerabilities),
+			AssetInfo:                      assetInfo,
+			CriticalVulnerabilitiesCount:   summary.TotalCriticalVulnerabilities,
+			HighVulnerabilitiesCount:       summary.TotalHighVulnerabilities,
+			LowVulnerabilitiesCount:        summary.TotalLowVulnerabilities,
+			MediumVulnerabilitiesCount:     summary.TotalMediumVulnerabilities,
+			NegligibleVulnerabilitiesCount: summary.TotalNegligibleVulnerabilities,
 		})
 	}
 
 	return ret
-}
-
-func toVulnerabilityCount(summary *backendmodels.VulnerabilityScanSummary) *models.VulnerabilityCount {
-	return &models.VulnerabilityCount{
-		CriticalVulnerabilitiesCount:   summary.TotalCriticalVulnerabilities,
-		HighVulnerabilitiesCount:       summary.TotalHighVulnerabilities,
-		LowVulnerabilitiesCount:        summary.TotalLowVulnerabilities,
-		MediumVulnerabilitiesCount:     summary.TotalMediumVulnerabilities,
-		NegligibleVulnerabilitiesCount: summary.TotalNegligibleVulnerabilities,
-	}
 }
 
 func toAPIRiskyAssets(targets []backendmodels.Target, findingType backendmodels.ScanType) []models.RiskyAsset {

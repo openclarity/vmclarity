@@ -325,13 +325,11 @@ func Test_toAPIVulnerabilityRiskyAsset(t *testing.T) {
 			},
 			want: []models.VulnerabilityRiskyAsset{
 				{
-					Count: &models.VulnerabilityCount{
-						CriticalVulnerabilitiesCount:   utils.PointerTo(1),
-						HighVulnerabilitiesCount:       utils.PointerTo(2),
-						LowVulnerabilitiesCount:        utils.PointerTo(3),
-						MediumVulnerabilitiesCount:     utils.PointerTo(4),
-						NegligibleVulnerabilitiesCount: utils.PointerTo(5),
-					},
+					CriticalVulnerabilitiesCount:   utils.PointerTo(1),
+					HighVulnerabilitiesCount:       utils.PointerTo(2),
+					LowVulnerabilitiesCount:        utils.PointerTo(3),
+					MediumVulnerabilitiesCount:     utils.PointerTo(4),
+					NegligibleVulnerabilitiesCount: utils.PointerTo(5),
 					AssetInfo: &models.AssetInfo{
 						Location: utils.PointerTo("vm location"),
 						Name:     utils.PointerTo("vm name"),
