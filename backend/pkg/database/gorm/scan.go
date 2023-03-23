@@ -238,9 +238,9 @@ func (s *ScansTableHandler) checkUniqueness(scan models.Scan, isUpdate bool) (mo
 		if err = json.Unmarshal(scans[0].Data, &apiScan); err != nil {
 			return models.Scan{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 		}
-		// In the case of updating a scan, needs to be checked whether other running scan exists with same scan config id.
+		// Return conflict error if the scan that will be modified is running and other running scan still exists with same scan config id.
 		if isUpdate {
-			if *apiScan.Id != *scan.Id {
+			if *apiScan.Id != *scan.Id && scan.EndTime == nil {
 				return apiScan, &common.ConflictError{
 					Reason: fmt.Sprintf("Other runnig scan with scanConfigID=%q exists", scan.ScanConfig.Id),
 				}
