@@ -19,10 +19,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
-
-	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
-
 	cdx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -32,6 +28,7 @@ import (
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/shared/pkg/families/exploits"
 	common2 "github.com/openclarity/vmclarity/shared/pkg/families/exploits/common"
+	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 	malwarecommon "github.com/openclarity/vmclarity/shared/pkg/families/malware/common"
 	"github.com/openclarity/vmclarity/shared/pkg/families/misconfiguration"
 	misconfigurationTypes "github.com/openclarity/vmclarity/shared/pkg/families/misconfiguration/types"
