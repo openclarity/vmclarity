@@ -521,7 +521,10 @@ func Test_convertMalwareResultToAPIModel(t *testing.T) {
 			args: args{
 				mergedResults: nil,
 			},
-			want: &models.MalwareScan{},
+			want: &models.MalwareScan{
+				Malware:  &[]models.Malware{},
+				Metadata: &[]models.ScannerMetadata{},
+			},
 		},
 		{
 			name: "nil malwareResults.Malware",
@@ -530,7 +533,10 @@ func Test_convertMalwareResultToAPIModel(t *testing.T) {
 					DetectedMalware: nil,
 				},
 			},
-			want: &models.MalwareScan{},
+			want: &models.MalwareScan{
+				Malware:  &[]models.Malware{},
+				Metadata: &[]models.ScannerMetadata{},
+			},
 		},
 		{
 			name: "sanity",
