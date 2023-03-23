@@ -21,8 +21,6 @@ import (
 	"fmt"
 	"time"
 
-	malwarecommon "github.com/openclarity/vmclarity/shared/pkg/families/malware/common"
-
 	"github.com/anchore/syft/syft/source"
 	kubeclarityConfig "github.com/openclarity/kubeclarity/shared/pkg/config"
 	log "github.com/sirupsen/logrus"
@@ -40,6 +38,7 @@ import (
 	exploitdbConfig "github.com/openclarity/vmclarity/shared/pkg/families/exploits/exploitdb/config"
 	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 	malwareconfig "github.com/openclarity/vmclarity/shared/pkg/families/malware/clam/config"
+	malwarecommon "github.com/openclarity/vmclarity/shared/pkg/families/malware/common"
 	misconfigurationTypes "github.com/openclarity/vmclarity/shared/pkg/families/misconfiguration/types"
 	familiesSbom "github.com/openclarity/vmclarity/shared/pkg/families/sbom"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"

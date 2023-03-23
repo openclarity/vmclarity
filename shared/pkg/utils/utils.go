@@ -43,7 +43,7 @@ func (r CmdRunError) Error() string {
 	)
 }
 
-func RunCommand(cmd *exec.Cmd) ([]byte, *CmdRunError) {
+func RunCommand(cmd *exec.Cmd) ([]byte, error) {
 	var outb, errb bytes.Buffer
 	cmd.Stdout = &outb
 	cmd.Stderr = &errb

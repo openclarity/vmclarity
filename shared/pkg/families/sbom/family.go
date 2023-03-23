@@ -46,7 +46,7 @@ func (s SBOM) Run(res *familiesresults.Results) (interfaces.IsResults, error) {
 
 	// TODO: move the logic from cli utils to shared utils
 	// TODO: now that we support multiple inputs,
-	//  we need to change the fact the the Malware assumes it is only for 1 input?
+	//  we need to change the fact the the MergedResults assumes it is only for 1 input?
 	hash, err := cliutils.GenerateHash(utils.SourceType(s.conf.Inputs[0].InputType), s.conf.Inputs[0].Input)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate hash for source %s: %v", s.conf.Inputs[0].Input, err)
