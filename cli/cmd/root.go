@@ -34,8 +34,8 @@ import (
 	"github.com/openclarity/vmclarity/cli/pkg/mount"
 	"github.com/openclarity/vmclarity/shared/pkg/families"
 	"github.com/openclarity/vmclarity/shared/pkg/families/exploits"
-	misconfigurationTypes "github.com/openclarity/vmclarity/shared/pkg/families/misconfiguration/types"
 	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
+	misconfigurationTypes "github.com/openclarity/vmclarity/shared/pkg/families/misconfiguration/types"
 	"github.com/openclarity/vmclarity/shared/pkg/families/results"
 	"github.com/openclarity/vmclarity/shared/pkg/families/sbom"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
@@ -151,7 +151,6 @@ func waitForAttached(exporter *Exporter) error {
 		}
 	}
 }
-
 
 // nolint:cyclop
 func outputResults(config *families.Config, res *results.Results) error {
