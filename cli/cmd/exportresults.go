@@ -398,7 +398,7 @@ func (e *Exporter) ExportMalwareResult(res *results.Results, famerr families.Run
 	if err, ok := famerr[types.Malware]; ok {
 		errors = append(errors, err.Error())
 	} else {
-		malwareResults, err := results.GetResult[*malware.Results](res)
+		malwareResults, err := results.GetResult[*malware.MergedResults](res)
 		if err != nil {
 			errors = append(errors, fmt.Errorf("failed to get malware results from scan: %w", err).Error())
 		} else {
@@ -420,13 +420,13 @@ func (e *Exporter) ExportMalwareResult(res *results.Results, famerr families.Run
 	return nil
 }
 
-func convertMalwareResultToAPIModel(malwareResults *malware.Results) *models.MalwareScan {
-	if malwareResults == nil || malwareResults.MergedResults == nil {
+func convertMalwareResultToAPIModel(malwareResults *malware.MergedResults) *models.MalwareScan {
+	if malwareResults == nil {
 		return &models.MalwareScan{}
 	}
 
 	malwareList := []models.Malware{}
-	for _, m := range malwareResults.MergedResults.DetectedMalware {
+	for _, m := range malwareResults.DetectedMalware {
 		mal := m // Prevent loop variable pointer export
 		malwareList = append(malwareList, models.Malware{
 			MalwareName: &mal.MalwareName,
@@ -436,7 +436,7 @@ func convertMalwareResultToAPIModel(malwareResults *malware.Results) *models.Mal
 	}
 
 	metadata := []models.ScannerMetadata{}
-	for name, summary := range malwareResults.MergedResults.Metadata {
+	for name, summary := range malwareResults.Metadata {
 		nameVal := name // Prevent loop variable pointer export
 		metadata = append(metadata, models.ScannerMetadata{
 			ScannerName: &nameVal,

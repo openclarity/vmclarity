@@ -425,7 +425,7 @@ func Test_convertSecretsResultToAPIModel(t *testing.T) {
 			want: &models.SecretScan{},
 		},
 		{
-			name: "nil secretsResults.MergedResults",
+			name: "nil secretsResults.Malware",
 			args: args{
 				secretsResults: &secrets.Results{
 					MergedResults: nil,
@@ -434,7 +434,7 @@ func Test_convertSecretsResultToAPIModel(t *testing.T) {
 			want: &models.SecretScan{},
 		},
 		{
-			name: "empty secretsResults.MergedResults.Results",
+			name: "empty secretsResults.Malware.Results",
 			args: args{
 				secretsResults: &secrets.Results{
 					MergedResults: &secrets.MergedResults{
@@ -507,7 +507,7 @@ func Test_convertSecretsResultToAPIModel(t *testing.T) {
 
 func Test_convertMalwareResultToAPIModel(t *testing.T) {
 	type args struct {
-		mergedResults *malware.Results
+		mergedResults *malware.MergedResults
 	}
 	tests := []struct {
 		name string
@@ -524,8 +524,8 @@ func Test_convertMalwareResultToAPIModel(t *testing.T) {
 		{
 			name: "nil malwareResults.Malware",
 			args: args{
-				mergedResults: &malware.Results{
-					MergedResults: nil,
+				mergedResults: &malware.MergedResults{
+					DetectedMalware: nil,
 				},
 			},
 			want: &models.MalwareScan{},
@@ -533,37 +533,35 @@ func Test_convertMalwareResultToAPIModel(t *testing.T) {
 		{
 			name: "sanity",
 			args: args{
-				mergedResults: &malware.Results{
-					MergedResults: &malware.MergedResults{
-						DetectedMalware: []malwarecommon.DetectedMalware{
-							{
-								MalwareName: "Worm<3",
-								MalwareType: "WORM",
-								Path:        "/somepath/innocent.exe",
-							},
-							{
-								MalwareName: "Trojan:)",
-								MalwareType: "TROJAN",
-								Path:        "/somepath/gift.jar",
-							},
-							{
-								MalwareName: "Ransom!",
-								MalwareType: "RANSOMWARE",
-								Path:        "/somepath/givememoney.exe",
-							},
+				mergedResults: &malware.MergedResults{
+					DetectedMalware: []malwarecommon.DetectedMalware{
+						{
+							MalwareName: "Worm<3",
+							MalwareType: "WORM",
+							Path:        "/somepath/innocent.exe",
 						},
-						Metadata: map[string]*malwarecommon.ScanSummary{
-							"clam": {
-								KnownViruses:       100,
-								EngineVersion:      "1",
-								ScannedDirectories: 10,
-								ScannedFiles:       1000,
-								InfectedFiles:      3,
-								SuspectedFiles:     4,
-								DataScanned:        "800 MB",
-								DataRead:           "1.6 GB",
-								TimeTaken:          "1000000 ms",
-							},
+						{
+							MalwareName: "Trojan:)",
+							MalwareType: "TROJAN",
+							Path:        "/somepath/gift.jar",
+						},
+						{
+							MalwareName: "Ransom!",
+							MalwareType: "RANSOMWARE",
+							Path:        "/somepath/givememoney.exe",
+						},
+					},
+					Metadata: map[string]*malwarecommon.ScanSummary{
+						"clam": {
+							KnownViruses:       100,
+							EngineVersion:      "1",
+							ScannedDirectories: 10,
+							ScannedFiles:       1000,
+							InfectedFiles:      3,
+							SuspectedFiles:     4,
+							DataScanned:        "800 MB",
+							DataRead:           "1.6 GB",
+							TimeTaken:          "1000000 ms",
 						},
 					},
 				},

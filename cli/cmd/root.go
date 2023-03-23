@@ -258,7 +258,7 @@ func outputExploitsResults(res *results.Results) error {
 }
 
 func outputMalwareResults(res *results.Results) error {
-	malwareResults, err := results.GetResult[*malware.Results](res)
+	malwareResults, err := results.GetResult[*malware.MergedResults](res)
 	if err != nil {
 		return fmt.Errorf("failed to get malware results: %v", err)
 	}
