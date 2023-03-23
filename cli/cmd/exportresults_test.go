@@ -521,10 +521,7 @@ func Test_convertMalwareResultToAPIModel(t *testing.T) {
 			args: args{
 				mergedResults: nil,
 			},
-			want: &models.MalwareScan{
-				Malware:  &[]models.Malware{},
-				Metadata: &[]models.ScannerMetadata{},
-			},
+			want: &models.MalwareScan{},
 		},
 		{
 			name: "nil malwareResults.Malware",
