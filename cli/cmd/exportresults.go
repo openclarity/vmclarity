@@ -382,7 +382,7 @@ func (e *Exporter) ExportSecretsResult(ctx context.Context, res *results.Results
 }
 
 func (e *Exporter) ExportMalwareResult(ctx context.Context, res *results.Results, famerr families.RunErrors) error {
-	scanResult, err := e.client.GetScanResult(context.TODO(), scanResultID, models.GetScanResultsScanResultIDParams{})
+	scanResult, err := e.client.GetScanResult(ctx, scanResultID, models.GetScanResultsScanResultIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get scan result: %w", err)
 	}
@@ -650,7 +650,7 @@ func (e *Exporter) ExportMisconfigurationResult(ctx context.Context, res *result
 	scanResult.Status.Misconfigurations.State = &state
 	scanResult.Status.Misconfigurations.Errors = &errors
 
-	err = e.client.PatchScanResult(context.TODO(), scanResult, scanResultID)
+	err = e.client.PatchScanResult(ctx, scanResult, scanResultID)
 	if err != nil {
 		return fmt.Errorf("failed to patch scan result: %w", err)
 	}

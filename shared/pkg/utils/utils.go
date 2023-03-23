@@ -48,7 +48,7 @@ func RunCommand(cmd *exec.Cmd) ([]byte, error) {
 	cmd.Stdout = &outb
 	cmd.Stderr = &errb
 	if err := cmd.Run(); err != nil {
-		return nil, &CmdRunError{
+		return nil, CmdRunError{
 			Cmd:    cmd,
 			Err:    err,
 			Stdout: outb.Bytes(),
