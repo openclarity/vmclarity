@@ -150,7 +150,7 @@ func (s *ScansTableHandler) SaveScan(scan models.Scan) (models.Scan, error) {
 	}
 
 	if scan.ScanConfig != nil {
-		existingScan, err := s.checkUniqueness(scan, false)
+		existingScan, err := s.checkUniqueness(scan, true)
 		if err != nil {
 			var conflictErr *common.ConflictError
 			if errors.As(err, &conflictErr) {
