@@ -123,7 +123,7 @@ func (t *TargetsTableHandler) CreateTarget(target models.Target) (models.Target,
 	// record in the DB, and should be treated safely by the DB without
 	// locking the table.
 
-	existingTarget, err := t.checkUniqueness(target, false)
+	existingTarget, err := t.checkUniqueness(target)
 	if err != nil {
 		var conflictErr *common.ConflictError
 		if errors.As(err, &conflictErr) {
@@ -171,7 +171,7 @@ func (t *TargetsTableHandler) SaveTarget(target models.Target) (models.Target, e
 		return models.Target{}, fmt.Errorf("failed to get target from db: %w", err)
 	}
 
-	existingTarget, err := t.checkUniqueness(target, true)
+	existingTarget, err := t.checkUniqueness(target)
 	if err != nil {
 		var conflictErr *common.ConflictError
 		if errors.As(err, &conflictErr) {
@@ -210,7 +210,7 @@ func (t *TargetsTableHandler) DeleteTarget(targetID models.TargetID) error {
 	return nil
 }
 
-func (t *TargetsTableHandler) checkUniqueness(target models.Target, isUpdate bool) (*models.Target, error) {
+func (t *TargetsTableHandler) checkUniqueness(target models.Target) (*models.Target, error) {
 	discriminator, err := target.TargetInfo.ValueByDiscriminator()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get value by discriminator: %w", err)
@@ -219,33 +219,23 @@ func (t *TargetsTableHandler) checkUniqueness(target models.Target, isUpdate boo
 	switch info := discriminator.(type) {
 	case models.VMInfo:
 		var targets []Target
-		filter := fmt.Sprintf("targetInfo/instanceID eq '%s' and targetInfo/location eq '%s'", info.InstanceID, info.Location)
+		// In the case of creating or updating a target, needs to be checked whether other target exists with same InstanceID and Location.
+		filter := fmt.Sprintf("id ne '%s' and targetInfo/instanceID eq '%s' and targetInfo/location eq '%s'", *target.Id, info.InstanceID, info.Location)
 		err = ODataQuery(t.DB, targetSchemaName, &filter, nil, nil, nil, nil, nil, true, &targets)
 		if err != nil {
 			return nil, err
 		}
-
 		if len(targets) > 0 {
 			var apiTarget models.Target
-			if err = json.Unmarshal(targets[0].Data, &apiTarget); err != nil {
+			if err := json.Unmarshal(targets[0].Data, &apiTarget); err != nil {
 				return nil, fmt.Errorf("failed to convert DB model to API model: %w", err)
 			}
-			// In the case of updating a target, needs to be checked whether other target exists with same InstanceID and Location.
-			if isUpdate {
-				if *apiTarget.Id != *target.Id {
-					return &apiTarget, &common.ConflictError{
-						Reason: fmt.Sprintf("Target VM exists with different id=%q. (instanceID=%q, location=%q)", *apiTarget.Id, info.InstanceID, info.Location),
-					}
-				}
-				return nil, nil // nolint:nilnil
-			}
 			return &apiTarget, &common.ConflictError{
-				Reason: fmt.Sprintf("Target VM exists with instanceID=%q and location=%q", info.InstanceID, info.Location),
+				Reason: fmt.Sprintf("Target VM exists with id=%s, instanceID=%q and location=%q", *apiTarget.Id, info.InstanceID, info.Location),
 			}
 		}
+		return nil, nil // nolint:nilnil
 	default:
 		return nil, fmt.Errorf("target type is not supported (%T): %w", discriminator, err)
 	}
-
-	return nil, nil // nolint:nilnil
 }
