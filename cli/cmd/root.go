@@ -34,6 +34,7 @@ import (
 	"github.com/openclarity/vmclarity/cli/pkg/mount"
 	"github.com/openclarity/vmclarity/shared/pkg/families"
 	"github.com/openclarity/vmclarity/shared/pkg/families/exploits"
+	misconfigurationTypes "github.com/openclarity/vmclarity/shared/pkg/families/misconfiguration/types"
 	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 	"github.com/openclarity/vmclarity/shared/pkg/families/results"
 	"github.com/openclarity/vmclarity/shared/pkg/families/sbom"
@@ -150,6 +151,7 @@ func waitForAttached(exporter *Exporter) error {
 		}
 	}
 }
+
 
 // nolint:cyclop
 func outputResults(config *families.Config, res *results.Results) error {
@@ -407,6 +409,15 @@ func setMountPointsForFamiliesInput(mountPoints []string, familiesConfig *famili
 				Input:     mountDir,
 				InputType: string(kubeclarityutils.ROOTFS),
 			})
+		}
+		if familiesConfig.Misconfiguration.Enabled {
+			familiesConfig.Misconfiguration.Inputs = append(
+				familiesConfig.Misconfiguration.Inputs,
+				misconfigurationTypes.Input{
+					Input:     mountDir,
+					InputType: string(kubeclarityutils.ROOTFS),
+				},
+			)
 		}
 	}
 	return familiesConfig

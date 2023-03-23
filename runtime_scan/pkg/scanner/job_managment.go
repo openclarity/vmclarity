@@ -39,9 +39,10 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 	malwareconfig "github.com/openclarity/vmclarity/shared/pkg/families/malware/clam/config"
 	"github.com/openclarity/vmclarity/shared/pkg/families/malware/common"
+	misconfigurationTypes "github.com/openclarity/vmclarity/shared/pkg/families/misconfiguration/types"
 	familiesSbom "github.com/openclarity/vmclarity/shared/pkg/families/sbom"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
-	secretscommon "github.com/openclarity/vmclarity/shared/pkg/families/secrets/common"
+	"github.com/openclarity/vmclarity/shared/pkg/families/secrets/common"
 	gitleaksconfig "github.com/openclarity/vmclarity/shared/pkg/families/secrets/gitleaks/config"
 	familiesVulnerabilities "github.com/openclarity/vmclarity/shared/pkg/families/vulnerabilities"
 )
@@ -387,10 +388,11 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 
 func (s *Scanner) generateFamiliesConfigurationYaml() (string, error) {
 	famConfig := families.Config{
-		SBOM:            userSBOMConfigToFamiliesSbomConfig(s.scanConfig.ScanFamiliesConfig.Sbom),
-		Vulnerabilities: userVulnConfigToFamiliesVulnConfig(s.scanConfig.ScanFamiliesConfig.Vulnerabilities),
-		Secrets:         userSecretsConfigToFamiliesSecretsConfig(s.scanConfig.ScanFamiliesConfig.Secrets, s.config.GitleaksBinaryPath),
-		Exploits:        userExploitsConfigToFamiliesExploitsConfig(s.scanConfig.ScanFamiliesConfig.Exploits, s.config.ExploitsDBAddress),
+		SBOM:             userSBOMConfigToFamiliesSbomConfig(s.scanConfig.ScanFamiliesConfig.Sbom),
+		Vulnerabilities:  userVulnConfigToFamiliesVulnConfig(s.scanConfig.ScanFamiliesConfig.Vulnerabilities),
+		Secrets:          userSecretsConfigToFamiliesSecretsConfig(s.scanConfig.ScanFamiliesConfig.Secrets, s.config.GitleaksBinaryPath),
+		Exploits:         userExploitsConfigToFamiliesExploitsConfig(s.scanConfig.ScanFamiliesConfig.Exploits, s.config.ExploitsDBAddress),
+		Misconfiguration: userMisconfigurationConfigToFamiliesMisconfigurationConfig(s.scanConfig.ScanFamiliesConfig.Misconfigurations),
 		Malware:         userMalwareConfigToFamiliesMalwareConfig(s.scanConfig.ScanFamiliesConfig.Malware, s.config.ClamBinaryPath),
 		// TODO(sambetts) Configure other families once we've got the known working ones working e2e
 	}
@@ -412,7 +414,7 @@ func userSecretsConfigToFamiliesSecretsConfig(secretsConfig *models.SecretsConfi
 		// TODO(idanf) This choice should come from the user's configuration
 		ScannersList: []string{"gitleaks"},
 		Inputs:       nil, // rootfs directory will be determined by the CLI after mount.
-		ScannersConfig: &secretscommon.ScannersConfig{
+		ScannersConfig: &common.ScannersConfig{
 			Gitleaks: gitleaksconfig.Config{
 				BinaryPath: gitleaksBinaryPath,
 			},
@@ -438,6 +440,21 @@ func userSBOMConfigToFamiliesSbomConfig(sbomConfig *models.SBOMConfig) familiesS
 					Timeout: TrivyTimeout,
 				},
 			},
+		},
+	}
+}
+
+func userMisconfigurationConfigToFamiliesMisconfigurationConfig(misconfigurationConfig *models.MisconfigurationsConfig) misconfigurationTypes.Config {
+	if misconfigurationConfig == nil || misconfigurationConfig.Enabled == nil || !*misconfigurationConfig.Enabled {
+		return misconfigurationTypes.Config{}
+	}
+	return misconfigurationTypes.Config{
+		Enabled: true,
+		// TODO(sambetts) This choice should come from the user's configuration
+		ScannersList:   []string{"fake"},
+		Inputs:         nil, // rootfs directory will be determined by the CLI after mount.
+		ScannersConfig: misconfigurationTypes.ScannersConfig{
+			// TODO(sambetts) Add scanner configurations here as we add them like Lynis
 		},
 	}
 }

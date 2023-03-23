@@ -16,6 +16,30 @@ const (
 	AWS CloudProvider = "AWS"
 )
 
+// Defines values for MalwareType.
+const (
+	ADWARE     MalwareType = "ADWARE"
+	RANSOMWARE MalwareType = "RANSOMWARE"
+	SPYWARE    MalwareType = "SPYWARE"
+	TROJAN     MalwareType = "TROJAN"
+	VIRUS      MalwareType = "VIRUS"
+	WORM       MalwareType = "WORM"
+)
+
+// Defines values for MisconfigurationSeverity.
+const (
+	MisconfigurationSeverityHighSeverity   MisconfigurationSeverity = "HighSeverity"
+	MisconfigurationSeverityLowSeverity    MisconfigurationSeverity = "LowSeverity"
+	MisconfigurationSeverityMediumSeverity MisconfigurationSeverity = "MediumSeverity"
+)
+
+// Defines values for MisconfigurationFindingInfoSeverity.
+const (
+	MisconfigurationFindingInfoSeverityHighSeverity   MisconfigurationFindingInfoSeverity = "HighSeverity"
+	MisconfigurationFindingInfoSeverityLowSeverity    MisconfigurationFindingInfoSeverity = "LowSeverity"
+	MisconfigurationFindingInfoSeverityMediumSeverity MisconfigurationFindingInfoSeverity = "MediumSeverity"
+)
+
 // Defines values for RootkitType.
 const (
 	APPLICATION RootkitType = "APPLICATION"
@@ -242,33 +266,47 @@ type MalwareFindingInfo struct {
 
 // MalwareScan defines model for MalwareScan.
 type MalwareScan struct {
-	Malware  *[]Malware         `json:"malware"`
-	Metadata *[]ScannerMetadata `json:"metadata,omitempty"`
+	Malware *[]Malware `json:"malware"`
 }
 
 // MalwareType defines model for MalwareType.
-type MalwareType = string
+type MalwareType string
 
 // Misconfiguration defines model for Misconfiguration.
 type Misconfiguration struct {
-	Description *string `json:"description,omitempty"`
-
-	// Path Path of the file that contains misconfigurations
-	Path *string `json:"path,omitempty"`
+	Message         *string                   `json:"message,omitempty"`
+	Remediation     *string                   `json:"remediation,omitempty"`
+	ScannedPath     *string                   `json:"scannedPath,omitempty"`
+	ScannerName     *string                   `json:"scannerName,omitempty"`
+	Severity        *MisconfigurationSeverity `json:"severity,omitempty"`
+	TestCategory    *string                   `json:"testCategory,omitempty"`
+	TestDescription *string                   `json:"testDescription,omitempty"`
+	TestID          *string                   `json:"testID,omitempty"`
 }
+
+// MisconfigurationSeverity defines model for Misconfiguration.Severity.
+type MisconfigurationSeverity string
 
 // MisconfigurationFindingInfo defines model for MisconfigurationFindingInfo.
 type MisconfigurationFindingInfo struct {
-	Description *string `json:"description,omitempty"`
-	ObjectType  string  `json:"objectType"`
-
-	// Path Path of the file that contains misconfigurations
-	Path *string `json:"path,omitempty"`
+	Message         *string                              `json:"message,omitempty"`
+	ObjectType      string                               `json:"objectType"`
+	Remediation     *string                              `json:"remediation,omitempty"`
+	ScannedPath     *string                              `json:"scannedPath,omitempty"`
+	ScannerName     *string                              `json:"scannerName,omitempty"`
+	Severity        *MisconfigurationFindingInfoSeverity `json:"severity,omitempty"`
+	TestCategory    *string                              `json:"testCategory,omitempty"`
+	TestDescription *string                              `json:"testDescription,omitempty"`
+	TestID          *string                              `json:"testID,omitempty"`
 }
+
+// MisconfigurationFindingInfoSeverity defines model for MisconfigurationFindingInfo.Severity.
+type MisconfigurationFindingInfoSeverity string
 
 // MisconfigurationScan defines model for MisconfigurationScan.
 type MisconfigurationScan struct {
 	Misconfigurations *[]Misconfiguration `json:"misconfigurations"`
+	Scanners          *[]string           `json:"scanners,omitempty"`
 }
 
 // MisconfigurationsConfig defines model for MisconfigurationsConfig.
@@ -575,25 +613,6 @@ type ScannerInstanceCreationConfig struct {
 	MaxPrice         *string `json:"maxPrice,omitempty"`
 	RetryMaxAttempts *int    `json:"retryMaxAttempts,omitempty"`
 	UseSpotInstances bool    `json:"useSpotInstances"`
-}
-
-// ScannerMetadata defines model for ScannerMetadata.
-type ScannerMetadata struct {
-	ScannerName    *string         `json:"scannerName,omitempty"`
-	ScannerSummary *ScannerSummary `json:"scannerSummary,omitempty"`
-}
-
-// ScannerSummary defines model for ScannerSummary.
-type ScannerSummary struct {
-	DataRead           *string `json:"DataRead,omitempty"`
-	DataScanned        *string `json:"DataScanned,omitempty"`
-	EngineVersion      *string `json:"EngineVersion,omitempty"`
-	InfectedFiles      *int    `json:"InfectedFiles,omitempty"`
-	KnownViruses       *int    `json:"KnownViruses,omitempty"`
-	ScannedDirectories *int    `json:"ScannedDirectories,omitempty"`
-	ScannedFiles       *int    `json:"ScannedFiles,omitempty"`
-	SuspectedFiles     *int    `json:"SuspectedFiles,omitempty"`
-	TimeTaken          *string `json:"TimeTaken,omitempty"`
 }
 
 // Scans defines model for Scans.
