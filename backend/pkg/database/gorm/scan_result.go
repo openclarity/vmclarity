@@ -127,7 +127,7 @@ func (s *ScanResultsTableHandler) CreateScanResult(scanResult models.TargetScanR
 	// locking the table.
 
 	// Check the existing DB entries to ensure that the scan id and target id fields are unique
-	existingScanResult, err := s.checkUniqueness(scanResult, false)
+	existingScanResult, err := s.checkUniqueness(scanResult)
 	if err != nil {
 		var conflictErr *common.ConflictError
 		if errors.As(err, &conflictErr) {
@@ -175,7 +175,7 @@ func (s *ScanResultsTableHandler) SaveScanResult(scanResult models.TargetScanRes
 	}
 
 	// Check the existing DB entries to ensure that the scan id and target id fields are unique
-	existingScanResult, err := s.checkUniqueness(scanResult, true)
+	existingScanResult, err := s.checkUniqueness(scanResult)
 	if err != nil {
 		var conflictErr *common.ConflictError
 		if errors.As(err, &conflictErr) {
@@ -223,7 +223,7 @@ func (s *ScanResultsTableHandler) UpdateScanResult(scanResult models.TargetScanR
 	}
 
 	// Check the existing DB entries to ensure that the scan id and target id fields are unique
-	existingScanResult, err := s.checkUniqueness(scanResult, true)
+	existingScanResult, err := s.checkUniqueness(scanResult)
 	if err != nil {
 		var conflictErr *common.ConflictError
 		if errors.As(err, &conflictErr) {
@@ -252,9 +252,10 @@ func (s *ScanResultsTableHandler) UpdateScanResult(scanResult models.TargetScanR
 	return tsr, nil
 }
 
-func (s *ScanResultsTableHandler) checkUniqueness(scanResult models.TargetScanResult, isUpdate bool) (models.TargetScanResult, error) {
+func (s *ScanResultsTableHandler) checkUniqueness(scanResult models.TargetScanResult) (models.TargetScanResult, error) {
 	var scanResults []ScanResult
-	filter := fmt.Sprintf("target/id eq '%s' and scan/id eq '%s'", scanResult.Target.Id, scanResult.Scan.Id)
+	// In the case of creating or updating a scan results, needs to be checked whether other scan results exists with same scan id and target id.
+	filter := fmt.Sprintf("id ne '%s' and target/id eq '%s' and scan/id eq '%s'", *scanResult.Id, scanResult.Target.Id, scanResult.Scan.Id)
 	err := ODataQuery(s.DB, targetScanResultsSchemaName, &filter, nil, nil, nil, nil, nil, true, &scanResults)
 	if err != nil {
 		return models.TargetScanResult{}, err
@@ -265,17 +266,10 @@ func (s *ScanResultsTableHandler) checkUniqueness(scanResult models.TargetScanRe
 		if err = json.Unmarshal(scanResults[0].Data, &tsr); err != nil {
 			return models.TargetScanResult{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 		}
-		// In the case of updating a target scan result, needs to be checked whether other scan result exists with same target id and scan id.
-		if isUpdate {
-			if *tsr.Id != *scanResult.Id {
-				return tsr, &common.ConflictError{
-					Reason: fmt.Sprintf("Other scan results exists with different id=%s (target id=%s, scan id=%s)", *scanResult.Id, scanResult.Target.Id, scanResult.Scan.Id),
-				}
+		if *tsr.Id != *scanResult.Id {
+			return tsr, &common.ConflictError{
+				Reason: fmt.Sprintf("Scan results exists with different id=%s (target id=%s, scan id=%s)", *scanResult.Id, scanResult.Target.Id, scanResult.Scan.Id),
 			}
-			return models.TargetScanResult{}, nil
-		}
-		return tsr, &common.ConflictError{
-			Reason: fmt.Sprintf("Scan results exists with scan id=%s and target id=%s", scanResult.Target.Id, scanResult.Scan.Id),
 		}
 	}
 	return models.TargetScanResult{}, nil
