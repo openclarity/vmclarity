@@ -244,7 +244,7 @@ func (s *ScansTableHandler) checkUniqueness(scan models.Scan) (models.Scan, erro
 		// In the case of creating a new scan the end time will be nil.
 		if scan.EndTime == nil {
 			return apiScan, &common.ConflictError{
-				Reason: fmt.Sprintf("Runnig scan exists with id=%s, scanConfigID=%q", *apiScan.Id, scan.ScanConfig.Id),
+				Reason: fmt.Sprintf("Runnig scan exists with same scanConfigID=%q", scan.ScanConfig.Id),
 			}
 		}
 	}
