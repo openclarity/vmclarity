@@ -268,7 +268,7 @@ func (s *ScanResultsTableHandler) checkUniqueness(scanResult models.TargetScanRe
 		}
 		if *tsr.Id != *scanResult.Id {
 			return tsr, &common.ConflictError{
-				Reason: fmt.Sprintf("Scan results exists with different id=%s (target id=%s, scan id=%s)", *scanResult.Id, scanResult.Target.Id, scanResult.Scan.Id),
+				Reason: fmt.Sprintf("Scan results exists with same target id=%s and scan id=%s)", scanResult.Target.Id, scanResult.Scan.Id),
 			}
 		}
 	}

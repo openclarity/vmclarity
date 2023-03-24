@@ -317,7 +317,7 @@ func (s *ScanConfigsTableHandler) checkUniqueness(scanConfig models.ScanConfig) 
 		}
 		// In the case of updating a scan config, needs to be checked whether other scan config exists with same name.
 		return sc, &common.ConflictError{
-			Reason: fmt.Sprintf("Scan config exists with different id=%s, name=%s", *sc.Id, *sc.Name),
+			Reason: fmt.Sprintf("Scan config exists with name=%s", *sc.Name),
 		}
 	}
 	return models.ScanConfig{}, nil

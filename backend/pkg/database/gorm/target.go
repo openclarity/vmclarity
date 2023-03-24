@@ -231,7 +231,7 @@ func (t *TargetsTableHandler) checkUniqueness(target models.Target) (*models.Tar
 				return nil, fmt.Errorf("failed to convert DB model to API model: %w", err)
 			}
 			return &apiTarget, &common.ConflictError{
-				Reason: fmt.Sprintf("Target VM exists with id=%s, instanceID=%q and location=%q", *apiTarget.Id, info.InstanceID, info.Location),
+				Reason: fmt.Sprintf("Target VM exists with same instanceID=%q and location=%q", info.InstanceID, info.Location),
 			}
 		}
 		return nil, nil // nolint:nilnil
