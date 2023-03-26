@@ -3,6 +3,121 @@ Description: |
   VMClarity is a tool for agentless detection and management of Virtual Machine
   Software Bill Of Materials (SBOM) and vulnerabilities
 Resources:
+# ------------------------------------------------------------------------
+# Deploys a Lambda function that downloads ClamAV signature files and uploads them to an S3 bucket
+  # Bucket that stores clamAV signatures
+  ClamSignaturesBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: "clam-signatures"
+  # Role for ClamAV downloader lambda
+  ClamAVDownloaderRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: "ClamAVDownloaderPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "s3:PutObject"
+                  - "s3:PutObjectAcl"
+                Resource: "arn:aws:s3:::clam-signatures/*"
+              - Effect: "Allow"
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "arn:aws:logs:*:*:*"
+  # ClamAV downloader lambda, a node.JS application
+  ClamAVDownloaderFunction:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: "ClamAVDownloader"
+      Handler: "index.handler"
+      Runtime: "nodejs14.x"
+      Role: !GetAtt "ClamAVDownloaderRole.Arn"
+      MemorySize: 128
+      Timeout: 120
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref ClamSignaturesBucket
+          CLAMAV_BASE_URL: "https://database.clamav.net/"
+      Code:
+        ZipFile: |
+          'use strict';
+          const https = require('https');
+          const AWS = require('aws-sdk');
+          const s3 = new AWS.S3();
+          const BUCKET = 'clam-signatures';
+          const FILES = [
+            'main.cvd',
+            'daily.cvd',
+            'bytecode.cvd'
+          ];
+          const CLAMAV_BASE_URL = 'https://database.clamav.net/';
+
+          exports.handler = async (event, context) => {
+            for (const file of FILES) {
+              try {
+                const data = await downloadFile(CLAMAV_BASE_URL + file);
+                await uploadToS3(BUCKET, file, data);
+              } catch (error) {
+                console.error(`Error processing ${file}:`, error);
+              }
+            }
+          };
+
+          function downloadFile(url) {
+            return new Promise((resolve, reject) => {
+              https.get(url, (res) => {
+                const data = [];
+                res.on('data', chunk => data.push(chunk));
+                res.on('end', () => resolve(Buffer.concat(data)));
+              }).on('error', (err) => {
+                reject(err);
+              });
+            });
+          }
+
+          async function uploadToS3(bucket, key, data) {
+            const params = {
+              Bucket: bucket,
+              Key: key,
+              Body: data,
+              ACL: 'private'
+            };
+            await s3.putObject(params).promise();
+          }
+  # An event that triggers clamAV signatures download
+  ClamAVDownloaderEventRule:
+    Type: "AWS::Events::Rule"
+    Properties:
+      Description: "Invoke ClamAVDownloader Lambda function every 1 minute"
+      ScheduleExpression: "rate(300 minute)"
+      State: "ENABLED"
+      Targets:
+        - Arn: !GetAtt "ClamAVDownloaderFunction.Arn"
+          Id: "ClamAVDownloaderFunctionTarget"
+  # Permissions for the ClamAV download event
+  ClamAVDownloaderEventPermission:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      FunctionName: !Ref ClamAVDownloaderFunction
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt "ClamAVDownloaderEventRule.Arn"
+# ------------------------------------------------------------------------------------------------
   # Create separate VPC to host the VMClarity components and scans so that we
   # keep VM Clarity resources completely separate from the VMs being scanned.
   VmClarityVPC:
