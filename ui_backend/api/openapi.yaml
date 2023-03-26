@@ -36,7 +36,7 @@ paths:
 
   /dashboard/findingsTrends:
     get:
-      summary: Get a findings trends.
+      summary: Get a list of finding trends for all finding types.
       parameters:
         - $ref: '#/components/parameters/startTime'
         - $ref: '#/components/parameters/endTime'
@@ -61,30 +61,32 @@ components:
       description: An object that is returned in all cases of failures.
 
     FindingsTrends:
-      description: Array of the total number of findings at a given time per finding type.
+      description: List of finding trends for all finding types.
       type: array
       items:
         $ref: '#/components/schemas/FindingTrends'
       readOnly: true
 
     FindingTrends:
-      description: Holds the total number of findings per finding type at a given time.
+      description: List of the total number of findings per time slot for the specific findingType.
       type: object
       properties:
         findingType:
           $ref: '#/components/schemas/FindingType'
         trends:
           type: array
-          description: Array of the total number of findings at a given time for the specific findingType.
           items:
             $ref: '#/components/schemas/FindingTrend'
           readOnly: true
 
     FindingTrend:
-      description: Holds the total number of findings at a given time.
+      description: Represents the total number of findings in the time slot (between startTime and endTime).
       type: object
       properties:
-        time:
+        startTime:
+          type: string
+          format: date-time
+        endTime:
           type: string
           format: date-time
         count:

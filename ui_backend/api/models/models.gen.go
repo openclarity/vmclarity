@@ -38,18 +38,17 @@ type AssetInfo struct {
 // AssetType defines model for AssetType.
 type AssetType string
 
-// FindingTrend Holds the total number of findings at a given time.
+// FindingTrend Represents the total number of findings in the time slot (between startTime and endTime).
 type FindingTrend struct {
-	Count *int       `json:"count,omitempty"`
-	Time  *time.Time `json:"time,omitempty"`
+	Count     *int       `json:"count,omitempty"`
+	EndTime   *time.Time `json:"endTime,omitempty"`
+	StartTime *time.Time `json:"startTime,omitempty"`
 }
 
-// FindingTrends Holds the total number of findings per finding type at a given time.
+// FindingTrends List of the total number of findings per time slot for the specific findingType.
 type FindingTrends struct {
-	FindingType *FindingType `json:"findingType,omitempty"`
-
-	// Trends Array of the total number of findings at a given time for the specific findingType.
-	Trends *[]FindingTrend `json:"trends,omitempty"`
+	FindingType *FindingType    `json:"findingType,omitempty"`
+	Trends      *[]FindingTrend `json:"trends,omitempty"`
 }
 
 // FindingType defines model for FindingType.
@@ -65,7 +64,7 @@ type FindingsCount struct {
 	Vulnerabilities   *int `json:"vulnerabilities,omitempty"`
 }
 
-// FindingsTrends Array of the total number of findings at a given time per finding type.
+// FindingsTrends List of finding trends for all finding types.
 type FindingsTrends = []FindingTrends
 
 // RegionFindings Total findings for a region

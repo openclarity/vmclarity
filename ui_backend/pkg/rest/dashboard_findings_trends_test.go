@@ -152,3 +152,120 @@ func mustParse(t *testing.T, timeStr string) time.Time {
 	assert.NilError(t, err)
 	return ret
 }
+
+func Test_validateParams(t *testing.T) {
+	type args struct {
+		params models.GetDashboardFindingsTrendsParams
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "start time before end time",
+			args: args{
+				params: models.GetDashboardFindingsTrendsParams{
+					StartTime: mustParse(t, "2006-01-03T10:32:00Z"),
+					EndTime:   mustParse(t, "2006-01-03T12:56:00Z"),
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "start time and end time are the same",
+			args: args{
+				params: models.GetDashboardFindingsTrendsParams{
+					StartTime: mustParse(t, "2006-01-03T10:32:00Z"),
+					EndTime:   mustParse(t, "2006-01-03T10:32:00Z"),
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "start time after end time",
+			args: args{
+				params: models.GetDashboardFindingsTrendsParams{
+					StartTime: mustParse(t, "2006-01-03T12:56:00Z"),
+					EndTime:   mustParse(t, "2006-01-03T10:32:00Z"),
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := validateParams(tt.args.params); (err != nil) != tt.wantErr {
+				t.Errorf("validateParams() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_getObjectType(t *testing.T) {
+	type args struct {
+		findingType models.FindingType
+	}
+	var tests = []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "Exploit",
+			args: args{
+				findingType: models.EXPLOIT,
+			},
+			want: "Exploit",
+		},
+		{
+			name: "Malware",
+			args: args{
+				findingType: models.MALWARE,
+			},
+			want: "Malware",
+		},
+		{
+			name: "Misconfiguration",
+			args: args{
+				findingType: models.MISCONFIGURATION,
+			},
+			want: "Misconfiguration",
+		},
+		{
+			name: "Package",
+			args: args{
+				findingType: models.PACKAGE,
+			},
+			want: "Package",
+		},
+		{
+			name: "Rootkit",
+			args: args{
+				findingType: models.ROOTKIT,
+			},
+			want: "Rootkit",
+		},
+		{
+			name: "Secret",
+			args: args{
+				findingType: models.SECRET,
+			},
+			want: "Secret",
+		},
+		{
+			name: "Vulnerability",
+			args: args{
+				findingType: models.VULNERABILITY,
+			},
+			want: "Vulnerability",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getObjectType(tt.args.findingType); got != tt.want {
+				t.Errorf("getObjectType() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -38,32 +38,35 @@ type timeSlot struct {
 
 func (s *ServerImpl) GetDashboardFindingsTrends(ctx echo.Context, params models.GetDashboardFindingsTrendsParams) error {
 	reqCtx := ctx.Request().Context()
+	if err := validateParams(params); err != nil {
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("Request params are not valid: %v", err))
+	}
 	timeSlots := createTimeSlots(params)
-	exploitTrends, err := s.getFindingTrendsPerFinding(reqCtx, models.EXPLOIT, timeSlots)
+	exploitTrends, err := s.getFindingTrendsForFindingType(reqCtx, models.EXPLOIT, timeSlots)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get exploit trends: %v", err))
 	}
-	malwareTrends, err := s.getFindingTrendsPerFinding(reqCtx, models.MALWARE, timeSlots)
+	malwareTrends, err := s.getFindingTrendsForFindingType(reqCtx, models.MALWARE, timeSlots)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get malware trends: %v", err))
 	}
-	misconfigurationTrends, err := s.getFindingTrendsPerFinding(reqCtx, models.MISCONFIGURATION, timeSlots)
+	misconfigurationTrends, err := s.getFindingTrendsForFindingType(reqCtx, models.MISCONFIGURATION, timeSlots)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get misconfiguration trends: %v", err))
 	}
-	packageTrends, err := s.getFindingTrendsPerFinding(reqCtx, models.PACKAGE, timeSlots)
+	packageTrends, err := s.getFindingTrendsForFindingType(reqCtx, models.PACKAGE, timeSlots)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get package trends: %v", err))
 	}
-	rootkitTrends, err := s.getFindingTrendsPerFinding(reqCtx, models.ROOTKIT, timeSlots)
+	rootkitTrends, err := s.getFindingTrendsForFindingType(reqCtx, models.ROOTKIT, timeSlots)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get rootkit trends: %v", err))
 	}
-	secretTrends, err := s.getFindingTrendsPerFinding(reqCtx, models.SECRET, timeSlots)
+	secretTrends, err := s.getFindingTrendsForFindingType(reqCtx, models.SECRET, timeSlots)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get secret trends: %v", err))
 	}
-	vulnerabilityTrends, err := s.getFindingTrendsPerFinding(reqCtx, models.VULNERABILITY, timeSlots)
+	vulnerabilityTrends, err := s.getFindingTrendsForFindingType(reqCtx, models.VULNERABILITY, timeSlots)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get vulnerability trends: %v", err))
 	}
@@ -79,6 +82,17 @@ func (s *ServerImpl) GetDashboardFindingsTrends(ctx echo.Context, params models.
 	})
 }
 
+func validateParams(params models.GetDashboardFindingsTrendsParams) error {
+	if !params.StartTime.Before(params.EndTime) {
+		return fmt.Errorf("start time must be before end time")
+	}
+
+	return nil
+}
+
+// createTimeSlots returns a slice of time slots (start time and end time).
+// The function split the total startTime-endTime period (from the API call) into timeSlotsCount time slots,
+// the finding trends will be reported based on the amount of active findings in each time slot.
 func createTimeSlots(params models.GetDashboardFindingsTrendsParams) []timeSlot {
 	timeSlots := make([]timeSlot, timeSlotsCount)
 	slotDuration := params.EndTime.Sub(params.StartTime) / timeSlotsCount
@@ -95,7 +109,7 @@ func createTimeSlots(params models.GetDashboardFindingsTrendsParams) []timeSlot 
 	return timeSlots
 }
 
-func (s *ServerImpl) getFindingTrendsPerFinding(ctx context.Context, findingType models.FindingType, timeSlots []timeSlot) (models.FindingTrends, error) {
+func (s *ServerImpl) getFindingTrendsForFindingType(ctx context.Context, findingType models.FindingType, timeSlots []timeSlot) (models.FindingTrends, error) {
 	trends := make([]models.FindingTrend, len(timeSlots))
 	for i, slot := range timeSlots {
 		trend, err := s.getFindingTrendPerSlot(ctx, findingType, slot)
@@ -127,8 +141,9 @@ func (s *ServerImpl) getFindingTrendPerSlot(ctx context.Context, findingType mod
 	}
 
 	return models.FindingTrend{
-		Count: findings.Count,
-		Time:  &slot.StartTime,
+		Count:     findings.Count,
+		StartTime: &slot.StartTime,
+		EndTime:   &slot.EndTime,
 	}, nil
 }
 
