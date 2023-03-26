@@ -115,7 +115,7 @@ func (b *BackendClient) PatchScanResult(ctx context.Context, scanResult models.T
 func (b *BackendClient) PostScan(ctx context.Context, scan models.Scan) (*models.Scan, error) {
 	resp, err := b.apiClient.PostScansWithResponse(ctx, scan)
 	if err != nil {
-		return nil, fmt.Errorf("failed to post a scan: %v", err)
+		return nil, fmt.Errorf("failed to create a scan: %v", err)
 	}
 	switch resp.StatusCode() {
 	case http.StatusCreated:
@@ -141,16 +141,16 @@ func (b *BackendClient) PostScan(ctx context.Context, scan models.Scan) (*models
 		}
 	default:
 		if resp.JSONDefault != nil && resp.JSONDefault.Message != nil {
-			return nil, fmt.Errorf("failed to post scan. status code=%v: %v", resp.StatusCode(), *resp.JSONDefault.Message)
+			return nil, fmt.Errorf("failed to create a scan. status code=%v: %v", resp.StatusCode(), *resp.JSONDefault.Message)
 		}
-		return nil, fmt.Errorf("failed to post scan. status code=%v", resp.StatusCode())
+		return nil, fmt.Errorf("failed to create a scan. status code=%v", resp.StatusCode())
 	}
 }
 
 func (b *BackendClient) PostScanResult(ctx context.Context, scanResult models.TargetScanResult) (*models.TargetScanResult, error) {
 	resp, err := b.apiClient.PostScanResultsWithResponse(ctx, scanResult)
 	if err != nil {
-		return nil, fmt.Errorf("failed to post scan result: %v", err)
+		return nil, fmt.Errorf("failed to create a scan result: %v", err)
 	}
 	switch resp.StatusCode() {
 	case http.StatusCreated:
@@ -176,9 +176,9 @@ func (b *BackendClient) PostScanResult(ctx context.Context, scanResult models.Ta
 		}
 	default:
 		if resp.JSONDefault != nil && resp.JSONDefault.Message != nil {
-			return nil, fmt.Errorf("failed to post scan result. status code=%v: %v", resp.StatusCode(), *resp.JSONDefault.Message)
+			return nil, fmt.Errorf("failed to create a scan result. status code=%v: %v", resp.StatusCode(), *resp.JSONDefault.Message)
 		}
-		return nil, fmt.Errorf("failed to post scan result. status code=%v", resp.StatusCode())
+		return nil, fmt.Errorf("failed to create a scan result. status code=%v", resp.StatusCode())
 	}
 }
 
@@ -376,7 +376,7 @@ func (b *BackendClient) GetScans(ctx context.Context, params models.GetScansPara
 func (b *BackendClient) PostTarget(ctx context.Context, target models.Target) (*models.Target, error) {
 	resp, err := b.apiClient.PostTargetsWithResponse(ctx, target)
 	if err != nil {
-		return nil, fmt.Errorf("failed to post target: %v", err)
+		return nil, fmt.Errorf("failed to create a target: %v", err)
 	}
 	switch resp.StatusCode() {
 	case http.StatusCreated:
@@ -386,9 +386,9 @@ func (b *BackendClient) PostTarget(ctx context.Context, target models.Target) (*
 		return resp.JSON201, nil
 	case http.StatusBadRequest:
 		if resp.JSON400 != nil && resp.JSON400.Message != nil {
-			return nil, fmt.Errorf("failed to post target. status code=%v: %v", resp.StatusCode(), *resp.JSON400.Message)
+			return nil, fmt.Errorf("failed to create a target. status code=%v: %v", resp.StatusCode(), *resp.JSON400.Message)
 		}
-		return nil, fmt.Errorf("failed to post target. status code=%v", resp.StatusCode())
+		return nil, fmt.Errorf("failed to create a target. status code=%v", resp.StatusCode())
 	case http.StatusConflict:
 		if resp.JSON409 == nil {
 			return nil, fmt.Errorf("failed to create a target: empty body. status code=%v", http.StatusConflict)
@@ -402,9 +402,9 @@ func (b *BackendClient) PostTarget(ctx context.Context, target models.Target) (*
 		}
 	default:
 		if resp.JSONDefault != nil && resp.JSONDefault.Message != nil {
-			return nil, fmt.Errorf("failed to post target. status code=%v: %v", resp.StatusCode(), *resp.JSONDefault.Message)
+			return nil, fmt.Errorf("failed to create a target. status code=%v: %v", resp.StatusCode(), *resp.JSONDefault.Message)
 		}
-		return nil, fmt.Errorf("failed to post target. status code=%v", resp.StatusCode())
+		return nil, fmt.Errorf("failed to create a target. status code=%v", resp.StatusCode())
 	}
 }
 
