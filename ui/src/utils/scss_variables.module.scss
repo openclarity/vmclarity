@@ -53,6 +53,11 @@ $color-findings-3: #52BAE6;
 $color-findings-4: #7FCFCE;
 $color-findings-5: #8DD7C9;
 
+//Gradients:
+$color-gradient-green: linear-gradient(0deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7)), linear-gradient(87.46deg, #38CDA0 0%, #7EC6E4 102.96%);
+$color-gradient-blue: linear-gradient(0deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7)), linear-gradient(87.46deg, #3861CD 0%, #7ED8E4 102.96%);
+$color-gradient-yellow: linear-gradient(0deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7)), linear-gradient(87.46deg, #CD9A38 0%, #E4E07E 102.96%);
+
 :export {
     color-main: $color-main;
     color-main-light: $color-main-light;
@@ -74,4 +79,7 @@ $color-findings-5: #8DD7C9;
     color-findings-3: $color-findings-3;
     color-findings-4: $color-findings-4;
     color-findings-5: $color-findings-5;
+    color-gradient-green: $color-gradient-green;
+    color-gradient-blue: $color-gradient-blue;
+    color-gradient-yellow: $color-gradient-yellow;
 }
