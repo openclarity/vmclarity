@@ -206,7 +206,7 @@ func Test_getObjectType(t *testing.T) {
 	type args struct {
 		findingType models.FindingType
 	}
-	var tests = []struct {
+	tests := []struct {
 		name string
 		args args
 		want string
