@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// nolint:cyclop
 package backendclient
 
 import (
@@ -41,7 +42,6 @@ func Create(serverAddress string) (*BackendClient, error) {
 	}, nil
 }
 
-// nolint:cyclop
 func (b *BackendClient) GetScanResult(ctx context.Context, scanResultID string, params models.GetScanResultsScanResultIDParams) (models.TargetScanResult, error) {
 	newGetExistingError := func(err error) error {
 		return fmt.Errorf("failed to get existing scan result %v: %w", scanResultID, err)
@@ -75,7 +75,6 @@ func (b *BackendClient) GetScanResult(ctx context.Context, scanResultID string, 
 	}
 }
 
-// nolint:cyclop
 func (b *BackendClient) PatchScanResult(ctx context.Context, scanResult models.TargetScanResult, scanResultID string) error {
 	newUpdateScanResultError := func(err error) error {
 		return fmt.Errorf("failed to update scan result %v: %w", scanResultID, err)
@@ -237,7 +236,6 @@ func (b *BackendClient) GetScanResultStatus(ctx context.Context, scanResultID st
 	return scanResult.Status, nil
 }
 
-// nolint:cyclop
 func (b *BackendClient) PatchTargetScanStatus(ctx context.Context, scanResultID string, status *models.TargetScanStatus) error {
 	scanResult := models.TargetScanResult{
 		Status: status,
@@ -319,7 +317,6 @@ func (b *BackendClient) GetScanConfigs(ctx context.Context, params models.GetSca
 	}
 }
 
-// nolint:cyclop
 func (b *BackendClient) PatchScanConfig(ctx context.Context, scanConfigID string, scanConfig *models.ScanConfig) error {
 	newPatchScanConfigResultError := func(err error) error {
 		return fmt.Errorf("failed to update scan config %v: %w", scanConfigID, err)
