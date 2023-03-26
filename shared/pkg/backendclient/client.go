@@ -92,6 +92,11 @@ func (b *BackendClient) PatchScanResult(ctx context.Context, scanResult models.T
 			return newUpdateScanResultError(fmt.Errorf("empty body"))
 		}
 		return nil
+	case http.StatusBadRequest:
+		if resp.JSON400 != nil && resp.JSON400.Message != nil {
+			return newUpdateScanResultError(fmt.Errorf("status code=%v: %v", resp.StatusCode(), *resp.JSON400.Message))
+		}
+		return newUpdateScanResultError(fmt.Errorf("status code=%v", resp.StatusCode()))
 	case http.StatusNotFound:
 		if resp.JSON404 == nil {
 			return newUpdateScanResultError(fmt.Errorf("empty body on not found"))
@@ -119,6 +124,11 @@ func (b *BackendClient) PostScan(ctx context.Context, scan models.Scan) (*models
 			return nil, fmt.Errorf("failed to create a scan: empty body. status code=%v", http.StatusCreated)
 		}
 		return resp.JSON201, nil
+	case http.StatusBadRequest:
+		if resp.JSON400 != nil && resp.JSON400.Message != nil {
+			return nil, fmt.Errorf("failed to create a scan. status code=%v: %v", resp.StatusCode(), *resp.JSON400.Message)
+		}
+		return nil, fmt.Errorf("failed to create a scan. status code=%v", resp.StatusCode())
 	case http.StatusConflict:
 		if resp.JSON409 == nil {
 			return nil, fmt.Errorf("failed to create a scan: empty body. status code=%v", http.StatusConflict)
@@ -149,6 +159,11 @@ func (b *BackendClient) PostScanResult(ctx context.Context, scanResult models.Ta
 			return nil, fmt.Errorf("failed to create a scan result: empty body. status code=%v", http.StatusCreated)
 		}
 		return resp.JSON201, nil
+	case http.StatusBadRequest:
+		if resp.JSON400 != nil && resp.JSON400.Message != nil {
+			return nil, fmt.Errorf("failed to create a scan result. status code=%v: %v", resp.StatusCode(), *resp.JSON400.Message)
+		}
+		return nil, fmt.Errorf("failed to create a scan result. status code=%v", resp.StatusCode())
 	case http.StatusConflict:
 		if resp.JSON409 == nil {
 			return nil, fmt.Errorf("failed to create a scan result: empty body. status code=%v", http.StatusConflict)
@@ -176,9 +191,22 @@ func (b *BackendClient) PatchScan(ctx context.Context, scanID models.ScanID, sca
 	switch resp.StatusCode() {
 	case http.StatusOK:
 		if resp.JSON200 == nil {
-			return fmt.Errorf("failed to patch a scan: empty body")
+			return fmt.Errorf("failed to update a scan: empty body")
 		}
 		return nil
+	case http.StatusBadRequest:
+		if resp.JSON400 != nil && resp.JSON400.Message != nil {
+			return fmt.Errorf("failed to update a scan. status code=%v: %v", resp.StatusCode(), *resp.JSON400.Message)
+		}
+		return fmt.Errorf("failed to update a scan. status code=%v", resp.StatusCode())
+	case http.StatusNotFound:
+		if resp.JSON404 == nil {
+			return fmt.Errorf("failed to update a scan: empty body on not found")
+		}
+		if resp.JSON404 != nil && resp.JSON404.Message != nil {
+			return fmt.Errorf("failed to update a scan, not found: %v", *resp.JSON404.Message)
+		}
+		return fmt.Errorf("failed to update a scan, not found")
 	default:
 		if resp.JSONDefault != nil && resp.JSONDefault.Message != nil {
 			return fmt.Errorf("failed to patch scan. status code=%v: %v", resp.StatusCode(), *resp.JSONDefault.Message)
@@ -224,12 +252,17 @@ func (b *BackendClient) PatchTargetScanStatus(ctx context.Context, scanResultID 
 			return fmt.Errorf("failed to update a scan result status: empty body")
 		}
 		return nil
+	case http.StatusBadRequest:
+		if resp.JSON400 != nil && resp.JSON400.Message != nil {
+			return fmt.Errorf("failed to update scan result status. status code=%v: %v", resp.StatusCode(), *resp.JSON400.Message)
+		}
+		return fmt.Errorf("failed to update scan result status. status code=%v", resp.StatusCode())
 	case http.StatusNotFound:
 		if resp.JSON404 == nil {
 			return fmt.Errorf("failed to update a scan result status: empty body on not found")
 		}
 		if resp.JSON404 != nil && resp.JSON404.Message != nil {
-			return fmt.Errorf("failed to update scan result status, not found: %v", resp.JSON404.Message)
+			return fmt.Errorf("failed to update scan result status, not found: %v", *resp.JSON404.Message)
 		}
 		return fmt.Errorf("failed to update scan result status, not found")
 	default:
@@ -251,6 +284,14 @@ func (b *BackendClient) GetScan(ctx context.Context, scanID string, params model
 			return nil, fmt.Errorf("failed to get a scan: empty body")
 		}
 		return resp.JSON200, nil
+	case http.StatusNotFound:
+		if resp.JSON404 == nil {
+			return nil, fmt.Errorf("failed to get a scan: empty body on not found")
+		}
+		if resp.JSON404 != nil && resp.JSON404.Message != nil {
+			return nil, fmt.Errorf("failed to get a scan, not found: %v", *resp.JSON404.Message)
+		}
+		return nil, fmt.Errorf("failed to get a scan, not found")
 	default:
 		if resp.JSONDefault != nil && resp.JSONDefault.Message != nil {
 			return nil, fmt.Errorf("failed to get a scan status. status code=%v: %v", resp.StatusCode(), *resp.JSONDefault.Message)
@@ -295,6 +336,11 @@ func (b *BackendClient) PatchScanConfig(ctx context.Context, scanConfigID string
 			return newPatchScanConfigResultError(fmt.Errorf("empty body"))
 		}
 		return nil
+	case http.StatusBadRequest:
+		if resp.JSON400 != nil && resp.JSON400.Message != nil {
+			return newPatchScanConfigResultError(fmt.Errorf("status code=%v: %v", resp.StatusCode(), *resp.JSON400.Message))
+		}
+		return newPatchScanConfigResultError(fmt.Errorf("status code=%v", resp.StatusCode()))
 	case http.StatusNotFound:
 		if resp.JSON404 == nil {
 			return newPatchScanConfigResultError(fmt.Errorf("empty body on not found"))
@@ -341,6 +387,11 @@ func (b *BackendClient) PostTarget(ctx context.Context, target models.Target) (*
 			return nil, fmt.Errorf("failed to create a target: empty body. status code=%v", http.StatusCreated)
 		}
 		return resp.JSON201, nil
+	case http.StatusBadRequest:
+		if resp.JSON400 != nil && resp.JSON400.Message != nil {
+			return nil, fmt.Errorf("failed to post target. status code=%v: %v", resp.StatusCode(), *resp.JSON400.Message)
+		}
+		return nil, fmt.Errorf("failed to post target. status code=%v", resp.StatusCode())
 	case http.StatusConflict:
 		if resp.JSON409 == nil {
 			return nil, fmt.Errorf("failed to create a target: empty body. status code=%v", http.StatusConflict)
