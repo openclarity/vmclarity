@@ -35,7 +35,7 @@ func (srp *ScanResultProcessor) reconcileResultVulnerabilitiesToFindings(ctx con
 
 	newerFound, newerTime, err := srp.newerExistingFindingTime(ctx, scanResult.Target.Id, "Vulnerability", *completedTime)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to check for newer existing vulnerability findings: %v", err)
 	}
 
 	existingFilter := fmt.Sprintf("findingInfo/objectType eq 'Vulnerability' and asset/id eq '%s' and scan/id eq '%s'",
@@ -117,7 +117,7 @@ func (srp *ScanResultProcessor) reconcileResultVulnerabilitiesToFindings(ctx con
 	// a scan result older than this scan result.
 	err = srp.invalidateOlderFindingsByType(ctx, "Vulnerability", scanResult.Target.Id, *completedTime)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to invalidate older vulnerability finding: %v", err)
 	}
 
 	// Get all findings which aren't invalidated, and then update the asset's summary

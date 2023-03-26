@@ -754,21 +754,21 @@ func Test_misconfigurationSeverityToAPIMisconfigurationSeverity(t *testing.T) {
 			args: args{
 				sev: misconfigurationTypes.HighSeverity,
 			},
-			want: models.HighSeverity,
+			want: models.MisconfigurationHighSeverity,
 		},
 		{
 			name: "medium severity",
 			args: args{
 				sev: misconfigurationTypes.MediumSeverity,
 			},
-			want: models.MediumSeverity,
+			want: models.MisconfigurationMediumSeverity,
 		},
 		{
 			name: "low severity",
 			args: args{
 				sev: misconfigurationTypes.LowSeverity,
 			},
-			want: models.LowSeverity,
+			want: models.MisconfigurationLowSeverity,
 		},
 		{
 			name: "unknown severity",
@@ -893,7 +893,7 @@ func Test_convertMisconfigurationResultToAPIModel(t *testing.T) {
 						Remediation:     utils.PointerTo(misconfiguration1.Remediation),
 						ScannedPath:     utils.PointerTo(misconfiguration1.ScannedPath),
 						ScannerName:     utils.PointerTo(misconfiguration1.ScannerName),
-						Severity:        utils.PointerTo(models.HighSeverity),
+						Severity:        utils.PointerTo(models.MisconfigurationHighSeverity),
 						TestCategory:    utils.PointerTo(misconfiguration1.TestCategory),
 						TestDescription: utils.PointerTo(misconfiguration1.TestDescription),
 						TestID:          utils.PointerTo(misconfiguration1.TestID),
@@ -903,7 +903,7 @@ func Test_convertMisconfigurationResultToAPIModel(t *testing.T) {
 						Remediation:     utils.PointerTo(misconfiguration2.Remediation),
 						ScannedPath:     utils.PointerTo(misconfiguration2.ScannedPath),
 						ScannerName:     utils.PointerTo(misconfiguration2.ScannerName),
-						Severity:        utils.PointerTo(models.MediumSeverity),
+						Severity:        utils.PointerTo(models.MisconfigurationMediumSeverity),
 						TestCategory:    utils.PointerTo(misconfiguration2.TestCategory),
 						TestDescription: utils.PointerTo(misconfiguration2.TestDescription),
 						TestID:          utils.PointerTo(misconfiguration2.TestID),
@@ -913,7 +913,7 @@ func Test_convertMisconfigurationResultToAPIModel(t *testing.T) {
 						Remediation:     utils.PointerTo(misconfiguration3.Remediation),
 						ScannedPath:     utils.PointerTo(misconfiguration3.ScannedPath),
 						ScannerName:     utils.PointerTo(misconfiguration3.ScannerName),
-						Severity:        utils.PointerTo(models.HighSeverity),
+						Severity:        utils.PointerTo(models.MisconfigurationHighSeverity),
 						TestCategory:    utils.PointerTo(misconfiguration3.TestCategory),
 						TestDescription: utils.PointerTo(misconfiguration3.TestDescription),
 						TestID:          utils.PointerTo(misconfiguration3.TestID),

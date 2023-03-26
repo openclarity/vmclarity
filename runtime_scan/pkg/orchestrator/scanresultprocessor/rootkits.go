@@ -66,7 +66,7 @@ func (srp *ScanResultProcessor) reconcileResultRootkitsToFindings(ctx context.Co
 
 	newerFound, newerTime, err := srp.newerExistingFindingTime(ctx, scanResult.Target.Id, "Rootkit", *completedTime)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to check for newer existing rootkit findings: %v", err)
 	}
 
 	// Build a map of existing findings for this scan to prevent us
@@ -124,7 +124,7 @@ func (srp *ScanResultProcessor) reconcileResultRootkitsToFindings(ctx context.Co
 	// a scan result older than this scan result.
 	err = srp.invalidateOlderFindingsByType(ctx, "Rootkit", scanResult.Target.Id, *completedTime)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to invalidate older rootkit finding: %v", err)
 	}
 
 	// Get all findings which aren't invalidated, and then update the asset's summary

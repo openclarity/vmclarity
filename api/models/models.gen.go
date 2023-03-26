@@ -18,9 +18,9 @@ const (
 
 // Defines values for MisconfigurationSeverity.
 const (
-	HighSeverity   MisconfigurationSeverity = "HighSeverity"
-	LowSeverity    MisconfigurationSeverity = "LowSeverity"
-	MediumSeverity MisconfigurationSeverity = "MediumSeverity"
+	MisconfigurationHighSeverity   MisconfigurationSeverity = "MisconfigurationHighSeverity"
+	MisconfigurationLowSeverity    MisconfigurationSeverity = "MisconfigurationLowSeverity"
+	MisconfigurationMediumSeverity MisconfigurationSeverity = "MisconfigurationMediumSeverity"
 )
 
 // Defines values for RootkitType.
@@ -643,7 +643,7 @@ type Secret struct {
 	// FilePath Name of the file containing the secret
 	FilePath *string `json:"filePath,omitempty"`
 
-	// Fingerprint Unique identification of the SecretInfo
+	// Fingerprint Note: this is not unique
 	Fingerprint *string `json:"fingerprint,omitempty"`
 	StartColumn *int    `json:"startColumn,omitempty"`
 	StartLine   *int    `json:"startLine,omitempty"`
@@ -658,7 +658,7 @@ type SecretFindingInfo struct {
 	// FilePath Name of the file containing the secret
 	FilePath *string `json:"filePath,omitempty"`
 
-	// Fingerprint Unique identification of the SecretInfo
+	// Fingerprint Note: this is not unique
 	Fingerprint *string `json:"fingerprint,omitempty"`
 	ObjectType  string  `json:"objectType"`
 	StartColumn *int    `json:"startColumn,omitempty"`

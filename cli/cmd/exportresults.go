@@ -570,13 +570,13 @@ func (e *Exporter) ExportExploitsResult(ctx context.Context, res *results.Result
 func misconfigurationSeverityToAPIMisconfigurationSeverity(sev misconfigurationTypes.Severity) (models.MisconfigurationSeverity, error) {
 	switch sev {
 	case misconfigurationTypes.HighSeverity:
-		return models.HighSeverity, nil
+		return models.MisconfigurationHighSeverity, nil
 	case misconfigurationTypes.MediumSeverity:
-		return models.MediumSeverity, nil
+		return models.MisconfigurationMediumSeverity, nil
 	case misconfigurationTypes.LowSeverity:
-		return models.LowSeverity, nil
+		return models.MisconfigurationLowSeverity, nil
 	default:
-		return models.LowSeverity, fmt.Errorf("unknown severity level %v", sev)
+		return models.MisconfigurationLowSeverity, fmt.Errorf("unknown severity level %v", sev)
 	}
 }
 

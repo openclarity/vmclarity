@@ -66,7 +66,7 @@ func (srp *ScanResultProcessor) reconcileResultSecretsToFindings(ctx context.Con
 
 	newerFound, newerTime, err := srp.newerExistingFindingTime(ctx, scanResult.Target.Id, "Secret", *completedTime)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to check for newer existing secret findings: %v", err)
 	}
 
 	// Build a map of existing findings for this scan to prevent us
@@ -128,7 +128,7 @@ func (srp *ScanResultProcessor) reconcileResultSecretsToFindings(ctx context.Con
 	// a scan result older than this scan result.
 	err = srp.invalidateOlderFindingsByType(ctx, "Secret", scanResult.Target.Id, *completedTime)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to invalidate older secret finding: %v", err)
 	}
 
 	// Get all findings which aren't invalidated, and then update the asset's summary

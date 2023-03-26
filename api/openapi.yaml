@@ -1705,9 +1705,9 @@ components:
     MisconfigurationSeverity:
       type: string
       enum:
-        - HighSeverity
-        - MediumSeverity
-        - LowSeverity
+        - MisconfigurationHighSeverity
+        - MisconfigurationMediumSeverity
+        - MisconfigurationLowSeverity
 
     Misconfiguration:
       type: object
@@ -1746,7 +1746,7 @@ components:
         endColumn:
           type: integer
         fingerprint:
-          description: "Unique identification of the SecretInfo"
+          description: "Note: this is not unique"
           type: string
 
     Exploit:

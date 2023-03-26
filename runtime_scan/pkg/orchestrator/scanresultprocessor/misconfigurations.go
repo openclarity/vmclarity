@@ -68,7 +68,7 @@ func (srp *ScanResultProcessor) reconcileResultMisconfigurationsToFindings(ctx c
 
 	newerFound, newerTime, err := srp.newerExistingFindingTime(ctx, scanResult.Target.Id, "Misconfiguration", *completedTime)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to check for newer existing misconfiguration findings: %v", err)
 	}
 
 	// Build a map of existing findings for this scan to prevent us
@@ -131,7 +131,7 @@ func (srp *ScanResultProcessor) reconcileResultMisconfigurationsToFindings(ctx c
 	// a scan result older than this scan result.
 	err = srp.invalidateOlderFindingsByType(ctx, "Misconfiguration", scanResult.Target.Id, *completedTime)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to invalidate older misconfiguration finding: %v", err)
 	}
 
 	// Get all findings which aren't invalidated, and then update the asset's summary
