@@ -186,7 +186,7 @@ func (b *BackendClient) PostScanResult(ctx context.Context, scanResult models.Ta
 func (b *BackendClient) PatchScan(ctx context.Context, scanID models.ScanID, scan *models.Scan) error {
 	resp, err := b.apiClient.PatchScansScanIDWithResponse(ctx, scanID, *scan)
 	if err != nil {
-		return fmt.Errorf("failed to patch a scan: %v", err)
+		return fmt.Errorf("failed to update a scan: %v", err)
 	}
 	switch resp.StatusCode() {
 	case http.StatusOK:
@@ -209,9 +209,9 @@ func (b *BackendClient) PatchScan(ctx context.Context, scanID models.ScanID, sca
 		return fmt.Errorf("failed to update a scan, not found")
 	default:
 		if resp.JSONDefault != nil && resp.JSONDefault.Message != nil {
-			return fmt.Errorf("failed to patch scan. status code=%v: %v", resp.StatusCode(), *resp.JSONDefault.Message)
+			return fmt.Errorf("failed to update scan. status code=%v: %v", resp.StatusCode(), *resp.JSONDefault.Message)
 		}
-		return fmt.Errorf("failed to patch scan. status code=%v", resp.StatusCode())
+		return fmt.Errorf("failed to update scan. status code=%v", resp.StatusCode())
 	}
 }
 
@@ -244,7 +244,7 @@ func (b *BackendClient) PatchTargetScanStatus(ctx context.Context, scanResultID 
 	}
 	resp, err := b.apiClient.PatchScanResultsScanResultIDWithResponse(ctx, scanResultID, scanResult)
 	if err != nil {
-		return fmt.Errorf("failed to patch a scan result status: %v", err)
+		return fmt.Errorf("failed to update a scan result status: %v", err)
 	}
 	switch resp.StatusCode() {
 	case http.StatusOK:
@@ -322,7 +322,7 @@ func (b *BackendClient) GetScanConfigs(ctx context.Context, params models.GetSca
 // nolint:cyclop
 func (b *BackendClient) PatchScanConfig(ctx context.Context, scanConfigID string, scanConfig *models.ScanConfig) error {
 	newPatchScanConfigResultError := func(err error) error {
-		return fmt.Errorf("failed to patch scan config %v: %w", scanConfigID, err)
+		return fmt.Errorf("failed to update scan config %v: %w", scanConfigID, err)
 	}
 
 	resp, err := b.apiClient.PatchScanConfigsScanConfigIDWithResponse(ctx, scanConfigID, *scanConfig)
