@@ -7,7 +7,7 @@ import './widget-wrapper.scss';
 const WidgetWrapper = ({className, title, children}) => (
     <div className={classnames("dashboard-widget-wrapper", className)}>
         <Title removeMargin medium>{title}</Title>
-        <div>{children}</div>
+        {children}
     </div>
 )
 
