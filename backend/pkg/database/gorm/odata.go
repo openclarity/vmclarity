@@ -82,6 +82,7 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 				FieldType:           odatasql.ComplexFieldType,
 				ComplexFieldSchemas: []string{"ScanFindingsSummary"},
 			},
+			"findingsProcessed": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 		},
 	},
 	"SbomScan": {
@@ -186,6 +187,8 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 			"filePath":    odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"startLine":   odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"endLine":     odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"startColumn": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"endColumn":   odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"fingerprint": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 		},
 	},
@@ -604,6 +607,15 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 					"ExploitFindingInfo",
 				},
 				DiscriminatorProperty: "objectType",
+				DiscriminatorSchemaMapping: map[string]string{
+					"PackageFindingInfo":          "Package",
+					"VulnerabilityFindingInfo":    "Vulnerability",
+					"MalwareFindingInfo":          "Malware",
+					"SecretFindingInfo":           "Secret",
+					"MisconfigurationFindingInfo": "Misconfiguration",
+					"RootkitFindingInfo":          "Rootkit",
+					"ExploitFindingInfo":          "Exploit",
+				},
 			},
 		},
 	},
@@ -729,6 +741,52 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 			"cveID":       odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"sourceDB":    odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"urls": odatasql.FieldMeta{
+				FieldType:          odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			},
+		},
+	},
+	"TargetScanStatus": {
+		Fields: odatasql.Schema{
+			"general": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"TargetScanState"},
+			},
+			"sbom": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"TargetScanState"},
+			},
+			"vulnerabilities": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"TargetScanState"},
+			},
+			"malware": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"TargetScanState"},
+			},
+			"rootkits": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"TargetScanState"},
+			},
+			"secrets": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"TargetScanState"},
+			},
+			"misconfigurations": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"TargetScanState"},
+			},
+			"exploits": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"TargetScanState"},
+			},
+		},
+	},
+	"TargetScanState": {
+		Fields: odatasql.Schema{
+			"state":              odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"lastTransitionTime": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"errors": odatasql.FieldMeta{
 				FieldType:          odatasql.CollectionFieldType,
 				CollectionItemMeta: &odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			},

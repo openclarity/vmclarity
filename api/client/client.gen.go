@@ -205,6 +205,11 @@ type ClientInterface interface {
 	// GetTargetsTargetID request
 	GetTargetsTargetID(ctx context.Context, targetID TargetID, params *GetTargetsTargetIDParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// PatchTargetsTargetID request with any body
+	PatchTargetsTargetIDWithBody(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PatchTargetsTargetID(ctx context.Context, targetID TargetID, body PatchTargetsTargetIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// PutTargetsTargetID request with any body
 	PutTargetsTargetIDWithBody(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -717,6 +722,30 @@ func (c *Client) DeleteTargetsTargetID(ctx context.Context, targetID TargetID, r
 
 func (c *Client) GetTargetsTargetID(ctx context.Context, targetID TargetID, params *GetTargetsTargetIDParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetTargetsTargetIDRequest(c.Server, targetID, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchTargetsTargetIDWithBody(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchTargetsTargetIDRequestWithBody(c.Server, targetID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchTargetsTargetID(ctx context.Context, targetID TargetID, body PatchTargetsTargetIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchTargetsTargetIDRequest(c.Server, targetID, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2647,6 +2676,53 @@ func NewGetTargetsTargetIDRequest(server string, targetID TargetID, params *GetT
 	return req, nil
 }
 
+// NewPatchTargetsTargetIDRequest calls the generic PatchTargetsTargetID builder with application/json body
+func NewPatchTargetsTargetIDRequest(server string, targetID TargetID, body PatchTargetsTargetIDJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPatchTargetsTargetIDRequestWithBody(server, targetID, "application/json", bodyReader)
+}
+
+// NewPatchTargetsTargetIDRequestWithBody generates requests for PatchTargetsTargetID with any type of body
+func NewPatchTargetsTargetIDRequestWithBody(server string, targetID TargetID, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "targetID", runtime.ParamLocationPath, targetID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/targets/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewPutTargetsTargetIDRequest calls the generic PutTargetsTargetID builder with application/json body
 func NewPutTargetsTargetIDRequest(server string, targetID TargetID, body PutTargetsTargetIDJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -2852,6 +2928,11 @@ type ClientWithResponsesInterface interface {
 	// GetTargetsTargetID request
 	GetTargetsTargetIDWithResponse(ctx context.Context, targetID TargetID, params *GetTargetsTargetIDParams, reqEditors ...RequestEditorFn) (*GetTargetsTargetIDResponse, error)
 
+	// PatchTargetsTargetID request with any body
+	PatchTargetsTargetIDWithBodyWithResponse(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchTargetsTargetIDResponse, error)
+
+	PatchTargetsTargetIDWithResponse(ctx context.Context, targetID TargetID, body PatchTargetsTargetIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchTargetsTargetIDResponse, error)
+
 	// PutTargetsTargetID request with any body
 	PutTargetsTargetIDWithBodyWithResponse(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutTargetsTargetIDResponse, error)
 
@@ -2931,6 +3012,7 @@ type PostFindingsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON201      *Finding
+	JSON400      *ApiResponse
 	JSON409      *FindingExists
 	JSONDefault  *ApiResponse
 }
@@ -3003,6 +3085,7 @@ type PatchFindingsFindingIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *Finding
+	JSON400      *ApiResponse
 	JSON404      *ApiResponse
 	JSONDefault  *ApiResponse
 }
@@ -3027,6 +3110,7 @@ type PutFindingsFindingIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *Finding
+	JSON400      *ApiResponse
 	JSON404      *ApiResponse
 	JSONDefault  *ApiResponse
 }
@@ -3074,6 +3158,7 @@ type PostScanConfigsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON201      *ScanConfig
+	JSON400      *ApiResponse
 	JSON409      *ScanConfigExists
 	JSONDefault  *ApiResponse
 }
@@ -3146,6 +3231,7 @@ type PatchScanConfigsScanConfigIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ScanConfig
+	JSON400      *ApiResponse
 	JSON404      *ApiResponse
 	JSONDefault  *ApiResponse
 }
@@ -3170,6 +3256,7 @@ type PutScanConfigsScanConfigIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ScanConfig
+	JSON400      *ApiResponse
 	JSON404      *ApiResponse
 	JSONDefault  *ApiResponse
 }
@@ -3217,6 +3304,7 @@ type PostScanResultsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON201      *TargetScanResult
+	JSON400      *ApiResponse
 	JSON409      *TargetScanResultExists
 	JSONDefault  *ApiResponse
 }
@@ -3265,6 +3353,7 @@ type PatchScanResultsScanResultIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *TargetScanResult
+	JSON400      *ApiResponse
 	JSON404      *ApiResponse
 	JSONDefault  *ApiResponse
 }
@@ -3289,6 +3378,7 @@ type PutScanResultsScanResultIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *TargetScanResult
+	JSON400      *ApiResponse
 	JSON404      *ApiResponse
 	JSONDefault  *ApiResponse
 }
@@ -3336,6 +3426,7 @@ type PostScansResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON201      *Scan
+	JSON400      *ApiResponse
 	JSON409      *ScanExists
 	JSONDefault  *ApiResponse
 }
@@ -3408,6 +3499,7 @@ type PatchScansScanIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *Scan
+	JSON400      *ApiResponse
 	JSON404      *ApiResponse
 	JSONDefault  *ApiResponse
 }
@@ -3432,6 +3524,7 @@ type PutScansScanIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *Scan
+	JSON400      *ApiResponse
 	JSON404      *ApiResponse
 	JSONDefault  *ApiResponse
 }
@@ -3479,6 +3572,7 @@ type PostTargetsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON201      *Target
+	JSON400      *ApiResponse
 	JSON409      *TargetExists
 	JSONDefault  *ApiResponse
 }
@@ -3503,6 +3597,7 @@ type DeleteTargetsTargetIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *SuccessResponse
+	JSON400      *ApiResponse
 	JSON404      *ApiResponse
 	JSONDefault  *ApiResponse
 }
@@ -3547,10 +3642,35 @@ func (r GetTargetsTargetIDResponse) StatusCode() int {
 	return 0
 }
 
+type PatchTargetsTargetIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Target
+	JSON404      *ApiResponse
+	JSONDefault  *ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PatchTargetsTargetIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PatchTargetsTargetIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type PutTargetsTargetIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *Target
+	JSON400      *ApiResponse
 	JSON404      *ApiResponse
 	JSONDefault  *ApiResponse
 }
@@ -3944,6 +4064,23 @@ func (c *ClientWithResponses) GetTargetsTargetIDWithResponse(ctx context.Context
 	return ParseGetTargetsTargetIDResponse(rsp)
 }
 
+// PatchTargetsTargetIDWithBodyWithResponse request with arbitrary body returning *PatchTargetsTargetIDResponse
+func (c *ClientWithResponses) PatchTargetsTargetIDWithBodyWithResponse(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchTargetsTargetIDResponse, error) {
+	rsp, err := c.PatchTargetsTargetIDWithBody(ctx, targetID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchTargetsTargetIDResponse(rsp)
+}
+
+func (c *ClientWithResponses) PatchTargetsTargetIDWithResponse(ctx context.Context, targetID TargetID, body PatchTargetsTargetIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchTargetsTargetIDResponse, error) {
+	rsp, err := c.PatchTargetsTargetID(ctx, targetID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchTargetsTargetIDResponse(rsp)
+}
+
 // PutTargetsTargetIDWithBodyWithResponse request with arbitrary body returning *PutTargetsTargetIDResponse
 func (c *ClientWithResponses) PutTargetsTargetIDWithBodyWithResponse(ctx context.Context, targetID TargetID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutTargetsTargetIDResponse, error) {
 	rsp, err := c.PutTargetsTargetIDWithBody(ctx, targetID, contentType, body, reqEditors...)
@@ -4081,6 +4218,13 @@ func ParsePostFindingsResponse(rsp *http.Response) (*PostFindingsResponse, error
 		}
 		response.JSON201 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
 		var dest FindingExists
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -4201,6 +4345,13 @@ func ParsePatchFindingsFindingIDResponse(rsp *http.Response) (*PatchFindingsFind
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest ApiResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -4240,6 +4391,13 @@ func ParsePutFindingsFindingIDResponse(rsp *http.Response) (*PutFindingsFindingI
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest ApiResponse
@@ -4313,6 +4471,13 @@ func ParsePostScanConfigsResponse(rsp *http.Response) (*PostScanConfigsResponse,
 			return nil, err
 		}
 		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
 		var dest ScanConfigExists
@@ -4434,6 +4599,13 @@ func ParsePatchScanConfigsScanConfigIDResponse(rsp *http.Response) (*PatchScanCo
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest ApiResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -4473,6 +4645,13 @@ func ParsePutScanConfigsScanConfigIDResponse(rsp *http.Response) (*PutScanConfig
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest ApiResponse
@@ -4546,6 +4725,13 @@ func ParsePostScanResultsResponse(rsp *http.Response) (*PostScanResultsResponse,
 			return nil, err
 		}
 		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
 		var dest TargetScanResultExists
@@ -4627,6 +4813,13 @@ func ParsePatchScanResultsScanResultIDResponse(rsp *http.Response) (*PatchScanRe
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest ApiResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -4666,6 +4859,13 @@ func ParsePutScanResultsScanResultIDResponse(rsp *http.Response) (*PutScanResult
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest ApiResponse
@@ -4739,6 +4939,13 @@ func ParsePostScansResponse(rsp *http.Response) (*PostScansResponse, error) {
 			return nil, err
 		}
 		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
 		var dest ScanExists
@@ -4860,6 +5067,13 @@ func ParsePatchScansScanIDResponse(rsp *http.Response) (*PatchScansScanIDRespons
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest ApiResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -4899,6 +5113,13 @@ func ParsePutScansScanIDResponse(rsp *http.Response) (*PutScansScanIDResponse, e
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest ApiResponse
@@ -4973,6 +5194,13 @@ func ParsePostTargetsResponse(rsp *http.Response) (*PostTargetsResponse, error) 
 		}
 		response.JSON201 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
 		var dest TargetExists
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -5012,6 +5240,13 @@ func ParseDeleteTargetsTargetIDResponse(rsp *http.Response) (*DeleteTargetsTarge
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest ApiResponse
@@ -5072,6 +5307,46 @@ func ParseGetTargetsTargetIDResponse(rsp *http.Response) (*GetTargetsTargetIDRes
 	return response, nil
 }
 
+// ParsePatchTargetsTargetIDResponse parses an HTTP response from a PatchTargetsTargetIDWithResponse call
+func ParsePatchTargetsTargetIDResponse(rsp *http.Response) (*PatchTargetsTargetIDResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PatchTargetsTargetIDResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Target
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParsePutTargetsTargetIDResponse parses an HTTP response from a PutTargetsTargetIDWithResponse call
 func ParsePutTargetsTargetIDResponse(rsp *http.Response) (*PutTargetsTargetIDResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -5092,6 +5367,13 @@ func ParsePutTargetsTargetIDResponse(rsp *http.Response) (*PutTargetsTargetIDRes
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest ApiResponse
