@@ -1,4 +1,4 @@
-// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,10 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package rootkits
+package common
 
-type Results struct {
-	MergedResults *MergedResults `yaml:"merged_results"`
+import "github.com/openclarity/vmclarity/shared/pkg/families/rootkits/chkrootkit/config"
+
+type ScannersConfig struct {
+	Chkrootkit config.Config `yaml:"chkrootkit" mapstructure:"chkrootkit"`
 }
 
-func (*Results) IsResults() {}
+func (ScannersConfig) IsConfig() {}

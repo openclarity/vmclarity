@@ -30,6 +30,7 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 	"github.com/openclarity/vmclarity/shared/pkg/families/misconfiguration"
 	misconfigurationTypes "github.com/openclarity/vmclarity/shared/pkg/families/misconfiguration/types"
+	"github.com/openclarity/vmclarity/shared/pkg/families/rootkits"
 	"github.com/openclarity/vmclarity/shared/pkg/families/sbom"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
 	"github.com/openclarity/vmclarity/shared/pkg/families/vulnerabilities"
@@ -312,4 +313,24 @@ func ConvertMisconfigurationResultToAPIModel(misconfigurationResults *misconfigu
 		Scanners:          utils.PointerTo(misconfigurationResults.Metadata.Scanners),
 		Misconfigurations: &retMisconfigurations,
 	}, nil
+}
+
+func ConvertRootkitsResultToAPIModel(rootkitsResults *rootkits.Results) *models.RootkitScan {
+	if rootkitsResults == nil || rootkitsResults.MergedResults == nil {
+		return &models.RootkitScan{}
+	}
+
+	rootkitsList := []models.Rootkit{}
+	for _, r := range rootkitsResults.MergedResults.Rootkits {
+		rootkit := r // Prevent loop variable pointer export
+		rootkitsList = append(rootkitsList, models.Rootkit{
+			Path:        &rootkit.Path,
+			RootkitName: &rootkit.RootkitName,
+			RootkitType: utils.PointerTo(models.RootkitType(rootkit.RootkitType)),
+		})
+	}
+
+	return &models.RootkitScan{
+		Rootkits: &rootkitsList,
+	}
 }

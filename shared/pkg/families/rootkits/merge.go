@@ -1,4 +1,4 @@
-// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,14 +19,18 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/families/rootkits/common"
 )
 
-type Config struct {
-	Enabled        bool                   `yaml:"enabled" mapstructure:"enabled"`
-	ScannersList   []string               `yaml:"scanners_list" mapstructure:"scanners_list"`
-	Inputs         []Input                `yaml:"inputs" mapstructure:"inputs"`
-	ScannersConfig *common.ScannersConfig `yaml:"scanners_config" mapstructure:"scanners_config"`
+type MergedResults struct {
+	Rootkits []common.Rootkit
 }
 
-type Input struct {
-	Input     string `yaml:"input" mapstructure:"input"`
-	InputType string `yaml:"input_type" mapstructure:"input_type"`
+func NewMergedResults() *MergedResults {
+	return &MergedResults{
+		Rootkits: []common.Rootkit{},
+	}
+}
+
+func (m *MergedResults) Merge(other *common.Results) *MergedResults {
+	m.Rootkits = append(m.Rootkits, other.Rootkits...)
+
+	return m
 }

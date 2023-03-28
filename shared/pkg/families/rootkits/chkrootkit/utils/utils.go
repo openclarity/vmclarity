@@ -1,4 +1,4 @@
-// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,20 +13,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package rootkits
+package utils
 
 import (
+	"regexp"
+
 	"github.com/openclarity/vmclarity/shared/pkg/families/rootkits/common"
 )
 
-type Config struct {
-	Enabled        bool                   `yaml:"enabled" mapstructure:"enabled"`
-	ScannersList   []string               `yaml:"scanners_list" mapstructure:"scanners_list"`
-	Inputs         []Input                `yaml:"inputs" mapstructure:"inputs"`
-	ScannersConfig *common.ScannersConfig `yaml:"scanners_config" mapstructure:"scanners_config"`
-}
+func ParseChkrootkitOutput(chkrootkitOutput string) []common.Rootkit {
+	rootkits := []common.Rootkit{}
 
-type Input struct {
-	Input     string `yaml:"input" mapstructure:"input"`
-	InputType string `yaml:"input_type" mapstructure:"input_type"`
+	myExp := regexp.MustCompile("`(?P<name>[A-Za-z0-9]+)'\\.\\.\\. INFECTED\n\n(?P<path>(/.*\\.\\w+))")
+	matches := myExp.FindAllStringSubmatch(chkrootkitOutput, -1)
+
+	for _, m := range matches {
+		rootkit := common.Rootkit{
+			RootkitType: m[1],
+			RootkitName: m[1],
+			Path:        m[2],
+		}
+
+		rootkits = append(rootkits, rootkit)
+	}
+
+	return rootkits
 }

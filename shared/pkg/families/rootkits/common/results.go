@@ -1,4 +1,4 @@
-// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,10 +13,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package rootkits
+package common
 
 type Results struct {
-	MergedResults *MergedResults `yaml:"merged_results"`
+	Rootkits     []Rootkit
+	ScannedInput string
+	ScannerName  string
+	Error        error
 }
 
-func (*Results) IsResults() {}
+type Rootkit struct {
+	Path        string `json:"path,omitempty"`
+	RootkitName string `json:"RootkitName,omitempty"`
+	RootkitType string `json:"RootkitType,omitempty"`
+}
+
+func (r *Results) GetError() error {
+	return r.Error
+}
