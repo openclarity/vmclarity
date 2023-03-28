@@ -139,6 +139,7 @@ func (s *ScansTableHandler) CreateScan(scan models.Scan) (models.Scan, error) {
 	return apiScan, nil
 }
 
+// nolint:cyclop
 func (s *ScansTableHandler) SaveScan(scan models.Scan) (models.Scan, error) {
 	if scan.Id == nil || *scan.Id == "" {
 		return models.Scan{}, fmt.Errorf("ID is required to update scan in DB")
@@ -150,7 +151,11 @@ func (s *ScansTableHandler) SaveScan(scan models.Scan) (models.Scan, error) {
 	}
 
 	if err := validateScanConfigID(scan, dbScan); err != nil {
-		return models.Scan{}, fmt.Errorf("failed to validate scan config id: %w", err)
+		var badRequestErr *common.BadRequestError
+		if errors.As(err, &badRequestErr) {
+			return models.Scan{}, err
+		}
+		return models.Scan{}, fmt.Errorf("scan config id validation failed: %w", err)
 	}
 
 	existingScan, err := s.checkUniqueness(scan)
@@ -181,6 +186,7 @@ func (s *ScansTableHandler) SaveScan(scan models.Scan) (models.Scan, error) {
 	return apiScan, nil
 }
 
+// nolint:cyclop
 func (s *ScansTableHandler) UpdateScan(scan models.Scan) (models.Scan, error) {
 	if scan.Id == nil || *scan.Id == "" {
 		return models.Scan{}, fmt.Errorf("ID is required to update scan in DB")
@@ -192,7 +198,11 @@ func (s *ScansTableHandler) UpdateScan(scan models.Scan) (models.Scan, error) {
 	}
 
 	if err := validateScanConfigID(scan, dbScan); err != nil {
-		return models.Scan{}, fmt.Errorf("failed to validate scan config id: %w", err)
+		var badRequestErr *common.BadRequestError
+		if errors.As(err, &badRequestErr) {
+			return models.Scan{}, err
+		}
+		return models.Scan{}, fmt.Errorf("scan config id validation failed: %w", err)
 	}
 
 	existingScan, err := s.checkUniqueness(scan)
@@ -254,7 +264,7 @@ func (s *ScansTableHandler) checkUniqueness(scan models.Scan) (models.Scan, erro
 	return models.Scan{}, nil
 }
 
-// In the case of updating a scan, not allowed to change the scan config ID
+// In the case of updating a scan, not allowed to change the scan config ID.
 func validateScanConfigID(scan models.Scan, dbScan Scan) error {
 	if scan.ScanConfig == nil {
 		return nil
@@ -264,7 +274,9 @@ func validateScanConfigID(scan models.Scan, dbScan Scan) error {
 		return fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 	if scan.ScanConfig.Id != apiScan.ScanConfig.Id {
-		return fmt.Errorf("not allowed to change scan config id from=%s to=%s", apiScan.ScanConfig.Id, scan.ScanConfig.Id)
+		return &common.BadRequestError{
+			Reason: fmt.Sprintf("not allowed to change scan config id from=%s to=%s", apiScan.ScanConfig.Id, scan.ScanConfig.Id),
+		}
 	}
 	return nil
 }

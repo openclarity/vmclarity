@@ -23,6 +23,14 @@ type ConflictError struct {
 	Reason string
 }
 
+type BadRequestError struct {
+	Reason string
+}
+
 func (ec *ConflictError) Error() string {
 	return fmt.Sprintf("Unable to create due to conflict, %v", ec.Reason)
+}
+
+func (bre *BadRequestError) Error() string {
+	return fmt.Sprintf("Bad request: %v", bre.Reason)
 }

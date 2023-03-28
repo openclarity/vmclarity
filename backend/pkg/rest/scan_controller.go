@@ -105,7 +105,11 @@ func (s *ServerImpl) PatchScansScanID(ctx echo.Context, scanID models.ScanID) er
 		if errors.Is(err, databaseTypes.ErrNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Scan with ID %v not found", scanID))
 		}
-		var conflictErr *common.ConflictError
+		var badRequestErr *common.BadRequestError
+		if errors.As(err, &badRequestErr) {
+			return sendError(ctx, http.StatusBadRequest, badRequestErr.Error())
+		}
+		var conflictErr *common.BadRequestError
 		if errors.As(err, &conflictErr) {
 			existResponse := &models.ScanExists{
 				Message: utils.StringPtr(conflictErr.Reason),
@@ -137,6 +141,10 @@ func (s *ServerImpl) PutScansScanID(ctx echo.Context, scanID models.ScanID) erro
 	if err != nil {
 		if errors.Is(err, databaseTypes.ErrNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Scan with ID %v not found", scanID))
+		}
+		var badRequestErr *common.BadRequestError
+		if errors.As(err, &badRequestErr) {
+			return sendError(ctx, http.StatusBadRequest, badRequestErr.Error())
 		}
 		var conflictErr *common.ConflictError
 		if errors.As(err, &conflictErr) {
