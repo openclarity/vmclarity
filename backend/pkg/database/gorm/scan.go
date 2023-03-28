@@ -149,15 +149,17 @@ func (s *ScansTableHandler) SaveScan(scan models.Scan) (models.Scan, error) {
 		return models.Scan{}, fmt.Errorf("failed to get scan from db: %w", err)
 	}
 
-	if scan.ScanConfig != nil {
-		existingScan, err := s.checkUniqueness(scan)
-		if err != nil {
-			var conflictErr *common.ConflictError
-			if errors.As(err, &conflictErr) {
-				return existingScan, err
-			}
-			return models.Scan{}, fmt.Errorf("failed to check existing scan: %w", err)
+	if err := validateScanConfigID(scan, dbScan); err != nil {
+		return models.Scan{}, fmt.Errorf("failed to validate scan config id: %w", err)
+	}
+
+	existingScan, err := s.checkUniqueness(scan)
+	if err != nil {
+		var conflictErr *common.ConflictError
+		if errors.As(err, &conflictErr) {
+			return existingScan, err
 		}
+		return models.Scan{}, fmt.Errorf("failed to check existing scan: %w", err)
 	}
 
 	marshaled, err := json.Marshal(scan)
@@ -189,18 +191,19 @@ func (s *ScansTableHandler) UpdateScan(scan models.Scan) (models.Scan, error) {
 		return models.Scan{}, err
 	}
 
-	if scan.ScanConfig != nil {
-		existingScan, err := s.checkUniqueness(scan)
-		if err != nil {
-			var conflictErr *common.ConflictError
-			if errors.As(err, &conflictErr) {
-				return existingScan, err
-			}
-			return models.Scan{}, fmt.Errorf("failed to check existing scan: %w", err)
-		}
+	if err := validateScanConfigID(scan, dbScan); err != nil {
+		return models.Scan{}, fmt.Errorf("failed to validate scan config id: %w", err)
 	}
 
-	var err error
+	existingScan, err := s.checkUniqueness(scan)
+	if err != nil {
+		var conflictErr *common.ConflictError
+		if errors.As(err, &conflictErr) {
+			return existingScan, err
+		}
+		return models.Scan{}, fmt.Errorf("failed to check existing scan: %w", err)
+	}
+
 	dbScan.Data, err = patchObject(dbScan.Data, scan)
 	if err != nil {
 		return models.Scan{}, fmt.Errorf("failed to apply patch: %w", err)
@@ -249,4 +252,19 @@ func (s *ScansTableHandler) checkUniqueness(scan models.Scan) (models.Scan, erro
 		}
 	}
 	return models.Scan{}, nil
+}
+
+// In the case of updating a scan, not allowed to change the scan config ID
+func validateScanConfigID(scan models.Scan, dbScan Scan) error {
+	if scan.ScanConfig == nil {
+		return nil
+	}
+	var apiScan models.Scan
+	if err := json.Unmarshal(dbScan.Data, &apiScan); err != nil {
+		return fmt.Errorf("failed to convert DB model to API model: %w", err)
+	}
+	if scan.ScanConfig.Id != apiScan.ScanConfig.Id {
+		return fmt.Errorf("not allowed to change scan config id from=%s to=%s", apiScan.ScanConfig.Id, scan.ScanConfig.Id)
+	}
+	return nil
 }
