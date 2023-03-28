@@ -33,7 +33,7 @@ type Reconciler[T comparable] struct {
 	ReconcileTimeout time.Duration
 
 	// The queue which the reconciler will receive events to reconcile on.
-	Queue *Queue[T]
+	Queue Dequeuer[T]
 }
 
 func (r *Reconciler[T]) Start(ctx context.Context) {
@@ -41,7 +41,7 @@ func (r *Reconciler[T]) Start(ctx context.Context) {
 		for {
 			// queue.Get will block until an item is available to
 			// return.
-			item, err := r.Queue.Get(ctx)
+			item, err := r.Queue.Dequeue(ctx)
 			if err != nil {
 				r.Logger.Errorf("Failed to get item from queue: %v", err)
 			} else {

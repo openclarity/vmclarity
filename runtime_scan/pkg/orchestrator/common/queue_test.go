@@ -98,15 +98,15 @@ func TestQueue(t *testing.T) {
 			for _, action := range tt.actions {
 				switch ack := action.(type) {
 				case AddAction:
-					q.Add(ack.object)
+					q.Enqueue(ack.object)
 				case GetAction:
-					jtem, err := q.Get(context.TODO())
+					jtem, err := q.Dequeue(context.TODO())
 					if err != nil {
 						t.Fatalf("Unexpected error: %v", err)
 					}
 
 					if diff := cmp.Diff(ack.object, jtem); diff != "" {
-						t.Fatalf("Get() mismatch (-want, +got):\n%s", diff)
+						t.Fatalf("Dequeue() mismatch (-want, +got):\n%s", diff)
 					}
 				case HasAction:
 					h := q.Has(ack.object)

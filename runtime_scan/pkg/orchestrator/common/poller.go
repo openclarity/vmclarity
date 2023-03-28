@@ -35,7 +35,7 @@ type Poller[T comparable] struct {
 	GetItems func(context.Context) ([]T, error)
 
 	// The queue to which we add items to reconcile.
-	Queue *Queue[T]
+	Queue Enqueuer[T]
 }
 
 func (p *Poller[T]) Start(ctx context.Context) {
@@ -54,7 +54,7 @@ func (p *Poller[T]) Start(ctx context.Context) {
 			} else {
 				p.Logger.Infof("Found %d items to reconcile, adding them to the queue", len(items))
 				for _, item := range items {
-					p.Queue.Add(item)
+					p.Queue.Enqueue(item)
 				}
 			}
 

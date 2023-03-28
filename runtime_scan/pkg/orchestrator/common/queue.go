@@ -21,11 +21,31 @@ import (
 	"sync"
 )
 
+type Enqueuer[T comparable] interface {
+	Enqueue(item T)
+}
+
+type Dequeuer[T comparable] interface {
+	Dequeue(ctx context.Context) (T, error)
+}
+
 type Queue[T comparable] struct {
+	// Channel used internally to block Dequeue when the queue is empty,
+	// and notify Dequeue when a new item is added through Enqueue.
 	itemAdded chan struct{}
-	queue     []T
-	inqueue   map[T]struct{}
-	l         sync.Mutex
+
+	// A slice which represents the queue, Enqueue will add to the end of
+	// the slice, Dequeue will remove from the head of the slice.
+	queue []T
+
+	// A map used as a set of unique items which are in the queue. This is
+	// used by Enqueue and Has to provide a quick reference to whats in the
+	// queue without needing to loop through the queue slice.
+	inqueue map[T]struct{}
+
+	// A mutex lock which protects the queue from simultaneous reads and
+	// writes ensuring the queue can be used by multiple go routines safely.
+	l sync.Mutex
 }
 
 func NewQueue[T comparable]() *Queue[T] {
@@ -36,7 +56,9 @@ func NewQueue[T comparable]() *Queue[T] {
 	}
 }
 
-func (q *Queue[T]) Get(ctx context.Context) (T, error) {
+// Dequeue until it can dequeue an item from the queue or the passed
+// context is cancelled.
+func (q *Queue[T]) Dequeue(ctx context.Context) (T, error) {
 	if len(q.queue) == 0 {
 		// If the queue is empty, block waiting for the itemAdded
 		// notification or context timeout.
@@ -66,7 +88,8 @@ func (q *Queue[T]) Get(ctx context.Context) (T, error) {
 	return item, nil
 }
 
-func (q *Queue[T]) Add(item T) {
+// Enqueue will add item to the queue if its not in the queue already.
+func (q *Queue[T]) Enqueue(item T) {
 	q.l.Lock()
 	defer q.l.Unlock()
 
@@ -81,6 +104,9 @@ func (q *Queue[T]) Add(item T) {
 	}
 }
 
+// Length returns the current length of the queue. It should not be used to
+// gate calls to Dequeue as the lock will be released in-between so the queue
+// could change.
 func (q *Queue[T]) Length() int {
 	q.l.Lock()
 	defer q.l.Unlock()
@@ -88,6 +114,9 @@ func (q *Queue[T]) Length() int {
 	return len(q.queue)
 }
 
+// Has returns true if items is currently in the queue for informational
+// purposes, it should not be used to gate Dequeue or Enqueue as the lock will
+// be released in-between and so the queue could change.
 func (q *Queue[T]) Has(item T) bool {
 	q.l.Lock()
 	defer q.l.Unlock()
