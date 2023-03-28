@@ -78,7 +78,7 @@ components:
       properties:
         vulnerabilities:
           type: array
-          description: Top 5 vulnerabilities findings sorted by impacted assets count
+          description: Top 5 vulnerability findings sorted by impacted assets count
           items:
             $ref: '#/components/schemas/VulnerabilityFindingImpact'
           readOnly: true
@@ -90,28 +90,53 @@ components:
           readOnly: true
         rootkits:
           type: array
-          description: Top 5 rootkits findings sorted by impacted assets count
+          description: Top 5 rootkit findings sorted by impacted assets count
           items:
             $ref: '#/components/schemas/RootkitFindingImpact'
           readOnly: true
         secrets:
           type: array
-          description: Top 5 secrets findings sorted by impacted assets count
+          description: Top 5 secret findings sorted by impacted assets count
           items:
             $ref: '#/components/schemas/SecretFindingImpact'
           readOnly: true
         misconfigurations:
           type: array
-          description: Top 5 misconfigurations findings sorted by impacted assets count
+          description: Top 5 misconfiguration findings sorted by impacted assets count
           items:
             $ref: '#/components/schemas/MisconfigurationFindingImpact'
           readOnly: true
         exploits:
           type: array
-          description: Top 5 exploits findings sorted by impacted assets count
+          description: Top 5 exploit findings sorted by impacted assets count
           items:
             $ref: '#/components/schemas/ExploitFindingImpact'
           readOnly: true
+        packages:
+          type: array
+          description: Top 5 package findings sorted by impacted assets count
+          items:
+            $ref: '#/components/schemas/PackageFindingImpact'
+          readOnly: true
+
+    PackageFindingImpact:
+      type: object
+      properties:
+        exploit:
+          $ref: '#/components/schemas/Package'
+        affectedAssetsCount:
+          type: integer
+          readOnly: true
+
+    Package:
+      type: object
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        purl:
+          type: string
 
     ExploitFindingImpact:
       type: object

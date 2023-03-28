@@ -106,22 +106,25 @@ type FindingsCount struct {
 
 // FindingsImpact defines model for FindingsImpact.
 type FindingsImpact struct {
-	// Exploits Top 5 exploits findings sorted by impacted assets count
+	// Exploits Top 5 exploit findings sorted by impacted assets count
 	Exploits *[]ExploitFindingImpact `json:"exploits,omitempty"`
 
 	// Malware Top 5 malware findings sorted by impacted assets count
 	Malware *[]MalwareFindingImpact `json:"malware,omitempty"`
 
-	// Misconfigurations Top 5 misconfigurations findings sorted by impacted assets count
+	// Misconfigurations Top 5 misconfiguration findings sorted by impacted assets count
 	Misconfigurations *[]MisconfigurationFindingImpact `json:"misconfigurations,omitempty"`
 
-	// Rootkits Top 5 rootkits findings sorted by impacted assets count
+	// Packages Top 5 package findings sorted by impacted assets count
+	Packages *[]PackageFindingImpact `json:"packages,omitempty"`
+
+	// Rootkits Top 5 rootkit findings sorted by impacted assets count
 	Rootkits *[]RootkitFindingImpact `json:"rootkits,omitempty"`
 
-	// Secrets Top 5 secrets findings sorted by impacted assets count
+	// Secrets Top 5 secret findings sorted by impacted assets count
 	Secrets *[]SecretFindingImpact `json:"secrets,omitempty"`
 
-	// Vulnerabilities Top 5 vulnerabilities findings sorted by impacted assets count
+	// Vulnerabilities Top 5 vulnerability findings sorted by impacted assets count
 	Vulnerabilities *[]VulnerabilityFindingImpact `json:"vulnerabilities,omitempty"`
 }
 
@@ -166,6 +169,19 @@ type MisconfigurationFindingImpact struct {
 
 // MisconfigurationSeverity defines model for MisconfigurationSeverity.
 type MisconfigurationSeverity string
+
+// Package defines model for Package.
+type Package struct {
+	Name    *string `json:"name,omitempty"`
+	Purl    *string `json:"purl,omitempty"`
+	Version *string `json:"version,omitempty"`
+}
+
+// PackageFindingImpact defines model for PackageFindingImpact.
+type PackageFindingImpact struct {
+	AffectedAssetsCount *int     `json:"affectedAssetsCount,omitempty"`
+	Exploit             *Package `json:"exploit,omitempty"`
+}
 
 // RegionFindings Total findings for a region
 type RegionFindings struct {
