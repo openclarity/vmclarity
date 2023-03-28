@@ -16,7 +16,6 @@
 package rest
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
@@ -29,7 +28,7 @@ import (
 )
 
 func (s *ServerImpl) GetDashboardRiskiestRegions(ctx echo.Context) error {
-	targets, err := s.BackendClient.GetTargets(context.TODO(), backendmodels.GetTargetsParams{
+	targets, err := s.BackendClient.GetTargets(ctx.Request().Context(), backendmodels.GetTargetsParams{
 		Filter: utils.StringPtr("targetInfo/objectType eq 'VMInfo'"),
 	})
 	if err != nil {
