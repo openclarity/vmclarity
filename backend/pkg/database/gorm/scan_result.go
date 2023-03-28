@@ -266,10 +266,8 @@ func (s *ScanResultsTableHandler) checkUniqueness(scanResult models.TargetScanRe
 		if err = json.Unmarshal(scanResults[0].Data, &tsr); err != nil {
 			return models.TargetScanResult{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 		}
-		if *tsr.Id != *scanResult.Id {
-			return tsr, &common.ConflictError{
-				Reason: fmt.Sprintf("Scan results exists with same target id=%s and scan id=%s)", scanResult.Target.Id, scanResult.Scan.Id),
-			}
+		return tsr, &common.ConflictError{
+			Reason: fmt.Sprintf("Scan results exists with same target id=%s and scan id=%s)", scanResult.Target.Id, scanResult.Scan.Id),
 		}
 	}
 	return models.TargetScanResult{}, nil
