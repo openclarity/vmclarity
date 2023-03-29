@@ -275,6 +275,11 @@ func validateScanConfigID(scan models.Scan, dbScan Scan) error {
 	if scan.ScanConfig == nil {
 		return nil
 	}
+	if scan.ScanConfig.Id == "" {
+		return &common.BadRequestError{
+			Reason: fmt.Sprintf("scan config id is required in the case of scan config is defined"),
+		}
+	}
 	var apiScan models.Scan
 	if err := json.Unmarshal(dbScan.Data, &apiScan); err != nil {
 		return fmt.Errorf("failed to convert DB model to API model: %w", err)
