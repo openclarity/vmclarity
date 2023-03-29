@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"gotest.tools/v3/assert"
 
 	backendmodels "github.com/openclarity/vmclarity/api/models"
@@ -187,6 +188,7 @@ func Test_processFindings(t *testing.T) {
 			wantErr: false,
 			expectedFindingAssetMap: map[findingAssetKey]struct{}{
 				findingAssetKey{FindingKey: rfKey1, AssetID: "target-1"}: {}, // nolint:gofmt,gofumpt
+				findingAssetKey{FindingKey: rfKey2, AssetID: "target-1"}: {}, // nolint:gofmt,gofumpt
 				findingAssetKey{FindingKey: rfKey2, AssetID: "target-2"}: {}, // nolint:gofmt,gofumpt
 				findingAssetKey{FindingKey: rfKey3, AssetID: "target-1"}: {}, // nolint:gofmt,gofumpt
 			},
@@ -213,7 +215,7 @@ func Test_processFindings(t *testing.T) {
 				t.Errorf("processFindings() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if err == nil {
-				if diff := cmp.Diff(tt.expectedFindingAssetMap, tt.args.findingAssetMap); diff != "" {
+				if diff := cmp.Diff(tt.expectedFindingAssetMap, tt.args.findingAssetMap, cmpopts.SortSlices(func(a, b findingAssetKey) bool { return a.FindingKey < b.FindingKey })); diff != "" {
 					t.Errorf("compareFindingInfo mismatch (-want +got):\n%s", diff)
 				}
 				if diff := cmp.Diff(tt.expectedFindingToAssetCount, tt.args.findingToAssetCount, cmp.Comparer(compareFindingInfo)); diff != "" {
@@ -346,7 +348,7 @@ func Test_getSortedFindingInfoCountSlice(t *testing.T) {
 			args: args{
 				findingAssetMapCount: nil,
 			},
-			want: nil,
+			want: []findingInfoCount{},
 		},
 		{
 			name: "sanity",

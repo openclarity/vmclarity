@@ -89,7 +89,7 @@ func getTargetLocation(target backendmodels.Target) (string, error) {
 	case backendmodels.VMInfo:
 		return info.Location, nil
 	default:
-		return "", fmt.Errorf("target type is not supported (%T): %w", discriminator, err)
+		return "", fmt.Errorf("target type is not supported (%T)", discriminator)
 	}
 }
 

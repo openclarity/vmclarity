@@ -137,14 +137,14 @@ func TestStringKeyMapToArray(t *testing.T) {
 			args: args{
 				m: nil,
 			},
-			want: nil,
+			want: []any{},
 		},
 		{
 			name: "empty map",
 			args: args{
 				m: map[string]any{},
 			},
-			want: nil,
+			want: []any{},
 		},
 		{
 			name: "string to int map",
