@@ -1,0 +1,30 @@
+#cloud-config
+package_upgrade: true
+packages:
+  - docker.io
+write_files:
+  - path: /opt/vmclarity/.goat
+    permissions: "0644"
+  - path: /etc/systemd/system/goat-image.service
+    permissions: "0644"
+    content: |
+      [Unit]
+      Description=Deploy test files
+      Requires=docker.service
+      After=network.target docker.service
+
+      [Service]
+      Type=oneshot
+      WorkingDirectory=/opt/vmclarity
+      ExecStartPre=docker pull {{ .ScannerImage }}
+      ExecStart=docker run --rm --name %n --privileged \
+          -v /opt/vmclarity:/opt/vmclarity \
+          -v /run:/run \
+          goat-image:latest
+
+      [Install]
+      WantedBy=multi-user.target
+runcmd:
+  - [ systemctl, daemon-reload ]
+  - [ systemctl, start, docker.service ]
+  - [ systemctl, start, goat-image.service ]
