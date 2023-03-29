@@ -8,16 +8,25 @@ import (
 	"compress/gzip"
 	"encoding/base64"
 	"fmt"
+	"net/http"
 	"net/url"
 	"path"
 	"strings"
 
+	"github.com/deepmap/oapi-codegen/pkg/runtime"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/labstack/echo/v4"
+	. "github.com/openclarity/vmclarity/ui_backend/api/models"
 )
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Get a list of findings impact for the dashboard.
+	// (GET /dashboard/findingsImpact)
+	GetDashboardFindingsImpact(ctx echo.Context) error
+	// Get a list of finding trends for all finding types.
+	// (GET /dashboard/findingsTrends)
+	GetDashboardFindingsTrends(ctx echo.Context, params GetDashboardFindingsTrendsParams) error
 	// Get a list of riskiest assets for the dashboard.
 	// (GET /dashboard/riskiestAssets)
 	GetDashboardRiskiestAssets(ctx echo.Context) error
@@ -29,6 +38,40 @@ type ServerInterface interface {
 // ServerInterfaceWrapper converts echo contexts to parameters.
 type ServerInterfaceWrapper struct {
 	Handler ServerInterface
+}
+
+// GetDashboardFindingsImpact converts echo context to params.
+func (w *ServerInterfaceWrapper) GetDashboardFindingsImpact(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.GetDashboardFindingsImpact(ctx)
+	return err
+}
+
+// GetDashboardFindingsTrends converts echo context to params.
+func (w *ServerInterfaceWrapper) GetDashboardFindingsTrends(ctx echo.Context) error {
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetDashboardFindingsTrendsParams
+	// ------------- Required query parameter "startTime" -------------
+
+	err = runtime.BindQueryParameter("form", true, true, "startTime", ctx.QueryParams(), &params.StartTime)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter startTime: %s", err))
+	}
+
+	// ------------- Required query parameter "endTime" -------------
+
+	err = runtime.BindQueryParameter("form", true, true, "endTime", ctx.QueryParams(), &params.EndTime)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter endTime: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.GetDashboardFindingsTrends(ctx, params)
+	return err
 }
 
 // GetDashboardRiskiestAssets converts echo context to params.
@@ -77,6 +120,8 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
+	router.GET(baseURL+"/dashboard/findingsImpact", wrapper.GetDashboardFindingsImpact)
+	router.GET(baseURL+"/dashboard/findingsTrends", wrapper.GetDashboardFindingsTrends)
 	router.GET(baseURL+"/dashboard/riskiestAssets", wrapper.GetDashboardRiskiestAssets)
 	router.GET(baseURL+"/dashboard/riskiestRegions", wrapper.GetDashboardRiskiestRegions)
 
@@ -85,22 +130,39 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/8RXTY/bNhD9KwTbo2BtUvSim7FNCgP9wmazPQQ50NJImiw1VIfUOsLC/70gJa1lWcra",
-	"Rd3ebA5n5s2b4SP1LFNT1YaAnJXJs6wVqwoccPgHX1VVa3iP2gH7BSSZyL8a4FZGklQFMhk2yUjatIRK",
-	"+X2urb3JOkYq5H6/jySDrQ1ZCIE/0iOZHb1jNiFuasgBOf9T1bXGVDk0FH+xhvzaIfD3DLlM5HfxAXbc",
-	"WW28rvGuT9KlzMCmjLUPJZMhp4CQ1Nt7Rx937Js8TzzXJMz2C6ROuFI5gVYwuIYJMoEklNYiVRasMLnI",
-	"FeqGwa5kJGs2NbDDruQKrFVFiM6gst9JtzJx3EB0wtbLSpdV7iO5thbchnITmnQUWJuOrRnehx7NGLqF",
-	"Vwj1Se/9xmVM930coKaSySe5/vODeHf7VmzIOkUpyM/RafL3SBlSYW9N0zX9mG9nnNIi9UbPKai0FHnn",
-	"IkKsKbfwtdYGuwnukyE5KIB9tkrpnWJYMKJNDeVYNBxYXIjBxrjHxQwWUoYl41OjCVhtUeOAd7ppjt07",
-	"KNDQwNQpSfeBpJ4WK3LDQgkOTif85FO+v9X14+aEk+uD/jY/SbPQ0T4iWBcGxJ5O7Lhd06Jq8aPg3l+o",
-	"EEBYww4ysW3F4NkNh4wkOqjsaxV5PG0A05Uze/oUs2on43IZuN7xqtjmpvVClNMQ18Q7PjaXwRw8r4lu",
-	"dGwvA9c7XhPbjGpchnEa4EyUDyO39hLI3xKCTstmlIAPhuPqfkEbtL/fIHboSuFKOAheuIp3yitfQ5kw",
-	"5M3VStyNPcgcHHaotSDjxBYEQx2IWp3dvGM1/sds9GwuqDk11RY4vCOOdJ269p7ouhq/Cl69ycPGfSTT",
-	"4RY45xpamodXKxjPX3vdehgdpko/HE/87VKZkSyxKM/frc3u/M0VZNhU5+8nKDQWuNVwrs9pl/wS9qw5",
-	"dNrbHn691Yo99R83Yv3HxgvAE7DtmvVmdbO68elNDaRqlIn8YXWzeuM7olwZmhFnypZboziL+eRCL7oR",
-	"8M0Lt8gmk4n8GdxPg8/kDTB5/7+9ufnXnv2TTDMv/w9NmoINpzaDXDV68Q30AjI++kIJHwtNVSluuzKF",
-	"EnpQqIkC+wH3QvXC3iq4z7A5UsWz6Rx8/gM+h1T/G6GD9s8yGq5vfgofqp+eZcNaJjJuMPbTvP+8/zsA",
-	"AP//MqphYdkOAAA=",
+	"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",
+	"/8kxVAbhKQAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

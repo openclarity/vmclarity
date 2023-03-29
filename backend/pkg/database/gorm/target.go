@@ -100,12 +100,16 @@ func (t *TargetsTableHandler) GetTarget(targetID models.TargetID, params models.
 func (t *TargetsTableHandler) CreateTarget(target models.Target) (models.Target, error) {
 	// Check the user didn't provide an ID
 	if target.Id != nil {
-		return models.Target{}, fmt.Errorf("can not specify Id field when creating a new Target")
+		return models.Target{}, &common.BadRequestError{
+			Reason: "can not specify id field when creating a new Target",
+		}
 	}
 
-	// Check that targetInfo was provided by the user its a required field for a target.
+	// Check that targetInfo was provided by the user, it's a required field for a target.
 	if target.TargetInfo == nil {
-		return models.Target{}, fmt.Errorf("targetInfo is a required field")
+		return models.Target{}, &common.BadRequestError{
+			Reason: "targetInfo is a required field",
+		}
 	}
 
 	// Generate a new UUID
@@ -158,12 +162,16 @@ func (t *TargetsTableHandler) CreateTarget(target models.Target) (models.Target,
 
 func (t *TargetsTableHandler) SaveTarget(target models.Target) (models.Target, error) {
 	if target.Id == nil || *target.Id == "" {
-		return models.Target{}, fmt.Errorf("ID is required to update target in DB")
+		return models.Target{}, &common.BadRequestError{
+			Reason: "id is required to save target",
+		}
 	}
 
-	// Check that targetInfo was provided by the user its a required field for a target.
+	// Check that targetInfo was provided by the user, it's a required field for a target.
 	if target.TargetInfo == nil {
-		return models.Target{}, fmt.Errorf("targetInfo is a required field")
+		return models.Target{}, &common.BadRequestError{
+			Reason: "targetInfo is a required field",
+		}
 	}
 
 	var dbTarget Target
@@ -200,6 +208,42 @@ func (t *TargetsTableHandler) SaveTarget(target models.Target) (models.Target, e
 	}
 
 	return apiTarget, nil
+}
+
+func (t *TargetsTableHandler) UpdateTarget(target models.Target) (models.Target, error) {
+	if target.Id == nil || *target.Id == "" {
+		return models.Target{}, fmt.Errorf("ID is required to update target in DB")
+	}
+
+	var dbTarget Target
+	if err := getExistingObjByID(t.DB, targetSchemaName, *target.Id, &dbTarget); err != nil {
+		return models.Target{}, err
+	}
+
+	existingTarget, err := t.checkUniqueness(target)
+	if err != nil {
+		var conflictErr *common.ConflictError
+		if errors.As(err, &conflictErr) {
+			return *existingTarget, err
+		}
+		return models.Target{}, fmt.Errorf("failed to check existing target: %w", err)
+	}
+
+	dbTarget.Data, err = patchObject(dbTarget.Data, target)
+	if err != nil {
+		return models.Target{}, fmt.Errorf("failed to apply patch: %w", err)
+	}
+
+	if err := t.DB.Save(&dbTarget).Error; err != nil {
+		return models.Target{}, fmt.Errorf("failed to save target in db: %w", err)
+	}
+
+	var ret models.Target
+	err = json.Unmarshal(dbTarget.Data, &ret)
+	if err != nil {
+		return models.Target{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+	}
+	return ret, nil
 }
 
 func (t *TargetsTableHandler) DeleteTarget(targetID models.TargetID) error {

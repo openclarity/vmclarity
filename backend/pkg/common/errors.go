@@ -32,5 +32,5 @@ func (ec *ConflictError) Error() string {
 }
 
 func (bre *BadRequestError) Error() string {
-	return fmt.Sprintf("Bad request: %v", bre.Reason)
+	return fmt.Sprintf("Object validation failed: %v", bre.Reason)
 }

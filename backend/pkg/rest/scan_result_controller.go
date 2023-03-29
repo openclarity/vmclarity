@@ -98,15 +98,20 @@ func (s *ServerImpl) PatchScanResultsScanResultID(ctx echo.Context, scanResultID
 
 	updatedScanResult, err := s.dbHandler.ScanResultsTable().UpdateScanResult(scanResult)
 	if err != nil {
+		var validationErr *common.BadRequestError
 		var conflictErr *common.ConflictError
-		if errors.As(err, &conflictErr) {
+		switch true {
+		case errors.As(err, &conflictErr):
 			existResponse := &models.TargetScanResultExists{
 				Message:          utils.StringPtr(conflictErr.Reason),
 				TargetScanResult: &updatedScanResult,
 			}
 			return sendResponse(ctx, http.StatusConflict, existResponse)
+		case errors.As(err, &validationErr):
+			return sendError(ctx, http.StatusBadRequest, err.Error())
+		default:
+			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update scan result in db. scanResultID=%v: %v", scanResultID, err))
 		}
-		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update scan result in db. scanResultID=%v: %v", scanResultID, err))
 	}
 
 	return sendResponse(ctx, http.StatusOK, updatedScanResult)
@@ -138,15 +143,20 @@ func (s *ServerImpl) PutScanResultsScanResultID(ctx echo.Context, scanResultID m
 
 	updatedScanResult, err := s.dbHandler.ScanResultsTable().SaveScanResult(scanResult)
 	if err != nil {
+		var validationErr *common.BadRequestError
 		var conflictErr *common.ConflictError
-		if errors.As(err, &conflictErr) {
+		switch true {
+		case errors.As(err, &conflictErr):
 			existResponse := &models.TargetScanResultExists{
 				Message:          utils.StringPtr(conflictErr.Reason),
 				TargetScanResult: &updatedScanResult,
 			}
 			return sendResponse(ctx, http.StatusConflict, existResponse)
+		case errors.As(err, &validationErr):
+			return sendError(ctx, http.StatusBadRequest, err.Error())
+		default:
+			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update scan result in db. scanResultID=%v: %v", scanResultID, err))
 		}
-		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update scan result in db. scanResultID=%v: %v", scanResultID, err))
 	}
 
 	return sendResponse(ctx, http.StatusOK, updatedScanResult)
