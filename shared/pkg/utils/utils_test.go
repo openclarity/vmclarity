@@ -117,6 +117,7 @@ func TestGetVulnerabilityTotalsPerSeverity(t *testing.T) {
 	}
 }
 
+// nolint:forcetypeassert
 func TestStringKeyMapToArray(t *testing.T) {
 	type TestObject struct {
 		TestInt     int
@@ -192,7 +193,8 @@ func TestStringKeyMapToArray(t *testing.T) {
 					TestInt:     3,
 					TestStr:     "3",
 					TestPointer: utils.PointerTo(false),
-				}},
+				},
+			},
 		},
 	}
 	for _, tt := range tests {

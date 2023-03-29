@@ -178,7 +178,7 @@ func createFindings(scanResults []models.TargetScanResult) []models.Finding {
 			},
 			FindingInfo: nil,
 			FoundOn:     foundOn,
-			//InvalidatedOn: utils.PointerTo(foundOn.Add(2 * time.Minute)),
+			// InvalidatedOn: utils.PointerTo(foundOn.Add(2 * time.Minute)),
 			Scan: &models.ScanRelationship{
 				Id: scanResult.Scan.Id,
 			},

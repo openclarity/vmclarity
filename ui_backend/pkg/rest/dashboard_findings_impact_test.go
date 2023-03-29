@@ -23,20 +23,20 @@ import (
 	"gotest.tools/v3/assert"
 
 	backendmodels "github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/shared/pkg/findingKey"
+	"github.com/openclarity/vmclarity/shared/pkg/findingkey"
 	"github.com/openclarity/vmclarity/shared/pkg/utils"
 	"github.com/openclarity/vmclarity/ui_backend/api/models"
 )
 
 func Test_processFindings(t *testing.T) {
 	rootkitFindingInfo1 := createRootkitFindingInfo(t, "path1", "name1", "type1")
-	rfKey1, err := findingKey.GenerateFindingKey(rootkitFindingInfo1)
+	rfKey1, err := findingkey.GenerateFindingKey(rootkitFindingInfo1)
 	assert.NilError(t, err)
 	rootkitFindingInfo2 := createRootkitFindingInfo(t, "path2", "name2", "type2")
-	rfKey2, err := findingKey.GenerateFindingKey(rootkitFindingInfo2)
+	rfKey2, err := findingkey.GenerateFindingKey(rootkitFindingInfo2)
 	assert.NilError(t, err)
 	rootkitFindingInfo3 := createRootkitFindingInfo(t, "path3", "name3", "type3")
-	rfKey3, err := findingKey.GenerateFindingKey(rootkitFindingInfo3)
+	rfKey3, err := findingkey.GenerateFindingKey(rootkitFindingInfo3)
 	assert.NilError(t, err)
 	type args struct {
 		findings            []backendmodels.Finding
@@ -66,10 +66,7 @@ func Test_processFindings(t *testing.T) {
 			},
 			wantErr: false,
 			expectedFindingAssetMap: map[findingAssetKey]struct{}{
-				findingAssetKey{
-					FindingKey: rfKey1,
-					AssetID:    "target-1",
-				}: {},
+				findingAssetKey{FindingKey: rfKey1, AssetID: "target-1"}: {}, // nolint:gofmt,gofumpt
 			},
 			expectedFindingToAssetCount: map[string]findingInfoCount{
 				rfKey1: {
@@ -90,10 +87,7 @@ func Test_processFindings(t *testing.T) {
 					},
 				},
 				findingAssetMap: map[findingAssetKey]struct{}{
-					findingAssetKey{
-						FindingKey: rfKey1,
-						AssetID:    "target-1",
-					}: {},
+					findingAssetKey{FindingKey: rfKey1, AssetID: "target-1"}: {}, // nolint:gofmt,gofumpt
 				},
 				findingToAssetCount: map[string]findingInfoCount{
 					rfKey1: {
@@ -128,10 +122,7 @@ func Test_processFindings(t *testing.T) {
 					},
 				},
 				findingAssetMap: map[findingAssetKey]struct{}{
-					findingAssetKey{
-						FindingKey: rfKey1,
-						AssetID:    "target-2",
-					}: {},
+					findingAssetKey{FindingKey: rfKey1, AssetID: "target-2"}: {}, // nolint:gofmt,gofumpt
 				},
 				findingToAssetCount: map[string]findingInfoCount{
 					rfKey1: {
@@ -142,14 +133,8 @@ func Test_processFindings(t *testing.T) {
 			},
 			wantErr: false,
 			expectedFindingAssetMap: map[findingAssetKey]struct{}{
-				findingAssetKey{
-					FindingKey: rfKey1,
-					AssetID:    "target-2",
-				}: {},
-				findingAssetKey{
-					FindingKey: rfKey1,
-					AssetID:    "target-1",
-				}: {},
+				findingAssetKey{FindingKey: rfKey1, AssetID: "target-2"}: {}, // nolint:gofmt,gofumpt
+				findingAssetKey{FindingKey: rfKey1, AssetID: "target-1"}: {}, // nolint:gofmt,gofumpt
 			},
 			expectedFindingToAssetCount: map[string]findingInfoCount{
 				rfKey1: {
@@ -188,14 +173,8 @@ func Test_processFindings(t *testing.T) {
 					},
 				},
 				findingAssetMap: map[findingAssetKey]struct{}{
-					findingAssetKey{
-						FindingKey: rfKey1,
-						AssetID:    "target-1",
-					}: {},
-					findingAssetKey{
-						FindingKey: rfKey2,
-						AssetID:    "target-2",
-					}: {},
+					findingAssetKey{FindingKey: rfKey1, AssetID: "target-1"}: {}, // nolint:gofmt,gofumpt
+					findingAssetKey{FindingKey: rfKey2, AssetID: "target-2"}: {}, // nolint:gofmt,gofumpt
 				},
 				findingToAssetCount: map[string]findingInfoCount{
 					rfKey1: {
@@ -261,6 +240,7 @@ func Test_processFindings(t *testing.T) {
 	}
 }
 
+// nolint:cyclop
 func compareFindingInfo(a, b backendmodels.Finding_FindingInfo) bool {
 	value, err := a.ValueByDiscriminator()
 	if err != nil {
@@ -345,6 +325,7 @@ func compareFindingInfo(a, b backendmodels.Finding_FindingInfo) bool {
 }
 
 func createRootkitFindingInfo(t *testing.T, path, name, tpe string) *backendmodels.Finding_FindingInfo {
+	t.Helper()
 	findingInfoB := backendmodels.Finding_FindingInfo{}
 	err := findingInfoB.FromRootkitFindingInfo(backendmodels.RootkitFindingInfo{
 		Path:        utils.PointerTo(path),
@@ -357,16 +338,16 @@ func createRootkitFindingInfo(t *testing.T, path, name, tpe string) *backendmode
 
 func Test_getSortedFindingInfoCountSlice(t *testing.T) {
 	rootkitFindingInfo1 := createRootkitFindingInfo(t, "path1", "name1", "type1")
-	rfKey1, err := findingKey.GenerateFindingKey(rootkitFindingInfo1)
+	rfKey1, err := findingkey.GenerateFindingKey(rootkitFindingInfo1)
 	assert.NilError(t, err)
 	rootkitFindingInfo2 := createRootkitFindingInfo(t, "path2", "name2", "type2")
-	rfKey2, err := findingKey.GenerateFindingKey(rootkitFindingInfo2)
+	rfKey2, err := findingkey.GenerateFindingKey(rootkitFindingInfo2)
 	assert.NilError(t, err)
 	rootkitFindingInfo3 := createRootkitFindingInfo(t, "path3", "name3", "type3")
-	rfKey3, err := findingKey.GenerateFindingKey(rootkitFindingInfo3)
+	rfKey3, err := findingkey.GenerateFindingKey(rootkitFindingInfo3)
 	assert.NilError(t, err)
 	rootkitFindingInfo4 := createRootkitFindingInfo(t, "path4", "name4", "type4")
-	rfKey4, err := findingKey.GenerateFindingKey(rootkitFindingInfo4)
+	rfKey4, err := findingkey.GenerateFindingKey(rootkitFindingInfo4)
 	assert.NilError(t, err)
 	type args struct {
 		findingAssetMapCount map[string]findingInfoCount

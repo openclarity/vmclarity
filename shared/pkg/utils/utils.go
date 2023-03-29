@@ -74,7 +74,7 @@ func PointerTo[T any](value T) *T {
 }
 
 func StringKeyMapToArray[T any](m map[string]T) []T {
-	var ret []T
+	ret := make([]T, 0, len(m))
 	for _, t := range m {
 		ret = append(ret, t)
 	}

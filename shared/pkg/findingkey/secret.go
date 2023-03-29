@@ -1,4 +1,4 @@
-package findingKey
+package findingkey
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ type SecretKey struct {
 }
 
 func (k SecretKey) String() string {
-	return fmt.Sprintf("%s.%s.%s", k.Fingerprint, k.StartColumn, k.EndColumn)
+	return fmt.Sprintf("%s.%d.%d", k.Fingerprint, k.StartColumn, k.EndColumn)
 }
 
 func GenerateSecretKey(secret models.SecretFindingInfo) SecretKey {

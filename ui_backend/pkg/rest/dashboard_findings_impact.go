@@ -25,7 +25,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	backendmodels "github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/shared/pkg/findingKey"
+	"github.com/openclarity/vmclarity/shared/pkg/findingkey"
 	"github.com/openclarity/vmclarity/shared/pkg/utils"
 	"github.com/openclarity/vmclarity/ui_backend/api/models"
 )
@@ -346,9 +346,9 @@ func toModelsVulnerabilitySeverity(severity *backendmodels.VulnerabilitySeverity
 }
 
 func toModelsVulnerabilityCVSSArray(cvss *[]backendmodels.VulnerabilityCvss) *[]models.VulnerabilityCvss {
-	var ret []models.VulnerabilityCvss
-	for _, vulnerabilityCvss := range *cvss {
-		ret = append(ret, toModelsVulnerabilityCVSS(vulnerabilityCvss))
+	ret := make([]models.VulnerabilityCvss, len(*cvss))
+	for i, vulnerabilityCvss := range *cvss {
+		ret[i] = toModelsVulnerabilityCVSS(vulnerabilityCvss)
 	}
 	return &ret
 }
@@ -457,7 +457,7 @@ func (s *ServerImpl) getFindingToAssetCountMapWithFilter(ctx context.Context, fi
 // findingToAssetCount - the current findingToAssetCount to update the asset count for each finding.
 func processFindings(findings []backendmodels.Finding, findingAssetMap map[findingAssetKey]struct{}, findingToAssetCount map[string]findingInfoCount) error {
 	for idx, item := range findings {
-		fKey, err := findingKey.GenerateFindingKey(item.FindingInfo)
+		fKey, err := findingkey.GenerateFindingKey(item.FindingInfo)
 		if err != nil {
 			return fmt.Errorf("failed to generate finding key: %v", err)
 		}
@@ -490,7 +490,7 @@ func processFindings(findings []backendmodels.Finding, findingAssetMap map[findi
 	return nil
 }
 
-// getSortedFindingInfoCountSlice will return a slice of findingInfoCount desc sorted by AssetCount
+// getSortedFindingInfoCountSlice will return a slice of findingInfoCount desc sorted by AssetCount.
 func getSortedFindingInfoCountSlice(findingAssetMapCount map[string]findingInfoCount) []findingInfoCount {
 	findingInfoCountSlice := utils.StringKeyMapToArray(findingAssetMapCount)
 	sort.Slice(findingInfoCountSlice, func(i, j int) bool {

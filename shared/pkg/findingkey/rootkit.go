@@ -1,4 +1,4 @@
-package findingKey
+package findingkey
 
 import (
 	"fmt"

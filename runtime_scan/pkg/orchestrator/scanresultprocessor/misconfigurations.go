@@ -21,11 +21,11 @@ import (
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
-	"github.com/openclarity/vmclarity/shared/pkg/findingKey"
+	"github.com/openclarity/vmclarity/shared/pkg/findingkey"
 )
 
-func (srp *ScanResultProcessor) getExistingMisconfigurationFindingsForScan(ctx context.Context, scanResult models.TargetScanResult) (map[findingKey.MisconfigurationKey]string, error) {
-	existingMap := map[findingKey.MisconfigurationKey]string{}
+func (srp *ScanResultProcessor) getExistingMisconfigurationFindingsForScan(ctx context.Context, scanResult models.TargetScanResult) (map[findingkey.MisconfigurationKey]string, error) {
+	existingMap := map[findingkey.MisconfigurationKey]string{}
 
 	existingFilter := fmt.Sprintf("findingInfo/objectType eq 'Misconfiguration' and asset/id eq '%s' and scan/id eq '%s'",
 		scanResult.Target.Id, scanResult.Scan.Id)
@@ -43,7 +43,7 @@ func (srp *ScanResultProcessor) getExistingMisconfigurationFindingsForScan(ctx c
 			return existingMap, fmt.Errorf("unable to get misconfiguration finding info: %w", err)
 		}
 
-		key := findingKey.GenerateMisconfigurationKey(info)
+		key := findingkey.GenerateMisconfigurationKey(info)
 		if _, ok := existingMap[key]; ok {
 			return existingMap, fmt.Errorf("found multiple matching existing findings for misconfiguration %v", key)
 		}
@@ -107,7 +107,7 @@ func (srp *ScanResultProcessor) reconcileResultMisconfigurationsToFindings(ctx c
 				finding.InvalidatedOn = &newerTime
 			}
 
-			key := findingKey.GenerateMisconfigurationKey(itemFindingInfo)
+			key := findingkey.GenerateMisconfigurationKey(itemFindingInfo)
 			if id, ok := existingMap[key]; ok {
 				err = srp.client.PatchFinding(ctx, id, finding)
 				if err != nil {
