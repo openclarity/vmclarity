@@ -277,7 +277,7 @@ func validateScanConfigID(scan models.Scan, dbScan Scan) error {
 	}
 	if scan.ScanConfig.Id == "" {
 		return &common.BadRequestError{
-			Reason: fmt.Sprintf("scan config id is required in the case of scan config is defined"),
+			Reason: "scan config id is required in the case of scan config is defined",
 		}
 	}
 	var apiScan models.Scan
