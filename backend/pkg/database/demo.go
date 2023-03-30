@@ -495,16 +495,16 @@ func createScanConfigs() []models.ScanConfig {
 	// Scan config 1
 	scanFamiliesConfig1 := models.ScanFamiliesConfig{
 		Exploits: &models.ExploitsConfig{
-			Enabled: utils.BoolPtr(true),
+			Enabled: utils.BoolPtr(false),
 		},
 		Malware: &models.MalwareConfig{
-			Enabled: utils.BoolPtr(true),
+			Enabled: utils.BoolPtr(false),
 		},
 		Misconfigurations: &models.MisconfigurationsConfig{
-			Enabled: utils.BoolPtr(true),
+			Enabled: utils.BoolPtr(false),
 		},
 		Rootkits: &models.RootkitsConfig{
-			Enabled: utils.BoolPtr(true),
+			Enabled: utils.BoolPtr(false),
 		},
 		Sbom: &models.SBOMConfig{
 			Enabled: utils.BoolPtr(true),
@@ -585,7 +585,7 @@ func createScanConfigs() []models.ScanConfig {
 			Enabled: utils.BoolPtr(false),
 		},
 		Secrets: &models.SecretsConfig{
-			Enabled: utils.BoolPtr(true),
+			Enabled: utils.BoolPtr(false),
 		},
 		Vulnerabilities: &models.VulnerabilitiesConfig{
 			Enabled: utils.BoolPtr(false),
