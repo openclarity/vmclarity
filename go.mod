@@ -480,11 +480,11 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-// https://github.com/openclarity/kubeclarity/commit/7f4fa848f6cc034558d7fa6ee9098f6178a9f846
+// https://github.com/openclarity/kubeclarity/commit/58c485b495d6e60b96efb1ea3473bc8dfa9d0843
 replace (
-	github.com/openclarity/kubeclarity/api => github.com/openclarity/kubeclarity/api v0.0.0-20230327091108-7f4fa848f6cc
-	github.com/openclarity/kubeclarity/cli => github.com/openclarity/kubeclarity/cli v0.0.0-20230327091108-7f4fa848f6cc
-	github.com/openclarity/kubeclarity/shared => github.com/openclarity/kubeclarity/shared v0.0.0-20230327091108-7f4fa848f6cc
+	github.com/openclarity/kubeclarity/api => github.com/openclarity/kubeclarity/api v0.0.0-20230330134744-58c485b495d6
+	github.com/openclarity/kubeclarity/cli => github.com/openclarity/kubeclarity/cli v0.0.0-20230330134744-58c485b495d6
+	github.com/openclarity/kubeclarity/shared => github.com/openclarity/kubeclarity/shared v0.0.0-20230330134744-58c485b495d6
 )
 
 // Replace these for trivy
