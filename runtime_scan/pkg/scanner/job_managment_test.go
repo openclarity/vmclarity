@@ -17,6 +17,7 @@ package scanner
 
 import (
 	"testing"
+	"time"
 
 	"github.com/anchore/syft/syft/source"
 	"github.com/google/go-cmp/cmp"
@@ -114,6 +115,8 @@ func Test_userSBOMConfigToFamiliesSbomConfig(t *testing.T) {
 func Test_userVulnConfigToFamiliesVulnConfig(t *testing.T) {
 	type args struct {
 		vulnerabilitiesConfig *models.VulnerabilitiesConfig
+		trivyServerAddress    string
+		grypeServerAddress    string
 	}
 	type returns struct {
 		config familiesVulnerabilities.Config
@@ -127,6 +130,8 @@ func Test_userVulnConfigToFamiliesVulnConfig(t *testing.T) {
 			name: "No Vulnerability Config",
 			args: args{
 				vulnerabilitiesConfig: nil,
+				trivyServerAddress:    "http://10.0.0.1:9992",
+				grypeServerAddress:    "",
 			},
 			want: returns{
 				config: familiesVulnerabilities.Config{},
@@ -136,6 +141,8 @@ func Test_userVulnConfigToFamiliesVulnConfig(t *testing.T) {
 			name: "Missing Enabled",
 			args: args{
 				vulnerabilitiesConfig: &models.VulnerabilitiesConfig{},
+				trivyServerAddress:    "http://10.0.0.1:9992",
+				grypeServerAddress:    "",
 			},
 			want: returns{
 				config: familiesVulnerabilities.Config{},
@@ -147,6 +154,8 @@ func Test_userVulnConfigToFamiliesVulnConfig(t *testing.T) {
 				vulnerabilitiesConfig: &models.VulnerabilitiesConfig{
 					Enabled: utils.BoolPtr(false),
 				},
+				trivyServerAddress: "http://10.0.0.1:9992",
+				grypeServerAddress: "",
 			},
 			want: returns{
 				config: familiesVulnerabilities.Config{},
@@ -158,6 +167,8 @@ func Test_userVulnConfigToFamiliesVulnConfig(t *testing.T) {
 				vulnerabilitiesConfig: &models.VulnerabilitiesConfig{
 					Enabled: utils.BoolPtr(true),
 				},
+				trivyServerAddress: "http://10.0.0.1:9992",
+				grypeServerAddress: "",
 			},
 			want: returns{
 				config: familiesVulnerabilities.Config{
@@ -169,7 +180,6 @@ func Test_userVulnConfigToFamiliesVulnConfig(t *testing.T) {
 						Registry: &kubeclarityConfig.Registry{},
 						Scanner: &kubeclarityConfig.Scanner{
 							GrypeConfig: kubeclarityConfig.GrypeConfig{
-								// TODO(sambetts) Should run grype in remote mode eventually
 								Mode: kubeclarityConfig.ModeLocal,
 								LocalGrypeConfig: kubeclarityConfig.LocalGrypeConfig{
 									UpdateDB:   true,
@@ -179,7 +189,42 @@ func Test_userVulnConfigToFamiliesVulnConfig(t *testing.T) {
 								},
 							},
 							TrivyConfig: kubeclarityConfig.ScannerTrivyConfig{
-								Timeout: TrivyTimeout,
+								Timeout:    TrivyTimeout,
+								ServerAddr: "http://10.0.0.1:9992",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "Enabled with grype server",
+			args: args{
+				vulnerabilitiesConfig: &models.VulnerabilitiesConfig{
+					Enabled: utils.BoolPtr(true),
+				},
+				trivyServerAddress: "http://10.0.0.1:9992",
+				grypeServerAddress: "10.0.0.1:9991",
+			},
+			want: returns{
+				config: familiesVulnerabilities.Config{
+					Enabled: true,
+					// TODO(sambetts) This choice should come from the user's configuration
+					ScannersList: []string{"grype", "trivy"},
+					ScannersConfig: &kubeclarityConfig.Config{
+						// TODO(sambetts) The user needs to be able to provide this configuration
+						Registry: &kubeclarityConfig.Registry{},
+						Scanner: &kubeclarityConfig.Scanner{
+							GrypeConfig: kubeclarityConfig.GrypeConfig{
+								Mode: kubeclarityConfig.ModeRemote,
+								RemoteGrypeConfig: kubeclarityConfig.RemoteGrypeConfig{
+									GrypeServerAddress: "10.0.0.1:9991",
+									GrypeServerTimeout: 2 * time.Minute,
+								},
+							},
+							TrivyConfig: kubeclarityConfig.ScannerTrivyConfig{
+								Timeout:    TrivyTimeout,
+								ServerAddr: "http://10.0.0.1:9992",
 							},
 						},
 					},
@@ -190,7 +235,7 @@ func Test_userVulnConfigToFamiliesVulnConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := userVulnConfigToFamiliesVulnConfig(tt.args.vulnerabilitiesConfig)
+			got := userVulnConfigToFamiliesVulnConfig(tt.args.vulnerabilitiesConfig, tt.args.trivyServerAddress, tt.args.grypeServerAddress)
 			if diff := cmp.Diff(tt.want.config, got); diff != "" {
 				t.Errorf("userVulnConfigToFamiliesVulnConfig() mismatch (-want +got):\n%s", diff)
 			}
