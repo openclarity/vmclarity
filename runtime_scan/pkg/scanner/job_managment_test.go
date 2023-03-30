@@ -315,8 +315,11 @@ func Test_userSecretsConfigToFamiliesSecretsConfig(t *testing.T) {
 
 func Test_userMalwareConfigToFamiliesMalwareConfig(t *testing.T) {
 	type args struct {
-		malwareConfig  *models.MalwareConfig
-		clamBinaryPath string
+		malwareConfig                 *models.MalwareConfig
+		clamBinaryPath                string
+		freshclamBinaryPath           string
+		useAlternativeFreshclamMirror bool
+		alternativeFreshclamMirrorURL string
 	}
 	tests := []struct {
 		name string
@@ -360,14 +363,20 @@ func Test_userMalwareConfigToFamiliesMalwareConfig(t *testing.T) {
 				malwareConfig: &models.MalwareConfig{
 					Enabled: utils.BoolPtr(true),
 				},
-				clamBinaryPath: "clamscan",
+				clamBinaryPath:                "clamscan",
+				freshclamBinaryPath:           "freshclam",
+				useAlternativeFreshclamMirror: false,
+				alternativeFreshclamMirrorURL: "",
 			},
 			want: malware.Config{
 				Enabled:      true,
 				ScannersList: []string{"clam"},
 				ScannersConfig: &malwarecommon.ScannersConfig{
 					Clam: config.Config{
-						BinaryPath: "clamscan",
+						BinaryPath:                    "clamscan",
+						FreshclamBinaryPath:           "freshclam",
+						UseAlternativeFreshclamMirror: false,
+						AlternativeFreshclamMirrorURL: "",
 					},
 				},
 			},
@@ -375,7 +384,13 @@ func Test_userMalwareConfigToFamiliesMalwareConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := userMalwareConfigToFamiliesMalwareConfig(tt.args.malwareConfig, tt.args.clamBinaryPath)
+			got := userMalwareConfigToFamiliesMalwareConfig(
+				tt.args.malwareConfig,
+				tt.args.clamBinaryPath,
+				tt.args.freshclamBinaryPath,
+				tt.args.useAlternativeFreshclamMirror,
+				tt.args.alternativeFreshclamMirrorURL,
+			)
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("userSecretsConfigToFamiliesSecretsConfig() mismatch (-want +got):\n%s", diff)
 			}
