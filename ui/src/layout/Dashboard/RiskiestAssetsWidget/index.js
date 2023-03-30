@@ -12,7 +12,6 @@ const RiskiestAssetsWidget = ({className}) => (
         title="Riskiest assets"
         widgetName="riskiers-assets"
         url={APIS.DASHBOARD_RISKIEST_ASSETS}
-        maxItems={5}
         getHeaderItems={() => (["Name", "Type", "Findings"])}
         getBodyItems={(selectedId) => ([
             {dataKey: "assetInfo.name"},

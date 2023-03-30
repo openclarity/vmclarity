@@ -11,8 +11,8 @@ import COLORS from 'utils/scss_variables.module.scss';
 
 import './findings-tabs-widget.scss';
 
-const WidgetContent = ({data=[], maxItems, getHeaderItems, getBodyItems, selectedId}) => {
-    const displayData = data.slice(0, maxItems);
+const WidgetContent = ({data=[], getHeaderItems, getBodyItems, selectedId}) => {
+    const displayData = (data || []).slice(0, 5);
 
     return (
         <table className="tabbed-widget-table">
@@ -52,7 +52,7 @@ const Tab = ({widgetName, title, icon, isActive}) => (
     />
 )
 
-const FindingsTabsWidget = ({widgetName, findingsItems, className, title, url, maxItems, getHeaderItems, getBodyItems}) => {
+const FindingsTabsWidget = ({widgetName, findingsItems, className, title, url, getHeaderItems, getBodyItems}) => {
     const [{data, error, loading}] = useFetch(url, {urlPrefix: "ui"});
     
     const WIDGET_TAB_ITEMS = findingsItems.map(({dataKey, icon, title}) => (
@@ -74,7 +74,6 @@ const FindingsTabsWidget = ({widgetName, findingsItems, className, title, url, m
                     loading ? <Loader absolute={false} /> : (error ? null :
                         <WidgetContent
                             data={!!data ? data[selectedTabId] : []}
-                            maxItems={maxItems}
                             getHeaderItems={getHeaderItems}
                             getBodyItems={getBodyItems}
                             selectedId={selectedTabId}

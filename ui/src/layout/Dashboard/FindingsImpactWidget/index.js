@@ -72,7 +72,6 @@ const FindingsImpactWidget = ({className}) => (
 		title="Findings impact"
 		widgetName="findings-impact"
 		url={APIS.DASHBOARD_FINDINGS_IMPACT}
-		maxItems={4}
 		getHeaderItems={(selectedId) => {
 			const {headerItems=[]} = TABS_COLUMNS_MAPPING[selectedId] || {};
 
