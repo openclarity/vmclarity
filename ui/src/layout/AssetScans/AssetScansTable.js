@@ -45,7 +45,7 @@ const AssetScansTable = () => {
             disableSort: true
         },
         {
-            Header: "Status",
+            Header: "Scan status",
             id: "status",
             accessor: original => {
                 const {state} = original?.status?.general || {};

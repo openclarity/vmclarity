@@ -21,7 +21,8 @@ const MisconfigurationsTable = () => {
             Header: "Description",
             id: "description",
             accessor: "findingInfo.testDescription",
-            disableSort: true
+            disableSort: true,
+            width: 200
         },
         ...getAssetAndScanColumnsConfigList()
     ], []);
