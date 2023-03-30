@@ -24,7 +24,7 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/findingkey"
 )
 
-func (srp *ScanResultProcessor) getExistingSecretFindingsForScan(ctx context.Context, scanResult models.TargetScanResult) (map[findingKey.SecretKey]string, error) {
+func (srp *ScanResultProcessor) getExistingSecretFindingsForScan(ctx context.Context, scanResult models.TargetScanResult) (map[findingkey.SecretKey]string, error) {
 	existingMap := map[findingkey.SecretKey]string{}
 
 	existingFilter := fmt.Sprintf("findingInfo/objectType eq 'Secret' and asset/id eq '%s' and scan/id eq '%s'",
