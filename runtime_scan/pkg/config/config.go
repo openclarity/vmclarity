@@ -37,6 +37,9 @@ const (
 	ScannerKeyPairName              = "SCANNER_KEY_PAIR_NAME"
 	GitleaksBinaryPath              = "GITLEAKS_BINARY_PATH"
 	ClamBinaryPath                  = "CLAM_BINARY_PATH"
+	FreshclamBinaryPath             = "FRESHCLAM_BINARY_PATH"
+	AlternativeFreshclamMirrorURL   = "ALTERNATIVE_FRESHCLAM_MIRROR_URL"
+	UseAlternativeFreshclamMirror   = "USE_ALTERNATIVE_FRESHCLAM_MIRROR"
 	LynisInstallPath                = "LYNIS_INSTALL_PATH"
 	AttachedVolumeDeviceName        = "ATTACHED_VOLUME_DEVICE_NAME"
 	defaultAttachedVolumeDeviceName = "xvdh"
@@ -93,6 +96,15 @@ type ScannerConfig struct {
 	// The clam binary path in the scanner image container.
 	ClamBinaryPath string
 
+	// The freshclam binary path in the scanner image container
+	FreshclamBinaryPath string
+
+	// The freshclam mirror url to use if it's enabled
+	AlternativeFreshclamMirrorURL string
+
+	// An indicator that says whether to use an alternative mirror or the default one
+	UseAlternativeMirror bool
+
 	// The location where Lynis is installed in the scanner image
 	LynisInstallPath string
 
@@ -114,6 +126,9 @@ func setConfigDefaults(backendHost string, backendPort int, backendBaseURL strin
 	viper.SetDefault(ExploitDBAddress, fmt.Sprintf("http://%s", net.JoinHostPort(backendHost, "1326")))
 	viper.SetDefault(AttachedVolumeDeviceName, defaultAttachedVolumeDeviceName)
 	viper.SetDefault(ClamBinaryPath, "clamscan")
+	viper.SetDefault(FreshclamBinaryPath, "freshclam")
+	viper.SetDefault(AlternativeFreshclamMirrorURL, "")
+	viper.SetDefault(UseAlternativeFreshclamMirror, "false")
 
 	viper.AutomaticEnv()
 }

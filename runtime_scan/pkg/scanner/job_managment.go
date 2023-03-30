@@ -389,11 +389,17 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 
 func (s *Scanner) generateFamiliesConfigurationYaml() (string, error) {
 	famConfig := families.Config{
-		SBOM:             userSBOMConfigToFamiliesSbomConfig(s.scanConfig.ScanFamiliesConfig.Sbom),
-		Vulnerabilities:  userVulnConfigToFamiliesVulnConfig(s.scanConfig.ScanFamiliesConfig.Vulnerabilities, s.config.TrivyServerAddress, s.config.GrypeServerAddress),
-		Secrets:          userSecretsConfigToFamiliesSecretsConfig(s.scanConfig.ScanFamiliesConfig.Secrets, s.config.GitleaksBinaryPath),
-		Exploits:         userExploitsConfigToFamiliesExploitsConfig(s.scanConfig.ScanFamiliesConfig.Exploits, s.config.ExploitsDBAddress),
-		Malware:          userMalwareConfigToFamiliesMalwareConfig(s.scanConfig.ScanFamiliesConfig.Malware, s.config.ClamBinaryPath),
+		SBOM:            userSBOMConfigToFamiliesSbomConfig(s.scanConfig.ScanFamiliesConfig.Sbom),
+		Vulnerabilities: userVulnConfigToFamiliesVulnConfig(s.scanConfig.ScanFamiliesConfig.Vulnerabilities, s.config.TrivyServerAddress, s.config.GrypeServerAddress),
+		Secrets:         userSecretsConfigToFamiliesSecretsConfig(s.scanConfig.ScanFamiliesConfig.Secrets, s.config.GitleaksBinaryPath),
+		Exploits:        userExploitsConfigToFamiliesExploitsConfig(s.scanConfig.ScanFamiliesConfig.Exploits, s.config.ExploitsDBAddress),
+		Malware: userMalwareConfigToFamiliesMalwareConfig(
+			s.scanConfig.ScanFamiliesConfig.Malware,
+			s.config.ClamBinaryPath,
+			s.config.FreshclamBinaryPath,
+			s.config.UseAlternativeMirror,
+			s.config.AlternativeFreshclamMirrorURL,
+		),
 		Misconfiguration: userMisconfigurationConfigToFamiliesMisconfigurationConfig(s.scanConfig.ScanFamiliesConfig.Misconfigurations, s.config.LynisInstallPath),
 		// TODO(sambetts) Configure other families once we've got the known working ones working e2e
 	}
@@ -525,7 +531,13 @@ func userExploitsConfigToFamiliesExploitsConfig(exploitsConfig *models.ExploitsC
 	}
 }
 
-func userMalwareConfigToFamiliesMalwareConfig(malwareConfig *models.MalwareConfig, clamBinaryPath string) malware.Config {
+func userMalwareConfigToFamiliesMalwareConfig(
+	malwareConfig *models.MalwareConfig,
+	clamBinaryPath string,
+	freshclamBinaryPath string,
+	useAlternativeFreshclamMirror bool,
+	alternativeFreshclamMirrorURL string,
+) malware.Config {
 	if malwareConfig == nil || malwareConfig.Enabled == nil || !*malwareConfig.Enabled {
 		return malware.Config{}
 	}
@@ -537,7 +549,10 @@ func userMalwareConfigToFamiliesMalwareConfig(malwareConfig *models.MalwareConfi
 		Inputs:       nil, // rootfs directory will be determined by the CLI after mount.
 		ScannersConfig: &malwarecommon.ScannersConfig{
 			Clam: malwareconfig.Config{
-				BinaryPath: clamBinaryPath,
+				BinaryPath:                    clamBinaryPath,
+				FreshclamBinaryPath:           freshclamBinaryPath,
+				UseAlternativeFreshclamMirror: useAlternativeFreshclamMirror,
+				AlternativeFreshclamMirrorURL: alternativeFreshclamMirrorURL,
 			},
 		},
 	}
