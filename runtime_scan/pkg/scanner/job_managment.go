@@ -185,33 +185,17 @@ func (s *Scanner) worker(ctx context.Context, queue chan *scanData, workNumber i
 	for {
 		select {
 		case data := <-queue:
-			// TODO: Run the job only if that target scan status is in init phase, else go to wait
-			job, err := s.runJob(ctx, data)
-			var errMsg string
+			job, err := s.handleScanData(ctx, data, ks)
 			if err != nil {
-				errMsg = fmt.Sprintf("failed to run job: %v", err)
-				s.Lock()
-				data.success = false
-				data.completed = true
-				s.Unlock()
-			} else {
-				s.waitForResult(ctx, data, ks)
-				// if there was a timeout, concat errMsg
-				if data.timeout {
-					errMsg = "job has timed out"
-				}
-			}
-
-			if errMsg != "" {
-				log.WithFields(s.logFields).Error(errMsg)
-				err := s.SetTargetScanStatusCompletionError(ctx, data.scanResultID, errMsg)
+				log.WithFields(s.logFields).Error(err)
+				err := s.SetTargetScanStatusCompletionError(ctx, data.scanResultID, err.Error())
 				if err != nil {
-					log.WithFields(s.logFields).Errorf("Couldn't set completion error for target scan status. targetID=%v, scanID=%v: %v", data.targetInstance.TargetID, s.scanID, err)
+					log.WithFields(s.logFields).Errorf("Couldn't set completion error for target scan status. targetID=%v, scanID=%v: %v",
+						data.targetInstance.TargetID, s.scanID, err)
 					// TODO: Should we retry?
 				}
 			}
-
-			s.deleteJobIfNeeded(ctx, &job, data.success, data.completed)
+			s.deleteJobIfNeeded(ctx, job, data.success, data.completed)
 
 			select {
 			case done <- data.targetInstance.TargetID:
@@ -225,32 +209,89 @@ func (s *Scanner) worker(ctx context.Context, queue chan *scanData, workNumber i
 	}
 }
 
+func (s *Scanner) handleScanData(ctx context.Context, data *scanData, ks chan bool) (*types.Job, error) {
+	var job types.Job
+
+	scanResultStatus, err := s.backendClient.GetScanResultStatus(ctx, data.scanResultID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch status of ScanResult with id %s: %v", data.scanResultID, err)
+	}
+
+	state, ok := scanResultStatus.GetGeneralState()
+	if !ok {
+		return nil, fmt.Errorf("cannot determine state of ScanResult with id %s", data.scanResultID)
+	}
+
+	switch state {
+	case models.INIT:
+		job, err = s.runJob(ctx, data)
+		if err != nil {
+			s.Lock()
+			data.success = false
+			data.completed = true
+			s.Unlock()
+			return nil, fmt.Errorf("failed to run scan job for target %s: %v", data.targetInstance, err)
+		}
+		fallthrough
+	case models.ATTACHED, models.INPROGRESS, models.ABORTED:
+		s.waitForResult(ctx, data, ks)
+		if data.timeout {
+			return nil, fmt.Errorf("scan job for target %s timed out: %v", data.targetInstance, err)
+		}
+	case models.DONE, models.NOTSCANNED:
+	}
+
+	return &job, nil
+}
+
+// nolint:cyclop
 func (s *Scanner) waitForResult(ctx context.Context, data *scanData, ks chan bool) {
 	log.WithFields(s.logFields).Infof("Waiting for result. targetID=%+v", data.targetInstance.TargetID)
-	ticker := time.NewTicker(s.config.JobResultsPollingInterval)
-	timeout := time.After(s.config.JobResultTimeout)
+	timer := time.NewTimer(s.config.JobResultsPollingInterval)
+	defer timer.Stop()
+
+	ctx, cancel := context.WithTimeout(ctx, s.config.JobResultTimeout)
+	defer cancel()
+
 	for {
 		select {
-		case <-ticker.C:
+		case <-timer.C:
 			log.WithFields(s.logFields).Infof("Polling scan results for targetID=%v with scanID=%v", data.targetInstance.TargetID, s.scanID)
 			// Get scan results from backend
-			instanceScanResults, err := s.backendClient.GetScanResultStatus(ctx, data.scanResultID)
+			scanResultStatus, err := s.backendClient.GetScanResultStatus(ctx, data.scanResultID)
 			if err != nil {
 				log.WithFields(s.logFields).Errorf("Failed to get target scan status. scanID=%v, targetID=%s: %v", s.scanID, data.targetInstance.TargetID, err)
 				continue
 			}
-			if *instanceScanResults.General.State != models.DONE {
-				log.WithFields(s.logFields).Infof("Scan is not done. scan result id=%v, scan id=%v, targetID=%s, state=%v", data.scanResultID,
-					s.scanID, data.targetInstance.TargetID, *instanceScanResults.General.State)
-				continue
+
+			state, ok := scanResultStatus.GetGeneralState()
+			if !ok {
+				log.WithFields(s.logFields).Errorf("cannot determine state of ScanResult with id %s", data.scanResultID)
 			}
 
-			s.Lock()
-			data.success = !scanStatusHasErrors(instanceScanResults)
-			data.completed = true
-			s.Unlock()
-			return
-		case <-timeout:
+			switch state {
+			case models.INIT:
+				// NOTE(chrisgacsal): this should never happen as INIT is handled by runJob prior invoking waitForResult
+				fallthrough
+			case models.ATTACHED, models.INPROGRESS:
+				log.WithFields(s.logFields).Infof("Scan is still running. scan result id=%v, scan id=%v, targetID=%s, state=%v",
+					data.scanResultID, s.scanID, data.targetInstance.TargetID, state)
+				continue
+			case models.ABORTED:
+				log.WithFields(s.logFields).Infof("Scan is aborted. Waiting for partial results to be reported back. scan result id=%v, scan id=%v, targetID=%s, state=%v",
+					data.scanResultID, s.scanID, data.targetInstance.TargetID, state)
+				continue
+			case models.DONE, models.NOTSCANNED:
+				s.Lock()
+				data.success = !scanStatusHasErrors(scanResultStatus)
+				data.completed = true
+				s.Unlock()
+				return
+			}
+		case <-ctx.Done():
+			if !timer.Stop() {
+				<-timer.C
+			}
 			log.WithFields(s.logFields).Infof("Job has timed out. targetID=%v", data.targetInstance.TargetID)
 			s.Lock()
 			data.success = false
