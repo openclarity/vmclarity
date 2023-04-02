@@ -128,7 +128,7 @@ func setConfigDefaults(backendHost string, backendPort int, backendBaseURL strin
 	viper.SetDefault(ClamBinaryPath, "clamscan")
 	viper.SetDefault(FreshclamBinaryPath, "freshclam")
 	viper.SetDefault(AlternativeFreshclamMirrorURL, "")
-	viper.SetDefault(UseAlternativeFreshclamMirror, "false")
+	viper.SetDefault(UseAlternativeFreshclamMirror, false)
 
 	viper.AutomaticEnv()
 }
@@ -140,21 +140,24 @@ func LoadConfig(backendHost string, backendPort int, baseURL string) (*Orchestra
 		AWSConfig:             aws.LoadConfig(),
 		ScannerBackendAddress: viper.GetString(ScannerBackendAddress),
 		ScannerConfig: ScannerConfig{
-			Region:                    viper.GetString(ScannerAWSRegion),
-			JobResultTimeout:          viper.GetDuration(JobResultTimeout),
-			JobResultsPollingInterval: viper.GetDuration(JobResultsPollingInterval),
-			ScanConfigWatchInterval:   viper.GetDuration(ScanConfigWatchInterval),
-			DeleteJobPolicy:           getDeleteJobPolicyType(viper.GetString(DeleteJobPolicy)),
-			ScannerImage:              viper.GetString(ScannerContainerImage),
-			ScannerBackendAddress:     viper.GetString(ScannerBackendAddress),
-			ScannerKeyPairName:        viper.GetString(ScannerKeyPairName),
-			GitleaksBinaryPath:        viper.GetString(GitleaksBinaryPath),
-			LynisInstallPath:          viper.GetString(LynisInstallPath),
-			DeviceName:                viper.GetString(AttachedVolumeDeviceName),
-			ExploitsDBAddress:         viper.GetString(ExploitDBAddress),
-			ClamBinaryPath:            viper.GetString(ClamBinaryPath),
-			TrivyServerAddress:        viper.GetString(TrivyServerAddress),
-			GrypeServerAddress:        viper.GetString(GrypeServerAddress),
+			Region:                        viper.GetString(ScannerAWSRegion),
+			JobResultTimeout:              viper.GetDuration(JobResultTimeout),
+			JobResultsPollingInterval:     viper.GetDuration(JobResultsPollingInterval),
+			ScanConfigWatchInterval:       viper.GetDuration(ScanConfigWatchInterval),
+			DeleteJobPolicy:               getDeleteJobPolicyType(viper.GetString(DeleteJobPolicy)),
+			ScannerImage:                  viper.GetString(ScannerContainerImage),
+			ScannerBackendAddress:         viper.GetString(ScannerBackendAddress),
+			ScannerKeyPairName:            viper.GetString(ScannerKeyPairName),
+			GitleaksBinaryPath:            viper.GetString(GitleaksBinaryPath),
+			LynisInstallPath:              viper.GetString(LynisInstallPath),
+			DeviceName:                    viper.GetString(AttachedVolumeDeviceName),
+			ExploitsDBAddress:             viper.GetString(ExploitDBAddress),
+			ClamBinaryPath:                viper.GetString(ClamBinaryPath),
+			FreshclamBinaryPath:           viper.GetString(FreshclamBinaryPath),
+			AlternativeFreshclamMirrorURL: viper.GetString(AlternativeFreshclamMirrorURL),
+			UseAlternativeMirror:          viper.GetBool(UseAlternativeFreshclamMirror),
+			TrivyServerAddress:            viper.GetString(TrivyServerAddress),
+			GrypeServerAddress:            viper.GetString(GrypeServerAddress),
 		},
 	}
 
