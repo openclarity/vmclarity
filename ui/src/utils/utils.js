@@ -13,6 +13,10 @@ export const calculateDuration = (startTime, endTime) => {
     const startMoment = moment(startTime);
     const endMoment = moment(endTime);
     
+    if (!startTime || !endTime) {
+        return null;
+    }
+
     const range = ["days", "hours", "minutes", "seconds"].map(item => ({diff: endMoment.diff(startMoment, item), label: item}))
         .find(({diff}) => diff > 1);
 
