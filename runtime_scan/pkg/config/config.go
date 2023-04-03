@@ -39,7 +39,6 @@ const (
 	ClamBinaryPath                  = "CLAM_BINARY_PATH"
 	FreshclamBinaryPath             = "FRESHCLAM_BINARY_PATH"
 	AlternativeFreshclamMirrorURL   = "ALTERNATIVE_FRESHCLAM_MIRROR_URL"
-	UseAlternativeFreshclamMirror   = "USE_ALTERNATIVE_FRESHCLAM_MIRROR"
 	LynisInstallPath                = "LYNIS_INSTALL_PATH"
 	AttachedVolumeDeviceName        = "ATTACHED_VOLUME_DEVICE_NAME"
 	defaultAttachedVolumeDeviceName = "xvdh"
@@ -102,9 +101,6 @@ type ScannerConfig struct {
 	// The freshclam mirror url to use if it's enabled
 	AlternativeFreshclamMirrorURL string
 
-	// An indicator that says whether to use an alternative mirror or the default one
-	UseAlternativeMirror bool
-
 	// The location where Lynis is installed in the scanner image
 	LynisInstallPath string
 
@@ -128,7 +124,6 @@ func setConfigDefaults(backendHost string, backendPort int, backendBaseURL strin
 	viper.SetDefault(ClamBinaryPath, "clamscan")
 	viper.SetDefault(FreshclamBinaryPath, "freshclam")
 	viper.SetDefault(AlternativeFreshclamMirrorURL, "")
-	viper.SetDefault(UseAlternativeFreshclamMirror, false)
 
 	viper.AutomaticEnv()
 }
@@ -155,7 +150,6 @@ func LoadConfig(backendHost string, backendPort int, baseURL string) (*Orchestra
 			ClamBinaryPath:                viper.GetString(ClamBinaryPath),
 			FreshclamBinaryPath:           viper.GetString(FreshclamBinaryPath),
 			AlternativeFreshclamMirrorURL: viper.GetString(AlternativeFreshclamMirrorURL),
-			UseAlternativeMirror:          viper.GetBool(UseAlternativeFreshclamMirror),
 			TrivyServerAddress:            viper.GetString(TrivyServerAddress),
 			GrypeServerAddress:            viper.GetString(GrypeServerAddress),
 		},

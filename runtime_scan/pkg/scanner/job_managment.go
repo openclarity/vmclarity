@@ -397,7 +397,6 @@ func (s *Scanner) generateFamiliesConfigurationYaml() (string, error) {
 			s.scanConfig.ScanFamiliesConfig.Malware,
 			s.config.ClamBinaryPath,
 			s.config.FreshclamBinaryPath,
-			s.config.UseAlternativeMirror,
 			s.config.AlternativeFreshclamMirrorURL,
 		),
 		Misconfiguration: userMisconfigurationConfigToFamiliesMisconfigurationConfig(s.scanConfig.ScanFamiliesConfig.Misconfigurations, s.config.LynisInstallPath),
@@ -535,7 +534,6 @@ func userMalwareConfigToFamiliesMalwareConfig(
 	malwareConfig *models.MalwareConfig,
 	clamBinaryPath string,
 	freshclamBinaryPath string,
-	useAlternativeFreshclamMirror bool,
 	alternativeFreshclamMirrorURL string,
 ) malware.Config {
 	if malwareConfig == nil || malwareConfig.Enabled == nil || !*malwareConfig.Enabled {
@@ -549,9 +547,8 @@ func userMalwareConfigToFamiliesMalwareConfig(
 		Inputs:       nil, // rootfs directory will be determined by the CLI after mount.
 		ScannersConfig: &malwarecommon.ScannersConfig{
 			Clam: malwareconfig.Config{
-				BinaryPath:                    clamBinaryPath,
+				ClamScanBinaryPath:            clamBinaryPath,
 				FreshclamBinaryPath:           freshclamBinaryPath,
-				UseAlternativeFreshclamMirror: useAlternativeFreshclamMirror,
 				AlternativeFreshclamMirrorURL: alternativeFreshclamMirrorURL,
 			},
 		},

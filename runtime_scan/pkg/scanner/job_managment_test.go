@@ -373,7 +373,7 @@ func Test_userMalwareConfigToFamiliesMalwareConfig(t *testing.T) {
 				ScannersList: []string{"clam"},
 				ScannersConfig: &malwarecommon.ScannersConfig{
 					Clam: config.Config{
-						BinaryPath:                    "clamscan",
+						ClamScanBinaryPath:            "clamscan",
 						FreshclamBinaryPath:           "freshclam",
 						UseAlternativeFreshclamMirror: false,
 						AlternativeFreshclamMirrorURL: "",
