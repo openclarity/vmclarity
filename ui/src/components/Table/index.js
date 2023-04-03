@@ -39,14 +39,6 @@ const Table = props => {
 
     const [inititalLoaded, setInititalLoaded] = useState(!!externalData);
 
-    const updatePage = pageIndex => {
-        if (!!onPageChange) {
-            onPageChange(pageIndex);
-        }
-
-        gotoPage(pageIndex);
-    }
-
     const {
         getTableProps,
         getTableBodyProps,
@@ -113,6 +105,14 @@ const Table = props => {
             })
         }
     );
+
+    const updatePage = useCallback(pageIndex => {
+        if (!!onPageChange) {
+            onPageChange(pageIndex);
+        }
+
+        gotoPage(pageIndex);
+    }, [gotoPage, onPageChange]);
 
     const cleanFilters = pickBy(filters, value => !isNull(value) && value !== "");
     const prevCleanFilters = usePrevious(cleanFilters);
