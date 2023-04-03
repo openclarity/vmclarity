@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	backgroundProcessingTimer = 15 * time.Minute
+	backgroundRecalculationInterval = 15 * time.Minute
 )
 
 type ServerImpl struct {
@@ -44,21 +44,21 @@ func CreateUIBackedServer(client *backendclient.BackendClient) *ServerImpl {
 
 func (s *ServerImpl) StartBackgroundProcessing(ctx context.Context) {
 	go func() {
-		s.runBackgroundProcessing(ctx)
+		s.runBackgroundRecalculation(ctx)
 		for {
 			select {
-			case <-time.After(backgroundProcessingTimer):
-				s.runBackgroundProcessing(ctx)
+			case <-time.After(backgroundRecalculationInterval):
+				s.runBackgroundRecalculation(ctx)
 			case <-ctx.Done():
-				log.Infof("Stop background processing")
+				log.Infof("Stop background recalculation")
 				return
 			}
 		}
 	}()
 }
 
-func (s *ServerImpl) runBackgroundProcessing(ctx context.Context) {
-	log.Infof("Background processing started...")
-	s.getAndSaveFindingsImpact(ctx)
-	log.Infof("Background processing ended...")
+func (s *ServerImpl) runBackgroundRecalculation(ctx context.Context) {
+	log.Infof("Background recalculation started...")
+	s.recalculateFindingsImpact(ctx)
+	log.Infof("Background recalculation ended...")
 }

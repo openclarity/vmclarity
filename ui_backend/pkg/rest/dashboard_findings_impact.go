@@ -74,8 +74,8 @@ func (s *ServerImpl) GetDashboardFindingsImpact(ctx echo.Context) error {
 	return sendResponse(ctx, http.StatusOK, findingsImpact)
 }
 
-func (s *ServerImpl) getAndSaveFindingsImpact(ctx context.Context) {
-	log.Debugf("Updating findings impact...")
+func (s *ServerImpl) recalculateFindingsImpact(ctx context.Context) {
+	log.Debugf("Recalculating findings impact...")
 	findingsImpact, err := s.getFindingsImpact(ctx)
 	if err != nil {
 		log.Errorf("failed to get findings impact: %v", err)
@@ -87,7 +87,7 @@ func (s *ServerImpl) getAndSaveFindingsImpact(ctx context.Context) {
 		})
 		s.findingsImpactMutex.Unlock()
 	}
-	log.Debugf("Done updating findings impact...")
+	log.Debugf("Done recalculating findings impact...")
 }
 
 func (s *ServerImpl) getFindingsImpact(ctx context.Context) (models.FindingsImpact, error) {
