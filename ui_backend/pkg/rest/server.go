@@ -24,6 +24,10 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 )
 
+const (
+	backgroundProcessingTimer = 15 * time.Minute
+)
+
 type ServerImpl struct {
 	BackendClient *backendclient.BackendClient
 	findingsImpactData
@@ -40,7 +44,7 @@ func (s *ServerImpl) StartBackgroundProcessing(ctx context.Context) {
 		s.runBackgroundProcessing(ctx)
 		for {
 			select {
-			case <-time.After(15 * time.Minute):
+			case <-time.After(backgroundProcessingTimer):
 				s.runBackgroundProcessing(ctx)
 			case <-ctx.Done():
 				log.Infof("Stop background processing")

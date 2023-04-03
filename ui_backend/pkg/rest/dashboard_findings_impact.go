@@ -33,7 +33,8 @@ import (
 )
 
 const (
-	maxFindingsImpactCount = 5
+	maxFindingsImpactCount             = 5
+	findingsImpactFetchedDurationSleep = 10 * time.Second // seconds to sleep before each verification of findingsImpactFetched boolean
 )
 
 var orderedSeveritiesValues = []string{
@@ -68,7 +69,7 @@ func (s *ServerImpl) GetDashboardFindingsImpact(ctx echo.Context) error {
 			return sendError(ctx, http.StatusRequestTimeout, "request timeout")
 		default:
 		}
-		time.Sleep(10 * time.Second)
+		time.Sleep(findingsImpactFetchedDurationSleep)
 	}
 	s.findingsImpactMutex.RLock()
 	findingsImpact := s.findingsImpact
