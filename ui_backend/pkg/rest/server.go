@@ -16,9 +16,42 @@
 package rest
 
 import (
+	"context"
+	"time"
+
+	log "github.com/sirupsen/logrus"
+
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 )
 
 type ServerImpl struct {
 	BackendClient *backendclient.BackendClient
+	findingsImpactData
+}
+
+func CreateUIBackedServer(client *backendclient.BackendClient) *ServerImpl {
+	return &ServerImpl{
+		BackendClient: client,
+	}
+}
+
+func (s *ServerImpl) StartBackgroundProcessing(ctx context.Context) {
+	go func() {
+		s.runBackgroundProcessing(ctx)
+		for {
+			select {
+			case <-time.After(15 * time.Minute):
+				s.runBackgroundProcessing(ctx)
+			case <-ctx.Done():
+				log.Infof("Stop background processing")
+				return
+			}
+		}
+	}()
+}
+
+func (s *ServerImpl) runBackgroundProcessing(ctx context.Context) {
+	log.Infof("Background processing started...")
+	s.getAndSaveFindingsImpact(ctx)
+	log.Infof("Background processing ended...")
 }
