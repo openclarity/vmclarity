@@ -21,6 +21,7 @@ func (s *TargetScanState) GetState() (TargetScanStateState, bool) {
 
 	if s.State != nil {
 		state = *s.State
+		ok = true
 	}
 	return state, ok
 }
@@ -42,6 +43,18 @@ func (r *TargetScanResult) GetGeneralState() (TargetScanStateState, bool) {
 
 	if r.Status != nil {
 		state, ok = r.Status.GetGeneralState()
+	}
+
+	return state, ok
+}
+
+func (s *Scan) GetState() (ScanState, bool) {
+	var state ScanState
+	var ok bool
+
+	if s.State != nil {
+		state = *s.State
+		ok = true
 	}
 
 	return state, ok

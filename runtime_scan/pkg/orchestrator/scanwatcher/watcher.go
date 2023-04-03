@@ -33,20 +33,13 @@ const (
 	DefaultReconcileTimeout = time.Minute
 )
 
+type ScanReconcileEvent struct {
+	ScanID string
+}
+
 type ScanQueue = common.Queue[ScanReconcileEvent]
 type ScanPoller = common.Poller[ScanReconcileEvent]
 type ScanReconciler = common.Reconciler[ScanReconcileEvent]
-
-type ScanEventKind int8
-
-const (
-	Aborted ScanEventKind = iota
-)
-
-type ScanReconcileEvent struct {
-	Kind ScanEventKind
-	Id   string
-}
 
 type Config struct {
 	Backend          *backendclient.BackendClient
@@ -78,7 +71,7 @@ func (w *Watcher) Start(ctx context.Context) {
 		Logger:     w.logger,
 		PollPeriod: w.pollPeriod,
 		Queue:      queue,
-		GetItems:   w.GetItems,
+		GetItems:   w.GetAbortedScans,
 	}
 	poller.Start(ctx)
 
@@ -90,7 +83,7 @@ func (w *Watcher) Start(ctx context.Context) {
 	reconciler.Start(ctx)
 }
 
-func (w *Watcher) GetItems(ctx context.Context) ([]ScanReconcileEvent, error) {
+func (w *Watcher) GetAbortedScans(ctx context.Context) ([]ScanReconcileEvent, error) {
 	scans, err := w.getScansByState(ctx, models.ScanStateAborted)
 	if err != nil || scans.Items == nil || len(*scans.Items) <= 0 {
 		return nil, err
@@ -100,19 +93,37 @@ func (w *Watcher) GetItems(ctx context.Context) ([]ScanReconcileEvent, error) {
 	r := make([]ScanReconcileEvent, count)
 	for i, scan := range *scans.Items {
 		r[i] = ScanReconcileEvent{
-			Kind: Aborted,
-			Id:   *scan.Id,
+			ScanID: *scan.Id,
 		}
 	}
 
 	return r, nil
 }
 
-func (w *Watcher) Reconcile(ctx context.Context, s ScanReconcileEvent) error {
-	w.logger.Infof("reconciling scan event: %v", s)
-	switch {
-	case s.Kind == Aborted:
-		return w.reconcileAborted(ctx, s)
+func (w *Watcher) Reconcile(ctx context.Context, event ScanReconcileEvent) error {
+	w.logger.Infof("reconciling scan event: %v", event)
+
+	selector := "id,state,stateReason"
+	params := models.GetScansScanIDParams{
+		Select: &selector,
+	}
+
+	scan, err := w.client.GetScan(ctx, event.ScanID, params)
+	if err != nil || scan == nil {
+		err = fmt.Errorf("getting scan with id %s failed: %v", event.ScanID, err)
+	}
+
+	state, ok := scan.GetState()
+	if !ok {
+		return fmt.Errorf("cannot determine state of Scan with %s id", event.ScanID)
+	}
+
+	switch state {
+	case models.ScanStateDone, models.ScanStateFailed:
+		w.logger.Infof("reconciling scan event is skipped as Scan is already finished: %v", event)
+	case models.ScanStateAborted:
+		return w.reconcileAborted(ctx, event)
+	default:
 	}
 
 	return nil
@@ -136,26 +147,18 @@ func (w *Watcher) getScansByState(ctx context.Context, s models.ScanState) (mode
 	return *scans, err
 }
 
-func (w *Watcher) getScanResultsByScanID(ctx context.Context, id string) (models.TargetScanResults, error) {
-	filter := fmt.Sprintf("scan/id eq '%s'", id)
+func (w *Watcher) reconcileAborted(ctx context.Context, event ScanReconcileEvent) error {
+	filter := fmt.Sprintf("scan/id eq '%s' and status/general/state ne '%s' and status/general/state ne '%s'",
+		event.ScanID, models.ABORTED, models.DONE)
 	selector := "id,scan,status,target"
 	params := models.GetScanResultsParams{
 		Filter: &filter,
 		Select: &selector,
 	}
 
-	scanResutls, err := w.client.GetScanResults(ctx, params)
+	scanResults, err := w.client.GetScanResults(ctx, params)
 	if err != nil {
-		err = fmt.Errorf("getting ScanResult(s) by Scan ID failed: %v", err)
-	}
-
-	return scanResutls, err
-}
-
-func (w *Watcher) reconcileAborted(ctx context.Context, s ScanReconcileEvent) error {
-	scanResults, err := w.getScanResultsByScanID(ctx, s.Id)
-	if err != nil {
-		return err
+		err = fmt.Errorf("getting ScanResult(s) for Scan with %s id failed: %v", event.ScanID, err)
 	}
 
 	if scanResults.Items == nil || len(*scanResults.Items) <= 0 {
