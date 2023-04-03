@@ -318,7 +318,6 @@ func Test_userMalwareConfigToFamiliesMalwareConfig(t *testing.T) {
 		malwareConfig                 *models.MalwareConfig
 		clamBinaryPath                string
 		freshclamBinaryPath           string
-		useAlternativeFreshclamMirror bool
 		alternativeFreshclamMirrorURL string
 	}
 	tests := []struct {
@@ -365,7 +364,6 @@ func Test_userMalwareConfigToFamiliesMalwareConfig(t *testing.T) {
 				},
 				clamBinaryPath:                "clamscan",
 				freshclamBinaryPath:           "freshclam",
-				useAlternativeFreshclamMirror: false,
 				alternativeFreshclamMirrorURL: "",
 			},
 			want: malware.Config{
@@ -375,7 +373,6 @@ func Test_userMalwareConfigToFamiliesMalwareConfig(t *testing.T) {
 					Clam: config.Config{
 						ClamScanBinaryPath:            "clamscan",
 						FreshclamBinaryPath:           "freshclam",
-						UseAlternativeFreshclamMirror: false,
 						AlternativeFreshclamMirrorURL: "",
 					},
 				},
@@ -388,7 +385,6 @@ func Test_userMalwareConfigToFamiliesMalwareConfig(t *testing.T) {
 				tt.args.malwareConfig,
 				tt.args.clamBinaryPath,
 				tt.args.freshclamBinaryPath,
-				tt.args.useAlternativeFreshclamMirror,
 				tt.args.alternativeFreshclamMirrorURL,
 			)
 			if diff := cmp.Diff(tt.want, got); diff != "" {
