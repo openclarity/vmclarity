@@ -36,6 +36,9 @@ type ServerImpl struct {
 func CreateUIBackedServer(client *backendclient.BackendClient) *ServerImpl {
 	return &ServerImpl{
 		BackendClient: client,
+		findingsImpactData: findingsImpactData{
+			findingsImpactFetchedChannel: make(chan struct{}),
+		},
 	}
 }
 

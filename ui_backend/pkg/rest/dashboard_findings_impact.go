@@ -21,7 +21,6 @@ import (
 	"net/http"
 	"sort"
 	"sync"
-	"time"
 
 	"github.com/labstack/echo/v4"
 	log "github.com/sirupsen/logrus"
@@ -33,8 +32,7 @@ import (
 )
 
 const (
-	maxFindingsImpactCount             = 5
-	findingsImpactFetchedDurationSleep = 10 * time.Second // seconds to sleep before each verification of findingsImpactFetched boolean
+	maxFindingsImpactCount = 5
 )
 
 var orderedSeveritiesValues = []string{
@@ -56,20 +54,18 @@ type findingInfoCount struct {
 }
 
 type findingsImpactData struct {
-	findingsImpact        models.FindingsImpact
-	findingsImpactFetched bool
-	findingsImpactMutex   sync.RWMutex
+	findingsImpact               models.FindingsImpact
+	findingsImpactFetchedChannel chan struct{}
+	findingsImpactMutex          sync.RWMutex
+	once                         sync.Once
 }
 
 func (s *ServerImpl) GetDashboardFindingsImpact(ctx echo.Context) error {
-	// Blocking call until data will be fetched for the first time.
-	for !s.findingsImpactFetched {
-		select {
-		case <-ctx.Request().Context().Done():
-			return sendError(ctx, http.StatusRequestTimeout, "request timeout")
-		default:
-		}
-		time.Sleep(findingsImpactFetchedDurationSleep)
+	// Blocking call until data will be fetched at least once.
+	select {
+	case <-s.findingsImpactFetchedChannel:
+	case <-ctx.Request().Context().Done():
+		return sendError(ctx, http.StatusRequestTimeout, "request timeout")
 	}
 	s.findingsImpactMutex.RLock()
 	findingsImpact := s.findingsImpact
@@ -86,7 +82,9 @@ func (s *ServerImpl) getAndSaveFindingsImpact(ctx context.Context) {
 	} else {
 		s.findingsImpactMutex.Lock()
 		s.findingsImpact = findingsImpact
-		s.findingsImpactFetched = true
+		s.once.Do(func() {
+			close(s.findingsImpactFetchedChannel)
+		})
 		s.findingsImpactMutex.Unlock()
 	}
 	log.Debugf("Done updating findings impact...")
