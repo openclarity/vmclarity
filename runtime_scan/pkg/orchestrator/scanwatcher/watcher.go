@@ -39,9 +39,11 @@ type ScanReconcileEvent struct {
 	ScanID models.ScanID
 }
 
-type ScanQueue = common.Queue[ScanReconcileEvent]
-type ScanPoller = common.Poller[ScanReconcileEvent]
-type ScanReconciler = common.Reconciler[ScanReconcileEvent]
+type (
+	ScanQueue      = common.Queue[ScanReconcileEvent]
+	ScanPoller     = common.Poller[ScanReconcileEvent]
+	ScanReconciler = common.Reconciler[ScanReconcileEvent]
+)
 
 type Config struct {
 	Backend          *backendclient.BackendClient
