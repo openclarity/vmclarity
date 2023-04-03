@@ -17,6 +17,7 @@ package scanwatcher
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -34,7 +35,7 @@ const (
 )
 
 type ScanReconcileEvent struct {
-	ScanID string
+	ScanID models.ScanID
 }
 
 type ScanQueue = common.Queue[ScanReconcileEvent]
@@ -110,7 +111,7 @@ func (w *Watcher) Reconcile(ctx context.Context, event ScanReconcileEvent) error
 
 	scan, err := w.client.GetScan(ctx, event.ScanID, params)
 	if err != nil || scan == nil {
-		err = fmt.Errorf("getting scan with id %s failed: %v", event.ScanID, err)
+		return fmt.Errorf("getting scan with id %s failed: %v", event.ScanID, err)
 	}
 
 	state, ok := scan.GetState()
@@ -123,6 +124,8 @@ func (w *Watcher) Reconcile(ctx context.Context, event ScanReconcileEvent) error
 		w.logger.Infof("reconciling scan event is skipped as Scan is already finished: %v", event)
 	case models.ScanStateAborted:
 		return w.reconcileAborted(ctx, event)
+	case models.ScanStatePending, models.ScanStateDiscovered, models.ScanStateInProgress:
+		fallthrough
 	default:
 	}
 
@@ -158,7 +161,7 @@ func (w *Watcher) reconcileAborted(ctx context.Context, event ScanReconcileEvent
 
 	scanResults, err := w.client.GetScanResults(ctx, params)
 	if err != nil {
-		err = fmt.Errorf("getting ScanResult(s) for Scan with %s id failed: %v", event.ScanID, err)
+		return fmt.Errorf("getting ScanResult(s) for Scan with %s id failed: %v", event.ScanID, err)
 	}
 
 	if scanResults.Items == nil || len(*scanResults.Items) <= 0 {
@@ -166,6 +169,7 @@ func (w *Watcher) reconcileAborted(ctx context.Context, event ScanReconcileEvent
 		return nil
 	}
 
+	var retryIsNeeded bool
 	var wg sync.WaitGroup
 	for _, scanResult := range *scanResults.Items {
 		if scanResult.Id == nil {
@@ -187,11 +191,27 @@ func (w *Watcher) reconcileAborted(ctx context.Context, event ScanReconcileEvent
 			err := w.client.PatchScanResult(ctx, sr, id)
 			if err != nil {
 				w.logger.Errorf("failed to patch ScanResult with id: %s", id)
+				retryIsNeeded = true
 				return
 			}
 		}()
 	}
 	wg.Wait()
+
+	if retryIsNeeded {
+		return errors.New("updating one or more ScanResults failed")
+	}
+
+	scan := &models.Scan{
+		EndTime:     runtimeScanUtils.PointerTo(time.Now().UTC()),
+		State:       runtimeScanUtils.PointerTo(models.ScanStateFailed),
+		StateReason: runtimeScanUtils.PointerTo(models.ScanStateReasonAborted),
+	}
+
+	err = w.client.PatchScan(ctx, event.ScanID, scan)
+	if err != nil {
+		return fmt.Errorf("failed to patch Scan with id: %s: %v", event.ScanID, err)
+	}
 
 	return nil
 }
