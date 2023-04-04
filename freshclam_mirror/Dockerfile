@@ -1,17 +1,14 @@
-# Use the official Nginx image as a base
 FROM nginx:latest
 
-# Install necessary packages
 RUN apt-get update && \
     apt-get install -y clamav clamav-freshclam cron
 
-# Create a directory to store the database files
 RUN mkdir -p /usr/share/nginx/html/clamav
 
 # Change ownership of the clamav directory to the clamav user and group
 RUN chown clamav:clamav /usr/share/nginx/html/clamav
 
-# Download the initial signature files
+# Download the initial signature files so they're present once already when the container is up
 RUN freshclam --datadir=/usr/share/nginx/html/clamav
 
 # Update the Nginx configuration to serve the signature files
@@ -29,7 +26,6 @@ RUN echo "0 */3 * * * root freshclam --datadir=/usr/share/nginx/html/clamav --qu
 # Make sure the cron job file has proper permissions
 RUN chmod 0644 /etc/cron.d/freshclam-mirror
 
-# Copy the entrypoint script
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
