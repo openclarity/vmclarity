@@ -160,7 +160,7 @@ jobs:
       - name: Set build output env var
         if: ${{ inputs.upload == 'true' }}
         run: |
-          echo "OUTPUTS=type=docker,dest=/tmp/vmclarity-cli.tar" >> $GITHUB_ENV
+          echo "OUTPUTS=type=docker,dest=/tmp/goat-image.tar" >> $GITHUB_ENV
 
       - name: Build
         uses: docker/build-push-action@v4
