@@ -3,7 +3,7 @@ package_upgrade: true
 packages:
   - docker.io
 write_files:
-  - path: /opt/vmclarity/.goat
+  - path: /opt/vmclarity-test/.goat
     permissions: "0644"
   - path: /etc/systemd/system/goat-image.service
     permissions: "0644"
@@ -15,12 +15,12 @@ write_files:
 
       [Service]
       Type=oneshot
-      WorkingDirectory=/opt/vmclarity
-      ExecStartPre=docker pull {{ .ScannerImage }}
+      WorkingDirectory=/opt/vmclarity-test
+      ExecStartPre=docker pull poke/goat-image:latest
       ExecStart=docker run --rm --name %n --privileged \
-          -v /opt/vmclarity:/opt/vmclarity \
-          -v /run:/run \
-          goat-image:latest
+          -v /opt/vmclarity-test:/opt/vmclarity-test \
+          poke/goat-image:latest \
+          /opt/vmclarity-test
 
       [Install]
       WantedBy=multi-user.target

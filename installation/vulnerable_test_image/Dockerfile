@@ -15,6 +15,9 @@ RUN apk --no-cache add procps
 # https://github.com/aquasecurity/kube-bench/issues/943
 RUN apk --no-cache upgrade apk-tools
 
-COPY ./goat.sh /app/goat.sh
+COPY goat.sh /app/goat.sh
+COPY families /app/families
+RUN chmod +x /app/goat.sh
+WORKDIR /app
 
 ENTRYPOINT ["/app/goat.sh"]

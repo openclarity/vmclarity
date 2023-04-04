@@ -143,3 +143,11 @@ api-backend: ## Generating API for backend code
 api-ui: ## Generating API for UI backend code
 	@(echo "Generating API for UI backend code ..." )
 	@(cd ui_backend/api; go generate)
+
+.PHONY: goat-image
+goat-image: ## Build vulnerable Docker image
+	@(echo "Building vulnerable docker image ..." )
+	docker build --file installation/vulnerable_test_image/Dockerfile --build-arg VERSION=${VERSION} \
+		--build-arg BUILD_TIMESTAMP=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ") \
+		--build-arg COMMIT_HASH=$(shell git rev-parse HEAD) \
+		-t ${DOCKER_REGISTRY}/goat-image:${DOCKER_TAG} installation/vulnerable_test_image
