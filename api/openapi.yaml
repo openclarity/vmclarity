@@ -1282,6 +1282,7 @@ components:
       properties:
         name:
           type: string
+          minLength: 1
         vpcs:
           type: array
           items:
@@ -1297,6 +1298,7 @@ components:
       properties:
         id:
           type: string
+          minLength: 1
         securityGroups:
           type: array
           items:
@@ -1312,6 +1314,7 @@ components:
       properties:
         id:
           type: string
+          minLength: 1
       required:
         - id
       additionalProperties: false
@@ -1651,6 +1654,7 @@ components:
           type: array
           items:
             type: string
+          nullable: true
         state:
           type: string
 
@@ -1848,6 +1852,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ScannerMetadata'
+          nullable: true
 
     RootkitScan:
       type: object
@@ -1874,6 +1879,7 @@ components:
           type: array
           items:
             type: string
+          nullable: true
         misconfigurations:
           type: array
           items:

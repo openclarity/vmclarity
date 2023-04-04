@@ -3,6 +3,7 @@ import ExpandableList from 'components/ExpandableList';
 import SeverityWithCvssDisplay from 'components/SeverityWithCvssDisplay';
 import { getHigestVersionCvssData } from 'utils/utils';
 import { getAssetAndScanColumnsConfigList } from 'layout/Findings/utils';
+import { FILTER_TYPES } from 'context/FiltersProvider';
 import FindingsTablePage from '../FindingsTablePage';
 
 const VulnerabilitiesTable = () => {
@@ -10,12 +11,13 @@ const VulnerabilitiesTable = () => {
         {
             Header: "Vulnerability name",
             id: "name",
-            accessor: "findingInfo.vulnerabilityName",
-            disableSort: true
+            sortIds: ["findingInfo.vulnerabilityName"],
+            accessor: "findingInfo.vulnerabilityName"
         },
         {
             Header: "Severity",
             id: "severity",
+            sortIds: ["findingInfo.severity"],
             Cell: ({row}) => {
                 const {id, findingInfo} = row.original;
                 const {severity, cvss} = findingInfo || {};
@@ -29,32 +31,31 @@ const VulnerabilitiesTable = () => {
                         compareTooltipId={`severity-compare-tooltip-${id}`}
                     />
                 )
-            },
-            disableSort: true
+            }
         },
         {
             Header: "Package name",
             id: "packageName",
-            accessor: "findingInfo.package.name",
-            disableSort: true
+            sortIds: ["findingInfo.package.name"],
+            accessor: "findingInfo.package.name"
         },
         {
             Header: "Package version",
             id: "packageVersion",
-            accessor: "findingInfo.package.version",
-            disableSort: true
+            sortIds: ["findingInfo.package.version"],
+            accessor: "findingInfo.package.version"
         },
         {
             Header: "Fix versions",
             id: "fixVersions",
+            sortIds: ["findingInfo.fix"],
             Cell: ({row}) => {
                 const {versions} = row.original.findingInfo?.fix || {};
 
                 return (
                     <ExpandableList items={versions || []} />
                 )
-            },
-            disableSort: true
+            }
         },
         ...getAssetAndScanColumnsConfigList()
     ], []);
@@ -62,6 +63,7 @@ const VulnerabilitiesTable = () => {
     return (
         <FindingsTablePage
             columns={columns}
+            filterType={FILTER_TYPES.FINDINGS_VULNERABILITIES}
             tableTitle="vulnerabilities"
             findingsObjectType="Vulnerability"
         />
