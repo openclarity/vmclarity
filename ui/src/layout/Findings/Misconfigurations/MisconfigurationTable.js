@@ -1,20 +1,29 @@
 import React, { useMemo } from 'react';
 import { getAssetAndScanColumnsConfigList } from 'layout/Findings/utils';
+import { FILTER_TYPES } from 'context/FiltersProvider';
 import FindingsTablePage from '../FindingsTablePage';
+import { MISCONFIGURATION_SEVERITY_MAP } from './utils';
 
 const MisconfigurationsTable = () => {
     const columns = useMemo(() => [
         {
-            Header: "File path",
-            id: "path",
-            accessor: "findingInfo.path",
-            disableSort: true
+            Header: "Test ID",
+            id: "testId",
+            sortIds: ["findingInfo.testID"],
+            accessor: "findingInfo.testID"
+        },
+        {
+            Header: "Severity",
+            id: "severity",
+            sortIds: ["findingInfo.severity"],
+            accessor: original => MISCONFIGURATION_SEVERITY_MAP[original.findingInfo?.severity]
         },
         {
             Header: "Description",
             id: "description",
-            accessor: "findingInfo.description",
-            disableSort: true
+            sortIds: ["findingInfo.testDescription"],
+            accessor: "findingInfo.testDescription",
+            width: 200
         },
         ...getAssetAndScanColumnsConfigList()
     ], []);
@@ -22,6 +31,7 @@ const MisconfigurationsTable = () => {
     return (
         <FindingsTablePage
             columns={columns}
+            filterType={FILTER_TYPES.FINDINGS_MISCONFIGURATIONS}
             tableTitle="misconfigurations"
             findingsObjectType="Misconfiguration"
         />

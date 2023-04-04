@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback, useEffect, useState } from 'react';
 import classnames from 'classnames';
-import { isEmpty, isEqual, pickBy, isNull } from 'lodash';
-import { useTable, usePagination, useSortBy, useResizeColumns, useFlexLayout, useRowSelect } from 'react-table';
+import { isEmpty, isEqual, pickBy, isNull, isUndefined } from 'lodash';
+import { useTable, usePagination, useResizeColumns, useFlexLayout, useRowSelect } from 'react-table';
 import Icon, { ICON_NAMES } from 'components/Icon';
 import Loader from 'components/Loader';
 import { useFetch, usePrevious } from 'hooks';
@@ -18,11 +18,12 @@ const ACTIONS_COLUMN_ID = "ACTIONS";
 const STATIC_COLUMN_IDS = [ACTIONS_COLUMN_ID];
 
 const Table = props => {
-    const {columns, defaultSortBy: defaultSortByItems, onLineClick, paginationItemsName, url, formatFetchedData, filters,
-        noResultsTitle="items", refreshTimestamp, withPagination=true, data: externalData, onRowSelect,
+    const {columns, defaultSortBy, onLineClick, paginationItemsName, url, formatFetchedData, filters, defaultPageIndex=0,
+        onPageChange, noResultsTitle="items", refreshTimestamp, withPagination=true, data: externalData, onRowSelect,
         actionsComponent: ActionsComponent, customEmptyResultsDisplay: CustomEmptyResultsDisplay, actionsColumnWidth=80} = props;
 
-    const defaultSortBy = useMemo(() => defaultSortByItems || [], [defaultSortByItems]);
+    const [sortBy, setSortBy] = useState(defaultSortBy || {});
+
     const defaultColumn = React.useMemo(() => ({
         minWidth: 30,
         width: 100
@@ -48,11 +49,9 @@ const Table = props => {
         nextPage,
         previousPage,
         gotoPage,
-        toggleSortBy, 
         state: {
             pageIndex,
             pageSize,
-            sortBy,
             selectedRowIds
         }
     } = useTable({
@@ -61,19 +60,16 @@ const Table = props => {
             data: tableItems,
             defaultColumn,
             initialState: {
-                pageIndex: 0,
+                pageIndex: defaultPageIndex,
                 pageSize: 50,
-                sortBy: defaultSortBy,
                 selectedRowIds: {}
             },
             manualPagination: true,
             pageCount: -1,
-            manualSortBy: true,
             disableMultiSort: true
         },
         useResizeColumns,
         useFlexLayout,
-        useSortBy,
         usePagination,
         useRowSelect,
         hooks => {
@@ -98,7 +94,6 @@ const Table = props => {
                                 {!!ActionsComponent && <ActionsComponent original={original} />}
                             </div>
                         ),
-                        disableSortBy: true,
                         disableResizing: true,
                         minWidth: actionsColumnWidth,
                         width: actionsColumnWidth,
@@ -111,14 +106,25 @@ const Table = props => {
         }
     );
 
-    const {id: sortKey, desc: sortDesc} = !isEmpty(sortBy) ? sortBy[0] : {};
+    const updatePage = useCallback(pageIndex => {
+        if (!!onPageChange) {
+            onPageChange(pageIndex);
+        }
+
+        gotoPage(pageIndex);
+    }, [gotoPage, onPageChange]);
+
     const cleanFilters = pickBy(filters, value => !isNull(value) && value !== "");
     const prevCleanFilters = usePrevious(cleanFilters);
-    const filtersChanged = !isEqual(cleanFilters, prevCleanFilters);
+    const filtersChanged = !isEqual(cleanFilters, prevCleanFilters) && !isUndefined(prevCleanFilters);
+    
     const prevPageIndex = usePrevious(pageIndex);
-    const prevSortKey = usePrevious(sortKey);
+
+    const {sortIds: sortKeys, desc: sortDesc} = sortBy || {};
+    const prevSortKeys = usePrevious(sortKeys);
     const prevSortDesc = usePrevious(sortDesc);
-    const sortingChanged = sortKey !== prevSortKey || sortDesc !== prevSortDesc;
+    const sortingChanged = !isEqual(sortKeys, prevSortKeys) || sortDesc !== prevSortDesc;
+
     const prevRefreshTimestamp = usePrevious(refreshTimestamp);
 
     const getQueryParams = useCallback(() => {
@@ -132,12 +138,12 @@ const Table = props => {
             queryParams["$top"] = pageSize;
         }
 
-        if (!isEmpty(sortKey)) {
-            queryParams["$orderby"] = `${sortKey} ${sortDesc ? "desc" : "asc"}`;
+        if (!isEmpty(sortKeys)) {
+            queryParams["$orderby"] = sortKeys.map(sortKey => `${sortKey} ${sortDesc ? "desc" : "asc"}`);
         }
 
         return queryParams;
-    }, [pageIndex, pageSize, sortKey, sortDesc, cleanFilters, withPagination]);
+    }, [pageIndex, pageSize, sortKeys, sortDesc, cleanFilters, withPagination]);
 
     const doFetchWithQueryParams = useCallback(() => {
         if (loading) {
@@ -146,14 +152,14 @@ const Table = props => {
         
         fetchData({queryParams: {...getQueryParams()}});
     }, [fetchData, getQueryParams, loading])
-
+    
     useEffect(() => {
         if (!filtersChanged && pageIndex === prevPageIndex && !sortingChanged && prevRefreshTimestamp === refreshTimestamp) {
             return;
         }
 
         if (filtersChanged && pageIndex !== 0) {
-            gotoPage(0);
+            updatePage(0);
 
             return;
         }
@@ -161,7 +167,7 @@ const Table = props => {
         if (!!url) {
             doFetchWithQueryParams();
         }
-    }, [filtersChanged, pageIndex, prevPageIndex, doFetchWithQueryParams, gotoPage, sortingChanged, refreshTimestamp, prevRefreshTimestamp, url]);
+    }, [filtersChanged, pageIndex, prevPageIndex, doFetchWithQueryParams, updatePage, sortingChanged, refreshTimestamp, prevRefreshTimestamp, url]);
 
     const selectedRows = Object.keys(selectedRowIds);
     const prevSelectedRows = usePrevious(selectedRows);
@@ -204,7 +210,7 @@ const Table = props => {
                     pageIndex={pageIndex}
                     pageSize={pageSize}
                     displayName={paginationItemsName}
-                    gotoPage={gotoPage}
+                    gotoPage={updatePage}
                     loading={loading}
                     total={count}
                     page={page}
@@ -218,16 +224,20 @@ const Table = props => {
                                 <div className="table-tr" {...headerGroup.getHeaderGroupProps()}>
                                     {
                                         headerGroup.headers.map(column => {
-                                            const {id, isSorted, isSortedDesc} = column;
-
+                                            const {sortIds} = column;
+                                            const isSorted = isEqual(sortIds, sortKeys);
+                                            
                                             return (
                                                 <div className="table-th" {...column.getHeaderProps()}>
                                                     <span className="table-th-content">{column.render('Header')}</span>
-                                                    {column.canSort && !column.disableSort &&
+                                                    {!isEmpty(sortIds) &&
                                                         <Icon
-                                                            className={classnames("table-sort-icon", {sorted: isSorted}, {rotate: isSortedDesc && isSorted})}
+                                                            className={classnames("table-sort-icon", {sorted: isSorted}, {rotate: isSorted && sortDesc})}
                                                             name={ICON_NAMES.SORT}
-                                                            onClick={() => toggleSortBy(id, isSorted ? !isSortedDesc : false)}
+                                                            size={9}
+                                                            onClick={() => setSortBy(({sortIds, desc}) => 
+                                                                ({sortIds: column.sortIds, desc: isEqual(column.sortIds, sortIds) ? !desc : false})
+                                                            )}
                                                         />
                                                     }
                                                     {column.canResize &&
@@ -254,7 +264,15 @@ const Table = props => {
                     
                             return (
                                 <React.Fragment key={row.id}>
-                                    <div className={classnames("table-tr", {clickable: !!onLineClick}, {"with-row-actions": withRowActions})} {...row.getRowProps()}>
+                                    <div
+                                        className={classnames("table-tr", {clickable: !!onLineClick}, {"with-row-actions": withRowActions})}
+                                        {...row.getRowProps()}
+                                        onClick={() => {
+                                            if (!!onLineClick) {
+                                                onLineClick(row.original);
+                                            }
+                                        }}
+                                    >
                                         {
                                             row.cells.map(cell => {
                                                 const {className, alignToTop} = cell.column;
@@ -267,15 +285,7 @@ const Table = props => {
                                                 const isTextValue = !!cell.column.accessor;
                                                 
                                                 return (
-                                                    <div
-                                                        className={cellClassName}
-                                                        {...cell.getCellProps()}
-                                                        onClick={() => {
-                                                            if (!!onLineClick) {
-                                                                onLineClick(row.original);
-                                                            }
-                                                        }}
-                                                    >{isTextValue ? cell.value : cell.render('Cell')}</div>
+                                                    <div className={cellClassName} {...cell.getCellProps()}>{isTextValue ? cell.value : cell.render('Cell')}</div>
                                                 )
                                             })
                                         }

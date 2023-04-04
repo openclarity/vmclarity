@@ -1,26 +1,15 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import moment from 'moment';
 import TitleValueDisplay, { TitleValueDisplayColumn, TitleValueDisplayRow } from 'components/TitleValueDisplay';
 import DoublePaneDisplay from 'components/DoublePaneDisplay';
 import Title from 'components/Title';
 import ScanProgressBar from 'components/ScanProgressBar';
 import Button from 'components/Button';
 import ConfigurationReadOnlyDisplay from 'layout/Scans/ConfigurationReadOnlyDisplay';
-import { formatDate } from 'utils/utils';
+import { formatDate, calculateDuration, formatNumber } from 'utils/utils';
 import { ROUTES } from 'utils/systemConsts';
 import { useFilterDispatch, setFilters, FILTER_TYPES } from 'context/FiltersProvider';
 import ConfigurationAlertLink from './ConfigurationAlertLink';
-
-export const calculateDuration = (startTime, endTime) => {
-    const startMoment = moment(startTime);
-    const endMoment = moment(endTime);
-    
-    const range = ["days", "hours", "minutes", "seconds"].map(item => ({diff: endMoment.diff(startMoment, item), label: item}))
-        .find(({diff}) => diff > 1);
-
-    return !!range ? `${range.diff} ${range.label}` : null;
-}
 
 const ScanDetails = ({scanData, withAssetScansLink=false}) => {
     const {pathname} = useLocation();
@@ -28,7 +17,7 @@ const ScanDetails = ({scanData, withAssetScansLink=false}) => {
     const filtersDispatch = useFilterDispatch();
 
     const {id, scanConfig, scanConfigSnapshot, startTime, endTime, summary, state, stateMessage, stateReason} = scanData || {};
-    const {jobsCompleted, jobsLeftToRun} = summary;
+    const {jobsCompleted, jobsLeftToRun} = summary || {};
 
     const formattedStartTime = formatDate(startTime);
     
@@ -75,7 +64,7 @@ const ScanDetails = ({scanData, withAssetScansLink=false}) => {
                     {withAssetScansLink &&
                         <div style={{marginTop: "50px"}}>
                             <Title medium>Asset scans</Title>
-                            <Button onClick={onAssetScansClick}>{`See asset scans (${jobsCompleted || 0})`}</Button>
+                            <Button onClick={onAssetScansClick}>{`See asset scans (${formatNumber(jobsCompleted || 0)})`}</Button>
                         </div>
                     }
                 </>

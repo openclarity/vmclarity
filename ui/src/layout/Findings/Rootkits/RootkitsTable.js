@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { getAssetAndScanColumnsConfigList } from 'layout/Findings/utils';
+import { FILTER_TYPES } from 'context/FiltersProvider';
 import FindingsTablePage from '../FindingsTablePage';
 
 const RootkitsTable = () => {
@@ -7,14 +8,14 @@ const RootkitsTable = () => {
         {
             Header: "Rootkit name",
             id: "rootkitName",
-            accessor: "findingInfo.rootkitName",
-            disableSort: true
+            sortIds: ["findingInfo.rootkitName"],
+            accessor: "findingInfo.rootkitName"
         },
         {
             Header: "File path",
             id: "path",
-            accessor: "findingInfo.path",
-            disableSort: true
+            sortIds: ["findingInfo.path"],
+            accessor: "findingInfo.path"
         },
         ...getAssetAndScanColumnsConfigList()
     ], []);
@@ -22,6 +23,7 @@ const RootkitsTable = () => {
     return (
         <FindingsTablePage
             columns={columns}
+            filterType={FILTER_TYPES.FINDINGS_ROOTKITS}
             tableTitle="rootkits"
             findingsObjectType="Rootkit"
         />

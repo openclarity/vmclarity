@@ -21,16 +21,11 @@ import (
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
+	"github.com/openclarity/vmclarity/shared/pkg/findingkey"
 )
 
-type rootkitKey struct {
-	name        string
-	rootkitType string
-	path        string
-}
-
-func (srp *ScanResultProcessor) getExistingRootkitFindingsForScan(ctx context.Context, scanResult models.TargetScanResult) (map[rootkitKey]string, error) {
-	existingMap := map[rootkitKey]string{}
+func (srp *ScanResultProcessor) getExistingRootkitFindingsForScan(ctx context.Context, scanResult models.TargetScanResult) (map[findingkey.RootkitKey]string, error) {
+	existingMap := map[findingkey.RootkitKey]string{}
 
 	existingFilter := fmt.Sprintf("findingInfo/objectType eq 'Rootkit' and asset/id eq '%s' and scan/id eq '%s'",
 		scanResult.Target.Id, scanResult.Scan.Id)
@@ -48,7 +43,7 @@ func (srp *ScanResultProcessor) getExistingRootkitFindingsForScan(ctx context.Co
 			return existingMap, fmt.Errorf("unable to get rootkit finding info: %w", err)
 		}
 
-		key := rootkitKey{*info.RootkitName, string(*info.RootkitType), *info.Path}
+		key := findingkey.GenerateRootkitKey(info)
 		if _, ok := existingMap[key]; ok {
 			return existingMap, fmt.Errorf("found multiple matching existing findings for rootkit %v", key)
 		}
@@ -78,44 +73,46 @@ func (srp *ScanResultProcessor) reconcileResultRootkitsToFindings(ctx context.Co
 		return fmt.Errorf("failed to check existing rootkit findings: %w", err)
 	}
 
-	// Create new or update existing findings all the rootkits found by the
-	// scan.
-	for _, item := range *scanResult.Rootkits.Rootkits {
-		itemFindingInfo := models.RootkitFindingInfo{
-			Path:        item.Path,
-			RootkitName: item.RootkitName,
-			RootkitType: item.RootkitType,
-		}
-
-		findingInfo := models.Finding_FindingInfo{}
-		err = findingInfo.FromRootkitFindingInfo(itemFindingInfo)
-		if err != nil {
-			return fmt.Errorf("unable to convert RootkitFindingInfo into FindingInfo: %w", err)
-		}
-
-		finding := models.Finding{
-			Scan:        scanResult.Scan,
-			Asset:       scanResult.Target,
-			FoundOn:     scanResult.Status.General.LastTransitionTime,
-			FindingInfo: &findingInfo,
-		}
-
-		// Set InvalidatedOn time to the FoundOn time of the oldest
-		// finding, found after this scan result.
-		if newerFound {
-			finding.InvalidatedOn = &newerTime
-		}
-
-		key := rootkitKey{*item.RootkitName, string(*item.RootkitType), *item.Path}
-		if id, ok := existingMap[key]; ok {
-			err = srp.client.PatchFinding(ctx, id, finding)
-			if err != nil {
-				return fmt.Errorf("failed to create finding: %w", err)
+	if scanResult.Rootkits != nil && scanResult.Rootkits.Rootkits != nil {
+		// Create new or update existing findings all the rootkits found by the
+		// scan.
+		for _, item := range *scanResult.Rootkits.Rootkits {
+			itemFindingInfo := models.RootkitFindingInfo{
+				Path:        item.Path,
+				RootkitName: item.RootkitName,
+				RootkitType: item.RootkitType,
 			}
-		} else {
-			_, err = srp.client.PostFinding(ctx, finding)
+
+			findingInfo := models.Finding_FindingInfo{}
+			err = findingInfo.FromRootkitFindingInfo(itemFindingInfo)
 			if err != nil {
-				return fmt.Errorf("failed to create finding: %w", err)
+				return fmt.Errorf("unable to convert RootkitFindingInfo into FindingInfo: %w", err)
+			}
+
+			finding := models.Finding{
+				Scan:        scanResult.Scan,
+				Asset:       scanResult.Target,
+				FoundOn:     scanResult.Status.General.LastTransitionTime,
+				FindingInfo: &findingInfo,
+			}
+
+			// Set InvalidatedOn time to the FoundOn time of the oldest
+			// finding, found after this scan result.
+			if newerFound {
+				finding.InvalidatedOn = &newerTime
+			}
+
+			key := findingkey.GenerateRootkitKey(itemFindingInfo)
+			if id, ok := existingMap[key]; ok {
+				err = srp.client.PatchFinding(ctx, id, finding)
+				if err != nil {
+					return fmt.Errorf("failed to create finding: %w", err)
+				}
+			} else {
+				_, err = srp.client.PostFinding(ctx, finding)
+				if err != nil {
+					return fmt.Errorf("failed to create finding: %w", err)
+				}
 			}
 		}
 	}

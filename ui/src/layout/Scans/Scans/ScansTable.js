@@ -7,13 +7,15 @@ import EmptyDisplay from 'components/EmptyDisplay';
 import { ExpandableScopeDisplay } from 'layout/Scans/scopeDisplayUtils';
 import { useModalDisplayDispatch, MODAL_DISPLAY_ACTIONS } from 'layout/Scans/ScanConfigWizardModal/ModalDisplayProvider';
 import { APIS } from 'utils/systemConsts';
-import { formatDate, getFindingsColumnsConfigList, getVulnerabilitiesColumnConfigItem } from 'utils/utils';
+import { formatDate, getFindingsColumnsConfigList, getVulnerabilitiesColumnConfigItem, formatNumber } from 'utils/utils';
 import { FILTER_TYPES } from 'context/FiltersProvider';
 import { SCANS_PATHS } from '../utils';
 // import ScanActionsDisplay from '../ScanActionsDisplay';
 
 const TABLE_TITLE = "scans";
 const TIME_CELL_WIDTH = 110;
+
+const START_TIME_SORT_IDS = ["startTime"];
 
 const TimeDisplay = ({time}) => (
     !!time ? formatDate(time) : <utils.EmptyValue />
@@ -28,40 +30,44 @@ const ScansTable = () => {
         {
             Header: "Config Name",
             id: "name",
-            accessor: "scanConfigSnapshot.name",
-            disableSort: true
+            sortIds: ["scanConfigSnapshot.name"],
+            accessor: "scanConfigSnapshot.name"
         },
         {
             Header: "Started",
             id: "startTime",
+            sortIds: START_TIME_SORT_IDS,
             Cell: ({row}) => <TimeDisplay time={row.original.startTime} />,
-            width: TIME_CELL_WIDTH,
-            disableSort: true
+            width: TIME_CELL_WIDTH
         },
         {
             Header: "Ended",
             id: "endTime",
+            sortIds: ["endTime"],
             Cell: ({row}) => <TimeDisplay time={row.original.endTime} />,
-            width: TIME_CELL_WIDTH,
-            disableSort: true
+            width: TIME_CELL_WIDTH
         },
         {
             Header: "Scope",
             id: "scope",
+            sortIds: [
+                "scanConfigSnapshot.scope.allRegions",
+                "scanConfigSnapshot.scope.regions"
+            ],
             Cell: ({row}) => {
                 const {allRegions, regions} = row.original.scanConfigSnapshot?.scope;
 
                 return <ExpandableScopeDisplay all={allRegions} regions={regions || []} />
             },
-            width: 260,
-            disableSort: true
+            width: 260
         },
         {
             Header: "Status",
             id: "status",
+            sortIds: ["state"],
             Cell: ({row}) => {
                 const {id, state, stateReason, stateMessage, summary} = row.original;
-                const {jobsCompleted, jobsLeftToRun} = summary;
+                const {jobsCompleted, jobsLeftToRun} = summary || {};
 
                 return (
                     <ScanProgressBar
@@ -76,29 +82,29 @@ const ScansTable = () => {
                     />
                 )
             },
-            width: 150,
-            disableSort: true
+            width: 150
         },
         getVulnerabilitiesColumnConfigItem(TABLE_TITLE),
         ...getFindingsColumnsConfigList(TABLE_TITLE),
         {
             Header: "Scanned assets",
             id: "assets",
+            sortIds: ["summary.jobsCompleted"],
             accessor: original => {
-                const {jobsCompleted, jobsLeftToRun} = original.summary;
+                const {jobsCompleted, jobsLeftToRun} = original.summary || {};
                 
-                return `${jobsCompleted}/${jobsCompleted + jobsLeftToRun}`;
-            },
-            disableSort: true
+                return `${formatNumber(jobsCompleted)}/${formatNumber(jobsCompleted + jobsLeftToRun)}`;
+            }
         }
     ], []);
-
+    
     return (
         <TablePage
             columns={columns}
             url={APIS.SCANS}
             tableTitle={TABLE_TITLE}
             filterType={FILTER_TYPES.SCANS}
+            defaultSortBy={{sortIds: START_TIME_SORT_IDS, desc: true}}
             // actionsComponent={({original}) => (
             //     <ScanActionsDisplay data={original} />
             // )}

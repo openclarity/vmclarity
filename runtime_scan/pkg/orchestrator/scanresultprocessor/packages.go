@@ -21,15 +21,11 @@ import (
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
+	"github.com/openclarity/vmclarity/shared/pkg/findingkey"
 )
 
-type packageKey struct {
-	packageName    string
-	pacakgeVersion string
-}
-
-func (srp *ScanResultProcessor) getExistingPackageFindingsForScan(ctx context.Context, scanResult models.TargetScanResult) (map[packageKey]string, error) {
-	existingMap := map[packageKey]string{}
+func (srp *ScanResultProcessor) getExistingPackageFindingsForScan(ctx context.Context, scanResult models.TargetScanResult) (map[findingkey.PackageKey]string, error) {
+	existingMap := map[findingkey.PackageKey]string{}
 
 	existingFilter := fmt.Sprintf("findingInfo/objectType eq 'Package' and asset/id eq '%s' and scan/id eq '%s'",
 		scanResult.Target.Id, scanResult.Scan.Id)
@@ -47,7 +43,7 @@ func (srp *ScanResultProcessor) getExistingPackageFindingsForScan(ctx context.Co
 			return existingMap, fmt.Errorf("unable to get package finding info: %w", err)
 		}
 
-		key := packageKey{*info.Name, *info.Version}
+		key := findingkey.GeneratePackageKey(info)
 		if _, ok := existingMap[key]; ok {
 			return existingMap, fmt.Errorf("found multiple matching existing findings for package %s version %s", *info.Name, *info.Version)
 		}
@@ -77,48 +73,50 @@ func (srp *ScanResultProcessor) reconcileResultPackagesToFindings(ctx context.Co
 		return fmt.Errorf("failed to check existing package findings: %w", err)
 	}
 
-	// Create new or update existing findings all the packages found by the
-	// scan.
-	for _, item := range *scanResult.Sboms.Packages {
-		itemFindingInfo := models.PackageFindingInfo{
-			Cpes:     item.Cpes,
-			Language: item.Language,
-			Licenses: item.Licenses,
-			Name:     item.Name,
-			Purl:     item.Purl,
-			Type:     item.Type,
-			Version:  item.Version,
-		}
-
-		findingInfo := models.Finding_FindingInfo{}
-		err = findingInfo.FromPackageFindingInfo(itemFindingInfo)
-		if err != nil {
-			return fmt.Errorf("unable to convert PackageFindingInfo into FindingInfo: %w", err)
-		}
-
-		finding := models.Finding{
-			Scan:        scanResult.Scan,
-			Asset:       scanResult.Target,
-			FoundOn:     scanResult.Status.General.LastTransitionTime,
-			FindingInfo: &findingInfo,
-		}
-
-		// Set InvalidatedOn time to the FoundOn time of the oldest
-		// finding, found after this scan result.
-		if newerFound {
-			finding.InvalidatedOn = &newerTime
-		}
-
-		key := packageKey{*item.Name, *item.Version}
-		if id, ok := existingMap[key]; ok {
-			err = srp.client.PatchFinding(ctx, id, finding)
-			if err != nil {
-				return fmt.Errorf("failed to create finding: %w", err)
+	if scanResult.Sboms != nil && scanResult.Sboms.Packages != nil {
+		// Create new or update existing findings all the packages found by the
+		// scan.
+		for _, item := range *scanResult.Sboms.Packages {
+			itemFindingInfo := models.PackageFindingInfo{
+				Cpes:     item.Cpes,
+				Language: item.Language,
+				Licenses: item.Licenses,
+				Name:     item.Name,
+				Purl:     item.Purl,
+				Type:     item.Type,
+				Version:  item.Version,
 			}
-		} else {
-			_, err = srp.client.PostFinding(ctx, finding)
+
+			findingInfo := models.Finding_FindingInfo{}
+			err = findingInfo.FromPackageFindingInfo(itemFindingInfo)
 			if err != nil {
-				return fmt.Errorf("failed to create finding: %w", err)
+				return fmt.Errorf("unable to convert PackageFindingInfo into FindingInfo: %w", err)
+			}
+
+			finding := models.Finding{
+				Scan:        scanResult.Scan,
+				Asset:       scanResult.Target,
+				FoundOn:     scanResult.Status.General.LastTransitionTime,
+				FindingInfo: &findingInfo,
+			}
+
+			// Set InvalidatedOn time to the FoundOn time of the oldest
+			// finding, found after this scan result.
+			if newerFound {
+				finding.InvalidatedOn = &newerTime
+			}
+
+			key := findingkey.GeneratePackageKey(itemFindingInfo)
+			if id, ok := existingMap[key]; ok {
+				err = srp.client.PatchFinding(ctx, id, finding)
+				if err != nil {
+					return fmt.Errorf("failed to create finding: %w", err)
+				}
+			} else {
+				_, err = srp.client.PostFinding(ctx, finding)
+				if err != nil {
+					return fmt.Errorf("failed to create finding: %w", err)
+				}
 			}
 		}
 	}

@@ -21,15 +21,10 @@ import (
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
+	"github.com/openclarity/vmclarity/shared/pkg/findingkey"
 )
 
-type vulKey struct {
-	vulName        string
-	packageName    string
-	pacakgeVersion string
-}
-
-// nolint:cyclop
+// nolint:cyclop,gocognit
 func (srp *ScanResultProcessor) reconcileResultVulnerabilitiesToFindings(ctx context.Context, scanResult models.TargetScanResult) error {
 	completedTime := scanResult.Status.General.LastTransitionTime
 
@@ -48,67 +43,69 @@ func (srp *ScanResultProcessor) reconcileResultVulnerabilitiesToFindings(ctx con
 		return fmt.Errorf("failed to check for existing finding: %w", err)
 	}
 
-	existingMap := map[vulKey]string{}
+	existingMap := map[findingkey.VulKey]string{}
 	for _, finding := range *existingFindings.Items {
 		vuln, err := (*finding.FindingInfo).AsVulnerabilityFindingInfo()
 		if err != nil {
 			return fmt.Errorf("unable to get vulnerability finding info: %w", err)
 		}
 
-		key := vulKey{*vuln.VulnerabilityName, *vuln.Package.Name, *vuln.Package.Version}
+		key := findingkey.GenerateVulnerabilityKey(vuln)
 		if _, ok := existingMap[key]; ok {
 			return fmt.Errorf("found multiple matching existing findings for vulnerability %s for package %s version %s", *vuln.VulnerabilityName, *vuln.Package.Name, *vuln.Package.Version)
 		}
 		existingMap[key] = *finding.Id
 	}
 
-	srp.logger.Infof("Found %d existing vulnerabilties findings for this scan", len(existingMap))
-	srp.logger.Debugf("Existing vulnerabilties map: %v", existingMap)
+	srp.logger.Infof("Found %d existing vulnerabilities findings for this scan", len(existingMap))
+	srp.logger.Debugf("Existing vulnerabilities map: %v", existingMap)
 
-	// Create new findings for all the found vulnerabilties
-	for _, vuln := range *scanResult.Vulnerabilities.Vulnerabilities {
-		vulFindingInfo := models.VulnerabilityFindingInfo{
-			VulnerabilityName: vuln.VulnerabilityName,
-			Description:       vuln.Description,
-			Severity:          vuln.Severity,
-			Links:             vuln.Links,
-			Distro:            vuln.Distro,
-			Cvss:              vuln.Cvss,
-			Package:           vuln.Package,
-			Fix:               vuln.Fix,
-			LayerId:           vuln.LayerId,
-			Path:              vuln.Path,
-		}
-
-		findingInfo := models.Finding_FindingInfo{}
-		err = findingInfo.FromVulnerabilityFindingInfo(vulFindingInfo)
-		if err != nil {
-			return fmt.Errorf("unable to convert VulnerabilityFindingInfo into FindingInfo: %w", err)
-		}
-
-		finding := models.Finding{
-			Scan:        scanResult.Scan,
-			Asset:       scanResult.Target,
-			FoundOn:     scanResult.Status.General.LastTransitionTime,
-			FindingInfo: &findingInfo,
-		}
-
-		// Set InvalidatedOn time to the FoundOn time of the oldest
-		// finding, found after this scan result.
-		if newerFound {
-			finding.InvalidatedOn = &newerTime
-		}
-
-		key := vulKey{*vuln.VulnerabilityName, *vuln.Package.Name, *vuln.Package.Version}
-		if id, ok := existingMap[key]; ok {
-			err = srp.client.PatchFinding(ctx, id, finding)
-			if err != nil {
-				return fmt.Errorf("failed to create finding: %w", err)
+	if scanResult.Vulnerabilities != nil && scanResult.Vulnerabilities.Vulnerabilities != nil {
+		// Create new findings for all the found vulnerabilities
+		for _, vuln := range *scanResult.Vulnerabilities.Vulnerabilities {
+			vulFindingInfo := models.VulnerabilityFindingInfo{
+				VulnerabilityName: vuln.VulnerabilityName,
+				Description:       vuln.Description,
+				Severity:          vuln.Severity,
+				Links:             vuln.Links,
+				Distro:            vuln.Distro,
+				Cvss:              vuln.Cvss,
+				Package:           vuln.Package,
+				Fix:               vuln.Fix,
+				LayerId:           vuln.LayerId,
+				Path:              vuln.Path,
 			}
-		} else {
-			_, err = srp.client.PostFinding(ctx, finding)
+
+			findingInfo := models.Finding_FindingInfo{}
+			err = findingInfo.FromVulnerabilityFindingInfo(vulFindingInfo)
 			if err != nil {
-				return fmt.Errorf("failed to create finding: %w", err)
+				return fmt.Errorf("unable to convert VulnerabilityFindingInfo into FindingInfo: %w", err)
+			}
+
+			finding := models.Finding{
+				Scan:        scanResult.Scan,
+				Asset:       scanResult.Target,
+				FoundOn:     scanResult.Status.General.LastTransitionTime,
+				FindingInfo: &findingInfo,
+			}
+
+			// Set InvalidatedOn time to the FoundOn time of the oldest
+			// finding, found after this scan result.
+			if newerFound {
+				finding.InvalidatedOn = &newerTime
+			}
+
+			key := findingkey.GenerateVulnerabilityKey(vulFindingInfo)
+			if id, ok := existingMap[key]; ok {
+				err = srp.client.PatchFinding(ctx, id, finding)
+				if err != nil {
+					return fmt.Errorf("failed to create finding: %w", err)
+				}
+			} else {
+				_, err = srp.client.PostFinding(ctx, finding)
+				if err != nil {
+					return fmt.Errorf("failed to create finding: %w", err)
+				}
 			}
 		}
 	}
@@ -131,23 +128,23 @@ func (srp *ScanResultProcessor) reconcileResultVulnerabilitiesToFindings(ctx con
 		target.Summary = &models.ScanFindingsSummary{}
 	}
 
-	critialVuls, err := srp.getActiveVulnerabilityFindingsCount(ctx, models.CRITICAL)
+	critialVuls, err := srp.getActiveVulnerabilityFindingsCount(ctx, scanResult.Target.Id, models.CRITICAL)
 	if err != nil {
 		return fmt.Errorf("failed to list active critial vulnerabilities: %w", err)
 	}
-	highVuls, err := srp.getActiveVulnerabilityFindingsCount(ctx, models.HIGH)
+	highVuls, err := srp.getActiveVulnerabilityFindingsCount(ctx, scanResult.Target.Id, models.HIGH)
 	if err != nil {
 		return fmt.Errorf("failed to list active high vulnerabilities: %w", err)
 	}
-	mediumVuls, err := srp.getActiveVulnerabilityFindingsCount(ctx, models.MEDIUM)
+	mediumVuls, err := srp.getActiveVulnerabilityFindingsCount(ctx, scanResult.Target.Id, models.MEDIUM)
 	if err != nil {
 		return fmt.Errorf("failed to list active medium vulnerabilities: %w", err)
 	}
-	lowVuls, err := srp.getActiveVulnerabilityFindingsCount(ctx, models.LOW)
+	lowVuls, err := srp.getActiveVulnerabilityFindingsCount(ctx, scanResult.Target.Id, models.LOW)
 	if err != nil {
 		return fmt.Errorf("failed to list active low vulnerabilities: %w", err)
 	}
-	negligibleVuls, err := srp.getActiveVulnerabilityFindingsCount(ctx, models.NEGLIGIBLE)
+	negligibleVuls, err := srp.getActiveVulnerabilityFindingsCount(ctx, scanResult.Target.Id, models.NEGLIGIBLE)
 	if err != nil {
 		return fmt.Errorf("failed to list active negligible vulnerabilities: %w", err)
 	}
@@ -168,8 +165,8 @@ func (srp *ScanResultProcessor) reconcileResultVulnerabilitiesToFindings(ctx con
 	return nil
 }
 
-func (srp *ScanResultProcessor) getActiveVulnerabilityFindingsCount(ctx context.Context, severity models.VulnerabilitySeverity) (int, error) {
-	filter := fmt.Sprintf("findingInfo/objectType eq 'Vulnerability' and invalidatedOn eq null and findingInfo/severity eq '%s'", string(severity))
+func (srp *ScanResultProcessor) getActiveVulnerabilityFindingsCount(ctx context.Context, assetID string, severity models.VulnerabilitySeverity) (int, error) {
+	filter := fmt.Sprintf("findingInfo/objectType eq 'Vulnerability' and asset/id eq '%s' and invalidatedOn eq null and findingInfo/severity eq '%s'", assetID, string(severity))
 	activeFindings, err := srp.client.GetFindings(ctx, models.GetFindingsParams{
 		Count:  utils.PointerTo(true),
 		Filter: &filter,

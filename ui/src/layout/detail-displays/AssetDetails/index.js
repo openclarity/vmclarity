@@ -7,6 +7,7 @@ import Title from 'components/Title';
 import Button from 'components/Button';
 import Loader from 'components/Loader';
 import { ROUTES, APIS } from 'utils/systemConsts';
+import { formatNumber } from 'utils/utils';
 import { useFilterDispatch, setFilters, FILTER_TYPES } from 'context/FiltersProvider';
 
 const AssetScansDisplay = ({assetName, targetId}) => {
@@ -41,14 +42,12 @@ const AssetScansDisplay = ({assetName, targetId}) => {
     return (
         <>
             <Title medium>Asset scans</Title>
-            <Button onClick={onAssetScansClick} >{`See all asset scans (${data?.count || 0})`}</Button>
+            <Button onClick={onAssetScansClick} >{`See all asset scans (${formatNumber(data?.count || 0)})`}</Button>
         </>
     )
 }
 
-const AssetDetails = ({assetData, withAssetLink=false, withAssetScansLink=false}) => {
-    const navigate = useNavigate();
-
+const AssetDetails = ({assetData, withAssetScansLink=false}) => {
     const {id, targetInfo} = assetData;
     const {instanceID, objectType, location} = targetInfo || {};
 
@@ -56,7 +55,7 @@ const AssetDetails = ({assetData, withAssetLink=false, withAssetScansLink=false}
         <DoublePaneDisplay
             leftPaneDisplay={() => (
                 <>
-                    <Title medium onClick={withAssetLink ? () => navigate(`${ROUTES.ASSETS}/${id}`) : undefined}>Asset</Title>
+                    <Title medium>Asset</Title>
                     <TitleValueDisplayRow>
                         <TitleValueDisplay title="Name">{instanceID}</TitleValueDisplay>
                         <TitleValueDisplay title="Type">{objectType}</TitleValueDisplay>

@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { getAssetAndScanColumnsConfigList } from 'layout/Findings/utils';
+import { FILTER_TYPES } from 'context/FiltersProvider';
 import FindingsTablePage from '../FindingsTablePage';
 
 const SecretsTable = () => {
@@ -7,20 +8,22 @@ const SecretsTable = () => {
         {
             Header: "Fingerprint",
             id: "fingerprint",
+            sortIds: ["findingInfo.fingerprint"],
             accessor: "findingInfo.fingerprint",
-            disableSort: true
+            width: 200
         },
         {
             Header: "Description",
             id: "description",
-            accessor: "findingInfo.description",
-            disableSort: true
+            sortIds: ["findingInfo.description"],
+            accessor: "findingInfo.description"
         },
         {
             Header: "File path",
             id: "findingInfo",
+            sortIds: ["findingInfo.filePath"],
             accessor: "findingInfo.filePath",
-            disableSort: true
+            width: 200
         },
         ...getAssetAndScanColumnsConfigList()
     ], []);
@@ -28,6 +31,7 @@ const SecretsTable = () => {
     return (
         <FindingsTablePage
             columns={columns}
+            filterType={FILTER_TYPES.FINDINGS_SECRETS}
             tableTitle="secrets"
             findingsObjectType="Secret"
         />

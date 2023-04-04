@@ -21,16 +21,11 @@ import (
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
+	"github.com/openclarity/vmclarity/shared/pkg/findingkey"
 )
 
-type secretKey struct {
-	fingerprint string
-	startColumn int
-	endColumn   int
-}
-
-func (srp *ScanResultProcessor) getExistingSecretFindingsForScan(ctx context.Context, scanResult models.TargetScanResult) (map[secretKey]string, error) {
-	existingMap := map[secretKey]string{}
+func (srp *ScanResultProcessor) getExistingSecretFindingsForScan(ctx context.Context, scanResult models.TargetScanResult) (map[findingkey.SecretKey]string, error) {
+	existingMap := map[findingkey.SecretKey]string{}
 
 	existingFilter := fmt.Sprintf("findingInfo/objectType eq 'Secret' and asset/id eq '%s' and scan/id eq '%s'",
 		scanResult.Target.Id, scanResult.Scan.Id)
@@ -48,7 +43,7 @@ func (srp *ScanResultProcessor) getExistingSecretFindingsForScan(ctx context.Con
 			return existingMap, fmt.Errorf("unable to get secret finding info: %w", err)
 		}
 
-		key := secretKey{*info.Fingerprint, *info.StartColumn, *info.EndColumn}
+		key := findingkey.GenerateSecretKey(info)
 		if _, ok := existingMap[key]; ok {
 			return existingMap, fmt.Errorf("found multiple matching existing findings for secret %v", key)
 		}
@@ -78,48 +73,50 @@ func (srp *ScanResultProcessor) reconcileResultSecretsToFindings(ctx context.Con
 		return fmt.Errorf("failed to check existing secret findings: %w", err)
 	}
 
-	// Create new or update existing findings all the secrets found by the
-	// scan.
-	for _, item := range *scanResult.Secrets.Secrets {
-		itemFindingInfo := models.SecretFindingInfo{
-			Description: item.Description,
-			EndLine:     item.EndLine,
-			FilePath:    item.FilePath,
-			Fingerprint: item.Fingerprint,
-			StartLine:   item.StartLine,
-			StartColumn: item.StartColumn,
-			EndColumn:   item.EndColumn,
-		}
-
-		findingInfo := models.Finding_FindingInfo{}
-		err = findingInfo.FromSecretFindingInfo(itemFindingInfo)
-		if err != nil {
-			return fmt.Errorf("unable to convert SecretFindingInfo into FindingInfo: %w", err)
-		}
-
-		finding := models.Finding{
-			Scan:        scanResult.Scan,
-			Asset:       scanResult.Target,
-			FoundOn:     scanResult.Status.General.LastTransitionTime,
-			FindingInfo: &findingInfo,
-		}
-
-		// Set InvalidatedOn time to the FoundOn time of the oldest
-		// finding, found after this scan result.
-		if newerFound {
-			finding.InvalidatedOn = &newerTime
-		}
-
-		key := secretKey{*item.Fingerprint, *item.StartColumn, *item.EndColumn}
-		if id, ok := existingMap[key]; ok {
-			err = srp.client.PatchFinding(ctx, id, finding)
-			if err != nil {
-				return fmt.Errorf("failed to create finding: %w", err)
+	if scanResult.Secrets != nil && scanResult.Secrets.Secrets != nil {
+		// Create new or update existing findings all the secrets found by the
+		// scan.
+		for _, item := range *scanResult.Secrets.Secrets {
+			itemFindingInfo := models.SecretFindingInfo{
+				Description: item.Description,
+				EndLine:     item.EndLine,
+				FilePath:    item.FilePath,
+				Fingerprint: item.Fingerprint,
+				StartLine:   item.StartLine,
+				StartColumn: item.StartColumn,
+				EndColumn:   item.EndColumn,
 			}
-		} else {
-			_, err = srp.client.PostFinding(ctx, finding)
+
+			findingInfo := models.Finding_FindingInfo{}
+			err = findingInfo.FromSecretFindingInfo(itemFindingInfo)
 			if err != nil {
-				return fmt.Errorf("failed to create finding: %w", err)
+				return fmt.Errorf("unable to convert SecretFindingInfo into FindingInfo: %w", err)
+			}
+
+			finding := models.Finding{
+				Scan:        scanResult.Scan,
+				Asset:       scanResult.Target,
+				FoundOn:     scanResult.Status.General.LastTransitionTime,
+				FindingInfo: &findingInfo,
+			}
+
+			// Set InvalidatedOn time to the FoundOn time of the oldest
+			// finding, found after this scan result.
+			if newerFound {
+				finding.InvalidatedOn = &newerTime
+			}
+
+			key := findingkey.GenerateSecretKey(itemFindingInfo)
+			if id, ok := existingMap[key]; ok {
+				err = srp.client.PatchFinding(ctx, id, finding)
+				if err != nil {
+					return fmt.Errorf("failed to create finding: %w", err)
+				}
+			} else {
+				_, err = srp.client.PostFinding(ctx, finding)
+				if err != nil {
+					return fmt.Errorf("failed to create finding: %w", err)
+				}
 			}
 		}
 	}

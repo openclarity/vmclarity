@@ -18,11 +18,13 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	cdx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/openclarity/kubeclarity/shared/pkg/scanner"
 	"github.com/openclarity/kubeclarity/shared/pkg/utils/cyclonedx_helper"
+	"github.com/openclarity/kubeclarity/shared/pkg/utils/vulnerability"
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
@@ -73,28 +75,12 @@ func convertPackageInfoToAPIModel(component cdx.Component) *models.Package {
 	return &models.Package{
 		Cpes:     utils.PointerTo([]string{component.CPE}),
 		Language: utils.PointerTo(cyclonedx_helper.GetComponentLanguage(component)),
-		Licenses: convertPackageLicencesToAPIModel(component.Licenses),
+		Licenses: utils.PointerTo(cyclonedx_helper.GetComponentLicenses(component)),
 		Name:     utils.PointerTo(component.Name),
 		Purl:     utils.PointerTo(component.PackageURL),
 		Type:     utils.PointerTo(string(component.Type)),
 		Version:  utils.PointerTo(component.Version),
 	}
-}
-
-func convertPackageLicencesToAPIModel(licenses *cdx.Licenses) *[]string {
-	if licenses == nil {
-		return nil
-	}
-	// nolint:prealloc
-	var ret []string
-	for _, lic := range *licenses {
-		if lic.License == nil {
-			continue
-		}
-		ret = append(ret, lic.License.Name)
-	}
-
-	return &ret
 }
 
 func convertVulnResultToAPIModel(vulnerabilitiesResults *vulnerabilities.Results) *models.VulnerabilityScan {
@@ -116,7 +102,7 @@ func convertVulnResultToAPIModel(vulnerabilitiesResults *vulnerabilities.Results
 			Links:             utils.PointerTo(vulCandidate.Vulnerability.Links),
 			Package:           convertVulnPackageToAPIModel(vulCandidate.Vulnerability.Package),
 			Path:              utils.PointerTo(vulCandidate.Vulnerability.Path),
-			Severity:          utils.PointerTo(models.VulnerabilitySeverity(vulCandidate.Vulnerability.Severity)),
+			Severity:          convertVulnSeverityToAPIModel(vulCandidate.Vulnerability.Severity),
 			VulnerabilityName: utils.PointerTo(vulCandidate.Vulnerability.ID),
 		}
 		vuls = append(vuls, vul)
@@ -124,6 +110,24 @@ func convertVulnResultToAPIModel(vulnerabilitiesResults *vulnerabilities.Results
 
 	return &models.VulnerabilityScan{
 		Vulnerabilities: &vuls,
+	}
+}
+
+func convertVulnSeverityToAPIModel(severity string) *models.VulnerabilitySeverity {
+	switch strings.ToUpper(severity) {
+	case vulnerability.DEFCON1, vulnerability.CRITICAL:
+		return utils.PointerTo(models.CRITICAL)
+	case vulnerability.HIGH:
+		return utils.PointerTo(models.HIGH)
+	case vulnerability.MEDIUM:
+		return utils.PointerTo(models.MEDIUM)
+	case vulnerability.LOW:
+		return utils.PointerTo(models.LOW)
+	case vulnerability.NEGLIGIBLE, vulnerability.UNKNOWN, vulnerability.NONE:
+		return utils.PointerTo(models.NEGLIGIBLE)
+	default:
+		logger.Errorf("Can't convert severity %q, treating as negligible", severity)
+		return utils.PointerTo(models.NEGLIGIBLE)
 	}
 }
 
@@ -674,7 +678,7 @@ func (e *Exporter) ExportResults(ctx context.Context, res *results.Results, fame
 
 	if config.Vulnerabilities.Enabled {
 		if err := e.ExportVulResult(ctx, res, famerr); err != nil {
-			errors = appendExportError("vulnerabilties", err, errors)
+			errors = appendExportError("vulnerabilities", err, errors)
 		}
 	}
 
