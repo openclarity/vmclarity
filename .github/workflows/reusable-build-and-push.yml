@@ -166,7 +166,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          tags: ghcr.io/openclarity/vmclarity-cli:${{ inputs.image_tag }}
+          tags: ghcr.io/openclarity/vmclarity-freshclam-mirror:${{ inputs.image_tag }}
           file: freshclam_mirror/Dockerfile
           push: ${{ inputs.push }}
           outputs: "${{ env.OUTPUTS }}"
