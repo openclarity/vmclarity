@@ -165,7 +165,7 @@ jobs:
       - name: Build
         uses: docker/build-push-action@v4
         with:
-          context: .
+          context: ./freshclam_mirror
           tags: ghcr.io/openclarity/vmclarity-freshclam-mirror:${{ inputs.image_tag }}
           file: freshclam_mirror/Dockerfile
           push: ${{ inputs.push }}
