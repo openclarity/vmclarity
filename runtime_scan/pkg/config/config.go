@@ -123,7 +123,7 @@ func setConfigDefaults(backendHost string, backendPort int, backendBaseURL strin
 	viper.SetDefault(AttachedVolumeDeviceName, defaultAttachedVolumeDeviceName)
 	viper.SetDefault(ClamBinaryPath, "clamscan")
 	viper.SetDefault(FreshclamBinaryPath, "freshclam")
-	viper.SetDefault(AlternativeFreshclamMirrorURL, "")
+	viper.SetDefault(AlternativeFreshclamMirrorURL, fmt.Sprintf("http://%s", net.JoinHostPort(backendHost, "1000")))
 
 	viper.AutomaticEnv()
 }

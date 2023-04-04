@@ -337,6 +337,29 @@ Resources:
                   [Install]
                   WantedBy=multi-user.target
               mode: "000644"
+            "/lib/systemd/system/vmclarity_freshclam_mirror.service":
+              content:
+                Fn::Sub: |
+                  [Unit]
+                  Description=Deploys the freshclam mirror service
+                  After=docker.service
+                  Requires=docker.service
+
+                  [Service]
+                  TimeoutStartSec=0
+                  Restart=always
+                  ExecStartPre=-/usr/bin/docker stop %n
+                  ExecStartPre=-/usr/bin/docker rm %n
+                  ExecStartPre=/usr/bin/docker pull ${FreshclamMirrorContainerImage}
+                  ExecStart=/usr/bin/docker run \
+                    --rm --name %n \
+                    -p 0.0.0.0:1000:80/tcp \
+                    ${FreshclamMirrorContainerImage} run --log-level info
+
+                  [Install]
+                  WantedBy=multi-user.target
+              mode: "000644"
+
           commands:
             01subsitute_rest_address:
               command: /etc/vmclarity/render_config.sh
@@ -350,6 +373,8 @@ Resources:
               command: systemctl enable --now grype_server.service
             06enable_vmclarity:
               command: systemctl enable --now vmclarity.service
+            07enable_vmclarity_freshclam_mirror:
+              command: systemctl enable --now vmclarity_freshclam_mirror.service
     DependsOn:
       - VmClarityServerPublicRoute
   # Create a Security Group for the VMClarity server. Allow on the public
@@ -727,6 +752,10 @@ Parameters:
     Description: Name of the container image used for running scans on targets.
     Type: String
     Default: ghcr.io/openclarity/vmclarity-cli:latest
+  FreshclamMirrorContainerImage:
+    Description: Name of the container image used for the freshclam mirror server.
+    Type: String
+    Default: ghcr.io/openclarity/vmclarity-freshclam-mirror:latest
   TrivyServerContainerImage:
     Description: Name of the container image used for the trivy server.
     Type: String
