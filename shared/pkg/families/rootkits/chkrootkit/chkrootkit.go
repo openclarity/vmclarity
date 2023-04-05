@@ -59,7 +59,6 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 		}
 
 		args := []string{
-			"-q", // quiet mode
 			"-r", // different root volume
 			userInput,
 		}
