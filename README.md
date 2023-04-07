@@ -5,7 +5,7 @@
 </picture>
 
 VMClarity is an open source tool for agentless detection and management of Virtual Machine
-Software Bill Of Materials (SBOM) and vulnerabilities.
+Software Bill Of Materials (SBOM), vulnerabilities, misconfigurations and security risks.
 
 # Table of Contents<!-- omit in toc -->
 
@@ -38,19 +38,15 @@ VMs are vulnerable to multiple threats:
 - Rootkits
 
 There are many very good open source and commercial-based solutions for
-providing threat detection for VMs including:
-- Vulnerability detection
-- Malware detection
-- Exploit detection
-- etc.
+providing threat detection for VMs, manifesting the different threat categories above.
 
-There are challenges with assembling and managing these tools yourself:
+However, there are challenges with assembling and managing these tools yourself:
 - Complex installation, configuration, and reporting
 - Integration with deployment automation
 - Siloed reporting and visualization
 
 The VMClarity project is focused on unifying detection and management of VM
-vulnerabilities.
+vulnerabilities and other security aspects, all in an agentless manner.
 
 # Overview
 
