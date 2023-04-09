@@ -167,6 +167,7 @@ Resources:
                     TRIVY_SERVER_ADDRESS=http://__BACKEND_REST_HOST__:9992
                     GRYPE_SERVER_ADDRESS=__BACKEND_REST_HOST__:9991
                     DELETE_JOB_POLICY=${AssetScanDeletePolicy}
+                    ALTERNATIVE_FRESHCLAM_MIRROR_URL=http://__BACKEND_REST_HOST__:1000
                   - JobImageID: !FindInMap
                       - AWSRegionArch2AMI
                       - !Ref "AWS::Region"
