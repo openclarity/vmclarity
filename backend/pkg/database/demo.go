@@ -878,8 +878,8 @@ func createRootkitsResult() *[]models.Rootkit {
 			RootkitType: utils.PointerTo(models.RootkitType("ARK")),
 		},
 		{
-			Message:     utils.PointerTo("/var/log/lastlog"),
-			RootkitName: utils.PointerTo("Linux.Xor.DDoS Malware"),
+			Message:     utils.PointerTo("Possible Linux/Ebury 1.4 - Operation Windigo installed"),
+			RootkitName: utils.PointerTo("Linux/Ebury - Operation Windigo ssh"),
 			RootkitType: utils.PointerTo(models.RootkitType("Malware")),
 		},
 		{
