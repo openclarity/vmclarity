@@ -29,6 +29,7 @@ const (
 	FIRMWARE    RootkitType = "FIRMWARE"
 	KERNEL      RootkitType = "KERNEL"
 	MEMORY      RootkitType = "MEMORY"
+	UNKNOWN     RootkitType = "UNKNOWN"
 )
 
 // Defines values for ScanState.

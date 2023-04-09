@@ -326,11 +326,29 @@ func ConvertRootkitsResultToAPIModel(rootkitsResults *rootkits.Results) *models.
 		rootkitsList = append(rootkitsList, models.Rootkit{
 			Path:        &rootkit.Path,
 			RootkitName: &rootkit.RootkitName,
-			RootkitType: utils.PointerTo(models.RootkitType(rootkit.RootkitType)),
+			RootkitType: ConvertRootkitTypeToAPIModel(rootkit.RootkitType),
 		})
 	}
 
 	return &models.RootkitScan{
 		Rootkits: &rootkitsList,
+	}
+}
+
+func ConvertRootkitTypeToAPIModel(rootkitType string) *models.RootkitType {
+	switch strings.ToUpper(rootkitType) {
+	case string(models.APPLICATION):
+		return utils.PointerTo(models.APPLICATION)
+	case string(models.FIRMWARE):
+		return utils.PointerTo(models.FIRMWARE)
+	case string(models.KERNEL):
+		return utils.PointerTo(models.KERNEL)
+	case string(models.MEMORY):
+		return utils.PointerTo(models.MEMORY)
+	case string(models.UNKNOWN):
+		return utils.PointerTo(models.UNKNOWN)
+	default:
+		log.Errorf("Can't convert rootkit type %q, treating as %v", rootkitType, models.UNKNOWN)
+		return utils.PointerTo(models.UNKNOWN)
 	}
 }
