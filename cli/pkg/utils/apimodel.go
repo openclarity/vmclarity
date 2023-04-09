@@ -324,7 +324,7 @@ func ConvertRootkitsResultToAPIModel(rootkitsResults *rootkits.Results) *models.
 	for _, r := range rootkitsResults.MergedResults.Rootkits {
 		rootkit := r // Prevent loop variable pointer export
 		rootkitsList = append(rootkitsList, models.Rootkit{
-			Path:        &rootkit.Path,
+			Message:     &rootkit.Message,
 			RootkitName: &rootkit.RootkitName,
 			RootkitType: ConvertRootkitTypeToAPIModel(rootkit.RootkitType),
 		})

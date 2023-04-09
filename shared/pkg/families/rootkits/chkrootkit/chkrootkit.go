@@ -94,7 +94,7 @@ func toResultsRootkits(rootkits []chkrootkitutils.Rootkit) []common.Rootkit {
 		}
 
 		ret = append(ret, common.Rootkit{
-			Path:        rootkit.Message,
+			Message:     rootkit.Message,
 			RootkitName: rootkit.RkName,
 			RootkitType: rootkit.RkType,
 		})

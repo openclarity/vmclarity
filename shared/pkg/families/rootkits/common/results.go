@@ -23,7 +23,7 @@ type Results struct {
 }
 
 type Rootkit struct {
-	Path        string `json:"path,omitempty"`
+	Message     string `json:"message,omitempty"`
 	RootkitName string `json:"RootkitName,omitempty"`
 	RootkitType string `json:"RootkitType,omitempty"`
 }

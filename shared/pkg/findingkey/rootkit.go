@@ -24,17 +24,17 @@ import (
 type RootkitKey struct {
 	Name        string
 	RootkitType string
-	Path        string
+	Message     string
 }
 
 func (k RootkitKey) String() string {
-	return fmt.Sprintf("%s.%s.%s", k.Name, k.RootkitType, k.Path)
+	return fmt.Sprintf("%s.%s.%s", k.Name, k.RootkitType, k.Message)
 }
 
 func GenerateRootkitKey(info models.RootkitFindingInfo) RootkitKey {
 	return RootkitKey{
 		Name:        *info.RootkitName,
 		RootkitType: string(*info.RootkitType),
-		Path:        *info.Path,
+		Message:     *info.Message,
 	}
 }
