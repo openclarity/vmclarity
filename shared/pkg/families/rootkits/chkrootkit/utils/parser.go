@@ -1,12 +1,15 @@
 package utils
 
-import "fmt"
-import "os"
-import "log"
-import "strings"
-import "bufio"
-import "bytes"
-import "encoding/json"
+import (
+	"bufio"
+	"bytes"
+	"fmt"
+	"strings"
+
+	log "github.com/sirupsen/logrus"
+
+	"github.com/openclarity/vmclarity/shared/pkg/utils"
+)
 
 func SplitFuncSeparator(sep string) func(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	return func(data []byte, atEOF bool) (advance int, token []byte, err error) {
@@ -16,11 +19,10 @@ func SplitFuncSeparator(sep string) func(data []byte, atEOF bool) (advance int, 
 
 		strData := string(data)
 
-		checkingIndex := strings.Index(strData[1:], sep)
+		sepIndex := strings.Index(strData[1:], sep)
 
-		if checkingIndex != -1 {
-			//log.Print("Checking: ", string(data[:checkingIndex+1]))
-			return checkingIndex+1, data[:checkingIndex+1], nil
+		if sepIndex != -1 {
+			return sepIndex + 1, data[:sepIndex+1], nil
 		}
 
 		if atEOF {
@@ -42,106 +44,108 @@ var applicationRootkits = []string{
 }
 
 type Rootkit struct {
-	RkType string
-	Rkname string
-	Message string
+	RkType   string
+	RkName   string
+	Message  string
 	Infected bool
 }
 
-func ParseChkrootkitOutput(chkrootkitOutput string) []Rootkit {
-	report, err := os.Open("chkrootkit_output")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer report.Close()
+func ParseChkrootkitOutput(chkrootkitOutput []byte) ([]Rootkit, error) {
+	var rootkits []Rootkit
 
-	scanner := bufio.NewScanner(report)
+	checkingPrefix := "Checking `"
+	checkingPrefixLen := len(checkingPrefix)
+
+	scanner := bufio.NewScanner(bytes.NewBuffer(chkrootkitOutput))
 	scanner.Split(SplitFuncSeparator("Checking"))
-
-	rootkits := []Rootkit{}
-
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		if !strings.HasPrefix(line, "Checking `") {
-			// probably should error
+		if strings.HasPrefix(line, "ROOTDIR is") {
+			// Skipping root dir path message.
 			continue
 		}
-		line = line[len("Checking `"):]
 
-		testname, result, found := strings.Cut(line, "'... ")
+		if !strings.HasPrefix(line, checkingPrefix) {
+			// Probably should error.
+			log.Warnf("Missing 'Checking' prefix, skipping line %q", line)
+			continue
+		}
+
+		// Removing checking prefix.
+		line = line[checkingPrefixLen:]
+
+		// Splitting test name and result
+		testName, result, found := strings.Cut(line, "'... ")
 		if !found {
-			// probably should error
+			// Probably should error.
+			log.Warnf("Failed to found test name and result, skipping line %q", line)
 			continue
 		}
 		result = strings.TrimSpace(result)
 
-		if Contains(applicationRootkits, "testname") {
+		if utils.Contains(applicationRootkits, testName) {
 			rootkits = append(rootkits, Rootkit{
-				RkType: "APPLICATION",
-				Rkname: "UNKNOWN",
-				Message: fmt.Sprintf("Application %q %s", testname, result),
+				RkType:   "APPLICATION",
+				RkName:   "UNKNOWN",
+				Message:  fmt.Sprintf("Application %q %s", testName, result),
 				Infected: result == "INFECTED",
 			})
-		} else if testname == "aliens" {
-			rootkits = append(rootkits, processAliensToRootkits(result)...)
+		} else if testName == "aliens" {
+			aliensToRootkits, err := processAliensToRootkits(result)
+			if err != nil {
+				return nil, fmt.Errorf("failed to process aliens to rootkits: %v", err)
+			}
+			rootkits = append(rootkits, aliensToRootkits...)
+		} else {
+			// Probably should error.
+			log.Warnf("Unknown test name %q, skipping line %q", testName, line)
+			continue
 		}
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+		return nil, fmt.Errorf("failed to scan the output: %v", err)
 	}
 
-	data, err := json.MarshalIndent(rootkits, "", "    ")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println(string(data))
+	return rootkits, nil
 }
 
-func processAliensToRootkits(result string) []Rootkit {
-	scanner := bufio.NewScanner(bytes.NewBufferString(result))
+func processAliensToRootkits(aliensResult string) ([]Rootkit, error) {
+	scanner := bufio.NewScanner(bytes.NewBufferString(aliensResult))
 	scanner.Split(SplitFuncSeparator("Searching"))
 
 	rootkits := map[string]Rootkit{}
+	searchingForPrefix := "Searching for "
+	searchingForPrefixLen := len(searchingForPrefix)
 
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		if !strings.HasPrefix(line, "Searching for ") {
-			// probably should error
+		if !strings.HasPrefix(line, searchingForPrefix) {
+			// Probably should error.
+			log.Warnf("Missing 'Searching for' prefix, skipping line %q", line)
 			continue
 		}
-		line = line[len("Searching for "):]
+		line = line[searchingForPrefixLen:]
 
 		name, result, found := strings.Cut(line, "...")
 		if !found {
-			// probably should error
+			// Probably should error.
+			log.Warnf("Failed to found test name and result, skipping line %q", line)
 			continue
 		}
 
-		name = strings.TrimSpace(name)
-		name = strings.TrimSuffix(name, "default files")
-		name = strings.TrimSpace(name)
-		name = strings.TrimSuffix(name, "default dir")
-		name = strings.TrimSpace(name)
-		name = strings.TrimSuffix(name, "default files and dirs")
-		name = strings.TrimSpace(name)
-		name = strings.TrimSuffix(name, "default files and dir")
-		name = strings.TrimSpace(name)
-		name = strings.TrimSuffix(name, "files and dirs")
-		name = strings.TrimSpace(name)
-		name = strings.TrimSuffix(name, "modules")
-		name = strings.TrimSpace(name)
-		name = strings.TrimSuffix(name, "defaults")
-		name = strings.TrimSpace(name)
-		name = strings.TrimSuffix(name, ", it may take a while")
-		name = strings.TrimSpace(name)
-		name = strings.TrimSuffix(name, "logs")
-		name = strings.TrimSpace(name)
-
-		name = strings.TrimSuffix(name, "'s")
+		name = strings.TrimSuffix(strings.TrimSpace(name), "default files")
+		name = strings.TrimSuffix(strings.TrimSpace(name), "default dir")
+		name = strings.TrimSuffix(strings.TrimSpace(name), "default files and dirs")
+		name = strings.TrimSuffix(strings.TrimSpace(name), "default files and dir")
+		name = strings.TrimSuffix(strings.TrimSpace(name), "files and dirs")
+		name = strings.TrimSuffix(strings.TrimSpace(name), "modules")
+		name = strings.TrimSuffix(strings.TrimSpace(name), "defaults")
+		name = strings.TrimSuffix(strings.TrimSpace(name), ", it may take a while")
+		name = strings.TrimSuffix(strings.TrimSpace(name), "logs")
+		name = strings.TrimSuffix(strings.TrimSpace(name), "'s")
 		name = strings.TrimSpace(name)
 
 		result = strings.TrimSpace(result)
@@ -151,19 +155,16 @@ func processAliensToRootkits(result string) []Rootkit {
 			rkType = "KERNEL"
 		}
 
-		infected := false
-		message := result
-		if result != "nothing found" {
-			infected = true
-		}
+		infected := result != "nothing found" && result != "not tested"
 
 		var rk Rootkit
-		rk, ok := rootkits[name]
+		var ok bool
+		rk, ok = rootkits[name]
 		if !ok {
 			rk = Rootkit{
-				RkType: rkType,
-				Rkname: name,
-				Message: message,
+				RkType:   rkType,
+				RkName:   name,
+				Message:  result,
 				Infected: infected,
 			}
 		} else {
@@ -171,35 +172,15 @@ func processAliensToRootkits(result string) []Rootkit {
 				rk.Infected = infected
 			}
 
-			rk.Message = fmt.Sprintf("%s %s", rootkits[name].Message, message)
+			rk.Message = fmt.Sprintf("%s %s", rk.Message, result)
 		}
+
 		rootkits[name] = rk
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+		return nil, fmt.Errorf("failed to scan: %v", err)
 	}
 
-	rootkitArray := []Rootkit{}
-	for _, rootkit := range rootkits {
-		rootkitArray = append(rootkitArray, rootkit)
-	}
-	return rootkitArray
+	return utils.StringKeyMapToArray(rootkits), nil
 }
-
-// Index returns the index of the first occurrence of v in s,
-// or -1 if not present.
-func Index[E comparable](s []E, v E) int {
-	for i, vs := range s {
-		if v == vs {
-			return i
-		}
-	}
-	return -1
-}
-
-// Contains reports whether v is present in s.
-func Contains[E comparable](s []E, v E) bool {
-	return Index(s, v) >= 0
-}
-

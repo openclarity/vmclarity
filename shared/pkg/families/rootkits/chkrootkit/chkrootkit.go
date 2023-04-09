@@ -72,12 +72,35 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 			return
 		}
 
-		retResults.Rootkits = chkrootkitutils.ParseChkrootkitOutput(string(out))
+		rootkits, err := chkrootkitutils.ParseChkrootkitOutput(out)
+		if err != nil {
+			s.sendResults(retResults, fmt.Errorf("failed to parse chkrootkit output: %v", err))
+			return
+		}
+
+		retResults.Rootkits = toResultsRootkits(rootkits)
 
 		s.sendResults(retResults, nil)
 	}()
 
 	return nil
+}
+
+func toResultsRootkits(rootkits []chkrootkitutils.Rootkit) []common.Rootkit {
+	var ret []common.Rootkit
+	for _, rootkit := range rootkits {
+		if !rootkit.Infected {
+			continue
+		}
+
+		ret = append(ret, common.Rootkit{
+			Path:        rootkit.Message,
+			RootkitName: rootkit.RkName,
+			RootkitType: rootkit.RkType,
+		})
+	}
+
+	return ret
 }
 
 func New(c job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.Result) job_manager.Job {
