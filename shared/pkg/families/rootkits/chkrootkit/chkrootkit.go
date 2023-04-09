@@ -87,6 +87,7 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 }
 
 func toResultsRootkits(rootkits []chkrootkitutils.Rootkit) []common.Rootkit {
+	// nolint:prealloc
 	var ret []common.Rootkit
 	for _, rootkit := range rootkits {
 		if !rootkit.Infected {
