@@ -13,21 +13,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package config
+package state
 
-type DeleteJobPolicyType string
+import (
+	"context"
 
-const (
-	DeleteJobPolicyAlways    DeleteJobPolicyType = "Always"
-	DeleteJobPolicyNever     DeleteJobPolicyType = "Never"
-	DeleteJobPolicyOnSuccess DeleteJobPolicyType = "OnSuccess"
+	log "github.com/sirupsen/logrus"
 )
 
-func (dj DeleteJobPolicyType) IsValid() bool {
-	switch dj {
-	case DeleteJobPolicyAlways, DeleteJobPolicyNever, DeleteJobPolicyOnSuccess:
-		return true
-	default:
-		return false
-	}
+type LocalState struct{}
+
+func (l *LocalState) WaitForVolumeAttachment(context.Context) error {
+	return nil
+}
+
+func (l *LocalState) MarkInProgress(context.Context) error {
+	log.Info("scanning is in progress")
+	return nil
+}
+
+func (l *LocalState) MarkDone(context.Context, []error) error {
+	log.Info("scanning is finished")
+	return nil
+}
+
+func NewLocalState() (*LocalState, error) {
+	return &LocalState{}, nil
 }

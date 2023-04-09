@@ -13,21 +13,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package config
+package presenter
 
-type DeleteJobPolicyType string
+import (
+	"io"
 
-const (
-	DeleteJobPolicyAlways    DeleteJobPolicyType = "Always"
-	DeleteJobPolicyNever     DeleteJobPolicyType = "Never"
-	DeleteJobPolicyOnSuccess DeleteJobPolicyType = "OnSuccess"
+	"github.com/openclarity/vmclarity/shared/pkg/families"
 )
 
-func (dj DeleteJobPolicyType) IsValid() bool {
-	switch dj {
-	case DeleteJobPolicyAlways, DeleteJobPolicyNever, DeleteJobPolicyOnSuccess:
-		return true
-	default:
-		return false
+type ConsolePresenter struct {
+	*DefaultPresenter
+}
+
+func NewConsolePresenter(output io.Writer, FamiliesConfig *families.Config) *ConsolePresenter {
+	return &ConsolePresenter{
+		DefaultPresenter: &DefaultPresenter{
+			Writer:         &ConsoleWriter{Output: output},
+			FamiliesConfig: FamiliesConfig,
+		},
 	}
 }

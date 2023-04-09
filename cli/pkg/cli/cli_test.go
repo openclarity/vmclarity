@@ -13,21 +13,48 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package config
+package cli
 
-type DeleteJobPolicyType string
-
-const (
-	DeleteJobPolicyAlways    DeleteJobPolicyType = "Always"
-	DeleteJobPolicyNever     DeleteJobPolicyType = "Never"
-	DeleteJobPolicyOnSuccess DeleteJobPolicyType = "OnSuccess"
+import (
+	"testing"
 )
 
-func (dj DeleteJobPolicyType) IsValid() bool {
-	switch dj {
-	case DeleteJobPolicyAlways, DeleteJobPolicyNever, DeleteJobPolicyOnSuccess:
-		return true
-	default:
-		return false
+func Test_isSupportedFS(t *testing.T) {
+	type args struct {
+		fs string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "supported ext4",
+			args: args{
+				fs: fsTypeExt4,
+			},
+			want: true,
+		},
+		{
+			name: "supported xfs",
+			args: args{
+				fs: fsTypeXFS,
+			},
+			want: true,
+		},
+		{
+			name: "not supported btrfs",
+			args: args{
+				fs: "btrfs",
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := isSupportedFS(tt.args.fs); got != tt.want {
+				t.Errorf("isSupportedFS() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

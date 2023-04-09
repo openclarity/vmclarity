@@ -13,21 +13,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package config
+package presenter
 
-type DeleteJobPolicyType string
+import "github.com/openclarity/vmclarity/shared/pkg/families"
 
-const (
-	DeleteJobPolicyAlways    DeleteJobPolicyType = "Always"
-	DeleteJobPolicyNever     DeleteJobPolicyType = "Never"
-	DeleteJobPolicyOnSuccess DeleteJobPolicyType = "OnSuccess"
-)
+type FilePresenter struct {
+	*DefaultPresenter
+}
 
-func (dj DeleteJobPolicyType) IsValid() bool {
-	switch dj {
-	case DeleteJobPolicyAlways, DeleteJobPolicyNever, DeleteJobPolicyOnSuccess:
-		return true
-	default:
-		return false
+func NewFilePresenter(path string, FamiliesConfig *families.Config) *FilePresenter {
+	return &FilePresenter{
+		DefaultPresenter: &DefaultPresenter{
+			Writer:         &FileWriter{Path: path},
+			FamiliesConfig: FamiliesConfig,
+		},
 	}
 }
