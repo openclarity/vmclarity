@@ -1,4 +1,4 @@
-// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,21 +13,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package config
+package utils
 
-type DeleteJobPolicyType string
-
-const (
-	DeleteJobPolicyAlways    DeleteJobPolicyType = "Always"
-	DeleteJobPolicyNever     DeleteJobPolicyType = "Never"
-	DeleteJobPolicyOnSuccess DeleteJobPolicyType = "OnSuccess"
-)
-
-func (dj DeleteJobPolicyType) IsValid() bool {
-	switch dj {
-	case DeleteJobPolicyAlways, DeleteJobPolicyNever, DeleteJobPolicyOnSuccess:
-		return true
-	default:
-		return false
+// Index returns the index of the first occurrence of v in s,
+// or -1 if not present.
+func Index[E comparable](s []E, v E) int {
+	for i, vs := range s {
+		if v == vs {
+			return i
+		}
 	}
+	return -1
+}
+
+// Contains reports whether v is present in s.
+func Contains[E comparable](s []E, v E) bool {
+	return Index(s, v) >= 0
 }

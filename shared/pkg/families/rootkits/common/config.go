@@ -1,4 +1,4 @@
-// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,21 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package config
+package common
 
-type DeleteJobPolicyType string
+import "github.com/openclarity/vmclarity/shared/pkg/families/rootkits/chkrootkit/config"
 
-const (
-	DeleteJobPolicyAlways    DeleteJobPolicyType = "Always"
-	DeleteJobPolicyNever     DeleteJobPolicyType = "Never"
-	DeleteJobPolicyOnSuccess DeleteJobPolicyType = "OnSuccess"
-)
-
-func (dj DeleteJobPolicyType) IsValid() bool {
-	switch dj {
-	case DeleteJobPolicyAlways, DeleteJobPolicyNever, DeleteJobPolicyOnSuccess:
-		return true
-	default:
-		return false
-	}
+type ScannersConfig struct {
+	Chkrootkit config.Config `yaml:"chkrootkit" mapstructure:"chkrootkit"`
 }
+
+func (ScannersConfig) IsConfig() {}

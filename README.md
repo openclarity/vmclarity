@@ -5,7 +5,7 @@
 </picture>
 
 VMClarity is an open source tool for agentless detection and management of Virtual Machine
-Software Bill Of Materials (SBOM) and vulnerabilities.
+Software Bill Of Materials (SBOM) and security threats such as vulnerabilities, exploits, malware, rootkits, misconfigurations and leaked secrets.
 
 # Table of Contents<!-- omit in toc -->
 
@@ -37,19 +37,14 @@ VMs are vulnerable to multiple threats:
 - Rootkits
 
 There are many very good open source and commercial-based solutions for
-providing threat detection for VMs including:
-- Vulnerability detection
-- Malware detection
-- Exploit detection
-- etc.
+providing threat detection for VMs, manifesting the different threat categories above.
 
-There are challenges with assembling and managing these tools yourself:
+However, there are challenges with assembling and managing these tools yourself:
 - Complex installation, configuration, and reporting
 - Integration with deployment automation
 - Siloed reporting and visualization
 
-The VMClarity project is focused on unifying detection and management of VM
-vulnerabilities.
+The VMClarity project is focused on unifying detection and management of VM security threats in an agentless manner.
 
 # Overview
 
@@ -143,7 +138,7 @@ The VMClarity infrastructure includes:
   can be added. (Postgres is in the roadmap)
 
 - **Scanner services**: These services provide support to the VMClarity
-  CLI to offload work that would need to be done in ever scanner, for example
+  CLI to offload work that would need to be done in every scanner, for example
   downloading the latest vulnerability or malware signatures from the various DB
   sources. The components included today are:
   - grype-server: A rest API wrapper around the grype vulnerbility scanner

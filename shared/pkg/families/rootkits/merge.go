@@ -1,4 +1,4 @@
-// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,21 +13,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package config
+package rootkits
 
-type DeleteJobPolicyType string
-
-const (
-	DeleteJobPolicyAlways    DeleteJobPolicyType = "Always"
-	DeleteJobPolicyNever     DeleteJobPolicyType = "Never"
-	DeleteJobPolicyOnSuccess DeleteJobPolicyType = "OnSuccess"
+import (
+	"github.com/openclarity/vmclarity/shared/pkg/families/rootkits/common"
 )
 
-func (dj DeleteJobPolicyType) IsValid() bool {
-	switch dj {
-	case DeleteJobPolicyAlways, DeleteJobPolicyNever, DeleteJobPolicyOnSuccess:
-		return true
-	default:
-		return false
+type MergedResults struct {
+	Rootkits []common.Rootkit
+}
+
+func NewMergedResults() *MergedResults {
+	return &MergedResults{
+		Rootkits: []common.Rootkit{},
 	}
+}
+
+func (m *MergedResults) Merge(other *common.Results) *MergedResults {
+	m.Rootkits = append(m.Rootkits, other.Rootkits...)
+
+	return m
 }

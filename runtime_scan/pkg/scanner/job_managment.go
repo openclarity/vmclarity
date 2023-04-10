@@ -40,6 +40,9 @@ import (
 	malwareconfig "github.com/openclarity/vmclarity/shared/pkg/families/malware/clam/config"
 	malwarecommon "github.com/openclarity/vmclarity/shared/pkg/families/malware/common"
 	misconfigurationTypes "github.com/openclarity/vmclarity/shared/pkg/families/misconfiguration/types"
+	"github.com/openclarity/vmclarity/shared/pkg/families/rootkits"
+	chkrootkitConfig "github.com/openclarity/vmclarity/shared/pkg/families/rootkits/chkrootkit/config"
+	rootkitsCommon "github.com/openclarity/vmclarity/shared/pkg/families/rootkits/common"
 	familiesSbom "github.com/openclarity/vmclarity/shared/pkg/families/sbom"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets/common"
@@ -352,6 +355,7 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 	if err != nil {
 		return types.Job{}, fmt.Errorf("failed to create volume: %v", err)
 	}
+	job.Volume = newVolume
 
 	// wait for instance to be in a running state.
 	if err := job.Instance.WaitForReady(ctx); err != nil {
@@ -389,13 +393,18 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 
 func (s *Scanner) generateFamiliesConfigurationYaml() (string, error) {
 	famConfig := families.Config{
-		SBOM:             userSBOMConfigToFamiliesSbomConfig(s.scanConfig.ScanFamiliesConfig.Sbom),
-		Vulnerabilities:  userVulnConfigToFamiliesVulnConfig(s.scanConfig.ScanFamiliesConfig.Vulnerabilities, s.config.TrivyServerAddress, s.config.GrypeServerAddress),
-		Secrets:          userSecretsConfigToFamiliesSecretsConfig(s.scanConfig.ScanFamiliesConfig.Secrets, s.config.GitleaksBinaryPath),
-		Exploits:         userExploitsConfigToFamiliesExploitsConfig(s.scanConfig.ScanFamiliesConfig.Exploits, s.config.ExploitsDBAddress),
-		Malware:          userMalwareConfigToFamiliesMalwareConfig(s.scanConfig.ScanFamiliesConfig.Malware, s.config.ClamBinaryPath),
+		SBOM:            userSBOMConfigToFamiliesSbomConfig(s.scanConfig.ScanFamiliesConfig.Sbom),
+		Vulnerabilities: userVulnConfigToFamiliesVulnConfig(s.scanConfig.ScanFamiliesConfig.Vulnerabilities, s.config.TrivyServerAddress, s.config.GrypeServerAddress),
+		Secrets:         userSecretsConfigToFamiliesSecretsConfig(s.scanConfig.ScanFamiliesConfig.Secrets, s.config.GitleaksBinaryPath),
+		Exploits:        userExploitsConfigToFamiliesExploitsConfig(s.scanConfig.ScanFamiliesConfig.Exploits, s.config.ExploitsDBAddress),
+		Malware: userMalwareConfigToFamiliesMalwareConfig(
+			s.scanConfig.ScanFamiliesConfig.Malware,
+			s.config.ClamBinaryPath,
+			s.config.FreshclamBinaryPath,
+			s.config.AlternativeFreshclamMirrorURL,
+		),
 		Misconfiguration: userMisconfigurationConfigToFamiliesMisconfigurationConfig(s.scanConfig.ScanFamiliesConfig.Misconfigurations, s.config.LynisInstallPath),
-		// TODO(sambetts) Configure other families once we've got the known working ones working e2e
+		Rootkits:         userRootkitsConfigToFamiliesRootkitsConfig(s.scanConfig.ScanFamiliesConfig.Rootkits, s.config.ChkrootkitBinaryPath),
 	}
 
 	famConfigYaml, err := yaml.Marshal(famConfig)
@@ -404,6 +413,23 @@ func (s *Scanner) generateFamiliesConfigurationYaml() (string, error) {
 	}
 
 	return string(famConfigYaml), nil
+}
+
+func userRootkitsConfigToFamiliesRootkitsConfig(rootkitsConfig *models.RootkitsConfig, chkRootkitBinaryPath string) rootkits.Config {
+	if rootkitsConfig == nil || rootkitsConfig.Enabled == nil || !*rootkitsConfig.Enabled {
+		return rootkits.Config{}
+	}
+
+	return rootkits.Config{
+		Enabled:      true,
+		ScannersList: []string{"chkrootkit"},
+		Inputs:       nil,
+		ScannersConfig: &rootkitsCommon.ScannersConfig{
+			Chkrootkit: chkrootkitConfig.Config{
+				BinaryPath: chkRootkitBinaryPath,
+			},
+		},
+	}
 }
 
 func userSecretsConfigToFamiliesSecretsConfig(secretsConfig *models.SecretsConfig, gitleaksBinaryPath string) secrets.Config {
@@ -525,7 +551,12 @@ func userExploitsConfigToFamiliesExploitsConfig(exploitsConfig *models.ExploitsC
 	}
 }
 
-func userMalwareConfigToFamiliesMalwareConfig(malwareConfig *models.MalwareConfig, clamBinaryPath string) malware.Config {
+func userMalwareConfigToFamiliesMalwareConfig(
+	malwareConfig *models.MalwareConfig,
+	clamBinaryPath string,
+	freshclamBinaryPath string,
+	alternativeFreshclamMirrorURL string,
+) malware.Config {
 	if malwareConfig == nil || malwareConfig.Enabled == nil || !*malwareConfig.Enabled {
 		return malware.Config{}
 	}
@@ -537,7 +568,9 @@ func userMalwareConfigToFamiliesMalwareConfig(malwareConfig *models.MalwareConfi
 		Inputs:       nil, // rootfs directory will be determined by the CLI after mount.
 		ScannersConfig: &malwarecommon.ScannersConfig{
 			Clam: malwareconfig.Config{
-				BinaryPath: clamBinaryPath,
+				ClamScanBinaryPath:            clamBinaryPath,
+				FreshclamBinaryPath:           freshclamBinaryPath,
+				AlternativeFreshclamMirrorURL: alternativeFreshclamMirrorURL,
 			},
 		},
 	}
@@ -557,9 +590,9 @@ func (s *Scanner) deleteJobIfNeeded(ctx context.Context, job *types.Job, isSucce
 	switch s.config.DeleteJobPolicy {
 	case config.DeleteJobPolicyNever:
 		// do nothing
-	case config.DeleteJobPolicyAll:
+	case config.DeleteJobPolicyAlways:
 		s.deleteJob(ctx, job)
-	case config.DeleteJobPolicySuccessful:
+	case config.DeleteJobPolicyOnSuccess:
 		if isSuccessfulJob {
 			s.deleteJob(ctx, job)
 		}

@@ -13,21 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package config
+package types
 
-type DeleteJobPolicyType string
+type RootkitType string
 
 const (
-	DeleteJobPolicyAlways    DeleteJobPolicyType = "Always"
-	DeleteJobPolicyNever     DeleteJobPolicyType = "Never"
-	DeleteJobPolicyOnSuccess DeleteJobPolicyType = "OnSuccess"
+	APPLICATION RootkitType = "APPLICATION"
+	FIRMWARE    RootkitType = "FIRMWARE"
+	KERNEL      RootkitType = "KERNEL"
+	MEMORY      RootkitType = "MEMORY"
+	UNKNOWN     RootkitType = "UNKNOWN"
 )
-
-func (dj DeleteJobPolicyType) IsValid() bool {
-	switch dj {
-	case DeleteJobPolicyAlways, DeleteJobPolicyNever, DeleteJobPolicyOnSuccess:
-		return true
-	default:
-		return false
-	}
-}

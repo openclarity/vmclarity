@@ -1,4 +1,4 @@
-// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,19 +15,6 @@
 
 package config
 
-type DeleteJobPolicyType string
-
-const (
-	DeleteJobPolicyAlways    DeleteJobPolicyType = "Always"
-	DeleteJobPolicyNever     DeleteJobPolicyType = "Never"
-	DeleteJobPolicyOnSuccess DeleteJobPolicyType = "OnSuccess"
-)
-
-func (dj DeleteJobPolicyType) IsValid() bool {
-	switch dj {
-	case DeleteJobPolicyAlways, DeleteJobPolicyNever, DeleteJobPolicyOnSuccess:
-		return true
-	default:
-		return false
-	}
+type Config struct {
+	BinaryPath string `yaml:"binary_path" mapstructure:"binary_path"`
 }
