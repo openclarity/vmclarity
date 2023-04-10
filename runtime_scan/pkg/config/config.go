@@ -157,7 +157,7 @@ func LoadConfig(backendHost string, backendPort int, baseURL string) (*Orchestra
 			AlternativeFreshclamMirrorURL: viper.GetString(AlternativeFreshclamMirrorURL),
 			TrivyServerAddress:            viper.GetString(TrivyServerAddress),
 			GrypeServerAddress:            viper.GetString(GrypeServerAddress),
-			ChkrootkitBinaryPath:      viper.GetString(ChkrootkitBinaryPath),
+			ChkrootkitBinaryPath:          viper.GetString(ChkrootkitBinaryPath),
 		},
 	}
 
