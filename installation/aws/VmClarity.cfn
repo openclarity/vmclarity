@@ -356,7 +356,7 @@ Resources:
                   ExecStart=/usr/bin/docker run \
                     --rm --name %n \
                     -p 0.0.0.0:1000:80/tcp \
-                    ${FreshclamMirrorContainerImage} run --log-level info
+                    ${FreshclamMirrorContainerImage}
 
                   [Install]
                   WantedBy=multi-user.target
