@@ -77,6 +77,7 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 			s.sendResults(retResults, fmt.Errorf("failed to parse chkrootkit output: %v", err))
 			return
 		}
+		rootkits = filterResults(rootkits)
 
 		retResults.Rootkits = toResultsRootkits(rootkits)
 
@@ -84,6 +85,21 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 	}()
 
 	return nil
+}
+
+func filterResults(rootkits []chkrootkitutils.Rootkit) []chkrootkitutils.Rootkit {
+	// nolint:prealloc
+	var ret []chkrootkitutils.Rootkit
+	for _, rootkit := range rootkits {
+		if rootkit.RkName == "suspicious files and dirs" {
+			// This causes many false positives on every VM, as it's just checks for:
+			// files=`${find} ${DIR} -name ".[A-Za-z]*" -o -name "...*" -o -name ".. *"`
+			// dirs=`${find} ${DIR} -type d -name ".*"`
+			continue
+		}
+		ret = append(ret, rootkit)
+	}
+	return ret
 }
 
 func toResultsRootkits(rootkits []chkrootkitutils.Rootkit) []common.Rootkit {

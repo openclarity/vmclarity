@@ -18,6 +18,7 @@ package chkrootkit
 import (
 	"encoding/json"
 	"os"
+	"reflect"
 	"testing"
 
 	"gotest.tools/v3/assert"
@@ -64,4 +65,83 @@ func prettyPrint(t *testing.T, got any) string {
 	jsonResults, err := json.MarshalIndent(got, "", "    ")
 	assert.NilError(t, err)
 	return string(jsonResults)
+}
+
+func Test_filterResults(t *testing.T) {
+	type args struct {
+		rootkits []chkrootkitutils.Rootkit
+	}
+	tests := []struct {
+		name string
+		args args
+		want []chkrootkitutils.Rootkit
+	}{
+		{
+			name: "shouldn't filter",
+			args: args{
+				rootkits: []chkrootkitutils.Rootkit{
+					{
+						RkType:   "test-type",
+						RkName:   "test-name1",
+						Message:  "test-message1",
+						Infected: true,
+					},
+					{
+						RkType:   "test-type",
+						RkName:   "test-name2",
+						Message:  "test-message2",
+						Infected: false,
+					},
+				},
+			},
+			want: []chkrootkitutils.Rootkit{
+				{
+					RkType:   "test-type",
+					RkName:   "test-name1",
+					Message:  "test-message1",
+					Infected: true,
+				},
+				{
+					RkType:   "test-type",
+					RkName:   "test-name2",
+					Message:  "test-message2",
+					Infected: false,
+				},
+			},
+		},
+		{
+			name: "filter out suspicious files and dirs",
+			args: args{
+				rootkits: []chkrootkitutils.Rootkit{
+					{
+						RkType:   "test-type",
+						RkName:   "test-name1",
+						Message:  "test-message1",
+						Infected: true,
+					},
+					{
+						RkType:   "test-type",
+						RkName:   "suspicious files and dirs",
+						Message:  "test-message2",
+						Infected: true,
+					},
+				},
+			},
+			want: []chkrootkitutils.Rootkit{
+				{
+					RkType:   "test-type",
+					RkName:   "test-name1",
+					Message:  "test-message1",
+					Infected: true,
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := filterResults(tt.args.rootkits); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("filterResults() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
