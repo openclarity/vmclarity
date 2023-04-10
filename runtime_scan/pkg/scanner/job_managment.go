@@ -40,6 +40,9 @@ import (
 	malwareconfig "github.com/openclarity/vmclarity/shared/pkg/families/malware/clam/config"
 	malwarecommon "github.com/openclarity/vmclarity/shared/pkg/families/malware/common"
 	misconfigurationTypes "github.com/openclarity/vmclarity/shared/pkg/families/misconfiguration/types"
+	"github.com/openclarity/vmclarity/shared/pkg/families/rootkits"
+	chkrootkitConfig "github.com/openclarity/vmclarity/shared/pkg/families/rootkits/chkrootkit/config"
+	rootkitsCommon "github.com/openclarity/vmclarity/shared/pkg/families/rootkits/common"
 	familiesSbom "github.com/openclarity/vmclarity/shared/pkg/families/sbom"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets/common"
@@ -400,7 +403,7 @@ func (s *Scanner) generateFamiliesConfigurationYaml() (string, error) {
 			s.config.AlternativeFreshclamMirrorURL,
 		),
 		Misconfiguration: userMisconfigurationConfigToFamiliesMisconfigurationConfig(s.scanConfig.ScanFamiliesConfig.Misconfigurations, s.config.LynisInstallPath),
-		// TODO(sambetts) Configure other families once we've got the known working ones working e2e
+		Rootkits:         userRootkitsConfigToFamiliesRootkitsConfig(s.scanConfig.ScanFamiliesConfig.Rootkits, s.config.ChkrootkitBinaryPath),
 	}
 
 	famConfigYaml, err := yaml.Marshal(famConfig)
@@ -409,6 +412,23 @@ func (s *Scanner) generateFamiliesConfigurationYaml() (string, error) {
 	}
 
 	return string(famConfigYaml), nil
+}
+
+func userRootkitsConfigToFamiliesRootkitsConfig(rootkitsConfig *models.RootkitsConfig, chkRootkitBinaryPath string) rootkits.Config {
+	if rootkitsConfig == nil || rootkitsConfig.Enabled == nil || !*rootkitsConfig.Enabled {
+		return rootkits.Config{}
+	}
+
+	return rootkits.Config{
+		Enabled:      true,
+		ScannersList: []string{"chkrootkit"},
+		Inputs:       nil,
+		ScannersConfig: &rootkitsCommon.ScannersConfig{
+			Chkrootkit: chkrootkitConfig.Config{
+				BinaryPath: chkRootkitBinaryPath,
+			},
+		},
+	}
 }
 
 func userSecretsConfigToFamiliesSecretsConfig(secretsConfig *models.SecretsConfig, gitleaksBinaryPath string) secrets.Config {
