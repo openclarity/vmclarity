@@ -47,7 +47,7 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 		}
 
 		if !s.isValidInputType(sourceType) {
-			retResults.Error = fmt.Errorf("received invalid input type chkrootkit scanner: %v", sourceType)
+			retResults.Error = fmt.Errorf("received invalid input type for chkrootkit scanner: %v", sourceType)
 			s.sendResults(retResults, nil)
 			return
 		}
@@ -59,7 +59,7 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 		}
 
 		args := []string{
-			"-r", // different root volume
+			"-r", // Set userInput as the path to the root volume
 			userInput,
 		}
 

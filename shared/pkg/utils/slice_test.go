@@ -75,38 +75,6 @@ func TestContains_strings(t *testing.T) {
 			},
 			want: false,
 		},
-		//{
-		//	name: "nil value",
-		//	args: args{
-		//		s: []string{"str", "str1"},
-		//		v: nil,
-		//	},
-		//	want: false,
-		//},
-		//{
-		//	name: "int slice - contains",
-		//	args: args{
-		//		s: []string{1, 2},
-		//		v: 1,
-		//	},
-		//	want: true,
-		//},
-		//{
-		//	name: "int slice - contains twice",
-		//	args: args{
-		//		s: []string{1, 2, 1},
-		//		v: 1,
-		//	},
-		//	want: true,
-		//},
-		//{
-		//	name: "int slice - does not contains",
-		//	args: args{
-		//		s: []string{1, 2},
-		//		v: 3,
-		//	},
-		//	want: false,
-		//},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

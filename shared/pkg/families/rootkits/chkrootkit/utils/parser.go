@@ -73,10 +73,10 @@ func ParseChkrootkitOutput(chkrootkitOutput []byte) ([]Rootkit, error) {
 	checkingPrefix := "Checking `"
 	checkingPrefixLen := len(checkingPrefix)
 
-	scanner := bufio.NewScanner(bytes.NewBuffer(chkrootkitOutput))
-	scanner.Split(SplitFuncSeparator("Checking"))
-	for scanner.Scan() {
-		line := scanner.Text()
+	outputScanner := bufio.NewScanner(bytes.NewBuffer(chkrootkitOutput))
+	outputScanner.Split(SplitFuncSeparator("Checking"))
+	for outputScanner.Scan() {
+		line := outputScanner.Text()
 
 		if strings.HasPrefix(line, "ROOTDIR is") {
 			// Skipping root dir path message.
@@ -121,7 +121,7 @@ func ParseChkrootkitOutput(chkrootkitOutput []byte) ([]Rootkit, error) {
 		}
 	}
 
-	if err := scanner.Err(); err != nil {
+	if err := outputScanner.Err(); err != nil {
 		return nil, fmt.Errorf("failed to scan the output: %v", err)
 	}
 
@@ -129,15 +129,15 @@ func ParseChkrootkitOutput(chkrootkitOutput []byte) ([]Rootkit, error) {
 }
 
 func processAliensToRootkits(aliensResult string) ([]Rootkit, error) {
-	scanner := bufio.NewScanner(bytes.NewBufferString(aliensResult))
-	scanner.Split(SplitFuncSeparator("Searching"))
+	outputScanner := bufio.NewScanner(bytes.NewBufferString(aliensResult))
+	outputScanner.Split(SplitFuncSeparator("Searching"))
 
 	rootkits := map[string]Rootkit{}
 	searchingForPrefix := "Searching for "
 	searchingForPrefixLen := len(searchingForPrefix)
 
-	for scanner.Scan() {
-		line := scanner.Text()
+	for outputScanner.Scan() {
+		line := outputScanner.Text()
 
 		if !strings.HasPrefix(line, searchingForPrefix) {
 			// Probably should error.
@@ -178,6 +178,7 @@ func processAliensToRootkits(aliensResult string) ([]Rootkit, error) {
 		var ok bool
 		rk, ok = rootkits[name]
 		if !ok {
+			// Create rootkit info.
 			rk = Rootkit{
 				RkType:   rkType,
 				RkName:   name,
@@ -186,17 +187,19 @@ func processAliensToRootkits(aliensResult string) ([]Rootkit, error) {
 			}
 		} else {
 			if !rk.Infected {
+				// Update existing rootkit, if previously found as not infected.
 				rk.Infected = infected
 			}
 
+			// Append the result to the message
 			rk.Message = fmt.Sprintf("%s %s", rk.Message, result)
 		}
 
 		rootkits[name] = rk
 	}
 
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("failed to scan: %v", err)
+	if err := outputScanner.Err(); err != nil {
+		return nil, fmt.Errorf("failed to get output: %v", err)
 	}
 
 	return utils.StringKeyMapToArray(rootkits), nil
