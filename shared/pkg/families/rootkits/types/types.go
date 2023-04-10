@@ -1,4 +1,4 @@
-// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,23 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package common
+package types
 
-import "github.com/openclarity/vmclarity/shared/pkg/families/rootkits/types"
+type RootkitType string
 
-type Results struct {
-	Rootkits     []Rootkit
-	ScannedInput string
-	ScannerName  string
-	Error        error
-}
-
-type Rootkit struct {
-	Message     string            `json:"message,omitempty"`
-	RootkitName string            `json:"RootkitName,omitempty"`
-	RootkitType types.RootkitType `json:"RootkitType,omitempty"`
-}
-
-func (r *Results) GetError() error {
-	return r.Error
-}
+const (
+	APPLICATION RootkitType = "APPLICATION"
+	FIRMWARE    RootkitType = "FIRMWARE"
+	KERNEL      RootkitType = "KERNEL"
+	MEMORY      RootkitType = "MEMORY"
+	UNKNOWN     RootkitType = "UNKNOWN"
+)

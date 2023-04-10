@@ -23,6 +23,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/openclarity/vmclarity/shared/pkg/families/rootkits/types"
 	"github.com/openclarity/vmclarity/shared/pkg/utils"
 )
 
@@ -60,7 +61,7 @@ var applicationRootkits = []string{
 }
 
 type Rootkit struct {
-	RkType   string
+	RkType   types.RootkitType
 	RkName   string
 	Message  string
 	Infected bool
@@ -102,7 +103,7 @@ func ParseChkrootkitOutput(chkrootkitOutput []byte) ([]Rootkit, error) {
 
 		if utils.Contains(applicationRootkits, testName) {
 			rootkits = append(rootkits, Rootkit{
-				RkType:   "APPLICATION",
+				RkType:   types.APPLICATION,
 				RkName:   "UNKNOWN",
 				Message:  fmt.Sprintf("Application %q %s", testName, result),
 				Infected: result == "INFECTED",
@@ -166,9 +167,9 @@ func processAliensToRootkits(aliensResult string) ([]Rootkit, error) {
 
 		result = strings.TrimSpace(result)
 
-		rkType := "UNKNOWN"
+		rkType := types.UNKNOWN
 		if strings.Contains(strings.ToLower(name), "lkm") {
-			rkType = "KERNEL"
+			rkType = types.KERNEL
 		}
 
 		infected := result != "nothing found" && result != "not tested"
