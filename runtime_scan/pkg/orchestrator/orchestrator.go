@@ -18,13 +18,13 @@ package orchestrator
 import (
 	"context"
 
-	"github.com/openclarity/vmclarity/runtime_scan/pkg/orchestrator/scanwatcher"
 	log "github.com/sirupsen/logrus"
 
 	_config "github.com/openclarity/vmclarity/runtime_scan/pkg/config"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/orchestrator/configwatcher"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/orchestrator/discovery"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/orchestrator/scanresultprocessor"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/orchestrator/scanwatcher"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 )

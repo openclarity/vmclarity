@@ -16,6 +16,7 @@
 package families
 
 import (
+	"context"
 	"fmt"
 
 	log "github.com/sirupsen/logrus"
@@ -77,17 +78,43 @@ func New(logger *log.Entry, config *Config) *Manager {
 
 type RunErrors map[types.FamilyType]error
 
-func (m *Manager) Run() (*results.Results, RunErrors) {
-	familyErrors := make(map[types.FamilyType]error)
+type familyResult struct {
+	result interfaces.IsResults
+	err    error
+}
 
+func (m *Manager) Run(ctx context.Context) (*results.Results, RunErrors) {
+	familyErrors := make(RunErrors)
 	familyResults := results.New()
+	result := make(chan familyResult, len(m.families))
 
+outer:
 	for _, family := range m.families {
-		ret, err := family.Run(familyResults)
-		if err != nil {
-			familyErrors[family.GetType()] = fmt.Errorf("failed to run family %v: %w", family.GetType(), err)
-		} else {
-			familyResults.SetResults(ret)
+		go func() {
+			ret, err := family.Run(familyResults)
+			result <- familyResult{
+				ret,
+				err,
+			}
+		}()
+
+	inner:
+		for {
+			select {
+			case <-ctx.Done():
+				log.Warningf("received context cancelled while family %q is still running. Aborting...", family)
+				break outer
+			case r := <-result:
+				log.Debugf("received result from family %q: %v", family, r)
+				if r.err != nil {
+					familyErrors[family.GetType()] = fmt.Errorf("failed to run family %v: %w", family.GetType(), r.err)
+				} else {
+					familyResults.SetResults(r.result)
+				}
+				break inner
+			default:
+				continue
+			}
 		}
 	}
 

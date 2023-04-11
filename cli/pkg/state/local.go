@@ -37,6 +37,10 @@ func (l *LocalState) MarkDone(context.Context, []error) error {
 	return nil
 }
 
+func (l *LocalState) IsAborted(context.Context) (bool, error) {
+	return false, nil
+}
+
 func NewLocalState() (*LocalState, error) {
 	return &LocalState{}, nil
 }

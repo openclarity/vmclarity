@@ -19,6 +19,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"time"
 
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
@@ -125,6 +126,34 @@ func (c *CLI) ExportResults(ctx context.Context, res *results.Results, errs fami
 	}
 
 	return result
+}
+
+func (c *CLI) WatchForAbort(ctx context.Context, cancel context.CancelFunc, interval time.Duration) {
+	go func() {
+		timer := time.NewTimer(interval)
+		defer timer.Stop()
+
+		for {
+			select {
+			case <-timer.C:
+				aborted, err := c.IsAborted(ctx)
+				if err != nil {
+					log.Errorf("failed to retrieve scan result state: %v", err)
+				}
+				if aborted {
+					cancel()
+					return
+				}
+				timer.Reset(interval)
+			case <-ctx.Done():
+				if !timer.Stop() {
+					<-timer.C
+				}
+				log.Debugf("stop watching for abort evetn as context is cancelled")
+				return
+			}
+		}
+	}()
 }
 
 func isSupportedFS(fs string) bool {
