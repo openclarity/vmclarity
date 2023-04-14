@@ -81,7 +81,6 @@ var rootCmd = &cobra.Command{
 		if waitForServerAttached {
 			if err := cli.WaitForVolumeAttachment(ctx); err != nil {
 				err = fmt.Errorf("failed to wait for block device being attached: %w", err)
-				logger.Error(err)
 				if e := cli.MarkDone(ctx, []error{err}); e != nil {
 					logger.Error(fmt.Errorf("failed to update scan result stat to completed with errors: %w", e))
 				}
