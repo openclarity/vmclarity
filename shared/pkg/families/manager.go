@@ -102,7 +102,7 @@ outer:
 		for {
 			select {
 			case <-ctx.Done():
-				log.Warningf("received context cancelled while family %q is still running. Aborting...", family)
+				familyErrors[family.GetType()] = fmt.Errorf("failed to run family %v: aborted", family.GetType())
 				break outer
 			case r := <-result:
 				log.Debugf("received result from family %q: %v", family, r)
