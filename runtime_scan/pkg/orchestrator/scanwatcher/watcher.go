@@ -167,42 +167,40 @@ func (w *Watcher) reconcileAborted(ctx context.Context, event ScanReconcileEvent
 		return fmt.Errorf("getting ScanResult(s) for Scan with %s id failed: %v", event.ScanID, err)
 	}
 
-	if scanResults.Items == nil || len(*scanResults.Items) <= 0 {
-		w.logger.Debug("nothing to reconcile")
-		return nil
-	}
+	if scanResults.Items != nil && len(*scanResults.Items) > 0 {
+		var retryIsNeeded bool
+		var wg sync.WaitGroup
 
-	var retryIsNeeded bool
-	var wg sync.WaitGroup
-	for _, scanResult := range *scanResults.Items {
-		if scanResult.Id == nil {
-			continue
-		}
-		id := *scanResult.Id
+		for _, scanResult := range *scanResults.Items {
+			if scanResult.Id == nil {
+				continue
+			}
+			id := *scanResult.Id
 
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			sr := models.TargetScanResult{
-				Status: &models.TargetScanStatus{
-					General: &models.TargetScanState{
-						State: runtimeScanUtils.PointerTo(models.ABORTED),
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				sr := models.TargetScanResult{
+					Status: &models.TargetScanStatus{
+						General: &models.TargetScanState{
+							State: runtimeScanUtils.PointerTo(models.ABORTED),
+						},
 					},
-				},
-			}
+				}
 
-			err := w.client.PatchScanResult(ctx, sr, id)
-			if err != nil {
-				w.logger.Errorf("failed to patch ScanResult with id: %s", id)
-				retryIsNeeded = true
-				return
-			}
-		}()
-	}
-	wg.Wait()
+				err := w.client.PatchScanResult(ctx, sr, id)
+				if err != nil {
+					w.logger.Errorf("failed to patch ScanResult with id: %s", id)
+					retryIsNeeded = true
+					return
+				}
+			}()
+		}
+		wg.Wait()
 
-	if retryIsNeeded {
-		return errors.New("updating one or more ScanResults failed")
+		if retryIsNeeded {
+			return errors.New("updating one or more ScanResults failed")
+		}
 	}
 
 	scan := &models.Scan{
