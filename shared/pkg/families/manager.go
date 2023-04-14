@@ -88,7 +88,6 @@ func (m *Manager) Run(ctx context.Context) (*results.Results, RunErrors) {
 	familyResults := results.New()
 	result := make(chan familyResult, len(m.families))
 
-outer:
 	for _, family := range m.families {
 		go func() {
 			ret, err := family.Run(familyResults)
@@ -98,22 +97,15 @@ outer:
 			}
 		}()
 
-	inner:
-		for {
-			select {
-			case <-ctx.Done():
-				familyErrors[family.GetType()] = fmt.Errorf("failed to run family %v: aborted", family.GetType())
-				break outer
-			case r := <-result:
-				log.Debugf("received result from family %q: %v", family, r)
-				if r.err != nil {
-					familyErrors[family.GetType()] = fmt.Errorf("failed to run family %v: %w", family.GetType(), r.err)
-				} else {
-					familyResults.SetResults(r.result)
-				}
-				break inner
-			default:
-				continue
+		select {
+		case <-ctx.Done():
+			familyErrors[family.GetType()] = fmt.Errorf("failed to run family %v: aborted", family.GetType())
+		case r := <-result:
+			log.Debugf("received result from family %q: %v", family, r)
+			if r.err != nil {
+				familyErrors[family.GetType()] = fmt.Errorf("failed to run family %v: %w", family.GetType(), r.err)
+			} else {
+				familyResults.SetResults(r.result)
 			}
 		}
 	}
