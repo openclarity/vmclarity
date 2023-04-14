@@ -137,7 +137,7 @@ func (w *Watcher) Reconcile(ctx context.Context, event ScanReconcileEvent) error
 
 func (w *Watcher) getScansByState(ctx context.Context, s models.ScanState) (models.Scans, error) {
 	filter := fmt.Sprintf("state eq '%s'", s)
-	selector := "id,state,stateReason,targetIDs"
+	selector := "id"
 	params := models.GetScansParams{
 		Filter: &filter,
 		Select: &selector,
@@ -156,7 +156,7 @@ func (w *Watcher) getScansByState(ctx context.Context, s models.ScanState) (mode
 func (w *Watcher) reconcileAborted(ctx context.Context, event ScanReconcileEvent) error {
 	filter := fmt.Sprintf("scan/id eq '%s' and status/general/state ne '%s' and status/general/state ne '%s'",
 		event.ScanID, models.ABORTED, models.DONE)
-	selector := "id,scan,status,target"
+	selector := "id,status"
 	params := models.GetScanResultsParams{
 		Filter: &filter,
 		Select: &selector,
