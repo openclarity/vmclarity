@@ -6,7 +6,7 @@ import EmptyDisplay from 'components/EmptyDisplay';
 import ExpandableList from 'components/ExpandableList';
 import TablePage from 'components/TablePage';
 import { OPERATORS } from 'components/Filter';
-import { BoldText, toCapitalized, formatDate } from 'utils/utils';
+import { BoldText, toCapitalized, formatDate, getScanScopeColumnFiltersConfig } from 'utils/utils';
 import { APIS } from 'utils/systemConsts';
 import { formatTagsToStringInstances, getScanTimeTypeTag } from 'layout/Scans/utils';
 import { ExpandableScopeDisplay } from 'layout/Scans/scopeDisplayUtils';
@@ -147,9 +147,7 @@ const ConfigurationsTable = () => {
                         {...OPERATORS.ne, valueItems: [], creatable: true},
                         {...OPERATORS.contains, valueItems: [], creatable: true}
                     ]},
-                    {value: "scope.regions", label: "Scope", operators: [
-                        {...OPERATORS.contains, valueItems: [], creatable: true}
-                    ]},
+                    ...getScanScopeColumnFiltersConfig(),
                     {value: "scope.instanceTagExclusion", label: "Excluded instances", operators: [
                         {...OPERATORS.contains, valueItems: [], creatable: true}
                     ]},

@@ -47,7 +47,7 @@ const FormFields = ({onAdd, filtersConfig}) => {
             <SelectField
                 name="scope"
                 items={filtersConfig}
-                placeholder="Select scope..."
+                placeholder="Select property..."
             />
             <SelectField
                 name="operator"

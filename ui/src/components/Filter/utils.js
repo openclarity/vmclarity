@@ -33,7 +33,7 @@ export const formatFiltersToOdataItems = (filters) => {
 
         return [
             ...acc,
-            !!customOdataFormat ? customOdataFormat(valuesList, operator) :`(${valuesList.map(valueItem => formatItem(valueItem)).join(` or `)})`
+            !!customOdataFormat ? customOdataFormat(valuesList, operator, scope) :`(${valuesList.map(valueItem => formatItem(valueItem)).join(` or `)})`
         ];
     }, []);
 };

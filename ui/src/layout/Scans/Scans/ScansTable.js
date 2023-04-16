@@ -7,9 +7,9 @@ import EmptyDisplay from 'components/EmptyDisplay';
 import { OPERATORS } from 'components/Filter';
 import { ExpandableScopeDisplay } from 'layout/Scans/scopeDisplayUtils';
 import { useModalDisplayDispatch, MODAL_DISPLAY_ACTIONS } from 'layout/Scans/ScanConfigWizardModal/ModalDisplayProvider';
-import { APIS } from 'utils/systemConsts';
+import { APIS, ROUTES } from 'utils/systemConsts';
 import { formatDate, getFindingsColumnsConfigList, getVulnerabilitiesColumnConfigItem, formatNumber, findingsColumnsFiltersConfig,
-    vulnerabilitiesCountersColumnsFiltersConfig } from 'utils/utils';
+    vulnerabilitiesCountersColumnsFiltersConfig, getScanScopeColumnFiltersConfig } from 'utils/utils';
 import { FILTER_TYPES } from 'context/FiltersProvider';
 import { SCANS_PATHS } from '../utils';
 // import ScanActionsDisplay from '../ScanActionsDisplay';
@@ -120,9 +120,7 @@ const ScansTable = () => {
                     {...OPERATORS.ge},
                     {...OPERATORS.le},
                 ]},
-                {value: "scanConfigSnapshot.scope.regions", label: "Scope", operators: [
-                    {...OPERATORS.contains, valueItems: [], creatable: true}
-                ]},
+                ...getScanScopeColumnFiltersConfig("scanConfigSnapshot.scope"),
                 {value: "state", label: "Status", operators: [
                     {...OPERATORS.eq, valueItems: SCAN_STATUS_ITEMS},
                     {...OPERATORS.ne, valueItems: SCAN_STATUS_ITEMS}
@@ -151,7 +149,7 @@ const ScansTable = () => {
                     title="New scan configuration"
                     onClick={() => modalDisplayDispatch({type: MODAL_DISPLAY_ACTIONS.SET_MODAL_DISPLAY_DATA, payload: {}})}
                     subTitle="Start scan from config"
-                    onSubClick={() => navigate(SCANS_PATHS.CONFIGURATIONS)}
+                    onSubClick={() => navigate(`${ROUTES.SCANS}/${SCANS_PATHS.CONFIGURATIONS}`)}
                 />
             )}
             absoluteSystemBanner

@@ -11,7 +11,7 @@ import { useFilterState, useFilterDispatch, resetSystemFilters, setPage, setSort
 const TablePage = (props) => {
     const {tableTitle, filterType, systemFilterType, filters, expand, select, withMargin, defaultSortBy: initialSortBy,
         filtersConfig, customHeaderDisplay: CustomHeaderDisplay, ...tableProps} = props;
-
+    
     const navigate = useNavigate();
     const {pathname} = useLocation();
 
@@ -43,8 +43,7 @@ const TablePage = (props) => {
                     customDisplay={customDisplay}
                 />
             }
-            <div style={{...(!!withMargin ? {margin: "30px 30px 35px 30px"} : {marginBottom: "35px"}), display: "flex", visibility: (!!filtersConfig || !!CustomHeaderDisplay) ? "visible" : "hidden"}}>
-                {!!CustomHeaderDisplay && <div style={{marginRight: "20px"}}><CustomHeaderDisplay /></div>}
+            <div style={{...(!!withMargin ? {margin: "30px 30px 35px 30px"} : {marginBottom: "35px"}), position: "relative", visibility: (!!filtersConfig || !!CustomHeaderDisplay) ? "visible" : "hidden"}}>
                 {!!filtersConfig &&
                     <Filter
                         filters={tableFilters}
@@ -52,6 +51,7 @@ const TablePage = (props) => {
                         filtersConfig={filtersConfig}
                     />
                 }
+                {!!CustomHeaderDisplay && <div style={{position: "absolute", top: 0, left: "100px"}}><CustomHeaderDisplay /></div>}
             </div>
             <ContentContainer withMargin={withMargin}>
                 <Table
@@ -67,6 +67,7 @@ const TablePage = (props) => {
                     onPageChange={pageIndex => setPage(filtersDispatch, {type: filterType, pageIndex})}
                     defaultSortBy={isEmpty(tableSort) ? initialSortBy : tableSort}
                     onSortChnage={tableSort => setSort(filtersDispatch, {type: filterType, tableSort})}
+                    showCustomEmptyDisplay={!tableFilters}
                     {...tableProps}
                 />
             </ContentContainer>
