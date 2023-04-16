@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { getAssetAndScanColumnsConfigList } from 'layout/Findings/utils';
 import { FILTER_TYPES } from 'context/FiltersProvider';
+import { OPERATORS } from 'components/Filter';
 import FindingsTablePage from '../FindingsTablePage';
 
 const SecretsTable = () => {
@@ -32,6 +33,23 @@ const SecretsTable = () => {
         <FindingsTablePage
             columns={columns}
             filterType={FILTER_TYPES.FINDINGS_SECRETS}
+            filtersConfig={[
+                {value: "findingInfo.fingerprint", label: "Fingerprint", operators: [
+                    {...OPERATORS.eq, valueItems: [], creatable: true},
+                    {...OPERATORS.ne, valueItems: [], creatable: true},
+                    {...OPERATORS.contains, valueItems: [], creatable: true}
+                ]},
+                {value: "findingInfo.description", label: "Description", operators: [
+                    {...OPERATORS.eq, valueItems: [], creatable: true},
+                    {...OPERATORS.ne, valueItems: [], creatable: true},
+                    {...OPERATORS.contains, valueItems: [], creatable: true}
+                ]},
+                {value: "findingInfo.filePath", label: "File path", operators: [
+                    {...OPERATORS.eq, valueItems: [], creatable: true},
+                    {...OPERATORS.ne, valueItems: [], creatable: true},
+                    {...OPERATORS.contains, valueItems: [], creatable: true}
+                ]}
+            ]}
             tableTitle="secrets"
             findingsObjectType="Secret"
         />
