@@ -48,6 +48,7 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets/common"
 	gitleaksconfig "github.com/openclarity/vmclarity/shared/pkg/families/secrets/gitleaks/config"
 	familiesVulnerabilities "github.com/openclarity/vmclarity/shared/pkg/families/vulnerabilities"
+	"github.com/openclarity/vmclarity/shared/pkg/utils"
 )
 
 // TODO this code is taken from KubeClarity, we can make improvements base on the discussions here: https://github.com/openclarity/vmclarity/pull/3
@@ -114,19 +115,41 @@ func (s *Scanner) jobBatchManagement(ctx context.Context) {
 			if numberOfCompletedJobs == len(targetIDToScanData) {
 				scanComplete = true
 
-				state := models.ScanStateDone
-				stateMessage := "All scan jobs completed"
-				stateReason := models.ScanStateReasonSuccess
-				if anyJobsFailed {
-					state = models.ScanStateFailed
-					stateMessage = "One or more ScanJobs failed"
-					stateReason = models.ScanStateReasonOneOrMoreTargetFailedToScan
+				scan.EndTime = utils.PointerTo(time.Now())
+
+				scanState, ok := scan.GetState()
+				if !ok {
+					scan.State = utils.PointerTo(models.ScanStateFailed)
+					scan.StateMessage = utils.PointerTo("Failed to retrieve scan state")
+					scan.StateReason = utils.PointerTo(models.ScanStateReasonUnexpected)
+					break
 				}
-				t := time.Now()
-				scan.EndTime = &t
-				scan.State = &state
-				scan.StateMessage = &stateMessage
-				scan.StateReason = &stateReason
+
+				var isAborted bool
+				if scanState == models.ScanStateAborted {
+					isAborted = true
+				}
+
+				if isAborted {
+					log.Warning("Scan is aborted")
+					scan.State = utils.PointerTo(models.ScanStateFailed)
+					scan.StateMessage = utils.PointerTo("User initiated")
+					scan.StateReason = utils.PointerTo(models.ScanStateReasonAborted)
+					break
+				}
+
+				if anyJobsFailed {
+					log.Warning("Scan is failed")
+					scan.State = utils.PointerTo(models.ScanStateFailed)
+					scan.StateMessage = utils.PointerTo("One or more ScanJobs failed")
+					scan.StateReason = utils.PointerTo(models.ScanStateReasonOneOrMoreTargetFailedToScan)
+					break
+				}
+
+				log.Info("Scan is completed")
+				scan.State = utils.PointerTo(models.ScanStateDone)
+				scan.StateMessage = utils.PointerTo("All scan jobs completed")
+				scan.StateReason = utils.PointerTo(models.ScanStateReasonSuccess)
 			}
 		case <-s.killSignal:
 			t := time.Now()
