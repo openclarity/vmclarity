@@ -29,11 +29,15 @@ const RootkitsTable = () => {
                 {value: "findingInfo.rootkitName", label: "Rootkit name", operators: [
                     {...OPERATORS.eq, valueItems: [], creatable: true},
                     {...OPERATORS.ne, valueItems: [], creatable: true},
+                    {...OPERATORS.startswith},
+                    {...OPERATORS.endswith},
                     {...OPERATORS.contains, valueItems: [], creatable: true}
                 ]},
                 {value: "findingInfo.message", label: "Message", operators: [
                     {...OPERATORS.eq, valueItems: [], creatable: true},
                     {...OPERATORS.ne, valueItems: [], creatable: true},
+                    {...OPERATORS.startswith},
+                    {...OPERATORS.endswith},
                     {...OPERATORS.contains, valueItems: [], creatable: true}
                 ]}
             ]}

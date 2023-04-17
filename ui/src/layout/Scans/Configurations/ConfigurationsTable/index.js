@@ -145,6 +145,8 @@ const ConfigurationsTable = () => {
                     {value: "name", label: "Name", operators: [
                         {...OPERATORS.eq, valueItems: [], creatable: true},
                         {...OPERATORS.ne, valueItems: [], creatable: true},
+                        {...OPERATORS.startswith},
+                        {...OPERATORS.endswith},
                         {...OPERATORS.contains, valueItems: [], creatable: true}
                     ]},
                     ...getScanScopeColumnFiltersConfig(),

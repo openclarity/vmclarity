@@ -76,6 +76,8 @@ const VulnerabilitiesTable = () => {
                 {value: "findingInfo.vulnerabilityName", label: "Vulnerability name", operators: [
                     {...OPERATORS.eq, valueItems: [], creatable: true},
                     {...OPERATORS.ne, valueItems: [], creatable: true},
+                    {...OPERATORS.startswith},
+                    {...OPERATORS.endswith},
                     {...OPERATORS.contains, valueItems: [], creatable: true}
                 ]},
                 {value: "findingInfo.severity", label: "Vulnerability severity", operators: [
@@ -85,11 +87,15 @@ const VulnerabilitiesTable = () => {
                 {value: "findingInfo.package.name", label: "Package name", operators: [
                     {...OPERATORS.eq, valueItems: [], creatable: true},
                     {...OPERATORS.ne, valueItems: [], creatable: true},
+                    {...OPERATORS.startswith},
+                    {...OPERATORS.endswith},
                     {...OPERATORS.contains, valueItems: [], creatable: true}
                 ]},
                 {value: "findingInfo.package.version", label: "Package version", operators: [
                     {...OPERATORS.eq, valueItems: [], creatable: true},
                     {...OPERATORS.ne, valueItems: [], creatable: true},
+                    {...OPERATORS.startswith},
+                    {...OPERATORS.endswith},
                     {...OPERATORS.contains, valueItems: [], creatable: true}
                 ]},
                 {value: "findingInfo.fix.state", label: "Fix version", operators: [

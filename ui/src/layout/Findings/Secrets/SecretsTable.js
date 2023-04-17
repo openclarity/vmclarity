@@ -37,16 +37,22 @@ const SecretsTable = () => {
                 {value: "findingInfo.fingerprint", label: "Fingerprint", operators: [
                     {...OPERATORS.eq, valueItems: [], creatable: true},
                     {...OPERATORS.ne, valueItems: [], creatable: true},
+                    {...OPERATORS.startswith},
+                    {...OPERATORS.endswith},
                     {...OPERATORS.contains, valueItems: [], creatable: true}
                 ]},
                 {value: "findingInfo.description", label: "Description", operators: [
                     {...OPERATORS.eq, valueItems: [], creatable: true},
                     {...OPERATORS.ne, valueItems: [], creatable: true},
+                    {...OPERATORS.startswith},
+                    {...OPERATORS.endswith},
                     {...OPERATORS.contains, valueItems: [], creatable: true}
                 ]},
                 {value: "findingInfo.filePath", label: "File path", operators: [
                     {...OPERATORS.eq, valueItems: [], creatable: true},
                     {...OPERATORS.ne, valueItems: [], creatable: true},
+                    {...OPERATORS.startswith},
+                    {...OPERATORS.endswith},
                     {...OPERATORS.contains, valueItems: [], creatable: true}
                 ]}
             ]}

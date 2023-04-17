@@ -48,16 +48,22 @@ const PackagesTable = () => {
                 {value: "findingInfo.name", label: "Package name", operators: [
                     {...OPERATORS.eq, valueItems: [], creatable: true},
                     {...OPERATORS.ne, valueItems: [], creatable: true},
+                    {...OPERATORS.startswith},
+                    {...OPERATORS.endswith},
                     {...OPERATORS.contains, valueItems: [], creatable: true}
                 ]},
                 {value: "findingInfo.version", label: "Version", operators: [
                     {...OPERATORS.eq, valueItems: [], creatable: true},
                     {...OPERATORS.ne, valueItems: [], creatable: true},
+                    {...OPERATORS.startswith},
+                    {...OPERATORS.endswith},
                     {...OPERATORS.contains, valueItems: [], creatable: true}
                 ]},
                 {value: "findingInfo.language", label: "Language", operators: [
                     {...OPERATORS.eq, valueItems: [], creatable: true},
                     {...OPERATORS.ne, valueItems: [], creatable: true},
+                    {...OPERATORS.startswith},
+                    {...OPERATORS.endswith},
                     {...OPERATORS.contains, valueItems: [], creatable: true}
                 ]},
                 {value: "findingInfo.licenses", label: "License", operators: [

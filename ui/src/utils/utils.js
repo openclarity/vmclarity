@@ -137,6 +137,8 @@ export const scanColumnsFiltersConfig = [
     {value: "scan.scanConfigSnapshot.name", label: "Scan name", operators: [
         {...OPERATORS.eq, valueItems: [], creatable: true},
         {...OPERATORS.ne, valueItems: [], creatable: true},
+        {...OPERATORS.startswith},
+        {...OPERATORS.endswith},
         {...OPERATORS.contains, valueItems: [], creatable: true}
     ]},
     {value: "scan.endTime", label: "Scan end time", isDate: true, operators: [
@@ -158,6 +160,8 @@ export const getAssetColumnsFiltersConfig = (props) => {
         {value: `${prefix}.instanceID`, label: "Asset name", operators: [
             {...OPERATORS.eq, valueItems: [], creatable: true},
             {...OPERATORS.ne, valueItems: [], creatable: true},
+            {...OPERATORS.startswith},
+            {...OPERATORS.endswith},
             {...OPERATORS.contains, valueItems: [], creatable: true}
         ]},
         ...(!withType ? [] : [{value: `${prefix}.objectType`, label: "Asset type", operators: [
@@ -167,6 +171,8 @@ export const getAssetColumnsFiltersConfig = (props) => {
         {value: `${prefix}.location`, label: "Asset location", operators: [
             {...OPERATORS.eq, valueItems: [], creatable: true},
             {...OPERATORS.ne, valueItems: [], creatable: true},
+            {...OPERATORS.startswith},
+            {...OPERATORS.endswith},
             {...OPERATORS.contains, valueItems: [], creatable: true}
         ]},
     ]

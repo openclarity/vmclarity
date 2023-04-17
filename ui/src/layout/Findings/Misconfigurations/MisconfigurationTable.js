@@ -40,6 +40,8 @@ const MisconfigurationsTable = () => {
                 {value: "findingInfo.testID", label: "Test ID", operators: [
                     {...OPERATORS.eq, valueItems: [], creatable: true},
                     {...OPERATORS.ne, valueItems: [], creatable: true},
+                    {...OPERATORS.startswith},
+                    {...OPERATORS.endswith},
                     {...OPERATORS.contains, valueItems: [], creatable: true}
                 ]},
                 {value: "findingInfo.severity", label: "Severity", operators: [
@@ -49,6 +51,8 @@ const MisconfigurationsTable = () => {
                 {value: "findingInfo.testDescription", label: "Description", operators: [
                     {...OPERATORS.eq, valueItems: [], creatable: true},
                     {...OPERATORS.ne, valueItems: [], creatable: true},
+                    {...OPERATORS.startswith},
+                    {...OPERATORS.endswith},
                     {...OPERATORS.contains, valueItems: [], creatable: true}
                 ]}
             ]}

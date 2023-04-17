@@ -110,6 +110,8 @@ const ScansTable = () => {
                 {value: "scanConfigSnapshot.name", label: "Config name", operators: [
                     {...OPERATORS.eq, valueItems: [], creatable: true},
                     {...OPERATORS.ne, valueItems: [], creatable: true},
+                    {...OPERATORS.startswith},
+                    {...OPERATORS.endswith},
                     {...OPERATORS.contains, valueItems: [], creatable: true}
                 ]},
                 {value: "startTime", label: "Started", isDate: true, operators: [
