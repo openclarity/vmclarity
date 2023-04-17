@@ -66,20 +66,24 @@ var rootCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		logger.Infof("Running...")
 
+		// Main context which remains active even if the scan is aborted allowing post-processing operations
+		// like updating scan result state
+		ctx := cmd.Context()
+
 		cli, err := newCli()
 		if err != nil {
 			return fmt.Errorf("failed to initialize CLI: %w", err)
 		}
 
-		ctx, cancel := context.WithCancel(cmd.Context())
+		// Create context used to signal to operations that the scan is aborted
+		abortCtx, cancel := context.WithCancel(ctx)
 		defer cancel()
 
 		// Start watching for abort event
 		cli.WatchForAbort(ctx, cancel, DefaultWatcherInterval)
 
-		// Collect non-critical errors for reporting them back to the backend
 		if waitForServerAttached {
-			if err := cli.WaitForVolumeAttachment(ctx); err != nil {
+			if err := cli.WaitForVolumeAttachment(abortCtx); err != nil {
 				err = fmt.Errorf("failed to wait for block device being attached: %w", err)
 				if e := cli.MarkDone(ctx, []error{err}); e != nil {
 					logger.Error(fmt.Errorf("failed to update scan result stat to completed with errors: %w", e))
@@ -89,7 +93,7 @@ var rootCmd = &cobra.Command{
 		}
 
 		if mountVolume {
-			mountPoints, err := cli.MountVolumes(ctx)
+			mountPoints, err := cli.MountVolumes(abortCtx)
 			if err != nil {
 				err = fmt.Errorf("failed to mount attached volume: %w", err)
 				logger.Error(err)
@@ -107,10 +111,10 @@ var rootCmd = &cobra.Command{
 		}
 
 		logger.Infof("Running scanners...")
-		res, familiesErr := families.New(logger, config).Run(ctx)
+		res, familiesErr := families.New(logger, config).Run(abortCtx)
 
 		logger.Infof("Exporting results...")
-		errs := cli.ExportResults(ctx, res, familiesErr)
+		errs := cli.ExportResults(abortCtx, res, familiesErr)
 
 		if len(familiesErr) > 0 {
 			errs = append(errs, fmt.Errorf("at least one family failed to run"))
