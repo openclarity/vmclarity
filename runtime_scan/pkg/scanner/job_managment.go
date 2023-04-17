@@ -256,38 +256,36 @@ func (s *Scanner) waitForResult(ctx context.Context, data *scanData, ks chan boo
 	for {
 		select {
 		case <-timer.C:
-			log.WithFields(s.logFields).Infof("Polling scan results for targetID=%v with scanID=%v", data.targetInstance.TargetID, s.scanID)
+			log.WithFields(s.logFields).Infof("Polling scan results for target id=%v and scan id=%v", data.targetInstance.TargetID, s.scanID)
 			// Get scan results from backend
 			scanResultStatus, err := s.backendClient.GetScanResultStatus(ctx, data.scanResultID)
 			if err != nil {
-				log.WithFields(s.logFields).Errorf("Failed to get target scan status. scanID=%v, targetID=%s: %v", s.scanID, data.targetInstance.TargetID, err)
-				continue
+				log.WithFields(s.logFields).Errorf("Failed to get target scan status. scanID=%v, target id=%s: %v", s.scanID, data.targetInstance.TargetID, err)
+				break
 			}
 
 			state, ok := scanResultStatus.GetGeneralState()
 			if !ok {
-				log.WithFields(s.logFields).Errorf("cannot determine state of ScanResult with id %s", data.scanResultID)
+				log.WithFields(s.logFields).Errorf("Cannot determine state of ScanResult with id %s", data.scanResultID)
 			}
 
 			switch state {
-			case models.INIT:
-				// NOTE(chrisgacsal): this should never happen as INIT is handled by runJob prior invoking waitForResult
-				fallthrough
-			case models.ATTACHED, models.INPROGRESS:
-				log.WithFields(s.logFields).Infof("Scan is still running. scan result id=%v, scan id=%v, targetID=%s, state=%v",
+			case models.INIT, models.ATTACHED, models.INPROGRESS:
+				log.WithFields(s.logFields).Infof("Scan for target is still running. scan result id=%v, scan id=%v, target id=%s, state=%v",
 					data.scanResultID, s.scanID, data.targetInstance.TargetID, state)
-				continue
 			case models.ABORTED:
-				log.WithFields(s.logFields).Infof("Scan is aborted. Waiting for partial results to be reported back. scan result id=%v, scan id=%v, targetID=%s, state=%v",
+				log.WithFields(s.logFields).Infof("Scan for target is aborted. Waiting for partial results to be reported back. scan result id=%v, scan id=%v, target id=%s, state=%v",
 					data.scanResultID, s.scanID, data.targetInstance.TargetID, state)
-				continue
 			case models.DONE, models.NOTSCANNED:
+				log.WithFields(s.logFields).Infof("Scan for target is completed. scan result id=%v, scan id=%v, target id=%s, state=%v",
+					data.scanResultID, s.scanID, data.targetInstance.TargetID, state)
 				s.Lock()
 				data.success = !scanStatusHasErrors(scanResultStatus)
 				data.completed = true
 				s.Unlock()
 				return
 			}
+			timer.Reset(s.config.JobResultsPollingInterval)
 		case <-ctx.Done():
 			if !timer.Stop() {
 				<-timer.C
