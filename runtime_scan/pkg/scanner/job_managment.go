@@ -62,7 +62,7 @@ const (
 )
 
 // run jobs.
-// nolint:cyclop
+// nolint:cyclop,gocognit
 func (s *Scanner) jobBatchManagement(ctx context.Context) {
 	s.Lock()
 	targetIDToScanData := s.targetIDToScanData
