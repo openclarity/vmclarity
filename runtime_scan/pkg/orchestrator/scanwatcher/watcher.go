@@ -203,16 +203,18 @@ func (w *Watcher) reconcileAborted(ctx context.Context, event ScanReconcileEvent
 		}
 	}
 
-	scan := &models.Scan{
-		EndTime:     runtimeScanUtils.PointerTo(time.Now().UTC()),
-		State:       runtimeScanUtils.PointerTo(models.ScanStateFailed),
-		StateReason: runtimeScanUtils.PointerTo(models.ScanStateReasonAborted),
-	}
-
-	err = w.client.PatchScan(ctx, event.ScanID, scan)
-	if err != nil {
-		return fmt.Errorf("failed to patch Scan with id: %s: %v", event.ScanID, err)
-	}
+	// FIXME(chrisgacsal): updating the Scan state here collides the Scan logic in Scanner.job_management
+	//                     therefore it is disabled until Scan lifecycle management is moved to ScanWatcher.
+	// scan := &models.Scan{
+	// 	EndTime:     runtimeScanUtils.PointerTo(time.Now().UTC()),
+	// 	State:       runtimeScanUtils.PointerTo(models.ScanStateFailed),
+	// 	StateReason: runtimeScanUtils.PointerTo(models.ScanStateReasonAborted),
+	// }
+	//
+	// err = w.client.PatchScan(ctx, event.ScanID, scan)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to patch Scan with id: %s: %v", event.ScanID, err)
+	// }
 
 	return nil
 }
