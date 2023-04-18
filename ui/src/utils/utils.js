@@ -14,7 +14,7 @@ export const calculateDuration = (startTime, endTime) => {
     const startMoment = moment(startTime);
     const endMoment = moment(endTime || new Date());
     
-    if (!startMoment || !endMoment) {
+    if (!startMoment) {
         return null;
     }
 
