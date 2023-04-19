@@ -35,6 +35,7 @@ func (l *LocalState) MarkInProgress(context.Context) error {
 func (l *LocalState) MarkDone(_ context.Context, errs []error) error {
 	if len(errs) > 0 {
 		log.Errorf("scan has been completed with errors: %v", errs)
+		return nil
 	}
 	log.Info("scan has been completed")
 	return nil
