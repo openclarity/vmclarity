@@ -125,12 +125,7 @@ func (s *Scanner) jobBatchManagement(ctx context.Context) {
 					break
 				}
 
-				var isAborted bool
 				if scanState == models.ScanStateAborted {
-					isAborted = true
-				}
-
-				if isAborted {
 					log.Warning("Scan is aborted")
 					scan.State = utils.PointerTo(models.ScanStateFailed)
 					scan.StateMessage = utils.PointerTo("User initiated")
