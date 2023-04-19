@@ -96,7 +96,6 @@ var rootCmd = &cobra.Command{
 			mountPoints, err := cli.MountVolumes(abortCtx)
 			if err != nil {
 				err = fmt.Errorf("failed to mount attached volume: %w", err)
-				logger.Error(err)
 				if e := cli.MarkDone(ctx, []error{err}); e != nil {
 					logger.Error(fmt.Errorf("failed to update scan result stat to completed with errors: %w", e))
 				}
