@@ -86,9 +86,9 @@ type familyResult struct {
 func (m *Manager) Run(ctx context.Context) (*results.Results, RunErrors) {
 	familyErrors := make(RunErrors)
 	familyResults := results.New()
-	result := make(chan familyResult, len(m.families))
 
 	for _, family := range m.families {
+		result := make(chan familyResult)
 		go func() {
 			ret, err := family.Run(familyResults)
 			result <- familyResult{
@@ -99,6 +99,10 @@ func (m *Manager) Run(ctx context.Context) (*results.Results, RunErrors) {
 
 		select {
 		case <-ctx.Done():
+			go func() {
+				<-result
+				close(result)
+			}()
 			familyErrors[family.GetType()] = fmt.Errorf("failed to run family %v: aborted", family.GetType())
 		case r := <-result:
 			log.Debugf("received result from family %q: %v", family, r)
@@ -107,6 +111,7 @@ func (m *Manager) Run(ctx context.Context) (*results.Results, RunErrors) {
 			} else {
 				familyResults.SetResults(r.result)
 			}
+			close(result)
 		}
 	}
 
