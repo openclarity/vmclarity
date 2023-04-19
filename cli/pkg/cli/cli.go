@@ -59,7 +59,7 @@ func (c *CLI) MountVolumes(ctx context.Context) ([]string, error) {
 			if err := device.Mount(mountDir); err != nil {
 				return nil, fmt.Errorf("failed to mount device: %v", err)
 			}
-			log.Infof("device %v on %v is mounted", device.DeviceName, mountDir)
+			log.Infof("Device %v on %v is mounted", device.DeviceName, mountDir)
 			mountPoints = append(mountPoints, mountDir)
 		}
 		if ctx.Err() != nil {
@@ -138,7 +138,7 @@ func (c *CLI) WatchForAbort(ctx context.Context, cancel context.CancelFunc, inte
 			case <-timer.C:
 				aborted, err := c.IsAborted(ctx)
 				if err != nil {
-					log.Errorf("failed to retrieve scan result state: %v", err)
+					log.Errorf("Failed to retrieve scan result state: %v", err)
 				}
 				if aborted {
 					cancel()
@@ -149,7 +149,7 @@ func (c *CLI) WatchForAbort(ctx context.Context, cancel context.CancelFunc, inte
 				if !timer.Stop() {
 					<-timer.C
 				}
-				log.Debugf("stop watching for abort evetn as context is cancelled")
+				log.Debugf("Stop watching for abort event as context is cancelled")
 				return
 			}
 		}

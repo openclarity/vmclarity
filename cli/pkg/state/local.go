@@ -28,7 +28,7 @@ func (l *LocalState) WaitForVolumeAttachment(context.Context) error {
 }
 
 func (l *LocalState) MarkInProgress(context.Context) error {
-	log.Info("scanning is in progress")
+	log.Info("Scanning is in progress")
 	return nil
 }
 
@@ -37,7 +37,7 @@ func (l *LocalState) MarkDone(_ context.Context, errs []error) error {
 		log.Errorf("scan has been completed with errors: %v", errs)
 		return nil
 	}
-	log.Info("scan has been completed")
+	log.Info("Scan has been completed")
 	return nil
 }
 

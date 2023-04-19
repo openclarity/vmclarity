@@ -105,7 +105,7 @@ func (w *Watcher) GetAbortedScans(ctx context.Context) ([]ScanReconcileEvent, er
 }
 
 func (w *Watcher) Reconcile(ctx context.Context, event ScanReconcileEvent) error {
-	w.logger.Infof("reconciling scan event: %v", event)
+	w.logger.Infof("Reconciling scan event: %v", event)
 
 	selector := "id,state,stateReason"
 	params := models.GetScansScanIDParams{
@@ -124,7 +124,7 @@ func (w *Watcher) Reconcile(ctx context.Context, event ScanReconcileEvent) error
 
 	switch state {
 	case models.ScanStateDone, models.ScanStateFailed:
-		w.logger.Infof("reconciling scan event is skipped as Scan is already finished: %v", event)
+		w.logger.Debugf("Reconciling scan event is skipped as Scan is already finished: %v", event)
 	case models.ScanStateAborted:
 		return w.reconcileAborted(ctx, event)
 	case models.ScanStatePending, models.ScanStateDiscovered, models.ScanStateInProgress:
@@ -190,7 +190,7 @@ func (w *Watcher) reconcileAborted(ctx context.Context, event ScanReconcileEvent
 
 				err := w.client.PatchScanResult(ctx, sr, id)
 				if err != nil {
-					w.logger.Errorf("failed to patch ScanResult with id: %s", id)
+					w.logger.Errorf("Failed to patch ScanResult with id: %s", id)
 					retryIsNeeded = true
 					return
 				}

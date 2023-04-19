@@ -86,7 +86,7 @@ var rootCmd = &cobra.Command{
 			if err := cli.WaitForVolumeAttachment(abortCtx); err != nil {
 				err = fmt.Errorf("failed to wait for block device being attached: %w", err)
 				if e := cli.MarkDone(ctx, []error{err}); e != nil {
-					logger.Error(fmt.Errorf("failed to update scan result stat to completed with errors: %w", e))
+					logger.Errorf("Failed to update scan result stat to completed with errors: %v", e)
 				}
 				return err
 			}
@@ -97,7 +97,7 @@ var rootCmd = &cobra.Command{
 			if err != nil {
 				err = fmt.Errorf("failed to mount attached volume: %w", err)
 				if e := cli.MarkDone(ctx, []error{err}); e != nil {
-					logger.Error(fmt.Errorf("failed to update scan result stat to completed with errors: %w", e))
+					logger.Errorf("Failed to update scan result stat to completed with errors: %v", e)
 				}
 				return err
 			}
