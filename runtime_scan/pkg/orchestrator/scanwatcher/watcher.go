@@ -168,7 +168,7 @@ func (w *Watcher) reconcileAborted(ctx context.Context, event ScanReconcileEvent
 	}
 
 	if scanResults.Items != nil && len(*scanResults.Items) > 0 {
-		var retryIsNeeded bool
+		var reconciliationFailed bool
 		var wg sync.WaitGroup
 
 		for _, scanResult := range *scanResults.Items {
@@ -191,14 +191,17 @@ func (w *Watcher) reconcileAborted(ctx context.Context, event ScanReconcileEvent
 				err := w.client.PatchScanResult(ctx, sr, id)
 				if err != nil {
 					w.logger.Errorf("Failed to patch ScanResult with id: %s", id)
-					retryIsNeeded = true
+					reconciliationFailed = true
 					return
 				}
 			}()
 		}
 		wg.Wait()
 
-		if retryIsNeeded {
+		// NOTE: reconciliationFailed is used to track errors returned by patching ScanResults
+		//       as setting the state of Scan to models.ScanStateFailed must be skipped in case
+		//       even a single error occurred to allow reconciling re-running for this Scan.
+		if reconciliationFailed {
 			return errors.New("updating one or more ScanResults failed")
 		}
 	}
