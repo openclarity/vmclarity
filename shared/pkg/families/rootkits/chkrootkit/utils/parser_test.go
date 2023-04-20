@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"gotest.tools/v3/assert"
 )
 
@@ -95,7 +96,7 @@ func TestParseChkrootkitOutput(t *testing.T) {
 				t.Errorf("ParseChkrootkitOutput() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if diff := cmp.Diff(tt.want, got); diff != "" {
+			if diff := cmp.Diff(tt.want, got, cmpopts.SortSlices(func(a, b Rootkit) bool { return a.RkName < b.RkName })); diff != "" {
 				t.Errorf("ParseChkrootkitOutput() mismatch (-want +got):\n%s", diff)
 			}
 		})
