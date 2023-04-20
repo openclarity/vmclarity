@@ -265,7 +265,7 @@ func (s *Scanner) handleScanData(ctx context.Context, data *scanData, ks chan bo
 // nolint:cyclop
 func (s *Scanner) waitForResult(ctx context.Context, data *scanData, ks chan bool) {
 	log.WithFields(s.logFields).Infof("Waiting for result. targetID=%+v", data.targetInstance.TargetID)
-	timer := time.NewTimer(s.config.JobResultsPollingInterval)
+	timer := time.NewTicker(s.config.JobResultsPollingInterval)
 	defer timer.Stop()
 
 	ctx, cancel := context.WithTimeout(ctx, s.config.JobResultTimeout)
@@ -303,11 +303,7 @@ func (s *Scanner) waitForResult(ctx context.Context, data *scanData, ks chan boo
 				s.Unlock()
 				return
 			}
-			timer.Reset(s.config.JobResultsPollingInterval)
 		case <-ctx.Done():
-			if !timer.Stop() {
-				<-timer.C
-			}
 			log.WithFields(s.logFields).Infof("Job has timed out. targetID=%v", data.targetInstance.TargetID)
 			s.Lock()
 			data.success = false

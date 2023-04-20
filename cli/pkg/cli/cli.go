@@ -130,7 +130,7 @@ func (c *CLI) ExportResults(ctx context.Context, res *results.Results, errs fami
 
 func (c *CLI) WatchForAbort(ctx context.Context, cancel context.CancelFunc, interval time.Duration) {
 	go func() {
-		timer := time.NewTimer(interval)
+		timer := time.NewTicker(interval)
 		defer timer.Stop()
 
 		for {
@@ -144,11 +144,7 @@ func (c *CLI) WatchForAbort(ctx context.Context, cancel context.CancelFunc, inte
 					cancel()
 					return
 				}
-				timer.Reset(interval)
 			case <-ctx.Done():
-				if !timer.Stop() {
-					<-timer.C
-				}
 				log.Debugf("Stop watching for abort event as context is cancelled")
 				return
 			}
