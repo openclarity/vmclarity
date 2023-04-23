@@ -397,7 +397,7 @@ func Test_ConvertSecretsResultToAPIModel(t *testing.T) {
 		EndLine:     11,
 		StartColumn: 101,
 		EndColumn:   111,
-		File:        "File1",
+		File:        "/mnt/File1",
 		Fingerprint: "Fingerprint1",
 	}
 	finding2 := common.Findings{
@@ -406,7 +406,7 @@ func Test_ConvertSecretsResultToAPIModel(t *testing.T) {
 		EndLine:     22,
 		StartColumn: 102,
 		EndColumn:   122,
-		File:        "File2",
+		File:        "/mnt/File2",
 		Fingerprint: "Fingerprint2",
 	}
 	finding3 := common.Findings{
@@ -415,11 +415,12 @@ func Test_ConvertSecretsResultToAPIModel(t *testing.T) {
 		EndLine:     33,
 		StartColumn: 103,
 		EndColumn:   133,
-		File:        "File3",
+		File:        "/mnt/File3",
 		Fingerprint: "Fingerprint3",
 	}
 	type args struct {
 		secretsResults *secrets.Results
+		mountPoints    []string
 	}
 	tests := []struct {
 		name string
@@ -456,6 +457,7 @@ func Test_ConvertSecretsResultToAPIModel(t *testing.T) {
 		{
 			name: "sanity",
 			args: args{
+				mountPoints: []string{"/mnt"},
 				secretsResults: &secrets.Results{
 					MergedResults: &secrets.MergedResults{
 						Results: []*common.Results{
@@ -482,7 +484,7 @@ func Test_ConvertSecretsResultToAPIModel(t *testing.T) {
 					{
 						Description: &finding1.Description,
 						EndLine:     &finding1.EndLine,
-						FilePath:    &finding1.File,
+						FilePath:    utils.PointerTo("/File1"),
 						Fingerprint: &finding1.Fingerprint,
 						StartLine:   &finding1.StartLine,
 						StartColumn: &finding1.StartColumn,
@@ -491,7 +493,7 @@ func Test_ConvertSecretsResultToAPIModel(t *testing.T) {
 					{
 						Description: &finding2.Description,
 						EndLine:     &finding2.EndLine,
-						FilePath:    &finding2.File,
+						FilePath:    utils.PointerTo("/File2"),
 						Fingerprint: &finding2.Fingerprint,
 						StartLine:   &finding2.StartLine,
 						StartColumn: &finding2.StartColumn,
@@ -500,7 +502,7 @@ func Test_ConvertSecretsResultToAPIModel(t *testing.T) {
 					{
 						Description: &finding3.Description,
 						EndLine:     &finding3.EndLine,
-						FilePath:    &finding3.File,
+						FilePath:    utils.PointerTo("/File3"),
 						Fingerprint: &finding3.Fingerprint,
 						StartLine:   &finding3.StartLine,
 						StartColumn: &finding3.StartColumn,
@@ -512,7 +514,7 @@ func Test_ConvertSecretsResultToAPIModel(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ConvertSecretsResultToAPIModel(tt.args.secretsResults)
+			got := ConvertSecretsResultToAPIModel(tt.args.secretsResults, tt.args.mountPoints)
 			if diff := cmp.Diff(tt.want, got, cmpopts.SortSlices(func(a, b models.Secret) bool { return *a.Fingerprint < *b.Fingerprint })); diff != "" {
 				t.Errorf("convertSBOMResultToAPIModel() mismatch (-want +got):\n%s", diff)
 			}
@@ -523,6 +525,7 @@ func Test_ConvertSecretsResultToAPIModel(t *testing.T) {
 func Test_ConvertMalwareResultToAPIModel(t *testing.T) {
 	type args struct {
 		mergedResults *malware.MergedResults
+		mountPoints   []string
 	}
 	tests := []struct {
 		name string
@@ -551,6 +554,7 @@ func Test_ConvertMalwareResultToAPIModel(t *testing.T) {
 		{
 			name: "sanity",
 			args: args{
+				mountPoints: []string{"/somepath"},
 				mergedResults: &malware.MergedResults{
 					DetectedMalware: []malwarecommon.DetectedMalware{
 						{
@@ -589,17 +593,17 @@ func Test_ConvertMalwareResultToAPIModel(t *testing.T) {
 					{
 						MalwareName: utils.StringPtr("Ransom!"),
 						MalwareType: utils.PointerTo[models.MalwareType]("RANSOMWARE"),
-						Path:        utils.StringPtr("/somepath/givememoney.exe"),
+						Path:        utils.StringPtr("/givememoney.exe"),
 					},
 					{
 						MalwareName: utils.StringPtr("Trojan:)"),
 						MalwareType: utils.PointerTo[models.MalwareType]("TROJAN"),
-						Path:        utils.StringPtr("/somepath/gift.jar"),
+						Path:        utils.StringPtr("/gift.jar"),
 					},
 					{
 						MalwareName: utils.StringPtr("Worm<3"),
 						MalwareType: utils.PointerTo[models.MalwareType]("WORM"),
-						Path:        utils.StringPtr("/somepath/innocent.exe"),
+						Path:        utils.StringPtr("/innocent.exe"),
 					},
 				},
 				Metadata: &[]models.ScannerMetadata{
@@ -623,7 +627,7 @@ func Test_ConvertMalwareResultToAPIModel(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ConvertMalwareResultToAPIModel(tt.args.mergedResults)
+			got := ConvertMalwareResultToAPIModel(tt.args.mergedResults, tt.args.mountPoints)
 			if diff := cmp.Diff(tt.want, got, cmpopts.SortSlices(func(a, b models.Malware) bool { return *a.MalwareType < *b.MalwareType })); diff != "" {
 				t.Errorf("convertMalwareResultToAPIModel() mismatch (-want +got):\n%s", diff)
 			}
@@ -799,7 +803,7 @@ func Test_ConvertMisconfigurationResultToAPIModel(t *testing.T) {
 	misconfiguration1 := misconfiguration.FlattenedMisconfiguration{
 		ScannerName: "foo",
 		Misconfiguration: misconfigurationTypes.Misconfiguration{
-			ScannedPath: "/scanned/path",
+			ScannedPath: "/1scanned/1path",
 
 			TestCategory:    "category1",
 			TestID:          "testid1",
@@ -814,7 +818,7 @@ func Test_ConvertMisconfigurationResultToAPIModel(t *testing.T) {
 	misconfiguration2 := misconfiguration.FlattenedMisconfiguration{
 		ScannerName: "foo",
 		Misconfiguration: misconfigurationTypes.Misconfiguration{
-			ScannedPath: "/scanned/path",
+			ScannedPath: "/2scanned/2path",
 
 			TestCategory:    "category2",
 			TestID:          "testid2",
@@ -829,7 +833,7 @@ func Test_ConvertMisconfigurationResultToAPIModel(t *testing.T) {
 	misconfiguration3 := misconfiguration.FlattenedMisconfiguration{
 		ScannerName: "bar",
 		Misconfiguration: misconfigurationTypes.Misconfiguration{
-			ScannedPath: "/scanned/path",
+			ScannedPath: "/3scanned/3path",
 
 			TestCategory:    "category1",
 			TestID:          "testid3",
@@ -845,6 +849,7 @@ func Test_ConvertMisconfigurationResultToAPIModel(t *testing.T) {
 
 	type args struct {
 		misconfigurationResults *misconfiguration.Results
+		mountPoints             []string
 	}
 	tests := []struct {
 		name string
@@ -874,6 +879,7 @@ func Test_ConvertMisconfigurationResultToAPIModel(t *testing.T) {
 		{
 			name: "sanity",
 			args: args{
+				mountPoints: []string{"/1scanned", "/2scanned"},
 				misconfigurationResults: &misconfiguration.Results{
 					Metadata: misconfiguration.Metadata{
 						Timestamp: timestamp,
@@ -892,7 +898,7 @@ func Test_ConvertMisconfigurationResultToAPIModel(t *testing.T) {
 					{
 						Message:         utils.PointerTo(misconfiguration1.Message),
 						Remediation:     utils.PointerTo(misconfiguration1.Remediation),
-						ScannedPath:     utils.PointerTo(misconfiguration1.ScannedPath),
+						ScannedPath:     utils.PointerTo("/1path"),
 						ScannerName:     utils.PointerTo(misconfiguration1.ScannerName),
 						Severity:        utils.PointerTo(models.MisconfigurationHighSeverity),
 						TestCategory:    utils.PointerTo(misconfiguration1.TestCategory),
@@ -902,7 +908,7 @@ func Test_ConvertMisconfigurationResultToAPIModel(t *testing.T) {
 					{
 						Message:         utils.PointerTo(misconfiguration2.Message),
 						Remediation:     utils.PointerTo(misconfiguration2.Remediation),
-						ScannedPath:     utils.PointerTo(misconfiguration2.ScannedPath),
+						ScannedPath:     utils.PointerTo("/2path"),
 						ScannerName:     utils.PointerTo(misconfiguration2.ScannerName),
 						Severity:        utils.PointerTo(models.MisconfigurationMediumSeverity),
 						TestCategory:    utils.PointerTo(misconfiguration2.TestCategory),
@@ -925,7 +931,7 @@ func Test_ConvertMisconfigurationResultToAPIModel(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ConvertMisconfigurationResultToAPIModel(tt.args.misconfigurationResults)
+			got, err := ConvertMisconfigurationResultToAPIModel(tt.args.misconfigurationResults, tt.args.mountPoints)
 			if err != nil {
 				t.Fatalf("Unexpected error: %v", err)
 			}
@@ -1021,6 +1027,126 @@ func Test_ConvertVulnSeverityToAPIModel(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := ConvertVulnSeverityToAPIModel(tt.args.severity); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("convertVulnSeverityToAPIModel() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_trimPrefixMountPointIfNeeded(t *testing.T) {
+	type args struct {
+		toTrim      string
+		mountPoints []string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "no mount points",
+			args: args{
+				toTrim:      "/foo",
+				mountPoints: nil,
+			},
+			want: "/foo",
+		},
+		{
+			name: "root path",
+			args: args{
+				toTrim:      "/foo/bar",
+				mountPoints: []string{"/foo/bar"},
+			},
+			want: "/",
+		},
+		{
+			name: "trim prefix 1 mount point",
+			args: args{
+				toTrim:      "/mnt/foo/bar",
+				mountPoints: []string{"/mnt/foo"},
+			},
+			want: "/bar",
+		},
+		{
+			name: "trim prefix 2 mount point",
+			args: args{
+				toTrim:      "/mnt/foo/bar",
+				mountPoints: []string{"/mnt2/bar", "/mnt/foo"},
+			},
+			want: "/bar",
+		},
+		{
+			name: "nothing to trim",
+			args: args{
+				toTrim:      "/mnt/foo/bar",
+				mountPoints: []string{"/mnt2/bar", "/mnt1/foo"},
+			},
+			want: "/mnt/foo/bar",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := trimPrefixMountPointIfNeeded(tt.args.toTrim, tt.args.mountPoints); got != tt.want {
+				t.Errorf("trimPrefixMountPointIfNeeded() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_removeMountPointSubStringIfNeeded(t *testing.T) {
+	type args struct {
+		toTrim      string
+		mountPoints []string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "remove from prefix",
+			args: args{
+				toTrim:      "/mnt/snap/foo:more/example:stam",
+				mountPoints: []string{"/mnt/snap"},
+			},
+			want: "/foo:more/example:stam",
+		},
+		{
+			name: "replace prefix with /",
+			args: args{
+				toTrim:      "/mnt/snap:more/example:stam",
+				mountPoints: []string{"/mnt/snap"},
+			},
+			want: "/:more/example:stam",
+		},
+		{
+			name: "replace from middle with /",
+			args: args{
+				toTrim:      "foo/bar:/mnt/snap:more/example:stam",
+				mountPoints: []string{"/mnt/snap"},
+			},
+			want: "foo/bar:/:more/example:stam",
+		},
+		{
+			name: "remove from middle",
+			args: args{
+				toTrim:      "foo/bar:/mnt/snap/foo:more/example:stam",
+				mountPoints: []string{"/mnt/snap"},
+			},
+			want: "foo/bar:/foo:more/example:stam",
+		},
+		{
+			name: "remove from middle and prefix",
+			args: args{
+				toTrim:      "/mnt/snap:foo/bar:/mnt/snap/foo:more/example:stam",
+				mountPoints: []string{"/mnt/snap"},
+			},
+			want: "/:foo/bar:/foo:more/example:stam",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := removeMountPointSubStringIfNeeded(tt.args.toTrim, tt.args.mountPoints); got != tt.want {
+				t.Errorf("removeMountPointSubStringIfNeeded() = %v, want %v", got, tt.want)
 			}
 		})
 	}

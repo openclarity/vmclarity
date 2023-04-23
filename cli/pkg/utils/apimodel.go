@@ -168,7 +168,7 @@ func ConvertVulnCvssToAPIModel(cvss []scanner.CVSS) *[]models.VulnerabilityCvss 
 	return &ret
 }
 
-func ConvertMalwareResultToAPIModel(malwareResults *malware.MergedResults) *models.MalwareScan {
+func ConvertMalwareResultToAPIModel(malwareResults *malware.MergedResults, mountPoints []string) *models.MalwareScan {
 	if malwareResults == nil {
 		return &models.MalwareScan{}
 	}
@@ -179,7 +179,7 @@ func ConvertMalwareResultToAPIModel(malwareResults *malware.MergedResults) *mode
 		malwareList = append(malwareList, models.Malware{
 			MalwareName: &mal.MalwareName,
 			MalwareType: &mal.MalwareType,
-			Path:        &mal.Path,
+			Path:        utils.PointerTo(trimPrefixMountPointIfNeeded(mal.Path, mountPoints)),
 		})
 	}
 
@@ -208,7 +208,7 @@ func ConvertMalwareResultToAPIModel(malwareResults *malware.MergedResults) *mode
 	}
 }
 
-func ConvertSecretsResultToAPIModel(secretsResults *secrets.Results) *models.SecretScan {
+func ConvertSecretsResultToAPIModel(secretsResults *secrets.Results, mountPoints []string) *models.SecretScan {
 	if secretsResults == nil || secretsResults.MergedResults == nil {
 		return &models.SecretScan{}
 	}
@@ -220,8 +220,8 @@ func ConvertSecretsResultToAPIModel(secretsResults *secrets.Results) *models.Sec
 			secretsSlice = append(secretsSlice, models.Secret{
 				Description: &finding.Description,
 				EndLine:     &finding.EndLine,
-				FilePath:    &finding.File,
-				Fingerprint: &finding.Fingerprint,
+				FilePath:    utils.PointerTo(trimPrefixMountPointIfNeeded(finding.File, mountPoints)),
+				Fingerprint: utils.PointerTo(removeMountPointSubStringIfNeeded(finding.Fingerprint, mountPoints)),
 				StartLine:   &finding.StartLine,
 				StartColumn: &finding.StartColumn,
 				EndColumn:   &finding.EndColumn,
@@ -280,7 +280,7 @@ func MisconfigurationSeverityToAPIMisconfigurationSeverity(sev misconfigurationT
 	}
 }
 
-func ConvertMisconfigurationResultToAPIModel(misconfigurationResults *misconfiguration.Results) (*models.MisconfigurationScan, error) {
+func ConvertMisconfigurationResultToAPIModel(misconfigurationResults *misconfiguration.Results, mountPoints []string) (*models.MisconfigurationScan, error) {
 	if misconfigurationResults == nil || misconfigurationResults.Misconfigurations == nil {
 		return &models.MisconfigurationScan{}, nil
 	}
@@ -300,7 +300,7 @@ func ConvertMisconfigurationResultToAPIModel(misconfigurationResults *misconfigu
 
 		retMisconfigurations[i] = models.Misconfiguration{
 			ScannerName:     &misconfig.ScannerName,
-			ScannedPath:     &misconfig.ScannedPath,
+			ScannedPath:     utils.PointerTo(trimPrefixMountPointIfNeeded(misconfig.ScannedPath, mountPoints)),
 			TestCategory:    &misconfig.TestCategory,
 			TestID:          &misconfig.TestID,
 			TestDescription: &misconfig.TestDescription,
@@ -316,7 +316,7 @@ func ConvertMisconfigurationResultToAPIModel(misconfigurationResults *misconfigu
 	}, nil
 }
 
-func ConvertRootkitsResultToAPIModel(rootkitsResults *rootkits.Results) *models.RootkitScan {
+func ConvertRootkitsResultToAPIModel(rootkitsResults *rootkits.Results, mountPoints []string) *models.RootkitScan {
 	if rootkitsResults == nil || rootkitsResults.MergedResults == nil {
 		return &models.RootkitScan{}
 	}
@@ -325,7 +325,7 @@ func ConvertRootkitsResultToAPIModel(rootkitsResults *rootkits.Results) *models.
 	for _, r := range rootkitsResults.MergedResults.Rootkits {
 		rootkit := r // Prevent loop variable pointer export
 		rootkitsList = append(rootkitsList, models.Rootkit{
-			Message:     &rootkit.Message,
+			Message:     utils.PointerTo(removeMountPointSubStringIfNeeded(rootkit.Message, mountPoints)),
 			RootkitName: &rootkit.RootkitName,
 			RootkitType: ConvertRootkitTypeToAPIModel(rootkit.RootkitType),
 		})
@@ -352,4 +352,30 @@ func ConvertRootkitTypeToAPIModel(rootkitType rootkitsTypes.RootkitType) *models
 		log.Errorf("Can't convert rootkit type %q, treating as %v", rootkitType, models.UNKNOWN)
 		return utils.PointerTo(models.UNKNOWN)
 	}
+}
+
+func trimPrefixMountPointIfNeeded(toTrim string, mountPoints []string) string {
+	for _, mPoint := range mountPoints {
+		if strings.HasPrefix(toTrim, mPoint) {
+			// avoid representing root directory as empty string
+			if toTrim == mPoint {
+				return "/"
+			}
+			return strings.TrimPrefix(toTrim, mPoint)
+		}
+	}
+	return toTrim
+}
+
+func removeMountPointSubStringIfNeeded(toTrim string, mountPoints []string) string {
+	for _, mPoint := range mountPoints {
+		if strings.Contains(toTrim, mPoint) {
+			// assume mount point is /mnt:
+			// first address cases like /mnt/foo -> should be /foo
+			toTrim = strings.ReplaceAll(toTrim, mPoint+"/", "/")
+			// then address cases like /mnt -> should be /
+			return strings.ReplaceAll(toTrim, mPoint, "/")
+		}
+	}
+	return toTrim
 }

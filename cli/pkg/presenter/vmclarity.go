@@ -44,7 +44,7 @@ type VMClarityPresenter struct {
 	scanResultID models.ScanResultID
 }
 
-func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res *results.Results, famerr families.RunErrors) error {
+func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res *results.Results, famerr families.RunErrors, config ResultExportConfig) error {
 	scanResult, err := v.client.GetScanResult(ctx, v.scanResultID, models.GetScanResultsScanResultIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get scan result: %w", err)
@@ -88,7 +88,7 @@ func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res *results.
 	return nil
 }
 
-func (v *VMClarityPresenter) ExportVulResult(ctx context.Context, res *results.Results, famerr families.RunErrors) error {
+func (v *VMClarityPresenter) ExportVulResult(ctx context.Context, res *results.Results, famerr families.RunErrors, config ResultExportConfig) error {
 	scanResult, err := v.client.GetScanResult(ctx, v.scanResultID, models.GetScanResultsScanResultIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get scan result: %w", err)
@@ -130,7 +130,7 @@ func (v *VMClarityPresenter) ExportVulResult(ctx context.Context, res *results.R
 	return nil
 }
 
-func (v *VMClarityPresenter) ExportSecretsResult(ctx context.Context, res *results.Results, famerr families.RunErrors) error {
+func (v *VMClarityPresenter) ExportSecretsResult(ctx context.Context, res *results.Results, famerr families.RunErrors, config ResultExportConfig) error {
 	scanResult, err := v.client.GetScanResult(ctx, v.scanResultID, models.GetScanResultsScanResultIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get scan result: %w", err)
@@ -156,7 +156,7 @@ func (v *VMClarityPresenter) ExportSecretsResult(ctx context.Context, res *resul
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to get secrets results from scan: %w", err).Error())
 		} else {
-			scanResult.Secrets = cliutils.ConvertSecretsResultToAPIModel(secretsResults)
+			scanResult.Secrets = cliutils.ConvertSecretsResultToAPIModel(secretsResults, config.MountPoints)
 			if scanResult.Secrets.Secrets != nil {
 				scanResult.Summary.TotalSecrets = utils.PointerTo(len(*scanResult.Secrets.Secrets))
 			}
@@ -175,7 +175,7 @@ func (v *VMClarityPresenter) ExportSecretsResult(ctx context.Context, res *resul
 	return nil
 }
 
-func (v *VMClarityPresenter) ExportMalwareResult(ctx context.Context, res *results.Results, famerr families.RunErrors) error {
+func (v *VMClarityPresenter) ExportMalwareResult(ctx context.Context, res *results.Results, famerr families.RunErrors, config ResultExportConfig) error {
 	scanResult, err := v.client.GetScanResult(ctx, v.scanResultID, models.GetScanResultsScanResultIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get scan result: %w", err)
@@ -197,7 +197,7 @@ func (v *VMClarityPresenter) ExportMalwareResult(ctx context.Context, res *resul
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to get malware results from scan: %w", err).Error())
 		} else {
-			scanResult.Malware = cliutils.ConvertMalwareResultToAPIModel(malwareResults)
+			scanResult.Malware = cliutils.ConvertMalwareResultToAPIModel(malwareResults, config.MountPoints)
 			if scanResult.Malware.Malware != nil {
 				scanResult.Summary.TotalMalware = utils.PointerTo[int](len(*scanResult.Malware.Malware))
 			}
@@ -215,7 +215,7 @@ func (v *VMClarityPresenter) ExportMalwareResult(ctx context.Context, res *resul
 	return nil
 }
 
-func (v *VMClarityPresenter) ExportExploitsResult(ctx context.Context, res *results.Results, famerr families.RunErrors) error {
+func (v *VMClarityPresenter) ExportExploitsResult(ctx context.Context, res *results.Results, famerr families.RunErrors, config ResultExportConfig) error {
 	scanResult, err := v.client.GetScanResult(ctx, v.scanResultID, models.GetScanResultsScanResultIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get scan result: %w", err)
@@ -259,7 +259,7 @@ func (v *VMClarityPresenter) ExportExploitsResult(ctx context.Context, res *resu
 	return nil
 }
 
-func (v *VMClarityPresenter) ExportMisconfigurationResult(ctx context.Context, res *results.Results, famerr families.RunErrors) error {
+func (v *VMClarityPresenter) ExportMisconfigurationResult(ctx context.Context, res *results.Results, famerr families.RunErrors, config ResultExportConfig) error {
 	scanResult, err := v.client.GetScanResult(ctx, v.scanResultID, models.GetScanResultsScanResultIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get scan result: %w", err)
@@ -284,7 +284,7 @@ func (v *VMClarityPresenter) ExportMisconfigurationResult(ctx context.Context, r
 		if err != nil {
 			errs = append(errs, fmt.Sprintf("failed to get misconfiguration results from scan: %v", err))
 		} else {
-			apiMisconfigurations, err := cliutils.ConvertMisconfigurationResultToAPIModel(misconfigurationResults)
+			apiMisconfigurations, err := cliutils.ConvertMisconfigurationResultToAPIModel(misconfigurationResults, config.MountPoints)
 			if err != nil {
 				errs = append(errs, fmt.Sprintf("failed to convert misconfiguration results from scan to API model: %v", err))
 			} else {
@@ -306,7 +306,7 @@ func (v *VMClarityPresenter) ExportMisconfigurationResult(ctx context.Context, r
 	return nil
 }
 
-func (v *VMClarityPresenter) ExportRootkitResult(ctx context.Context, res *results.Results, famerr families.RunErrors) error {
+func (v *VMClarityPresenter) ExportRootkitResult(ctx context.Context, res *results.Results, famerr families.RunErrors, config ResultExportConfig) error {
 	scanResult, err := v.client.GetScanResult(ctx, v.scanResultID, models.GetScanResultsScanResultIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get scan result: %w", err)
@@ -328,7 +328,7 @@ func (v *VMClarityPresenter) ExportRootkitResult(ctx context.Context, res *resul
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to get rootkits results from scan: %w", err).Error())
 		} else {
-			scanResult.Rootkits = cliutils.ConvertRootkitsResultToAPIModel(rootkitsResults)
+			scanResult.Rootkits = cliutils.ConvertRootkitsResultToAPIModel(rootkitsResults, config.MountPoints)
 			if scanResult.Rootkits.Rootkits != nil {
 				scanResult.Summary.TotalRootkits = utils.PointerTo[int](len(*scanResult.Rootkits.Rootkits))
 			}

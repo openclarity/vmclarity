@@ -92,6 +92,7 @@ var rootCmd = &cobra.Command{
 			}
 		}
 
+		var resultExportConfig presenter.ResultExportConfig
 		if mountVolume {
 			mountPoints, err := cli.MountVolumes(abortCtx)
 			if err != nil {
@@ -102,6 +103,7 @@ var rootCmd = &cobra.Command{
 				return err
 			}
 			setMountPointsForFamiliesInput(mountPoints, config)
+			resultExportConfig.MountPoints = mountPoints
 		}
 
 		err = cli.MarkInProgress(ctx)
@@ -113,7 +115,7 @@ var rootCmd = &cobra.Command{
 		res, familiesErr := families.New(logger, config).Run(abortCtx)
 
 		logger.Infof("Exporting results...")
-		errs := cli.ExportResults(abortCtx, res, familiesErr)
+		errs := cli.ExportResults(abortCtx, res, familiesErr, resultExportConfig)
 
 		if len(familiesErr) > 0 {
 			errs = append(errs, fmt.Errorf("at least one family failed to run"))

@@ -70,11 +70,11 @@ func (c *CLI) MountVolumes(ctx context.Context) ([]string, error) {
 }
 
 //nolint:cyclop
-func (c *CLI) ExportResults(ctx context.Context, res *results.Results, errs families.RunErrors) []error {
+func (c *CLI) ExportResults(ctx context.Context, res *results.Results, errs families.RunErrors, exportConfig presenter.ResultExportConfig) []error {
 	familiesSet := []struct {
 		enabled  bool
 		name     string
-		exporter func(context.Context, *results.Results, families.RunErrors) error
+		exporter func(context.Context, *results.Results, families.RunErrors, presenter.ResultExportConfig) error
 	}{
 		{
 			c.FamiliesConfig.SBOM.Enabled,
@@ -118,7 +118,7 @@ func (c *CLI) ExportResults(ctx context.Context, res *results.Results, errs fami
 		if !f.enabled {
 			continue
 		}
-		if err := f.exporter(ctx, res, errs); err != nil {
+		if err := f.exporter(ctx, res, errs, exportConfig); err != nil {
 			err = fmt.Errorf("failed to export %s result to server: %w", f.name, err)
 			log.Error(err)
 			result = append(result, err)

@@ -22,12 +22,19 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/families/results"
 )
 
+type ResultExportConfig struct {
+	// list of mounted snapshot paths.
+	// these should be removed from everywhere the scanners report a file path,
+	// as they are internal and not part of the scanned disk.
+	MountPoints []string
+}
+
 type Presenter interface {
-	ExportSbomResult(context.Context, *results.Results, families.RunErrors) error
-	ExportVulResult(context.Context, *results.Results, families.RunErrors) error
-	ExportSecretsResult(context.Context, *results.Results, families.RunErrors) error
-	ExportMalwareResult(context.Context, *results.Results, families.RunErrors) error
-	ExportExploitsResult(context.Context, *results.Results, families.RunErrors) error
-	ExportMisconfigurationResult(context.Context, *results.Results, families.RunErrors) error
-	ExportRootkitResult(context.Context, *results.Results, families.RunErrors) error
+	ExportSbomResult(context.Context, *results.Results, families.RunErrors, ResultExportConfig) error
+	ExportVulResult(context.Context, *results.Results, families.RunErrors, ResultExportConfig) error
+	ExportSecretsResult(context.Context, *results.Results, families.RunErrors, ResultExportConfig) error
+	ExportMalwareResult(context.Context, *results.Results, families.RunErrors, ResultExportConfig) error
+	ExportExploitsResult(context.Context, *results.Results, families.RunErrors, ResultExportConfig) error
+	ExportMisconfigurationResult(context.Context, *results.Results, families.RunErrors, ResultExportConfig) error
+	ExportRootkitResult(context.Context, *results.Results, families.RunErrors, ResultExportConfig) error
 }

@@ -36,7 +36,7 @@ type DefaultPresenter struct {
 	FamiliesConfig *families.Config
 }
 
-func (p *DefaultPresenter) ExportSbomResult(_ context.Context, res *results.Results, _ families.RunErrors) error {
+func (p *DefaultPresenter) ExportSbomResult(_ context.Context, res *results.Results, _ families.RunErrors, _ ResultExportConfig) error {
 	sbomResults, err := results.GetResult[*sbom.Results](res)
 	if err != nil {
 		return fmt.Errorf("failed to get sbom results: %w", err)
@@ -55,7 +55,7 @@ func (p *DefaultPresenter) ExportSbomResult(_ context.Context, res *results.Resu
 	return nil
 }
 
-func (p *DefaultPresenter) ExportVulResult(_ context.Context, res *results.Results, _ families.RunErrors) error {
+func (p *DefaultPresenter) ExportVulResult(_ context.Context, res *results.Results, _ families.RunErrors, _ ResultExportConfig) error {
 	vulnerabilitiesResults, err := results.GetResult[*vulnerabilities.Results](res)
 	if err != nil {
 		return fmt.Errorf("failed to get sbom results: %w", err)
@@ -72,7 +72,7 @@ func (p *DefaultPresenter) ExportVulResult(_ context.Context, res *results.Resul
 	return nil
 }
 
-func (p *DefaultPresenter) ExportSecretsResult(_ context.Context, res *results.Results, _ families.RunErrors) error {
+func (p *DefaultPresenter) ExportSecretsResult(_ context.Context, res *results.Results, _ families.RunErrors, _ ResultExportConfig) error {
 	secretsResults, err := results.GetResult[*secrets.Results](res)
 	if err != nil {
 		return fmt.Errorf("failed to get secrets results: %w", err)
@@ -89,7 +89,7 @@ func (p *DefaultPresenter) ExportSecretsResult(_ context.Context, res *results.R
 	return nil
 }
 
-func (p *DefaultPresenter) ExportMalwareResult(_ context.Context, res *results.Results, _ families.RunErrors) error {
+func (p *DefaultPresenter) ExportMalwareResult(_ context.Context, res *results.Results, _ families.RunErrors, _ ResultExportConfig) error {
 	malwareResults, err := results.GetResult[*malware.MergedResults](res)
 	if err != nil {
 		return fmt.Errorf("failed to get malware results: %w", err)
@@ -106,7 +106,7 @@ func (p *DefaultPresenter) ExportMalwareResult(_ context.Context, res *results.R
 	return nil
 }
 
-func (p *DefaultPresenter) ExportExploitsResult(_ context.Context, res *results.Results, _ families.RunErrors) error {
+func (p *DefaultPresenter) ExportExploitsResult(_ context.Context, res *results.Results, _ families.RunErrors, _ ResultExportConfig) error {
 	exploitsResults, err := results.GetResult[*exploits.Results](res)
 	if err != nil {
 		return fmt.Errorf("failed to get exploits results: %w", err)
@@ -123,12 +123,12 @@ func (p *DefaultPresenter) ExportExploitsResult(_ context.Context, res *results.
 	return nil
 }
 
-func (p *DefaultPresenter) ExportMisconfigurationResult(context.Context, *results.Results, families.RunErrors) error {
+func (p *DefaultPresenter) ExportMisconfigurationResult(context.Context, *results.Results, families.RunErrors, ResultExportConfig) error {
 	// TODO: implement
 	return nil
 }
 
-func (p *DefaultPresenter) ExportRootkitResult(_ context.Context, res *results.Results, _ families.RunErrors) error {
+func (p *DefaultPresenter) ExportRootkitResult(_ context.Context, res *results.Results, _ families.RunErrors, _ ResultExportConfig) error {
 	rootkitsResults, err := results.GetResult[*rootkits.Results](res)
 	if err != nil {
 		return fmt.Errorf("failed to get rootkits results: %w", err)
