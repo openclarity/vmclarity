@@ -53,7 +53,7 @@ const ConfigurationActionsDisplay = ({data, onDelete, onUpdate}) => {
                         
                         fetchScanConfig({
                             method: FETCH_METHODS.PATCH,
-                            submitData: {scheduled: {...scheduled, operationTime: (new Date()).toISOString()}},
+                            submitData: {scheduled: {...scheduled, operationTime: (new Date()).toISOString()}, disabled: false},
                             formatUrl: url => `${url}/${id}`
                         });
                     }}
