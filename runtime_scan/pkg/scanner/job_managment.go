@@ -248,13 +248,13 @@ func (s *Scanner) handleScanData(ctx context.Context, data *scanData, ks chan bo
 			data.success = false
 			data.completed = true
 			s.Unlock()
-			return nil, fmt.Errorf("failed to run scan job for target %s: %v", data.targetInstance, err)
+			return nil, fmt.Errorf("failed to run scan job for target %s: %v", data.targetInstance.TargetID, err)
 		}
 		fallthrough
 	case models.ATTACHED, models.INPROGRESS, models.ABORTED:
 		s.waitForResult(ctx, data, ks)
 		if data.timeout {
-			return nil, fmt.Errorf("scan job for target %s timed out: %v", data.targetInstance, err)
+			return nil, fmt.Errorf("scan job for target %s timed out: %v", data.targetInstance.TargetID, err)
 		}
 	case models.DONE, models.NOTSCANNED:
 	}
