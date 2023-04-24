@@ -22,11 +22,12 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/openclarity/vmclarity/ui_backend/api/models"
+
 	"gotest.tools/v3/assert"
 
 	chkrootkitutils "github.com/openclarity/vmclarity/shared/pkg/families/rootkits/chkrootkit/utils"
 	"github.com/openclarity/vmclarity/shared/pkg/families/rootkits/common"
+	"github.com/openclarity/vmclarity/ui_backend/api/models"
 )
 
 func Test_toResultsRootkits(t *testing.T) {
