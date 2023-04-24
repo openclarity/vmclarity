@@ -120,6 +120,9 @@ func (s *ScanConfigsTableHandler) CreateScanConfig(scanConfig models.ScanConfig)
 	// Generate a new UUID
 	scanConfig.Id = utils.PointerTo(uuid.New().String())
 
+	// Initialise revision
+	scanConfig.Revision = utils.PointerTo(1)
+
 	// TODO(sambetts) Lock the table here to prevent race conditions
 	// checking the uniqueness.
 	//
@@ -198,7 +201,7 @@ func isEmptyOperationTime(operationTime *time.Time) bool {
 }
 
 // nolint: cyclop
-func (s *ScanConfigsTableHandler) SaveScanConfig(scanConfig models.ScanConfig) (models.ScanConfig, error) {
+func (s *ScanConfigsTableHandler) SaveScanConfig(scanConfig models.ScanConfig, params models.PutScanConfigsScanConfigIDParams) (models.ScanConfig, error) {
 	if scanConfig.Id == nil || *scanConfig.Id == "" {
 		return models.ScanConfig{}, &common.BadRequestError{
 			Reason: "id is required to save scan config",
@@ -218,9 +221,23 @@ func (s *ScanConfigsTableHandler) SaveScanConfig(scanConfig models.ScanConfig) (
 		}
 	}
 
-	var dbScanConfig ScanConfig
-	if err := getExistingObjByID(s.DB, "ScanConfig", *scanConfig.Id, &dbScanConfig); err != nil {
+	var dbObj ScanConfig
+	if err := getExistingObjByID(s.DB, "ScanConfig", *scanConfig.Id, &dbObj); err != nil {
 		return models.ScanConfig{}, fmt.Errorf("failed to get scan config from db: %w", err)
+	}
+
+	var dbScanConfig models.ScanConfig
+	err := json.Unmarshal(dbObj.Data, &dbScanConfig)
+	if err != nil {
+		return models.ScanConfig{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+	}
+
+	if (params.IfMatch != nil && dbScanConfig.Revision != nil && *params.IfMatch != *dbScanConfig.Revision) || (params.IfMatch != nil && dbScanConfig.Revision == nil) {
+		return models.ScanConfig{}, &types.PreconditionFailedError{
+			Reason: fmt.Sprintf(
+				"Revision %d does not match %d. The object may have been modified since you started the request.",
+				*dbScanConfig.Revision, *params.IfMatch),
+		}
 	}
 
 	// Check the existing DB entries to ensure that the name field is unique
@@ -233,12 +250,18 @@ func (s *ScanConfigsTableHandler) SaveScanConfig(scanConfig models.ScanConfig) (
 		return models.ScanConfig{}, fmt.Errorf("failed to check existing scan config: %w", err)
 	}
 
+	if dbScanConfig.Revision != nil {
+		scanConfig.Revision = utils.PointerTo(*dbScanConfig.Revision + 1)
+	} else {
+		scanConfig.Revision = utils.PointerTo(1)
+	}
+
 	marshaled, err := json.Marshal(scanConfig)
 	if err != nil {
 		return models.ScanConfig{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
 	}
 
-	dbScanConfig.Data = marshaled
+	dbObj.Data = marshaled
 
 	if err := s.DB.Save(&dbScanConfig).Error; err != nil {
 		return models.ScanConfig{}, fmt.Errorf("failed to save scan config in db: %w", err)
@@ -248,7 +271,7 @@ func (s *ScanConfigsTableHandler) SaveScanConfig(scanConfig models.ScanConfig) (
 	// creating any of the data (like the ID) so we can just return the
 	// scanConfig pre-marshal above.
 	var sc models.ScanConfig
-	err = json.Unmarshal(dbScanConfig.Data, &sc)
+	err = json.Unmarshal(dbObj.Data, &sc)
 	if err != nil {
 		return models.ScanConfig{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
@@ -256,7 +279,7 @@ func (s *ScanConfigsTableHandler) SaveScanConfig(scanConfig models.ScanConfig) (
 }
 
 // nolint: cyclop
-func (s *ScanConfigsTableHandler) UpdateScanConfig(scanConfig models.ScanConfig) (models.ScanConfig, error) {
+func (s *ScanConfigsTableHandler) UpdateScanConfig(scanConfig models.ScanConfig, params models.PatchScanConfigsScanConfigIDParams) (models.ScanConfig, error) {
 	if scanConfig.Id == nil || *scanConfig.Id == "" {
 		return models.ScanConfig{}, &common.BadRequestError{
 			Reason: "id is required to update scan config",
@@ -272,19 +295,39 @@ func (s *ScanConfigsTableHandler) UpdateScanConfig(scanConfig models.ScanConfig)
 		}
 	}
 
-	var dbScanConfig ScanConfig
-	if err := getExistingObjByID(s.DB, "ScanConfig", *scanConfig.Id, &dbScanConfig); err != nil {
+	var err error
+	var dbObj ScanConfig
+	if err := getExistingObjByID(s.DB, "ScanConfig", *scanConfig.Id, &dbObj); err != nil {
 		return models.ScanConfig{}, fmt.Errorf("failed to get scan config from db: %w", err)
 	}
 
-	var err error
-	dbScanConfig.Data, err = patchObject(dbScanConfig.Data, scanConfig)
+	var dbScanConfig models.ScanConfig
+	err = json.Unmarshal(dbObj.Data, &dbScanConfig)
+	if err != nil {
+		return models.ScanConfig{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+	}
+
+	if (params.IfMatch != nil && dbScanConfig.Revision != nil && *params.IfMatch != *dbScanConfig.Revision) || (params.IfMatch != nil && dbScanConfig.Revision == nil) {
+		return models.ScanConfig{}, &types.PreconditionFailedError{
+			Reason: fmt.Sprintf(
+				"Revision %d does not match %d. The object may have been modified since you started the request.",
+				*dbScanConfig.Revision, *params.IfMatch),
+		}
+	}
+
+	if dbScanConfig.Revision != nil {
+		scanConfig.Revision = utils.PointerTo(*dbScanConfig.Revision + 1)
+	} else {
+		scanConfig.Revision = utils.PointerTo(1)
+	}
+
+	dbObj.Data, err = patchObject(dbObj.Data, scanConfig)
 	if err != nil {
 		return models.ScanConfig{}, fmt.Errorf("failed to apply patch: %w", err)
 	}
 
 	var sc models.ScanConfig
-	err = json.Unmarshal(dbScanConfig.Data, &sc)
+	err = json.Unmarshal(dbObj.Data, &sc)
 	if err != nil {
 		return models.ScanConfig{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
@@ -299,7 +342,7 @@ func (s *ScanConfigsTableHandler) UpdateScanConfig(scanConfig models.ScanConfig)
 		return models.ScanConfig{}, fmt.Errorf("failed to check existing scan config: %w", err)
 	}
 
-	if err := s.DB.Save(&dbScanConfig).Error; err != nil {
+	if err := s.DB.Save(&dbObj).Error; err != nil {
 		return models.ScanConfig{}, fmt.Errorf("failed to save scan config in db: %w", err)
 	}
 

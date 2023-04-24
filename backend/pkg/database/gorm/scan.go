@@ -108,6 +108,9 @@ func (s *ScansTableHandler) CreateScan(scan models.Scan) (models.Scan, error) {
 	// Generate a new UUID
 	scan.Id = utils.PointerTo(uuid.New().String())
 
+	// Initialise revision
+	scan.Revision = utils.PointerTo(1)
+
 	// TODO do we want ScanConfig to be required in the api?
 	if scan.ScanConfig != nil {
 		existingScan, err := s.checkUniqueness(scan)
@@ -142,16 +145,29 @@ func (s *ScansTableHandler) CreateScan(scan models.Scan) (models.Scan, error) {
 }
 
 // nolint:cyclop
-func (s *ScansTableHandler) SaveScan(scan models.Scan) (models.Scan, error) {
+func (s *ScansTableHandler) SaveScan(scan models.Scan, params models.PutScansScanIDParams) (models.Scan, error) {
 	if scan.Id == nil || *scan.Id == "" {
 		return models.Scan{}, &common.BadRequestError{
 			Reason: "id is required to save scan",
 		}
 	}
 
-	var dbScan Scan
-	if err := getExistingObjByID(s.DB, scanSchemaName, *scan.Id, &dbScan); err != nil {
+	var dbObj Scan
+	if err := getExistingObjByID(s.DB, scanSchemaName, *scan.Id, &dbObj); err != nil {
 		return models.Scan{}, fmt.Errorf("failed to get scan from db: %w", err)
+	}
+
+	var dbScan models.Scan
+	if err := json.Unmarshal(dbObj.Data, &dbScan); err != nil {
+		return models.Scan{}, fmt.Errorf("failed to convert DB object to API model: %w", err)
+	}
+
+	if (params.IfMatch != nil && dbScan.Revision != nil && *params.IfMatch != *dbScan.Revision) || (params.IfMatch != nil && dbScan.Revision == nil) {
+		return models.Scan{}, &types.PreconditionFailedError{
+			Reason: fmt.Sprintf(
+				"Revision %d does not match %d. The object may have been modified since you started the request.",
+				*dbScan.Revision, *params.IfMatch),
+		}
 	}
 
 	if err := validateScanConfigID(scan, dbScan); err != nil {
@@ -173,19 +189,25 @@ func (s *ScansTableHandler) SaveScan(scan models.Scan) (models.Scan, error) {
 		}
 	}
 
+	if dbScan.Revision != nil {
+		scan.Revision = utils.PointerTo(*dbScan.Revision + 1)
+	} else {
+		scan.Revision = utils.PointerTo(1)
+	}
+
 	marshaled, err := json.Marshal(scan)
 	if err != nil {
 		return models.Scan{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
 	}
 
-	dbScan.Data = marshaled
+	dbObj.Data = marshaled
 
-	if err = s.DB.Save(&dbScan).Error; err != nil {
+	if err = s.DB.Save(&dbObj).Error; err != nil {
 		return models.Scan{}, fmt.Errorf("failed to save scan in db: %w", err)
 	}
 
 	var apiScan models.Scan
-	if err = json.Unmarshal(dbScan.Data, &apiScan); err != nil {
+	if err = json.Unmarshal(dbObj.Data, &apiScan); err != nil {
 		return models.Scan{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
@@ -193,16 +215,29 @@ func (s *ScansTableHandler) SaveScan(scan models.Scan) (models.Scan, error) {
 }
 
 // nolint:cyclop
-func (s *ScansTableHandler) UpdateScan(scan models.Scan) (models.Scan, error) {
+func (s *ScansTableHandler) UpdateScan(scan models.Scan, params models.PatchScansScanIDParams) (models.Scan, error) {
 	if scan.Id == nil || *scan.Id == "" {
 		return models.Scan{}, &common.BadRequestError{
 			Reason: "id is required to update scan",
 		}
 	}
 
-	var dbScan Scan
-	if err := getExistingObjByID(s.DB, scanSchemaName, *scan.Id, &dbScan); err != nil {
+	var dbObj Scan
+	if err := getExistingObjByID(s.DB, scanSchemaName, *scan.Id, &dbObj); err != nil {
 		return models.Scan{}, err
+	}
+
+	var dbScan models.Scan
+	if err := json.Unmarshal(dbObj.Data, &dbScan); err != nil {
+		return models.Scan{}, fmt.Errorf("failed to convert DB object to API model: %w", err)
+	}
+
+	if (params.IfMatch != nil && dbScan.Revision != nil && *params.IfMatch != *dbScan.Revision) || (params.IfMatch != nil && dbScan.Revision == nil) {
+		return models.Scan{}, &types.PreconditionFailedError{
+			Reason: fmt.Sprintf(
+				"Revision %d does not match %d. The object may have been modified since you started the request.",
+				*dbScan.Revision, *params.IfMatch),
+		}
 	}
 
 	if err := validateScanConfigID(scan, dbScan); err != nil {
@@ -213,14 +248,20 @@ func (s *ScansTableHandler) UpdateScan(scan models.Scan) (models.Scan, error) {
 		return models.Scan{}, fmt.Errorf("scan config id validation failed: %w", err)
 	}
 
+	if dbScan.Revision != nil {
+		scan.Revision = utils.PointerTo(*dbScan.Revision + 1)
+	} else {
+		scan.Revision = utils.PointerTo(1)
+	}
+
 	var err error
-	dbScan.Data, err = patchObject(dbScan.Data, scan)
+	dbObj.Data, err = patchObject(dbObj.Data, scan)
 	if err != nil {
 		return models.Scan{}, fmt.Errorf("failed to apply patch: %w", err)
 	}
 
 	var ret models.Scan
-	err = json.Unmarshal(dbScan.Data, &ret)
+	err = json.Unmarshal(dbObj.Data, &ret)
 	if err != nil {
 		return models.Scan{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
@@ -236,7 +277,7 @@ func (s *ScansTableHandler) UpdateScan(scan models.Scan) (models.Scan, error) {
 		}
 	}
 
-	if err := s.DB.Save(&dbScan).Error; err != nil {
+	if err := s.DB.Save(&dbObj).Error; err != nil {
 		return models.Scan{}, fmt.Errorf("failed to save scan in db: %w", err)
 	}
 
@@ -277,7 +318,7 @@ func (s *ScansTableHandler) checkUniqueness(scan models.Scan) (models.Scan, erro
 }
 
 // In the case of updating a scan, not allowed to change the scan config ID.
-func validateScanConfigID(scan models.Scan, dbScan Scan) error {
+func validateScanConfigID(scan models.Scan, dbScan models.Scan) error {
 	if scan.ScanConfig == nil {
 		return nil
 	}
@@ -286,13 +327,9 @@ func validateScanConfigID(scan models.Scan, dbScan Scan) error {
 			Reason: "scan config id is required when scan config is defined",
 		}
 	}
-	var apiScan models.Scan
-	if err := json.Unmarshal(dbScan.Data, &apiScan); err != nil {
-		return fmt.Errorf("failed to convert DB model to API model: %w", err)
-	}
-	if scan.ScanConfig.Id != apiScan.ScanConfig.Id {
+	if scan.ScanConfig.Id != dbScan.ScanConfig.Id {
 		return &common.BadRequestError{
-			Reason: fmt.Sprintf("not allowed to change scan config id from=%s to=%s", apiScan.ScanConfig.Id, scan.ScanConfig.Id),
+			Reason: fmt.Sprintf("not allowed to change scan config id from=%s to=%s", dbScan.ScanConfig.Id, scan.ScanConfig.Id),
 		}
 	}
 	return nil
