@@ -9,7 +9,7 @@ require (
 	github.com/Portshift/go-utils v0.0.0-20220421083203-89265d8a6487
 	github.com/anchore/syft v0.77.0
 	github.com/aptible/supercronic v0.2.2
-	github.com/aws/aws-sdk-go-v2 v1.17.7
+	github.com/aws/aws-sdk-go-v2 v1.18.0
 	github.com/aws/aws-sdk-go-v2/config v1.18.15
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.92.0
 	github.com/cenkalti/backoff v2.2.1+incompatible
