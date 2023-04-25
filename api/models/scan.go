@@ -47,3 +47,14 @@ func (s *Scan) GetScanConfigScope() (ScanScopeType, bool) {
 
 	return scope, ok
 }
+
+func (s *Scan) GetTimeoutSeconds() (int, bool) {
+	var timeoutSec int
+	var ok bool
+
+	if s.ScanConfigSnapshot != nil {
+		timeoutSec, ok = s.ScanConfigSnapshot.GetTimeoutSeconds()
+	}
+
+	return timeoutSec, ok
+}

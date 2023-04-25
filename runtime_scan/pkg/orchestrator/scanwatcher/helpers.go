@@ -28,9 +28,17 @@ func isScanTimedOut(scan *models.Scan, timeout time.Duration) bool {
 	if scan == nil || scan.StartTime == nil {
 		return false
 	}
-	deadline := (*scan.StartTime).Add(timeout)
 
-	return time.Now().UTC().After(deadline)
+	now := time.Now().UTC()
+
+	// Set timeoutTime to global timeout provided to the ScanWatcher controller
+	timeoutTime := scan.StartTime.Add(timeout)
+	// Calculate and use timeoutTime from Scan.ScanConfigSnapshot.TimeoutSeconds if set
+	if timeoutSeconds, ok := scan.GetTimeoutSeconds(); ok {
+		timeoutTime = scan.StartTime.Add(time.Duration(timeoutSeconds) * time.Second)
+	}
+
+	return now.After(timeoutTime)
 }
 
 func newVulnerabilityScanSummary() *models.VulnerabilityScanSummary {
