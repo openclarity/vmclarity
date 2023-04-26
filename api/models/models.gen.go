@@ -150,6 +150,21 @@ type AwsVPC struct {
 // CloudProvider defines model for CloudProvider.
 type CloudProvider string
 
+// ContainerImage defines model for ContainerImage.
+type ContainerImage struct {
+	ImageHash  *string `json:"imageHash,omitempty"`
+	ImageName  *string `json:"imageName,omitempty"`
+	ImageTag   *string `json:"imageTag,omitempty"`
+	ObjectType string  `json:"objectType"`
+	Registry   *string `json:"registry,omitempty"`
+}
+
+// ContainerInfo defines model for ContainerInfo.
+type ContainerInfo struct {
+	ContainerName *string `json:"containerName,omitempty"`
+	ObjectType    string  `json:"objectType"`
+}
+
 // DirInfo defines model for DirInfo.
 type DirInfo struct {
 	DirName    *string `json:"dirName,omitempty"`
@@ -799,6 +814,16 @@ type Targets struct {
 
 	// Items List of targets in the given filters and page. List length must be lower or equal to pageSize.
 	Items *[]Target `json:"items,omitempty"`
+}
+
+// VMImage defines model for VMImage.
+type VMImage struct {
+	Arch         *string `json:"arch,omitempty"`
+	ImageID      *string `json:"imageID,omitempty"`
+	ImageName    *string `json:"imageName,omitempty"`
+	ImageVersion *string `json:"imageVersion,omitempty"`
+	Location     *string `json:"location,omitempty"`
+	ObjectType   string  `json:"objectType"`
 }
 
 // VMInfo defines model for VMInfo.
@@ -1519,6 +1544,90 @@ func (t *TargetType) MergeDirInfo(v DirInfo) error {
 	return err
 }
 
+// AsVMImage returns the union data inside the TargetType as a VMImage
+func (t TargetType) AsVMImage() (VMImage, error) {
+	var body VMImage
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromVMImage overwrites any union data inside the TargetType as the provided VMImage
+func (t *TargetType) FromVMImage(v VMImage) error {
+	v.ObjectType = "VMImage"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeVMImage performs a merge with any union data inside the TargetType, using the provided VMImage
+func (t *TargetType) MergeVMImage(v VMImage) error {
+	v.ObjectType = "VMImage"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+// AsContainerInfo returns the union data inside the TargetType as a ContainerInfo
+func (t TargetType) AsContainerInfo() (ContainerInfo, error) {
+	var body ContainerInfo
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromContainerInfo overwrites any union data inside the TargetType as the provided ContainerInfo
+func (t *TargetType) FromContainerInfo(v ContainerInfo) error {
+	v.ObjectType = "ContainerInfo"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeContainerInfo performs a merge with any union data inside the TargetType, using the provided ContainerInfo
+func (t *TargetType) MergeContainerInfo(v ContainerInfo) error {
+	v.ObjectType = "ContainerInfo"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+// AsContainerImage returns the union data inside the TargetType as a ContainerImage
+func (t TargetType) AsContainerImage() (ContainerImage, error) {
+	var body ContainerImage
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromContainerImage overwrites any union data inside the TargetType as the provided ContainerImage
+func (t *TargetType) FromContainerImage(v ContainerImage) error {
+	v.ObjectType = "ContainerImage"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeContainerImage performs a merge with any union data inside the TargetType, using the provided ContainerImage
+func (t *TargetType) MergeContainerImage(v ContainerImage) error {
+	v.ObjectType = "ContainerImage"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
 func (t TargetType) Discriminator() (string, error) {
 	var discriminator struct {
 		Discriminator string `json:"objectType"`
@@ -1533,10 +1642,16 @@ func (t TargetType) ValueByDiscriminator() (interface{}, error) {
 		return nil, err
 	}
 	switch discriminator {
+	case "ContainerImage":
+		return t.AsContainerImage()
+	case "ContainerInfo":
+		return t.AsContainerInfo()
 	case "DirInfo":
 		return t.AsDirInfo()
 	case "PodInfo":
 		return t.AsPodInfo()
+	case "VMImage":
+		return t.AsVMImage()
 	case "VMInfo":
 		return t.AsVMInfo()
 	default:
