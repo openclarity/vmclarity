@@ -17,6 +17,7 @@ package types
 
 import (
 	"context"
+	"time"
 )
 
 // Job represents a scan process of a target.
@@ -38,6 +39,11 @@ type ScanJobRunConfig struct {
 
 type Instance interface {
 	GetID() string
+	GetImage() string
+	GetType() string
+	GetLaunchTime() time.Time
+	GetPlatform() string
+	GetTags() []Tag
 	GetLocation() string
 	GetRootVolume(ctx context.Context) (Volume, error)
 	GetAvailabilityZone() string
@@ -106,4 +112,9 @@ type MalwareScan struct {
 
 type ExploitScan struct {
 	Enabled bool `json:"enabled,omitempty"`
+}
+
+type Tag struct {
+	Key string
+	Val string
 }

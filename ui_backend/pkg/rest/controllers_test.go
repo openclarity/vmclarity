@@ -34,7 +34,7 @@ import (
 func Test_getTargetLocation(t *testing.T) {
 	targetInfo := backendmodels.TargetType{}
 	err := targetInfo.FromVMInfo(backendmodels.VMInfo{
-		Location: "us-east-1",
+		Location: "us-east-1/vpcid-1/sg-1",
 	})
 	assert.NilError(t, err)
 	nonSupportedTargetInfo := backendmodels.TargetType{}
@@ -73,13 +73,13 @@ func Test_getTargetLocation(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getTargetLocation(tt.args.target)
+			got, err := getTargetRegion(tt.args.target)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("getTargetLocation() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("getTargetRegion() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("getTargetLocation() got = %v, want %v", got, tt.want)
+				t.Errorf("getTargetRegion() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

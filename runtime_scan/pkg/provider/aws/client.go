@@ -144,11 +144,11 @@ func convertFromAPIScanScope(scope *models.AwsScanScope) *ScanScope {
 	}
 }
 
-func convertFromAPITags(tags *[]models.Tag) []Tag {
-	var ret []Tag
+func convertFromAPITags(tags *[]models.Tag) []types.Tag {
+	var ret []types.Tag
 	if tags != nil {
 		for _, tag := range *tags {
-			ret = append(ret, Tag{
+			ret = append(ret, types.Tag{
 				Key: tag.Key,
 				Val: tag.Value,
 			})
@@ -330,6 +330,17 @@ func (c *Client) RunScanningJob(ctx context.Context, region, id string, config p
 	}, nil
 }
 
+func convertTags(tags []ec2types.Tag) []types.Tag {
+	var ret []types.Tag
+	for _, tag := range tags {
+		ret = append(ret, types.Tag{
+			Key: *tag.Key,
+			Val: *tag.Value,
+		})
+	}
+	return ret
+}
+
 func createInstanceTags(id string) []ec2types.Tag {
 	nameTagValue := fmt.Sprintf("vmclarity-scanner-%s", id)
 
@@ -343,7 +354,7 @@ func createInstanceTags(id string) []ec2types.Tag {
 	return ret
 }
 
-func (c *Client) GetInstances(ctx context.Context, filters []ec2types.Filter, excludeTags []Tag, regionID string) ([]types.Instance, error) {
+func (c *Client) GetInstances(ctx context.Context, filters []ec2types.Filter, excludeTags []types.Tag, regionID string) ([]types.Instance, error) {
 	ret := make([]types.Instance, 0)
 
 	out, err := c.ec2Client.DescribeInstances(ctx, &ec2.DescribeInstancesInput{
@@ -389,7 +400,7 @@ func getInstanceState(result *ec2.DescribeInstancesOutput, instanceID string) ec
 	return ec2types.InstanceStateNamePending
 }
 
-func (c *Client) getInstancesFromDescribeInstancesOutput(result *ec2.DescribeInstancesOutput, excludeTags []Tag, regionID string) []types.Instance {
+func (c *Client) getInstancesFromDescribeInstancesOutput(result *ec2.DescribeInstancesOutput, excludeTags []types.Tag, regionID string) []types.Instance {
 	var ret []types.Instance
 
 	for _, reservation := range result.Reservations {
@@ -398,11 +409,27 @@ func (c *Client) getInstancesFromDescribeInstancesOutput(result *ec2.DescribeIns
 				continue
 			}
 			ret = append(ret, &InstanceImpl{
-				ec2Client: c.ec2Client,
-				id:        *instance.InstanceId,
-				region:    regionID,
+				ec2Client:        c.ec2Client,
+				id:               *instance.InstanceId,
+				region:           regionID,
+				availabilityZone: *instance.Placement.AvailabilityZone,
+				image:            *instance.ImageId,
+				ec2Type:          string(instance.InstanceType),
+				platform:         *instance.PlatformDetails,
+				tags:             convertTags(instance.Tags),
+				launchTime:       *instance.LaunchTime,
+				vpcID:            *instance.VpcId,
+				securityGroups:   getSecurityGroupsNames(instance.SecurityGroups),
 			})
 		}
+	}
+	return ret
+}
+
+func getSecurityGroupsNames(sg []ec2types.GroupIdentifier) []string {
+	var ret []string
+	for _, identifier := range sg {
+		ret = append(ret, *identifier.GroupName)
 	}
 	return ret
 }
@@ -458,7 +485,7 @@ func createInstanceStateFilters(scanStopped bool) []ec2types.Filter {
 	return filters
 }
 
-func createInclusionTagsFilters(tags []Tag) []ec2types.Filter {
+func createInclusionTagsFilters(tags []types.Tag) []ec2types.Filter {
 	// nolint:prealloc
 	var filters []ec2types.Filter
 
@@ -564,7 +591,7 @@ func convertAwsVPCs(vpcs []ec2types.Vpc) []VPC {
 
 // AND logic - if excludeTags = {tag1:val1, tag2:val2},
 // then an instance will be excluded only if it has ALL these tags ({tag1:val1, tag2:val2}).
-func hasExcludeTags(excludeTags []Tag, instanceTags []ec2types.Tag) bool {
+func hasExcludeTags(excludeTags []types.Tag, instanceTags []ec2types.Tag) bool {
 	instanceTagsMap := make(map[string]string)
 
 	if len(excludeTags) == 0 {

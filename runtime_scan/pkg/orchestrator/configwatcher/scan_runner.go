@@ -150,9 +150,14 @@ func (scw *ScanConfigWatcher) createTarget(ctx context.Context, instance types.I
 	info := models.TargetType{}
 	instanceProvider := models.AWS
 	err := info.FromVMInfo(models.VMInfo{
+		Image:            instance.GetImage(),
 		InstanceID:       instance.GetID(),
 		InstanceProvider: &instanceProvider,
+		InstanceType:     instance.GetType(),
+		LaunchTime:       instance.GetLaunchTime(),
 		Location:         instance.GetLocation(),
+		Platform:         instance.GetPlatform(),
+		Tags:             convertTags(instance.GetTags()),
 	})
 	if err != nil {
 		return "", fmt.Errorf("failed to create VMInfo: %v", err)
@@ -169,4 +174,15 @@ func (scw *ScanConfigWatcher) createTarget(ctx context.Context, instance types.I
 		return "", fmt.Errorf("failed to post target: %v", err)
 	}
 	return *createdTarget.Id, nil
+}
+
+func convertTags(tags []types.Tag) *[]models.Tag {
+	var ret []models.Tag
+	for _, tag := range tags {
+		ret = append(ret, models.Tag{
+			Key:   tag.Key,
+			Value: tag.Val,
+		})
+	}
+	return &ret
 }
