@@ -33,7 +33,7 @@ require (
 	golang.org/x/exp v0.0.0-20230213192124-5e25df0256eb
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/datatypes v1.2.0
-	gorm.io/driver/sqlite v1.3.6
+	gorm.io/driver/sqlite v1.5.0
 	gorm.io/gorm v1.23.10
 	gotest.tools/v3 v3.4.0
 	k8s.io/mount-utils v0.27.1
