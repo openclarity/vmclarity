@@ -69,7 +69,7 @@ func (m Misconfiguration) Run(res *results.Results) (interfaces.IsResults, error
 
 // StripPathFromResult strip input path from results wherever it is found.
 func StripPathFromResult(result misconfigurationTypes.ScannerResult, path string) misconfigurationTypes.ScannerResult {
-	for i, _ := range result.Misconfigurations {
+	for i := range result.Misconfigurations {
 		result.Misconfigurations[i].ScannedPath = familiesutils.TrimMountPath(result.Misconfigurations[i].ScannedPath, path)
 	}
 	return result

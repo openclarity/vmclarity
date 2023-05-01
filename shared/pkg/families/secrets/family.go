@@ -67,7 +67,7 @@ func (s Secrets) Run(res *familiesresults.Results) (interfaces.IsResults, error)
 
 // StripPathFromResult strip input path from results wherever it is found.
 func StripPathFromResult(result *common.Results, path string) *common.Results {
-	for i, _ := range result.Findings {
+	for i := range result.Findings {
 		result.Findings[i].File = familiesutils.TrimMountPath(result.Findings[i].File, path)
 		result.Findings[i].Fingerprint = familiesutils.RemoveMountPathSubStringIfNeeded(result.Findings[i].Fingerprint, path)
 	}
