@@ -803,15 +803,16 @@ type Targets struct {
 
 // VMInfo defines model for VMInfo.
 type VMInfo struct {
-	Image            string         `json:"image"`
-	InstanceID       string         `json:"instanceID"`
-	InstanceProvider *CloudProvider `json:"instanceProvider,omitempty"`
-	InstanceType     string         `json:"instanceType"`
-	LaunchTime       time.Time      `json:"launchTime"`
-	Location         string         `json:"location"`
-	ObjectType       string         `json:"objectType"`
-	Platform         string         `json:"platform"`
-	Tags             *[]Tag         `json:"tags"`
+	Image            string              `json:"image"`
+	InstanceID       string              `json:"instanceID"`
+	InstanceProvider *CloudProvider      `json:"instanceProvider,omitempty"`
+	InstanceType     string              `json:"instanceType"`
+	LaunchTime       time.Time           `json:"launchTime"`
+	Location         string              `json:"location"`
+	ObjectType       string              `json:"objectType"`
+	Platform         string              `json:"platform"`
+	SecurityGroups   *[]AwsSecurityGroup `json:"securityGroups"`
+	Tags             *[]Tag              `json:"tags"`
 }
 
 // VulnerabilitiesConfig defines model for VulnerabilitiesConfig.

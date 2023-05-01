@@ -47,11 +47,11 @@ func (i *InstanceImpl) GetID() string {
 }
 
 func (i *InstanceImpl) GetLocation() string {
-	ret := i.region + "/" + i.vpcID
-	for _, group := range i.securityGroups { // TODO how do we want to represent multiple sg?
-		ret = ret + "/" + group
-	}
-	return ret
+	return i.region + "/" + i.vpcID
+}
+
+func (i *InstanceImpl) GetSecurityGroups() []string {
+	return i.securityGroups
 }
 
 func (i *InstanceImpl) GetAvailabilityZone() string {

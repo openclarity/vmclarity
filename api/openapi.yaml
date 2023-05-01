@@ -1453,6 +1453,11 @@ components:
           items:
             $ref: '#/components/schemas/Tag'
           nullable: true
+        securityGroups:
+          type: array
+          items:
+            $ref: '#/components/schemas/AwsSecurityGroup'
+          nullable: true
         image:
           type: string
         instanceType:

@@ -395,3 +395,52 @@ func Test_getPointerValOrZero(t *testing.T) {
 		})
 	}
 }
+
+func Test_getRegionByProvider(t *testing.T) {
+	type args struct {
+		info backendmodels.VMInfo
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "cloud provider is nil",
+			args: args{
+				info: backendmodels.VMInfo{
+					InstanceProvider: nil,
+					Location:         "eu-central-1/vpc-1",
+				},
+			},
+			want: "eu-central-1/vpc-1",
+		},
+		{
+			name: "AWS cloud provider",
+			args: args{
+				info: backendmodels.VMInfo{
+					InstanceProvider: utils.PointerTo(backendmodels.AWS),
+					Location:         "eu-central-1/vpc-1",
+				},
+			},
+			want: "eu-central-1",
+		},
+		{
+			name: "non AWS cloud provider",
+			args: args{
+				info: backendmodels.VMInfo{
+					InstanceProvider: utils.PointerTo(backendmodels.CloudProvider("GCP")),
+					Location:         "eu-central-1/vpc-1",
+				},
+			},
+			want: "eu-central-1/vpc-1",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getRegionByProvider(tt.args.info); got != tt.want {
+				t.Errorf("getRegionByProvider() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -408,6 +408,10 @@ func (c *Client) getInstancesFromDescribeInstancesOutput(result *ec2.DescribeIns
 			if hasExcludeTags(excludeTags, instance.Tags) {
 				continue
 			}
+			if err := validateInstanceFields(instance); err != nil {
+				log.Errorf("Instance validation failed: %v", err)
+				continue
+			}
 			ret = append(ret, &InstanceImpl{
 				ec2Client:        c.ec2Client,
 				id:               *instance.InstanceId,
@@ -419,17 +423,39 @@ func (c *Client) getInstancesFromDescribeInstancesOutput(result *ec2.DescribeIns
 				tags:             convertTags(instance.Tags),
 				launchTime:       *instance.LaunchTime,
 				vpcID:            *instance.VpcId,
-				securityGroups:   getSecurityGroupsNames(instance.SecurityGroups),
+				securityGroups:   getSecurityGroupsIDs(instance.SecurityGroups),
 			})
 		}
 	}
 	return ret
 }
 
-func getSecurityGroupsNames(sg []ec2types.GroupIdentifier) []string {
+func validateInstanceFields(instance ec2types.Instance) error {
+	if instance.InstanceId == nil {
+		return fmt.Errorf("instance id does not exist")
+	}
+	if instance.Placement == nil || instance.Placement.AvailabilityZone == nil {
+		return fmt.Errorf("insatnce AvailabilityZone does not exist")
+	}
+	if instance.ImageId == nil {
+		return fmt.Errorf("instance image id does not exist")
+	}
+	if instance.PlatformDetails == nil {
+		return fmt.Errorf("instance platform details does not exist")
+	}
+	if instance.LaunchTime == nil {
+		return fmt.Errorf("instance launch time does not exist")
+	}
+	if instance.VpcId == nil {
+		return fmt.Errorf("instance vpc id does not exist")
+	}
+	return nil
+}
+
+func getSecurityGroupsIDs(sg []ec2types.GroupIdentifier) []string {
 	var ret []string
 	for _, identifier := range sg {
-		ret = append(ret, *identifier.GroupName)
+		ret = append(ret, *identifier.GroupId)
 	}
 	return ret
 }

@@ -88,10 +88,23 @@ func getTargetRegion(target backendmodels.Target) (string, error) {
 
 	switch info := discriminator.(type) {
 	case backendmodels.VMInfo:
-		return strings.Split(info.Location, "/")[0], nil
+		return getRegionByProvider(info), nil
 	default:
 		return "", fmt.Errorf("target type is not supported (%T)", discriminator)
 	}
+}
+
+func getRegionByProvider(info backendmodels.VMInfo) string {
+	if info.InstanceProvider == nil {
+		log.Warnf("Instace provider is nil. instance id: %v", info.InstanceID)
+		return info.Location
+	}
+	if *info.InstanceProvider == backendmodels.AWS {
+		// AWS location is represented as region/vpc, need to return only the region
+		return strings.Split(info.Location, "/")[0]
+	}
+	// for other clouds, return the location
+	return info.Location
 }
 
 func addTargetSummaryToFindingsCount(findingsCount *models.FindingsCount, summary *backendmodels.ScanFindingsSummary) *models.FindingsCount {

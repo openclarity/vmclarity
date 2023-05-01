@@ -158,6 +158,7 @@ func (scw *ScanConfigWatcher) createTarget(ctx context.Context, instance types.I
 		Location:         instance.GetLocation(),
 		Platform:         instance.GetPlatform(),
 		Tags:             convertTags(instance.GetTags()),
+		SecurityGroups:   createSecurityGroups(instance.GetSecurityGroups()),
 	})
 	if err != nil {
 		return "", fmt.Errorf("failed to create VMInfo: %v", err)
@@ -174,6 +175,20 @@ func (scw *ScanConfigWatcher) createTarget(ctx context.Context, instance types.I
 		return "", fmt.Errorf("failed to post target: %v", err)
 	}
 	return *createdTarget.Id, nil
+}
+
+func createSecurityGroups(sgs []string) *[]models.AwsSecurityGroup {
+	if len(sgs) == 0 {
+		return nil
+	}
+
+	var ret []models.AwsSecurityGroup
+	for _, sg := range sgs {
+		ret = append(ret, models.AwsSecurityGroup{
+			Id: sg,
+		})
+	}
+	return &ret
 }
 
 func convertTags(tags []types.Tag) *[]models.Tag {

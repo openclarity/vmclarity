@@ -345,6 +345,13 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 					ComplexFieldSchemas: []string{"Tag"},
 				},
 			},
+			"securityGroups": odatasql.FieldMeta{
+				FieldType: odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{
+					FieldType:           odatasql.ComplexFieldType,
+					ComplexFieldSchemas: []string{"AwsSecurityGroup"},
+				},
+			},
 			"instanceProvider": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 		},
 	},

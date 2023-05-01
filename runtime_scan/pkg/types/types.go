@@ -45,6 +45,7 @@ type Instance interface {
 	GetPlatform() string
 	GetTags() []Tag
 	GetLocation() string
+	GetSecurityGroups() []string
 	GetRootVolume(ctx context.Context) (Volume, error)
 	GetAvailabilityZone() string
 	WaitForReady(ctx context.Context) error
