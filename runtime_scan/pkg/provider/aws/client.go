@@ -331,12 +331,16 @@ func (c *Client) RunScanningJob(ctx context.Context, region, id string, config p
 }
 
 func convertTags(tags []ec2types.Tag) []types.Tag {
-	var ret []types.Tag
-	for _, tag := range tags {
-		ret = append(ret, types.Tag{
+	if len(tags) == 0 {
+		return nil
+	}
+
+	ret := make([]types.Tag, len(tags))
+	for i, tag := range tags {
+		ret[i] = types.Tag{
 			Key: *tag.Key,
 			Val: *tag.Value,
-		})
+		}
 	}
 	return ret
 }
@@ -453,9 +457,9 @@ func validateInstanceFields(instance ec2types.Instance) error {
 }
 
 func getSecurityGroupsIDs(sg []ec2types.GroupIdentifier) []string {
-	var ret []string
-	for _, identifier := range sg {
-		ret = append(ret, *identifier.GroupId)
+	ret := make([]string, len(sg))
+	for i, identifier := range sg {
+		ret[i] = *identifier.GroupId
 	}
 	return ret
 }

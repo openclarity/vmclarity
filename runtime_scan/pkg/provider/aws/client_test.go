@@ -474,6 +474,7 @@ func Test_getInstanceState(t *testing.T) {
 	}
 }
 
+// nolint: maintidx
 func TestClient_getInstancesFromDescribeInstancesOutput(t *testing.T) {
 	launchTime := time.Now()
 
@@ -525,7 +526,7 @@ func TestClient_getInstancesFromDescribeInstancesOutput(t *testing.T) {
 									LaunchTime:      utils.PointerTo(launchTime),
 									SecurityGroups: []ec2types.GroupIdentifier{
 										{
-											GroupName: utils.PointerTo("group1"),
+											GroupId: utils.PointerTo("group1"),
 										},
 									},
 								},
@@ -547,7 +548,7 @@ func TestClient_getInstancesFromDescribeInstancesOutput(t *testing.T) {
 									LaunchTime:      utils.PointerTo(launchTime),
 									SecurityGroups: []ec2types.GroupIdentifier{
 										{
-											GroupName: utils.PointerTo("group2"),
+											GroupId: utils.PointerTo("group2"),
 										},
 									},
 								},
@@ -567,7 +568,7 @@ func TestClient_getInstancesFromDescribeInstancesOutput(t *testing.T) {
 									LaunchTime:      utils.PointerTo(launchTime),
 									SecurityGroups: []ec2types.GroupIdentifier{
 										{
-											GroupName: utils.PointerTo("group3"),
+											GroupId: utils.PointerTo("group3"),
 										},
 									},
 								},
@@ -652,7 +653,7 @@ func TestClient_getInstancesFromDescribeInstancesOutput(t *testing.T) {
 									LaunchTime:      utils.PointerTo(launchTime),
 									SecurityGroups: []ec2types.GroupIdentifier{
 										{
-											GroupName: utils.PointerTo("group1"),
+											GroupId: utils.PointerTo("group1"),
 										},
 									},
 								},
@@ -674,7 +675,7 @@ func TestClient_getInstancesFromDescribeInstancesOutput(t *testing.T) {
 									LaunchTime:      utils.PointerTo(launchTime),
 									SecurityGroups: []ec2types.GroupIdentifier{
 										{
-											GroupName: utils.PointerTo("group2"),
+											GroupId: utils.PointerTo("group2"),
 										},
 									},
 								},
@@ -694,7 +695,7 @@ func TestClient_getInstancesFromDescribeInstancesOutput(t *testing.T) {
 									LaunchTime:      utils.PointerTo(launchTime),
 									SecurityGroups: []ec2types.GroupIdentifier{
 										{
-											GroupName: utils.PointerTo("group3"),
+											GroupId: utils.PointerTo("group3"),
 										},
 									},
 								},

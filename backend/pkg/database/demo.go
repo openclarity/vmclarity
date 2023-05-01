@@ -406,7 +406,8 @@ func createVulnerabilityFindings(base models.Finding, vulnerabilities []models.V
 }
 
 func createVMInfo(instanceID, location, image, instanceType, platform string,
-	tags []models.Tag, launchTime time.Time, instanceProvider models.CloudProvider) *models.TargetType {
+	tags []models.Tag, launchTime time.Time, instanceProvider models.CloudProvider,
+) *models.TargetType {
 	info := models.TargetType{}
 	err := info.FromVMInfo(models.VMInfo{
 		Image:            image,

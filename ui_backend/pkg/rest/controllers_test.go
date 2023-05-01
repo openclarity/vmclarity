@@ -34,7 +34,8 @@ import (
 func Test_getTargetLocation(t *testing.T) {
 	targetInfo := backendmodels.TargetType{}
 	err := targetInfo.FromVMInfo(backendmodels.VMInfo{
-		Location: "us-east-1/vpcid-1/sg-1",
+		InstanceProvider: utils.PointerTo(backendmodels.AWS),
+		Location:         "us-east-1/vpcid-1/sg-1",
 	})
 	assert.NilError(t, err)
 	nonSupportedTargetInfo := backendmodels.TargetType{}

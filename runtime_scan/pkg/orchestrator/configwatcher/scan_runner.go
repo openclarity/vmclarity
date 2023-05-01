@@ -178,26 +178,22 @@ func (scw *ScanConfigWatcher) createTarget(ctx context.Context, instance types.I
 }
 
 func createSecurityGroups(sgs []string) *[]models.AwsSecurityGroup {
-	if len(sgs) == 0 {
-		return nil
-	}
-
-	var ret []models.AwsSecurityGroup
-	for _, sg := range sgs {
-		ret = append(ret, models.AwsSecurityGroup{
+	ret := make([]models.AwsSecurityGroup, len(sgs))
+	for i, sg := range sgs {
+		ret[i] = models.AwsSecurityGroup{
 			Id: sg,
-		})
+		}
 	}
 	return &ret
 }
 
 func convertTags(tags []types.Tag) *[]models.Tag {
-	var ret []models.Tag
-	for _, tag := range tags {
-		ret = append(ret, models.Tag{
+	ret := make([]models.Tag, len(tags))
+	for i, tag := range tags {
+		ret[i] = models.Tag{
 			Key:   tag.Key,
 			Value: tag.Val,
-		})
+		}
 	}
 	return &ret
 }

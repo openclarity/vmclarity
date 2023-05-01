@@ -37,6 +37,7 @@ type ScanJobRunConfig struct {
 	SubnetID       string
 }
 
+// nolint: interfacebloat
 type Instance interface {
 	GetID() string
 	GetImage() string
