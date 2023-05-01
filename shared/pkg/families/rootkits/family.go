@@ -67,7 +67,7 @@ func (r Rootkits) Run(res *familiesresults.Results) (familiesinterface.IsResults
 
 // StripPathFromResult strip input path from results wherever it is found.
 func StripPathFromResult(result *common.Results, path string) *common.Results {
-	for i, _ := range result.Rootkits {
+	for i := range result.Rootkits {
 		result.Rootkits[i].Message = familiesutils.RemoveMountPathSubStringIfNeeded(result.Rootkits[i].Message, path)
 	}
 	return result
