@@ -413,7 +413,7 @@ func (c *Client) getInstancesFromDescribeInstancesOutput(result *ec2.DescribeIns
 				continue
 			}
 			if err := validateInstanceFields(instance); err != nil {
-				log.Errorf("Instance validation failed: %v", err)
+				log.Errorf("Instance validation failed. instance id=%v: %v", getPointerValOrEmpty(instance.InstanceId), err)
 				continue
 			}
 			ret = append(ret, &InstanceImpl{
@@ -434,27 +434,34 @@ func (c *Client) getInstancesFromDescribeInstancesOutput(result *ec2.DescribeIns
 	return ret
 }
 
+func getPointerValOrEmpty(val *string) string {
+	if val == nil {
+		return ""
+	}
+	return *val
+}
+
 func validateInstanceFields(instance ec2types.Instance) error {
 	if instance.InstanceId == nil {
 		return fmt.Errorf("instance id does not exist")
 	}
 	if instance.Placement == nil {
-		return fmt.Errorf("insatnce Placement does not exist. instance id=%v", *instance.InstanceId)
+		return fmt.Errorf("insatnce Placement does not exist")
 	}
 	if instance.Placement.AvailabilityZone == nil {
-		return fmt.Errorf("insatnce AvailabilityZone does not exist. instance id=%v", *instance.InstanceId)
+		return fmt.Errorf("insatnce AvailabilityZone does not exist")
 	}
 	if instance.ImageId == nil {
-		return fmt.Errorf("instance ImageId does not exist. instance id=%v", *instance.InstanceId)
+		return fmt.Errorf("instance ImageId does not exist")
 	}
 	if instance.PlatformDetails == nil {
-		return fmt.Errorf("instance PlatformDetails does not exist. instance id=%v", *instance.InstanceId)
+		return fmt.Errorf("instance PlatformDetails does not exist")
 	}
 	if instance.LaunchTime == nil {
-		return fmt.Errorf("instance LaunchTime does not exist. instance id=%v", *instance.InstanceId)
+		return fmt.Errorf("instance LaunchTime does not exist")
 	}
 	if instance.VpcId == nil {
-		return fmt.Errorf("instance VpcId does not exist. instance id=%v", *instance.InstanceId)
+		return fmt.Errorf("instance VpcId does not exist")
 	}
 	return nil
 }
