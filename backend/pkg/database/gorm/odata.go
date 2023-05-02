@@ -349,10 +349,15 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 				FieldType: odatasql.CollectionFieldType,
 				CollectionItemMeta: &odatasql.FieldMeta{
 					FieldType:           odatasql.ComplexFieldType,
-					ComplexFieldSchemas: []string{"AwsSecurityGroup"},
+					ComplexFieldSchemas: []string{"SecurityGroup"},
 				},
 			},
 			"instanceProvider": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+		},
+	},
+	"SecurityGroup": {
+		Fields: odatasql.Schema{
+			"id": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 		},
 	},
 	"ScanFindingsSummary": {

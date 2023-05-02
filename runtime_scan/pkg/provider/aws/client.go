@@ -438,20 +438,23 @@ func validateInstanceFields(instance ec2types.Instance) error {
 	if instance.InstanceId == nil {
 		return fmt.Errorf("instance id does not exist")
 	}
-	if instance.Placement == nil || instance.Placement.AvailabilityZone == nil {
-		return fmt.Errorf("insatnce AvailabilityZone does not exist")
+	if instance.Placement == nil {
+		return fmt.Errorf("insatnce Placement does not exist. instance id=%v", *instance.InstanceId)
+	}
+	if instance.Placement.AvailabilityZone == nil {
+		return fmt.Errorf("insatnce AvailabilityZone does not exist. instance id=%v", *instance.InstanceId)
 	}
 	if instance.ImageId == nil {
-		return fmt.Errorf("instance image id does not exist")
+		return fmt.Errorf("instance ImageId does not exist. instance id=%v", *instance.InstanceId)
 	}
 	if instance.PlatformDetails == nil {
-		return fmt.Errorf("instance platform details does not exist")
+		return fmt.Errorf("instance PlatformDetails does not exist. instance id=%v", *instance.InstanceId)
 	}
 	if instance.LaunchTime == nil {
-		return fmt.Errorf("instance launch time does not exist")
+		return fmt.Errorf("instance LaunchTime does not exist. instance id=%v", *instance.InstanceId)
 	}
 	if instance.VpcId == nil {
-		return fmt.Errorf("instance vpc id does not exist")
+		return fmt.Errorf("instance VpcId does not exist. instance id=%v", *instance.InstanceId)
 	}
 	return nil
 }

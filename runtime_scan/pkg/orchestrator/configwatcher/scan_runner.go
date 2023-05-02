@@ -177,10 +177,10 @@ func (scw *ScanConfigWatcher) createTarget(ctx context.Context, instance types.I
 	return *createdTarget.Id, nil
 }
 
-func createSecurityGroups(sgs []string) *[]models.AwsSecurityGroup {
-	ret := make([]models.AwsSecurityGroup, len(sgs))
+func createSecurityGroups(sgs []string) *[]models.SecurityGroup {
+	ret := make([]models.SecurityGroup, len(sgs))
 	for i, sg := range sgs {
-		ret[i] = models.AwsSecurityGroup{
+		ret[i] = models.SecurityGroup{
 			Id: sg,
 		}
 	}

@@ -1308,6 +1308,18 @@ components:
         - id
       additionalProperties: false
 
+
+    SecurityGroup:
+      type: object
+      description: general cloud security group
+      properties:
+        id:
+          type: string
+          minLength: 1
+      required:
+        - id
+      additionalProperties: false
+
     AwsSecurityGroup:
       type: object
       description: AWS security group
@@ -1456,7 +1468,7 @@ components:
         securityGroups:
           type: array
           items:
-            $ref: '#/components/schemas/AwsSecurityGroup'
+            $ref: '#/components/schemas/SecurityGroup'
           nullable: true
         image:
           type: string
