@@ -25,10 +25,12 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/config/aws"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/config/external_provider"
 )
 
 const (
 	ScannerAWSRegion                = "SCANNER_AWS_REGION"
+	CloudProvider                   = "CLOUD_PROVIDER"
 	defaultScannerAWSRegion         = "us-east-1"
 	JobResultTimeout                = "JOB_RESULT_TIMEOUT"
 	JobResultsPollingInterval       = "JOB_RESULT_POLLING_INTERVAL"
@@ -51,8 +53,10 @@ const (
 )
 
 type OrchestratorConfig struct {
-	AWSConfig             *aws.Config
-	ScannerBackendAddress string
+	Provider               string
+	AWSConfig              *aws.Config
+	ExternalProviderConfig *external_provider.Config
+	ScannerBackendAddress  string
 	ScannerConfig
 }
 
@@ -129,6 +133,7 @@ func setConfigDefaults(backendHost string, backendPort int, backendBaseURL strin
 	viper.SetDefault(AttachedVolumeDeviceName, defaultAttachedVolumeDeviceName)
 	viper.SetDefault(ClamBinaryPath, "clamscan")
 	viper.SetDefault(FreshclamBinaryPath, "freshclam")
+	viper.SetDefault(CloudProvider, "AWS")
 
 	viper.AutomaticEnv()
 }
@@ -137,8 +142,10 @@ func LoadConfig(backendHost string, backendPort int, baseURL string) (*Orchestra
 	setConfigDefaults(backendHost, backendPort, baseURL)
 
 	config := &OrchestratorConfig{
-		AWSConfig:             aws.LoadConfig(),
-		ScannerBackendAddress: viper.GetString(ScannerBackendAddress),
+		Provider:               viper.GetString(CloudProvider),
+		AWSConfig:              aws.LoadConfig(),
+		ExternalProviderConfig: external_provider.LoadConfig(),
+		ScannerBackendAddress:  viper.GetString(ScannerBackendAddress),
 		ScannerConfig: ScannerConfig{
 			Region:                        viper.GetString(ScannerAWSRegion),
 			JobResultTimeout:              viper.GetDuration(JobResultTimeout),

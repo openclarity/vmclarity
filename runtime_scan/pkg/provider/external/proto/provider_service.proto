@@ -1,0 +1,231 @@
+syntax = "proto3";
+
+package provider;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "proto/provider_service";
+
+// The provider service definition.
+service Provider {
+  // general operations
+  rpc RunScanningJob(RunScanningJobParams) returns (RunScanningJobResult){}
+  rpc DiscoverScopes(DiscoverScopesParams) returns (DiscoverScopesResult){}
+  rpc DiscoverInstances(DiscoverInstancesParams) returns (DiscoverInstancesResult){}
+
+  // operation on an instance
+  rpc GetInstanceRootVolume(GetInstanceRootVolumeParams) returns (GetInstanceRootVolumeResult){}
+  rpc WaitForInstanceReady(WaitForInstanceReadyParams) returns (WaitForInstanceReadyResult){}
+  rpc DeleteInstance(DeleteInstanceParams) returns (DeleteInstanceResult){}
+  rpc AttachVolumeToInstance(AttachVolumeToInstanceParams) returns (AttachVolumeToInstanceResult){}
+
+  // operation on a snapshot
+  rpc CopySnapshot(CopySnapshotParams) returns (CopySnapshotResult){}
+  rpc DeleteSnapshot(DeleteSnapshotParams) returns (DeleteSnapshotResult){}
+  rpc WaitForSnapshotReady(WaitForSnapshotReadyParams) returns (WaitForSnapshotReadyResult){}
+  rpc CreateVolumeFromSnapshot(CreateVolumeFromSnapshotParams) returns (CreateVolumeFromSnapshotResult){}
+
+  // operation on a volume
+  rpc TakeVolumeSnapshot(TakeVolumeSnapshotParams) returns (TakeVolumeSnapshotResult){}
+  rpc WaitForVolumeReady(WaitForVolumeReadyParams) returns (WaitForVolumeReadyResult){}
+  rpc WaitForVolumeAttached(WaitForVolumeAttachedParams) returns (WaitForVolumeAttachedResult){}
+  rpc DeleteVolume(DeleteVolumeParams) returns (DeleteVolumeResult){}
+}
+
+message RunScanningJobParams {
+  // where to run the scanning job. location concept is similar to region in AWS.
+  // TODO do we really need location? why do we care where the user will run his scanner?
+  string location = 1;
+  // unique identifier of the scanning job. can be used with tags to identify the scanning job.
+  string id = 2;
+  // configuration for how to run the job
+  ScanningJobConfig config = 3;
+}
+
+message RunScanningJobResult {
+  // the running scanning job instance.
+  Instance instance = 1;
+}
+
+message DiscoverScopesParams {
+}
+
+message DiscoverScopesResult {
+  // json marshaled representation of scopes. See backend api for possible scopes types (models.Scopes).
+  // TODO once we have a design for a generic scope representation, we will not need to add each new scope type to the api.
+  bytes scopes = 1;
+}
+
+message DiscoverInstancesParams {
+  // json marshaled representation of scanScope. See backend api for possible scopes types (models.ScanScopeType).
+  // TODO once we have a design for a generic scope representation, we will not need to add each new scope type to the api.
+  bytes scanScopes = 1;
+}
+
+message DiscoverInstancesResult {
+  repeated Instance instances = 1;
+}
+
+message GetInstanceRootVolumeParams {
+  string instanceID = 1;
+  string instanceLocation = 2;
+}
+
+message GetInstanceRootVolumeResult {
+  Volume volume = 1;
+}
+
+message WaitForInstanceReadyParams {
+  string instanceID = 1;
+  string instanceLocation = 2;
+}
+
+message WaitForInstanceReadyResult {
+}
+
+message DeleteInstanceParams {
+  string instanceID = 1;
+  string instanceLocation = 2;
+}
+
+message DeleteInstanceResult {
+}
+
+message AttachVolumeToInstanceParams {
+  string instanceID = 1;
+  string instanceLocation = 2;
+  string volumeID = 3;
+  // The block device. name that will be given to the attached volume.
+  string deviceName = 4;
+}
+
+message AttachVolumeToInstanceResult {
+}
+
+message CopySnapshotParams {
+  string snapshotID = 1;
+  string snapshotLocation = 2;
+  string destLocation = 3;
+}
+
+message CopySnapshotResult {
+  Snapshot snapshot = 1;
+}
+
+message DeleteSnapshotParams {
+  string snapshotID = 1;
+  string snapshotLocation = 2;
+}
+
+message DeleteSnapshotResult {
+}
+
+message WaitForSnapshotReadyParams {
+  string snapshotID = 1;
+  string snapshotLocation = 2;
+}
+
+message WaitForSnapshotReadyResult {
+}
+
+message CreateVolumeFromSnapshotParams {
+  string snapshotID = 1;
+  string snapshotLocation = 2;
+  string availabilityZone = 3;
+}
+
+message CreateVolumeFromSnapshotResult {
+  Volume volume = 1;
+}
+
+message TakeVolumeSnapshotParams {
+  string volumeID = 1;
+  string volumeLocation = 2;
+}
+
+message TakeVolumeSnapshotResult {
+  Snapshot snapshot = 1;
+}
+
+message WaitForVolumeReadyParams {
+  string volumeID = 1;
+  string volumeLocation = 2;
+}
+
+message WaitForVolumeReadyResult {
+}
+
+message WaitForVolumeAttachedParams {
+  string volumeID = 1;
+  string volumeLocation = 2;
+}
+
+message WaitForVolumeAttachedResult {
+}
+
+message DeleteVolumeParams {
+  string volumeID = 1;
+  string volumeLocation = 2;
+}
+
+message DeleteVolumeResult {
+}
+
+// ScanningJobConfig - the wording:
+// scanner instance - the VM to run the VMClarity CLI and all related stuff on (DBs for example)
+// scanner CLI - VMClarity CLI tool that does the actual scanning. This is packed in a container and should be run inside the scanner.
+message ScanningJobConfig {
+  // scanner CLI Container Image to use containing the vmclarity-cli and tools
+  string scannerImage = 1;
+  // scanner CLI config yaml (families config yaml) serialized in json format
+  string scannerCLIConfig = 2;
+  // The backend address for the scanner CLI to export to the results.
+  string vmClarityAddress = 3;
+  // The ID of the ScanResult that the scanner CLI should update in the backend.
+  string scanResultID = 4;
+  // The name of the key pair to set on the scanner instance, ignored if not set, used mainly for debugging.
+  string keyPairName = 5;
+  // configuration for how to run the scanner instance (optional)
+  ScannerInstanceCreationConfig scannerInstanceCreationConfig = 6;
+}
+
+message ScannerInstanceCreationConfig {
+  string MaxPrice = 1;
+  int32 RetryMaxAttempts = 2;
+  bool UseSpotInstances = 3;
+}
+
+message Instance {
+  string id = 1;
+  string Location = 2;
+  string image = 3;
+  string instanceType = 4;
+  string platform = 5;
+  repeated Tag tags  = 6;
+  google.protobuf.Timestamp launchTime = 7;
+}
+
+message AccountScope {
+  // json representation of the scope
+  string scope = 1;
+}
+
+message ScanScope {
+  // json representation of the scan scope
+  string scope = 1;
+}
+
+message Volume {
+  string id = 1;
+  string location = 2;
+}
+
+message Snapshot {
+  string id = 1;
+  string location = 2;
+}
+
+message Tag {
+  string key = 1;
+  string val = 2;
+}

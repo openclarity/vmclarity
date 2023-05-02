@@ -130,9 +130,20 @@ func startRuntimeScanOrchestratorIfNeeded(ctx context.Context, config *_config.C
 		log.Fatalf("Failed to load runtime scan orchestrator config: %v", err)
 	}
 
-	providerClient, err := aws.Create(ctx, runtimeScanConfig.AWSConfig)
-	if err != nil {
-		log.Fatalf("Failed to create provider client: %v", err)
+	var providerClient provider.Client
+	switch runtimeScanConfig.Provider {
+	case "AWS":
+		providerClient, err = aws.Create(ctx, runtimeScanConfig.AWSConfig)
+		if err != nil {
+			log.Fatalf("Failed to create AWS provider client: %v", err)
+		}
+	case "External":
+		providerClient, err = external.Create(ctx, runtimeScanConfig.ExternalProviderConfig)
+		if err != nil {
+			log.Fatalf("Failed to create extertnal provider client: %v", err)
+		}
+	default:
+		log.Fatalf("Unknown cloud provider: %v. Only AWS and External are supported", runtimeScanConfig.Provider)
 	}
 
 	orc, err := createRuntimeScanOrchestrator(providerClient, runtimeScanConfig, backendClient)

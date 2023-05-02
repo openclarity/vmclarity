@@ -37,7 +37,7 @@ func (s *SnapshotImpl) GetID() string {
 	return s.id
 }
 
-func (s *SnapshotImpl) GetRegion() string {
+func (s *SnapshotImpl) GetLocation() string {
 	return s.region
 }
 

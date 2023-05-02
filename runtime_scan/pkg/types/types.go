@@ -69,7 +69,7 @@ type Volume interface {
 
 type Snapshot interface {
 	GetID() string
-	GetRegion() string
+	GetLocation() string
 	Copy(ctx context.Context, dstRegion string) (Snapshot, error)
 	Delete(ctx context.Context) error
 	WaitForReady(ctx context.Context) error

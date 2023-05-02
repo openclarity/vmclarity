@@ -1560,6 +1560,8 @@ github.com/openclarity/kubeclarity/cli v0.0.0-20230503074245-0199b41a7b8f h1:eXu
 github.com/openclarity/kubeclarity/cli v0.0.0-20230503074245-0199b41a7b8f/go.mod h1:lYO20T+lAE3PK+TOICxaY9WNysT8bcgMsgOSIQNipfM=
 github.com/openclarity/kubeclarity/shared v0.0.0-20230503074245-0199b41a7b8f h1:HeosQnO4qe34cMNKAtLyEWpQW3NOc5O3e/mWdpNHelg=
 github.com/openclarity/kubeclarity/shared v0.0.0-20230503074245-0199b41a7b8f/go.mod h1:O8Y9Rf3yXb03KRcVrgCXyzkG2Nl0FlxuS9vCS8S9tk8=
+github.com/openclarity/vmclarity/runtime_scan/pkg/provider/grpc/proto v0.0.0-20230507134904-d1ca0d8e49b4 h1:5XYUK+R/9W7vbWYOhMCcuL/yCEck3u0jHSqidkaCPjo=
+github.com/openclarity/vmclarity/runtime_scan/pkg/provider/grpc/proto v0.0.0-20230507134904-d1ca0d8e49b4/go.mod h1:Fu3G6/tqW8CTgOCwW9+N9YoOb1ea/bgNWD/MvbRflmA=
 github.com/opencontainers/go-digest v0.0.0-20170106003457-a6d0ee40d420/go.mod h1:cMLVZDEM3+U2I4VmLI6N8jQYUd2OVphdqWwCJHrFt2s=
 github.com/opencontainers/go-digest v0.0.0-20180430190053-c9281466c8b2/go.mod h1:cMLVZDEM3+U2I4VmLI6N8jQYUd2OVphdqWwCJHrFt2s=
 github.com/opencontainers/go-digest v1.0.0-rc1/go.mod h1:cMLVZDEM3+U2I4VmLI6N8jQYUd2OVphdqWwCJHrFt2s=

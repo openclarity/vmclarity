@@ -367,7 +367,7 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 
 	// we need the snapshot to be in the scanner region in order to create
 	// a volume and attach it.
-	if s.config.Region != snapshot.GetRegion() {
+	if s.config.Region != snapshot.GetLocation() {
 		cpySnapshot, err = snapshot.Copy(ctx, s.config.Region)
 		if err != nil {
 			return types.Job{}, fmt.Errorf("failed to copy snapshot. snapshotID=%v: %v", snapshot.GetID(), err)
@@ -397,7 +397,7 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 		KeyPairName:                   s.config.ScannerKeyPairName,
 		ScannerInstanceCreationConfig: s.scanConfig.ScannerInstanceCreationConfig,
 	}
-	launchInstance, err = s.providerClient.RunScanningJob(ctx, launchSnapshot.GetRegion(), launchSnapshot.GetID(), scanningJobConfig)
+	launchInstance, err = s.providerClient.RunScanningJob(ctx, launchSnapshot.GetLocation(), launchSnapshot.GetID(), scanningJobConfig)
 	if err != nil {
 		return types.Job{}, fmt.Errorf("failed to launch a new instance: %v", err)
 	}
@@ -440,6 +440,61 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 	if err != nil {
 		return types.Job{}, fmt.Errorf("failed to patch target scan status: %v", err)
 	}
+
+	// since the CLI is not really running, we need to mock it by updating the scan result and mark it as done.
+	scanResult, err := s.backendClient.GetScanResult(ctx, scanningJobConfig.ScanResultID, models.GetScanResultsScanResultIDParams{})
+	if err != nil {
+		return types.Job{}, fmt.Errorf("failed to get scan result: %w", err)
+	}
+
+	if scanResult.Status == nil {
+		scanResult.Status = &models.TargetScanStatus{}
+	}
+	if scanResult.Status.Sbom == nil {
+		scanResult.Status.Sbom = &models.TargetScanState{}
+	}
+	if scanResult.Summary == nil {
+		scanResult.Summary = &models.ScanFindingsSummary{}
+	}
+
+	scanResult.Sboms = &models.SbomScan{
+		Packages: &[]models.Package{
+			{
+				Cpes:     &[]string{"cpe1", "cpe2"},
+				Language: utils.StringPtr("go"),
+				Licenses: &[]string{"license1", "license2"},
+				Name:     utils.StringPtr("pkg1"),
+				Purl:     utils.StringPtr("purl/pkg1"),
+				Type:     utils.StringPtr("pkgType1"),
+				Version:  utils.StringPtr("pkgVersion1"),
+			},
+			{
+				Cpes:     &[]string{"cpe1", "cpe3"},
+				Language: utils.StringPtr("java"),
+				Licenses: &[]string{"license3", "license4"},
+				Name:     utils.StringPtr("pkg2"),
+				Purl:     utils.StringPtr("purl/pkg2"),
+				Type:     utils.StringPtr("pkgType2"),
+				Version:  utils.StringPtr("pkgVersion2"),
+			},
+		},
+	}
+
+	scanResult.Summary.TotalPackages = utils.PointerTo(2)
+	scanResult.Status.Sbom.State = utils.PointerTo(models.DONE)
+
+	if scanResult.Status.General == nil {
+		scanResult.Status.General = &models.TargetScanState{}
+	}
+	scanResult.Status.General.State = utils.PointerTo(models.DONE)
+	scanResult.Status.General.LastTransitionTime = utils.PointerTo(time.Now())
+
+	err = s.backendClient.PatchScanResult(ctx, scanResult, scanningJobConfig.ScanResultID)
+	if err != nil {
+		return types.Job{}, fmt.Errorf("failed to patch scan result: %w", err)
+	}
+
+	/* Done patching scan result */
 
 	return job, nil
 }
