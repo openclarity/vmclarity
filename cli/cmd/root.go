@@ -28,6 +28,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/cli/pkg"
 	"github.com/openclarity/vmclarity/cli/pkg/cli"
 	"github.com/openclarity/vmclarity/cli/pkg/presenter"
@@ -55,6 +56,7 @@ var (
 	scanResultID          string
 	mountVolume           bool
 	waitForServerAttached bool
+	scanConfigName        string
 )
 
 // rootCmd represents the base command when called without any subcommands.
@@ -150,8 +152,9 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.vmclarity.yaml)")
-	rootCmd.PersistentFlags().StringVar(&output, "output", "", "set output directory path. Stdout is used if not set.")
+	rootCmd.PersistentFlags().StringVar(&output, "output", "", "set output directory path. Stdout is used if not set")
 	rootCmd.PersistentFlags().StringVar(&server, "server", "", "VMClarity server to export scan results to, for example: http://localhost:9999/api")
+	rootCmd.PersistentFlags().StringVar(&scanConfigName, "scan-config-name", "", "use an existing scan config that is defined in the VMClarity server")
 	rootCmd.PersistentFlags().StringVar(&scanResultID, "scan-result-id", "", "the ScanResult ID to export the scan results to")
 	rootCmd.PersistentFlags().BoolVar(&mountVolume, "mount-attached-volume", false, "discover for an attached volume and mount it before the scan")
 	rootCmd.PersistentFlags().BoolVar(&waitForServerAttached, "wait-for-server-attached", false, "wait for the VMClarity server to attach the volume")
@@ -159,12 +162,48 @@ func init() {
 	// TODO(sambetts) we may have to change this to our own validation when
 	// we add the CI/CD scenario and there isn't an existing scan-result-id
 	// in the backend to PATCH
-	rootCmd.MarkFlagsRequiredTogether("server", "scan-result-id")
+	validateRequiredFlagForDefinedFlag(rootCmd, "scan-result-id", "server")
+	validateRequiredFlagForDefinedFlag(rootCmd, "scan-config-name", "server")
+	rootCmd.MarkFlagsMutuallyExclusive("config", "scan-config-name")
 }
 
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {
-	logrus.Infof("init config")
+func validateRequiredFlagForDefinedFlag(rootCmd *cobra.Command, definedFlag, requiredFlag string) {
+	if flag := rootCmd.Flag(definedFlag); flag != nil {
+		if required := rootCmd.Flag(requiredFlag); required == nil {
+			panic(fmt.Sprintf("Cannot set flag '%s' alone without flag '%s'", definedFlag, requiredFlag))
+		}
+	}
+}
+
+func getConfigFromBackend() *families.Config {
+	scanConfig := families.Config{}
+	if server == "" {
+		return &scanConfig
+	}
+	client, err := backendclient.Create(server)
+	if err != nil {
+		logrus.Errorf("failed to create VMClarity API client: %v", err)
+	}
+
+	scanConfigs, err := client.GetScanConfigs(context.TODO(), models.GetScanConfigsParams{
+		Filter: utils.PointerTo(fmt.Sprintf("name eq %s", scanConfigName)),
+	})
+	if err != nil {
+		panic("Failed to get scan config by name")
+	}
+	if *scanConfigs.Count == 0 {
+		panic(fmt.Sprintf("There is no scan config with name=%s", scanConfigName))
+	}
+	scanConfig = families.CreateFamilyConfigFromModel(
+		(*scanConfigs.Items)[0].ScanFamiliesConfig,
+		families.LoadAddresses("localhost"),
+		families.LoadPaths(),
+	)
+
+	return &scanConfig
+}
+
+func getConfigFromFile() *families.Config {
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
@@ -190,6 +229,19 @@ func initConfig() {
 	config = &families.Config{}
 	err = viper.Unmarshal(config)
 	cobra.CheckErr(err)
+
+	return config
+}
+
+// initConfig reads in config file and ENV variables if set.
+func initConfig() {
+	logrus.Infof("init config")
+
+	if scanConfigName != "" {
+		config = getConfigFromBackend()
+	} else {
+		config = getConfigFromFile()
+	}
 
 	if logrus.IsLevelEnabled(logrus.InfoLevel) {
 		configB, err := yaml.Marshal(config)

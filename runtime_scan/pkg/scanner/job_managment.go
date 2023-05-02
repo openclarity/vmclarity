@@ -21,8 +21,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/anchore/syft/syft/source"
-	kubeclarityConfig "github.com/openclarity/kubeclarity/shared/pkg/config"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
@@ -33,21 +31,6 @@ import (
 	runtimeScanUtils "github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 	"github.com/openclarity/vmclarity/shared/pkg/families"
-	familiesExploits "github.com/openclarity/vmclarity/shared/pkg/families/exploits"
-	exploitsCommon "github.com/openclarity/vmclarity/shared/pkg/families/exploits/common"
-	exploitdbConfig "github.com/openclarity/vmclarity/shared/pkg/families/exploits/exploitdb/config"
-	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
-	malwareconfig "github.com/openclarity/vmclarity/shared/pkg/families/malware/clam/config"
-	malwarecommon "github.com/openclarity/vmclarity/shared/pkg/families/malware/common"
-	misconfigurationTypes "github.com/openclarity/vmclarity/shared/pkg/families/misconfiguration/types"
-	"github.com/openclarity/vmclarity/shared/pkg/families/rootkits"
-	chkrootkitConfig "github.com/openclarity/vmclarity/shared/pkg/families/rootkits/chkrootkit/config"
-	rootkitsCommon "github.com/openclarity/vmclarity/shared/pkg/families/rootkits/common"
-	familiesSbom "github.com/openclarity/vmclarity/shared/pkg/families/sbom"
-	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
-	"github.com/openclarity/vmclarity/shared/pkg/families/secrets/common"
-	gitleaksconfig "github.com/openclarity/vmclarity/shared/pkg/families/secrets/gitleaks/config"
-	familiesVulnerabilities "github.com/openclarity/vmclarity/shared/pkg/families/vulnerabilities"
 	"github.com/openclarity/vmclarity/shared/pkg/utils"
 )
 
@@ -445,20 +428,11 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 }
 
 func (s *Scanner) generateFamiliesConfigurationYaml() (string, error) {
-	famConfig := families.Config{
-		SBOM:            userSBOMConfigToFamiliesSbomConfig(s.scanConfig.ScanFamiliesConfig.Sbom),
-		Vulnerabilities: userVulnConfigToFamiliesVulnConfig(s.scanConfig.ScanFamiliesConfig.Vulnerabilities, s.config.TrivyServerAddress, s.config.GrypeServerAddress),
-		Secrets:         userSecretsConfigToFamiliesSecretsConfig(s.scanConfig.ScanFamiliesConfig.Secrets, s.config.GitleaksBinaryPath),
-		Exploits:        userExploitsConfigToFamiliesExploitsConfig(s.scanConfig.ScanFamiliesConfig.Exploits, s.config.ExploitsDBAddress),
-		Malware: userMalwareConfigToFamiliesMalwareConfig(
-			s.scanConfig.ScanFamiliesConfig.Malware,
-			s.config.ClamBinaryPath,
-			s.config.FreshclamBinaryPath,
-			s.config.AlternativeFreshclamMirrorURL,
-		),
-		Misconfiguration: userMisconfigurationConfigToFamiliesMisconfigurationConfig(s.scanConfig.ScanFamiliesConfig.Misconfigurations, s.config.LynisInstallPath),
-		Rootkits:         userRootkitsConfigToFamiliesRootkitsConfig(s.scanConfig.ScanFamiliesConfig.Rootkits, s.config.ChkrootkitBinaryPath),
-	}
+	famConfig := families.CreateFamilyConfigFromModel(
+		s.scanConfig.ScanFamiliesConfig,
+		s.config.FamiliesAddresses,
+		s.config.FamiliesPaths,
+	)
 
 	famConfigYaml, err := yaml.Marshal(famConfig)
 	if err != nil {
@@ -466,167 +440,6 @@ func (s *Scanner) generateFamiliesConfigurationYaml() (string, error) {
 	}
 
 	return string(famConfigYaml), nil
-}
-
-func userRootkitsConfigToFamiliesRootkitsConfig(rootkitsConfig *models.RootkitsConfig, chkRootkitBinaryPath string) rootkits.Config {
-	if rootkitsConfig == nil || rootkitsConfig.Enabled == nil || !*rootkitsConfig.Enabled {
-		return rootkits.Config{}
-	}
-
-	return rootkits.Config{
-		Enabled:      true,
-		ScannersList: []string{"chkrootkit"},
-		Inputs:       nil,
-		ScannersConfig: &rootkitsCommon.ScannersConfig{
-			Chkrootkit: chkrootkitConfig.Config{
-				BinaryPath: chkRootkitBinaryPath,
-			},
-		},
-	}
-}
-
-func userSecretsConfigToFamiliesSecretsConfig(secretsConfig *models.SecretsConfig, gitleaksBinaryPath string) secrets.Config {
-	if secretsConfig == nil || secretsConfig.Enabled == nil || !*secretsConfig.Enabled {
-		return secrets.Config{}
-	}
-	return secrets.Config{
-		Enabled: true,
-		// TODO(idanf) This choice should come from the user's configuration
-		ScannersList: []string{"gitleaks"},
-		Inputs:       nil, // rootfs directory will be determined by the CLI after mount.
-		ScannersConfig: &common.ScannersConfig{
-			Gitleaks: gitleaksconfig.Config{
-				BinaryPath: gitleaksBinaryPath,
-			},
-		},
-	}
-}
-
-func userSBOMConfigToFamiliesSbomConfig(sbomConfig *models.SBOMConfig) familiesSbom.Config {
-	if sbomConfig == nil || sbomConfig.Enabled == nil || !*sbomConfig.Enabled {
-		return familiesSbom.Config{}
-	}
-	return familiesSbom.Config{
-		Enabled: true,
-		// TODO(sambetts) This choice should come from the user's configuration
-		AnalyzersList: []string{"syft", "trivy"},
-		Inputs:        nil, // rootfs directory will be determined by the CLI after mount.
-		AnalyzersConfig: &kubeclarityConfig.Config{
-			// TODO(sambetts) The user needs to be able to provide this configuration
-			Registry: &kubeclarityConfig.Registry{},
-			Analyzer: &kubeclarityConfig.Analyzer{
-				OutputFormat: "cyclonedx",
-				TrivyConfig: kubeclarityConfig.AnalyzerTrivyConfig{
-					Timeout: TrivyTimeout,
-				},
-			},
-		},
-	}
-}
-
-func userMisconfigurationConfigToFamiliesMisconfigurationConfig(misconfigurationConfig *models.MisconfigurationsConfig, lynisInstallPath string) misconfigurationTypes.Config {
-	if misconfigurationConfig == nil || misconfigurationConfig.Enabled == nil || !*misconfigurationConfig.Enabled {
-		return misconfigurationTypes.Config{}
-	}
-	return misconfigurationTypes.Config{
-		Enabled: true,
-		// TODO(sambetts) This choice should come from the user's configuration
-		ScannersList: []string{"lynis"},
-		Inputs:       nil, // rootfs directory will be determined by the CLI after mount.
-		ScannersConfig: misconfigurationTypes.ScannersConfig{
-			// TODO(sambetts) Add scanner configurations here as we add them like Lynis
-			Lynis: misconfigurationTypes.LynisConfig{
-				InstallPath: lynisInstallPath,
-			},
-		},
-	}
-}
-
-func userVulnConfigToFamiliesVulnConfig(vulnerabilitiesConfig *models.VulnerabilitiesConfig, trivyServerAddr string, grypeServerAddr string) familiesVulnerabilities.Config {
-	if vulnerabilitiesConfig == nil || vulnerabilitiesConfig.Enabled == nil || !*vulnerabilitiesConfig.Enabled {
-		return familiesVulnerabilities.Config{}
-	}
-
-	var grypeConfig kubeclarityConfig.GrypeConfig
-	if grypeServerAddr != "" {
-		grypeConfig = kubeclarityConfig.GrypeConfig{
-			Mode: kubeclarityConfig.ModeRemote,
-			RemoteGrypeConfig: kubeclarityConfig.RemoteGrypeConfig{
-				GrypeServerAddress: grypeServerAddr,
-				GrypeServerTimeout: GrypeServerTimeout,
-			},
-		}
-	} else {
-		grypeConfig = kubeclarityConfig.GrypeConfig{
-			Mode: kubeclarityConfig.ModeLocal,
-			LocalGrypeConfig: kubeclarityConfig.LocalGrypeConfig{
-				UpdateDB:   true,
-				DBRootDir:  "/tmp/",
-				ListingURL: "https://toolbox-data.anchore.io/grype/databases/listing.json",
-				Scope:      source.SquashedScope,
-			},
-		}
-	}
-
-	return familiesVulnerabilities.Config{
-		Enabled: true,
-		// TODO(sambetts) This choice should come from the user's configuration
-		ScannersList:  []string{"grype", "trivy"},
-		InputFromSbom: false, // will be determined by the CLI.
-		ScannersConfig: &kubeclarityConfig.Config{
-			// TODO(sambetts) The user needs to be able to provide this configuration
-			Registry: &kubeclarityConfig.Registry{},
-			Scanner: &kubeclarityConfig.Scanner{
-				GrypeConfig: grypeConfig,
-				TrivyConfig: kubeclarityConfig.ScannerTrivyConfig{
-					Timeout:    TrivyTimeout,
-					ServerAddr: trivyServerAddr,
-				},
-			},
-		},
-	}
-}
-
-func userExploitsConfigToFamiliesExploitsConfig(exploitsConfig *models.ExploitsConfig, baseURL string) familiesExploits.Config {
-	if exploitsConfig == nil || exploitsConfig.Enabled == nil || !*exploitsConfig.Enabled {
-		return familiesExploits.Config{}
-	}
-	// TODO(erezf) Some choices should come from the user's configuration
-	return familiesExploits.Config{
-		Enabled:       true,
-		ScannersList:  []string{"exploitdb"},
-		InputFromVuln: true,
-		ScannersConfig: &exploitsCommon.ScannersConfig{
-			ExploitDB: exploitdbConfig.Config{
-				BaseURL: baseURL,
-			},
-		},
-	}
-}
-
-func userMalwareConfigToFamiliesMalwareConfig(
-	malwareConfig *models.MalwareConfig,
-	clamBinaryPath string,
-	freshclamBinaryPath string,
-	alternativeFreshclamMirrorURL string,
-) malware.Config {
-	if malwareConfig == nil || malwareConfig.Enabled == nil || !*malwareConfig.Enabled {
-		return malware.Config{}
-	}
-
-	log.Debugf("clam binary path: %s", clamBinaryPath)
-	return malware.Config{
-		Enabled:      true,
-		ScannersList: []string{"clam"},
-		Inputs:       nil, // rootfs directory will be determined by the CLI after mount.
-		ScannersConfig: &malwarecommon.ScannersConfig{
-			Clam: malwareconfig.Config{
-				ClamScanBinaryPath:            clamBinaryPath,
-				FreshclamBinaryPath:           freshclamBinaryPath,
-				AlternativeFreshclamMirrorURL: alternativeFreshclamMirrorURL,
-			},
-		},
-	}
 }
 
 func (s *Scanner) deleteJobIfNeeded(ctx context.Context, job *types.Job, isSuccessfulJob, isCompletedJob bool) {
