@@ -31,6 +31,7 @@ import (
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/cli/pkg"
 	"github.com/openclarity/vmclarity/cli/pkg/cli"
+	"github.com/openclarity/vmclarity/cli/pkg/initiator"
 	"github.com/openclarity/vmclarity/cli/pkg/presenter"
 	"github.com/openclarity/vmclarity/cli/pkg/state"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
@@ -56,7 +57,14 @@ var (
 	scanResultID          string
 	mountVolume           bool
 	waitForServerAttached bool
-	scanConfigName        string
+
+	// flags for CICD mode
+	cicdMode          bool
+	scanConfigName    string
+	scanConfigID      string
+	input             string
+	inputType         string
+	exportCICDResults bool
 )
 
 // rootCmd represents the base command when called without any subcommands.
@@ -105,6 +113,10 @@ var rootCmd = &cobra.Command{
 				return err
 			}
 			setMountPointsForFamiliesInput(mountPoints, config)
+		}
+
+		if input != "" {
+			setInput(input, inputType, config)
 		}
 
 		err = cli.MarkInProgress(ctx)
@@ -158,6 +170,10 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&scanResultID, "scan-result-id", "", "the ScanResult ID to export the scan results to")
 	rootCmd.PersistentFlags().BoolVar(&mountVolume, "mount-attached-volume", false, "discover for an attached volume and mount it before the scan")
 	rootCmd.PersistentFlags().BoolVar(&waitForServerAttached, "wait-for-server-attached", false, "wait for the VMClarity server to attach the volume")
+	rootCmd.PersistentFlags().StringVar(&input, "input", "", "input for families")
+	rootCmd.PersistentFlags().StringVar(&inputType, "input-type", string(kubeclarityutils.DIR), "input type for families")
+	rootCmd.PersistentFlags().BoolVar(&cicdMode, "cicd-mode", false, "CICD mode")
+	rootCmd.PersistentFlags().BoolVar(&exportCICDResults, "export-cicd-results", false, "export results to VMclarity server")
 
 	// TODO(sambetts) we may have to change this to our own validation when
 	// we add the CI/CD scenario and there isn't an existing scan-result-id
@@ -165,6 +181,9 @@ func init() {
 	validateRequiredFlagForDefinedFlag(rootCmd, "scan-result-id", "server")
 	validateRequiredFlagForDefinedFlag(rootCmd, "scan-config-name", "server")
 	rootCmd.MarkFlagsMutuallyExclusive("config", "scan-config-name")
+	rootCmd.MarkFlagsMutuallyExclusive("mount-attached-volume", "input")
+	validateRequiredFlagForDefinedFlag(rootCmd, "input-type", "input")
+	validateRequiredFlagForDefinedFlag(rootCmd, "export-cicd-results", "server")
 }
 
 func validateRequiredFlagForDefinedFlag(rootCmd *cobra.Command, definedFlag, requiredFlag string) {
@@ -176,9 +195,8 @@ func validateRequiredFlagForDefinedFlag(rootCmd *cobra.Command, definedFlag, req
 }
 
 func getConfigFromBackend() *families.Config {
-	scanConfig := families.Config{}
 	if server == "" {
-		return &scanConfig
+		panic("Missing backend")
 	}
 	client, err := backendclient.Create(server)
 	if err != nil {
@@ -186,19 +204,21 @@ func getConfigFromBackend() *families.Config {
 	}
 
 	scanConfigs, err := client.GetScanConfigs(context.TODO(), models.GetScanConfigsParams{
-		Filter: utils.PointerTo(fmt.Sprintf("name eq %s", scanConfigName)),
+		Filter: utils.PointerTo(fmt.Sprintf("name eq '%s'", scanConfigName)),
 	})
 	if err != nil {
-		panic("Failed to get scan config by name")
+		panic(fmt.Sprintf("Failed to get scan config by name %v", err))
 	}
-	if *scanConfigs.Count == 0 {
+	if len(*scanConfigs.Items) == 0 {
 		panic(fmt.Sprintf("There is no scan config with name=%s", scanConfigName))
 	}
-	scanConfig = families.CreateFamilyConfigFromModel(
+
+	scanConfig := families.CreateFamilyConfigFromModel(
 		(*scanConfigs.Items)[0].ScanFamiliesConfig,
 		families.LoadAddresses("localhost"),
 		families.LoadPaths(),
 	)
+	scanConfigID = *(*scanConfigs.Items)[0].Id
 
 	return &scanConfig
 }
@@ -246,7 +266,11 @@ func initConfig() {
 	if logrus.IsLevelEnabled(logrus.InfoLevel) {
 		configB, err := yaml.Marshal(config)
 		cobra.CheckErr(err)
-		logrus.Infof("Using config file (%s):\n%s", viper.ConfigFileUsed(), string(configB))
+		if scanConfigName != "" {
+			logrus.Infof("Using config from backend (%s):\n%s", scanConfigName, string(configB))
+		} else {
+			logrus.Infof("Using config file (%s):\n%s", viper.ConfigFileUsed(), string(configB))
+		}
 	}
 }
 
@@ -265,7 +289,7 @@ func newCli() (*cli.CLI, error) {
 		return nil, errors.New("families config must not be nil")
 	}
 
-	if server != "" {
+	if server != "" && !cicdMode {
 		var client *backendclient.BackendClient
 		var p presenter.Presenter
 
@@ -289,6 +313,32 @@ func newCli() (*cli.CLI, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to create local state: %w", err)
 		}
+		var client *backendclient.BackendClient
+		var p presenter.Presenter
+
+		client, err = backendclient.Create(server)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create VMClarity API client: %w", err)
+		}
+
+		if exportCICDResults {
+			if scanResultID == "" {
+				i, err := initiator.NewInitiator(client, scanConfigID, scanConfigName, input, inputType)
+				if err != nil {
+					return nil, fmt.Errorf("failed to create VMClarity initiator: %w", err)
+				}
+				scanResultID, err = i.InitResults(context.TODO())
+				if err != nil {
+					return nil, fmt.Errorf("failed to init scan result: %w", err)
+				}
+			}
+
+			p, err = presenter.NewVMClarityPresenter(client, scanResultID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create VMClarity presenter: %w", err)
+			}
+			presenters = append(presenters, p)
+		}
 	}
 
 	if output != "" {
@@ -310,58 +360,64 @@ func newCli() (*cli.CLI, error) {
 func setMountPointsForFamiliesInput(mountPoints []string, familiesConfig *families.Config) *families.Config {
 	// update families inputs with the mount point as rootfs
 	for _, mountDir := range mountPoints {
+		familiesConfig = setInput(mountDir, string(kubeclarityutils.ROOTFS), familiesConfig)
+	}
+	return familiesConfig
+}
+
+func setInput(input, inputType string, familiesConfig *families.Config) *families.Config {
+	if familiesConfig.SBOM.Enabled {
+		familiesConfig.SBOM.Inputs = append(familiesConfig.SBOM.Inputs, sbom.Input{
+			Input:     input,
+			InputType: inputType,
+		})
+	}
+
+	if familiesConfig.Vulnerabilities.Enabled {
 		if familiesConfig.SBOM.Enabled {
-			familiesConfig.SBOM.Inputs = append(familiesConfig.SBOM.Inputs, sbom.Input{
-				Input:     mountDir,
-				InputType: string(kubeclarityutils.ROOTFS),
+			familiesConfig.Vulnerabilities.InputFromSbom = true
+		} else {
+			familiesConfig.Vulnerabilities.Inputs = append(familiesConfig.Vulnerabilities.Inputs, vulnerabilities.Input{
+				Input:     input,
+				InputType: inputType,
 			})
-		}
-
-		if familiesConfig.Vulnerabilities.Enabled {
-			if familiesConfig.SBOM.Enabled {
-				familiesConfig.Vulnerabilities.InputFromSbom = true
-			} else {
-				familiesConfig.Vulnerabilities.Inputs = append(familiesConfig.Vulnerabilities.Inputs, vulnerabilities.Input{
-					Input:     mountDir,
-					InputType: string(kubeclarityutils.ROOTFS),
-				})
-			}
-		}
-
-		if familiesConfig.Secrets.Enabled {
-			familiesConfig.Secrets.Inputs = append(familiesConfig.Secrets.Inputs, secrets.Input{
-				StripPathFromResult: utils.PointerTo(true),
-				Input:               mountDir,
-				InputType:           string(kubeclarityutils.ROOTFS),
-			})
-		}
-
-		if familiesConfig.Malware.Enabled {
-			familiesConfig.Malware.Inputs = append(familiesConfig.Malware.Inputs, malware.Input{
-				StripPathFromResult: utils.PointerTo(true),
-				Input:               mountDir,
-				InputType:           string(kubeclarityutils.ROOTFS),
-			})
-		}
-
-		if familiesConfig.Rootkits.Enabled {
-			familiesConfig.Rootkits.Inputs = append(familiesConfig.Rootkits.Inputs, rootkits.Input{
-				StripPathFromResult: utils.PointerTo(true),
-				Input:               mountDir,
-				InputType:           string(kubeclarityutils.ROOTFS),
-			})
-		}
-
-		if familiesConfig.Misconfiguration.Enabled {
-			familiesConfig.Misconfiguration.Inputs = append(
-				familiesConfig.Misconfiguration.Inputs,
-				misconfigurationTypes.Input{
-					StripPathFromResult: utils.PointerTo(true),
-					Input:               mountDir,
-					InputType:           string(kubeclarityutils.ROOTFS),
-				},
-			)
 		}
 	}
+
+	if familiesConfig.Secrets.Enabled {
+		familiesConfig.Secrets.Inputs = append(familiesConfig.Secrets.Inputs, secrets.Input{
+			StripPathFromResult: utils.PointerTo(true),
+			Input:               input,
+			InputType:           inputType,
+		})
+	}
+
+	if familiesConfig.Malware.Enabled {
+		familiesConfig.Malware.Inputs = append(familiesConfig.Malware.Inputs, malware.Input{
+			StripPathFromResult: utils.PointerTo(true),
+			Input:               input,
+			InputType:           inputType,
+		})
+	}
+
+	if familiesConfig.Rootkits.Enabled {
+		familiesConfig.Rootkits.Inputs = append(familiesConfig.Rootkits.Inputs, rootkits.Input{
+			StripPathFromResult: utils.PointerTo(true),
+			Input:               input,
+			InputType:           inputType,
+		})
+	}
+
+	if familiesConfig.Misconfiguration.Enabled {
+		familiesConfig.Misconfiguration.Inputs = append(
+			familiesConfig.Misconfiguration.Inputs,
+			misconfigurationTypes.Input{
+				StripPathFromResult: utils.PointerTo(true),
+				Input:               input,
+				InputType:           inputType,
+			},
+		)
+	}
+
 	return familiesConfig
 }

@@ -281,6 +281,8 @@ func (t *TargetsTableHandler) checkUniqueness(target models.Target) (*models.Tar
 			}
 		}
 		return nil, nil // nolint:nilnil
+	case models.DirInfo:
+		return nil, nil
 	default:
 		return nil, fmt.Errorf("target type is not supported (%T): %w", discriminator, err)
 	}
