@@ -201,3 +201,5 @@ export const getScanScopeColumnFiltersConfig = (scopePrefix="scope") => {
         ]}
     ]
 }
+
+export const formatTagsToStringsList = tags => tags?.map(({key, value}) => `${key}=${value}`);
