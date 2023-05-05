@@ -26,6 +26,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/shared/pkg/families"
 	"github.com/openclarity/vmclarity/shared/pkg/families/exploits"
 	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 	"github.com/openclarity/vmclarity/shared/pkg/families/misconfiguration"
@@ -351,5 +352,31 @@ func ConvertRootkitTypeToAPIModel(rootkitType rootkitsTypes.RootkitType) *models
 	default:
 		log.Errorf("Can't convert rootkit type %q, treating as %v", rootkitType, models.UNKNOWN)
 		return utils.PointerTo(models.UNKNOWN)
+	}
+}
+
+func ConvertScanFamiliesConfigToAPIModel(config *families.Config) *models.ScanFamiliesConfig {
+	return &models.ScanFamiliesConfig{
+		Exploits: &models.ExploitsConfig{
+			Enabled: utils.PointerTo(config.Exploits.Enabled),
+		},
+		Malware: &models.MalwareConfig{
+			Enabled: utils.PointerTo(config.Malware.Enabled),
+		},
+		Misconfigurations: &models.MisconfigurationsConfig{
+			Enabled: utils.PointerTo(config.Misconfiguration.Enabled),
+		},
+		Rootkits: &models.RootkitsConfig{
+			Enabled: utils.PointerTo(config.Rootkits.Enabled),
+		},
+		Sbom: &models.SBOMConfig{
+			Enabled: utils.PointerTo(config.SBOM.Enabled),
+		},
+		Secrets: &models.SecretsConfig{
+			Enabled: utils.PointerTo(config.Secrets.Enabled),
+		},
+		Vulnerabilities: &models.VulnerabilitiesConfig{
+			Enabled: utils.PointerTo(config.Vulnerabilities.Enabled),
+		},
 	}
 }

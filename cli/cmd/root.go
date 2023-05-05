@@ -30,8 +30,9 @@ import (
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/cli/pkg"
+	cicdinitiator "github.com/openclarity/vmclarity/cli/pkg/cicd/initiator"
+	cicdupdater "github.com/openclarity/vmclarity/cli/pkg/cicd/updater"
 	"github.com/openclarity/vmclarity/cli/pkg/cli"
-	"github.com/openclarity/vmclarity/cli/pkg/initiator"
 	"github.com/openclarity/vmclarity/cli/pkg/presenter"
 	"github.com/openclarity/vmclarity/cli/pkg/state"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
@@ -137,6 +138,10 @@ var rootCmd = &cobra.Command{
 		err = cli.MarkDone(ctx, errs)
 		if err != nil {
 			return fmt.Errorf("failed to inform the server %v the scan was completed: %w", server, err)
+		}
+
+		if err := cli.UpdateScan(ctx); err != nil {
+			return fmt.Errorf("failed to udate scan: %v", err)
 		}
 
 		if len(familiesErr) > 0 {
@@ -283,13 +288,17 @@ func initLogger() {
 func newCli() (*cli.CLI, error) {
 	var manager state.Manager
 	var presenters []presenter.Presenter
+	var updater cicdupdater.Updater
+
 	var err error
 
 	if config == nil {
 		return nil, errors.New("families config must not be nil")
 	}
 
-	if server != "" && !cicdMode {
+	updater = cicdupdater.NewDefaultUpdater()
+
+	if (server != "" && !cicdMode) || (cicdMode && exportCICDResults) {
 		var client *backendclient.BackendClient
 		var p presenter.Presenter
 
@@ -298,6 +307,22 @@ func newCli() (*cli.CLI, error) {
 			return nil, fmt.Errorf("failed to create VMClarity API client: %w", err)
 		}
 
+		if exportCICDResults && scanResultID == "" {
+			i, err := cicdinitiator.NewInitiator(client, config, scanConfigID, scanConfigName, input, inputType)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create VMClarity initiator: %w", err)
+			}
+			var scanID string
+			scanID, scanResultID, err = i.InitResults(context.TODO())
+			if err != nil {
+				return nil, fmt.Errorf("failed to init scan result: %w", err)
+			}
+			u, err := cicdupdater.NewVMClarityUpdater(client, scanID, scanResultID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create VMClarity initiator: %w", err)
+			}
+			updater = u
+		}
 		manager, err = state.NewVMClarityState(client, scanResultID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create VMClarity state manager: %w", err)
@@ -312,32 +337,6 @@ func newCli() (*cli.CLI, error) {
 		manager, err = state.NewLocalState()
 		if err != nil {
 			return nil, fmt.Errorf("failed to create local state: %w", err)
-		}
-		var client *backendclient.BackendClient
-		var p presenter.Presenter
-
-		client, err = backendclient.Create(server)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create VMClarity API client: %w", err)
-		}
-
-		if exportCICDResults {
-			if scanResultID == "" {
-				i, err := initiator.NewInitiator(client, scanConfigID, scanConfigName, input, inputType)
-				if err != nil {
-					return nil, fmt.Errorf("failed to create VMClarity initiator: %w", err)
-				}
-				scanResultID, err = i.InitResults(context.TODO())
-				if err != nil {
-					return nil, fmt.Errorf("failed to init scan result: %w", err)
-				}
-			}
-
-			p, err = presenter.NewVMClarityPresenter(client, scanResultID)
-			if err != nil {
-				return nil, fmt.Errorf("failed to create VMClarity presenter: %w", err)
-			}
-			presenters = append(presenters, p)
 		}
 	}
 
@@ -354,7 +353,7 @@ func newCli() (*cli.CLI, error) {
 		p = &presenter.MultiPresenter{Presenters: presenters}
 	}
 
-	return &cli.CLI{Manager: manager, Presenter: p, FamiliesConfig: config}, nil
+	return &cli.CLI{Manager: manager, Presenter: p, Updater: updater, FamiliesConfig: config}, nil
 }
 
 func setMountPointsForFamiliesInput(mountPoints []string, familiesConfig *families.Config) *families.Config {

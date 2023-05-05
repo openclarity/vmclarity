@@ -18,5 +18,5 @@ package initiator
 import "context"
 
 type Initiator interface {
-	InitResults(ctx context.Context) (string, error)
+	InitResults(ctx context.Context) (string, string, error)
 }

@@ -24,20 +24,24 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/api/models"
+	cliutils "github.com/openclarity/vmclarity/cli/pkg/utils"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
+	"github.com/openclarity/vmclarity/shared/pkg/families"
 )
 
 type VMClarityInitiator struct {
-	client         *backendclient.BackendClient
-	input          string
-	inputType      string
-	scanConfigName string
-	scanConfigID   string
+	client             *backendclient.BackendClient
+	input              string
+	inputType          string
+	scanConfigName     string
+	scanConfigID       string
+	scanConfigFamilies *models.ScanFamiliesConfig
 }
 
 func NewInitiator(
 	client *backendclient.BackendClient,
+	config *families.Config,
 	scanConfigID,
 	scanConfigName,
 	input,
@@ -46,29 +50,30 @@ func NewInitiator(
 		return nil, errors.New("backend client must not be nil")
 	}
 	return &VMClarityInitiator{
-		client:         client,
-		input:          input,
-		inputType:      inputType,
-		scanConfigName: scanConfigName,
-		scanConfigID:   scanConfigID,
+		client:             client,
+		input:              input,
+		inputType:          inputType,
+		scanConfigName:     scanConfigName,
+		scanConfigID:       scanConfigID,
+		scanConfigFamilies: cliutils.ConvertScanFamiliesConfigToAPIModel(config),
 	}, nil
 }
 
-func (i *VMClarityInitiator) InitResults(ctx context.Context) (string, error) {
+func (i *VMClarityInitiator) InitResults(ctx context.Context) (string, string, error) {
 	targetID, err := i.createTarget(ctx)
 	if err != nil {
-		return "", fmt.Errorf("failed to init results: %v", err)
+		return "", "", fmt.Errorf("failed to init results: %v", err)
 	}
 	scanID, err := i.createScan(ctx, targetID)
 	if err != nil {
-		return "", fmt.Errorf("failed to init results: %v", err)
+		return "", "", fmt.Errorf("failed to init results: %v", err)
 	}
 	scanResultID, err := i.createScanResult(ctx, targetID, scanID)
 	if err != nil {
-		return "", fmt.Errorf("failed to init results: %v", err)
+		return scanID, "", fmt.Errorf("failed to init results: %v", err)
 	}
 
-	return scanResultID, nil
+	return scanID, scanResultID, nil
 }
 
 func (i *VMClarityInitiator) createTarget(ctx context.Context) (string, error) {
@@ -97,13 +102,14 @@ func (i *VMClarityInitiator) createTarget(ctx context.Context) (string, error) {
 }
 
 func (i *VMClarityInitiator) createScan(ctx context.Context, targetID string) (string, error) {
-	now := time.Now().UTC()
+	now := time.Now()
 	scan := &models.Scan{
 		ScanConfig: &models.ScanConfigRelationship{
 			Id: i.scanConfigID,
 		},
 		ScanConfigSnapshot: &models.ScanConfigData{
-			Name: utils.PointerTo(i.scanConfigName),
+			Name:               utils.PointerTo(i.scanConfigName),
+			ScanFamiliesConfig: i.scanConfigFamilies,
 		},
 		StartTime: &now,
 		TargetIDs: utils.PointerTo([]string{targetID}),
@@ -121,11 +127,13 @@ func (i *VMClarityInitiator) createScan(ctx context.Context, targetID string) (s
 	} else {
 		scanID = *createdScan.Id
 	}
+
 	return scanID, nil
 }
 
 func (i *VMClarityInitiator) createScanResult(ctx context.Context, targetID, scanID string) (string, error) {
 	scanResult := models.TargetScanResult{
+		Summary: createInitScanResultSummary(),
 		Scan: &models.ScanRelationship{
 			Id: scanID,
 		},
@@ -143,4 +151,22 @@ func (i *VMClarityInitiator) createScanResult(ctx context.Context, targetID, sca
 		return "", fmt.Errorf("failed to post scan result: %v", err)
 	}
 	return *createdScanResult.Id, nil
+}
+
+func createInitScanResultSummary() *models.ScanFindingsSummary {
+	return &models.ScanFindingsSummary{
+		TotalExploits:          utils.PointerTo(0),
+		TotalMalware:           utils.PointerTo(0),
+		TotalMisconfigurations: utils.PointerTo(0),
+		TotalPackages:          utils.PointerTo(0),
+		TotalRootkits:          utils.PointerTo(0),
+		TotalSecrets:           utils.PointerTo(0),
+		TotalVulnerabilities: &models.VulnerabilityScanSummary{
+			TotalCriticalVulnerabilities:   utils.PointerTo(0),
+			TotalHighVulnerabilities:       utils.PointerTo(0),
+			TotalMediumVulnerabilities:     utils.PointerTo(0),
+			TotalLowVulnerabilities:        utils.PointerTo(0),
+			TotalNegligibleVulnerabilities: utils.PointerTo(0),
+		},
+	}
 }

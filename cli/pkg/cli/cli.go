@@ -24,6 +24,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/openclarity/vmclarity/cli/pkg/cicd/updater"
 	"github.com/openclarity/vmclarity/cli/pkg/mount"
 	"github.com/openclarity/vmclarity/cli/pkg/presenter"
 	"github.com/openclarity/vmclarity/cli/pkg/state"
@@ -39,6 +40,7 @@ const (
 type CLI struct {
 	state.Manager
 	presenter.Presenter
+	updater.Updater
 
 	FamiliesConfig *families.Config
 }
