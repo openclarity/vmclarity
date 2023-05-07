@@ -55,6 +55,7 @@ const AssetsTable = () => {
             filterType={FILTER_TYPES.ASSETS}
             filtersConfig={[
                 ...getAssetColumnsFiltersConfig(),
+                
                 ...vulnerabilitiesCountersColumnsFiltersConfig,
                 ...findingsColumnsFiltersConfig
             ]}
