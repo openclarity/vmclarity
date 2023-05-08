@@ -35,6 +35,7 @@ import (
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/orchestrator"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider/aws"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider/external"
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 	uibackend "github.com/openclarity/vmclarity/ui_backend/pkg/rest"
 )

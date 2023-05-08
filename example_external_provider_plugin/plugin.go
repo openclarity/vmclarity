@@ -197,3 +197,19 @@ func (p *Provider) WaitForVolumeAttached(context.Context, *provider_service.Wait
 func (p *Provider) DeleteVolume(context.Context, *provider_service.DeleteVolumeParams) (*provider_service.DeleteVolumeResult, error) {
 	return &provider_service.DeleteVolumeResult{}, nil
 }
+
+//
+//func main() {
+//	flag.Parse()
+//	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:24230"))
+//	if err != nil {
+//		log.Fatalf("failed to listen: %v", err)
+//	}
+//	var opts []grpc.ServerOption
+//	grpcServer := grpc.NewServer(opts...)
+//	provider_service.RegisterProviderServer(grpcServer, &Provider{})
+//	log.Infof("listening.....")
+//	if err := grpcServer.Serve(lis); err != nil {
+//		log.Fatalf("failed to serve: %v", err)
+//	}
+//}
