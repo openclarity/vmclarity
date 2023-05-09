@@ -19,15 +19,14 @@ import (
 	"context"
 
 	"github.com/openclarity/vmclarity/shared/pkg/families"
-	"github.com/openclarity/vmclarity/shared/pkg/families/results"
 )
 
 type Presenter interface {
-	ExportSbomResult(context.Context, *results.Results, families.RunErrors) error
-	ExportVulResult(context.Context, *results.Results, families.RunErrors) error
-	ExportSecretsResult(context.Context, *results.Results, families.RunErrors) error
-	ExportMalwareResult(context.Context, *results.Results, families.RunErrors) error
-	ExportExploitsResult(context.Context, *results.Results, families.RunErrors) error
-	ExportMisconfigurationResult(context.Context, *results.Results, families.RunErrors) error
-	ExportRootkitResult(context.Context, *results.Results, families.RunErrors) error
+	ExportSbomResult(context.Context, families.FamilyResult) error
+	ExportVulResult(context.Context, families.FamilyResult) error
+	ExportSecretsResult(context.Context, families.FamilyResult) error
+	ExportMalwareResult(context.Context, families.FamilyResult) error
+	ExportExploitsResult(context.Context, families.FamilyResult) error
+	ExportMisconfigurationResult(context.Context, families.FamilyResult) error
+	ExportRootkitResult(context.Context, families.FamilyResult) error
 }

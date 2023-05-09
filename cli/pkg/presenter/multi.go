@@ -20,16 +20,15 @@ import (
 	"fmt"
 
 	"github.com/openclarity/vmclarity/shared/pkg/families"
-	"github.com/openclarity/vmclarity/shared/pkg/families/results"
 )
 
 type MultiPresenter struct {
 	Presenters []Presenter
 }
 
-func (m *MultiPresenter) ExportSbomResult(ctx context.Context, res *results.Results, famErr families.RunErrors) error {
+func (m *MultiPresenter) ExportSbomResult(ctx context.Context, res families.FamilyResult) error {
 	for _, p := range m.Presenters {
-		if err := p.ExportSbomResult(ctx, res, famErr); err != nil {
+		if err := p.ExportSbomResult(ctx, res); err != nil {
 			return fmt.Errorf("failed to export result: %w", err)
 		}
 	}
@@ -37,9 +36,9 @@ func (m *MultiPresenter) ExportSbomResult(ctx context.Context, res *results.Resu
 	return nil
 }
 
-func (m *MultiPresenter) ExportVulResult(ctx context.Context, res *results.Results, famErr families.RunErrors) error {
+func (m *MultiPresenter) ExportVulResult(ctx context.Context, res families.FamilyResult) error {
 	for _, p := range m.Presenters {
-		if err := p.ExportVulResult(ctx, res, famErr); err != nil {
+		if err := p.ExportVulResult(ctx, res); err != nil {
 			return fmt.Errorf("failed to export result: %w", err)
 		}
 	}
@@ -47,9 +46,9 @@ func (m *MultiPresenter) ExportVulResult(ctx context.Context, res *results.Resul
 	return nil
 }
 
-func (m *MultiPresenter) ExportSecretsResult(ctx context.Context, res *results.Results, famErr families.RunErrors) error {
+func (m *MultiPresenter) ExportSecretsResult(ctx context.Context, res families.FamilyResult) error {
 	for _, p := range m.Presenters {
-		if err := p.ExportSecretsResult(ctx, res, famErr); err != nil {
+		if err := p.ExportSecretsResult(ctx, res); err != nil {
 			return fmt.Errorf("failed to export result: %w", err)
 		}
 	}
@@ -57,9 +56,9 @@ func (m *MultiPresenter) ExportSecretsResult(ctx context.Context, res *results.R
 	return nil
 }
 
-func (m *MultiPresenter) ExportMalwareResult(ctx context.Context, res *results.Results, famErr families.RunErrors) error {
+func (m *MultiPresenter) ExportMalwareResult(ctx context.Context, res families.FamilyResult) error {
 	for _, p := range m.Presenters {
-		if err := p.ExportMalwareResult(ctx, res, famErr); err != nil {
+		if err := p.ExportMalwareResult(ctx, res); err != nil {
 			return fmt.Errorf("failed to export result: %w", err)
 		}
 	}
@@ -67,9 +66,9 @@ func (m *MultiPresenter) ExportMalwareResult(ctx context.Context, res *results.R
 	return nil
 }
 
-func (m *MultiPresenter) ExportExploitsResult(ctx context.Context, res *results.Results, famErr families.RunErrors) error {
+func (m *MultiPresenter) ExportExploitsResult(ctx context.Context, res families.FamilyResult) error {
 	for _, p := range m.Presenters {
-		if err := p.ExportExploitsResult(ctx, res, famErr); err != nil {
+		if err := p.ExportExploitsResult(ctx, res); err != nil {
 			return fmt.Errorf("failed to export result: %w", err)
 		}
 	}
@@ -77,9 +76,9 @@ func (m *MultiPresenter) ExportExploitsResult(ctx context.Context, res *results.
 	return nil
 }
 
-func (m *MultiPresenter) ExportMisconfigurationResult(ctx context.Context, res *results.Results, famErr families.RunErrors) error {
+func (m *MultiPresenter) ExportMisconfigurationResult(ctx context.Context, res families.FamilyResult) error {
 	for _, p := range m.Presenters {
-		if err := p.ExportMisconfigurationResult(ctx, res, famErr); err != nil {
+		if err := p.ExportMisconfigurationResult(ctx, res); err != nil {
 			return fmt.Errorf("failed to export result: %w", err)
 		}
 	}
@@ -87,9 +86,9 @@ func (m *MultiPresenter) ExportMisconfigurationResult(ctx context.Context, res *
 	return nil
 }
 
-func (m *MultiPresenter) ExportRootkitResult(ctx context.Context, res *results.Results, famErr families.RunErrors) error {
+func (m *MultiPresenter) ExportRootkitResult(ctx context.Context, res families.FamilyResult) error {
 	for _, p := range m.Presenters {
-		if err := p.ExportRootkitResult(ctx, res, famErr); err != nil {
+		if err := p.ExportRootkitResult(ctx, res); err != nil {
 			return fmt.Errorf("failed to export result: %w", err)
 		}
 	}

@@ -28,7 +28,7 @@ import (
 	"github.com/openclarity/vmclarity/cli/pkg/presenter"
 	"github.com/openclarity/vmclarity/cli/pkg/state"
 	"github.com/openclarity/vmclarity/shared/pkg/families"
-	"github.com/openclarity/vmclarity/shared/pkg/families/results"
+	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 )
 
 const (
@@ -70,62 +70,27 @@ func (c *CLI) MountVolumes(ctx context.Context) ([]string, error) {
 }
 
 //nolint:cyclop
-func (c *CLI) ExportResults(ctx context.Context, res *results.Results, errs families.RunErrors) []error {
-	familiesSet := []struct {
-		enabled  bool
-		name     string
-		exporter func(context.Context, *results.Results, families.RunErrors) error
-	}{
-		{
-			c.FamiliesConfig.SBOM.Enabled,
-			"sbom",
-			c.ExportSbomResult,
-		},
-		{
-			c.FamiliesConfig.Vulnerabilities.Enabled,
-			"vulnerabilities",
-			c.ExportVulResult,
-		},
-		{
-			c.FamiliesConfig.Secrets.Enabled,
-			"secrets",
-			c.ExportSecretsResult,
-		},
-		{
-			c.FamiliesConfig.Exploits.Enabled,
-			"exploits",
-			c.ExportExploitsResult,
-		},
-		{
-			c.FamiliesConfig.Malware.Enabled,
-			"malware",
-			c.ExportMalwareResult,
-		},
-		{
-			c.FamiliesConfig.Misconfiguration.Enabled,
-			"misconfiguration",
-			c.ExportMisconfigurationResult,
-		},
-		{
-			c.FamiliesConfig.Rootkits.Enabled,
-			"rootkits",
-			c.ExportRootkitResult,
-		},
+func (c *CLI) ExportFamilyResult(ctx context.Context, res families.FamilyResult) error {
+	var err error
+
+	switch res.FamilyType {
+	case types.SBOM:
+		err = c.ExportSbomResult(ctx, res)
+	case types.Vulnerabilities:
+		err = c.ExportVulResult(ctx, res)
+	case types.Secrets:
+		err = c.ExportSecretsResult(ctx, res)
+	case types.Exploits:
+		err = c.ExportExploitsResult(ctx, res)
+	case types.Misconfiguration:
+		err = c.ExportMisconfigurationResult(ctx, res)
+	case types.Rootkits:
+		err = c.ExportRootkitResult(ctx, res)
+	case types.Malware:
+		err = c.ExportMalwareResult(ctx, res)
 	}
 
-	result := make([]error, 0, len(familiesSet))
-	for _, f := range familiesSet {
-		if !f.enabled {
-			continue
-		}
-		if err := f.exporter(ctx, res, errs); err != nil {
-			err = fmt.Errorf("failed to export %s result to server: %w", f.name, err)
-			log.Error(err)
-			result = append(result, err)
-		}
-	}
-
-	return result
+	return err
 }
 
 func (c *CLI) WatchForAbort(ctx context.Context, cancel context.CancelFunc, interval time.Duration) {

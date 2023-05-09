@@ -34,13 +34,17 @@ import (
 )
 
 type Manager struct {
-	config   *Config
-	families []interfaces.Family
+	config         *Config
+	families       []interfaces.Family
+	resultsChan    chan FamilyResult
+	inProgressChan chan types.FamilyType
 }
 
-func New(logger *log.Entry, config *Config) *Manager {
+func New(logger *log.Entry, config *Config, resultsChan chan FamilyResult, inProgressChan chan types.FamilyType) *Manager {
 	manager := &Manager{
-		config: config,
+		config:         config,
+		resultsChan:    resultsChan,
+		inProgressChan: inProgressChan,
 	}
 
 	// Analyzers.
@@ -78,22 +82,24 @@ func New(logger *log.Entry, config *Config) *Manager {
 
 type RunErrors map[types.FamilyType]error
 
-type familyResult struct {
-	result interfaces.IsResults
-	err    error
+type FamilyResult struct {
+	Result     interfaces.IsResults
+	FamilyType types.FamilyType
+	Err        error
 }
 
-func (m *Manager) Run(ctx context.Context) (*results.Results, RunErrors) {
-	familyErrors := make(RunErrors)
+func (m *Manager) Run(ctx context.Context) *results.Results {
 	familyResults := results.New()
 
 	for _, family := range m.families {
-		result := make(chan familyResult)
+		result := make(chan FamilyResult)
 		go func() {
+			m.inProgressChan <- family.GetType()
 			ret, err := family.Run(familyResults)
-			result <- familyResult{
-				ret,
-				err,
+			result <- FamilyResult{
+				Result:     ret,
+				FamilyType: family.GetType(),
+				Err:        err,
 			}
 		}()
 
@@ -103,17 +109,16 @@ func (m *Manager) Run(ctx context.Context) (*results.Results, RunErrors) {
 				<-result
 				close(result)
 			}()
-			familyErrors[family.GetType()] = fmt.Errorf("failed to run family %v: aborted", family.GetType())
+			m.resultsChan <- FamilyResult{
+				FamilyType: family.GetType(),
+				Err:        fmt.Errorf("failed to run family %v: aborted", family.GetType()),
+			}
 		case r := <-result:
 			log.Debugf("received result from family %q: %v", family, r)
-			if r.err != nil {
-				familyErrors[family.GetType()] = fmt.Errorf("failed to run family %v: %w", family.GetType(), r.err)
-			} else {
-				familyResults.SetResults(r.result)
-			}
+			m.resultsChan <- r
 			close(result)
 		}
 	}
 
-	return familyResults, familyErrors
+	return familyResults
 }
