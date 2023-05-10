@@ -282,7 +282,23 @@ func (t *TargetsTableHandler) checkUniqueness(target models.Target) (*models.Tar
 		}
 		return nil, nil // nolint:nilnil
 	case models.DirInfo:
-		return nil, nil
+		var targets []Target
+		// In the case of creating or updating a target, needs to be checked whether other target exists with same DirName and Location.
+		filter := fmt.Sprintf("id ne '%s' and targetInfo/dirName eq '%s' and targetInfo/location eq '%s'", *target.Id, *info.DirName, *info.Location)
+		err = ODataQuery(t.DB, targetSchemaName, &filter, nil, nil, nil, nil, nil, true, &targets)
+		if err != nil {
+			return nil, err
+		}
+		if len(targets) > 0 {
+			var apiTarget models.Target
+			if err := json.Unmarshal(targets[0].Data, &apiTarget); err != nil {
+				return nil, fmt.Errorf("failed to convert DB model to API model: %w", err)
+			}
+			return &apiTarget, &common.ConflictError{
+				Reason: fmt.Sprintf("Target directory exists with same name=%q and location=%q", info.DirName, info.Location),
+			}
+		}
+		return nil, nil // nolint:nilnil
 	default:
 		return nil, fmt.Errorf("target type is not supported (%T): %w", discriminator, err)
 	}
