@@ -75,10 +75,6 @@ func (u *VMClarityUpdater) updatedScanSummary(ctx context.Context) (*models.Scan
 		return nil, fmt.Errorf("failed to get result summary to update status: %v", err)
 	}
 
-	if scan.Summary == nil {
-		scan.Summary = createInitScanSummary()
-	}
-
 	// Update the scan summary with the summary from the completed scan result
 	scan.Summary.JobsCompleted = utils.PointerTo(*scan.Summary.JobsCompleted + 1)
 	scan.Summary.JobsLeftToRun = utils.PointerTo(*scan.Summary.JobsLeftToRun - 1)
@@ -97,24 +93,4 @@ func (u *VMClarityUpdater) updatedScanSummary(ctx context.Context) (*models.Scan
 	}
 
 	return scan, nil
-}
-
-func createInitScanSummary() *models.ScanSummary {
-	return &models.ScanSummary{
-		JobsCompleted:          utils.PointerTo(0),
-		JobsLeftToRun:          utils.PointerTo(1),
-		TotalExploits:          utils.PointerTo(0),
-		TotalMalware:           utils.PointerTo(0),
-		TotalMisconfigurations: utils.PointerTo(0),
-		TotalPackages:          utils.PointerTo(0),
-		TotalRootkits:          utils.PointerTo(0),
-		TotalSecrets:           utils.PointerTo(0),
-		TotalVulnerabilities: &models.VulnerabilityScanSummary{
-			TotalCriticalVulnerabilities:   utils.PointerTo(0),
-			TotalHighVulnerabilities:       utils.PointerTo(0),
-			TotalMediumVulnerabilities:     utils.PointerTo(0),
-			TotalLowVulnerabilities:        utils.PointerTo(0),
-			TotalNegligibleVulnerabilities: utils.PointerTo(0),
-		},
-	}
 }

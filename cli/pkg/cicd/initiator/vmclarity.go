@@ -19,6 +19,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -64,7 +66,7 @@ func (i *VMClarityInitiator) InitResults(ctx context.Context) (string, string, e
 	if err != nil {
 		return "", "", fmt.Errorf("failed to init results: %v", err)
 	}
-	scanID, err := i.createScan(ctx, targetID)
+	scanID, err := i.createScan(ctx)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to init results: %v", err)
 	}
@@ -77,19 +79,26 @@ func (i *VMClarityInitiator) InitResults(ctx context.Context) (string, string, e
 }
 
 func (i *VMClarityInitiator) createTarget(ctx context.Context) (string, error) {
+	// Now we are support only directory input in the CI/CD mode
+	hostName, err := os.Hostname()
+	if err != nil {
+		return "", fmt.Errorf("failed to get hostname: %v", err)
+	}
+	// TODO(pebalogh) create target by input-type
+	absPath, err := filepath.Abs(i.input)
+	if err != nil {
+		return "", fmt.Errorf("failed to get absolute path of %s: %v", i.input, err)
+	}
 	info := models.TargetType{}
-	err := info.FromDirInfo(models.DirInfo{
-		DirName: utils.PointerTo(i.input),
-		// TODO what should be the location ???
-		Location: utils.PointerTo(i.input),
+	err = info.FromDirInfo(models.DirInfo{
+		DirName:  utils.PointerTo(absPath),
+		Location: utils.PointerTo(hostName),
 	})
 	if err != nil {
 		return "", fmt.Errorf("failed to create DirInfo: %v", err)
 	}
 
-	createdTarget, err := i.client.PostTarget(ctx, models.Target{
-		TargetInfo: &info,
-	})
+	createdTarget, err := i.client.PostTarget(ctx, models.Target{TargetInfo: &info})
 	if err != nil {
 		var conErr backendclient.TargetConflictError
 		if errors.As(err, &conErr) {
@@ -101,34 +110,30 @@ func (i *VMClarityInitiator) createTarget(ctx context.Context) (string, error) {
 	return *createdTarget.Id, nil
 }
 
-func (i *VMClarityInitiator) createScan(ctx context.Context, targetID string) (string, error) {
+func (i *VMClarityInitiator) createScan(ctx context.Context) (string, error) {
 	now := time.Now()
 	scan := &models.Scan{
-		ScanConfig: &models.ScanConfigRelationship{
-			Id: i.scanConfigID,
-		},
+		// Scan config relationship is not set in CI/CD mode
+		// to avoid uniqueness check of a scan
 		ScanConfigSnapshot: &models.ScanConfigData{
 			Name:               utils.PointerTo(i.scanConfigName),
 			ScanFamiliesConfig: i.scanConfigFamilies,
 		},
 		StartTime: &now,
-		TargetIDs: utils.PointerTo([]string{targetID}),
+		Summary:   createInitScanSummary(),
 	}
-	var scanID string
+
 	createdScan, err := i.client.PostScan(ctx, *scan)
 	if err != nil {
 		var conErr backendclient.ScanConflictError
 		if errors.As(err, &conErr) {
 			logrus.Infof("Scan already exist. scan id=%v.", *conErr.ConflictingScan.Id)
-			scanID = *conErr.ConflictingScan.Id
-		} else {
-			return "", fmt.Errorf("failed to post scan: %v", err)
+			return *conErr.ConflictingScan.Id, nil
 		}
-	} else {
-		scanID = *createdScan.Id
+		return "", fmt.Errorf("failed to post scan: %v", err)
 	}
 
-	return scanID, nil
+	return *createdScan.Id, nil
 }
 
 func (i *VMClarityInitiator) createScanResult(ctx context.Context, targetID, scanID string) (string, error) {
@@ -155,6 +160,26 @@ func (i *VMClarityInitiator) createScanResult(ctx context.Context, targetID, sca
 
 func createInitScanResultSummary() *models.ScanFindingsSummary {
 	return &models.ScanFindingsSummary{
+		TotalExploits:          utils.PointerTo(0),
+		TotalMalware:           utils.PointerTo(0),
+		TotalMisconfigurations: utils.PointerTo(0),
+		TotalPackages:          utils.PointerTo(0),
+		TotalRootkits:          utils.PointerTo(0),
+		TotalSecrets:           utils.PointerTo(0),
+		TotalVulnerabilities: &models.VulnerabilityScanSummary{
+			TotalCriticalVulnerabilities:   utils.PointerTo(0),
+			TotalHighVulnerabilities:       utils.PointerTo(0),
+			TotalMediumVulnerabilities:     utils.PointerTo(0),
+			TotalLowVulnerabilities:        utils.PointerTo(0),
+			TotalNegligibleVulnerabilities: utils.PointerTo(0),
+		},
+	}
+}
+
+func createInitScanSummary() *models.ScanSummary {
+	return &models.ScanSummary{
+		JobsCompleted:          utils.PointerTo(0),
+		JobsLeftToRun:          utils.PointerTo(1),
 		TotalExploits:          utils.PointerTo(0),
 		TotalMalware:           utils.PointerTo(0),
 		TotalMisconfigurations: utils.PointerTo(0),
