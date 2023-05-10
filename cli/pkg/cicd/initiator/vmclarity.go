@@ -26,6 +26,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/cli/pkg/cicd/vminfoprovider"
 	cliutils "github.com/openclarity/vmclarity/cli/pkg/utils"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
@@ -35,7 +36,7 @@ import (
 type VMClarityInitiator struct {
 	client             *backendclient.BackendClient
 	input              string
-	inputType          string
+	targetInfoType     string
 	scanConfigName     string
 	scanConfigID       string
 	scanConfigFamilies *models.ScanFamiliesConfig
@@ -51,14 +52,29 @@ func NewInitiator(
 	if client == nil {
 		return nil, errors.New("backend client must not be nil")
 	}
+	targetInfoType, err := getTargetInfoType(inputType)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get target type by inputType=%s: %v", inputType, err)
+	}
 	return &VMClarityInitiator{
 		client:             client,
 		input:              input,
-		inputType:          inputType,
+		targetInfoType:     targetInfoType,
 		scanConfigName:     scanConfigName,
 		scanConfigID:       scanConfigID,
 		scanConfigFamilies: cliutils.ConvertScanFamiliesConfigToAPIModel(config),
 	}, nil
+}
+
+func getTargetInfoType(inputType string) (string, error) {
+	switch inputType {
+	case "dir", "DIR":
+		return "DIRInfo", nil
+	case "vm", "VM":
+		return "VMInfo", nil
+	default:
+		return "", errors.New("unsupported target type")
+	}
 }
 
 func (i *VMClarityInitiator) InitResults(ctx context.Context) (string, string, error) {
@@ -79,23 +95,41 @@ func (i *VMClarityInitiator) InitResults(ctx context.Context) (string, string, e
 }
 
 func (i *VMClarityInitiator) createTarget(ctx context.Context) (string, error) {
-	// Now we are support only directory input in the CI/CD mode
-	hostName, err := os.Hostname()
-	if err != nil {
-		return "", fmt.Errorf("failed to get hostname: %v", err)
-	}
-	// TODO(pebalogh) create target by input-type
-	absPath, err := filepath.Abs(i.input)
-	if err != nil {
-		return "", fmt.Errorf("failed to get absolute path of %s: %v", i.input, err)
-	}
+	// Now we are support only directory and vm input in the CI/CD mode
 	info := models.TargetType{}
-	err = info.FromDirInfo(models.DirInfo{
-		DirName:  utils.PointerTo(absPath),
-		Location: utils.PointerTo(hostName),
-	})
-	if err != nil {
-		return "", fmt.Errorf("failed to create DirInfo: %v", err)
+	switch i.targetInfoType {
+	case "DIRInfo":
+		hostName, err := os.Hostname()
+		if err != nil {
+			return "", fmt.Errorf("failed to get hostname: %v", err)
+		}
+		absPath, err := filepath.Abs(i.input)
+		if err != nil {
+			return "", fmt.Errorf("failed to get absolute path of %s: %v", i.input, err)
+		}
+		err = info.FromDirInfo(models.DirInfo{
+			DirName:  utils.PointerTo(absPath),
+			Location: utils.PointerTo(hostName),
+		})
+		if err != nil {
+			return "", fmt.Errorf("failed to create DirInfo: %v", err)
+		}
+	case "VMInfo":
+		// TODO(pebalogh) now we are supporting AWS cloud provider only
+		vmInfoProvider := vminfoprovider.CreateNewAWSInfoProvider()
+		instanceID, location, err := vmInfoProvider.GetVMInfo()
+		if err != nil {
+			return "", fmt.Errorf("failed to get VMInfo: %v", err)
+		}
+		err = info.FromVMInfo(models.VMInfo{
+			InstanceID: instanceID,
+			Location:   location,
+		})
+		if err != nil {
+			return "", fmt.Errorf("failed to create VMInfo: %v", err)
+		}
+	default:
+		return "", errors.New("unsupported target type")
 	}
 
 	createdTarget, err := i.client.PostTarget(ctx, models.Target{TargetInfo: &info})

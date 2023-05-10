@@ -117,7 +117,11 @@ var rootCmd = &cobra.Command{
 		}
 
 		if input != "" {
-			setInput(input, inputType, config)
+			famInputType, err := getFamiliesInputType(inputType)
+			if err != nil {
+				return fmt.Errorf("failed to get families input type by inputType=%s: %w", inputType, err)
+			}
+			setInput(input, famInputType, config)
 		}
 
 		err = cli.MarkInProgress(ctx)
@@ -176,7 +180,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&mountVolume, "mount-attached-volume", false, "discover for an attached volume and mount it before the scan")
 	rootCmd.PersistentFlags().BoolVar(&waitForServerAttached, "wait-for-server-attached", false, "wait for the VMClarity server to attach the volume")
 	rootCmd.PersistentFlags().StringVar(&input, "input", "", "input for families")
-	rootCmd.PersistentFlags().StringVar(&inputType, "input-type", string(kubeclarityutils.DIR), "input type for families")
+	rootCmd.PersistentFlags().StringVar(&inputType, "input-type", "dir", "input type for families")
 	rootCmd.PersistentFlags().BoolVar(&cicdMode, "cicd-mode", false, "CICD mode")
 	rootCmd.PersistentFlags().BoolVar(&exportCICDResults, "export-cicd-results", false, "export results to VMclarity server")
 
@@ -419,4 +423,15 @@ func setInput(input, inputType string, familiesConfig *families.Config) *familie
 	}
 
 	return familiesConfig
+}
+
+func getFamiliesInputType(inputType string) (string, error) {
+	switch inputType {
+	case "dir", "DIR":
+		return string(kubeclarityutils.DIR), nil
+	case "vm", "VM":
+		return string(kubeclarityutils.ROOTFS), nil
+	default:
+		return "", errors.New("input type is not supported")
+	}
 }
