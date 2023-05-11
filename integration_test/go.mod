@@ -3,6 +3,7 @@ module github.com/openclarity/vmclarity/integration_test
 go 1.19
 
 require (
+	github.com/openclarity/vmclarity v0.0.0
 	github.com/compose-spec/compose-go v1.13.4
 	github.com/docker/cli v23.0.5+incompatible
 	github.com/docker/compose/v2 v2.17.3
@@ -162,6 +163,8 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+replace github.com/openclarity/vmclarity => ../
 
 // NOTE(adamtagscherer):
 // force cloud.google.com/go to be at least v0.100.2, so that the metadata is not present.
