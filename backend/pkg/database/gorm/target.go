@@ -256,6 +256,7 @@ func (t *TargetsTableHandler) DeleteTarget(targetID models.TargetID) error {
 	return nil
 }
 
+// nolint:cyclop
 func (t *TargetsTableHandler) checkUniqueness(target models.Target) (*models.Target, error) {
 	discriminator, err := target.TargetInfo.ValueByDiscriminator()
 	if err != nil {
@@ -295,7 +296,7 @@ func (t *TargetsTableHandler) checkUniqueness(target models.Target) (*models.Tar
 				return nil, fmt.Errorf("failed to convert DB model to API model: %w", err)
 			}
 			return &apiTarget, &common.ConflictError{
-				Reason: fmt.Sprintf("Target directory exists with same name=%q and location=%q", info.DirName, info.Location),
+				Reason: fmt.Sprintf("Target directory exists with same name=%q and location=%q", *info.DirName, *info.Location),
 			}
 		}
 		return nil, nil // nolint:nilnil

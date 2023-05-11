@@ -28,7 +28,7 @@ func CreateNewAWSInfoProvider() *AWSInfoProvider {
 }
 
 func (a *AWSInfoProvider) GetVMInfo() (string, string, error) {
-	instanceIDResp, err := http.Get("http://169.254.169.254/latest/meta-data/instance-id")
+	instanceIDResp, err := http.Get("http://169.254.169.254/latest/meta-data/instance-id") // nolint:noctx
 	if err != nil {
 		return "", "", fmt.Errorf("failed to get instance-id: %v", err)
 	}
@@ -38,7 +38,7 @@ func (a *AWSInfoProvider) GetVMInfo() (string, string, error) {
 		return "", "", fmt.Errorf("failed to read instance-id response body: %v", err)
 	}
 
-	azResp, err := http.Get("http://169.254.169.254/latest/meta-data/placement/availability-zone")
+	azResp, err := http.Get("http://169.254.169.254/latest/meta-data/placement/availability-zone") // nolint:noctx
 	if err != nil {
 		return "", "", fmt.Errorf("failed to get availability-zone: %v", err)
 	}

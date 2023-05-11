@@ -48,7 +48,8 @@ func NewInitiator(
 	scanConfigID,
 	scanConfigName,
 	input,
-	inputType string) (*VMClarityInitiator, error) {
+	inputType string,
+) (*VMClarityInitiator, error) {
 	if client == nil {
 		return nil, errors.New("backend client must not be nil")
 	}
@@ -94,6 +95,7 @@ func (i *VMClarityInitiator) InitResults(ctx context.Context) (string, string, e
 	return scanID, scanResultID, nil
 }
 
+// nolint:cyclop
 func (i *VMClarityInitiator) createTarget(ctx context.Context) (string, error) {
 	// Now we are support only directory and vm input in the CI/CD mode
 	info := models.TargetType{}

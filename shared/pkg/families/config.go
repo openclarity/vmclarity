@@ -145,7 +145,8 @@ func LoadAddresses(exploitDBHost string) Addresses {
 
 func CreateFamilyConfigFromModel(scanFamiliesConfig *models.ScanFamiliesConfig,
 	addresses Addresses,
-	familiesPaths Paths) Config {
+	familiesPaths Paths,
+) Config {
 	return Config{
 		SBOM:            userSBOMConfigToFamiliesSbomConfig(scanFamiliesConfig.Sbom),
 		Vulnerabilities: userVulnConfigToFamiliesVulnConfig(scanFamiliesConfig.Vulnerabilities, addresses.TrivyServerAddress, addresses.GrypeServerAddress),

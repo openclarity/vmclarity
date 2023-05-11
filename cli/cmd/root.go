@@ -59,7 +59,7 @@ var (
 	mountVolume           bool
 	waitForServerAttached bool
 
-	// flags for CICD mode
+	// flags for CICD mode.
 	cicdMode          bool
 	scanConfigName    string
 	scanConfigID      string
@@ -289,6 +289,7 @@ func initLogger() {
 	logger = log.WithField("app", "vmclarity")
 }
 
+// nolint:gocognit,cyclop
 func newCli() (*cli.CLI, error) {
 	var manager state.Manager
 	var presenters []presenter.Presenter

@@ -32,8 +32,7 @@ type VMClarityUpdater struct {
 	scanResultID string
 }
 
-func NewVMClarityUpdater(
-	client *backendclient.BackendClient, scanID, scanResultID string) (*VMClarityUpdater, error) {
+func NewVMClarityUpdater(client *backendclient.BackendClient, scanID, scanResultID string) (*VMClarityUpdater, error) {
 	if client == nil {
 		return nil, errors.New("backend client must not be nil")
 	}
