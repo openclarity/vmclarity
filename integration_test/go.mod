@@ -18,7 +18,6 @@ replace (
 	github.com/spdx/tools-golang => github.com/spdx/tools-golang v0.3.1-0.20230104082527-d6f58551be3f
 )
 
-// github.com/openclarity/kubeclarity v0.0.0-20230503074245-0199b41a7b8f (v2.17.1)
 replace (
 	github.com/openclarity/kubeclarity/api => github.com/openclarity/kubeclarity/api v0.0.0-20230503074245-0199b41a7b8f
 	github.com/openclarity/kubeclarity/cli => github.com/openclarity/kubeclarity/cli v0.0.0-20230503074245-0199b41a7b8f
