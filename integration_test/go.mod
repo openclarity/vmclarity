@@ -4,9 +4,7 @@ go 1.19
 
 require (
 	github.com/openclarity/vmclarity v0.0.0
-	github.com/compose-spec/compose-go v1.13.4
-	github.com/docker/cli v23.0.5+incompatible
-	github.com/docker/compose/v2 v2.17.3
+	github.com/docker/compose/v2 v2.17.2
 	github.com/onsi/ginkgo/v2 v2.9.2
 	github.com/onsi/gomega v1.27.6
 	github.com/pkg/errors v0.9.1
@@ -165,6 +163,7 @@ require (
 )
 
 replace github.com/openclarity/vmclarity => ../
+replace github.com/openclarity/vmclarity/api => ../api
 
 // NOTE(adamtagscherer):
 // force cloud.google.com/go to be at least v0.100.2, so that the metadata is not present.
