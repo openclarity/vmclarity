@@ -4,11 +4,13 @@ import (
 	"context"
 	"github.com/compose-spec/compose-go/cli"
 	"github.com/openclarity/vmclarity/integration_test/testenv"
+	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 	"testing"
 )
 
 var (
 	testEnv *testenv.Environment
+	client  *backendclient.BackendClient
 )
 
 func TestIntegrationTest(t *testing.T) {
