@@ -6,6 +6,9 @@ import (
 	"github.com/openclarity/vmclarity/integration_test/testenv"
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 	"testing"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 var (
