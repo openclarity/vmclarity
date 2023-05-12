@@ -40,6 +40,12 @@ func beforeSuite(ctx context.Context) {
 	Expect(err).NotTo(HaveOccurred())
 
 	Eventually(areServicesReady(ctx), 15).Should(BeTrue())
+
+	u, err := testEnv.VMClarityURL()
+	Expect(err).NotTo(HaveOccurred())
+
+	client, err = backendclient.Create(u.Host)
+	Expect(err).NotTo(HaveOccurred())
 }
 
 var _ = BeforeSuite(beforeSuite)
