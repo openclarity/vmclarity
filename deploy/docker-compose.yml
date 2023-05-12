@@ -3,7 +3,7 @@ version: "3.9"
 services:
   vm-clarity-backend:
     image: ghcr.io/openclarity/vmclarity-backend:709b7f881ec6342d08167581240e81cee6cdab3a
-    entrypoint: ["/bin/sh", "-c", "sleep infinity"]
+    command: ["run"]
     ports:
       - "8888:8888"
     expose:
