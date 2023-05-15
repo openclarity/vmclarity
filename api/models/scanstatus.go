@@ -13,23 +13,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package types
+package models
 
-type ScanError struct {
-	ErrMsg    string
-	ErrType   string
-	ErrSource ScanErrorSource
+func (s *TargetScanStatus) GetGeneralState() (TargetScanStateState, bool) {
+	var state TargetScanStateState
+	var ok bool
+
+	if s.General != nil {
+		state, ok = s.General.GetState()
+	}
+
+	return state, ok
 }
 
-type ScanErrorType string
+func (s *TargetScanStatus) GetGeneralErrors() []string {
+	var errs []string
 
-const (
-	JobRun     ScanErrorType = "errorJobRun"
-	JobTimeout ScanErrorType = "errorJobTimeout"
-)
+	if s.General != nil {
+		errs = s.General.GetErrors()
+	}
 
-type ScanErrorSource string
-
-const (
-	ScanErrSourceJob ScanErrorSource = "ScanErrSourceJob"
-)
+	return errs
+}

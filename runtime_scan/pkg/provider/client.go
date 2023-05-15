@@ -19,23 +19,15 @@ import (
 	"context"
 
 	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
 )
 
-type ScanningJobConfig struct {
-	ScannerImage                  string // Scanner Container Image to use containing the vmclarity-cli and tools
-	ScannerCLIConfig              string // Scanner CLI config yaml (families config yaml)
-	VMClarityAddress              string // The backend address for the scanner CLI to export too
-	ScanResultID                  string // The ID of the ScanResult that the scanner CLI should update
-	KeyPairName                   string // The name of the key pair to set on the instance, ignored if not set, used mainly for debugging.
-	ScannerInstanceCreationConfig *models.ScannerInstanceCreationConfig
-}
-
 type Client interface {
-	// RunScanningJob - run a scanning job.
-	RunScanningJob(ctx context.Context, region, id string, config ScanningJobConfig) (types.Instance, error)
-	// DiscoverScopes - List all scopes
+	// Kind returns provider type
+	Kind() models.CloudProvider
+	// DiscoverScopes returns a list of discovered scopes
 	DiscoverScopes(ctx context.Context) (*models.Scopes, error)
-	// DiscoverInstances - list VM instances in the account according to the scan scope.
-	DiscoverInstances(ctx context.Context, scanScope *models.ScanScopeType) ([]types.Instance, error)
+	// DiscoverTargets returns list of Targets in scanScope
+	DiscoverTargets(ctx context.Context, scanScope *models.ScanScopeType) ([]models.TargetType, error)
+	RunTargetScan(context.Context, *ScanJobConfig) (models.TargetScanStateState, error)
+	RemoveTargetScan(context.Context, *ScanJobConfig) (models.ResourceCleanupState, error)
 }

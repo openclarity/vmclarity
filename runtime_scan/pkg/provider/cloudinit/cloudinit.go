@@ -17,30 +17,28 @@ package cloudinit
 
 import (
 	"bytes"
+	_ "embed"
 	"fmt"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
 )
 
-type Data struct {
-	ScannerCLIConfig string // Scanner families configuration file yaml
-	ScannerImage     string // Scanner container image to use
-	ServerAddress    string // IP address of VMClarity backend for export
-	ScanResultID     string // ScanResult ID to export the results to
-}
+//go:embed cloud-init.tmpl.yaml
+var cloudInitTemplate string
 
-func GenerateCloudInit(data Data) (string, error) {
+func New(data any) (string, error) {
 	// parse cloud-init template
-	tmpl, err := template.New("cloud-init").Funcs(sprig.FuncMap()).Parse(cloudInitTmpl)
+	tmpl, err := template.New("cloud-init").Funcs(sprig.FuncMap()).Parse(cloudInitTemplate)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse cloud-init template: %v", err)
 	}
 
 	// execute template using data
-	var tmplExB bytes.Buffer
-	if err := tmpl.Execute(&tmplExB, data); err != nil {
+	var cloudInitBuf bytes.Buffer
+	if err := tmpl.Execute(&cloudInitBuf, data); err != nil {
 		return "", fmt.Errorf("failed to execute cloud-init template: %v", err)
 	}
-	return tmplExB.String(), nil
+
+	return cloudInitBuf.String(), nil
 }

@@ -20,42 +20,16 @@ func (s *TargetScanState) GetState() (TargetScanStateState, bool) {
 	var ok bool
 
 	if s.State != nil {
-		state = *s.State
-		ok = true
+		state, ok = *s.State, true
 	}
 	return state, ok
 }
 
-func (s *TargetScanStatus) GetGeneralState() (TargetScanStateState, bool) {
-	var state TargetScanStateState
-	var ok bool
+func (s *TargetScanState) GetErrors() []string {
+	var errs []string
 
-	if s.General != nil {
-		state, ok = s.General.GetState()
+	if s.Errors != nil {
+		errs = *s.Errors
 	}
-
-	return state, ok
-}
-
-func (r *TargetScanResult) GetGeneralState() (TargetScanStateState, bool) {
-	var state TargetScanStateState
-	var ok bool
-
-	if r.Status != nil {
-		state, ok = r.Status.GetGeneralState()
-	}
-
-	return state, ok
-}
-
-func (s *Scan) GetState() (ScanState, bool) {
-	var state ScanState
-	var ok bool
-
-	if s.State != nil {
-		state = *s.State
-		ok = true
-	}
-
-	return state, ok
+	return errs
 }

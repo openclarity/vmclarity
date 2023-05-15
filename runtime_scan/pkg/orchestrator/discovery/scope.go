@@ -34,10 +34,10 @@ type ScopeDiscoverer struct {
 	providerClient provider.Client
 }
 
-func CreateScopeDiscoverer(backendClient *backendclient.BackendClient, providerClient provider.Client) *ScopeDiscoverer {
+func New(config Config) *ScopeDiscoverer {
 	return &ScopeDiscoverer{
-		backendClient:  backendClient,
-		providerClient: providerClient,
+		backendClient:  config.Backend,
+		providerClient: config.Provider,
 	}
 }
 

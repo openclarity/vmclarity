@@ -28,7 +28,6 @@ import (
 )
 
 const (
-	DefaultWaitForVolTimeout       = utils.DefaultResourceReadyWaitTimeoutMin * time.Minute
 	DefaultWaitForVolRetryInterval = utils.DefaultResourceReadyCheckIntervalSec * time.Second
 )
 
@@ -40,8 +39,8 @@ type VMClarityState struct {
 	scanResultID models.ScanResultID
 }
 
-func (v *VMClarityState) WaitForVolumeAttachment(ctx context.Context) error {
-	ctx, cancel := context.WithTimeout(ctx, DefaultWaitForVolTimeout)
+func (v *VMClarityState) WaitForVolumeAttachment(ctx context.Context, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	timer := time.NewTimer(DefaultWaitForVolRetryInterval)
@@ -55,7 +54,7 @@ func (v *VMClarityState) WaitForVolumeAttachment(ctx context.Context) error {
 				return fmt.Errorf("failed to get scan result status: %w", err)
 			}
 			// wait for status attached (meaning volume was attached and can be mounted).
-			if *status.General.State == models.ATTACHED {
+			if *status.General.State == models.TargetScanStateStateATTACHED {
 				return nil
 			}
 			timer.Reset(DefaultWaitForVolRetryInterval)
@@ -81,7 +80,7 @@ func (v *VMClarityState) MarkInProgress(ctx context.Context) error {
 		scanResult.Status.General = &models.TargetScanState{}
 	}
 
-	state := models.INPROGRESS
+	state := models.TargetScanStateStateINPROGRESS
 	scanResult.Status.General.State = &state
 	scanResult.Status.General.LastTransitionTime = utils.PointerTo(time.Now())
 
@@ -106,7 +105,7 @@ func (v *VMClarityState) MarkDone(ctx context.Context, errors []error) error {
 		scanResult.Status.General = &models.TargetScanState{}
 	}
 
-	state := models.DONE
+	state := models.TargetScanStateStateDONE
 	scanResult.Status.General.State = &state
 	scanResult.Status.General.LastTransitionTime = utils.PointerTo(time.Now())
 
@@ -172,7 +171,7 @@ func (v *VMClarityState) markExploitsScanInProgress(ctx context.Context) error {
 		scanResult.Status.Exploits = &models.TargetScanState{}
 	}
 
-	state := models.INPROGRESS
+	state := models.TargetScanStateStateINPROGRESS
 	scanResult.Status.Exploits.State = &state
 	scanResult.Status.Exploits.LastTransitionTime = utils.PointerTo(time.Now())
 
@@ -197,7 +196,7 @@ func (v *VMClarityState) markSecretsScanInProgress(ctx context.Context) error {
 		scanResult.Status.Secrets = &models.TargetScanState{}
 	}
 
-	state := models.INPROGRESS
+	state := models.TargetScanStateStateINPROGRESS
 	scanResult.Status.Secrets.State = &state
 	scanResult.Status.Secrets.LastTransitionTime = utils.PointerTo(time.Now())
 
@@ -222,7 +221,7 @@ func (v *VMClarityState) markSBOMScanInProgress(ctx context.Context) error {
 		scanResult.Status.Sbom = &models.TargetScanState{}
 	}
 
-	state := models.INPROGRESS
+	state := models.TargetScanStateStateINPROGRESS
 	scanResult.Status.Sbom.State = &state
 	scanResult.Status.Sbom.LastTransitionTime = utils.PointerTo(time.Now())
 
@@ -247,7 +246,7 @@ func (v *VMClarityState) markVulnerabilitiesScanInProgress(ctx context.Context) 
 		scanResult.Status.Vulnerabilities = &models.TargetScanState{}
 	}
 
-	state := models.INPROGRESS
+	state := models.TargetScanStateStateINPROGRESS
 	scanResult.Status.Vulnerabilities.State = &state
 	scanResult.Status.Vulnerabilities.LastTransitionTime = utils.PointerTo(time.Now())
 
@@ -272,7 +271,7 @@ func (v *VMClarityState) markMalwareScanInProgress(ctx context.Context) error {
 		scanResult.Status.Malware = &models.TargetScanState{}
 	}
 
-	state := models.INPROGRESS
+	state := models.TargetScanStateStateINPROGRESS
 	scanResult.Status.Malware.State = &state
 	scanResult.Status.Malware.LastTransitionTime = utils.PointerTo(time.Now())
 
@@ -297,7 +296,7 @@ func (v *VMClarityState) markMisconfigurationsScanInProgress(ctx context.Context
 		scanResult.Status.Misconfigurations = &models.TargetScanState{}
 	}
 
-	state := models.INPROGRESS
+	state := models.TargetScanStateStateINPROGRESS
 	scanResult.Status.Misconfigurations.State = &state
 	scanResult.Status.Misconfigurations.LastTransitionTime = utils.PointerTo(time.Now())
 
@@ -322,7 +321,7 @@ func (v *VMClarityState) markRootkitsScanInProgress(ctx context.Context) error {
 		scanResult.Status.Rootkits = &models.TargetScanState{}
 	}
 
-	state := models.INPROGRESS
+	state := models.TargetScanStateStateINPROGRESS
 	scanResult.Status.Rootkits.State = &state
 	scanResult.Status.Rootkits.LastTransitionTime = utils.PointerTo(time.Now())
 
@@ -347,7 +346,7 @@ func (v *VMClarityState) IsAborted(ctx context.Context) (bool, error) {
 		return false, errors.New("failed to get general state of scan result")
 	}
 
-	if state == models.ABORTED {
+	if state == models.TargetScanStateStateABORTED {
 		return true, nil
 	}
 
