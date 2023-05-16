@@ -2,18 +2,21 @@ package integration_test
 
 import (
 	"context"
+	"fmt"
 	"github.com/compose-spec/compose-go/cli"
+	"github.com/go-logr/logr"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 	"github.com/openclarity/vmclarity/integration_test/testenv"
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 	"testing"
-
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 )
 
 var (
-	testEnv *testenv.Environment
-	client  *backendclient.BackendClient
+	testEnv   *testenv.Environment
+	log       logr.Logger
+	logSyncFn func() error
+	client    *backendclient.BackendClient
 )
 
 func TestIntegrationTest(t *testing.T) {
@@ -25,6 +28,8 @@ func beforeSuite(ctx context.Context) {
 	var err error
 
 	By("creating test environment")
+	log, logSyncFn, err = testenv.NewLogger(GinkgoWriter)
+	ctx = logr.NewContext(ctx, log)
 
 	opts, err := cli.NewProjectOptions(
 		[]string{"../deploy/docker-compose.yml"},
@@ -44,7 +49,7 @@ func beforeSuite(ctx context.Context) {
 	u, err := testEnv.VMClarityURL()
 	Expect(err).NotTo(HaveOccurred())
 
-	client, err = backendclient.Create(u.Host)
+	client, err = backendclient.Create(fmt.Sprintf("%s://%s/api", u.Scheme, u.Host))
 	Expect(err).NotTo(HaveOccurred())
 }
 
@@ -54,6 +59,12 @@ func afterSuite(ctx context.Context) {
 	By("tearing down test environment")
 	err := testEnv.Stop(ctx)
 	Expect(err).NotTo(HaveOccurred())
+	defer func(fn func() error) {
+		err := fn()
+		if err != nil {
+			fmt.Printf("calling sync on logger failed: %v\n", err)
+		}
+	}(logSyncFn)
 }
 
 var _ = AfterSuite(afterSuite)
