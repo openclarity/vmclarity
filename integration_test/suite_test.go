@@ -9,6 +9,8 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/openclarity/vmclarity/integration_test/testenv"
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
+	"os"
+	"strconv"
 	"testing"
 )
 
@@ -37,7 +39,15 @@ func beforeSuite(ctx context.Context) {
 	)
 	Expect(err).NotTo(HaveOccurred())
 
-	testEnv, err = testenv.New(opts)
+	err = cli.WithOsEnv(opts)
+	Expect(err).NotTo(HaveOccurred())
+
+	var reuseEnv bool
+	if reuseEnv, _ = strconv.ParseBool(os.Getenv("USE_EXISTING")); reuseEnv {
+		log.V(-1).Info("reusing existing environment...", "use_existing", reuseEnv)
+	}
+
+	testEnv, err = testenv.New(opts, reuseEnv)
 	Expect(err).NotTo(HaveOccurred())
 
 	By("starting test environment")
@@ -51,6 +61,7 @@ func beforeSuite(ctx context.Context) {
 
 	client, err = backendclient.Create(fmt.Sprintf("%s://%s/api", u.Scheme, u.Host))
 	Expect(err).NotTo(HaveOccurred())
+
 }
 
 var _ = BeforeSuite(beforeSuite)

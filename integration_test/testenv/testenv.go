@@ -22,9 +22,10 @@ const (
 type Environment struct {
 	composer api.Service
 	project  *types.Project
+	reuse    bool
 }
 
-func New(o *cli.ProjectOptions) (*Environment, error) {
+func New(o *cli.ProjectOptions, reuse bool) (*Environment, error) {
 	project, err := cli.ProjectFromOptions(o)
 	if err != nil {
 		return nil, err
@@ -52,14 +53,23 @@ func New(o *cli.ProjectOptions) (*Environment, error) {
 	return &Environment{
 		composer: compose.NewComposeService(cmd),
 		project:  project,
+		reuse:    reuse,
 	}, nil
 }
 
 func (e *Environment) Start(ctx context.Context) error {
+	if e.reuse {
+		return nil
+	}
+
 	return e.composer.Up(ctx, e.project, api.UpOptions{})
 }
 
 func (e *Environment) Stop(ctx context.Context) error {
+	if e.reuse {
+		return nil
+	}
+
 	return e.composer.Down(ctx, e.project.Name, api.DownOptions{})
 }
 
