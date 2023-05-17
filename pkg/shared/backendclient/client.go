@@ -328,7 +328,7 @@ func (b *BackendClient) GetScan(ctx context.Context, scanID string, params model
 func (b *BackendClient) PostScanConfig(ctx context.Context, scanConfig models.ScanConfig) (*models.ScanConfig, error) {
 	resp, err := b.apiClient.PostScanConfigsWithResponse(ctx, scanConfig)
 	if err != nil {
-		return nil, fmt.Errorf("failed to freate scan config: %v", err)
+		return nil, fmt.Errorf("failed to create scan config: %w", err)
 	}
 	switch resp.StatusCode() {
 	case http.StatusCreated:
