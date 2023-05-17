@@ -73,7 +73,7 @@ func (e *Environment) Stop(ctx context.Context) error {
 	return e.composer.Down(ctx, e.project.Name, api.DownOptions{})
 }
 
-func (e *Environment) Ready(ctx context.Context) (bool, error) {
+func (e *Environment) ServicesReady(ctx context.Context) (bool, error) {
 	services := e.Services()
 
 	ps, err := e.composer.Ps(

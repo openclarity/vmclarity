@@ -7,11 +7,13 @@ import (
 	"github.com/go-logr/logr"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/integration_test/testenv"
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 	"os"
 	"strconv"
 	"testing"
+	"time"
 )
 
 var (
@@ -54,7 +56,11 @@ func beforeSuite(ctx context.Context) {
 	err = testEnv.Start(ctx)
 	Expect(err).NotTo(HaveOccurred())
 
-	Eventually(areServicesReady(ctx), 15).Should(BeTrue())
+	Eventually(func() bool {
+		ready, err := testEnv.ServicesReady(ctx)
+		Expect(err).NotTo(HaveOccurred())
+		return ready
+	}, time.Second*5).Should(BeTrue())
 
 	u, err := testEnv.VMClarityURL()
 	Expect(err).NotTo(HaveOccurred())
@@ -62,6 +68,12 @@ func beforeSuite(ctx context.Context) {
 	client, err = backendclient.Create(fmt.Sprintf("%s://%s/api", u.Scheme, u.Host))
 	Expect(err).NotTo(HaveOccurred())
 
+	// todo(adam.tagscherer): create a proper readyz endpoint for the api
+	By("waiting until VMClarity API is ready")
+	Eventually(func() bool {
+		_, err = client.GetScanConfigs(ctx, models.GetScanConfigsParams{})
+		return err == nil
+	}, time.Second*5).Should(BeTrue())
 }
 
 var _ = BeforeSuite(beforeSuite)
@@ -79,9 +91,3 @@ func afterSuite(ctx context.Context) {
 }
 
 var _ = AfterSuite(afterSuite)
-
-func areServicesReady(ctx context.Context) bool {
-	ready, err := testEnv.Ready(ctx)
-	Expect(err).NotTo(HaveOccurred())
-	return ready
-}
