@@ -23,6 +23,10 @@ func NewDefaultUpdater() *DefaultUpdater {
 	return &DefaultUpdater{}
 }
 
-func (d *DefaultUpdater) UpdateScan(ctx context.Context) error {
+func (d *DefaultUpdater) UpdateScanStateAndSummary(ctx context.Context) error {
+	return nil
+}
+
+func (d *DefaultUpdater) SetScanIDIfNeeded(ctx context.Context) error {
 	return nil
 }

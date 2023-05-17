@@ -22,8 +22,8 @@ import (
 	"time"
 
 	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
+	"github.com/openclarity/vmclarity/shared/pkg/utils"
 )
 
 type VMClarityUpdater struct {
@@ -36,6 +36,7 @@ func NewVMClarityUpdater(client *backendclient.BackendClient, scanID, scanResult
 	if client == nil {
 		return nil, errors.New("backend client must not be nil")
 	}
+
 	return &VMClarityUpdater{
 		client:       client,
 		scanID:       scanID,
@@ -43,7 +44,20 @@ func NewVMClarityUpdater(client *backendclient.BackendClient, scanID, scanResult
 	}, nil
 }
 
-func (u *VMClarityUpdater) UpdateScan(ctx context.Context) error {
+func (u *VMClarityUpdater) SetScanIDIfNeeded(ctx context.Context) error {
+	if u.scanID != "" {
+		return nil
+	}
+	scanResult, err := u.client.GetScanResult(ctx, u.scanResultID, models.GetScanResultsScanResultIDParams{})
+	if err != nil {
+		return fmt.Errorf("failed to get scan result by ID=%s: %v", u.scanResultID, err)
+	}
+	u.scanID = scanResult.Scan.Id
+
+	return nil
+}
+
+func (u *VMClarityUpdater) UpdateScanStateAndSummary(ctx context.Context) error {
 	scan, err := u.updatedScanSummary(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to update scan results summary: %v", err)
@@ -51,10 +65,9 @@ func (u *VMClarityUpdater) UpdateScan(ctx context.Context) error {
 
 	scan.EndTime = utils.PointerTo(time.Now())
 	scan.State = utils.PointerTo(models.ScanStateDone)
-	scan.StateMessage = utils.PointerTo("All scan jobs completed")
+	scan.StateMessage = utils.PointerTo(utils.AllScanJobsCompleted)
 	scan.StateReason = utils.PointerTo(models.ScanStateReasonSuccess)
 
-	// regardless of success or failure we need to patch the scan status
 	err = u.client.PatchScan(ctx, u.scanID, scan)
 	if err != nil {
 		return fmt.Errorf("failed to patch the scan ID=%s: %v", u.scanID, err)

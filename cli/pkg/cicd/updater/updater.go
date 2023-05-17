@@ -18,5 +18,8 @@ package updater
 import "context"
 
 type Updater interface {
-	UpdateScan(ctx context.Context) error
+	// UpdateScanStateAndSummary updates scan state, endtine, and summary.
+	UpdateScanStateAndSummary(ctx context.Context) error
+	// SetScanIDIfNeeded set the scan ID if the scanResult ID is defined by user.
+	SetScanIDIfNeeded(ctx context.Context) error
 }

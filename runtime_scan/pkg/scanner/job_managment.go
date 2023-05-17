@@ -126,7 +126,7 @@ func (s *Scanner) jobBatchManagement(ctx context.Context) {
 
 				log.Info("Scan is completed")
 				scan.State = utils.PointerTo(models.ScanStateDone)
-				scan.StateMessage = utils.PointerTo("All scan jobs completed")
+				scan.StateMessage = utils.PointerTo(utils.AllScanJobsCompleted)
 				scan.StateReason = utils.PointerTo(models.ScanStateReasonSuccess)
 			}
 		case <-s.killSignal:

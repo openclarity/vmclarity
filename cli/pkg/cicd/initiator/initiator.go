@@ -15,8 +15,49 @@
 
 package initiator
 
-import "context"
+import (
+	"context"
+	"fmt"
 
-type Initiator interface {
-	InitResults(ctx context.Context) (string, string, error)
+	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
+	"github.com/openclarity/vmclarity/shared/pkg/families"
+)
+
+type Config struct {
+	client         *backendclient.BackendClient
+	fmConfig       *families.Config
+	scanConfigID   string
+	scanConfigName string
+	input          string
+	inputType      string
+}
+
+func CreateConfig(
+	client *backendclient.BackendClient,
+	fmConfig *families.Config,
+	scanConfigID, scanConfigName, input, inputType string,
+) Config {
+	return Config{
+		client:         client,
+		fmConfig:       fmConfig,
+		scanConfigID:   scanConfigID,
+		scanConfigName: scanConfigName,
+		input:          input,
+		inputType:      inputType,
+	}
+}
+
+// InitResults creates VMClarityInitiator and init Results.
+// The function is returns the scanID and scanResultID that required for the export.
+func InitResults(ctx context.Context, cicdInitiatorConfig Config) (string, string, error) {
+	i, err := newVMClarityInitiator(cicdInitiatorConfig)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to create VMClarity initiator: %w", err)
+	}
+	scanID, scanResultID, err := i.initResults(ctx)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to init scan result: %w", err)
+	}
+
+	return scanID, scanResultID, nil
 }

@@ -30,40 +30,26 @@ import (
 	cliutils "github.com/openclarity/vmclarity/cli/pkg/utils"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
-	"github.com/openclarity/vmclarity/shared/pkg/families"
 )
 
 type VMClarityInitiator struct {
-	client             *backendclient.BackendClient
-	input              string
 	targetInfoType     string
-	scanConfigName     string
-	scanConfigID       string
 	scanConfigFamilies *models.ScanFamiliesConfig
+	Config
 }
 
-func NewInitiator(
-	client *backendclient.BackendClient,
-	config *families.Config,
-	scanConfigID,
-	scanConfigName,
-	input,
-	inputType string,
-) (*VMClarityInitiator, error) {
-	if client == nil {
+func newVMClarityInitiator(config Config) (*VMClarityInitiator, error) {
+	if config.client == nil {
 		return nil, errors.New("backend client must not be nil")
 	}
-	targetInfoType, err := getTargetInfoType(inputType)
+	targetInfoType, err := getTargetInfoType(config.inputType)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get target type by inputType=%s: %v", inputType, err)
+		return nil, fmt.Errorf("failed to get target type by inputType=%s: %v", config.inputType, err)
 	}
 	return &VMClarityInitiator{
-		client:             client,
-		input:              input,
 		targetInfoType:     targetInfoType,
-		scanConfigName:     scanConfigName,
-		scanConfigID:       scanConfigID,
-		scanConfigFamilies: cliutils.ConvertScanFamiliesConfigToAPIModel(config),
+		scanConfigFamilies: cliutils.ConvertScanFamiliesConfigToAPIModel(config.fmConfig),
+		Config:             config,
 	}, nil
 }
 
@@ -78,18 +64,21 @@ func getTargetInfoType(inputType string) (string, error) {
 	}
 }
 
-func (i *VMClarityInitiator) InitResults(ctx context.Context) (string, string, error) {
+// initResults creates the necessary objects for exporting the results into the VMClarity backend,
+// these objects are `target`, `scan`, `targetScanResult`.
+// The function is returns the scanID and scanResultID that required for the export.
+func (i *VMClarityInitiator) initResults(ctx context.Context) (string, string, error) {
 	targetID, err := i.createTarget(ctx)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to init results: %v", err)
+		return "", "", fmt.Errorf("failed to init target: %v", err)
 	}
 	scanID, err := i.createScan(ctx)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to init results: %v", err)
+		return "", "", fmt.Errorf("failed to init scan: %v", err)
 	}
 	scanResultID, err := i.createScanResult(ctx, targetID, scanID)
 	if err != nil {
-		return scanID, "", fmt.Errorf("failed to init results: %v", err)
+		return scanID, "", fmt.Errorf("failed to init scan result: %v", err)
 	}
 
 	return scanID, scanResultID, nil
@@ -161,11 +150,6 @@ func (i *VMClarityInitiator) createScan(ctx context.Context) (string, error) {
 
 	createdScan, err := i.client.PostScan(ctx, *scan)
 	if err != nil {
-		var conErr backendclient.ScanConflictError
-		if errors.As(err, &conErr) {
-			logrus.Infof("Scan already exist. scan id=%v.", *conErr.ConflictingScan.Id)
-			return *conErr.ConflictingScan.Id, nil
-		}
 		return "", fmt.Errorf("failed to post scan: %v", err)
 	}
 
@@ -184,11 +168,6 @@ func (i *VMClarityInitiator) createScanResult(ctx context.Context, targetID, sca
 	}
 	createdScanResult, err := i.client.PostScanResult(ctx, scanResult)
 	if err != nil {
-		var conErr backendclient.ScanResultConflictError
-		if errors.As(err, &conErr) {
-			logrus.Infof("Scan results already exist. scan result id=%v.", *conErr.ConflictingScanResult.Id)
-			return *conErr.ConflictingScanResult.Id, nil
-		}
 		return "", fmt.Errorf("failed to post scan result: %v", err)
 	}
 	return *createdScanResult.Id, nil

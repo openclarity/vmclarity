@@ -48,5 +48,7 @@ func (a *AWSInfoProvider) GetVMInfo() (string, string, error) {
 		return "", "", fmt.Errorf("failed to read availability-zone response body: %v", err)
 	}
 	az := string(availabilityZone)
+
+	// cut the last character from the availability-zone in order to return only the region
 	return string(instanceID), az[:len(az)-1], nil
 }

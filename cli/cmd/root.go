@@ -121,7 +121,7 @@ var rootCmd = &cobra.Command{
 			if err != nil {
 				return fmt.Errorf("failed to get families input type by inputType=%s: %w", inputType, err)
 			}
-			setInput(input, famInputType, config)
+			appendInput(input, famInputType, config)
 		}
 
 		err = cli.MarkInProgress(ctx)
@@ -144,7 +144,9 @@ var rootCmd = &cobra.Command{
 			return fmt.Errorf("failed to inform the server %v the scan was completed: %w", server, err)
 		}
 
-		if err := cli.UpdateScan(ctx); err != nil {
+		// In CI/CD mode, the scan objects needs to be updated in order to calculate ScanSummary,
+		// update scan state end endTime of the scan.
+		if err := cli.UpdateScanStateAndSummary(ctx); err != nil {
 			return fmt.Errorf("failed to udate scan: %v", err)
 		}
 
@@ -184,9 +186,6 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&cicdMode, "cicd-mode", false, "CICD mode")
 	rootCmd.PersistentFlags().BoolVar(&exportCICDResults, "export-cicd-results", false, "export results to VMclarity server")
 
-	// TODO(sambetts) we may have to change this to our own validation when
-	// we add the CI/CD scenario and there isn't an existing scan-result-id
-	// in the backend to PATCH
 	validateRequiredFlagForDefinedFlag(rootCmd, "scan-result-id", "server")
 	validateRequiredFlagForDefinedFlag(rootCmd, "scan-config-name", "server")
 	rootCmd.MarkFlagsMutuallyExclusive("config", "scan-config-name")
@@ -198,7 +197,7 @@ func init() {
 func validateRequiredFlagForDefinedFlag(rootCmd *cobra.Command, definedFlag, requiredFlag string) {
 	if flag := rootCmd.Flag(definedFlag); flag != nil {
 		if required := rootCmd.Flag(requiredFlag); required == nil {
-			panic(fmt.Sprintf("Cannot set flag '%s' alone without flag '%s'", definedFlag, requiredFlag))
+			logrus.Fatalf("Cannot set flag '%s' alone without flag '%s'", definedFlag, requiredFlag)
 		}
 	}
 }
@@ -209,17 +208,17 @@ func getConfigFromBackend() *families.Config {
 	}
 	client, err := backendclient.Create(server)
 	if err != nil {
-		logrus.Errorf("failed to create VMClarity API client: %v", err)
+		logrus.Fatalf("failed to create VMClarity API client: %v", err)
 	}
 
 	scanConfigs, err := client.GetScanConfigs(context.TODO(), models.GetScanConfigsParams{
 		Filter: utils.PointerTo(fmt.Sprintf("name eq '%s'", scanConfigName)),
 	})
 	if err != nil {
-		panic(fmt.Sprintf("Failed to get scan config by name %v", err))
+		logrus.Fatalf("Failed to get scan config by name %v", err)
 	}
 	if len(*scanConfigs.Items) == 0 {
-		panic(fmt.Sprintf("There is no scan config with name=%s", scanConfigName))
+		logrus.Fatalf("There is no scan config with name=%s", scanConfigName)
 	}
 
 	scanConfig := families.CreateFamilyConfigFromModel(
@@ -312,19 +311,22 @@ func newCli() (*cli.CLI, error) {
 			return nil, fmt.Errorf("failed to create VMClarity API client: %w", err)
 		}
 
-		if exportCICDResults && scanResultID == "" {
-			i, err := cicdinitiator.NewInitiator(client, config, scanConfigID, scanConfigName, input, inputType)
-			if err != nil {
-				return nil, fmt.Errorf("failed to create VMClarity initiator: %w", err)
-			}
+		if exportCICDResults {
 			var scanID string
-			scanID, scanResultID, err = i.InitResults(context.TODO())
-			if err != nil {
-				return nil, fmt.Errorf("failed to init scan result: %w", err)
+			if scanResultID == "" {
+				cicdInitiatorConfig := cicdinitiator.CreateConfig(client, config, scanConfigID, scanConfigName, input, inputType)
+				scanID, scanResultID, err = cicdinitiator.InitResults(context.TODO(), cicdInitiatorConfig)
+				if err != nil {
+					return nil, fmt.Errorf("failed to init scan result: %w", err)
+				}
 			}
 			u, err := cicdupdater.NewVMClarityUpdater(client, scanID, scanResultID)
 			if err != nil {
-				return nil, fmt.Errorf("failed to create VMClarity initiator: %w", err)
+				return nil, fmt.Errorf("failed to create VMClarity updater: %w", err)
+			}
+			// If the scanResultID is defined by the user we get the scan ID from it.
+			if err := u.SetScanIDIfNeeded(context.TODO()); err != nil {
+				return nil, fmt.Errorf("failed to set scan ID: %w", err)
 			}
 			updater = u
 		}
@@ -364,12 +366,12 @@ func newCli() (*cli.CLI, error) {
 func setMountPointsForFamiliesInput(mountPoints []string, familiesConfig *families.Config) *families.Config {
 	// update families inputs with the mount point as rootfs
 	for _, mountDir := range mountPoints {
-		familiesConfig = setInput(mountDir, string(kubeclarityutils.ROOTFS), familiesConfig)
+		familiesConfig = appendInput(mountDir, string(kubeclarityutils.ROOTFS), familiesConfig)
 	}
 	return familiesConfig
 }
 
-func setInput(input, inputType string, familiesConfig *families.Config) *families.Config {
+func appendInput(input, inputType string, familiesConfig *families.Config) *families.Config {
 	if familiesConfig.SBOM.Enabled {
 		familiesConfig.SBOM.Inputs = append(familiesConfig.SBOM.Inputs, sbom.Input{
 			Input:     input,

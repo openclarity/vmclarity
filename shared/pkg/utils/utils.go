@@ -27,6 +27,7 @@ import (
 const (
 	DefaultResourceReadyWaitTimeoutMin   = 3
 	DefaultResourceReadyCheckIntervalSec = 3
+	AllScanJobsCompleted                 = "All scan jobs completed"
 )
 
 type CmdRunError struct {
