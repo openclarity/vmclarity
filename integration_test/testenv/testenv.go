@@ -11,6 +11,8 @@ import (
 	"github.com/docker/compose/v2/pkg/compose"
 	"github.com/pkg/errors"
 	"net/url"
+	"strings"
+	"time"
 )
 
 const (
@@ -33,8 +35,11 @@ func New(o *cli.ProjectOptions, reuse bool) (*Environment, error) {
 
 	for i, service := range project.Services {
 		service.CustomLabels = map[string]string{
-			api.ProjectLabel: project.Name,
-			api.OneoffLabel:  "False",
+			api.ProjectLabel:     project.Name,
+			api.ServiceLabel:     service.Name,
+			api.WorkingDirLabel:  project.WorkingDir,
+			api.ConfigFilesLabel: strings.Join(project.ComposeFiles, ","),
+			api.OneoffLabel:      "False",
 		}
 		project.Services[i] = service
 	}
@@ -62,7 +67,23 @@ func (e *Environment) Start(ctx context.Context) error {
 		return nil
 	}
 
-	return e.composer.Up(ctx, e.project, api.UpOptions{})
+	timeout := 1 * time.Minute
+	opts := api.UpOptions{
+		Create: api.CreateOptions{
+			RemoveOrphans: true,
+			QuietPull:     true,
+			Timeout:       &timeout,
+			Services:      e.Services(),
+			Inherit:       false,
+		},
+		Start: api.StartOptions{
+			Project:     e.project,
+			Wait:        true,
+			WaitTimeout: 2 * time.Minute,
+			Services:    e.Services(),
+		},
+	}
+	return e.composer.Up(ctx, e.project, opts)
 }
 
 func (e *Environment) Stop(ctx context.Context) error {
@@ -70,7 +91,14 @@ func (e *Environment) Stop(ctx context.Context) error {
 		return nil
 	}
 
-	return e.composer.Down(ctx, e.project.Name, api.DownOptions{})
+	timeout := 1 * time.Minute
+	opts := api.DownOptions{
+		RemoveOrphans: true,
+		Project:       e.project,
+		Volumes:       true,
+		Timeout:       &timeout,
+	}
+	return e.composer.Down(ctx, e.project.Name, opts)
 }
 
 func (e *Environment) ServicesReady(ctx context.Context) (bool, error) {
@@ -86,6 +114,10 @@ func (e *Environment) ServicesReady(ctx context.Context) (bool, error) {
 	)
 	if err != nil {
 		return false, err
+	}
+
+	if len(services) != len(ps) {
+		return false, nil
 	}
 
 	for _, c := range ps {
@@ -134,5 +166,6 @@ func (e *Environment) VMClarityURL() (*url.URL, error) {
 	return &url.URL{
 		Scheme: "http",
 		Host:   fmt.Sprintf("%s:%s", hostIP, port),
+		Path:   "api",
 	}, nil
 }

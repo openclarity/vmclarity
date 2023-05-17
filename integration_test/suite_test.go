@@ -38,6 +38,9 @@ func beforeSuite(ctx context.Context) {
 	opts, err := cli.NewProjectOptions(
 		[]string{"../deploy/docker-compose.yml"},
 		cli.WithName("vm-clarity"),
+		cli.WithWorkingDirectory("../deploy"),
+		cli.WithResolvedPaths(true),
+		cli.WithProfiles([]string{""}),
 	)
 	Expect(err).NotTo(HaveOccurred())
 
@@ -65,7 +68,7 @@ func beforeSuite(ctx context.Context) {
 	u, err := testEnv.VMClarityURL()
 	Expect(err).NotTo(HaveOccurred())
 
-	client, err = backendclient.Create(fmt.Sprintf("%s://%s/api", u.Scheme, u.Host))
+	client, err = backendclient.Create(fmt.Sprintf("%s://%s/%s", u.Scheme, u.Host, u.Path))
 	Expect(err).NotTo(HaveOccurred())
 
 	// todo(adam.tagscherer): create a proper readyz endpoint for the api
