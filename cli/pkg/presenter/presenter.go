@@ -22,11 +22,5 @@ import (
 )
 
 type Presenter interface {
-	ExportSbomResult(context.Context, families.FamilyResult) error
-	ExportVulResult(context.Context, families.FamilyResult) error
-	ExportSecretsResult(context.Context, families.FamilyResult) error
-	ExportMalwareResult(context.Context, families.FamilyResult) error
-	ExportExploitsResult(context.Context, families.FamilyResult) error
-	ExportMisconfigurationResult(context.Context, families.FamilyResult) error
-	ExportRootkitResult(context.Context, families.FamilyResult) error
+	ExportFamilyResult(ctx context.Context, res families.FamilyResult) error
 }

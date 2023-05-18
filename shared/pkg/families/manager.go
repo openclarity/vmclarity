@@ -21,6 +21,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/openclarity/vmclarity/cli/pkg/presenter"
+	"github.com/openclarity/vmclarity/cli/pkg/state"
 	"github.com/openclarity/vmclarity/shared/pkg/families/exploits"
 	"github.com/openclarity/vmclarity/shared/pkg/families/interfaces"
 	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
@@ -34,17 +36,13 @@ import (
 )
 
 type Manager struct {
-	config         *Config
-	families       []interfaces.Family
-	resultsChan    chan FamilyResult
-	inProgressChan chan types.FamilyType
+	config   *Config
+	families []interfaces.Family
 }
 
-func New(logger *log.Entry, config *Config, resultsChan chan FamilyResult, inProgressChan chan types.FamilyType) *Manager {
+func New(logger *log.Entry, config *Config) *Manager {
 	manager := &Manager{
-		config:         config,
-		resultsChan:    resultsChan,
-		inProgressChan: inProgressChan,
+		config: config,
 	}
 
 	// Analyzers.
@@ -88,18 +86,22 @@ type FamilyResult struct {
 	Err        error
 }
 
-func (m *Manager) Run(ctx context.Context) *results.Results {
+func (m *Manager) Run(ctx context.Context, presenter presenter.Presenter, stateManager state.Manager) error {
+	var oneOrMoreFamilyFailed bool
 	familyResults := results.New()
 
 	for _, family := range m.families {
+		if err := stateManager.MarkFamilyScanInProgress(ctx, family.GetType()); err != nil {
+			log.Errorf("Failed to mark familiy scan in progress: %v", err)
+		}
+
 		result := make(chan FamilyResult)
 		go func() {
-			m.inProgressChan <- family.GetType()
 			ret, err := family.Run(familyResults)
 			result <- FamilyResult{
 				Result:     ret,
-				FamilyType: family.GetType(),
 				Err:        err,
+				FamilyType: family.GetType(),
 			}
 		}()
 
@@ -109,16 +111,31 @@ func (m *Manager) Run(ctx context.Context) *results.Results {
 				<-result
 				close(result)
 			}()
-			m.resultsChan <- FamilyResult{
+			oneOrMoreFamilyFailed = true
+			if err := presenter.ExportFamilyResult(ctx, FamilyResult{
+				Result:     nil,
 				FamilyType: family.GetType(),
 				Err:        fmt.Errorf("failed to run family %v: aborted", family.GetType()),
+			}); err != nil {
+				log.Errorf("Failed to export family result: %v", err)
 			}
 		case r := <-result:
 			log.Debugf("received result from family %q: %v", family, r)
-			m.resultsChan <- r
+			if r.Err != nil {
+				oneOrMoreFamilyFailed = true
+			} else {
+				familyResults.SetResults(r.Result)
+			}
+			if err := presenter.ExportFamilyResult(ctx, r); err != nil {
+				log.Errorf("Failed to export family result: %v", err)
+			}
 			close(result)
 		}
+
 	}
 
-	return familyResults
+	if oneOrMoreFamilyFailed {
+		return fmt.Errorf("at least one family failed to run")
+	}
+	return nil
 }

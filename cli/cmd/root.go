@@ -40,7 +40,6 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/families/rootkits"
 	"github.com/openclarity/vmclarity/shared/pkg/families/sbom"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
-	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 	"github.com/openclarity/vmclarity/shared/pkg/families/vulnerabilities"
 )
 
@@ -112,44 +111,9 @@ var rootCmd = &cobra.Command{
 		}
 
 		logger.Infof("Running scanners...")
-		resultsChan := make(chan families.FamilyResult, 0)
-		inProgressChan := make(chan types.FamilyType, 0)
-		doneChan := make(chan struct{}, 0)
-		go func() {
-			_ = families.New(logger, config, resultsChan, inProgressChan).Run(abortCtx)
-			doneChan <- struct{}{}
-		}()
-
 		var errs []error
-		var familiesErr []error
-		var exportErrors []error
-	LOOP:
-		for {
-			select {
-			case <-ctx.Done():
-				return fmt.Errorf("failed to wait for all results to arrive")
-			case <-doneChan:
-				logger.Info("got all families results")
-				break LOOP
-			case familyType := <-inProgressChan:
-				if err := cli.MarkFamilyScanInProgress(abortCtx, familyType); err != nil {
-					logger.Warnf("failed to mark scan of %v in progress: %v", familyType, err)
-				}
-			case r := <-resultsChan:
-				logger.Infof("Exporting results of family %v", r.FamilyType)
-				exportErr := cli.ExportFamilyResult(abortCtx, r)
-				if r.Err != nil {
-					familiesErr = append(familiesErr, r.Err)
-				}
-				if exportErr != nil {
-					exportErrors = append(exportErrors, exportErr)
-				}
-			}
-		}
-		errs = append(errs, familiesErr...)
-		errs = append(errs, exportErrors...)
-
-		if len(familiesErr) > 0 {
+		famErr := families.New(logger, config).Run(abortCtx, cli.Presenter, cli.Manager)
+		if famErr != nil {
 			errs = append(errs, fmt.Errorf("at least one family failed to run"))
 		}
 
@@ -158,8 +122,8 @@ var rootCmd = &cobra.Command{
 			return fmt.Errorf("failed to inform the server %v the scan was completed: %w", server, err)
 		}
 
-		if len(familiesErr) > 0 {
-			return fmt.Errorf("failed to run families: %+v", familiesErr)
+		if len(errs) > 0 {
+			return fmt.Errorf("failed to run families: %+v", errs)
 		}
 
 		return nil

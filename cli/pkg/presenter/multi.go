@@ -26,69 +26,9 @@ type MultiPresenter struct {
 	Presenters []Presenter
 }
 
-func (m *MultiPresenter) ExportSbomResult(ctx context.Context, res families.FamilyResult) error {
+func (m *MultiPresenter) ExportFamilyResult(ctx context.Context, res families.FamilyResult) error {
 	for _, p := range m.Presenters {
-		if err := p.ExportSbomResult(ctx, res); err != nil {
-			return fmt.Errorf("failed to export result: %w", err)
-		}
-	}
-
-	return nil
-}
-
-func (m *MultiPresenter) ExportVulResult(ctx context.Context, res families.FamilyResult) error {
-	for _, p := range m.Presenters {
-		if err := p.ExportVulResult(ctx, res); err != nil {
-			return fmt.Errorf("failed to export result: %w", err)
-		}
-	}
-
-	return nil
-}
-
-func (m *MultiPresenter) ExportSecretsResult(ctx context.Context, res families.FamilyResult) error {
-	for _, p := range m.Presenters {
-		if err := p.ExportSecretsResult(ctx, res); err != nil {
-			return fmt.Errorf("failed to export result: %w", err)
-		}
-	}
-
-	return nil
-}
-
-func (m *MultiPresenter) ExportMalwareResult(ctx context.Context, res families.FamilyResult) error {
-	for _, p := range m.Presenters {
-		if err := p.ExportMalwareResult(ctx, res); err != nil {
-			return fmt.Errorf("failed to export result: %w", err)
-		}
-	}
-
-	return nil
-}
-
-func (m *MultiPresenter) ExportExploitsResult(ctx context.Context, res families.FamilyResult) error {
-	for _, p := range m.Presenters {
-		if err := p.ExportExploitsResult(ctx, res); err != nil {
-			return fmt.Errorf("failed to export result: %w", err)
-		}
-	}
-
-	return nil
-}
-
-func (m *MultiPresenter) ExportMisconfigurationResult(ctx context.Context, res families.FamilyResult) error {
-	for _, p := range m.Presenters {
-		if err := p.ExportMisconfigurationResult(ctx, res); err != nil {
-			return fmt.Errorf("failed to export result: %w", err)
-		}
-	}
-
-	return nil
-}
-
-func (m *MultiPresenter) ExportRootkitResult(ctx context.Context, res families.FamilyResult) error {
-	for _, p := range m.Presenters {
-		if err := p.ExportRootkitResult(ctx, res); err != nil {
+		if err := p.ExportFamilyResult(ctx, res); err != nil {
 			return fmt.Errorf("failed to export result: %w", err)
 		}
 	}

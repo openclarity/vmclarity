@@ -28,7 +28,6 @@ import (
 	"github.com/openclarity/vmclarity/cli/pkg/presenter"
 	"github.com/openclarity/vmclarity/cli/pkg/state"
 	"github.com/openclarity/vmclarity/shared/pkg/families"
-	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 )
 
 const (
@@ -67,30 +66,6 @@ func (c *CLI) MountVolumes(ctx context.Context) ([]string, error) {
 		}
 	}
 	return mountPoints, nil
-}
-
-//nolint:cyclop
-func (c *CLI) ExportFamilyResult(ctx context.Context, res families.FamilyResult) error {
-	var err error
-
-	switch res.FamilyType {
-	case types.SBOM:
-		err = c.ExportSbomResult(ctx, res)
-	case types.Vulnerabilities:
-		err = c.ExportVulResult(ctx, res)
-	case types.Secrets:
-		err = c.ExportSecretsResult(ctx, res)
-	case types.Exploits:
-		err = c.ExportExploitsResult(ctx, res)
-	case types.Misconfiguration:
-		err = c.ExportMisconfigurationResult(ctx, res)
-	case types.Rootkits:
-		err = c.ExportRootkitResult(ctx, res)
-	case types.Malware:
-		err = c.ExportMalwareResult(ctx, res)
-	}
-
-	return err
 }
 
 func (c *CLI) WatchForAbort(ctx context.Context, cancel context.CancelFunc, interval time.Duration) {

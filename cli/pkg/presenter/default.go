@@ -26,6 +26,7 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/families/rootkits"
 	"github.com/openclarity/vmclarity/shared/pkg/families/sbom"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
+	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 	"github.com/openclarity/vmclarity/shared/pkg/families/vulnerabilities"
 )
 
@@ -33,6 +34,29 @@ type DefaultPresenter struct {
 	Writer
 
 	FamiliesConfig *families.Config
+}
+
+func (p *DefaultPresenter) ExportFamilyResult(ctx context.Context, res families.FamilyResult) error {
+	var err error
+
+	switch res.FamilyType {
+	case types.SBOM:
+		err = p.ExportSbomResult(ctx, res)
+	case types.Vulnerabilities:
+		err = p.ExportVulResult(ctx, res)
+	case types.Secrets:
+		err = p.ExportSecretsResult(ctx, res)
+	case types.Exploits:
+		err = p.ExportExploitsResult(ctx, res)
+	case types.Misconfiguration:
+		err = p.ExportMisconfigurationResult(ctx, res)
+	case types.Rootkits:
+		err = p.ExportRootkitResult(ctx, res)
+	case types.Malware:
+		err = p.ExportMalwareResult(ctx, res)
+	}
+
+	return err
 }
 
 func (p *DefaultPresenter) ExportSbomResult(_ context.Context, res families.FamilyResult) error {

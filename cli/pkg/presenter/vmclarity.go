@@ -30,6 +30,7 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/families/rootkits"
 	"github.com/openclarity/vmclarity/shared/pkg/families/sbom"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
+	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 	"github.com/openclarity/vmclarity/shared/pkg/families/vulnerabilities"
 	"github.com/openclarity/vmclarity/shared/pkg/utils"
 )
@@ -40,6 +41,29 @@ type VMClarityPresenter struct {
 	client *backendclient.BackendClient
 
 	scanResultID models.ScanResultID
+}
+
+func (v *VMClarityPresenter) ExportFamilyResult(ctx context.Context, res families.FamilyResult) error {
+	var err error
+
+	switch res.FamilyType {
+	case types.SBOM:
+		err = v.ExportSbomResult(ctx, res)
+	case types.Vulnerabilities:
+		err = v.ExportVulResult(ctx, res)
+	case types.Secrets:
+		err = v.ExportSecretsResult(ctx, res)
+	case types.Exploits:
+		err = v.ExportExploitsResult(ctx, res)
+	case types.Misconfiguration:
+		err = v.ExportMisconfigurationResult(ctx, res)
+	case types.Rootkits:
+		err = v.ExportRootkitResult(ctx, res)
+	case types.Malware:
+		err = v.ExportMalwareResult(ctx, res)
+	}
+
+	return err
 }
 
 func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res families.FamilyResult) error {
