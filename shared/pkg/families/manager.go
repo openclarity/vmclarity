@@ -89,13 +89,15 @@ type FamilyNotifier interface {
 	FamilyFinished(ctx context.Context, res FamilyResult) error
 }
 
-func (m *Manager) Run(ctx context.Context, notifier FamilyNotifier) error {
+func (m *Manager) Run(ctx context.Context, notifier FamilyNotifier) []error {
 	var oneOrMoreFamilyFailed bool
+	var errors []error
 	familyResults := results.New()
 
 	for _, family := range m.families {
 		if err := notifier.FamilyStarted(ctx, family.GetType()); err != nil {
-			log.Errorf("Failed to mark familiy scan in progress: %v", err)
+			errors = append(errors, fmt.Errorf("family started notification failed: %v", err))
+			continue
 		}
 
 		result := make(chan FamilyResult)
@@ -120,7 +122,7 @@ func (m *Manager) Run(ctx context.Context, notifier FamilyNotifier) error {
 				FamilyType: family.GetType(),
 				Err:        fmt.Errorf("failed to run family %v: aborted", family.GetType()),
 			}); err != nil {
-				log.Errorf("Failed to export family result: %v", err)
+				errors = append(errors, fmt.Errorf("family finished notification failed: %v", err))
 			}
 		case r := <-result:
 			log.Debugf("received result from family %q: %v", family, r)
@@ -130,7 +132,7 @@ func (m *Manager) Run(ctx context.Context, notifier FamilyNotifier) error {
 				familyResults.SetResults(r.Result)
 			}
 			if err := notifier.FamilyFinished(ctx, r); err != nil {
-				log.Errorf("Failed to export family result: %v", err)
+				errors = append(errors, fmt.Errorf("family finished notification failed: %v", err))
 			}
 			close(result)
 		}
@@ -138,7 +140,7 @@ func (m *Manager) Run(ctx context.Context, notifier FamilyNotifier) error {
 	}
 
 	if oneOrMoreFamilyFailed {
-		return fmt.Errorf("at least one family failed to run")
+		errors = append(errors, fmt.Errorf("at least one family failed to run"))
 	}
-	return nil
+	return errors
 }
