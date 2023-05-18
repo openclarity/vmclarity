@@ -232,12 +232,8 @@ func (s *ScanConfigsTableHandler) SaveScanConfig(scanConfig models.ScanConfig, p
 		return models.ScanConfig{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
-	if (params.IfMatch != nil && dbScanConfig.Revision != nil && *params.IfMatch != *dbScanConfig.Revision) || (params.IfMatch != nil && dbScanConfig.Revision == nil) {
-		return models.ScanConfig{}, &types.PreconditionFailedError{
-			Reason: fmt.Sprintf(
-				"Revision %d does not match %d. The object may have been modified since you started the request.",
-				*dbScanConfig.Revision, *params.IfMatch),
-		}
+	if err := checkRevisionEtag(params.IfMatch, dbScanConfig.Revision); err != nil {
+		return models.ScanConfig{}, err
 	}
 
 	// Check the existing DB entries to ensure that the name field is unique
@@ -250,11 +246,7 @@ func (s *ScanConfigsTableHandler) SaveScanConfig(scanConfig models.ScanConfig, p
 		return models.ScanConfig{}, fmt.Errorf("failed to check existing scan config: %w", err)
 	}
 
-	if dbScanConfig.Revision != nil {
-		scanConfig.Revision = utils.PointerTo(*dbScanConfig.Revision + 1)
-	} else {
-		scanConfig.Revision = utils.PointerTo(1)
-	}
+	scanConfig.Revision = bumpRevision(dbScanConfig.Revision)
 
 	marshaled, err := json.Marshal(scanConfig)
 	if err != nil {
@@ -263,7 +255,7 @@ func (s *ScanConfigsTableHandler) SaveScanConfig(scanConfig models.ScanConfig, p
 
 	dbObj.Data = marshaled
 
-	if err := s.DB.Save(&dbScanConfig).Error; err != nil {
+	if err := s.DB.Save(&dbObj).Error; err != nil {
 		return models.ScanConfig{}, fmt.Errorf("failed to save scan config in db: %w", err)
 	}
 
@@ -307,19 +299,11 @@ func (s *ScanConfigsTableHandler) UpdateScanConfig(scanConfig models.ScanConfig,
 		return models.ScanConfig{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
-	if (params.IfMatch != nil && dbScanConfig.Revision != nil && *params.IfMatch != *dbScanConfig.Revision) || (params.IfMatch != nil && dbScanConfig.Revision == nil) {
-		return models.ScanConfig{}, &types.PreconditionFailedError{
-			Reason: fmt.Sprintf(
-				"Revision %d does not match %d. The object may have been modified since you started the request.",
-				*dbScanConfig.Revision, *params.IfMatch),
-		}
+	if err := checkRevisionEtag(params.IfMatch, dbScanConfig.Revision); err != nil {
+		return models.ScanConfig{}, err
 	}
 
-	if dbScanConfig.Revision != nil {
-		scanConfig.Revision = utils.PointerTo(*dbScanConfig.Revision + 1)
-	} else {
-		scanConfig.Revision = utils.PointerTo(1)
-	}
+	scanConfig.Revision = bumpRevision(dbScanConfig.Revision)
 
 	dbObj.Data, err = patchObject(dbObj.Data, scanConfig)
 	if err != nil {

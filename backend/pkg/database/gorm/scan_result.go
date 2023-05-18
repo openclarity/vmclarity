@@ -210,19 +210,11 @@ func (s *ScanResultsTableHandler) SaveScanResult(scanResult models.TargetScanRes
 		return models.TargetScanResult{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
-	if (params.IfMatch != nil && dbScanResult.Revision != nil && *params.IfMatch != *dbScanResult.Revision) || (params.IfMatch != nil && dbScanResult.Revision == nil) {
-		return models.TargetScanResult{}, &types.PreconditionFailedError{
-			Reason: fmt.Sprintf(
-				"Revision %d does not match %d. The object may have been modified since you started the request.",
-				*dbScanResult.Revision, *params.IfMatch),
-		}
+	if err := checkRevisionEtag(params.IfMatch, dbScanResult.Revision); err != nil {
+		return models.TargetScanResult{}, err
 	}
 
-	if dbScanResult.Revision != nil {
-		scanResult.Revision = utils.PointerTo(*dbScanResult.Revision + 1)
-	} else {
-		scanResult.Revision = utils.PointerTo(1)
-	}
+	scanResult.Revision = bumpRevision(dbScanResult.Revision)
 
 	marshaled, err := json.Marshal(scanResult)
 	if err != nil {
@@ -231,7 +223,7 @@ func (s *ScanResultsTableHandler) SaveScanResult(scanResult models.TargetScanRes
 
 	dbObj.Data = marshaled
 
-	if err := s.DB.Save(&dbScanResult).Error; err != nil {
+	if err := s.DB.Save(&dbObj).Error; err != nil {
 		return models.TargetScanResult{}, fmt.Errorf("failed to save scan result in db: %w", err)
 	}
 
@@ -267,19 +259,11 @@ func (s *ScanResultsTableHandler) UpdateScanResult(scanResult models.TargetScanR
 		return models.TargetScanResult{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
-	if (params.IfMatch != nil && dbScanResult.Revision != nil && *params.IfMatch != *dbScanResult.Revision) || (params.IfMatch != nil && dbScanResult.Revision == nil) {
-		return models.TargetScanResult{}, &types.PreconditionFailedError{
-			Reason: fmt.Sprintf(
-				"Revision %d does not match %d. The object may have been modified since you started the request.",
-				*dbScanResult.Revision, *params.IfMatch),
-		}
+	if err := checkRevisionEtag(params.IfMatch, dbScanResult.Revision); err != nil {
+		return models.TargetScanResult{}, err
 	}
 
-	if dbScanResult.Revision != nil {
-		scanResult.Revision = utils.PointerTo(*dbScanResult.Revision + 1)
-	} else {
-		scanResult.Revision = utils.PointerTo(1)
-	}
+	scanResult.Revision = bumpRevision(dbScanResult.Revision)
 
 	dbObj.Data, err = patchObject(dbObj.Data, scanResult)
 	if err != nil {

@@ -33,7 +33,7 @@ type PreconditionFailedError struct {
 }
 
 func (e *PreconditionFailedError) Error() string {
-	return fmt.Sprintf("Precondition Failed: %s", e.Reason)
+	return fmt.Sprintf("Precondition failed: %s", e.Reason)
 }
 
 type DBConfig struct {

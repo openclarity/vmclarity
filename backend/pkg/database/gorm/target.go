@@ -189,19 +189,11 @@ func (t *TargetsTableHandler) SaveTarget(target models.Target, params models.Put
 		return models.Target{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
-	if (params.IfMatch != nil && dbTarget.Revision != nil && *params.IfMatch != *dbTarget.Revision) || (params.IfMatch != nil && dbTarget.Revision == nil) {
-		return models.Target{}, &types.PreconditionFailedError{
-			Reason: fmt.Sprintf(
-				"Revision %d does not match %d. The object may have been modified since you started the request.",
-				*dbTarget.Revision, *params.IfMatch),
-		}
+	if err := checkRevisionEtag(params.IfMatch, dbTarget.Revision); err != nil {
+		return models.Target{}, err
 	}
 
-	if dbTarget.Revision != nil {
-		target.Revision = utils.PointerTo(*dbTarget.Revision + 1)
-	} else {
-		target.Revision = utils.PointerTo(1)
-	}
+	target.Revision = bumpRevision(dbTarget.Revision)
 
 	existingTarget, err := t.checkUniqueness(target)
 	if err != nil {
@@ -252,19 +244,11 @@ func (t *TargetsTableHandler) UpdateTarget(target models.Target, params models.P
 		return models.Target{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
-	if (params.IfMatch != nil && dbTarget.Revision != nil && *params.IfMatch != *dbTarget.Revision) || (params.IfMatch != nil && dbTarget.Revision == nil) {
-		return models.Target{}, &types.PreconditionFailedError{
-			Reason: fmt.Sprintf(
-				"Revision %d does not match %d. The object may have been modified since you started the request.",
-				*dbTarget.Revision, *params.IfMatch),
-		}
+	if err := checkRevisionEtag(params.IfMatch, dbTarget.Revision); err != nil {
+		return models.Target{}, err
 	}
 
-	if dbTarget.Revision != nil {
-		target.Revision = utils.PointerTo(*dbTarget.Revision + 1)
-	} else {
-		target.Revision = utils.PointerTo(1)
-	}
+	target.Revision = bumpRevision(dbTarget.Revision)
 
 	dbObj.Data, err = patchObject(dbObj.Data, target)
 	if err != nil {
