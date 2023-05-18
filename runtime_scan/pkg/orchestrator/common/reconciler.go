@@ -52,6 +52,7 @@ func (r *Reconciler[T]) Start(ctx context.Context) {
 				}
 				cancel()
 			}
+			r.Queue.Done(item)
 
 			// Check if the parent context done if so we also need
 			// to exit.
