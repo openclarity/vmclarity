@@ -45,6 +45,10 @@ func (l *LocalState) IsAborted(context.Context) (bool, error) {
 	return false, nil
 }
 
+func (l *LocalState) GetScanResultID() string {
+	return ""
+}
+
 func NewLocalState() (*LocalState, error) {
 	return &LocalState{}, nil
 }

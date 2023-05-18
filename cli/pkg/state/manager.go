@@ -24,4 +24,5 @@ type Manager interface {
 	MarkInProgress(context.Context) error
 	MarkDone(context.Context, []error) error
 	IsAborted(ctx context.Context) (bool, error)
+	GetScanResultID() string
 }

@@ -346,6 +346,10 @@ func (v *VMClarityPresenter) ExportRootkitResult(ctx context.Context, res *resul
 	return nil
 }
 
+func (v *VMClarityPresenter) SetScanResultID(scanResultID string) {
+	v.scanResultID = scanResultID
+}
+
 func NewVMClarityPresenter(client *backendclient.BackendClient, id ScanResultID) (*VMClarityPresenter, error) {
 	if client == nil {
 		return nil, errors.New("backend client must not be nil")

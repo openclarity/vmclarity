@@ -157,6 +157,10 @@ func (v VMClarityState) IsAborted(ctx context.Context) (bool, error) {
 	return false, nil
 }
 
+func (v VMClarityState) GetScanResultID() string {
+	return v.scanResultID
+}
+
 func NewVMClarityState(client *backendclient.BackendClient, id ScanResultID) (*VMClarityState, error) {
 	if client == nil {
 		return nil, errors.New("backend client must not be nil")

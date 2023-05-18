@@ -144,3 +144,5 @@ func (p *DefaultPresenter) ExportRootkitResult(_ context.Context, res *results.R
 	}
 	return nil
 }
+
+func (p *DefaultPresenter) SetScanResultID(_ string) {}

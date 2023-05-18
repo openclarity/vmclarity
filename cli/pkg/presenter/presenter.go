@@ -30,4 +30,5 @@ type Presenter interface {
 	ExportExploitsResult(context.Context, *results.Results, families.RunErrors) error
 	ExportMisconfigurationResult(context.Context, *results.Results, families.RunErrors) error
 	ExportRootkitResult(context.Context, *results.Results, families.RunErrors) error
+	SetScanResultID(string)
 }

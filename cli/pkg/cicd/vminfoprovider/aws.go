@@ -38,17 +38,16 @@ func (a *AWSInfoProvider) GetVMInfo() (string, string, error) {
 		return "", "", fmt.Errorf("failed to read instance-id response body: %v", err)
 	}
 
-	azResp, err := http.Get("http://169.254.169.254/latest/meta-data/placement/availability-zone") // nolint:noctx
+	regionResp, err := http.Get("http://169.254.169.254/latest/meta-data/placement/region") // nolint:noctx
 	if err != nil {
-		return "", "", fmt.Errorf("failed to get availability-zone: %v", err)
+		return "", "", fmt.Errorf("failed to get region: %v", err)
 	}
-	defer azResp.Body.Close()
-	availabilityZone, err := io.ReadAll(azResp.Body)
+	defer regionResp.Body.Close()
+	region, err := io.ReadAll(regionResp.Body)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to read availability-zone response body: %v", err)
+		return "", "", fmt.Errorf("failed to read region response body: %v", err)
 	}
-	az := string(availabilityZone)
 
 	// cut the last character from the availability-zone in order to return only the region
-	return string(instanceID), az[:len(az)-1], nil
+	return string(instanceID), string(region), nil
 }

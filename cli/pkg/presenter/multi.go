@@ -96,3 +96,9 @@ func (m *MultiPresenter) ExportRootkitResult(ctx context.Context, res *results.R
 
 	return nil
 }
+
+func (m *MultiPresenter) SetScanResultID(scanResultID string) {
+	for _, p := range m.Presenters {
+		p.SetScanResultID(scanResultID)
+	}
+}
