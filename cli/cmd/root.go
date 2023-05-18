@@ -112,7 +112,7 @@ var rootCmd = &cobra.Command{
 
 		logger.Infof("Running scanners...")
 		var errs []error
-		famErr := families.New(logger, config).Run(abortCtx, cli.Presenter, cli.Manager)
+		famErr := families.New(logger, config).Run(abortCtx, cli)
 		if famErr != nil {
 			errs = append(errs, fmt.Errorf("at least one family failed to run"))
 		}

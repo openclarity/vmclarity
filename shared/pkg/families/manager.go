@@ -21,8 +21,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/openclarity/vmclarity/cli/pkg/presenter"
-	"github.com/openclarity/vmclarity/cli/pkg/state"
 	"github.com/openclarity/vmclarity/shared/pkg/families/exploits"
 	"github.com/openclarity/vmclarity/shared/pkg/families/interfaces"
 	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
@@ -86,12 +84,17 @@ type FamilyResult struct {
 	Err        error
 }
 
-func (m *Manager) Run(ctx context.Context, presenter presenter.Presenter, stateManager state.Manager) error {
+type FamilyNotifier interface {
+	FamilyStarted(context.Context, types.FamilyType) error
+	FamilyFinished(ctx context.Context, res FamilyResult) error
+}
+
+func (m *Manager) Run(ctx context.Context, notifier FamilyNotifier) error {
 	var oneOrMoreFamilyFailed bool
 	familyResults := results.New()
 
 	for _, family := range m.families {
-		if err := stateManager.MarkFamilyScanInProgress(ctx, family.GetType()); err != nil {
+		if err := notifier.FamilyStarted(ctx, family.GetType()); err != nil {
 			log.Errorf("Failed to mark familiy scan in progress: %v", err)
 		}
 
@@ -112,7 +115,7 @@ func (m *Manager) Run(ctx context.Context, presenter presenter.Presenter, stateM
 				close(result)
 			}()
 			oneOrMoreFamilyFailed = true
-			if err := presenter.ExportFamilyResult(ctx, FamilyResult{
+			if err := notifier.FamilyFinished(ctx, FamilyResult{
 				Result:     nil,
 				FamilyType: family.GetType(),
 				Err:        fmt.Errorf("failed to run family %v: aborted", family.GetType()),
@@ -126,7 +129,7 @@ func (m *Manager) Run(ctx context.Context, presenter presenter.Presenter, stateM
 			} else {
 				familyResults.SetResults(r.Result)
 			}
-			if err := presenter.ExportFamilyResult(ctx, r); err != nil {
+			if err := notifier.FamilyFinished(ctx, r); err != nil {
 				log.Errorf("Failed to export family result: %v", err)
 			}
 			close(result)

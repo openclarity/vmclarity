@@ -28,6 +28,7 @@ import (
 	"github.com/openclarity/vmclarity/cli/pkg/presenter"
 	"github.com/openclarity/vmclarity/cli/pkg/state"
 	"github.com/openclarity/vmclarity/shared/pkg/families"
+	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 )
 
 const (
@@ -40,6 +41,14 @@ type CLI struct {
 	presenter.Presenter
 
 	FamiliesConfig *families.Config
+}
+
+func (c *CLI) FamilyStarted(ctx context.Context, famType types.FamilyType) error {
+	return c.Manager.MarkFamilyScanInProgress(ctx, famType)
+}
+
+func (c *CLI) FamilyFinished(ctx context.Context, res families.FamilyResult) error {
+	return c.Presenter.ExportFamilyResult(ctx, res)
 }
 
 func (c *CLI) MountVolumes(ctx context.Context) ([]string, error) {
