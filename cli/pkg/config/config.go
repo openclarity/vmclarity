@@ -54,9 +54,14 @@ func setDefaultAddresses() {
 	viper.SetDefault("addresses.exploitsDBAddress", fmt.Sprintf("http://%s", net.JoinHostPort("localhost", "1326")))
 }
 
+func setDefaultAsset() {
+	viper.SetDefault("asset.type", "dir")
+}
+
 func setDefaults() {
 	setDefaultAddresses()
 	setDefaultPaths()
+	setDefaultAsset()
 }
 
 func LoadConfig(values []string) *Config {
@@ -79,7 +84,9 @@ func LoadConfig(values []string) *Config {
 
 	return &Config{
 		Asset: &Asset{
-			Type: viper.GetString("asset.type"),
+			Type:       viper.GetString("asset.type"),
+			Location:   viper.GetString("asset.location"),
+			InstanceID: viper.GetString("asset.instanceID"),
 		},
 		Addresses: addresses,
 		Paths:     paths,

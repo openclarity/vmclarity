@@ -30,10 +30,10 @@ import (
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/cli/pkg"
-	cicdinitiator "github.com/openclarity/vmclarity/cli/pkg/cicd/initiator"
 	"github.com/openclarity/vmclarity/cli/pkg/cli"
 	cliconfig "github.com/openclarity/vmclarity/cli/pkg/config"
 	"github.com/openclarity/vmclarity/cli/pkg/presenter"
+	standaloneinitiator "github.com/openclarity/vmclarity/cli/pkg/standalone/initiator"
 	"github.com/openclarity/vmclarity/cli/pkg/state"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
@@ -60,13 +60,12 @@ var (
 	mountVolume           bool
 	waitForServerAttached bool
 
-	// flags for CICD mode.
-	cicdMode          bool
-	scanConfigName    string
-	scanConfigID      string
-	input             string
-	inputType         string
-	exportCICDResults bool
+	// flags for standalone mode.
+	standalone     bool
+	scanConfigName string
+	scanConfigID   string
+	input          string
+	exportResults  bool
 )
 
 // rootCmd represents the base command when called without any subcommands.
@@ -118,9 +117,9 @@ var rootCmd = &cobra.Command{
 		}
 
 		if input != "" {
-			famInputType, err := getFamiliesInputType(inputType)
+			famInputType, err := getFamiliesInputType(config.Asset.Type)
 			if err != nil {
-				return fmt.Errorf("failed to get families input type by inputType=%s: %w", inputType, err)
+				return fmt.Errorf("failed to get families input type by inputType=%s: %w", config.Asset.Type, err)
 			}
 			appendInput(input, famInputType, config.Config)
 		}
@@ -182,17 +181,15 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&mountVolume, "mount-attached-volume", false, "discover for an attached volume and mount it before the scan")
 	rootCmd.PersistentFlags().BoolVar(&waitForServerAttached, "wait-for-server-attached", false, "wait for the VMClarity server to attach the volume")
 	rootCmd.PersistentFlags().StringVar(&input, "input", "", "input for families")
-	rootCmd.PersistentFlags().StringVar(&inputType, "input-type", "dir", "input type for families")
-	rootCmd.PersistentFlags().BoolVar(&cicdMode, "cicd-mode", false, "CICD mode")
-	rootCmd.PersistentFlags().BoolVar(&exportCICDResults, "export-cicd-results", false, "export results to VMclarity server")
+	rootCmd.PersistentFlags().BoolVar(&standalone, "standalone", false, "standalone mode")
+	rootCmd.PersistentFlags().BoolVar(&exportResults, "export-results", false, "export results in standalone mode to VMclarity server")
 	rootCmd.PersistentFlags().StringArrayVar(&values, "set", []string{}, "set values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)")
 
 	validateRequiredFlagForDefinedFlag(rootCmd, "scan-result-id", "server")
 	validateRequiredFlagForDefinedFlag(rootCmd, "scan-config-name", "server")
 	rootCmd.MarkFlagsMutuallyExclusive("config", "scan-config-name")
 	rootCmd.MarkFlagsMutuallyExclusive("mount-attached-volume", "input")
-	validateRequiredFlagForDefinedFlag(rootCmd, "input-type", "input")
-	validateRequiredFlagForDefinedFlag(rootCmd, "export-cicd-results", "server")
+	validateRequiredFlagForDefinedFlag(rootCmd, "export-results", "server")
 }
 
 func validateRequiredFlagForDefinedFlag(rootCmd *cobra.Command, definedFlag, requiredFlag string) {
@@ -203,7 +200,7 @@ func validateRequiredFlagForDefinedFlag(rootCmd *cobra.Command, definedFlag, req
 	}
 }
 
-func getConfigFromBackend() *cliconfig.Config {
+func getConfigFromBackend(cliConf *cliconfig.Config) *cliconfig.Config {
 	if server == "" {
 		panic("Missing backend")
 	}
@@ -221,8 +218,6 @@ func getConfigFromBackend() *cliconfig.Config {
 	if len(*scanConfigs.Items) == 0 {
 		logrus.Fatalf("There is no scan config with name=%s", scanConfigName)
 	}
-
-	cliConf := cliconfig.LoadConfig(values)
 
 	scanConfig := families.CreateFamilyConfigFromModel(
 		(*scanConfigs.Items)[0].ScanFamiliesConfig,
@@ -251,25 +246,44 @@ func getConfigFromFile() *cliconfig.Config {
 		viper.SetConfigType("yaml")
 		viper.SetConfigName(".families")
 	}
-
 	// If a config file is found, read it in.
 	err := viper.ReadInConfig()
 	cobra.CheckErr(err)
 
 	// Load config
-	config = &cliconfig.Config{}
-	err = viper.Unmarshal(config)
+	cliConf := &cliconfig.Config{}
+	err = viper.Unmarshal(cliConf)
 	cobra.CheckErr(err)
 
-	return config
+	return cliConf
+}
+
+func getConfgiForStandalonMode() *cliconfig.Config {
+	cliConf := cliconfig.LoadConfig(values)
+	var conf *cliconfig.Config
+	if scanConfigName != "" {
+		conf = getConfigFromBackend(cliConf)
+	} else {
+		conf = getConfigFromFile()
+		if conf.Asset == nil {
+			conf.Asset = cliConf.Asset
+		}
+		if conf.Paths == nil {
+			conf.Paths = cliConf.Paths
+		}
+		if conf.Addresses == nil {
+			conf.Addresses = cliConf.Addresses
+		}
+	}
+	return conf
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
 	logrus.Infof("init config")
 
-	if scanConfigName != "" {
-		config = getConfigFromBackend()
+	if standalone {
+		config = getConfgiForStandalonMode()
 	} else {
 		config = getConfigFromFile()
 	}
@@ -302,7 +316,6 @@ func newCli() (*cli.CLI, error) {
 		return nil, errors.New("families config must not be nil")
 	}
 
-	//	if (server != "" && !cicdMode) || (cicdMode && exportCICDResults) {
 	if server != "" {
 		var client *backendclient.BackendClient
 		var p presenter.Presenter
@@ -312,12 +325,12 @@ func newCli() (*cli.CLI, error) {
 			return nil, fmt.Errorf("failed to create VMClarity API client: %w", err)
 		}
 
-		if cicdMode {
-			if exportCICDResults {
-				cicdInitiatorConfig := cicdinitiator.CreateConfig(client, config.Config, scanConfigID, scanConfigName, input, inputType)
-				manager, err = state.NewCICDState(client, scanResultID, cicdInitiatorConfig)
+		if standalone {
+			if exportResults {
+				standaloneInitiatorConfig := standaloneinitiator.CreateConfig(client, config.Config, scanConfigID, scanConfigName, input, *config.Asset)
+				manager, err = state.NewStandaloneState(client, scanResultID, standaloneInitiatorConfig)
 				if err != nil {
-					return nil, fmt.Errorf("failed to create CICD state manager: %w", err)
+					return nil, fmt.Errorf("failed to create standalone state manager: %w", err)
 				}
 
 				p, err = presenter.NewVMClarityPresenter(client, scanResultID)
@@ -427,8 +440,8 @@ func appendInput(input, inputType string, familiesConfig *families.Config) *fami
 	return familiesConfig
 }
 
-func getFamiliesInputType(inputType string) (string, error) {
-	switch inputType {
+func getFamiliesInputType(assetType string) (string, error) {
+	switch assetType {
 	case "dir", "DIR":
 		return string(kubeclarityutils.DIR), nil
 	case "vm", "VM":

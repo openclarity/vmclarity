@@ -26,7 +26,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/cli/pkg/cicd/vminfoprovider"
+	"github.com/openclarity/vmclarity/cli/pkg/standalone/vminfoprovider"
 	cliutils "github.com/openclarity/vmclarity/cli/pkg/utils"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
@@ -42,9 +42,9 @@ func newVMClarityInitiator(config Config) (*VMClarityInitiator, error) {
 	if config.client == nil {
 		return nil, errors.New("backend client must not be nil")
 	}
-	targetInfoType, err := getTargetInfoType(config.inputType)
+	targetInfoType, err := getTargetInfoType(config.asset.Type)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get target type by inputType=%s: %v", config.inputType, err)
+		return nil, fmt.Errorf("failed to get target type by inputType=%s: %v", config.asset.Type, err)
 	}
 	return &VMClarityInitiator{
 		targetInfoType:     targetInfoType,
@@ -86,7 +86,7 @@ func (i *VMClarityInitiator) initResults(ctx context.Context) (string, string, e
 
 // nolint:cyclop
 func (i *VMClarityInitiator) createTarget(ctx context.Context) (string, error) {
-	// Now we are support only directory and vm input in the CI/CD mode
+	// Now we are support only directory and vm input in the standalone mode
 	info := models.TargetType{}
 	switch i.targetInfoType {
 	case "DIRInfo":
@@ -98,6 +98,9 @@ func (i *VMClarityInitiator) createTarget(ctx context.Context) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("failed to get absolute path of %s: %v", i.input, err)
 		}
+		if i.asset.Location != "" {
+			hostName = i.asset.Location
+		}
 		err = info.FromDirInfo(models.DirInfo{
 			DirName:  utils.PointerTo(absPath),
 			Location: utils.PointerTo(hostName),
@@ -108,7 +111,15 @@ func (i *VMClarityInitiator) createTarget(ctx context.Context) (string, error) {
 	case "VMInfo":
 		// TODO(pebalogh) now we are supporting AWS cloud provider only
 		vmInfoProvider := vminfoprovider.CreateNewAWSInfoProvider()
+		// Get VM info from vm.
 		instanceID, location, err := vmInfoProvider.GetVMInfo()
+		// If the asset location and instanceID are set in config use them instead.
+		if i.asset.Location != "" {
+			location = i.asset.Location
+		}
+		if i.asset.InstanceID != "" {
+			instanceID = i.asset.InstanceID
+		}
 		if err != nil {
 			return "", fmt.Errorf("failed to get VMInfo: %v", err)
 		}
@@ -138,7 +149,7 @@ func (i *VMClarityInitiator) createTarget(ctx context.Context) (string, error) {
 func (i *VMClarityInitiator) createScan(ctx context.Context) (string, error) {
 	now := time.Now()
 	scan := &models.Scan{
-		// Scan config relationship is not set in CI/CD mode
+		// Scan config relationship is not set in standalone mode
 		// to avoid uniqueness check of a scan
 		ScanConfigSnapshot: &models.ScanConfigData{
 			Name:               utils.PointerTo(i.scanConfigName),

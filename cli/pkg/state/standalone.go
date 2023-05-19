@@ -23,34 +23,34 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/api/models"
-	cicdinitiator "github.com/openclarity/vmclarity/cli/pkg/cicd/initiator"
-	cicdupdater "github.com/openclarity/vmclarity/cli/pkg/cicd/updater"
+	standaloneitiator "github.com/openclarity/vmclarity/cli/pkg/standalone/initiator"
+	standaloneupdater "github.com/openclarity/vmclarity/cli/pkg/standalone/updater"
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 	"github.com/openclarity/vmclarity/shared/pkg/utils"
 )
 
-type CICDState struct {
+type StandaloneState struct {
 	client          *backendclient.BackendClient
 	scanResultID    models.ScanResultID
-	initiatorConfig cicdinitiator.Config
-	updater         cicdupdater.Updater
+	initiatorConfig standaloneitiator.Config
+	updater         standaloneupdater.Updater
 }
 
-func (c *CICDState) WaitForVolumeAttachment(context.Context) error {
+func (c *StandaloneState) WaitForVolumeAttachment(context.Context) error {
 	return nil
 }
 
-func (c *CICDState) MarkInProgress(ctx context.Context) error {
+func (c *StandaloneState) MarkInProgress(ctx context.Context) error {
 	log.Info("Scanning is in progress")
 	var err error
 	var scanID string
 	if c.scanResultID == "" {
-		scanID, c.scanResultID, err = cicdinitiator.InitResults(ctx, c.initiatorConfig)
+		scanID, c.scanResultID, err = standaloneitiator.InitResults(ctx, c.initiatorConfig)
 		if err != nil {
 			return fmt.Errorf("failed to init scan result: %w", err)
 		}
 	}
-	u, err := cicdupdater.NewVMClarityUpdater(c.client, scanID, c.scanResultID)
+	u, err := standaloneupdater.NewVMClarityUpdater(c.client, scanID, c.scanResultID)
 	if err != nil {
 		return fmt.Errorf("failed to create VMClarity updater: %w", err)
 	}
@@ -64,7 +64,7 @@ func (c *CICDState) MarkInProgress(ctx context.Context) error {
 }
 
 // nolint:cyclop
-func (c *CICDState) MarkDone(ctx context.Context, errors []error) error {
+func (c *StandaloneState) MarkDone(ctx context.Context, errors []error) error {
 	log.Info("Scanning is done")
 	scanResult, err := c.client.GetScanResult(ctx, c.scanResultID, models.GetScanResultsScanResultIDParams{})
 	if err != nil {
@@ -107,7 +107,7 @@ func (c *CICDState) MarkDone(ctx context.Context, errors []error) error {
 		return fmt.Errorf("failed to patch scan result: %w", err)
 	}
 
-	// In CI/CD mode, the scan objects needs to be updated in order to calculate ScanSummary,
+	// In standalone mode, the scan objects needs to be updated in order to calculate ScanSummary,
 	// update scan state end endTime of the scan.
 	if err := c.updater.UpdateScanStateAndSummary(ctx); err != nil {
 		return fmt.Errorf("failed to udate scan: %v", err)
@@ -116,22 +116,22 @@ func (c *CICDState) MarkDone(ctx context.Context, errors []error) error {
 	return nil
 }
 
-func (c *CICDState) IsAborted(context.Context) (bool, error) {
+func (c *StandaloneState) IsAborted(context.Context) (bool, error) {
 	return false, nil
 }
 
-func (c *CICDState) GetScanResultID() string {
+func (c *StandaloneState) GetScanResultID() string {
 	return c.scanResultID
 }
 
-func NewCICDState(
+func NewStandaloneState(
 	client *backendclient.BackendClient,
 	scanResultID models.ScanResultID,
-	cicdinitiatorConfig cicdinitiator.Config,
-) (*CICDState, error) {
-	return &CICDState{
+	standaloneInitiatorConfig standaloneitiator.Config,
+) (*StandaloneState, error) {
+	return &StandaloneState{
 		client:          client,
 		scanResultID:    scanResultID,
-		initiatorConfig: cicdinitiatorConfig,
+		initiatorConfig: standaloneInitiatorConfig,
 	}, nil
 }

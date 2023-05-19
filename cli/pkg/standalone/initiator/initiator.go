@@ -19,6 +19,7 @@ import (
 	"context"
 	"fmt"
 
+	cliconfig "github.com/openclarity/vmclarity/cli/pkg/config"
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 	"github.com/openclarity/vmclarity/shared/pkg/families"
 )
@@ -29,13 +30,14 @@ type Config struct {
 	scanConfigID   string
 	scanConfigName string
 	input          string
-	inputType      string
+	asset          cliconfig.Asset
 }
 
 func CreateConfig(
 	client *backendclient.BackendClient,
 	fmConfig *families.Config,
-	scanConfigID, scanConfigName, input, inputType string,
+	scanConfigID, scanConfigName, input string,
+	asset cliconfig.Asset,
 ) Config {
 	return Config{
 		client:         client,
@@ -43,14 +45,14 @@ func CreateConfig(
 		scanConfigID:   scanConfigID,
 		scanConfigName: scanConfigName,
 		input:          input,
-		inputType:      inputType,
+		asset:          asset,
 	}
 }
 
 // InitResults creates VMClarityInitiator and init Results.
 // The function is returns the scanID and scanResultID that required for the export.
-func InitResults(ctx context.Context, cicdInitiatorConfig Config) (string, string, error) {
-	i, err := newVMClarityInitiator(cicdInitiatorConfig)
+func InitResults(ctx context.Context, standaloneInitiatorConfig Config) (string, string, error) {
+	i, err := newVMClarityInitiator(standaloneInitiatorConfig)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to create VMClarity initiator: %w", err)
 	}
