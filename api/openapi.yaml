@@ -1442,18 +1442,12 @@ components:
         - $ref: '#/components/schemas/VMInfo'
         - $ref: '#/components/schemas/PodInfo'
         - $ref: '#/components/schemas/DirInfo'
-        - $ref: '#/components/schemas/VMImage'
-        - $ref: '#/components/schemas/ContainerInfo'
-        - $ref: '#/components/schemas/ContainerImage'
       discriminator:
         propertyName: objectType
         mapping:
           VMInfo: '#/components/schemas/VMInfo'
           PodInfo: '#/components/schemas/PodInfo'
           DirInfo: '#/components/schemas/DirInfo'
-          VMImage: '#/components/schemas/VMImage'
-          ContainerInfo: '#/components/schemas/ContainerInfo'
-          ContainerImage: '#/components/schemas/ContainerImage'
 
     VMInfo:
       type: object
@@ -1514,50 +1508,6 @@ components:
         dirName:
           type: string
         location:
-          type: string
-      required:
-        - objectType
-
-    VMImage:
-      type: object
-      properties:
-        objectType:
-          type: string
-        imageName:
-          type: string
-        imageVersion:
-          type: string
-        arch:
-          type: string
-        imageID:
-          type: string
-        location:
-          type: string
-      required:
-        - objectType
-
-    ContainerInfo:
-      type: object
-      properties:
-        objectType:
-          type: string
-        containerName:
-          type: string
-      required:
-        - objectType
-
-    ContainerImage:
-      type: object
-      properties:
-        objectType:
-          type: string
-        imageName:
-          type: string
-        imageTag:
-          type: string
-        imageHash:
-          type: string
-        registry:
           type: string
       required:
         - objectType
