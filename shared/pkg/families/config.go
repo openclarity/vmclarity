@@ -16,14 +16,11 @@
 package families
 
 import (
-	"fmt"
-	"net"
 	"time"
 
 	"github.com/anchore/syft/syft/source"
 	kubeclarityConfig "github.com/openclarity/kubeclarity/shared/pkg/config"
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/shared/pkg/families/exploits"
@@ -46,16 +43,6 @@ import (
 const (
 	TrivyTimeout       = 300
 	GrypeServerTimeout = 2 * time.Minute
-
-	GitleaksBinaryPath            = "GITLEAKS_BINARY_PATH"
-	ClamBinaryPath                = "CLAM_BINARY_PATH"
-	FreshclamBinaryPath           = "FRESHCLAM_BINARY_PATH"
-	AlternativeFreshclamMirrorURL = "ALTERNATIVE_FRESHCLAM_MIRROR_URL"
-	LynisInstallPath              = "LYNIS_INSTALL_PATH"
-	ChkrootkitBinaryPath          = "CHKROOTKIT_BINARY_PATH"
-	ExploitDBAddress              = "EXPLOIT_DB_ADDRESS"
-	TrivyServerAddress            = "TRIVY_SERVER_ADDRESS"
-	GrypeServerAddress            = "GRYPE_SERVER_ADDRESS"
 )
 
 type Config struct {
@@ -75,72 +62,28 @@ type Config struct {
 
 type Paths struct {
 	// The gitleaks binary path in the scanner image container.
-	GitleaksBinaryPath string
+	GitleaksBinaryPath string `json:"gitleaksBinaryPath,omitempty" yaml:"gitleaksBinaryPath,omitempty" mapstructure:"gitleaksBinaryPath,omitempty"`
 
 	// The clam binary path in the scanner image container.
-	ClamBinaryPath string
+	ClamBinaryPath string `json:"clamBinaryPath,omitempty" yaml:"clamBinaryPath,omitempty" mapstructure:"clamBinaryPath,omitempty"`
 
 	// The freshclam binary path in the scanner image container
-	FreshclamBinaryPath string
+	FreshclamBinaryPath string `json:"freshclamBinaryPath,omitempty" yaml:"freshclamBinaryPath,omitempty" mapstructure:"freshclamBinaryPath,omitempty"`
 
 	// The freshclam mirror url to use if it's enabled
-	AlternativeFreshclamMirrorURL string
+	AlternativeFreshclamMirrorURL string `json:"alternativeFreshclamMirrorURL,omitempty" yaml:"alternativeFreshclamMirrorURL,omitempty" mapstructure:"alternativeFreshclamMirrorURL,omitempty"`
 
 	// The location where Lynis is installed in the scanner image
-	LynisInstallPath string
+	LynisInstallPath string `json:"lynisInstallPath,omitempty" yaml:"lynisInstallPath,omitempty" mapstructure:"lynisInstallPath,omitempty"`
 
 	// The chkrootkit binary path in the scanner image container.
-	ChkrootkitBinaryPath string
+	ChkrootkitBinaryPath string `json:"chkrootkitBinaryPath,omitempty" yaml:"chkrootkitBinaryPath,omitempty" mapstructure:"chkrootkitBinaryPath,omitempty"`
 }
 
 type Addresses struct {
-	ExploitsDBAddress  string
-	GrypeServerAddress string
-	TrivyServerAddress string
-}
-
-func setDefaultPaths() {
-	// https://github.com/openclarity/vmclarity-tools-base/blob/main/Dockerfile#L33
-	viper.SetDefault(GitleaksBinaryPath, "/artifacts/gitleaks")
-	// https://github.com/openclarity/vmclarity-tools-base/blob/main/Dockerfile#L35
-	viper.SetDefault(LynisInstallPath, "/artifacts/lynis")
-	// https://github.com/openclarity/vmclarity-tools-base/blob/main/Dockerfile
-	viper.SetDefault(ChkrootkitBinaryPath, "/artifacts/chkrootkit")
-	viper.SetDefault(ClamBinaryPath, "clamscan")
-	viper.SetDefault(FreshclamBinaryPath, "freshclam")
-
-	viper.AutomaticEnv()
-}
-
-func setDefaultAddresses(exploitDBHost string) {
-	viper.SetDefault(ExploitDBAddress, fmt.Sprintf("http://%s", net.JoinHostPort(exploitDBHost, "1326")))
-
-	viper.AutomaticEnv()
-}
-
-func LoadPaths() Paths {
-	setDefaultPaths()
-	paths := Paths{
-		GitleaksBinaryPath:            viper.GetString(GitleaksBinaryPath),
-		ClamBinaryPath:                viper.GetString(ClamBinaryPath),
-		FreshclamBinaryPath:           viper.GetString(FreshclamBinaryPath),
-		AlternativeFreshclamMirrorURL: viper.GetString(AlternativeFreshclamMirrorURL),
-		LynisInstallPath:              viper.GetString(LynisInstallPath),
-		ChkrootkitBinaryPath:          viper.GetString(ChkrootkitBinaryPath),
-	}
-
-	return paths
-}
-
-func LoadAddresses(exploitDBHost string) Addresses {
-	setDefaultAddresses(exploitDBHost)
-	addresses := Addresses{
-		ExploitsDBAddress:  viper.GetString(ExploitDBAddress),
-		GrypeServerAddress: viper.GetString(GrypeServerAddress),
-		TrivyServerAddress: viper.GetString(TrivyServerAddress),
-	}
-
-	return addresses
+	ExploitsDBAddress  string `json:"exploitsDBAddress,omitempty" yaml:"exploitsDBAddress,omitempty" mapstructure:"exploitsDBAddress,omitempty"`
+	GrypeServerAddress string `json:"grypeServerAddress,omitempty" yaml:"grypeServerAddress,omitempty" mapstructure:"grypeServerAddress,omitempty"`
+	TrivyServerAddress string `json:"trivyServerAddress,omitempty" yaml:"trivyServerAddress,omitempty" mapstructure:"trivyServerAddress,omitempty"`
 }
 
 func CreateFamilyConfigFromModel(scanFamiliesConfig *models.ScanFamiliesConfig,

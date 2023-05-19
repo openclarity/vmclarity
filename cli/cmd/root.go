@@ -32,6 +32,7 @@ import (
 	"github.com/openclarity/vmclarity/cli/pkg"
 	cicdinitiator "github.com/openclarity/vmclarity/cli/pkg/cicd/initiator"
 	"github.com/openclarity/vmclarity/cli/pkg/cli"
+	cliconfig "github.com/openclarity/vmclarity/cli/pkg/config"
 	"github.com/openclarity/vmclarity/cli/pkg/presenter"
 	"github.com/openclarity/vmclarity/cli/pkg/state"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
@@ -49,7 +50,7 @@ const DefaultWatcherInterval = 2 * time.Minute
 
 var (
 	cfgFile string
-	config  *families.Config
+	config  *cliconfig.Config
 	logger  *logrus.Entry
 	output  string
 
@@ -112,7 +113,7 @@ var rootCmd = &cobra.Command{
 				}
 				return err
 			}
-			setMountPointsForFamiliesInput(mountPoints, config)
+			setMountPointsForFamiliesInput(mountPoints, config.Config)
 		}
 
 		if input != "" {
@@ -120,7 +121,7 @@ var rootCmd = &cobra.Command{
 			if err != nil {
 				return fmt.Errorf("failed to get families input type by inputType=%s: %w", inputType, err)
 			}
-			appendInput(input, famInputType, config)
+			appendInput(input, famInputType, config.Config)
 		}
 
 		err = cli.MarkInProgress(ctx)
@@ -129,7 +130,7 @@ var rootCmd = &cobra.Command{
 		}
 
 		logger.Infof("Running scanners...")
-		res, familiesErr := families.New(logger, config).Run(abortCtx)
+		res, familiesErr := families.New(logger, config.Config).Run(abortCtx)
 
 		logger.Infof("Exporting results...")
 		if scanResultID == "" {
@@ -200,7 +201,7 @@ func validateRequiredFlagForDefinedFlag(rootCmd *cobra.Command, definedFlag, req
 	}
 }
 
-func getConfigFromBackend() *families.Config {
+func getConfigFromBackend() *cliconfig.Config {
 	if server == "" {
 		panic("Missing backend")
 	}
@@ -221,15 +222,17 @@ func getConfigFromBackend() *families.Config {
 
 	scanConfig := families.CreateFamilyConfigFromModel(
 		(*scanConfigs.Items)[0].ScanFamiliesConfig,
-		families.LoadAddresses("localhost"),
-		families.LoadPaths(),
+		cliconfig.GetAddresses(),
+		cliconfig.GetPaths(),
 	)
 	scanConfigID = *(*scanConfigs.Items)[0].Id
 
-	return &scanConfig
+	return &cliconfig.Config{
+		Config: &scanConfig,
+	}
 }
 
-func getConfigFromFile() *families.Config {
+func getConfigFromFile() *cliconfig.Config {
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
@@ -245,14 +248,12 @@ func getConfigFromFile() *families.Config {
 		viper.SetConfigName(".families")
 	}
 
-	viper.AutomaticEnv() // read in environment variables that match
-
 	// If a config file is found, read it in.
 	err := viper.ReadInConfig()
 	cobra.CheckErr(err)
 
 	// Load config
-	config = &families.Config{}
+	config = &cliconfig.Config{}
 	err = viper.Unmarshal(config)
 	cobra.CheckErr(err)
 
@@ -309,7 +310,7 @@ func newCli() (*cli.CLI, error) {
 
 		if cicdMode {
 			if exportCICDResults {
-				cicdInitiatorConfig := cicdinitiator.CreateConfig(client, config, scanConfigID, scanConfigName, input, inputType)
+				cicdInitiatorConfig := cicdinitiator.CreateConfig(client, config.Config, scanConfigID, scanConfigName, input, inputType)
 				manager, err = state.NewCICDState(client, scanResultID, cicdInitiatorConfig)
 				if err != nil {
 					return nil, fmt.Errorf("failed to create CICD state manager: %w", err)
@@ -342,9 +343,9 @@ func newCli() (*cli.CLI, error) {
 	}
 
 	if output != "" {
-		presenters = append(presenters, presenter.NewFilePresenter(output, config))
+		presenters = append(presenters, presenter.NewFilePresenter(output, config.Config))
 	} else {
-		presenters = append(presenters, presenter.NewConsolePresenter(os.Stdout, config))
+		presenters = append(presenters, presenter.NewConsolePresenter(os.Stdout, config.Config))
 	}
 
 	var p presenter.Presenter
@@ -354,7 +355,7 @@ func newCli() (*cli.CLI, error) {
 		p = &presenter.MultiPresenter{Presenters: presenters}
 	}
 
-	return &cli.CLI{Manager: manager, Presenter: p, FamiliesConfig: config}, nil
+	return &cli.CLI{Manager: manager, Presenter: p, FamiliesConfig: config.Config}, nil
 }
 
 func setMountPointsForFamiliesInput(mountPoints []string, familiesConfig *families.Config) *families.Config {

@@ -21,8 +21,9 @@ import (
 	"fmt"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/config"
@@ -126,7 +127,7 @@ func (s *Scanner) jobBatchManagement(ctx context.Context) {
 
 				log.Info("Scan is completed")
 				scan.State = utils.PointerTo(models.ScanStateDone)
-				scan.StateMessage = utils.PointerTo(utils.AllScanJobsCompleted)
+				scan.StateMessage = utils.PointerTo("All scan jobs completed")
 				scan.StateReason = utils.PointerTo(models.ScanStateReasonSuccess)
 			}
 		case <-s.killSignal:
@@ -428,10 +429,23 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 }
 
 func (s *Scanner) generateFamiliesConfigurationYaml() (string, error) {
+	famAddresses := families.Addresses{
+		ExploitsDBAddress:  s.config.ExploitsDBAddress,
+		GrypeServerAddress: s.config.GrypeServerAddress,
+		TrivyServerAddress: s.config.TrivyServerAddress,
+	}
+	famPaths := families.Paths{
+		GitleaksBinaryPath:            s.config.GitleaksBinaryPath,
+		ClamBinaryPath:                s.config.ClamBinaryPath,
+		FreshclamBinaryPath:           s.config.FreshclamBinaryPath,
+		AlternativeFreshclamMirrorURL: s.config.AlternativeFreshclamMirrorURL,
+		LynisInstallPath:              s.config.LynisInstallPath,
+		ChkrootkitBinaryPath:          s.config.ChkrootkitBinaryPath,
+	}
 	famConfig := families.CreateFamilyConfigFromModel(
 		s.scanConfig.ScanFamiliesConfig,
-		s.config.FamiliesAddresses,
-		s.config.FamiliesPaths,
+		famAddresses,
+		famPaths,
 	)
 
 	famConfigYaml, err := yaml.Marshal(famConfig)
