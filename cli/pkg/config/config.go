@@ -18,6 +18,7 @@ package config
 import (
 	"fmt"
 	"net"
+	"strings"
 
 	"github.com/spf13/viper"
 
@@ -33,7 +34,7 @@ type Config struct {
 }
 
 type Asset struct {
-	Type       string `json:"type" yaml:"type" mapstructure:"type"`
+	Type       string `json:"type,omitempty" yaml:"type,omitempty" mapstructure:"type,omitempty"`
 	Location   string `json:"location,omitempty" yaml:"location,omitempty" mapstructure:"location,omitempty"`
 	InstanceID string `json:"instanceID,omitempty" yaml:"instanceID,omitempty" mapstructure:"instanceID,omitempty"`
 }
@@ -53,9 +54,15 @@ func setDefaultAddresses() {
 	viper.SetDefault("addresses.exploitsDBAddress", fmt.Sprintf("http://%s", net.JoinHostPort("localhost", "1326")))
 }
 
-func GetPaths() families.Paths {
+func setDefaults() {
+	setDefaultAddresses()
 	setDefaultPaths()
-	return families.Paths{
+}
+
+func LoadConfig(values []string) *Config {
+	setDefaults()
+	setValuesFromArgs(values)
+	paths := &families.Paths{
 		GitleaksBinaryPath:            viper.GetString("paths.gitleaksBinaryPath"),
 		ClamBinaryPath:                viper.GetString("paths.clamBinaryPath"),
 		FreshclamBinaryPath:           viper.GetString("paths.freshclamBinaryPath"),
@@ -63,13 +70,33 @@ func GetPaths() families.Paths {
 		LynisInstallPath:              viper.GetString("paths.lynisInstallPath"),
 		ChkrootkitBinaryPath:          viper.GetString("paths.chkrootkitBinaryPath"),
 	}
-}
 
-func GetAddresses() families.Addresses {
-	setDefaultAddresses()
-	return families.Addresses{
+	addresses := &families.Addresses{
 		ExploitsDBAddress:  viper.GetString("addresses.exploitsDBAddress"),
 		GrypeServerAddress: viper.GetString("addresses.grypeServerAddress"),
 		TrivyServerAddress: viper.GetString("addresses.trivyServerAddress"),
 	}
+
+	return &Config{
+		Asset: &Asset{
+			Type: viper.GetString("asset.type"),
+		},
+		Addresses: addresses,
+		Paths:     paths,
+	}
+}
+
+func setValuesFromArgs(values []string) {
+	if len(values) == 0 {
+		return
+	}
+	for _, v := range values {
+		key, value := splitKeyValue(v)
+		viper.SetDefault(key, value)
+	}
+}
+
+func splitKeyValue(value string) (string, string) {
+	keyValue := strings.Split(value, "=")
+	return keyValue[0], keyValue[1]
 }

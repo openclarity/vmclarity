@@ -53,6 +53,7 @@ var (
 	config  *cliconfig.Config
 	logger  *logrus.Entry
 	output  string
+	values  []string
 
 	server                string
 	scanResultID          string
@@ -184,6 +185,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&inputType, "input-type", "dir", "input type for families")
 	rootCmd.PersistentFlags().BoolVar(&cicdMode, "cicd-mode", false, "CICD mode")
 	rootCmd.PersistentFlags().BoolVar(&exportCICDResults, "export-cicd-results", false, "export results to VMclarity server")
+	rootCmd.PersistentFlags().StringArrayVar(&values, "set", []string{}, "set values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)")
 
 	validateRequiredFlagForDefinedFlag(rootCmd, "scan-result-id", "server")
 	validateRequiredFlagForDefinedFlag(rootCmd, "scan-config-name", "server")
@@ -220,16 +222,18 @@ func getConfigFromBackend() *cliconfig.Config {
 		logrus.Fatalf("There is no scan config with name=%s", scanConfigName)
 	}
 
+	cliConf := cliconfig.LoadConfig(values)
+
 	scanConfig := families.CreateFamilyConfigFromModel(
 		(*scanConfigs.Items)[0].ScanFamiliesConfig,
-		cliconfig.GetAddresses(),
-		cliconfig.GetPaths(),
+		*cliConf.Addresses,
+		*cliConf.Paths,
 	)
 	scanConfigID = *(*scanConfigs.Items)[0].Id
 
-	return &cliconfig.Config{
-		Config: &scanConfig,
-	}
+	cliConf.Config = &scanConfig
+
+	return cliConf
 }
 
 func getConfigFromFile() *cliconfig.Config {
