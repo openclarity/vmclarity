@@ -231,7 +231,7 @@ func getConfigFromBackend(cliConf *cliconfig.Config) *cliconfig.Config {
 	return cliConf
 }
 
-func getConfigFromFile() *cliconfig.Config {
+func getFamiliesConfigFromFile() *families.Config {
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
@@ -251,29 +251,22 @@ func getConfigFromFile() *cliconfig.Config {
 	cobra.CheckErr(err)
 
 	// Load config
-	cliConf := &cliconfig.Config{}
-	err = viper.Unmarshal(cliConf)
+	famConfig := &families.Config{}
+	err = viper.Unmarshal(famConfig)
 	cobra.CheckErr(err)
 
-	return cliConf
+	return famConfig
 }
 
-func getConfigForStandalonMode() *cliconfig.Config {
+func getConfigForStandaloneMode() *cliconfig.Config {
 	cliConf := cliconfig.LoadConfig(values)
 	var conf *cliconfig.Config
 	if scanConfigName != "" {
 		conf = getConfigFromBackend(cliConf)
 	} else {
-		conf = getConfigFromFile()
-		if conf.Asset == nil {
-			conf.Asset = cliConf.Asset
-		}
-		if conf.Paths == nil {
-			conf.Paths = cliConf.Paths
-		}
-		if conf.Addresses == nil {
-			conf.Addresses = cliConf.Addresses
-		}
+		conf = cliConf
+		conf.Config = getFamiliesConfigFromFile()
+
 	}
 	return conf
 }
@@ -283,9 +276,10 @@ func initConfig() {
 	logrus.Infof("init config")
 
 	if standalone {
-		config = getConfigForStandalonMode()
+		config = getConfigForStandaloneMode()
 	} else {
-		config = getConfigFromFile()
+		config = &cliconfig.Config{}
+		config.Config = getFamiliesConfigFromFile()
 	}
 
 	if logrus.IsLevelEnabled(logrus.InfoLevel) {
