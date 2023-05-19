@@ -258,7 +258,7 @@ func getConfigFromFile() *cliconfig.Config {
 	return cliConf
 }
 
-func getConfgiForStandalonMode() *cliconfig.Config {
+func getConfigForStandalonMode() *cliconfig.Config {
 	cliConf := cliconfig.LoadConfig(values)
 	var conf *cliconfig.Config
 	if scanConfigName != "" {
@@ -283,7 +283,7 @@ func initConfig() {
 	logrus.Infof("init config")
 
 	if standalone {
-		config = getConfgiForStandalonMode()
+		config = getConfigForStandalonMode()
 	} else {
 		config = getConfigFromFile()
 	}
