@@ -41,7 +41,7 @@ func (c *CICDState) WaitForVolumeAttachment(context.Context) error {
 }
 
 func (c *CICDState) MarkInProgress(ctx context.Context) error {
-	log.Info("Scanning is in progress CICD")
+	log.Info("Scanning is in progress")
 	var err error
 	var scanID string
 	if c.scanResultID == "" {
@@ -65,7 +65,7 @@ func (c *CICDState) MarkInProgress(ctx context.Context) error {
 
 // nolint:cyclop
 func (c *CICDState) MarkDone(ctx context.Context, errors []error) error {
-	log.Info("Scanning is done CICD")
+	log.Info("Scanning is done")
 	scanResult, err := c.client.GetScanResult(ctx, c.scanResultID, models.GetScanResultsScanResultIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get scan result: %w", err)
