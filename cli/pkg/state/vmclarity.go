@@ -154,7 +154,7 @@ func (v *VMClarityState) MarkFamilyScanInProgress(ctx context.Context, familyTyp
 	case types.Rootkits:
 		err = v.markRootkitsScanInProgress(ctx)
 	case types.Malware:
-		err = v.markRootkitsScanInProgress(ctx)
+		err = v.markMalwareScanInProgress(ctx)
 	}
 	return err
 }
@@ -183,6 +183,7 @@ func (v *VMClarityState) markExploitsScanInProgress(ctx context.Context) error {
 
 	return nil
 }
+
 func (v *VMClarityState) markSecretsScanInProgress(ctx context.Context) error {
 	scanResult, err := v.client.GetScanResult(ctx, v.scanResultID, models.GetScanResultsScanResultIDParams{})
 	if err != nil {
@@ -207,6 +208,7 @@ func (v *VMClarityState) markSecretsScanInProgress(ctx context.Context) error {
 
 	return nil
 }
+
 func (v *VMClarityState) markSBOMScanInProgress(ctx context.Context) error {
 	scanResult, err := v.client.GetScanResult(ctx, v.scanResultID, models.GetScanResultsScanResultIDParams{})
 	if err != nil {
@@ -231,6 +233,7 @@ func (v *VMClarityState) markSBOMScanInProgress(ctx context.Context) error {
 
 	return nil
 }
+
 func (v *VMClarityState) markVulnerabilitiesScanInProgress(ctx context.Context) error {
 	scanResult, err := v.client.GetScanResult(ctx, v.scanResultID, models.GetScanResultsScanResultIDParams{})
 	if err != nil {
@@ -255,6 +258,7 @@ func (v *VMClarityState) markVulnerabilitiesScanInProgress(ctx context.Context) 
 
 	return nil
 }
+
 func (v *VMClarityState) markMalwareScanInProgress(ctx context.Context) error {
 	scanResult, err := v.client.GetScanResult(ctx, v.scanResultID, models.GetScanResultsScanResultIDParams{})
 	if err != nil {
@@ -279,6 +283,7 @@ func (v *VMClarityState) markMalwareScanInProgress(ctx context.Context) error {
 
 	return nil
 }
+
 func (v *VMClarityState) markMisconfigurationsScanInProgress(ctx context.Context) error {
 	scanResult, err := v.client.GetScanResult(ctx, v.scanResultID, models.GetScanResultsScanResultIDParams{})
 	if err != nil {
@@ -303,6 +308,7 @@ func (v *VMClarityState) markMisconfigurationsScanInProgress(ctx context.Context
 
 	return nil
 }
+
 func (v *VMClarityState) markRootkitsScanInProgress(ctx context.Context) error {
 	scanResult, err := v.client.GetScanResult(ctx, v.scanResultID, models.GetScanResultsScanResultIDParams{})
 	if err != nil {

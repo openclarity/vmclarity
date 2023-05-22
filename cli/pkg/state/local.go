@@ -35,58 +35,22 @@ func (l *LocalState) MarkInProgress(context.Context) error {
 }
 
 func (l *LocalState) MarkFamilyScanInProgress(ctx context.Context, familyType types.FamilyType) error {
-	var err error
 	switch familyType {
 	case types.SBOM:
-		err = l.markSBOMScanInProgress(ctx)
+		log.Info("SBOM scan is in progress")
 	case types.Vulnerabilities:
-		err = l.markVulnerabilitiesScanInProgress(ctx)
+		log.Info("Vulnerabilities scan is in progress")
 	case types.Secrets:
-		err = l.markSecretsScanInProgress(ctx)
+		log.Info("Secrets scan is in progress")
 	case types.Exploits:
-		err = l.markExploitsScanInProgress(ctx)
+		log.Info("Exploits scan is in progress")
 	case types.Misconfiguration:
-		err = l.markMisconfigurationsScanInProgress(ctx)
+		log.Info("Misconfiguration scan is in progress")
 	case types.Rootkits:
-		err = l.markRootkitsScanInProgress(ctx)
+		log.Info("Rootkit scan is in progress")
 	case types.Malware:
-		err = l.markRootkitsScanInProgress(ctx)
+		log.Info("Malware scan is in progress")
 	}
-	return err
-}
-
-func (l *LocalState) markExploitsScanInProgress(context.Context) error {
-	log.Info("Exploits scan is in progress")
-	return nil
-}
-
-func (l *LocalState) markSecretsScanInProgress(context.Context) error {
-	log.Info("Secrets scan is in progress")
-	return nil
-}
-
-func (l *LocalState) markSBOMScanInProgress(context.Context) error {
-	log.Info("SBOM scan is in progress")
-	return nil
-}
-
-func (l *LocalState) markVulnerabilitiesScanInProgress(context.Context) error {
-	log.Info("Vulnerabilities scan is in progress")
-	return nil
-}
-
-func (l *LocalState) markMalwareScanInProgress(context.Context) error {
-	log.Info("Malware scan is in progress")
-	return nil
-}
-
-func (l *LocalState) markMisconfigurationsScanInProgress(context.Context) error {
-	log.Info("Misconfiguration scan is in progress")
-	return nil
-}
-
-func (l *LocalState) markRootkitsScanInProgress(context.Context) error {
-	log.Info("Rootkit scan is in progress")
 	return nil
 }
 

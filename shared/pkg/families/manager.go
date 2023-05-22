@@ -136,7 +136,6 @@ func (m *Manager) Run(ctx context.Context, notifier FamilyNotifier) []error {
 			}
 			close(result)
 		}
-
 	}
 
 	if oneOrMoreFamilyFailed {
