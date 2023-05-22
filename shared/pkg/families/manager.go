@@ -125,7 +125,7 @@ func (m *Manager) Run(ctx context.Context, notifier FamilyNotifier) []error {
 				errors = append(errors, fmt.Errorf("family finished notification failed: %v", err))
 			}
 		case r := <-result:
-			log.Debugf("received result from family %q: %v", family, r)
+			log.Debugf("received result from family %q: %v", family.GetType(), r)
 			if r.Err != nil {
 				oneOrMoreFamilyFailed = true
 			} else {
