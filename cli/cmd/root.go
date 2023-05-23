@@ -266,7 +266,6 @@ func getConfigForStandaloneMode() *cliconfig.Config {
 	} else {
 		conf = cliConf
 		conf.Config = getFamiliesConfigFromFile()
-
 	}
 	return conf
 }
