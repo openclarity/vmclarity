@@ -51,8 +51,8 @@ func (r *Reconciler[T]) Start(ctx context.Context) {
 					r.Logger.Errorf("Failed to reconcile item: %v", err)
 				}
 				cancel()
+				r.Queue.Done(item)
 			}
-			r.Queue.Done(item)
 
 			// Check if the parent context done if so we also need
 			// to exit.
