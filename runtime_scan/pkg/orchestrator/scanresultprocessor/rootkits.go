@@ -90,8 +90,9 @@ func (srp *ScanResultProcessor) reconcileResultRootkitsToFindings(ctx context.Co
 			}
 
 			finding := models.Finding{
-				Scan:        scanResult.Scan,
-				Asset:       scanResult.Target,
+				AssetScan: &models.TargetScanResultRelationship{
+					Id: scanResult.Id,
+				},
 				FoundOn:     scanResult.Status.General.LastTransitionTime,
 				FindingInfo: &findingInfo,
 			}

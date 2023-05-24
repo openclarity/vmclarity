@@ -15,7 +15,8 @@ const ROOTKIT_DETAILS_PATHS = {
 const DetailsContent = ({data}) => {
     const {pathname} = useLocation();
     
-    const {id, scan, asset} = data;
+    const {id, assetScan} = data;
+    const {target: asset, scan} = assetScan;
     
     return (
         <TabbedPage
@@ -48,7 +49,7 @@ const DetailsContent = ({data}) => {
 const RootkitDetails = () => (
     <DetailsPageWrapper
         backTitle="Rootkits"
-        getUrl={({id}) => `${APIS.FINDINGS}/${id}?$expand=asset,scan`}
+        getUrl={({id}) => `${APIS.FINDINGS}/${id}?$expand=assetScan($expand=target,scan)`}
         getTitleData={({findingInfo}) => ({title: findingInfo.rootkitName})}
         detailsContent={props => <DetailsContent {...props} />}
     />

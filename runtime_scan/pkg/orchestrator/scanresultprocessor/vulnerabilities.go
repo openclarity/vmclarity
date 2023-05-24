@@ -83,8 +83,9 @@ func (srp *ScanResultProcessor) reconcileResultVulnerabilitiesToFindings(ctx con
 			}
 
 			finding := models.Finding{
-				Scan:        scanResult.Scan,
-				Asset:       scanResult.Target,
+				AssetScan: &models.TargetScanResultRelationship{
+					Id: scanResult.Id,
+				},
 				FoundOn:     scanResult.Status.General.LastTransitionTime,
 				FindingInfo: &findingInfo,
 			}

@@ -32,35 +32,32 @@ import (
 
 func (scw *ScanConfigWatcher) scan(ctx context.Context, scanConfig *models.ScanConfig) error {
 	// TODO: check if existing scan or a new scan
-	targetInstances, scanID, err := scw.initNewScan(ctx, scanConfig)
+	targetInstances, scan, err := scw.initNewScan(ctx, scanConfig)
 	if err != nil {
 		return fmt.Errorf("failed to init new scan: %v", err)
 	}
 
-	scanner := _scanner.CreateScanner(scw.scannerConfig, scw.providerClient, scw.backendClient, scanConfig, targetInstances, scanID)
+	scanner := _scanner.CreateScanner(scw.scannerConfig, scw.providerClient, scw.backendClient, scan, targetInstances)
 	go scanner.Scan(ctx)
 
 	return nil
 }
 
 // initNewScan Initialized a new scan, returns target instances and scan ID.
-func (scw *ScanConfigWatcher) initNewScan(ctx context.Context, scanConfig *models.ScanConfig) ([]*types.TargetInstance, string, error) {
+func (scw *ScanConfigWatcher) initNewScan(ctx context.Context, scanConfig *models.ScanConfig) ([]*types.TargetInstance, *models.Scan, error) {
 	// Create scan in pending
 	now := time.Now().UTC()
 	scan := &models.Scan{
+		Name: utils.PointerTo(fmt.Sprintf("%s-%s", *scanConfig.Name, now.Format(time.RFC3339))),
 		ScanConfig: &models.ScanConfigRelationship{
 			Id: *scanConfig.Id,
 		},
-		ScanConfigSnapshot: &models.ScanConfigSnapshot{
-			MaxParallelScanners: scanConfig.MaxParallelScanners,
-			Name:                scanConfig.Name,
-			ScanFamiliesConfig:  scanConfig.ScanFamiliesConfig,
-			Scheduled:           scanConfig.Scheduled,
-			Scope:               scanConfig.Scope,
-		},
-		StartTime: &now,
-		State:     utils.PointerTo(models.ScanStatePending),
-		Summary:   createInitScanSummary(),
+		MaxParallelScanners: scanConfig.MaxParallelScanners,
+		ScanFamiliesConfig:  scanConfig.ScanFamiliesConfig,
+		Scope:               scanConfig.Scope,
+		StartTime:           &now,
+		State:               utils.PointerTo(models.ScanStatePending),
+		Summary:             createInitScanSummary(),
 	}
 	var scanID string
 	createdScan, err := scw.backendClient.PostScan(ctx, *scan)
@@ -70,20 +67,20 @@ func (scw *ScanConfigWatcher) initNewScan(ctx context.Context, scanConfig *model
 			log.Infof("Scan already exist. scan id=%v.", *conErr.ConflictingScan.Id)
 			scanID = *conErr.ConflictingScan.Id
 		} else {
-			return nil, "", fmt.Errorf("failed to post scan: %v", err)
+			return nil, nil, fmt.Errorf("failed to post scan: %v", err)
 		}
 	} else {
 		scanID = *createdScan.Id
 	}
 
 	// Do discovery of targets
-	instances, err := scw.providerClient.DiscoverInstances(ctx, scan.ScanConfigSnapshot.Scope)
+	instances, err := scw.providerClient.DiscoverInstances(ctx, scan.Scope)
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to discover instances to scan: %v", err)
+		return nil, nil, fmt.Errorf("failed to discover instances to scan: %v", err)
 	}
 	targetInstances, err := scw.createTargetInstances(ctx, instances)
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to get or create targets: %v", err)
+		return nil, nil, fmt.Errorf("failed to get or create targets: %v", err)
 	}
 
 	// Move scan to discovered and add the discovered targets.
@@ -93,12 +90,12 @@ func (scw *ScanConfigWatcher) initNewScan(ctx context.Context, scanConfig *model
 		State:        utils.PointerTo(models.ScanStateDiscovered),
 		StateMessage: utils.PointerTo("Targets for scan successfully discovered"),
 	}
-	err = scw.backendClient.PatchScan(ctx, scanID, scan)
+	scan, err = scw.backendClient.PatchScan(ctx, scanID, scan)
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to update scan: %v", err)
+		return nil, nil, fmt.Errorf("failed to update scan: %v", err)
 	}
 
-	return targetInstances, scanID, nil
+	return targetInstances, scan, nil
 }
 
 func createInitScanSummary() *models.ScanSummary {

@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import DetailsPageWrapper from 'components/DetailsPageWrapper';
 import TabbedPage from 'components/TabbedPage';
 import { APIS } from 'utils/systemConsts';
-import { formatDate, getScanName } from 'utils/utils';
+import { formatDate } from 'utils/utils';
 import { ScanDetails as ScanDetailsTab, Findings } from 'layout/detail-displays';
 import ScanActionsDisplay from './ScanActionsDisplay';
 
@@ -15,7 +15,7 @@ export const SCAN_DETAILS_PATHS = {
 const DetailsContent = ({data, fetchData}) => {
     const {pathname} = useLocation();
     
-    const {id, scanConfigSnapshot, startTime} = data;
+    const {id, name} = data;
 
     return (
         <TabbedPage
@@ -34,8 +34,8 @@ const DetailsContent = ({data, fetchData}) => {
                     component: () => (
                         <Findings
                             findingsSummary={data?.summary}
-                            findingsFilter={`scan/id eq '${id}'`}
-                            findingsFilterTitle={getScanName({name: scanConfigSnapshot.name, startTime})}
+                            findingsFilter={`assetScan/scan/id eq '${id}'`}
+                            findingsFilterTitle={`${name}`}
                         />
                     )
                 }
@@ -53,7 +53,7 @@ const ScanDetails = () => (
         className="scan-details-page-wrapper"
         backTitle="Scans"
         getUrl={({id}) => `${APIS.SCANS}/${id}?$expand=scanConfig`}
-        getTitleData={({scanConfigSnapshot, startTime}) => ({title: scanConfigSnapshot?.name, subTitle: formatDate(startTime)})}
+        getTitleData={({name, startTime}) => ({title: name, subTitle: formatDate(startTime)})}
         detailsContent={props => <DetailsContent {...props} />}
     />
 )

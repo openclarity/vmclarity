@@ -56,8 +56,11 @@ func Test_processFindings(t *testing.T) {
 			args: args{
 				findings: []backendmodels.Finding{
 					{
-						Asset: &backendmodels.TargetRelationship{
-							Id: "target-1",
+						AssetScan: &backendmodels.TargetScanResultRelationship{
+							Id: utils.PointerTo("targetscan-1"),
+							Target: &backendmodels.TargetRelationship{
+								Id: "target-1",
+							},
 						},
 						FindingInfo: rootkitFindingInfo1,
 					},
@@ -81,8 +84,11 @@ func Test_processFindings(t *testing.T) {
 			args: args{
 				findings: []backendmodels.Finding{
 					{
-						Asset: &backendmodels.TargetRelationship{
-							Id: "target-1",
+						AssetScan: &backendmodels.TargetScanResultRelationship{
+							Id: utils.PointerTo("targetscan-1"),
+							Target: &backendmodels.TargetRelationship{
+								Id: "target-1",
+							},
 						},
 						FindingInfo: rootkitFindingInfo1,
 					},
@@ -113,8 +119,11 @@ func Test_processFindings(t *testing.T) {
 			args: args{
 				findings: []backendmodels.Finding{
 					{
-						Asset: &backendmodels.TargetRelationship{
-							Id: "target-1",
+						AssetScan: &backendmodels.TargetScanResultRelationship{
+							Id: utils.PointerTo("targetscan-1"),
+							Target: &backendmodels.TargetRelationship{
+								Id: "target-1",
+							},
 						},
 						FindingInfo: rootkitFindingInfo1,
 					},
@@ -150,22 +159,31 @@ func Test_processFindings(t *testing.T) {
 				findings: []backendmodels.Finding{
 					{
 						// findingAssetKey already in findingAssetMap
-						Asset: &backendmodels.TargetRelationship{
-							Id: "target-1",
+						AssetScan: &backendmodels.TargetScanResultRelationship{
+							Id: utils.PointerTo("targetscan-1"),
+							Target: &backendmodels.TargetRelationship{
+								Id: "target-1",
+							},
 						},
 						FindingInfo: rootkitFindingInfo1,
 					},
 					{
 						// findingAssetKey not in findingAssetMap - already saw the finding
-						Asset: &backendmodels.TargetRelationship{
-							Id: "target-1",
+						AssetScan: &backendmodels.TargetScanResultRelationship{
+							Id: utils.PointerTo("targetscan-1"),
+							Target: &backendmodels.TargetRelationship{
+								Id: "target-1",
+							},
 						},
 						FindingInfo: rootkitFindingInfo2,
 					},
 					{
 						// findingAssetKey not in findingAssetMap - first time we see the finding
-						Asset: &backendmodels.TargetRelationship{
-							Id: "target-1",
+						AssetScan: &backendmodels.TargetScanResultRelationship{
+							Id: utils.PointerTo("targetscan-1"),
+							Target: &backendmodels.TargetRelationship{
+								Id: "target-1",
+							},
 						},
 						FindingInfo: rootkitFindingInfo3,
 					},

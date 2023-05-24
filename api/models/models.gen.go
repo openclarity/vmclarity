@@ -190,9 +190,8 @@ type ExploitsConfig struct {
 
 // Finding defines model for Finding.
 type Finding struct {
-	// Asset Describes a relationship to a target which can be expanded.
-	Asset       *TargetRelationship  `json:"asset,omitempty"`
-	FindingInfo *Finding_FindingInfo `json:"findingInfo,omitempty"`
+	AssetScan   *TargetScanResultRelationship `json:"assetScan,omitempty"`
+	FindingInfo *Finding_FindingInfo          `json:"findingInfo,omitempty"`
 
 	// FoundOn When this finding was discovered by a scan
 	FoundOn *time.Time `json:"foundOn,omitempty"`
@@ -200,9 +199,6 @@ type Finding struct {
 
 	// InvalidatedOn When this finding was invalidated by a newer scan
 	InvalidatedOn *time.Time `json:"invalidatedOn,omitempty"`
-
-	// Scan Describes an expandable relationship to Scan object
-	Scan *ScanRelationship `json:"scan,omitempty"`
 }
 
 // Finding_FindingInfo defines model for Finding.FindingInfo.
@@ -381,14 +377,20 @@ type Scan struct {
 	EndTime *time.Time `json:"endTime,omitempty"`
 	Id      *string    `json:"id,omitempty"`
 
+	// MaxParallelScanners The maximum number of scanners that can run in parallel for each scan
+	MaxParallelScanners *int    `json:"maxParallelScanners,omitempty"`
+	Name                *string `json:"name,omitempty"`
+
 	// ScanConfig Describes a relationship to a scan config which can be expanded.
 	ScanConfig *ScanConfigRelationship `json:"scanConfig,omitempty"`
 
-	// ScanConfigSnapshot Snapshot of the configuration from the ScanConfig which created the
-	// scan, so that changes in the ScanConfig do not affect the existing
-	// Scan.
-	ScanConfigSnapshot *ScanConfigSnapshot `json:"scanConfigSnapshot,omitempty"`
-	StartTime          *time.Time          `json:"startTime,omitempty"`
+	// ScanFamiliesConfig The configuration of the scanner families within a scan config
+	ScanFamiliesConfig *ScanFamiliesConfig `json:"scanFamiliesConfig,omitempty"`
+
+	// ScannerInstanceCreationConfig Configuration of scanner instance
+	ScannerInstanceCreationConfig *ScannerInstanceCreationConfig `json:"scannerInstanceCreationConfig,omitempty"`
+	Scope                         *ScanScopeType                 `json:"scope,omitempty"`
+	StartTime                     *time.Time                     `json:"startTime,omitempty"`
 
 	// State The lifecycle state of this scan.
 	State *ScanState `json:"state,omitempty"`
@@ -463,28 +465,6 @@ type ScanConfigRelationship struct {
 	Scope     *ScanScopeType             `json:"scope,omitempty"`
 }
 
-// ScanConfigSnapshot Snapshot of the configuration from the ScanConfig which created the
-// scan, so that changes in the ScanConfig do not affect the existing
-// Scan.
-type ScanConfigSnapshot struct {
-	// Disabled if true, the scan config is disabled and no scan should run from it
-	Disabled *bool `json:"disabled,omitempty"`
-
-	// MaxParallelScanners The maximum number of scanners that can run in parallel for each scan
-	MaxParallelScanners *int    `json:"maxParallelScanners,omitempty"`
-	Name                *string `json:"name,omitempty"`
-
-	// ScanFamiliesConfig The configuration of the scanner families within a scan config
-	ScanFamiliesConfig *ScanFamiliesConfig `json:"scanFamiliesConfig,omitempty"`
-
-	// ScannerInstanceCreationConfig Configuration of scanner instance
-	ScannerInstanceCreationConfig *ScannerInstanceCreationConfig `json:"scannerInstanceCreationConfig,omitempty"`
-
-	// Scheduled Runtime schedule scan configuration. If only operationTime is set, it will be a single scan scheduled for the operationTime. If only cronLine is set, the current time will be the "from time" to start the scheduling according to the cronLine. If both operationTime and cronLine are set, the first scan will run at operationTime and the operationTime will be the first time that the cronLine will be effective from.
-	Scheduled *RuntimeScheduleScanConfig `json:"scheduled,omitempty"`
-	Scope     *ScanScopeType             `json:"scope,omitempty"`
-}
-
 // ScanConfigs defines model for ScanConfigs.
 type ScanConfigs struct {
 	// Count Total scan config count according to the given filters
@@ -532,14 +512,20 @@ type ScanRelationship struct {
 	EndTime *time.Time `json:"endTime,omitempty"`
 	Id      string     `json:"id"`
 
+	// MaxParallelScanners The maximum number of scanners that can run in parallel for each scan
+	MaxParallelScanners *int    `json:"maxParallelScanners,omitempty"`
+	Name                *string `json:"name,omitempty"`
+
 	// ScanConfig Describes a relationship to a scan config which can be expanded.
 	ScanConfig *ScanConfigRelationship `json:"scanConfig,omitempty"`
 
-	// ScanConfigSnapshot Snapshot of the configuration from the ScanConfig which created the
-	// scan, so that changes in the ScanConfig do not affect the existing
-	// Scan.
-	ScanConfigSnapshot *ScanConfigSnapshot `json:"scanConfigSnapshot,omitempty"`
-	StartTime          *time.Time          `json:"startTime,omitempty"`
+	// ScanFamiliesConfig The configuration of the scanner families within a scan config
+	ScanFamiliesConfig *ScanFamiliesConfig `json:"scanFamiliesConfig,omitempty"`
+
+	// ScannerInstanceCreationConfig Configuration of scanner instance
+	ScannerInstanceCreationConfig *ScannerInstanceCreationConfig `json:"scannerInstanceCreationConfig,omitempty"`
+	Scope                         *ScanScopeType                 `json:"scope,omitempty"`
+	StartTime                     *time.Time                     `json:"startTime,omitempty"`
 
 	// State The lifecycle state of this scan.
 	State *ScanRelationshipState `json:"state,omitempty"`
@@ -726,18 +712,28 @@ type TargetRelationship struct {
 
 // TargetScanResult defines model for TargetScanResult.
 type TargetScanResult struct {
-	Exploits          *ExploitScan          `json:"exploits,omitempty"`
-	FindingsProcessed *bool                 `json:"findingsProcessed,omitempty"`
-	Id                *string               `json:"id,omitempty"`
-	Malware           *MalwareScan          `json:"malware,omitempty"`
-	Misconfigurations *MisconfigurationScan `json:"misconfigurations,omitempty"`
-	Rootkits          *RootkitScan          `json:"rootkits,omitempty"`
-	Sboms             *SbomScan             `json:"sboms,omitempty"`
+	Exploits          *ExploitScan `json:"exploits,omitempty"`
+	FindingsProcessed *bool        `json:"findingsProcessed,omitempty"`
+	Id                *string      `json:"id,omitempty"`
+	Malware           *MalwareScan `json:"malware,omitempty"`
+
+	// MaxParallelScanners The maximum number of scanners that can run in parallel for each scan
+	MaxParallelScanners *int                  `json:"maxParallelScanners,omitempty"`
+	Misconfigurations   *MisconfigurationScan `json:"misconfigurations,omitempty"`
+	Name                *string               `json:"name,omitempty"`
+	Rootkits            *RootkitScan          `json:"rootkits,omitempty"`
+	Sboms               *SbomScan             `json:"sboms,omitempty"`
 
 	// Scan Describes an expandable relationship to Scan object
-	Scan    *ScanRelationship `json:"scan,omitempty"`
-	Secrets *SecretScan       `json:"secrets,omitempty"`
-	Status  *TargetScanStatus `json:"status,omitempty"`
+	Scan *ScanRelationship `json:"scan,omitempty"`
+
+	// ScanFamiliesConfig The configuration of the scanner families within a scan config
+	ScanFamiliesConfig *ScanFamiliesConfig `json:"scanFamiliesConfig,omitempty"`
+
+	// ScannerInstanceCreationConfig Configuration of scanner instance
+	ScannerInstanceCreationConfig *ScannerInstanceCreationConfig `json:"scannerInstanceCreationConfig,omitempty"`
+	Secrets                       *SecretScan                    `json:"secrets,omitempty"`
+	Status                        *TargetScanStatus              `json:"status,omitempty"`
 
 	// Summary A summary of the scan findings.
 	Summary *ScanFindingsSummary `json:"summary,omitempty"`
@@ -752,6 +748,39 @@ type TargetScanResultExists struct {
 	// Message Describes which unique constraint combination causes the conflict.
 	Message          *string           `json:"message,omitempty"`
 	TargetScanResult *TargetScanResult `json:"targetScanResult,omitempty"`
+}
+
+// TargetScanResultRelationship defines model for TargetScanResultRelationship.
+type TargetScanResultRelationship struct {
+	Exploits          *ExploitScan `json:"exploits,omitempty"`
+	FindingsProcessed *bool        `json:"findingsProcessed,omitempty"`
+	Id                *string      `json:"id,omitempty"`
+	Malware           *MalwareScan `json:"malware,omitempty"`
+
+	// MaxParallelScanners The maximum number of scanners that can run in parallel for each scan
+	MaxParallelScanners *int                  `json:"maxParallelScanners,omitempty"`
+	Misconfigurations   *MisconfigurationScan `json:"misconfigurations,omitempty"`
+	Name                *string               `json:"name,omitempty"`
+	Rootkits            *RootkitScan          `json:"rootkits,omitempty"`
+	Sboms               *SbomScan             `json:"sboms,omitempty"`
+
+	// Scan Describes an expandable relationship to Scan object
+	Scan *ScanRelationship `json:"scan,omitempty"`
+
+	// ScanFamiliesConfig The configuration of the scanner families within a scan config
+	ScanFamiliesConfig *ScanFamiliesConfig `json:"scanFamiliesConfig,omitempty"`
+
+	// ScannerInstanceCreationConfig Configuration of scanner instance
+	ScannerInstanceCreationConfig *ScannerInstanceCreationConfig `json:"scannerInstanceCreationConfig,omitempty"`
+	Secrets                       *SecretScan                    `json:"secrets,omitempty"`
+	Status                        *TargetScanStatus              `json:"status,omitempty"`
+
+	// Summary A summary of the scan findings.
+	Summary *ScanFindingsSummary `json:"summary,omitempty"`
+
+	// Target Describes a relationship to a target which can be expanded.
+	Target          *TargetRelationship `json:"target,omitempty"`
+	Vulnerabilities *VulnerabilityScan  `json:"vulnerabilities,omitempty"`
 }
 
 // TargetScanResults defines model for TargetScanResults.

@@ -119,7 +119,7 @@ func initDataBase(config types.DBConfig) (*gorm.DB, error) {
 	// The UI needs to find all the findings for a specific finding type
 	// and the scan result processor needs to filter that list by a
 	// specific asset. So add a combined index for those cases.
-	idb = db.Exec("CREATE INDEX IF NOT EXISTS findings_by_type_and_asset_idx ON findings(Data -> 'findingInfo.objectType', Data -> 'asset.id')")
+	idb = db.Exec("CREATE INDEX IF NOT EXISTS findings_by_type_and_asset_idx ON findings(Data -> 'findingInfo.objectType', Data -> 'assetScan.id')")
 	if idb.Error != nil {
 		return nil, fmt.Errorf("failed to create index findings_by_type_and_asset_idx: %w", idb.Error)
 	}

@@ -17,6 +17,7 @@ package database
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -168,15 +169,12 @@ func createFindings(scanResults []models.TargetScanResult) []models.Finding {
 			foundOn = utils.PointerTo(time.Now().Add(time.Duration(-randMin) * time.Minute))
 		}
 		findingBase := models.Finding{
-			Asset: &models.TargetRelationship{
-				Id: scanResult.Target.Id,
+			AssetScan: &models.TargetScanResultRelationship{
+				Id: scanResult.Id,
 			},
 			FindingInfo: nil,
 			FoundOn:     foundOn,
 			// InvalidatedOn: utils.PointerTo(foundOn.Add(2 * time.Minute)),
-			Scan: &models.ScanRelationship{
-				Id: scanResult.Scan.Id,
-			},
 		}
 		if scanResult.Sboms != nil && scanResult.Sboms.Packages != nil {
 			ret = append(ret, createPackageFindings(findingBase, *scanResult.Sboms.Packages)...)
@@ -683,14 +681,6 @@ func createScans(targets []models.Target, scanConfigs []models.ScanConfig) []mod
 		},
 	}
 
-	scan1ConfigSnapshot := &models.ScanConfigSnapshot{
-		MaxParallelScanners: scanConfigs[0].MaxParallelScanners,
-		Name:                utils.PointerTo[string]("Scan Config 1"),
-		ScanFamiliesConfig:  scanConfigs[0].ScanFamiliesConfig,
-		Scheduled:           scanConfigs[0].Scheduled,
-		Scope:               scanConfigs[0].Scope,
-	}
-
 	// Create scan 2: Running
 	scan2Start := time.Now().Add(-5 * time.Minute)
 	scan2Targets := []string{*targets[2].Id}
@@ -713,39 +703,37 @@ func createScans(targets []models.Target, scanConfigs []models.ScanConfig) []mod
 		},
 	}
 
-	scan2ConfigSnapshot := &models.ScanConfigSnapshot{
-		MaxParallelScanners: scanConfigs[1].MaxParallelScanners,
-		Name:                utils.PointerTo[string]("Scan Config 2"),
-		ScanFamiliesConfig:  scanConfigs[1].ScanFamiliesConfig,
-		Scheduled:           scanConfigs[1].Scheduled,
-		Scope:               scanConfigs[1].Scope,
-	}
-
 	return []models.Scan{
 		{
+			Name:    utils.PointerTo(fmt.Sprintf("Scan Config 1-%s", scan1Start.Format(time.RFC3339))),
 			EndTime: &scan1End,
 			ScanConfig: &models.ScanConfigRelationship{
 				Id: *scanConfigs[0].Id,
 			},
-			ScanConfigSnapshot: scan1ConfigSnapshot,
-			StartTime:          &scan1Start,
-			State:              utils.PointerTo(models.ScanStateDone),
-			StateMessage:       utils.StringPtr("Scan was completed successfully"),
-			StateReason:        utils.PointerTo(models.ScanStateReasonSuccess),
-			Summary:            scan1Summary,
-			TargetIDs:          &scan1Targets,
+			MaxParallelScanners: scanConfigs[0].MaxParallelScanners,
+			ScanFamiliesConfig:  scanConfigs[0].ScanFamiliesConfig,
+			Scope:               scanConfigs[0].Scope,
+			StartTime:           &scan1Start,
+			State:               utils.PointerTo(models.ScanStateDone),
+			StateMessage:        utils.StringPtr("Scan was completed successfully"),
+			StateReason:         utils.PointerTo(models.ScanStateReasonSuccess),
+			Summary:             scan1Summary,
+			TargetIDs:           &scan1Targets,
 		},
 		{
+			Name: utils.PointerTo(fmt.Sprintf("Scan Config 2-%s", scan2Start.Format(time.RFC3339))),
 			ScanConfig: &models.ScanConfigRelationship{
 				Id: *scanConfigs[1].Id,
 			},
-			ScanConfigSnapshot: scan2ConfigSnapshot,
-			StartTime:          &scan2Start,
-			State:              utils.PointerTo(models.ScanStateInProgress),
-			StateMessage:       utils.StringPtr("Scan is in progress"),
-			StateReason:        nil,
-			Summary:            scan2Summary,
-			TargetIDs:          &scan2Targets,
+			MaxParallelScanners: scanConfigs[1].MaxParallelScanners,
+			ScanFamiliesConfig:  scanConfigs[1].ScanFamiliesConfig,
+			Scope:               scanConfigs[1].Scope,
+			StartTime:           &scan2Start,
+			State:               utils.PointerTo(models.ScanStateInProgress),
+			StateMessage:        utils.StringPtr("Scan is in progress"),
+			StateReason:         nil,
+			Summary:             scan2Summary,
+			TargetIDs:           &scan2Targets,
 		},
 	}
 }
@@ -768,7 +756,7 @@ func createScanResults(scans []models.Scan) []models.TargetScanResult {
 				},
 			}
 			// Create Exploits if needed
-			if *scan.ScanConfigSnapshot.ScanFamiliesConfig.Exploits.Enabled {
+			if *scan.ScanFamiliesConfig.Exploits.Enabled {
 				result.Exploits = &models.ExploitScan{
 					Exploits: createExploitsResult(),
 				}
@@ -778,7 +766,7 @@ func createScanResults(scans []models.Scan) []models.TargetScanResult {
 			}
 
 			// Create Malware if needed
-			if *scan.ScanConfigSnapshot.ScanFamiliesConfig.Malware.Enabled {
+			if *scan.ScanFamiliesConfig.Malware.Enabled {
 				result.Malware = &models.MalwareScan{
 					Malware: createMalwareResult(),
 				}
@@ -788,7 +776,7 @@ func createScanResults(scans []models.Scan) []models.TargetScanResult {
 			}
 
 			// Create Misconfigurations if needed
-			if *scan.ScanConfigSnapshot.ScanFamiliesConfig.Misconfigurations.Enabled {
+			if *scan.ScanFamiliesConfig.Misconfigurations.Enabled {
 				result.Misconfigurations = &models.MisconfigurationScan{
 					Misconfigurations: createMisconfigurationsResult(),
 				}
@@ -798,7 +786,7 @@ func createScanResults(scans []models.Scan) []models.TargetScanResult {
 			}
 
 			// Create Packages if needed
-			if *scan.ScanConfigSnapshot.ScanFamiliesConfig.Sbom.Enabled {
+			if *scan.ScanFamiliesConfig.Sbom.Enabled {
 				result.Sboms = &models.SbomScan{
 					Packages: createPackagesResult(),
 				}
@@ -808,7 +796,7 @@ func createScanResults(scans []models.Scan) []models.TargetScanResult {
 			}
 
 			// Create Rootkits if needed
-			if *scan.ScanConfigSnapshot.ScanFamiliesConfig.Rootkits.Enabled {
+			if *scan.ScanFamiliesConfig.Rootkits.Enabled {
 				result.Rootkits = &models.RootkitScan{
 					Rootkits: createRootkitsResult(),
 				}
@@ -818,7 +806,7 @@ func createScanResults(scans []models.Scan) []models.TargetScanResult {
 			}
 
 			// Create Secrets if needed
-			if *scan.ScanConfigSnapshot.ScanFamiliesConfig.Secrets.Enabled {
+			if *scan.ScanFamiliesConfig.Secrets.Enabled {
 				result.Secrets = &models.SecretScan{
 					Secrets: createSecretsResult(),
 				}
@@ -828,7 +816,7 @@ func createScanResults(scans []models.Scan) []models.TargetScanResult {
 			}
 
 			// Create Vulnerabilities if needed
-			if *scan.ScanConfigSnapshot.ScanFamiliesConfig.Vulnerabilities.Enabled {
+			if *scan.ScanFamiliesConfig.Vulnerabilities.Enabled {
 				result.Vulnerabilities = &models.VulnerabilityScan{
 					Vulnerabilities: createVulnerabilitiesResult(),
 				}

@@ -35,10 +35,10 @@ const ScansTable = () => {
 
     const columns = useMemo(() => [
         {
-            Header: "Config Name",
+            Header: "Name",
             id: "name",
-            sortIds: ["scanConfigSnapshot.name"],
-            accessor: "scanConfigSnapshot.name"
+            sortIds: ["name"],
+            accessor: "name"
         },
         {
             Header: "Started",
@@ -58,11 +58,11 @@ const ScansTable = () => {
             Header: "Scope",
             id: "scope",
             sortIds: [
-                "scanConfigSnapshot.scope.allRegions",
-                "scanConfigSnapshot.scope.regions"
+                "scope.allRegions",
+                "scope.regions"
             ],
             Cell: ({row}) => {
-                const {allRegions, regions} = row.original.scanConfigSnapshot?.scope;
+                const {allRegions, regions} = row.original.scope;
 
                 return <ExpandableScopeDisplay all={allRegions} regions={regions || []} />
             },
@@ -112,7 +112,7 @@ const ScansTable = () => {
             tableTitle={TABLE_TITLE}
             filterType={FILTER_TYPES.SCANS}
             filtersConfig={[
-                {value: "scanConfigSnapshot.name", label: "Config name", operators: [
+                {value: "name", label: "Name", operators: [
                     {...OPERATORS.eq, valueItems: [], creatable: true},
                     {...OPERATORS.ne, valueItems: [], creatable: true},
                     {...OPERATORS.startswith},
@@ -127,7 +127,7 @@ const ScansTable = () => {
                     {...OPERATORS.ge},
                     {...OPERATORS.le},
                 ]},
-                ...getScanScopeColumnFiltersConfig("scanConfigSnapshot.scope"),
+                ...getScanScopeColumnFiltersConfig("scope"),
                 {value: "state", label: "Status", operators: [
                     {...OPERATORS.eq, valueItems: FILTER_SCAN_STATUS_ITEMS},
                     {...OPERATORS.ne, valueItems: FILTER_SCAN_STATUS_ITEMS}

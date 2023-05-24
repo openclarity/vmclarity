@@ -18,8 +18,14 @@ const FILTER_SCAN_STATUSES = Object.keys(STATUS_MAPPING).map(statusKey => (
 const AssetScansTable = () => {
     const columns = useMemo(() => [
         {
-            Header: "Asset name",
+            Header: "Name",
             id: "name",
+            sortIds: ["name"],
+            accessor: "name"
+        },
+        {
+            Header: "Asset name",
+            id: "assetName",
             sortIds: ["target.targetInfo.instanceID"],
             accessor: "target.targetInfo.instanceID"
         },
@@ -38,8 +44,8 @@ const AssetScansTable = () => {
         {
             Header: "Scan name",
             id: "scanName",
-            sortIds: ["scan.scanConfigSnapshot.name"],
-            accessor: "scan.scanConfigSnapshot.name"
+            sortIds: ["scan.name"],
+            accessor: original => original?.scan?.name
         },
         {
             Header: "Scan start",
@@ -69,7 +75,7 @@ const AssetScansTable = () => {
             columns={columns}
             url={APIS.ASSET_SCANS}
             expand="scan,target"
-            select="id,target,summary,scan,status"
+            select="id,name,target,summary,scan,status"
             defaultSortBy={{sortIds: SCAN_START_TIME_SORT_IDS, desc: true}}
             tableTitle={TABLE_TITLE}
             filterType={FILTER_TYPES.ASSET_SCANS}

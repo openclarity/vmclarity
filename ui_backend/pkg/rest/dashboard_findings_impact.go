@@ -468,6 +468,7 @@ func (s *ServerImpl) getFindingToAssetCountMapWithFilter(ctx context.Context, fi
 			Filter: &filter,
 			Top:    &top,
 			Skip:   &skip,
+			Expand: utils.PointerTo("assetScan"),
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to get findings: %v", err)
@@ -503,7 +504,7 @@ func processFindings(findings []backendmodels.Finding, findingAssetMap map[findi
 		}
 		fsKey := findingAssetKey{
 			FindingKey: fKey,
-			AssetID:    item.Asset.Id,
+			AssetID:    item.AssetScan.Target.Id,
 		}
 		if _, ok := findingAssetMap[fsKey]; !ok {
 			// Mark as seen to avoid counting the same asset more than once for a finding.
@@ -523,7 +524,7 @@ func processFindings(findings []backendmodels.Finding, findingAssetMap map[findi
 				}
 			}
 		} else {
-			log.Debugf("Already count asset %q for finding finding (%+v).", item.Asset.Id, fKey)
+			log.Debugf("Already count asset %q for finding finding (%+v).", item.AssetScan.Target.Id, fKey)
 		}
 	}
 

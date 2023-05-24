@@ -34,12 +34,11 @@ import (
 
 type Scanner struct {
 	targetIDToScanData map[string]*scanData
-	scanConfig         *models.ScanConfig
+	scan               *models.Scan
 	killSignal         chan bool
 	providerClient     provider.Client
 	logFields          log.Fields
 	backendClient      *backendclient.BackendClient
-	scanID             string
 	targetInstances    []*types.TargetInstance
 	config             *_config.ScannerConfig
 
@@ -58,18 +57,16 @@ func CreateScanner(
 	config *_config.ScannerConfig,
 	providerClient provider.Client,
 	backendClient *backendclient.BackendClient,
-	scanConfig *models.ScanConfig,
+	scan *models.Scan,
 	targetInstances []*types.TargetInstance,
-	scanID string,
 ) *Scanner {
 	return &Scanner{
 		targetIDToScanData: nil,
-		scanConfig:         scanConfig,
+		scan:               scan,
 		killSignal:         make(chan bool),
 		providerClient:     providerClient,
 		logFields:          log.Fields{"scanner id": uuid.NewV4().String()},
 		backendClient:      backendClient,
-		scanID:             scanID,
 		targetInstances:    targetInstances,
 		config:             config,
 		Mutex:              sync.Mutex{},
@@ -83,9 +80,9 @@ func (s *Scanner) initScan(ctx context.Context) error {
 
 	// Populate the target to scanData map and create ScanResult for each target.
 	for _, targetInstance := range s.targetInstances {
-		scanResultID, err := s.createInitTargetScanStatus(ctx, s.scanID, targetInstance.TargetID)
+		scanResultID, err := s.createInitTargetScanStatus(ctx, targetInstance.TargetID)
 		if err != nil {
-			return fmt.Errorf("failed to create an init scan result for instance id=%v, scan id=%v: %v", targetInstance.TargetID, s.scanID, err)
+			return fmt.Errorf("failed to create an init scan result for instance id=%v, scan id=%v: %v", targetInstance.TargetID, *s.scan.Id, err)
 		}
 		targetIDToScanData[targetInstance.TargetID] = &scanData{
 			targetInstance: targetInstance,
@@ -105,7 +102,7 @@ func (s *Scanner) initScan(ctx context.Context) error {
 		State:   utils.PointerTo(models.ScanStateInProgress),
 		Summary: summary,
 	}
-	err := s.backendClient.PatchScan(ctx, s.scanID, scan)
+	_, err := s.backendClient.PatchScan(ctx, *s.scan.Id, scan)
 	if err != nil {
 		return fmt.Errorf("failed to update scan: %v", err)
 	}
@@ -139,7 +136,7 @@ func (s *Scanner) Scan(ctx context.Context) {
 	s.Lock()
 	defer s.Unlock()
 
-	log.WithFields(s.logFields).Infof("Start scanning ID=%s", s.scanID)
+	log.WithFields(s.logFields).Infof("Start scanning ID=%s", *s.scan.Id)
 
 	err := s.initScan(ctx)
 	if err != nil {
@@ -150,9 +147,9 @@ func (s *Scanner) Scan(ctx context.Context) {
 			StateMessage: utils.PointerTo(fmt.Sprintf("failed to init scan: %v", err)),
 			StateReason:  utils.PointerTo(models.ScanStateReasonUnexpected),
 		}
-		err := s.backendClient.PatchScan(ctx, s.scanID, scan)
+		_, err := s.backendClient.PatchScan(ctx, *s.scan.Id, scan)
 		if err != nil {
-			log.Errorf("failed to patch scan as failed ID=%s: %v", s.scanID, err)
+			log.Errorf("failed to patch scan as failed ID=%s: %v", *s.scan.Id, err)
 		}
 		return
 	}
@@ -167,9 +164,9 @@ func (s *Scanner) Scan(ctx context.Context) {
 			StateMessage: utils.StringPtr("Nothing to scan"),
 			StateReason:  &reason,
 		}
-		err := s.backendClient.PatchScan(ctx, s.scanID, scan)
+		_, err := s.backendClient.PatchScan(ctx, *s.scan.Id, scan)
 		if err != nil {
-			log.Errorf("failed to patch scan as nothing to scan ID=%s: %v", s.scanID, err)
+			log.Errorf("failed to patch scan as nothing to scan ID=%s: %v", *s.scan.Id, err)
 		}
 		return
 	}

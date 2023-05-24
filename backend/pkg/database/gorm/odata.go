@@ -35,7 +35,19 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 	targetScanResultsSchemaName: {
 		Table: "scan_results",
 		Fields: odatasql.Schema{
-			"id": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"id":   odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"name": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"scanFamiliesConfig": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"ScanFamiliesConfig"},
+			},
+			"maxParallelScanners": odatasql.FieldMeta{
+				FieldType: odatasql.PrimitiveFieldType,
+			},
+			"scannerInstanceCreationConfig": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"ScannerInstanceCreationConfig"},
+			},
 			"target": odatasql.FieldMeta{
 				FieldType:            odatasql.RelationshipFieldType,
 				RelationshipSchema:   targetSchemaName,
@@ -265,6 +277,7 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 		Table: "scans",
 		Fields: odatasql.Schema{
 			"id":        odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"name":      odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"startTime": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"endTime":   odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"scanConfig": odatasql.FieldMeta{
@@ -272,9 +285,21 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 				RelationshipSchema:   "ScanConfig",
 				RelationshipProperty: "id",
 			},
-			"scanConfigSnapshot": odatasql.FieldMeta{
+			"scanFamiliesConfig": odatasql.FieldMeta{
 				FieldType:           odatasql.ComplexFieldType,
-				ComplexFieldSchemas: []string{"ScanConfigSnapshot"},
+				ComplexFieldSchemas: []string{"ScanFamiliesConfig"},
+			},
+			"scope": odatasql.FieldMeta{
+				FieldType:             odatasql.ComplexFieldType,
+				ComplexFieldSchemas:   []string{"AwsScanScope"},
+				DiscriminatorProperty: "objectType",
+			},
+			"maxParallelScanners": odatasql.FieldMeta{
+				FieldType: odatasql.PrimitiveFieldType,
+			},
+			"scannerInstanceCreationConfig": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"ScannerInstanceCreationConfig"},
 			},
 			"targetIDs": odatasql.FieldMeta{
 				FieldType: odatasql.CollectionFieldType,
@@ -387,32 +412,6 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 		Table: "scan_configs",
 		Fields: odatasql.Schema{
 			"id":       odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
-			"name":     odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
-			"disabled": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
-			"scanFamiliesConfig": odatasql.FieldMeta{
-				FieldType:           odatasql.ComplexFieldType,
-				ComplexFieldSchemas: []string{"ScanFamiliesConfig"},
-			},
-			"scheduled": odatasql.FieldMeta{
-				FieldType:           odatasql.ComplexFieldType,
-				ComplexFieldSchemas: []string{"RuntimeScheduleScanConfig"},
-			},
-			"scope": odatasql.FieldMeta{
-				FieldType:             odatasql.ComplexFieldType,
-				ComplexFieldSchemas:   []string{"AwsScanScope"},
-				DiscriminatorProperty: "objectType",
-			},
-			"maxParallelScanners": odatasql.FieldMeta{
-				FieldType: odatasql.PrimitiveFieldType,
-			},
-			"scannerInstanceCreationConfig": odatasql.FieldMeta{
-				FieldType:           odatasql.ComplexFieldType,
-				ComplexFieldSchemas: []string{"ScannerInstanceCreationConfig"},
-			},
-		},
-	},
-	"ScanConfigSnapshot": {
-		Fields: odatasql.Schema{
 			"name":     odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"disabled": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"scanFamiliesConfig": odatasql.FieldMeta{
@@ -606,14 +605,9 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 		Table: "findings",
 		Fields: odatasql.Schema{
 			"id": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
-			"scan": odatasql.FieldMeta{
+			"assetScan": odatasql.FieldMeta{
 				FieldType:            odatasql.RelationshipFieldType,
-				RelationshipSchema:   "Scan",
-				RelationshipProperty: "id",
-			},
-			"asset": odatasql.FieldMeta{
-				FieldType:            odatasql.RelationshipFieldType,
-				RelationshipSchema:   targetSchemaName,
+				RelationshipSchema:   targetScanResultsSchemaName,
 				RelationshipProperty: "id",
 			},
 			"foundOn":       odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},

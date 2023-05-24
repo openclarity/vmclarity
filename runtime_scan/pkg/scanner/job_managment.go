@@ -67,7 +67,7 @@ func (s *Scanner) jobBatchManagement(ctx context.Context) {
 	s.Lock()
 	targetIDToScanData := s.targetIDToScanData
 	// Since this value has a default in the API, I assume it is safe to dereference it.
-	numberOfWorkers := *s.scanConfig.MaxParallelScanners
+	numberOfWorkers := *s.scan.MaxParallelScanners
 	s.Unlock()
 
 	// queue of scan data
@@ -86,7 +86,7 @@ func (s *Scanner) jobBatchManagement(ctx context.Context) {
 			select {
 			case q <- data:
 			case <-s.killSignal:
-				log.WithFields(s.logFields).Debugf("Scan process was canceled. targetID=%v, scanID=%v", data.targetInstance.TargetID, s.scanID)
+				log.WithFields(s.logFields).Debugf("Scan process was canceled. targetID=%v, scanID=%v", data.targetInstance.TargetID, *s.scan.Id)
 				return
 			}
 		}
@@ -160,15 +160,15 @@ func (s *Scanner) jobBatchManagement(ctx context.Context) {
 		}
 
 		// regardless of success or failure we need to patch the scan status
-		err = s.backendClient.PatchScan(ctx, s.scanID, scan)
+		_, err = s.backendClient.PatchScan(ctx, *s.scan.Id, scan)
 		if err != nil {
-			log.WithFields(s.logFields).Errorf("failed to patch the scan ID=%s: %v", s.scanID, err)
+			log.WithFields(s.logFields).Errorf("failed to patch the scan ID=%s: %v", *s.scan.Id, err)
 		}
 	}
 }
 
 func (s *Scanner) createScanWithUpdatedSummary(ctx context.Context, data scanData) (*models.Scan, error) {
-	scan, err := s.backendClient.GetScan(ctx, s.scanID, models.GetScansScanIDParams{})
+	scan, err := s.backendClient.GetScan(ctx, *s.scan.Id, models.GetScansScanIDParams{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get scan to update status: %v", err)
 	}
@@ -209,7 +209,7 @@ func (s *Scanner) worker(ctx context.Context, queue chan *scanData, workNumber i
 				err := s.SetTargetScanStatusCompletionError(ctx, data.scanResultID, err.Error())
 				if err != nil {
 					log.WithFields(s.logFields).Errorf("Couldn't set completion error for target scan status. targetID=%v, scanID=%v: %v",
-						data.targetInstance.TargetID, s.scanID, err)
+						data.targetInstance.TargetID, *s.scan.Id, err)
 					// TODO: Should we retry?
 				}
 			}
@@ -274,11 +274,11 @@ func (s *Scanner) waitForResult(ctx context.Context, data *scanData, ks chan boo
 	for {
 		select {
 		case <-timer.C:
-			log.WithFields(s.logFields).Infof("Polling scan results for target id=%v and scan id=%v", data.targetInstance.TargetID, s.scanID)
+			log.WithFields(s.logFields).Infof("Polling scan results for target id=%v and scan id=%v", data.targetInstance.TargetID, *s.scan.Id)
 			// Get scan results from backend
 			scanResultStatus, err := s.backendClient.GetScanResultStatus(ctx, data.scanResultID)
 			if err != nil {
-				log.WithFields(s.logFields).Errorf("Failed to get target scan status. scanID=%v, target id=%s: %v", s.scanID, data.targetInstance.TargetID, err)
+				log.WithFields(s.logFields).Errorf("Failed to get target scan status. scanID=%v, target id=%s: %v", *s.scan.Id, data.targetInstance.TargetID, err)
 				break
 			}
 
@@ -290,13 +290,13 @@ func (s *Scanner) waitForResult(ctx context.Context, data *scanData, ks chan boo
 			switch state {
 			case models.INIT, models.ATTACHED, models.INPROGRESS:
 				log.WithFields(s.logFields).Infof("Scan for target is still running. scan result id=%v, scan id=%v, target id=%s, state=%v",
-					data.scanResultID, s.scanID, data.targetInstance.TargetID, state)
+					data.scanResultID, *s.scan.Id, data.targetInstance.TargetID, state)
 			case models.ABORTED:
 				log.WithFields(s.logFields).Infof("Scan for target is aborted. Waiting for partial results to be reported back. scan result id=%v, scan id=%v, target id=%s, state=%v",
-					data.scanResultID, s.scanID, data.targetInstance.TargetID, state)
+					data.scanResultID, *s.scan.Id, data.targetInstance.TargetID, state)
 			case models.DONE, models.NOTSCANNED:
 				log.WithFields(s.logFields).Infof("Scan for target is completed. scan result id=%v, scan id=%v, target id=%s, state=%v",
-					data.scanResultID, s.scanID, data.targetInstance.TargetID, state)
+					data.scanResultID, *s.scan.Id, data.targetInstance.TargetID, state)
 				s.Lock()
 				data.success = !scanStatusHasErrors(scanResultStatus)
 				data.completed = true
@@ -395,7 +395,7 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 		VMClarityAddress:              s.config.ScannerBackendAddress,
 		ScanResultID:                  data.scanResultID,
 		KeyPairName:                   s.config.ScannerKeyPairName,
-		ScannerInstanceCreationConfig: s.scanConfig.ScannerInstanceCreationConfig,
+		ScannerInstanceCreationConfig: s.scan.ScannerInstanceCreationConfig,
 	}
 	launchInstance, err = s.providerClient.RunScanningJob(ctx, launchSnapshot.GetRegion(), launchSnapshot.GetID(), scanningJobConfig)
 	if err != nil {
@@ -446,18 +446,18 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 
 func (s *Scanner) generateFamiliesConfigurationYaml() (string, error) {
 	famConfig := families.Config{
-		SBOM:            userSBOMConfigToFamiliesSbomConfig(s.scanConfig.ScanFamiliesConfig.Sbom),
-		Vulnerabilities: userVulnConfigToFamiliesVulnConfig(s.scanConfig.ScanFamiliesConfig.Vulnerabilities, s.config.TrivyServerAddress, s.config.GrypeServerAddress),
-		Secrets:         userSecretsConfigToFamiliesSecretsConfig(s.scanConfig.ScanFamiliesConfig.Secrets, s.config.GitleaksBinaryPath),
-		Exploits:        userExploitsConfigToFamiliesExploitsConfig(s.scanConfig.ScanFamiliesConfig.Exploits, s.config.ExploitsDBAddress),
+		SBOM:            userSBOMConfigToFamiliesSbomConfig(s.scan.ScanFamiliesConfig.Sbom),
+		Vulnerabilities: userVulnConfigToFamiliesVulnConfig(s.scan.ScanFamiliesConfig.Vulnerabilities, s.config.TrivyServerAddress, s.config.GrypeServerAddress),
+		Secrets:         userSecretsConfigToFamiliesSecretsConfig(s.scan.ScanFamiliesConfig.Secrets, s.config.GitleaksBinaryPath),
+		Exploits:        userExploitsConfigToFamiliesExploitsConfig(s.scan.ScanFamiliesConfig.Exploits, s.config.ExploitsDBAddress),
 		Malware: userMalwareConfigToFamiliesMalwareConfig(
-			s.scanConfig.ScanFamiliesConfig.Malware,
+			s.scan.ScanFamiliesConfig.Malware,
 			s.config.ClamBinaryPath,
 			s.config.FreshclamBinaryPath,
 			s.config.AlternativeFreshclamMirrorURL,
 		),
-		Misconfiguration: userMisconfigurationConfigToFamiliesMisconfigurationConfig(s.scanConfig.ScanFamiliesConfig.Misconfigurations, s.config.LynisInstallPath),
-		Rootkits:         userRootkitsConfigToFamiliesRootkitsConfig(s.scanConfig.ScanFamiliesConfig.Rootkits, s.config.ChkrootkitBinaryPath),
+		Misconfiguration: userMisconfigurationConfigToFamiliesMisconfigurationConfig(s.scan.ScanFamiliesConfig.Misconfigurations, s.config.LynisInstallPath),
+		Rootkits:         userRootkitsConfigToFamiliesRootkitsConfig(s.scan.ScanFamiliesConfig.Rootkits, s.config.ChkrootkitBinaryPath),
 	}
 
 	famConfigYaml, err := yaml.Marshal(famConfig)
@@ -676,11 +676,11 @@ func (s *Scanner) deleteJob(ctx context.Context, job *types.Job) {
 }
 
 // nolint:cyclop
-func (s *Scanner) createInitTargetScanStatus(ctx context.Context, scanID, targetID string) (string, error) {
+func (s *Scanner) createInitTargetScanStatus(ctx context.Context, targetID string) (string, error) {
 	initScanStatus := &models.TargetScanStatus{
 		Exploits: &models.TargetScanState{
 			Errors: nil,
-			State:  getInitScanStatusExploitsStateFromEnabled(s.scanConfig.ScanFamiliesConfig.Exploits),
+			State:  getInitScanStatusExploitsStateFromEnabled(s.scan.ScanFamiliesConfig.Exploits),
 		},
 		General: &models.TargetScanState{
 			Errors: nil,
@@ -688,33 +688,34 @@ func (s *Scanner) createInitTargetScanStatus(ctx context.Context, scanID, target
 		},
 		Malware: &models.TargetScanState{
 			Errors: nil,
-			State:  getInitScanStatusMalwareStateFromEnabled(s.scanConfig.ScanFamiliesConfig.Malware),
+			State:  getInitScanStatusMalwareStateFromEnabled(s.scan.ScanFamiliesConfig.Malware),
 		},
 		Misconfigurations: &models.TargetScanState{
 			Errors: nil,
-			State:  getInitScanStatusMisconfigurationsStateFromEnabled(s.scanConfig.ScanFamiliesConfig.Misconfigurations),
+			State:  getInitScanStatusMisconfigurationsStateFromEnabled(s.scan.ScanFamiliesConfig.Misconfigurations),
 		},
 		Rootkits: &models.TargetScanState{
 			Errors: nil,
-			State:  getInitScanStatusRootkitsStateFromEnabled(s.scanConfig.ScanFamiliesConfig.Rootkits),
+			State:  getInitScanStatusRootkitsStateFromEnabled(s.scan.ScanFamiliesConfig.Rootkits),
 		},
 		Sbom: &models.TargetScanState{
 			Errors: nil,
-			State:  getInitScanStatusSbomStateFromEnabled(s.scanConfig.ScanFamiliesConfig.Sbom),
+			State:  getInitScanStatusSbomStateFromEnabled(s.scan.ScanFamiliesConfig.Sbom),
 		},
 		Secrets: &models.TargetScanState{
 			Errors: nil,
-			State:  getInitScanStatusSecretsStateFromEnabled(s.scanConfig.ScanFamiliesConfig.Secrets),
+			State:  getInitScanStatusSecretsStateFromEnabled(s.scan.ScanFamiliesConfig.Secrets),
 		},
 		Vulnerabilities: &models.TargetScanState{
 			Errors: nil,
-			State:  getInitScanStatusVulnerabilitiesStateFromEnabled(s.scanConfig.ScanFamiliesConfig.Vulnerabilities),
+			State:  getInitScanStatusVulnerabilitiesStateFromEnabled(s.scan.ScanFamiliesConfig.Vulnerabilities),
 		},
 	}
 	scanResult := models.TargetScanResult{
+		Name:    utils.PointerTo(fmt.Sprintf("%s-%s", *s.scan.Name, targetID)),
 		Summary: createInitScanResultSummary(),
 		Scan: &models.ScanRelationship{
-			Id: scanID,
+			Id: *s.scan.Id,
 		},
 		Status: initScanStatus,
 		Target: &models.TargetRelationship{

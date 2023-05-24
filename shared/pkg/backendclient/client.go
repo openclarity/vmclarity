@@ -207,35 +207,35 @@ func (b *BackendClient) PostScanResult(ctx context.Context, scanResult models.Ta
 	}
 }
 
-func (b *BackendClient) PatchScan(ctx context.Context, scanID models.ScanID, scan *models.Scan) error {
+func (b *BackendClient) PatchScan(ctx context.Context, scanID models.ScanID, scan *models.Scan) (*models.Scan, error) {
 	resp, err := b.apiClient.PatchScansScanIDWithResponse(ctx, scanID, *scan)
 	if err != nil {
-		return fmt.Errorf("failed to update a scan: %v", err)
+		return nil, fmt.Errorf("failed to update a scan: %v", err)
 	}
 	switch resp.StatusCode() {
 	case http.StatusOK:
 		if resp.JSON200 == nil {
-			return fmt.Errorf("failed to update a scan: empty body")
+			return nil, fmt.Errorf("failed to update a scan: empty body")
 		}
-		return nil
+		return resp.JSON200, nil
 	case http.StatusBadRequest:
 		if resp.JSON400 != nil && resp.JSON400.Message != nil {
-			return fmt.Errorf("failed to update a scan. status code=%v: %v", resp.StatusCode(), *resp.JSON400.Message)
+			return nil, fmt.Errorf("failed to update a scan. status code=%v: %v", resp.StatusCode(), *resp.JSON400.Message)
 		}
-		return fmt.Errorf("failed to update a scan. status code=%v", resp.StatusCode())
+		return nil, fmt.Errorf("failed to update a scan. status code=%v", resp.StatusCode())
 	case http.StatusNotFound:
 		if resp.JSON404 == nil {
-			return fmt.Errorf("failed to update a scan: empty body on not found")
+			return nil, fmt.Errorf("failed to update a scan: empty body on not found")
 		}
 		if resp.JSON404 != nil && resp.JSON404.Message != nil {
-			return fmt.Errorf("failed to update a scan, not found: %v", *resp.JSON404.Message)
+			return nil, fmt.Errorf("failed to update a scan, not found: %v", *resp.JSON404.Message)
 		}
-		return fmt.Errorf("failed to update a scan, not found")
+		return nil, fmt.Errorf("failed to update a scan, not found")
 	default:
 		if resp.JSONDefault != nil && resp.JSONDefault.Message != nil {
-			return fmt.Errorf("failed to update scan. status code=%v: %v", resp.StatusCode(), *resp.JSONDefault.Message)
+			return nil, fmt.Errorf("failed to update scan. status code=%v: %v", resp.StatusCode(), *resp.JSONDefault.Message)
 		}
-		return fmt.Errorf("failed to update scan. status code=%v", resp.StatusCode())
+		return nil, fmt.Errorf("failed to update scan. status code=%v", resp.StatusCode())
 	}
 }
 

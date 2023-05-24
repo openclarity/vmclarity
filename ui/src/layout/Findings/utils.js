@@ -17,8 +17,8 @@ export const getAssetAndScanColumnsConfigList = () => ([
     {
         Header: "Scan name",
         id: "scanName",
-        sortIds: ["scan.scanConfigSnapshot.name"],
-        accessor: "scan.scanConfigSnapshot.name"
+        sortIds: ["scan.name"],
+        accessor: "scan.name"
     },
     {
         Header: "Scan start",

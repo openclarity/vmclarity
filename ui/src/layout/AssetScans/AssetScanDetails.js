@@ -3,7 +3,6 @@ import { useLocation } from 'react-router-dom';
 import DetailsPageWrapper from 'components/DetailsPageWrapper';
 import TabbedPage from 'components/TabbedPage';
 import { APIS } from 'utils/systemConsts';
-import { formatDate, getScanName } from 'utils/utils';
 import { Findings } from 'layout/detail-displays';
 import TabAssetScanDetails from './TabAssetScanDetails';
 
@@ -15,9 +14,7 @@ const ASSET_SCAN_DETAILS_PATHS = {
 const DetailsContent = ({data}) => {
     const {pathname} = useLocation();
     
-    const {id, scan, target, summary} = data;
-    const {id: scanId, scanConfigSnapshot, startTime} = scan;
-    const {id: targetId, targetInfo} = target;
+    const {id, name, summary} = data;
     
     return (
         <TabbedPage
@@ -36,8 +33,8 @@ const DetailsContent = ({data}) => {
                     component: () => (
                         <Findings
                             findingsSummary={summary}
-                            findingsFilter={`scan/id eq '${scanId}' and asset/id eq '${targetId}'`}
-                            findingsFilterTitle={`${targetInfo.instanceID} scanned by ${getScanName({name: scanConfigSnapshot.name, startTime})}`}
+                            findingsFilter={`assetScan/id eq '${id}'`}
+                            findingsFilterTitle={`${name}`}
                         />
                     )
                 }
@@ -50,13 +47,10 @@ const DetailsContent = ({data}) => {
 const AssetScanDetails = () => (
     <DetailsPageWrapper
         backTitle="Asset scans"
-        getUrl={({id}) => `${APIS.ASSET_SCANS}/${id}?$expand=scan,scan/scanConfig,target`}
-        getTitleData={({scan, target}) => {
-            const {startTime, scanConfigSnapshot} = scan || {};
-
+        getUrl={({id}) => `${APIS.ASSET_SCANS}/${id}?$select=id,name,summary,status&$expand=scan($select=id,name,startTime,endTime),target($select=id,targetInfo/objectType,targetInfo/location,targetInfo/instanceID)`}
+        getTitleData={({name}) => {
             return ({
-                title: target?.targetInfo?.instanceID,
-                subTitle: `scanned by '${scanConfigSnapshot?.name}' on ${formatDate(startTime)}`
+                title: name,
             })
         }}
         detailsContent={props => <DetailsContent {...props} />}

@@ -6,7 +6,7 @@ import DoublePaneDisplay from 'components/DoublePaneDisplay';
 import Button from 'components/Button';
 import Title from 'components/Title';
 import Loader from 'components/Loader';
-import ConfigurationReadOnlyDisplay from 'layout/Scans/ConfigurationReadOnlyDisplay';
+import { ConfigurationReadOnlyDisplay } from 'layout/Scans/ConfigurationReadOnlyDisplay';
 import { ROUTES, APIS } from 'utils/systemConsts';
 import { formatNumber } from 'utils/utils';
 import { useFilterDispatch, setFilters, FILTER_TYPES } from 'context/FiltersProvider';

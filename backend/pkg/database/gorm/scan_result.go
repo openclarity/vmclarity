@@ -98,12 +98,7 @@ func (s *ScanResultsTableHandler) GetScanResult(scanResultID models.ScanResultID
 
 // nolint:cyclop
 func (s *ScanResultsTableHandler) CreateScanResult(scanResult models.TargetScanResult) (models.TargetScanResult, error) {
-	// Check the user provided scan id and target id fields
-	if scanResult.Scan != nil && scanResult.Scan.Id == "" {
-		return models.TargetScanResult{}, &common.BadRequestError{
-			Reason: "scan.id is a required field",
-		}
-	}
+	// Check the user provided target id fields
 	if scanResult.Target != nil && scanResult.Target.Id == "" {
 		return models.TargetScanResult{}, &common.BadRequestError{
 			Reason: "target.id is a required field",
@@ -174,12 +169,7 @@ func (s *ScanResultsTableHandler) SaveScanResult(scanResult models.TargetScanRes
 		}
 	}
 
-	// Check the user provided scan id and target id fields
-	if scanResult.Scan != nil && scanResult.Scan.Id == "" {
-		return models.TargetScanResult{}, &common.BadRequestError{
-			Reason: "scan.id is a required field",
-		}
-	}
+	// Check the user provided target id field
 	if scanResult.Target != nil && scanResult.Target.Id == "" {
 		return models.TargetScanResult{}, &common.BadRequestError{
 			Reason: "target.id is a required field",
@@ -266,6 +256,12 @@ func (s *ScanResultsTableHandler) UpdateScanResult(scanResult models.TargetScanR
 }
 
 func (s *ScanResultsTableHandler) checkUniqueness(scanResult models.TargetScanResult) (models.TargetScanResult, error) {
+	// If this scanResult isn't linked to a scan then we can short-circuit
+	// this check.
+	if scanResult.Scan == nil {
+		return models.TargetScanResult{}, nil
+	}
+
 	var scanResults []ScanResult
 	// In the case of creating or updating a scan results, needs to be checked whether other scan results exists with same scan id and target id.
 	filter := fmt.Sprintf("id ne '%s' and target/id eq '%s' and scan/id eq '%s'", *scanResult.Id, scanResult.Target.Id, scanResult.Scan.Id)

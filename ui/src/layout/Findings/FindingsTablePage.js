@@ -47,7 +47,7 @@ const FindingsTablePage = ({tableTitle, findingsObjectType, columns, filterType,
                 filterType={filterType}
                 filtersConfig={[
                     ...filtersConfig,
-                    ...getAssetColumnsFiltersConfig({prefix: "asset.targetInfo", withType: false, withLabels: false}),
+                    ...getAssetColumnsFiltersConfig({prefix: "assetScan.target.targetInfo", withType: false, withLabels: false}),
                     ...scanColumnsFiltersConfig,
                     {value: "foundOn", label: "Found on", isDate: true, operators: [
                         {...OPERATORS.ge},
@@ -59,8 +59,8 @@ const FindingsTablePage = ({tableTitle, findingsObjectType, columns, filterType,
                     `(findingInfo.objectType eq '${findingsObjectType}')`,
                     ...(hideHistory ? ["(invalidatedOn eq null)"] : [])
                 ].join(` and `)}
-                expand="asset,scan"
-                defaultSortBy={{sortIds: ["scan.startTime"], desc: true}}
+                expand="assetScan($expand=target,scan)"
+                defaultSortBy={{sortIds: ["assetScan.scan.startTime"], desc: true}}
             />
         </div>
     )
