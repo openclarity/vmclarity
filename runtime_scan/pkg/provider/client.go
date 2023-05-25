@@ -34,8 +34,10 @@ type ScanningJobConfig struct {
 type Client interface {
 	// RunScanningJob - run a scanning job.
 	RunScanningJob(ctx context.Context, region, id string, config ScanningJobConfig) (types.Instance, error)
-	// DiscoverScopes - List all scopes
-	DiscoverScopes(ctx context.Context) (*models.Scopes, error)
-	// DiscoverInstances - list VM instances in the account according to the scan scope.
-	DiscoverInstances(ctx context.Context, scanScope *models.ScanScopeType) ([]types.Instance, error)
+
+	// DiscoverAssets - list assets available from the provider
+	DiscoverAssets(ctx context.Context) ([]models.Target, error)
+
+	// Converts an Asset back to an instance
+	AssetToInstance(ctx context.Context, target models.Target) (types.Instance, error)
 }

@@ -109,44 +109,6 @@ type ApiResponse struct {
 	Message *string `json:"message,omitempty"`
 }
 
-// AwsAccountScope AWS cloud account scope
-type AwsAccountScope struct {
-	ObjectType string       `json:"objectType"`
-	Regions    *[]AwsRegion `json:"regions"`
-}
-
-// AwsRegion AWS region
-type AwsRegion struct {
-	Name string    `json:"name"`
-	Vpcs *[]AwsVPC `json:"vpcs"`
-}
-
-// AwsScanScope The scope of a configured scan.
-type AwsScanScope struct {
-	// AllRegions Scan all regions, if set will override anything set in regions.
-	AllRegions *bool `json:"allRegions,omitempty"`
-
-	// InstanceTagExclusion VM instances will not be scanned if they contain all of these tags (even if they match instanceTagSelector). If empty, not taken into account.
-	InstanceTagExclusion *[]Tag `json:"instanceTagExclusion"`
-
-	// InstanceTagSelector VM instances will be scanned if they contain all of these tags. If empty, not taken into account.
-	InstanceTagSelector        *[]Tag       `json:"instanceTagSelector"`
-	ObjectType                 string       `json:"objectType"`
-	Regions                    *[]AwsRegion `json:"regions"`
-	ShouldScanStoppedInstances *bool        `json:"shouldScanStoppedInstances,omitempty"`
-}
-
-// AwsSecurityGroup AWS security group
-type AwsSecurityGroup struct {
-	Id string `json:"id"`
-}
-
-// AwsVPC AWS VPC
-type AwsVPC struct {
-	Id             string              `json:"id"`
-	SecurityGroups *[]AwsSecurityGroup `json:"securityGroups"`
-}
-
 // CloudProvider defines model for CloudProvider.
 type CloudProvider string
 
@@ -430,7 +392,7 @@ type ScanConfig struct {
 
 	// Scheduled Runtime schedule scan configuration. If only operationTime is set, it will be a single scan scheduled for the operationTime. If only cronLine is set, the current time will be the "from time" to start the scheduling according to the cronLine. If both operationTime and cronLine are set, the first scan will run at operationTime and the operationTime will be the first time that the cronLine will be effective from.
 	Scheduled *RuntimeScheduleScanConfig `json:"scheduled,omitempty"`
-	Scope     *ScanScopeType             `json:"scope,omitempty"`
+	Scope     *string                    `json:"scope,omitempty"`
 }
 
 // ScanConfigExists defines model for ScanConfigExists.
@@ -460,7 +422,7 @@ type ScanConfigRelationship struct {
 
 	// Scheduled Runtime schedule scan configuration. If only operationTime is set, it will be a single scan scheduled for the operationTime. If only cronLine is set, the current time will be the "from time" to start the scheduling according to the cronLine. If both operationTime and cronLine are set, the first scan will run at operationTime and the operationTime will be the first time that the cronLine will be effective from.
 	Scheduled *RuntimeScheduleScanConfig `json:"scheduled,omitempty"`
-	Scope     *ScanScopeType             `json:"scope,omitempty"`
+	Scope     *string                    `json:"scope,omitempty"`
 }
 
 // ScanConfigSnapshot Snapshot of the configuration from the ScanConfig which created the
@@ -482,7 +444,7 @@ type ScanConfigSnapshot struct {
 
 	// Scheduled Runtime schedule scan configuration. If only operationTime is set, it will be a single scan scheduled for the operationTime. If only cronLine is set, the current time will be the "from time" to start the scheduling according to the cronLine. If both operationTime and cronLine are set, the first scan will run at operationTime and the operationTime will be the first time that the cronLine will be effective from.
 	Scheduled *RuntimeScheduleScanConfig `json:"scheduled,omitempty"`
-	Scope     *ScanScopeType             `json:"scope,omitempty"`
+	Scope     *string                    `json:"scope,omitempty"`
 }
 
 // ScanConfigs defines model for ScanConfigs.
@@ -563,11 +525,6 @@ type ScanRelationshipState string
 // ScanRelationshipStateReason Machine-readable, UpperCamelCase text indicating the reason for the condition's last transition.
 type ScanRelationshipStateReason string
 
-// ScanScopeType defines model for ScanScopeType.
-type ScanScopeType struct {
-	union json.RawMessage
-}
-
 // ScanSummary defines model for ScanSummary.
 type ScanSummary struct {
 	JobsCompleted          *int `json:"jobsCompleted,omitempty"`
@@ -619,16 +576,6 @@ type Scans struct {
 
 	// Items List of scans according to the given filters and page. List length must be lower or equal to pageSize.
 	Items *[]Scan `json:"items,omitempty"`
-}
-
-// ScopeType defines model for ScopeType.
-type ScopeType struct {
-	union json.RawMessage
-}
-
-// Scopes Scopes discovery
-type Scopes struct {
-	ScopeInfo *ScopeType `json:"scopeInfo,omitempty"`
 }
 
 // Secret defines model for Secret.
@@ -942,13 +889,6 @@ type Success = SuccessResponse
 // UnknownError An object that is returned in all cases of failures.
 type UnknownError = ApiResponse
 
-// GetDiscoveryScopesParams defines parameters for GetDiscoveryScopes.
-type GetDiscoveryScopesParams struct {
-	Filter  *OdataFilter `form:"$filter,omitempty" json:"$filter,omitempty"`
-	Select  *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
-	OrderBy *OrderBy     `form:"$orderby,omitempty" json:"$orderby,omitempty"`
-}
-
 // GetFindingsParams defines parameters for GetFindings.
 type GetFindingsParams struct {
 	Filter  *OdataFilter `form:"$filter,omitempty" json:"$filter,omitempty"`
@@ -1033,9 +973,6 @@ type GetTargetsTargetIDParams struct {
 	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
 	Expand *OdataExpand `form:"$expand,omitempty" json:"$expand,omitempty"`
 }
-
-// PutDiscoveryScopesJSONRequestBody defines body for PutDiscoveryScopes for application/json ContentType.
-type PutDiscoveryScopesJSONRequestBody = Scopes
 
 // PostFindingsJSONRequestBody defines body for PostFindings for application/json ContentType.
 type PostFindingsJSONRequestBody = Finding
@@ -1317,124 +1254,6 @@ func (t Finding_FindingInfo) MarshalJSON() ([]byte, error) {
 }
 
 func (t *Finding_FindingInfo) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	return err
-}
-
-// AsAwsScanScope returns the union data inside the ScanScopeType as a AwsScanScope
-func (t ScanScopeType) AsAwsScanScope() (AwsScanScope, error) {
-	var body AwsScanScope
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromAwsScanScope overwrites any union data inside the ScanScopeType as the provided AwsScanScope
-func (t *ScanScopeType) FromAwsScanScope(v AwsScanScope) error {
-	v.ObjectType = "AwsScanScope"
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeAwsScanScope performs a merge with any union data inside the ScanScopeType, using the provided AwsScanScope
-func (t *ScanScopeType) MergeAwsScanScope(v AwsScanScope) error {
-	v.ObjectType = "AwsScanScope"
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JsonMerge(b, t.union)
-	t.union = merged
-	return err
-}
-
-func (t ScanScopeType) Discriminator() (string, error) {
-	var discriminator struct {
-		Discriminator string `json:"objectType"`
-	}
-	err := json.Unmarshal(t.union, &discriminator)
-	return discriminator.Discriminator, err
-}
-
-func (t ScanScopeType) ValueByDiscriminator() (interface{}, error) {
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return nil, err
-	}
-	switch discriminator {
-	case "AwsScanScope":
-		return t.AsAwsScanScope()
-	default:
-		return nil, errors.New("unknown discriminator value: " + discriminator)
-	}
-}
-
-func (t ScanScopeType) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	return b, err
-}
-
-func (t *ScanScopeType) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	return err
-}
-
-// AsAwsAccountScope returns the union data inside the ScopeType as a AwsAccountScope
-func (t ScopeType) AsAwsAccountScope() (AwsAccountScope, error) {
-	var body AwsAccountScope
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromAwsAccountScope overwrites any union data inside the ScopeType as the provided AwsAccountScope
-func (t *ScopeType) FromAwsAccountScope(v AwsAccountScope) error {
-	v.ObjectType = "AwsAccountScope"
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeAwsAccountScope performs a merge with any union data inside the ScopeType, using the provided AwsAccountScope
-func (t *ScopeType) MergeAwsAccountScope(v AwsAccountScope) error {
-	v.ObjectType = "AwsAccountScope"
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JsonMerge(b, t.union)
-	t.union = merged
-	return err
-}
-
-func (t ScopeType) Discriminator() (string, error) {
-	var discriminator struct {
-		Discriminator string `json:"objectType"`
-	}
-	err := json.Unmarshal(t.union, &discriminator)
-	return discriminator.Discriminator, err
-}
-
-func (t ScopeType) ValueByDiscriminator() (interface{}, error) {
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return nil, err
-	}
-	switch discriminator {
-	case "AwsAccountScope":
-		return t.AsAwsAccountScope()
-	default:
-		return nil, errors.New("unknown discriminator value: " + discriminator)
-	}
-}
-
-func (t ScopeType) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	return b, err
-}
-
-func (t *ScopeType) UnmarshalJSON(b []byte) error {
 	err := t.union.UnmarshalJSON(b)
 	return err
 }

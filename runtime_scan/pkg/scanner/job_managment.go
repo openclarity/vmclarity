@@ -86,7 +86,7 @@ func (s *Scanner) jobBatchManagement(ctx context.Context) {
 			select {
 			case q <- data:
 			case <-s.killSignal:
-				log.WithFields(s.logFields).Debugf("Scan process was canceled. targetID=%v, scanID=%v", data.targetInstance.TargetID, s.scanID)
+				log.WithFields(s.logFields).Debugf("Scan process was canceled. targetID=%v, scanID=%v", *data.target.Id, s.scanID)
 				return
 			}
 		}
@@ -209,16 +209,16 @@ func (s *Scanner) worker(ctx context.Context, queue chan *scanData, workNumber i
 				err := s.SetTargetScanStatusCompletionError(ctx, data.scanResultID, err.Error())
 				if err != nil {
 					log.WithFields(s.logFields).Errorf("Couldn't set completion error for target scan status. targetID=%v, scanID=%v: %v",
-						data.targetInstance.TargetID, s.scanID, err)
+						*data.target.Id, s.scanID, err)
 					// TODO: Should we retry?
 				}
 			}
 			s.deleteJobIfNeeded(ctx, job, data.success, data.completed)
 
 			select {
-			case done <- data.targetInstance.TargetID:
+			case done <- *data.target.Id:
 			case <-ks:
-				log.WithFields(s.logFields).Infof("Instance scan was canceled. targetID=%v", data.targetInstance.TargetID)
+				log.WithFields(s.logFields).Infof("Instance scan was canceled. targetID=%v", *data.target.Id)
 			}
 		case <-ks:
 			log.WithFields(s.logFields).Debugf("worker #%v halted", workNumber)
@@ -248,13 +248,13 @@ func (s *Scanner) handleScanData(ctx context.Context, data *scanData, ks chan bo
 			data.success = false
 			data.completed = true
 			s.Unlock()
-			return nil, fmt.Errorf("failed to run scan job for target %s: %v", data.targetInstance.TargetID, err)
+			return nil, fmt.Errorf("failed to run scan job for target %s: %v", *data.target.Id, err)
 		}
 		fallthrough
 	case models.ATTACHED, models.INPROGRESS, models.ABORTED:
 		s.waitForResult(ctx, data, ks)
 		if data.timeout {
-			return nil, fmt.Errorf("scan job for target %s timed out: %v", data.targetInstance.TargetID, err)
+			return nil, fmt.Errorf("scan job for target %s timed out: %v", *data.target.Id, err)
 		}
 	case models.DONE, models.NOTSCANNED:
 	}
@@ -264,7 +264,7 @@ func (s *Scanner) handleScanData(ctx context.Context, data *scanData, ks chan bo
 
 // nolint:cyclop
 func (s *Scanner) waitForResult(ctx context.Context, data *scanData, ks chan bool) {
-	log.WithFields(s.logFields).Infof("Waiting for result. targetID=%+v", data.targetInstance.TargetID)
+	log.WithFields(s.logFields).Infof("Waiting for result. targetID=%+v", *data.target.Id)
 	timer := time.NewTicker(s.config.JobResultsPollingInterval)
 	defer timer.Stop()
 
@@ -274,11 +274,11 @@ func (s *Scanner) waitForResult(ctx context.Context, data *scanData, ks chan boo
 	for {
 		select {
 		case <-timer.C:
-			log.WithFields(s.logFields).Infof("Polling scan results for target id=%v and scan id=%v", data.targetInstance.TargetID, s.scanID)
+			log.WithFields(s.logFields).Infof("Polling scan results for target id=%v and scan id=%v", *data.target.Id, s.scanID)
 			// Get scan results from backend
 			scanResultStatus, err := s.backendClient.GetScanResultStatus(ctx, data.scanResultID)
 			if err != nil {
-				log.WithFields(s.logFields).Errorf("Failed to get target scan status. scanID=%v, target id=%s: %v", s.scanID, data.targetInstance.TargetID, err)
+				log.WithFields(s.logFields).Errorf("Failed to get target scan status. scanID=%v, target id=%s: %v", s.scanID, *data.target.Id, err)
 				break
 			}
 
@@ -290,13 +290,13 @@ func (s *Scanner) waitForResult(ctx context.Context, data *scanData, ks chan boo
 			switch state {
 			case models.INIT, models.ATTACHED, models.INPROGRESS:
 				log.WithFields(s.logFields).Infof("Scan for target is still running. scan result id=%v, scan id=%v, target id=%s, state=%v",
-					data.scanResultID, s.scanID, data.targetInstance.TargetID, state)
+					data.scanResultID, s.scanID, *data.target.Id, state)
 			case models.ABORTED:
 				log.WithFields(s.logFields).Infof("Scan for target is aborted. Waiting for partial results to be reported back. scan result id=%v, scan id=%v, target id=%s, state=%v",
-					data.scanResultID, s.scanID, data.targetInstance.TargetID, state)
+					data.scanResultID, s.scanID, *data.target.Id, state)
 			case models.DONE, models.NOTSCANNED:
 				log.WithFields(s.logFields).Infof("Scan for target is completed. scan result id=%v, scan id=%v, target id=%s, state=%v",
-					data.scanResultID, s.scanID, data.targetInstance.TargetID, state)
+					data.scanResultID, s.scanID, *data.target.Id, state)
 				s.Lock()
 				data.success = !scanStatusHasErrors(scanResultStatus)
 				data.completed = true
@@ -304,7 +304,7 @@ func (s *Scanner) waitForResult(ctx context.Context, data *scanData, ks chan boo
 				return
 			}
 		case <-ctx.Done():
-			log.WithFields(s.logFields).Infof("Job has timed out. targetID=%v", data.targetInstance.TargetID)
+			log.WithFields(s.logFields).Infof("Job has timed out. targetID=%v", *data.target.Id)
 			s.Lock()
 			data.success = false
 			data.completed = true
@@ -312,7 +312,7 @@ func (s *Scanner) waitForResult(ctx context.Context, data *scanData, ks chan boo
 			s.Unlock()
 			return
 		case <-ks:
-			log.WithFields(s.logFields).Infof("Instance scan was canceled. targetID=%v", data.targetInstance.TargetID)
+			log.WithFields(s.logFields).Infof("Instance scan was canceled. targetID=%v", *data.target.Id)
 			return
 		}
 	}
@@ -337,7 +337,11 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 	var job types.Job
 	var err error
 
-	instanceToScan := data.targetInstance.Instance
+	instanceToScan, err := s.providerClient.AssetToInstance(ctx, data.target)
+	if err != nil {
+		return types.Job{}, fmt.Errorf("failed to get instance from target: %w", err)
+	}
+
 	log.WithFields(s.logFields).Infof("Running scanner job for instance id %v", instanceToScan.GetID())
 
 	// cleanup in case of an error

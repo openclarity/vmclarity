@@ -501,25 +501,6 @@ func (b *BackendClient) GetTarget(ctx context.Context, targetID string, params m
 	}
 }
 
-func (b *BackendClient) PutDiscoveryScopes(ctx context.Context, scope *models.Scopes) (*models.Scopes, error) {
-	resp, err := b.apiClient.PutDiscoveryScopesWithResponse(ctx, *scope)
-	if err != nil {
-		return nil, fmt.Errorf("failed to put discovery scope: %v", err)
-	}
-	switch resp.StatusCode() {
-	case http.StatusOK:
-		if resp.JSON200 == nil {
-			return nil, fmt.Errorf("failed to put scopes: empty body. status code=%v", http.StatusOK)
-		}
-		return resp.JSON200, nil
-	default:
-		if resp.JSONDefault != nil && resp.JSONDefault.Message != nil {
-			return nil, fmt.Errorf("failed to put scopes. status code=%v: %s", resp.StatusCode(), *resp.JSONDefault.Message)
-		}
-		return nil, fmt.Errorf("failed to put scopes. status code=%v", resp.StatusCode())
-	}
-}
-
 func (b *BackendClient) GetTargets(ctx context.Context, params models.GetTargetsParams) (*models.Targets, error) {
 	resp, err := b.apiClient.GetTargetsWithResponse(ctx, &params)
 	if err != nil {

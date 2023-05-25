@@ -27,7 +27,6 @@ import (
 	"github.com/openclarity/vmclarity/api/models"
 	_config "github.com/openclarity/vmclarity/runtime_scan/pkg/config"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
-	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 )
@@ -40,18 +39,18 @@ type Scanner struct {
 	logFields          log.Fields
 	backendClient      *backendclient.BackendClient
 	scanID             string
-	targetInstances    []*types.TargetInstance
+	targets            []models.Target
 	config             *_config.ScannerConfig
 
 	sync.Mutex
 }
 
 type scanData struct {
-	targetInstance *types.TargetInstance
-	scanResultID   string
-	success        bool // Needed for deletion policy in case we want to access the logs
-	timeout        bool
-	completed      bool
+	target       models.Target
+	scanResultID string
+	success      bool // Needed for deletion policy in case we want to access the logs
+	timeout      bool
+	completed    bool
 }
 
 func CreateScanner(
@@ -59,7 +58,7 @@ func CreateScanner(
 	providerClient provider.Client,
 	backendClient *backendclient.BackendClient,
 	scanConfig *models.ScanConfig,
-	targetInstances []*types.TargetInstance,
+	targets []models.Target,
 	scanID string,
 ) *Scanner {
 	return &Scanner{
@@ -70,7 +69,7 @@ func CreateScanner(
 		logFields:          log.Fields{"scanner id": uuid.NewV4().String()},
 		backendClient:      backendClient,
 		scanID:             scanID,
-		targetInstances:    targetInstances,
+		targets:            targets,
 		config:             config,
 		Mutex:              sync.Mutex{},
 	}
@@ -82,17 +81,17 @@ func (s *Scanner) initScan(ctx context.Context) error {
 	targetIDToScanData := make(map[string]*scanData)
 
 	// Populate the target to scanData map and create ScanResult for each target.
-	for _, targetInstance := range s.targetInstances {
-		scanResultID, err := s.createInitTargetScanStatus(ctx, s.scanID, targetInstance.TargetID)
+	for _, target := range s.targets {
+		scanResultID, err := s.createInitTargetScanStatus(ctx, s.scanID, *target.Id)
 		if err != nil {
-			return fmt.Errorf("failed to create an init scan result for instance id=%v, scan id=%v: %v", targetInstance.TargetID, s.scanID, err)
+			return fmt.Errorf("failed to create an init scan result for instance id=%v, scan id=%v: %v", *target.Id, s.scanID, err)
 		}
-		targetIDToScanData[targetInstance.TargetID] = &scanData{
-			targetInstance: targetInstance,
-			scanResultID:   scanResultID,
-			success:        false,
-			completed:      false,
-			timeout:        false,
+		targetIDToScanData[*target.Id] = &scanData{
+			target:       target,
+			scanResultID: scanResultID,
+			success:      false,
+			completed:    false,
+			timeout:      false,
 		}
 	}
 

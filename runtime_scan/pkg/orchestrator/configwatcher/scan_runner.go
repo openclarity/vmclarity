@@ -25,26 +25,25 @@ import (
 
 	"github.com/openclarity/vmclarity/api/models"
 	_scanner "github.com/openclarity/vmclarity/runtime_scan/pkg/scanner"
-	"github.com/openclarity/vmclarity/runtime_scan/pkg/types"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 )
 
 func (scw *ScanConfigWatcher) scan(ctx context.Context, scanConfig *models.ScanConfig) error {
 	// TODO: check if existing scan or a new scan
-	targetInstances, scanID, err := scw.initNewScan(ctx, scanConfig)
+	targets, scanID, err := scw.initNewScan(ctx, scanConfig)
 	if err != nil {
 		return fmt.Errorf("failed to init new scan: %v", err)
 	}
 
-	scanner := _scanner.CreateScanner(scw.scannerConfig, scw.providerClient, scw.backendClient, scanConfig, targetInstances, scanID)
+	scanner := _scanner.CreateScanner(scw.scannerConfig, scw.providerClient, scw.backendClient, scanConfig, targets, scanID)
 	go scanner.Scan(ctx)
 
 	return nil
 }
 
 // initNewScan Initialized a new scan, returns target instances and scan ID.
-func (scw *ScanConfigWatcher) initNewScan(ctx context.Context, scanConfig *models.ScanConfig) ([]*types.TargetInstance, string, error) {
+func (scw *ScanConfigWatcher) initNewScan(ctx context.Context, scanConfig *models.ScanConfig) ([]models.Target, string, error) {
 	// Create scan in pending
 	now := time.Now().UTC()
 	scan := &models.Scan{
@@ -77,19 +76,22 @@ func (scw *ScanConfigWatcher) initNewScan(ctx context.Context, scanConfig *model
 	}
 
 	// Do discovery of targets
-	instances, err := scw.providerClient.DiscoverInstances(ctx, scan.ScanConfigSnapshot.Scope)
+	targets, err := scw.backendClient.GetTargets(ctx, models.GetTargetsParams{
+		Filter: createdScan.ScanConfigSnapshot.Scope,
+	})
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to discover instances to scan: %v", err)
+		return nil, "", fmt.Errorf("failed to query targets to scan: %w", err)
 	}
-	targetInstances, err := scw.createTargetInstances(ctx, instances)
-	if err != nil {
-		return nil, "", fmt.Errorf("failed to get or create targets: %v", err)
+
+	// We just want the IDs right now
+	targetIds := []string{}
+	for _, target := range *targets.Items {
+		targetIds = append(targetIds, *target.Id)
 	}
 
 	// Move scan to discovered and add the discovered targets.
-	targetIds := getTargetIDs(targetInstances)
 	scan = &models.Scan{
-		TargetIDs:    targetIds,
+		TargetIDs:    &targetIds,
 		State:        utils.PointerTo(models.ScanStateDiscovered),
 		StateMessage: utils.PointerTo("Targets for scan successfully discovered"),
 	}
@@ -98,7 +100,7 @@ func (scw *ScanConfigWatcher) initNewScan(ctx context.Context, scanConfig *model
 		return nil, "", fmt.Errorf("failed to update scan: %v", err)
 	}
 
-	return targetInstances, scanID, nil
+	return *targets.Items, scanID, nil
 }
 
 func createInitScanSummary() *models.ScanSummary {
@@ -119,81 +121,4 @@ func createInitScanSummary() *models.ScanSummary {
 			TotalNegligibleVulnerabilities: utils.PointerTo(0),
 		},
 	}
-}
-
-func getTargetIDs(targetInstances []*types.TargetInstance) *[]string {
-	ret := make([]string, len(targetInstances))
-	for i, targetInstance := range targetInstances {
-		ret[i] = targetInstance.TargetID
-	}
-
-	return &ret
-}
-
-func (scw *ScanConfigWatcher) createTargetInstances(ctx context.Context, instances []types.Instance) ([]*types.TargetInstance, error) {
-	targetInstances := make([]*types.TargetInstance, 0, len(instances))
-	for i, instance := range instances {
-		targetID, err := scw.createTarget(ctx, instance)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create target. instanceID=%v: %v", instance.GetID(), err)
-		}
-		targetInstances = append(targetInstances, &types.TargetInstance{
-			TargetID: targetID,
-			Instance: instances[i],
-		})
-	}
-
-	return targetInstances, nil
-}
-
-func (scw *ScanConfigWatcher) createTarget(ctx context.Context, instance types.Instance) (string, error) {
-	info := models.TargetType{}
-	instanceProvider := models.AWS
-	err := info.FromVMInfo(models.VMInfo{
-		Image:            instance.GetImage(),
-		InstanceID:       instance.GetID(),
-		InstanceProvider: &instanceProvider,
-		InstanceType:     instance.GetType(),
-		LaunchTime:       instance.GetLaunchTime(),
-		Location:         instance.GetLocation(),
-		Platform:         instance.GetPlatform(),
-		Tags:             convertTags(instance.GetTags()),
-		SecurityGroups:   createSecurityGroups(instance.GetSecurityGroups()),
-	})
-	if err != nil {
-		return "", fmt.Errorf("failed to create VMInfo: %v", err)
-	}
-	createdTarget, err := scw.backendClient.PostTarget(ctx, models.Target{
-		TargetInfo: &info,
-	})
-	if err != nil {
-		var conErr backendclient.TargetConflictError
-		if errors.As(err, &conErr) {
-			log.Infof("Target already exist. target id=%v.", *conErr.ConflictingTarget.Id)
-			return *conErr.ConflictingTarget.Id, nil
-		}
-		return "", fmt.Errorf("failed to post target: %v", err)
-	}
-	return *createdTarget.Id, nil
-}
-
-func createSecurityGroups(sgs []string) *[]models.SecurityGroup {
-	ret := make([]models.SecurityGroup, len(sgs))
-	for i, sg := range sgs {
-		ret[i] = models.SecurityGroup{
-			Id: sg,
-		}
-	}
-	return &ret
-}
-
-func convertTags(tags []types.Tag) *[]models.Tag {
-	ret := make([]models.Tag, len(tags))
-	for i, tag := range tags {
-		ret[i] = models.Tag{
-			Key:   tag.Key,
-			Value: tag.Val,
-		}
-	}
-	return &ret
 }

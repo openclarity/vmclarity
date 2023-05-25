@@ -17,6 +17,8 @@ package discovery
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -44,17 +46,12 @@ func CreateScopeDiscoverer(backendClient *backendclient.BackendClient, providerC
 func (sd *ScopeDiscoverer) Start(ctx context.Context) {
 	go func() {
 		for {
-			log.Debug("Discovering available scopes")
-			// nolint:contextcheck
-			scopes, err := sd.providerClient.DiscoverScopes(ctx)
+			log.Debug("Discovering available assets")
+			err := sd.DiscoverAndCreateAssets(ctx)
 			if err != nil {
-				log.Warnf("Failed to discover scopes: %v", err)
-			} else {
-				_, err := sd.backendClient.PutDiscoveryScopes(ctx, scopes)
-				if err != nil {
-					log.Warnf("Failed to set scopes: %v", err)
-				}
+				log.Warnf("Failed to discover assets: %v", err)
 			}
+
 			select {
 			case <-time.After(discoveryInterval):
 				log.Debug("Discovery interval elapsed")
@@ -64,4 +61,31 @@ func (sd *ScopeDiscoverer) Start(ctx context.Context) {
 			}
 		}
 	}()
+}
+
+func (sd *ScopeDiscoverer) DiscoverAndCreateAssets(ctx context.Context) error {
+	assets, err := sd.providerClient.DiscoverAssets(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to discover assets from provider: %w", err)
+	}
+
+	errs := []error{}
+	for _, asset := range assets {
+		_, err := sd.backendClient.PostTarget(ctx, asset)
+		if err != nil && !errors.As(err, &backendclient.TargetConflictError{}) {
+			// If there is an error, and its not a conflict telling
+			// us that the target already exists, then we need to
+			// keept track of it and log it as a failure to
+			// complete discovery. We don't fail instantly here
+			// because discovering the assets is a heavy operation
+			// so we want to give the best chance to create all the
+			// assets in the DB before failing.
+			errs = append(errs, fmt.Errorf("failed to post target: %v", err))
+		}
+	}
+
+	// TODO(sambetts) Compare the assets list to the assets in the DB and
+	// mark missing assets as terminated.
+
+	return errors.Join(errs...)
 }

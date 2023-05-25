@@ -44,7 +44,6 @@ type Database interface {
 	ScanConfigsTable() ScanConfigsTable
 	ScansTable() ScansTable
 	TargetsTable() TargetsTable
-	ScopesTable() ScopesTable
 	FindingsTable() FindingsTable
 }
 
@@ -90,11 +89,6 @@ type TargetsTable interface {
 	SaveTarget(target models.Target) (models.Target, error)
 
 	DeleteTarget(targetID models.TargetID) error
-}
-
-type ScopesTable interface {
-	GetScopes(params models.GetDiscoveryScopesParams) (models.Scopes, error)
-	SetScopes(scopes models.Scopes) (models.Scopes, error)
 }
 
 type FindingsTable interface {

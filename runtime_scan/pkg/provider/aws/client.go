@@ -69,178 +69,82 @@ func Create(ctx context.Context, config *aws.Config) (*Client, error) {
 	return &awsClient, nil
 }
 
-func (c *Client) DiscoverScopes(ctx context.Context) (*models.Scopes, error) {
+func (c *Client) DiscoverAssets(ctx context.Context) ([]models.Target, error) {
 	regions, err := c.ListAllRegions(ctx, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list all regions: %v", err)
 	}
 
-	scopes := models.ScopeType{}
-	err = scopes.FromAwsAccountScope(models.AwsAccountScope{
-		Regions: convertToAPIRegions(regions),
+	assets := []models.Target{}
+	for _, region := range regions {
+		instances, err := c.GetInstances(ctx, []ec2types.Filter{}, []types.Tag{}, region.Name)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get instances: %w", err)
+		}
+
+		targets, err := c.createTargetsFromInstances(instances)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create targets: %w", err)
+		}
+
+		assets = append(assets, targets...)
+	}
+	return assets, nil
+}
+
+func (c *Client) createTargetsFromInstances(instances []types.Instance) ([]models.Target, error) {
+	targets := []models.Target{}
+	for _, instance := range instances {
+		target, err := c.createTargetFromInstance(instance)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create target: %w", err)
+		}
+		targets = append(targets, target)
+	}
+	return targets, nil
+}
+
+func (c *Client) createTargetFromInstance(instance types.Instance) (models.Target, error) {
+	info := models.TargetType{}
+	instanceProvider := models.AWS
+	err := info.FromVMInfo(models.VMInfo{
+		Image:            instance.GetImage(),
+		InstanceID:       instance.GetID(),
+		InstanceProvider: &instanceProvider,
+		InstanceType:     instance.GetType(),
+		LaunchTime:       instance.GetLaunchTime(),
+		Location:         instance.GetLocation(),
+		Platform:         instance.GetPlatform(),
+		Tags:             convertToAPITags(instance.GetTags()),
+		SecurityGroups:   convertToAPISecurityGroups(instance.GetSecurityGroups()),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("FromAwsScope failed: %w", err)
+		return models.Target{}, fmt.Errorf("failed to create VMInfo: %v", err)
 	}
-
-	return &models.Scopes{
-		ScopeInfo: &scopes,
+	return models.Target{
+		TargetInfo: &info,
 	}, nil
 }
 
-func (c *Client) DiscoverInstances(ctx context.Context, scanScope *models.ScanScopeType) ([]types.Instance, error) {
-	var ret []types.Instance
-	var filters []ec2types.Filter
-
-	awsScanScope, err := scanScope.AsAwsScanScope()
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert as aws scope: %v", err)
-	}
-
-	scope := convertFromAPIScanScope(&awsScanScope)
-
-	regions, err := c.getRegionsToScan(ctx, scope)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get regions to scan: %v", err)
-	}
-	if len(regions) == 0 {
-		return nil, fmt.Errorf("no regions to scan")
-	}
-	filters = append(filters, createInclusionTagsFilters(scope.TagSelector)...)
-	filters = append(filters, createInstanceStateFilters(scope.ScanStopped)...)
-
-	for _, region := range regions {
-		// if no vpcs, that mean that we don't need any vpc filters
-		if len(region.VPCs) == 0 {
-			instances, err := c.GetInstances(ctx, filters, scope.ExcludeTags, region.Name)
-			if err != nil {
-				return nil, fmt.Errorf("failed to get instances: %v", err)
-			}
-			ret = append(ret, instances...)
-			continue
-		}
-
-		// need to do a per vpc call for DescribeInstances
-		for _, vpc := range region.VPCs {
-			vpcFilters := append(filters, createVPCFilters(vpc)...)
-
-			instances, err := c.GetInstances(ctx, vpcFilters, scope.ExcludeTags, region.Name)
-			if err != nil {
-				return nil, fmt.Errorf("failed to get instances: %v", err)
-			}
-			ret = append(ret, instances...)
+func convertToAPISecurityGroups(sgs []string) *[]models.SecurityGroup {
+	ret := make([]models.SecurityGroup, len(sgs))
+	for i, sg := range sgs {
+		ret[i] = models.SecurityGroup{
+			Id: sg,
 		}
 	}
-	return ret, nil
-}
-
-func convertFromAPIScanScope(scope *models.AwsScanScope) *ScanScope {
-	return &ScanScope{
-		AllRegions:  convertBool(scope.AllRegions),
-		Regions:     convertFromAPIRegions(scope.Regions),
-		ScanStopped: convertBool(scope.ShouldScanStoppedInstances),
-		TagSelector: convertFromAPITags(scope.InstanceTagSelector),
-		ExcludeTags: convertFromAPITags(scope.InstanceTagExclusion),
-	}
-}
-
-func convertFromAPITags(tags *[]models.Tag) []types.Tag {
-	var ret []types.Tag
-	if tags != nil {
-		for _, tag := range *tags {
-			ret = append(ret, types.Tag{
-				Key: tag.Key,
-				Val: tag.Value,
-			})
-		}
-	}
-
-	return ret
-}
-
-func convertFromAPIRegions(regions *[]models.AwsRegion) []Region {
-	var ret []Region
-	if regions != nil {
-		for _, region := range *regions {
-			ret = append(ret, Region{
-				Name: region.Name,
-				VPCs: convertFromAPIVPCs(region.Vpcs),
-			})
-		}
-	}
-
-	return ret
-}
-
-func convertFromAPIVPCs(vpcs *[]models.AwsVPC) []VPC {
-	if vpcs == nil {
-		return nil
-	}
-	ret := make([]VPC, len(*vpcs))
-	for i, vpc := range *vpcs {
-		ret[i] = VPC{
-			ID:             vpc.Id,
-			SecurityGroups: convertFromAPISecurityGroups(vpc.SecurityGroups),
-		}
-	}
-
-	return ret
-}
-
-func convertFromAPISecurityGroups(securityGroups *[]models.AwsSecurityGroup) []SecurityGroup {
-	if securityGroups == nil {
-		return []SecurityGroup{}
-	}
-	ret := make([]SecurityGroup, len(*securityGroups))
-	for i, securityGroup := range *securityGroups {
-		ret[i] = SecurityGroup{
-			ID: securityGroup.Id,
-		}
-	}
-
-	return ret
-}
-
-func convertToAPIRegions(regions []Region) *[]models.AwsRegion {
-	ret := make([]models.AwsRegion, len(regions))
-	for i := range regions {
-		ret[i] = models.AwsRegion{
-			Name: regions[i].Name,
-			Vpcs: convertToAPIVPCs(regions[i].VPCs),
-		}
-	}
-
 	return &ret
 }
 
-func convertToAPIVPCs(vpcs []VPC) *[]models.AwsVPC {
-	ret := make([]models.AwsVPC, len(vpcs))
-	for i := range vpcs {
-		ret[i] = models.AwsVPC{
-			Id:             vpcs[i].ID,
-			SecurityGroups: convertToAPISecurityGroups(vpcs[i].SecurityGroups),
+func convertToAPITags(tags []types.Tag) *[]models.Tag {
+	ret := make([]models.Tag, len(tags))
+	for i, tag := range tags {
+		ret[i] = models.Tag{
+			Key:   tag.Key,
+			Value: tag.Val,
 		}
 	}
-
 	return &ret
-}
-
-func convertToAPISecurityGroups(securityGroups []SecurityGroup) *[]models.AwsSecurityGroup {
-	ret := make([]models.AwsSecurityGroup, len(securityGroups))
-	for i := range securityGroups {
-		ret[i] = models.AwsSecurityGroup{
-			Id: securityGroups[i].ID,
-		}
-	}
-
-	return &ret
-}
-
-func convertBool(all *bool) bool {
-	if all != nil {
-		return *all
-	}
-	return false
 }
 
 func (c *Client) RunScanningJob(ctx context.Context, region, id string, config provider.ScanningJobConfig) (types.Instance, error) {
@@ -362,7 +266,6 @@ func (c *Client) GetInstances(ctx context.Context, filters []ec2types.Filter, ex
 	ret := make([]types.Instance, 0)
 
 	out, err := c.ec2Client.DescribeInstances(ctx, &ec2.DescribeInstancesInput{
-		Filters:    filters,
 		MaxResults: utils.Int32Ptr(maxResults), // TODO what will be a good number?
 	}, func(options *ec2.Options) {
 		options.Region = regionID
@@ -541,14 +444,6 @@ func createInclusionTagsFilters(tags []types.Tag) []ec2types.Filter {
 	return filters
 }
 
-func (c *Client) getRegionsToScan(ctx context.Context, scope *ScanScope) ([]Region, error) {
-	if scope.AllRegions {
-		return c.ListAllRegions(ctx, false)
-	}
-
-	return scope.Regions, nil
-}
-
 func (c *Client) ListAllRegions(ctx context.Context, isRecursive bool) ([]Region, error) {
 	ret := make([]Region, 0)
 	out, err := c.ec2Client.DescribeRegions(ctx, &ec2.DescribeRegionsInput{
@@ -655,4 +550,49 @@ func hasExcludeTags(excludeTags []types.Tag, instanceTags []ec2types.Tag) bool {
 		}
 	}
 	return true
+}
+
+func (c *Client) AssetToInstance(ctx context.Context, target models.Target) (types.Instance, error) {
+	vminfo, err := target.TargetInfo.AsVMInfo()
+	if err != nil {
+		return nil, fmt.Errorf("can't get vminfo from target: %w", err)
+	}
+
+	loc, err := NewLocation(vminfo.Location)
+	if err != nil {
+		return nil, fmt.Errorf("can't parse location from vminfo: %w", err)
+	}
+
+	return &InstanceImpl{
+		ec2Client: c.ec2Client,
+		id:        vminfo.InstanceID,
+		region:    loc.Region,
+	}, nil
+}
+
+const (
+	LocationSeparator  = "/"
+	LocationNumOfParts = 2
+)
+
+type Location struct {
+	Region string
+	Vpc    string
+}
+
+func (l Location) String() string {
+	return fmt.Sprintf("%s%s%s", l.Region, LocationSeparator, l.Vpc)
+}
+
+// NOTE: pattern <region>/<vpc>.
+func NewLocation(l string) (*Location, error) {
+	s := strings.SplitN(l, LocationSeparator, LocationNumOfParts)
+	if len(s) != LocationNumOfParts {
+		return nil, fmt.Errorf("failed to parse Location string: %s", l)
+	}
+
+	return &Location{
+		Region: s[0],
+		Vpc:    s[1],
+	}, nil
 }
