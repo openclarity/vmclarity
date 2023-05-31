@@ -34,7 +34,7 @@ const DetailsContent = ({data, fetchData}) => {
                     component: () => (
                         <Findings
                             findingsSummary={data?.summary}
-                            findingsFilter={`scan.id eq '${id}'`}
+                            findingsFilter={`scan/id eq '${id}'`}
                             findingsFilterTitle={getScanName({name: scanConfigSnapshot.name, startTime})}
                         />
                     )
