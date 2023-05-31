@@ -65,7 +65,7 @@ func (u *VMClarityUpdater) UpdateScanStateAndSummary(ctx context.Context) error 
 
 	scan.EndTime = utils.PointerTo(time.Now())
 	scan.State = utils.PointerTo(models.ScanStateDone)
-	scan.StateMessage = utils.PointerTo(utils.AllScanJobsCompleted)
+	scan.StateMessage = utils.PointerTo(utils.AllScanJobsCompletedMessage)
 	scan.StateReason = utils.PointerTo(models.ScanStateReasonSuccess)
 
 	err = u.client.PatchScan(ctx, u.scanID, scan)

@@ -200,9 +200,9 @@ func validateRequiredFlagForDefinedFlag(rootCmd *cobra.Command, definedFlag, req
 	}
 }
 
-func getConfigFromBackend(cliConf *cliconfig.Config) *cliconfig.Config {
+func getFamiliesConfigFromBackend() *models.ScanFamiliesConfig {
 	if server == "" {
-		panic("Missing backend")
+		logrus.Fatal("Missing backend")
 	}
 	client, err := backendclient.Create(server)
 	if err != nil {
@@ -219,16 +219,20 @@ func getConfigFromBackend(cliConf *cliconfig.Config) *cliconfig.Config {
 		logrus.Fatalf("There is no scan config with name=%s", scanConfigName)
 	}
 
+	scanConfigID = *(*scanConfigs.Items)[0].Id
+
+	return (*scanConfigs.Items)[0].ScanFamiliesConfig
+}
+
+func createFamiliesConfigFromCliAndBackend(famConfig *models.ScanFamiliesConfig) *families.Config {
+	cliConf := cliconfig.LoadConfig(values)
 	scanConfig := families.CreateFamilyConfigFromModel(
-		(*scanConfigs.Items)[0].ScanFamiliesConfig,
+		famConfig,
 		*cliConf.Addresses,
 		*cliConf.Paths,
 	)
-	scanConfigID = *(*scanConfigs.Items)[0].Id
 
-	cliConf.Config = &scanConfig
-
-	return cliConf
+	return &scanConfig
 }
 
 func getFamiliesConfigFromFile() *families.Config {
@@ -259,14 +263,13 @@ func getFamiliesConfigFromFile() *families.Config {
 }
 
 func getConfigForStandaloneMode() *cliconfig.Config {
-	cliConf := cliconfig.LoadConfig(values)
-	var conf *cliconfig.Config
+	conf := cliconfig.LoadConfig(values)
 	if scanConfigName != "" {
-		conf = getConfigFromBackend(cliConf)
+		conf.Config = createFamiliesConfigFromCliAndBackend(getFamiliesConfigFromBackend())
 	} else {
-		conf = cliConf
 		conf.Config = getFamiliesConfigFromFile()
 	}
+
 	return conf
 }
 
