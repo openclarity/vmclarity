@@ -633,26 +633,38 @@ func createScanConfigs() []models.ScanConfig {
 	return []models.ScanConfig{
 		{
 			Name:               utils.PointerTo("Scan Config 1"),
-			ScanFamiliesConfig: &scanFamiliesConfig1,
-			Scheduled: &models.RuntimeScheduleScanConfig{
-				OperationTime: utils.PointerTo(time.Now().Add(5 * time.Hour)),
+			Config: &models.ScanConfigSpec{
+				Scheduled: &models.RuntimeScheduleScanConfig{
+					OperationTime: utils.PointerTo(time.Now().Add(5 * time.Hour)),
+				},
+				ScanConfig: &models.ScanSpec{
+					Scope:               &scanScopeType1,
+					MaxParallelScanners: utils.PointerTo(2),
+					TargetScanResultConfig: &models.TargetScanResultSpec{
+						ScanFamiliesConfig: &scanFamiliesConfig1,
+					},
+				},
 			},
-			Scope:               &scanScopeType1,
-			MaxParallelScanners: utils.PointerTo(2),
 		},
 		{
-			MaxParallelScanners: utils.PointerTo(3),
 			Name:                utils.PointerTo("Scan Config 2"),
-			ScanFamiliesConfig:  &scanFamiliesConfig2,
-			ScannerInstanceCreationConfig: &models.ScannerInstanceCreationConfig{
-				MaxPrice:         utils.PointerTo("1000000"),
-				RetryMaxAttempts: utils.PointerTo(4),
-				UseSpotInstances: true,
+			Config: &models.ScanConfigSpec{
+				Scheduled: &models.RuntimeScheduleScanConfig{
+					CronLine: utils.PointerTo("0 */4 * * *"),
+				},
+				ScanConfig: &models.ScanSpec{
+					Scope: &scanScopeType2,
+					MaxParallelScanners: utils.PointerTo(3),
+					TargetScanResultConfig: &models.TargetScanResultSpec{
+						ScanFamiliesConfig:  &scanFamiliesConfig2,
+						ScannerInstanceCreationConfig: &models.ScannerInstanceCreationConfig{
+							MaxPrice:         utils.PointerTo("1000000"),
+							RetryMaxAttempts: utils.PointerTo(4),
+							UseSpotInstances: true,
+						},
+					},
+				},
 			},
-			Scheduled: &models.RuntimeScheduleScanConfig{
-				CronLine: utils.PointerTo("0 */4 * * *"),
-			},
-			Scope: &scanScopeType2,
 		},
 	}
 }
@@ -710,9 +722,7 @@ func createScans(targets []models.Target, scanConfigs []models.ScanConfig) []mod
 			ScanConfig: &models.ScanConfigRelationship{
 				Id: *scanConfigs[0].Id,
 			},
-			MaxParallelScanners: scanConfigs[0].MaxParallelScanners,
-			ScanFamiliesConfig:  scanConfigs[0].ScanFamiliesConfig,
-			Scope:               scanConfigs[0].Scope,
+			Config: scanConfigs[0].Config.ScanConfig,
 			StartTime:           &scan1Start,
 			State:               utils.PointerTo(models.ScanStateDone),
 			StateMessage:        utils.StringPtr("Scan was completed successfully"),
@@ -725,9 +735,7 @@ func createScans(targets []models.Target, scanConfigs []models.ScanConfig) []mod
 			ScanConfig: &models.ScanConfigRelationship{
 				Id: *scanConfigs[1].Id,
 			},
-			MaxParallelScanners: scanConfigs[1].MaxParallelScanners,
-			ScanFamiliesConfig:  scanConfigs[1].ScanFamiliesConfig,
-			Scope:               scanConfigs[1].Scope,
+			Config: scanConfigs[1].Config.ScanConfig,
 			StartTime:           &scan2Start,
 			State:               utils.PointerTo(models.ScanStateInProgress),
 			StateMessage:        utils.StringPtr("Scan is in progress"),
@@ -748,6 +756,7 @@ func createScanResults(scans []models.Scan) []models.TargetScanResult {
 				Scan: &models.ScanRelationship{
 					Id: *scan.Id,
 				},
+				Config: scan.Config.TargetScanResultConfig,
 				Secrets: nil,
 				Status:  nil,
 				Summary: &models.ScanFindingsSummary{},
@@ -756,7 +765,7 @@ func createScanResults(scans []models.Scan) []models.TargetScanResult {
 				},
 			}
 			// Create Exploits if needed
-			if *scan.ScanFamiliesConfig.Exploits.Enabled {
+			if *result.Config.ScanFamiliesConfig.Exploits.Enabled {
 				result.Exploits = &models.ExploitScan{
 					Exploits: createExploitsResult(),
 				}
@@ -766,7 +775,7 @@ func createScanResults(scans []models.Scan) []models.TargetScanResult {
 			}
 
 			// Create Malware if needed
-			if *scan.ScanFamiliesConfig.Malware.Enabled {
+			if *result.Config.ScanFamiliesConfig.Malware.Enabled {
 				result.Malware = &models.MalwareScan{
 					Malware: createMalwareResult(),
 				}
@@ -776,7 +785,7 @@ func createScanResults(scans []models.Scan) []models.TargetScanResult {
 			}
 
 			// Create Misconfigurations if needed
-			if *scan.ScanFamiliesConfig.Misconfigurations.Enabled {
+			if *result.Config.ScanFamiliesConfig.Misconfigurations.Enabled {
 				result.Misconfigurations = &models.MisconfigurationScan{
 					Misconfigurations: createMisconfigurationsResult(),
 				}
@@ -786,7 +795,7 @@ func createScanResults(scans []models.Scan) []models.TargetScanResult {
 			}
 
 			// Create Packages if needed
-			if *scan.ScanFamiliesConfig.Sbom.Enabled {
+			if *result.Config.ScanFamiliesConfig.Sbom.Enabled {
 				result.Sboms = &models.SbomScan{
 					Packages: createPackagesResult(),
 				}
@@ -796,7 +805,7 @@ func createScanResults(scans []models.Scan) []models.TargetScanResult {
 			}
 
 			// Create Rootkits if needed
-			if *scan.ScanFamiliesConfig.Rootkits.Enabled {
+			if *result.Config.ScanFamiliesConfig.Rootkits.Enabled {
 				result.Rootkits = &models.RootkitScan{
 					Rootkits: createRootkitsResult(),
 				}
@@ -806,7 +815,7 @@ func createScanResults(scans []models.Scan) []models.TargetScanResult {
 			}
 
 			// Create Secrets if needed
-			if *scan.ScanFamiliesConfig.Secrets.Enabled {
+			if *result.Config.ScanFamiliesConfig.Secrets.Enabled {
 				result.Secrets = &models.SecretScan{
 					Secrets: createSecretsResult(),
 				}
@@ -816,7 +825,7 @@ func createScanResults(scans []models.Scan) []models.TargetScanResult {
 			}
 
 			// Create Vulnerabilities if needed
-			if *scan.ScanFamiliesConfig.Vulnerabilities.Enabled {
+			if *result.Config.ScanFamiliesConfig.Vulnerabilities.Enabled {
 				result.Vulnerabilities = &models.VulnerabilityScan{
 					Vulnerabilities: createVulnerabilitiesResult(),
 				}

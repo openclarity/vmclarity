@@ -104,6 +104,13 @@ func (s *ScanConfigsTableHandler) CreateScanConfig(scanConfig models.ScanConfig)
 		}
 	}
 
+	// Check the user provided the config field
+	if scanConfig.Config == nil {
+		return models.ScanConfig{}, &common.BadRequestError{
+			Reason: "config must be provided",
+		}
+	}
+
 	// Check the user didn't provide an ID
 	if scanConfig.Id != nil {
 		return models.ScanConfig{}, &common.BadRequestError{
@@ -111,7 +118,7 @@ func (s *ScanConfigsTableHandler) CreateScanConfig(scanConfig models.ScanConfig)
 		}
 	}
 
-	if err := validateRuntimeScheduleScanConfig(scanConfig.Scheduled); err != nil {
+	if err := validateRuntimeScheduleScanConfig(scanConfig.Config.Scheduled); err != nil {
 		return models.ScanConfig{}, &common.BadRequestError{
 			Reason: fmt.Sprintf("failed to validate runtime schedule scan config: %v", err),
 		}
@@ -212,7 +219,14 @@ func (s *ScanConfigsTableHandler) SaveScanConfig(scanConfig models.ScanConfig) (
 		}
 	}
 
-	if err := validateRuntimeScheduleScanConfig(scanConfig.Scheduled); err != nil {
+	// Check the user provided the config field
+	if scanConfig.Config == nil {
+		return models.ScanConfig{}, &common.BadRequestError{
+			Reason: "config must be provided",
+		}
+	}
+
+	if err := validateRuntimeScheduleScanConfig(scanConfig.Config.Scheduled); err != nil {
 		return models.ScanConfig{}, &common.BadRequestError{
 			Reason: fmt.Sprintf("runtime schedule scan config validation failed: %v", err),
 		}
@@ -264,8 +278,8 @@ func (s *ScanConfigsTableHandler) UpdateScanConfig(scanConfig models.ScanConfig)
 	}
 
 	// We will want to validate Scheduled upon update only if exists.
-	if scanConfig.Scheduled != nil {
-		if err := validateRuntimeScheduleScanConfig(scanConfig.Scheduled); err != nil {
+	if scanConfig.Config != nil && scanConfig.Config.Scheduled != nil {
+		if err := validateRuntimeScheduleScanConfig(scanConfig.Config.Scheduled); err != nil {
 			return models.ScanConfig{}, &common.BadRequestError{
 				Reason: fmt.Sprintf("failed to validate runtime schedule scan config: %v", err),
 			}

@@ -889,6 +889,7 @@ components:
           type: string
         name:
           type: string
+          readOnly: true
         startTime:
           type: string
           format: date-time
@@ -900,20 +901,8 @@ components:
         scanConfig:
           $ref: '#/components/schemas/ScanConfigRelationship'
           readOnly: true
-        scanFamiliesConfig:
-          $ref: '#/components/schemas/ScanFamiliesConfig'
-          readOnly: true
-        scope:
-          $ref: '#/components/schemas/ScanScopeType'
-          readOnly: true
-        maxParallelScanners:
-          type: 'integer'
-          minimum: 1
-          maximum: 20
-          description: "The maximum number of scanners that can run in parallel for each scan"
-          readOnly: true
-        scannerInstanceCreationConfig:
-          $ref: '#/components/schemas/ScannerInstanceCreationConfig'
+        config:
+          $ref: '#/components/schemas/ScanSpec'
           readOnly: true
         targetIDs:
           description: List of target IDs that are targeted for scanning as part of this scan
@@ -955,6 +944,19 @@ components:
       required:
         - id
 
+    ScanSpec:
+      type: object
+      properties:
+        scope:
+          $ref: '#/components/schemas/ScanScopeType'
+        maxParallelScanners:
+          type: 'integer'
+          minimum: 1
+          maximum: 20
+          description: "The maximum number of scanners that can run in parallel for each scan"
+        targetScanResultConfig:
+          $ref: '#/components/schemas/TargetScanResultSpec'
+
     # NOTE(sambetts) Any changes made to Scan must be reflected in
     # ScanRelationship to ensure correct operation of the API when $expanding
     Scan:
@@ -982,17 +984,8 @@ components:
           format: date-time
         scanConfig:
           $ref: '#/components/schemas/ScanConfigRelationship'
-        scanFamiliesConfig:
-          $ref: '#/components/schemas/ScanFamiliesConfig'
-        scope:
-          $ref: '#/components/schemas/ScanScopeType'
-        maxParallelScanners:
-          type: 'integer'
-          minimum: 1
-          maximum: 20
-          description: "The maximum number of scanners that can run in parallel for each scan"
-        scannerInstanceCreationConfig:
-          $ref: '#/components/schemas/ScannerInstanceCreationConfig'
+        config:
+          $ref: '#/components/schemas/ScanSpec'
         targetIDs:
           description: List of target IDs that are targeted for scanning as part of this scan
           type: array
@@ -1170,38 +1163,16 @@ components:
       required:
         - useSpotInstances
 
-    ScanConfigRelationship:
+    ScanConfigSpec:
       type: object
-      description: Describes a relationship to a scan config which can be expanded.
       properties:
-        id:
-          type: string
-        name:
-          type: string
-          readOnly: true
-        scanFamiliesConfig:
-          $ref: '#/components/schemas/ScanFamiliesConfig'
-          readOnly: true
-        scope:
-          $ref: '#/components/schemas/ScanScopeType'
-          readOnly: true
         scheduled:
           $ref: '#/components/schemas/RuntimeScheduleScanConfig'
-          readOnly: true
-        maxParallelScanners:
-          type: 'integer'
-          minimum: 1
-          maximum: 20
-          description: "The maximum number of scanners that can run in parallel for each scan"
-          readOnly: true
         disabled:
           description: 'if true, the scan config is disabled and no scan should run from it'
           type: boolean
-          readOnly: true
-        scannerInstanceCreationConfig:
-          $ref: '#/components/schemas/ScannerInstanceCreationConfig'
-          readOnly: true
-      required: ['id']
+        scanConfig:
+          $ref: '#/components/schemas/ScanSpec'
 
     # NOTE(sambetts) Any changes made to ScanConfig must be reflected in
     # ScanConfigRelationship to ensure correct operation of the API when $expanding
@@ -1213,23 +1184,22 @@ components:
           type: string
         name:
           type: string
-        scanFamiliesConfig:
-          $ref: '#/components/schemas/ScanFamiliesConfig'
-        scope:
-          $ref: '#/components/schemas/ScanScopeType'
-        scheduled:
-          $ref: '#/components/schemas/RuntimeScheduleScanConfig'
-        maxParallelScanners:
-          description: "The maximum number of scanners that can run in parallel for each scan"
-          type: 'integer'
-          minimum: 1
-          maximum: 20
-          default: 2
-        disabled:
-          description: 'if true, the scan config is disabled and no scan should run from it'
-          type: boolean
-        scannerInstanceCreationConfig:
-          $ref: '#/components/schemas/ScannerInstanceCreationConfig'
+        config:
+          $ref: '#/components/schemas/ScanConfigSpec'
+
+    ScanConfigRelationship:
+      type: object
+      description: Describes a relationship to a scan config which can be expanded.
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          readOnly: true
+        config:
+          $ref: '#/components/schemas/ScanConfigSpec'
+          readOnly: true
+      required: ['id']
 
     ScanConfigExists:
       type: object
@@ -1561,6 +1531,14 @@ components:
             $ref: '#/components/schemas/TargetScanResult'
           readOnly: true
 
+    TargetScanResultSpec:
+      type: object
+      properties:
+        scanFamiliesConfig:
+          $ref: '#/components/schemas/ScanFamiliesConfig'
+        scannerInstanceCreationConfig:
+          $ref: '#/components/schemas/ScannerInstanceCreationConfig'
+
     TargetScanResult:
       type: object
       properties:
@@ -1577,15 +1555,8 @@ components:
           # readOnly: true
         name:
           type: string
-        scanFamiliesConfig:
-          $ref: '#/components/schemas/ScanFamiliesConfig'
-        maxParallelScanners:
-          type: 'integer'
-          minimum: 1
-          maximum: 20
-          description: "The maximum number of scanners that can run in parallel for each scan"
-        scannerInstanceCreationConfig:
-          $ref: '#/components/schemas/ScannerInstanceCreationConfig'
+        config:
+          $ref: '#/components/schemas/TargetScanResultSpec'
         target:
           $ref: '#/components/schemas/TargetRelationship'
         scan:
@@ -1630,17 +1601,8 @@ components:
         name:
           type: string
           readOnly: true
-        scanFamiliesConfig:
-          $ref: '#/components/schemas/ScanFamiliesConfig'
-          readOnly: true
-        maxParallelScanners:
-          type: 'integer'
-          minimum: 1
-          maximum: 20
-          description: "The maximum number of scanners that can run in parallel for each scan"
-          readOnly: true
-        scannerInstanceCreationConfig:
-          $ref: '#/components/schemas/ScannerInstanceCreationConfig'
+        config:
+          $ref: '#/components/schemas/TargetScanResultSpec'
           readOnly: true
         target:
           $ref: '#/components/schemas/TargetRelationship'

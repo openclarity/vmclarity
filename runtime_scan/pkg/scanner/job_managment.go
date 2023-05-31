@@ -67,7 +67,7 @@ func (s *Scanner) jobBatchManagement(ctx context.Context) {
 	s.Lock()
 	targetIDToScanData := s.targetIDToScanData
 	// Since this value has a default in the API, I assume it is safe to dereference it.
-	numberOfWorkers := *s.scan.MaxParallelScanners
+	numberOfWorkers := *s.scan.Config.MaxParallelScanners
 	s.Unlock()
 
 	// queue of scan data
@@ -395,7 +395,7 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 		VMClarityAddress:              s.config.ScannerBackendAddress,
 		ScanResultID:                  data.scanResultID,
 		KeyPairName:                   s.config.ScannerKeyPairName,
-		ScannerInstanceCreationConfig: s.scan.ScannerInstanceCreationConfig,
+		ScannerInstanceCreationConfig: s.scan.Config.TargetScanResultConfig.ScannerInstanceCreationConfig,
 	}
 	launchInstance, err = s.providerClient.RunScanningJob(ctx, launchSnapshot.GetRegion(), launchSnapshot.GetID(), scanningJobConfig)
 	if err != nil {
@@ -446,18 +446,18 @@ func (s *Scanner) runJob(ctx context.Context, data *scanData) (types.Job, error)
 
 func (s *Scanner) generateFamiliesConfigurationYaml() (string, error) {
 	famConfig := families.Config{
-		SBOM:            userSBOMConfigToFamiliesSbomConfig(s.scan.ScanFamiliesConfig.Sbom),
-		Vulnerabilities: userVulnConfigToFamiliesVulnConfig(s.scan.ScanFamiliesConfig.Vulnerabilities, s.config.TrivyServerAddress, s.config.GrypeServerAddress),
-		Secrets:         userSecretsConfigToFamiliesSecretsConfig(s.scan.ScanFamiliesConfig.Secrets, s.config.GitleaksBinaryPath),
-		Exploits:        userExploitsConfigToFamiliesExploitsConfig(s.scan.ScanFamiliesConfig.Exploits, s.config.ExploitsDBAddress),
+		SBOM:            userSBOMConfigToFamiliesSbomConfig(s.scan.Config.TargetScanResultConfig.ScanFamiliesConfig.Sbom),
+		Vulnerabilities: userVulnConfigToFamiliesVulnConfig(s.scan.Config.TargetScanResultConfig.ScanFamiliesConfig.Vulnerabilities, s.config.TrivyServerAddress, s.config.GrypeServerAddress),
+		Secrets:         userSecretsConfigToFamiliesSecretsConfig(s.scan.Config.TargetScanResultConfig.ScanFamiliesConfig.Secrets, s.config.GitleaksBinaryPath),
+		Exploits:        userExploitsConfigToFamiliesExploitsConfig(s.scan.Config.TargetScanResultConfig.ScanFamiliesConfig.Exploits, s.config.ExploitsDBAddress),
 		Malware: userMalwareConfigToFamiliesMalwareConfig(
-			s.scan.ScanFamiliesConfig.Malware,
+			s.scan.Config.TargetScanResultConfig.ScanFamiliesConfig.Malware,
 			s.config.ClamBinaryPath,
 			s.config.FreshclamBinaryPath,
 			s.config.AlternativeFreshclamMirrorURL,
 		),
-		Misconfiguration: userMisconfigurationConfigToFamiliesMisconfigurationConfig(s.scan.ScanFamiliesConfig.Misconfigurations, s.config.LynisInstallPath),
-		Rootkits:         userRootkitsConfigToFamiliesRootkitsConfig(s.scan.ScanFamiliesConfig.Rootkits, s.config.ChkrootkitBinaryPath),
+		Misconfiguration: userMisconfigurationConfigToFamiliesMisconfigurationConfig(s.scan.Config.TargetScanResultConfig.ScanFamiliesConfig.Misconfigurations, s.config.LynisInstallPath),
+		Rootkits:         userRootkitsConfigToFamiliesRootkitsConfig(s.scan.Config.TargetScanResultConfig.ScanFamiliesConfig.Rootkits, s.config.ChkrootkitBinaryPath),
 	}
 
 	famConfigYaml, err := yaml.Marshal(famConfig)
@@ -680,7 +680,7 @@ func (s *Scanner) createInitTargetScanStatus(ctx context.Context, targetID strin
 	initScanStatus := &models.TargetScanStatus{
 		Exploits: &models.TargetScanState{
 			Errors: nil,
-			State:  getInitScanStatusExploitsStateFromEnabled(s.scan.ScanFamiliesConfig.Exploits),
+			State:  getInitScanStatusExploitsStateFromEnabled(s.scan.Config.TargetScanResultConfig.ScanFamiliesConfig.Exploits),
 		},
 		General: &models.TargetScanState{
 			Errors: nil,
@@ -688,27 +688,27 @@ func (s *Scanner) createInitTargetScanStatus(ctx context.Context, targetID strin
 		},
 		Malware: &models.TargetScanState{
 			Errors: nil,
-			State:  getInitScanStatusMalwareStateFromEnabled(s.scan.ScanFamiliesConfig.Malware),
+			State:  getInitScanStatusMalwareStateFromEnabled(s.scan.Config.TargetScanResultConfig.ScanFamiliesConfig.Malware),
 		},
 		Misconfigurations: &models.TargetScanState{
 			Errors: nil,
-			State:  getInitScanStatusMisconfigurationsStateFromEnabled(s.scan.ScanFamiliesConfig.Misconfigurations),
+			State:  getInitScanStatusMisconfigurationsStateFromEnabled(s.scan.Config.TargetScanResultConfig.ScanFamiliesConfig.Misconfigurations),
 		},
 		Rootkits: &models.TargetScanState{
 			Errors: nil,
-			State:  getInitScanStatusRootkitsStateFromEnabled(s.scan.ScanFamiliesConfig.Rootkits),
+			State:  getInitScanStatusRootkitsStateFromEnabled(s.scan.Config.TargetScanResultConfig.ScanFamiliesConfig.Rootkits),
 		},
 		Sbom: &models.TargetScanState{
 			Errors: nil,
-			State:  getInitScanStatusSbomStateFromEnabled(s.scan.ScanFamiliesConfig.Sbom),
+			State:  getInitScanStatusSbomStateFromEnabled(s.scan.Config.TargetScanResultConfig.ScanFamiliesConfig.Sbom),
 		},
 		Secrets: &models.TargetScanState{
 			Errors: nil,
-			State:  getInitScanStatusSecretsStateFromEnabled(s.scan.ScanFamiliesConfig.Secrets),
+			State:  getInitScanStatusSecretsStateFromEnabled(s.scan.Config.TargetScanResultConfig.ScanFamiliesConfig.Secrets),
 		},
 		Vulnerabilities: &models.TargetScanState{
 			Errors: nil,
-			State:  getInitScanStatusVulnerabilitiesStateFromEnabled(s.scan.ScanFamiliesConfig.Vulnerabilities),
+			State:  getInitScanStatusVulnerabilitiesStateFromEnabled(s.scan.Config.TargetScanResultConfig.ScanFamiliesConfig.Vulnerabilities),
 		},
 	}
 	scanResult := models.TargetScanResult{
@@ -717,6 +717,7 @@ func (s *Scanner) createInitTargetScanStatus(ctx context.Context, targetID strin
 		Scan: &models.ScanRelationship{
 			Id: *s.scan.Id,
 		},
+		Config: s.scan.Config.TargetScanResultConfig,
 		Status: initScanStatus,
 		Target: &models.TargetRelationship{
 			Id: targetID,

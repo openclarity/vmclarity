@@ -52,9 +52,7 @@ func (scw *ScanConfigWatcher) initNewScan(ctx context.Context, scanConfig *model
 		ScanConfig: &models.ScanConfigRelationship{
 			Id: *scanConfig.Id,
 		},
-		MaxParallelScanners: scanConfig.MaxParallelScanners,
-		ScanFamiliesConfig:  scanConfig.ScanFamiliesConfig,
-		Scope:               scanConfig.Scope,
+		Config: scanConfig.Config.ScanConfig,
 		StartTime:           &now,
 		State:               utils.PointerTo(models.ScanStatePending),
 		Summary:             createInitScanSummary(),
@@ -74,7 +72,7 @@ func (scw *ScanConfigWatcher) initNewScan(ctx context.Context, scanConfig *model
 	}
 
 	// Do discovery of targets
-	instances, err := scw.providerClient.DiscoverInstances(ctx, scan.Scope)
+	instances, err := scw.providerClient.DiscoverInstances(ctx, scan.Config.Scope)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to discover instances to scan: %v", err)
 	}

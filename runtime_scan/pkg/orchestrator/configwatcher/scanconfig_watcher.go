@@ -86,7 +86,7 @@ func (scw *ScanConfigWatcher) reconcileScanConfigs(ctx context.Context) error {
 		scanConfig := sc
 		shouldScan := false
 		scanConfigID := *scanConfig.Id
-		operationTime := *scanConfig.Scheduled.OperationTime
+		operationTime := *scanConfig.Config.Scheduled.OperationTime
 		shouldScan, err = scw.shouldScan(ctx, scanConfigID, operationTime, now)
 		if err != nil {
 			log.Errorf("Failed to check whether should scan according to scan config (%s): %v", scanConfigID, err)
@@ -99,15 +99,15 @@ func (scw *ScanConfigWatcher) reconcileScanConfigs(ctx context.Context) error {
 				log.Errorf("Failed to schedule a scan for scan config (%s): %v", *scanConfig.Id, err)
 			} else {
 				log.Infof("Succeeded to schedule a scan for scan config (%s)", *scanConfig.Id)
-				if scanConfig.Scheduled.CronLine != nil {
+				if scanConfig.Config.Scheduled.CronLine != nil {
 					// calculate next operation time based on current operation time
-					nextOperationTime := cronexpr.MustParse(*scanConfig.Scheduled.CronLine).Next(operationTime)
-					scanConfig.Scheduled.OperationTime = &nextOperationTime
+					nextOperationTime := cronexpr.MustParse(*scanConfig.Config.Scheduled.CronLine).Next(operationTime)
+					scanConfig.Config.Scheduled.OperationTime = &nextOperationTime
 					log.Debugf("Patching ScanConfig %s with a new operation time (%s)", scanConfigID, nextOperationTime.String())
 				} else {
 					// not a periodic scan, we should disable the scan config, so it will not be fetched again.
-					scanConfig.Disabled = utils.PointerTo(true)
-					log.Debugf("Patching ScanConfig %s with disabled (%v)", scanConfigID, *scanConfig.Disabled)
+					scanConfig.Config.Disabled = utils.PointerTo(true)
+					log.Debugf("Patching ScanConfig %s with disabled (%v)", scanConfigID, *scanConfig.Config.Disabled)
 				}
 				if err = scw.backendClient.PatchScanConfig(ctx, scanConfigID, &scanConfig); err != nil {
 					log.Errorf("Failed to patch scan config: %v", err)
@@ -115,11 +115,11 @@ func (scw *ScanConfigWatcher) reconcileScanConfigs(ctx context.Context) error {
 			}
 		} else {
 			log.Debugf("No scan should be started from ScanConfig %s", scanConfigID)
-			if operationTime.Before(now) && scanConfig.Scheduled.CronLine != nil {
+			if operationTime.Before(now) && scanConfig.Config.Scheduled.CronLine != nil {
 				// If operationTime is not within the window, and it was in the past,
 				// we will calculate the next operation time until we will find one that is in the future.
-				nextOperationTime := findFirstOperationTimeInTheFuture(operationTime, now, *scanConfig.Scheduled.CronLine)
-				scanConfig.Scheduled.OperationTime = &nextOperationTime
+				nextOperationTime := findFirstOperationTimeInTheFuture(operationTime, now, *scanConfig.Config.Scheduled.CronLine)
+				scanConfig.Config.Scheduled.OperationTime = &nextOperationTime
 				log.Debugf("Patching ScanConfig %s with a new operation time (%s)", scanConfigID, nextOperationTime.String())
 				if err = scw.backendClient.PatchScanConfig(ctx, scanConfigID, &scanConfig); err != nil {
 					log.Errorf("Failed to patch scan config: %v", err)
