@@ -180,7 +180,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&scanResultID, "scan-result-id", "", "the ScanResult ID to export the scan results to")
 	rootCmd.PersistentFlags().BoolVar(&mountVolume, "mount-attached-volume", false, "discover for an attached volume and mount it before the scan")
 	rootCmd.PersistentFlags().BoolVar(&waitForServerAttached, "wait-for-server-attached", false, "wait for the VMClarity server to attach the volume")
-	rootCmd.PersistentFlags().StringVar(&input, "input", "", "input for families")
+	rootCmd.PersistentFlags().StringVar(&input, "input", "", "input for scans")
 	rootCmd.PersistentFlags().BoolVar(&standalone, "standalone", false, "standalone mode")
 	rootCmd.PersistentFlags().BoolVar(&exportResults, "export-results", false, "export results in standalone mode to VMclarity server")
 	rootCmd.PersistentFlags().StringArrayVar(&values, "set", []string{}, "set values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)")
