@@ -152,31 +152,9 @@ func (s *Scanner) jobBatchManagement(ctx context.Context) {
 }
 
 func (s *Scanner) createScanWithUpdatedSummary(ctx context.Context, data scanData) (*models.Scan, error) {
-	scan, err := s.backendClient.GetScan(ctx, s.scanID, models.GetScansScanIDParams{})
+	scan, err := s.backendClient.UpdatedScanSummary(ctx, s.scanID, data.scanResultID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get scan to update status: %v", err)
-	}
-
-	scanResultSummary, err := s.backendClient.GetScanResultSummary(ctx, data.scanResultID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get result summary to update status: %v", err)
-	}
-
-	// Update the scan summary with the summary from the completed scan result
-	scan.Summary.JobsCompleted = runtimeScanUtils.IntPtr(*scan.Summary.JobsCompleted + 1)
-	scan.Summary.JobsLeftToRun = runtimeScanUtils.IntPtr(*scan.Summary.JobsLeftToRun - 1)
-	scan.Summary.TotalExploits = runtimeScanUtils.IntPtr(*scan.Summary.TotalExploits + *scanResultSummary.TotalExploits)
-	scan.Summary.TotalMalware = runtimeScanUtils.IntPtr(*scan.Summary.TotalMalware + *scanResultSummary.TotalMalware)
-	scan.Summary.TotalMisconfigurations = runtimeScanUtils.IntPtr(*scan.Summary.TotalMisconfigurations + *scanResultSummary.TotalMisconfigurations)
-	scan.Summary.TotalPackages = runtimeScanUtils.IntPtr(*scan.Summary.TotalPackages + *scanResultSummary.TotalPackages)
-	scan.Summary.TotalRootkits = runtimeScanUtils.IntPtr(*scan.Summary.TotalRootkits + *scanResultSummary.TotalRootkits)
-	scan.Summary.TotalSecrets = runtimeScanUtils.IntPtr(*scan.Summary.TotalSecrets + *scanResultSummary.TotalSecrets)
-	scan.Summary.TotalVulnerabilities = &models.VulnerabilityScanSummary{
-		TotalCriticalVulnerabilities:   runtimeScanUtils.IntPtr(*scan.Summary.TotalVulnerabilities.TotalCriticalVulnerabilities + *scanResultSummary.TotalVulnerabilities.TotalCriticalVulnerabilities),
-		TotalHighVulnerabilities:       runtimeScanUtils.IntPtr(*scan.Summary.TotalVulnerabilities.TotalHighVulnerabilities + *scanResultSummary.TotalVulnerabilities.TotalHighVulnerabilities),
-		TotalLowVulnerabilities:        runtimeScanUtils.IntPtr(*scan.Summary.TotalVulnerabilities.TotalLowVulnerabilities + *scanResultSummary.TotalVulnerabilities.TotalLowVulnerabilities),
-		TotalMediumVulnerabilities:     runtimeScanUtils.IntPtr(*scan.Summary.TotalVulnerabilities.TotalMediumVulnerabilities + *scanResultSummary.TotalVulnerabilities.TotalMediumVulnerabilities),
-		TotalNegligibleVulnerabilities: runtimeScanUtils.IntPtr(*scan.Summary.TotalVulnerabilities.TotalCriticalVulnerabilities + *scanResultSummary.TotalVulnerabilities.TotalNegligibleVulnerabilities),
+		return nil, fmt.Errorf("failed to update scan summary: %v", err)
 	}
 
 	return scan, nil

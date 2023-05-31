@@ -619,3 +619,34 @@ func (b *BackendClient) PostFinding(ctx context.Context, finding models.Finding)
 		return nil, fmt.Errorf("failed to create a finding. status code=%v", resp.StatusCode())
 	}
 }
+
+func (b *BackendClient) UpdatedScanSummary(ctx context.Context, scanID, scanResultID string) (*models.Scan, error) {
+	scan, err := b.GetScan(ctx, scanID, models.GetScansScanIDParams{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get scan to update status: %v", err)
+	}
+
+	scanResultSummary, err := b.GetScanResultSummary(ctx, scanResultID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get result summary to update status: %v", err)
+	}
+
+	// Update the scan summary with the summary from the completed scan result
+	scan.Summary.JobsCompleted = utils.PointerTo(*scan.Summary.JobsCompleted + 1)
+	scan.Summary.JobsLeftToRun = utils.PointerTo(*scan.Summary.JobsLeftToRun - 1)
+	scan.Summary.TotalExploits = utils.PointerTo(*scan.Summary.TotalExploits + *scanResultSummary.TotalExploits)
+	scan.Summary.TotalMalware = utils.PointerTo(*scan.Summary.TotalMalware + *scanResultSummary.TotalMalware)
+	scan.Summary.TotalMisconfigurations = utils.PointerTo(*scan.Summary.TotalMisconfigurations + *scanResultSummary.TotalMisconfigurations)
+	scan.Summary.TotalPackages = utils.PointerTo(*scan.Summary.TotalPackages + *scanResultSummary.TotalPackages)
+	scan.Summary.TotalRootkits = utils.PointerTo(*scan.Summary.TotalRootkits + *scanResultSummary.TotalRootkits)
+	scan.Summary.TotalSecrets = utils.PointerTo(*scan.Summary.TotalSecrets + *scanResultSummary.TotalSecrets)
+	scan.Summary.TotalVulnerabilities = &models.VulnerabilityScanSummary{
+		TotalCriticalVulnerabilities:   utils.PointerTo(*scan.Summary.TotalVulnerabilities.TotalCriticalVulnerabilities + *scanResultSummary.TotalVulnerabilities.TotalCriticalVulnerabilities),
+		TotalHighVulnerabilities:       utils.PointerTo(*scan.Summary.TotalVulnerabilities.TotalHighVulnerabilities + *scanResultSummary.TotalVulnerabilities.TotalHighVulnerabilities),
+		TotalLowVulnerabilities:        utils.PointerTo(*scan.Summary.TotalVulnerabilities.TotalLowVulnerabilities + *scanResultSummary.TotalVulnerabilities.TotalLowVulnerabilities),
+		TotalMediumVulnerabilities:     utils.PointerTo(*scan.Summary.TotalVulnerabilities.TotalMediumVulnerabilities + *scanResultSummary.TotalVulnerabilities.TotalMediumVulnerabilities),
+		TotalNegligibleVulnerabilities: utils.PointerTo(*scan.Summary.TotalVulnerabilities.TotalCriticalVulnerabilities + *scanResultSummary.TotalVulnerabilities.TotalNegligibleVulnerabilities),
+	}
+
+	return scan, nil
+}
