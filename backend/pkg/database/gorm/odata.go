@@ -23,8 +23,11 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/openclarity/vmclarity/backend/pkg/database/odatasql"
+	"github.com/openclarity/vmclarity/backend/pkg/database/odatasql/jsonsql"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/utils"
 )
+
+var SQLVariant jsonsql.Variant
 
 type ODataObject struct {
 	ID   uint `gorm:"primarykey"`
@@ -35,7 +38,8 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 	targetScanResultsSchemaName: {
 		Table: "scan_results",
 		Fields: odatasql.Schema{
-			"id": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"id":       odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"revision": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"target": odatasql.FieldMeta{
 				FieldType:            odatasql.RelationshipFieldType,
 				RelationshipSchema:   targetSchemaName,
@@ -265,6 +269,7 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 		Table: "scans",
 		Fields: odatasql.Schema{
 			"id":        odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"revision":  odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"startTime": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"endTime":   odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"scanConfig": odatasql.FieldMeta{
@@ -317,6 +322,7 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 		Table: "targets",
 		Fields: odatasql.Schema{
 			"id":         odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"revision":   odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"scansCount": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"targetInfo": odatasql.FieldMeta{
 				FieldType:             odatasql.ComplexFieldType,
@@ -387,6 +393,7 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 		Table: "scan_configs",
 		Fields: odatasql.Schema{
 			"id":       odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"revision": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"name":     odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"disabled": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"scanFamiliesConfig": odatasql.FieldMeta{
@@ -827,7 +834,7 @@ func ODataQuery(db *gorm.DB, schema string, filterString, selectString, expandSt
 
 	// Build the raw SQL query using the odatasql library, this will also
 	// parse and validate the ODATA query params.
-	query, err := odatasql.BuildSQLQuery(schemaMetas, schema, filterString, selectString, expandString, orderby, top, skip)
+	query, err := odatasql.BuildSQLQuery(SQLVariant, schemaMetas, schema, filterString, selectString, expandString, orderby, top, skip)
 	if err != nil {
 		return fmt.Errorf("failed to build query for DB: %w", err)
 	}
@@ -849,7 +856,7 @@ func ODataQuery(db *gorm.DB, schema string, filterString, selectString, expandSt
 }
 
 func ODataCount(db *gorm.DB, schema string, filterString *string) (int, error) {
-	query, err := odatasql.BuildCountQuery(schemaMetas, schema, filterString)
+	query, err := odatasql.BuildCountQuery(SQLVariant, schemaMetas, schema, filterString)
 	if err != nil {
 		return 0, fmt.Errorf("failed to build query to count objects: %w", err)
 	}
