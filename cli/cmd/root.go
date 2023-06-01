@@ -60,8 +60,6 @@ var (
 	scanResultID          string
 	mountVolume           bool
 	waitForServerAttached bool
-	readynessTimeout      time.Duration
-	scanTimeout           time.Duration
 )
 
 // rootCmd represents the base command when called without any subcommands.
@@ -88,10 +86,10 @@ var rootCmd = &cobra.Command{
 		defer cancel()
 
 		// Start watching for abort event
-		cli.WatchForAbort(ctx, cancel, DefaultWatcherInterval, scanTimeout)
+		cli.WatchForAbort(ctx, cancel, DefaultWatcherInterval)
 
 		if waitForServerAttached {
-			if err := cli.WaitForVolumeAttachment(abortCtx, readynessTimeout); err != nil {
+			if err := cli.WaitForVolumeAttachment(abortCtx); err != nil {
 				err = fmt.Errorf("failed to wait for block device being attached: %w", err)
 				if e := cli.MarkDone(ctx, []error{err}); e != nil {
 					logger.Errorf("Failed to update scan result stat to completed with errors: %v", e)
@@ -155,8 +153,6 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&scanResultID, "scan-result-id", "", "the ScanResult ID to export the scan results to")
 	rootCmd.PersistentFlags().BoolVar(&mountVolume, "mount-attached-volume", false, "discover for an attached volume and mount it before the scan")
 	rootCmd.PersistentFlags().BoolVar(&waitForServerAttached, "wait-for-server-attached", false, "wait for the VMClarity server to attach the volume")
-	rootCmd.PersistentFlags().DurationVar(&readynessTimeout, "readyness-timeout", DefaultReadynessTimeout, "timeout for waiting for VMClarity server to attach the volume")
-	rootCmd.PersistentFlags().DurationVar(&scanTimeout, "timeout", DefaultScanTimeout, "timeout for scan operation")
 
 	// TODO(sambetts) we may have to change this to our own validation when
 	// we add the CI/CD scenario and there isn't an existing scan-result-id

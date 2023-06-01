@@ -18,7 +18,6 @@ package scanresultwatcher
 import (
 	"errors"
 	"fmt"
-	"time"
 
 	"gopkg.in/yaml.v3"
 
@@ -32,9 +31,6 @@ type jobConfigInput struct {
 	scanResult *models.TargetScanResult
 	scanConfig *models.ScanConfigSnapshot
 	target     *models.Target
-
-	scanTimeout          time.Duration
-	scanReadynessTimeout time.Duration
 }
 
 func (i *jobConfigInput) Validate() error {
@@ -78,14 +74,6 @@ func newJobConfig(i *jobConfigInput) (*provider.ScanJobConfig, error) {
 			*i.scanResult.Id)
 	}
 
-	if i.scanTimeout == 0 {
-		i.scanTimeout = DefaultScanResultTimeout
-	}
-
-	if i.scanReadynessTimeout == 0 {
-		i.scanReadynessTimeout = DefaultScanResultReadynessTimeout
-	}
-
 	return &provider.ScanJobConfig{
 		ScannerImage:     i.config.ScannerImage,
 		ScannerCLIConfig: string(scannerConfigYAML),
@@ -100,7 +88,5 @@ func newJobConfig(i *jobConfigInput) (*provider.ScanJobConfig, error) {
 		},
 		ScannerInstanceCreationConfig: instanceCreationConfig,
 		Target:                        *i.target,
-		ScanTimeout:                   i.scanTimeout,
-		ScanReadynessTimeout:          i.scanReadynessTimeout,
 	}, nil
 }

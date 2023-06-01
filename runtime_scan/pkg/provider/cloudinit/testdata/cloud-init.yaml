@@ -40,9 +40,7 @@ write_files:
           --wait-for-server-attached \
           --mount-attached-volume \
           --scan-result-id d6ff6f55-5d53-4934-bef5-c3abb70a7f76 \
-          --output /var/opt/vmclarity \
-          --readyness-timeout 30m0s \
-          --timeout 4h0m0s
+          --output /var/opt/vmclarity
       
       [Install]
       WantedBy=multi-user.target

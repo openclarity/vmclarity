@@ -30,9 +30,7 @@ write_files:
           --wait-for-server-attached \
           --mount-attached-volume \
           --scan-result-id {{ .ScanResultID }} \
-          --output /var/opt/vmclarity \
-          --readyness-timeout {{ .ScanReadynessTimeout }} \
-          --timeout {{ .ScanTimeout }}
+          --output /var/opt/vmclarity
       
       [Install]
       WantedBy=multi-user.target

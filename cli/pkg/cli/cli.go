@@ -80,19 +80,11 @@ func (c *CLI) MountVolumes(ctx context.Context) ([]string, error) {
 }
 
 // WatchForAbort is responsible for watching for abort events triggered and invoking the provided cancel function to mark
-// the ctx context cancelled. Abort events are fired by:
-// * ScanResult state is changed to ABORTED
-// * context deadline defined by timeout parameter is reached
-func (c *CLI) WatchForAbort(ctx context.Context, cancel context.CancelFunc, interval time.Duration, timeout time.Duration) {
+// the ctx context cancelled.
+func (c *CLI) WatchForAbort(ctx context.Context, cancel context.CancelFunc, interval time.Duration) {
 	go func() {
-		ctx, timeoutCancel := context.WithTimeout(ctx, timeout)
 		timer := time.NewTicker(interval)
-
-		defer func() {
-			timer.Stop()
-			timeoutCancel()
-			cancel()
-		}()
+		defer timer.Stop()
 
 		logger := log.GetLoggerFromContextOrDiscard(ctx)
 
@@ -104,6 +96,7 @@ func (c *CLI) WatchForAbort(ctx context.Context, cancel context.CancelFunc, inte
 					logger.Errorf("Failed to retrieve scan result state: %v", err)
 				}
 				if aborted {
+					cancel()
 					return
 				}
 			case <-ctx.Done():

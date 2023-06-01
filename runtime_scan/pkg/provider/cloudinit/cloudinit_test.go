@@ -18,7 +18,6 @@ package cloudinit
 import (
 	_ "embed"
 	"testing"
-	"time"
 
 	. "github.com/onsi/gomega"
 
@@ -41,11 +40,9 @@ func TestNewCloudInit(t *testing.T) {
 		{
 			Name: "Cloud-init from ScanJobConfig passed by pointer",
 			CloudInitData: &provider.ScanJobConfig{
-				ScannerImage:         "ghcr.io/openclarity/vmclarity-cli:latest",
-				ScannerCLIConfig:     ScannerCLIConfig,
-				VMClarityAddress:     "10.1.1.1:8888",
-				ScanReadynessTimeout: 30 * time.Minute,
-				ScanTimeout:          4 * time.Hour,
+				ScannerImage:     "ghcr.io/openclarity/vmclarity-cli:latest",
+				ScannerCLIConfig: ScannerCLIConfig,
+				VMClarityAddress: "10.1.1.1:8888",
 				ScanMetadata: provider.ScanMetadata{
 					ScanResultID: "d6ff6f55-5d53-4934-bef5-c3abb70a7f76",
 				},
@@ -55,11 +52,9 @@ func TestNewCloudInit(t *testing.T) {
 		{
 			Name: "Cloud-init from ScanJobConfig passed by value",
 			CloudInitData: provider.ScanJobConfig{
-				ScannerImage:         "ghcr.io/openclarity/vmclarity-cli:latest",
-				ScannerCLIConfig:     ScannerCLIConfig,
-				VMClarityAddress:     "10.1.1.1:8888",
-				ScanReadynessTimeout: 30 * time.Minute,
-				ScanTimeout:          4 * time.Hour,
+				ScannerImage:     "ghcr.io/openclarity/vmclarity-cli:latest",
+				ScannerCLIConfig: ScannerCLIConfig,
+				VMClarityAddress: "10.1.1.1:8888",
 				ScanMetadata: provider.ScanMetadata{
 					ScanResultID: "d6ff6f55-5d53-4934-bef5-c3abb70a7f76",
 				},

@@ -24,10 +24,12 @@ import (
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 	"github.com/openclarity/vmclarity/shared/pkg/families/types"
+	"github.com/openclarity/vmclarity/shared/pkg/log"
 	"github.com/openclarity/vmclarity/shared/pkg/utils"
 )
 
 const (
+	DefaultWaitForVolTimeout       = utils.DefaultResourceReadyWaitTimeoutMin * time.Minute
 	DefaultWaitForVolRetryInterval = utils.DefaultResourceReadyCheckIntervalSec * time.Second
 )
 
@@ -39,11 +41,13 @@ type VMClarityState struct {
 	scanResultID models.ScanResultID
 }
 
-func (v *VMClarityState) WaitForVolumeAttachment(ctx context.Context, timeout time.Duration) error {
-	ctx, cancel := context.WithTimeout(ctx, timeout)
+func (v *VMClarityState) WaitForVolumeAttachment(ctx context.Context) error {
+	logger := log.GetLoggerFromContextOrDiscard(ctx)
+
+	ctx, cancel := context.WithTimeout(ctx, DefaultWaitForVolTimeout)
 	defer cancel()
 
-	timer := time.NewTimer(DefaultWaitForVolRetryInterval)
+	timer := time.NewTicker(DefaultWaitForVolRetryInterval)
 	defer timer.Stop()
 
 	for {
@@ -51,17 +55,14 @@ func (v *VMClarityState) WaitForVolumeAttachment(ctx context.Context, timeout ti
 		case <-timer.C:
 			status, err := v.client.GetScanResultStatus(ctx, v.scanResultID)
 			if err != nil {
-				return fmt.Errorf("failed to get scan result status: %w", err)
+				logger.Errorf("failed to get scan result status: %v", err)
+				break
 			}
 			// wait for status attached (meaning volume was attached and can be mounted).
 			if *status.General.State == models.TargetScanStateStateATTACHED {
 				return nil
 			}
-			timer.Reset(DefaultWaitForVolRetryInterval)
 		case <-ctx.Done():
-			if !timer.Stop() {
-				<-timer.C
-			}
 			return fmt.Errorf("waiting for volume ready was canceled: %w", ctx.Err())
 		}
 	}

@@ -25,19 +25,14 @@ import (
 const (
 	DefaultPollInterval     = time.Minute
 	DefaultReconcileTimeout = 5 * time.Minute
-	DefaultRequeueInterval  = 5 * time.Minute
-
-	DefaultScanResultTimeout          = 4 * time.Hour
-	DefaultScanResultReadynessTimeout = 30 * time.Minute
 )
 
 type Config struct {
-	Backend           *backendclient.BackendClient
-	Provider          provider.Provider
-	PollPeriod        time.Duration
-	ReconcileTimeout  time.Duration
-	ScanResultTimeout time.Duration
-	ScannerConfig     ScannerConfig
+	Backend          *backendclient.BackendClient
+	Provider         provider.Provider
+	PollPeriod       time.Duration
+	ReconcileTimeout time.Duration
+	ScannerConfig    ScannerConfig
 }
 
 func (c Config) WithBackendClient(b *backendclient.BackendClient) Config {
@@ -57,11 +52,6 @@ func (c Config) WithReconcileTimeout(t time.Duration) Config {
 
 func (c Config) WithPollPeriod(t time.Duration) Config {
 	c.PollPeriod = t
-	return c
-}
-
-func (c Config) WithScanResultTimeout(t time.Duration) Config {
-	c.ScanResultTimeout = t
 	return c
 }
 

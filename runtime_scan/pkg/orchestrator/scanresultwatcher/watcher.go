@@ -37,23 +37,21 @@ type (
 
 func New(c Config) *Watcher {
 	return &Watcher{
-		backend:           c.Backend,
-		provider:          c.Provider,
-		scannerConfig:     c.ScannerConfig,
-		pollPeriod:        c.PollPeriod,
-		reconcileTimeout:  c.ReconcileTimeout,
-		scanResultTimeout: c.ScanResultTimeout,
-		queue:             common.NewQueue[ScanResultReconcileEvent](),
+		backend:          c.Backend,
+		provider:         c.Provider,
+		scannerConfig:    c.ScannerConfig,
+		pollPeriod:       c.PollPeriod,
+		reconcileTimeout: c.ReconcileTimeout,
+		queue:            common.NewQueue[ScanResultReconcileEvent](),
 	}
 }
 
 type Watcher struct {
-	backend           *backendclient.BackendClient
-	provider          provider.Provider
-	scannerConfig     ScannerConfig
-	pollPeriod        time.Duration
-	reconcileTimeout  time.Duration
-	scanResultTimeout time.Duration
+	backend          *backendclient.BackendClient
+	provider         provider.Provider
+	scannerConfig    ScannerConfig
+	pollPeriod       time.Duration
+	reconcileTimeout time.Duration
 
 	queue *ScanResultQueue
 }

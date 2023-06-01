@@ -17,7 +17,6 @@ package provider
 
 import (
 	"context"
-	"time"
 
 	"github.com/openclarity/vmclarity/api/models"
 )
@@ -65,9 +64,6 @@ type ScanJobConfig struct {
 	KeyPairName      string // The name of the key pair to set on the instance, ignored if not set, used mainly for debugging.
 	Region           string // The region where the VMClarity server is deployed
 	BlockDeviceName  string // The block device name used for attaching target volume to the scanner vm
-
-	ScanReadynessTimeout time.Duration // Timeout for ScanResult state become ATTACHED
-	ScanTimeout          time.Duration // Timeout for performing Scan
 
 	ScanMetadata
 	models.ScannerInstanceCreationConfig

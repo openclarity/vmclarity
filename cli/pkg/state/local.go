@@ -17,7 +17,6 @@ package state
 
 import (
 	"context"
-	"time"
 
 	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 	"github.com/openclarity/vmclarity/shared/pkg/log"
@@ -25,7 +24,7 @@ import (
 
 type LocalState struct{}
 
-func (l *LocalState) WaitForVolumeAttachment(context.Context, time.Duration) error {
+func (l *LocalState) WaitForVolumeAttachment(context.Context) error {
 	return nil
 }
 
