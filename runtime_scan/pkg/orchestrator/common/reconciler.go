@@ -17,14 +17,30 @@ package common
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/openclarity/vmclarity/shared/pkg/log"
 )
 
-type Reconciler[T comparable] struct {
-	Logger *log.Entry
+type RequeueAfterError struct {
+	d   time.Duration
+	msg string
+}
 
+func (rae RequeueAfterError) Error() string {
+	if rae.msg != "" {
+		return fmt.Sprintf("%v so requeuing after %v", rae.msg, rae.d)
+	}
+	return fmt.Sprintf("requeuing after %v", rae.d)
+}
+
+func NewRequeueAfterError(d time.Duration, msg string) error {
+	return RequeueAfterError{d, msg}
+}
+
+type Reconciler[T comparable] struct {
 	// Reconcile function which will be called whenever there is an event on EventChan
 	ReconcileFunction func(context.Context, T) error
 
@@ -38,26 +54,42 @@ type Reconciler[T comparable] struct {
 
 func (r *Reconciler[T]) Start(ctx context.Context) {
 	go func() {
+		logger := log.GetLoggerFromContextOrDiscard(ctx)
+
 		for {
 			// queue.Get will block until an item is available to
 			// return.
 			item, err := r.Queue.Dequeue(ctx)
 			if err != nil {
-				r.Logger.Errorf("Failed to get item from queue: %v", err)
+				logger.Errorf("Failed to get item from queue: %v", err)
 			} else {
 				timeoutCtx, cancel := context.WithTimeout(ctx, r.ReconcileTimeout)
 				err := r.ReconcileFunction(timeoutCtx, item)
 				if err != nil {
-					r.Logger.Errorf("Failed to reconcile item: %v", err)
+					logger.Errorf("Failed to reconcile item: %v", err)
 				}
+
+				// Make sure timeout context is canceled to
+				// prevent orphaned resources
 				cancel()
+
+				// If reconcile has requested that we requeue the item
+				// by returning a RequeueAfterError then requeue the
+				// item with the duration specified, otherwise mark the
+				// item as Done.
+				var requeueAfterError RequeueAfterError
+				if errors.As(err, &requeueAfterError) {
+					r.Queue.RequeueAfter(item, requeueAfterError.d)
+				} else {
+					r.Queue.Done(item)
+				}
 			}
 
 			// Check if the parent context done if so we also need
 			// to exit.
 			select {
 			case <-ctx.Done():
-				r.Logger.Infof("Shutting down: %v", ctx.Err())
+				logger.Infof("Shutting down: %v", ctx.Err())
 				return
 			default:
 			}

@@ -19,8 +19,6 @@ import (
 	"context"
 	"fmt"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/openclarity/vmclarity/shared/pkg/families/exploits"
 	"github.com/openclarity/vmclarity/shared/pkg/families/interfaces"
 	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
@@ -31,6 +29,7 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
 	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 	"github.com/openclarity/vmclarity/shared/pkg/families/vulnerabilities"
+	"github.com/openclarity/vmclarity/shared/pkg/log"
 )
 
 type Manager struct {
@@ -38,7 +37,7 @@ type Manager struct {
 	families []interfaces.Family
 }
 
-func New(logger *log.Entry, config *Config) *Manager {
+func New(config *Config) *Manager {
 	manager := &Manager{
 		config: config,
 	}
@@ -46,31 +45,31 @@ func New(logger *log.Entry, config *Config) *Manager {
 	// Analyzers.
 	// SBOM MUST come before vulnerabilities.
 	if config.SBOM.Enabled {
-		manager.families = append(manager.families, sbom.New(logger, config.SBOM))
+		manager.families = append(manager.families, sbom.New(config.SBOM))
 	}
 
 	// Scanners.
 	// Vulnerabilities MUST be after SBOM to support the case it is configured to use the output from sbom.
 	if config.Vulnerabilities.Enabled {
-		manager.families = append(manager.families, vulnerabilities.New(logger, config.Vulnerabilities))
+		manager.families = append(manager.families, vulnerabilities.New(config.Vulnerabilities))
 	}
 	if config.Secrets.Enabled {
-		manager.families = append(manager.families, secrets.New(logger, config.Secrets))
+		manager.families = append(manager.families, secrets.New(config.Secrets))
 	}
 	if config.Rootkits.Enabled {
-		manager.families = append(manager.families, rootkits.New(logger, config.Rootkits))
+		manager.families = append(manager.families, rootkits.New(config.Rootkits))
 	}
 	if config.Malware.Enabled {
-		manager.families = append(manager.families, malware.New(logger, config.Malware))
+		manager.families = append(manager.families, malware.New(config.Malware))
 	}
 	if config.Misconfiguration.Enabled {
-		manager.families = append(manager.families, misconfiguration.New(logger, config.Misconfiguration))
+		manager.families = append(manager.families, misconfiguration.New(config.Misconfiguration))
 	}
 
 	// Enrichers.
 	// Exploits MUST be after Vulnerabilities to support the case it is configured to use the output from Vulnerabilities.
 	if config.Exploits.Enabled {
-		manager.families = append(manager.families, exploits.New(logger, config.Exploits))
+		manager.families = append(manager.families, exploits.New(config.Exploits))
 	}
 
 	return manager
@@ -78,22 +77,37 @@ func New(logger *log.Entry, config *Config) *Manager {
 
 type RunErrors map[types.FamilyType]error
 
-type familyResult struct {
-	result interfaces.IsResults
-	err    error
+type FamilyResult struct {
+	Result     interfaces.IsResults
+	FamilyType types.FamilyType
+	Err        error
 }
 
-func (m *Manager) Run(ctx context.Context) (*results.Results, RunErrors) {
-	familyErrors := make(RunErrors)
+type FamilyNotifier interface {
+	FamilyStarted(context.Context, types.FamilyType) error
+	FamilyFinished(ctx context.Context, res FamilyResult) error
+}
+
+func (m *Manager) Run(ctx context.Context, notifier FamilyNotifier) []error {
+	var oneOrMoreFamilyFailed bool
+	var errors []error
 	familyResults := results.New()
 
+	logger := log.GetLoggerFromContextOrDiscard(ctx)
+
 	for _, family := range m.families {
-		result := make(chan familyResult)
+		if err := notifier.FamilyStarted(ctx, family.GetType()); err != nil {
+			errors = append(errors, fmt.Errorf("family started notification failed: %v", err))
+			continue
+		}
+
+		result := make(chan FamilyResult)
 		go func() {
-			ret, err := family.Run(familyResults)
-			result <- familyResult{
-				ret,
-				err,
+			ret, err := family.Run(ctx, familyResults)
+			result <- FamilyResult{
+				Result:     ret,
+				Err:        err,
+				FamilyType: family.GetType(),
 			}
 		}()
 
@@ -103,17 +117,30 @@ func (m *Manager) Run(ctx context.Context) (*results.Results, RunErrors) {
 				<-result
 				close(result)
 			}()
-			familyErrors[family.GetType()] = fmt.Errorf("failed to run family %v: aborted", family.GetType())
+			oneOrMoreFamilyFailed = true
+			if err := notifier.FamilyFinished(ctx, FamilyResult{
+				Result:     nil,
+				FamilyType: family.GetType(),
+				Err:        fmt.Errorf("failed to run family %v: aborted", family.GetType()),
+			}); err != nil {
+				errors = append(errors, fmt.Errorf("family finished notification failed: %v", err))
+			}
 		case r := <-result:
-			log.Debugf("received result from family %q: %v", family, r)
-			if r.err != nil {
-				familyErrors[family.GetType()] = fmt.Errorf("failed to run family %v: %w", family.GetType(), r.err)
+			logger.Debugf("received result from family %q: %v", family.GetType(), r)
+			if r.Err != nil {
+				oneOrMoreFamilyFailed = true
 			} else {
-				familyResults.SetResults(r.result)
+				familyResults.SetResults(r.Result)
+			}
+			if err := notifier.FamilyFinished(ctx, r); err != nil {
+				errors = append(errors, fmt.Errorf("family finished notification failed: %v", err))
 			}
 			close(result)
 		}
 	}
 
-	return familyResults, familyErrors
+	if oneOrMoreFamilyFailed {
+		errors = append(errors, fmt.Errorf("at least one family failed to run"))
+	}
+	return errors
 }

@@ -26,6 +26,7 @@ import (
 	standaloneitiator "github.com/openclarity/vmclarity/cli/pkg/standalone/initiator"
 	standaloneupdater "github.com/openclarity/vmclarity/cli/pkg/standalone/updater"
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
+	"github.com/openclarity/vmclarity/shared/pkg/families/types"
 	"github.com/openclarity/vmclarity/shared/pkg/utils"
 )
 
@@ -50,6 +51,7 @@ func (c *StandaloneState) MarkInProgress(ctx context.Context) error {
 			return fmt.Errorf("failed to init scan result: %w", err)
 		}
 	}
+
 	u, err := standaloneupdater.NewVMClarityUpdater(c.client, scanID, c.scanResultID)
 	if err != nil {
 		return fmt.Errorf("failed to create VMClarity updater: %w", err)
@@ -114,6 +116,15 @@ func (c *StandaloneState) MarkDone(ctx context.Context, errors []error) error {
 	}
 
 	return nil
+}
+
+func (c *StandaloneState) MarkFamilyScanInProgress(ctx context.Context, familyType types.FamilyType) error {
+	vmClarityState, err := NewVMClarityState(c.client, c.scanResultID)
+	if err != nil {
+		return fmt.Errorf("failed to create VMClarity state: %v", err)
+	}
+
+	return vmClarityState.MarkFamilyScanInProgress(ctx, familyType)
 }
 
 func (c *StandaloneState) IsAborted(context.Context) (bool, error) {

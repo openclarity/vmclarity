@@ -19,14 +19,18 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 )
 
 type Enqueuer[T comparable] interface {
 	Enqueue(item T)
+	EnqueueAfter(item T, d time.Duration)
 }
 
 type Dequeuer[T comparable] interface {
 	Dequeue(ctx context.Context) (T, error)
+	Done(item T)
+	RequeueAfter(item T, d time.Duration)
 }
 
 type Queue[T comparable] struct {
@@ -43,6 +47,21 @@ type Queue[T comparable] struct {
 	// queue without needing to loop through the queue slice.
 	inqueue map[T]struct{}
 
+	// A map used as a set of unique items which are processing. This keeps
+	// track of items which have been Dequeued but are still being
+	// processed outside of the queue and therefore shouldn't be requeued
+	// if an Enqueue request is received for them.
+	//
+	// We use a separate map for this instead of reusing inqueue to prevent
+	// calls to Done() removing items from inqueue when they are actually
+	// in the queue slice.
+	processing map[T]struct{}
+
+	// A map to track items which have been scheduled to be queued at a
+	// later date. We keep track of these items to prevent them being
+	// enqueued earlier than their scheduled time through Enqueue.
+	waitingForEnqueue map[T]struct{}
+
 	// A mutex lock which protects the queue from simultaneous reads and
 	// writes ensuring the queue can be used by multiple go routines safely.
 	l sync.Mutex
@@ -50,14 +69,18 @@ type Queue[T comparable] struct {
 
 func NewQueue[T comparable]() *Queue[T] {
 	return &Queue[T]{
-		itemAdded: make(chan struct{}),
-		queue:     make([]T, 0),
-		inqueue:   map[T]struct{}{},
+		itemAdded:         make(chan struct{}),
+		queue:             make([]T, 0),
+		inqueue:           map[T]struct{}{},
+		processing:        map[T]struct{}{},
+		waitingForEnqueue: map[T]struct{}{},
 	}
 }
 
-// Dequeue until it can dequeue an item from the queue or the passed
-// context is cancelled.
+// Dequeue until it can dequeue an item from the queue or the passed context is
+// cancelled. The queue will keep track of the item and prevent Enqueuing until
+// "Done" is called with the dequeued item to acknowledge its processing is
+// completed.
 func (q *Queue[T]) Dequeue(ctx context.Context) (T, error) {
 	if len(q.queue) == 0 {
 		// If the queue is empty, block waiting for the itemAdded
@@ -84,6 +107,7 @@ func (q *Queue[T]) Dequeue(ctx context.Context) (T, error) {
 	item := q.queue[0]
 	q.queue = q.queue[1:]
 	delete(q.inqueue, item)
+	q.processing[item] = struct{}{}
 
 	return item, nil
 }
@@ -93,14 +117,56 @@ func (q *Queue[T]) Enqueue(item T) {
 	q.l.Lock()
 	defer q.l.Unlock()
 
-	if _, ok := q.inqueue[item]; !ok {
-		q.queue = append(q.queue, item)
-		q.inqueue[item] = struct{}{}
+	q.enqueue(item)
+}
+
+// EnqueueAfter will tell the queue to keep track of the item preventing it
+// being enqueued before the specified duration through Enqueue. It will then
+// Enqueue it after a defined duration. If item already in the queue, is
+// processing or waiting to be enqueued, nothing will be done.
+func (q *Queue[T]) EnqueueAfter(item T, d time.Duration) {
+	q.l.Lock()
+	defer q.l.Unlock()
+
+	q.enqueueAfter(item, d)
+}
+
+// Internal enqueueAfter function that it can be reused by the public
+// EnqueueAfter and public RequeueAfter functions, these should not be called
+// without obtaining a lock on Queue first.
+func (q *Queue[T]) enqueueAfter(item T, d time.Duration) {
+	_, inQueue := q.inqueue[item]
+	_, isProcessing := q.processing[item]
+	_, isWaitingForEnqueue := q.waitingForEnqueue[item]
+	if inQueue || isProcessing || isWaitingForEnqueue {
+		// item is already known by the queue so there is nothing to do
+		return
 	}
 
-	select {
-	case q.itemAdded <- struct{}{}:
-	default:
+	q.waitingForEnqueue[item] = struct{}{}
+	go func() {
+		<-time.After(d)
+		q.l.Lock()
+		defer q.l.Unlock()
+		delete(q.waitingForEnqueue, item)
+		q.enqueue(item)
+	}()
+}
+
+// Internal enqueue function that it can be reused by public functions Enqueue
+// and EnqueueAfter.
+func (q *Queue[T]) enqueue(item T) {
+	_, inQueue := q.inqueue[item]
+	_, isProcessing := q.processing[item]
+	_, isWaitingForEnqueue := q.waitingForEnqueue[item]
+	if !inQueue && !isProcessing && !isWaitingForEnqueue {
+		q.queue = append(q.queue, item)
+		q.inqueue[item] = struct{}{}
+
+		select {
+		case q.itemAdded <- struct{}{}:
+		default:
+		}
 	}
 }
 
@@ -121,6 +187,36 @@ func (q *Queue[T]) Has(item T) bool {
 	q.l.Lock()
 	defer q.l.Unlock()
 
-	_, ok := q.inqueue[item]
-	return ok
+	_, inQueue := q.inqueue[item]
+	_, isProcessing := q.processing[item]
+	_, isWaitingForEnqueue := q.waitingForEnqueue[item]
+	return inQueue || isProcessing || isWaitingForEnqueue
+}
+
+// Done will tell the queue that the processing for the item is completed and
+// that it should stop tracking that item.
+func (q *Queue[T]) Done(item T) {
+	q.l.Lock()
+	defer q.l.Unlock()
+	delete(q.processing, item)
+}
+
+// RequeueAfter will mark a processing item as Done and then schedule it to be
+// requeued after the specified duration. This should be used instead of
+// calling Done and then EnqueueAfter to prevent someone Enqueuing the same
+// item between Done and EnqueueAfter.
+func (q *Queue[T]) RequeueAfter(item T, d time.Duration) {
+	q.l.Lock()
+	defer q.l.Unlock()
+
+	delete(q.processing, item)
+	q.enqueueAfter(item, d)
+}
+
+// Returns the number of items currently being actively processed.
+func (q *Queue[T]) ProcessingCount() int {
+	q.l.Lock()
+	defer q.l.Unlock()
+
+	return len(q.processing)
 }

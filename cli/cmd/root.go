@@ -23,10 +23,11 @@ import (
 	"time"
 
 	"github.com/ghodss/yaml"
-	kubeclarityutils "github.com/openclarity/kubeclarity/shared/pkg/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	kubeclarityutils "github.com/openclarity/kubeclarity/shared/pkg/utils"
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/cli/pkg"
@@ -44,6 +45,7 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/families/sbom"
 	"github.com/openclarity/vmclarity/shared/pkg/families/secrets"
 	"github.com/openclarity/vmclarity/shared/pkg/families/vulnerabilities"
+	"github.com/openclarity/vmclarity/shared/pkg/log"
 )
 
 const DefaultWatcherInterval = 2 * time.Minute
@@ -80,7 +82,7 @@ var rootCmd = &cobra.Command{
 
 		// Main context which remains active even if the scan is aborted allowing post-processing operations
 		// like updating scan result state
-		ctx := cmd.Context()
+		ctx := log.SetLoggerForContext(cmd.Context(), logger)
 
 		cli, err := newCli()
 		if err != nil {
@@ -129,28 +131,21 @@ var rootCmd = &cobra.Command{
 			return fmt.Errorf("failed to inform server %v scan has started: %w", server, err)
 		}
 
-		logger.Infof("Running scanners...")
-		res, familiesErr := families.New(logger, config.Config).Run(abortCtx)
-
-		logger.Infof("Exporting results...")
 		if scanResultID == "" {
-			// In the case of standalone mode if the scanResultID is not set
-			// we get it from the status manager.
+			// In the case of standalone mode if the scanResultID can be not set
+			// we can get it from the status manage after MarkInProgress that creates the initial results.
 			cli.SetScanResultID(cli.GetScanResultID())
 		}
-		errs := cli.ExportResults(abortCtx, res, familiesErr)
+		logger.Infof("Running scanners...")
+		runErrors := families.New(config.Config).Run(abortCtx, cli)
 
-		if len(familiesErr) > 0 {
-			errs = append(errs, fmt.Errorf("at least one family failed to run"))
-		}
-
-		err = cli.MarkDone(ctx, errs)
+		err = cli.MarkDone(ctx, runErrors)
 		if err != nil {
 			return fmt.Errorf("failed to inform the server %v the scan was completed: %w", server, err)
 		}
 
-		if len(familiesErr) > 0 {
-			return fmt.Errorf("failed to run families: %+v", familiesErr)
+		if len(runErrors) > 0 {
+			logger.Errorf("Errors when running families: %+v", runErrors)
 		}
 
 		return nil
@@ -296,9 +291,8 @@ func initConfig() {
 }
 
 func initLogger() {
-	log := logrus.New()
-	log.SetLevel(logrus.InfoLevel)
-	logger = log.WithField("app", "vmclarity")
+	log.InitLogger(logrus.InfoLevel.String(), os.Stderr)
+	logger = logrus.WithField("app", "vmclarity")
 }
 
 // nolint:gocognit,cyclop

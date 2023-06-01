@@ -151,7 +151,7 @@ func (i *VMClarityInitiator) createScan(ctx context.Context) (string, error) {
 	scan := &models.Scan{
 		// Scan config relationship is not set in standalone mode
 		// to avoid uniqueness check of a scan
-		ScanConfigSnapshot: &models.ScanConfigData{
+		ScanConfigSnapshot: &models.ScanConfigSnapshot{
 			Name:               utils.PointerTo(i.scanConfigName),
 			ScanFamiliesConfig: i.scanConfigFamilies,
 		},

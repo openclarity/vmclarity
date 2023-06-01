@@ -22,13 +22,13 @@ import (
 	"time"
 
 	uuid "github.com/satori/go.uuid"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/cli/pkg/mount"
 	"github.com/openclarity/vmclarity/cli/pkg/presenter"
 	"github.com/openclarity/vmclarity/cli/pkg/state"
 	"github.com/openclarity/vmclarity/shared/pkg/families"
-	"github.com/openclarity/vmclarity/shared/pkg/families/results"
+	"github.com/openclarity/vmclarity/shared/pkg/families/types"
+	"github.com/openclarity/vmclarity/shared/pkg/log"
 )
 
 const (
@@ -43,8 +43,18 @@ type CLI struct {
 	FamiliesConfig *families.Config
 }
 
+func (c *CLI) FamilyStarted(ctx context.Context, famType types.FamilyType) error {
+	return c.Manager.MarkFamilyScanInProgress(ctx, famType)
+}
+
+func (c *CLI) FamilyFinished(ctx context.Context, res families.FamilyResult) error {
+	return c.Presenter.ExportFamilyResult(ctx, res)
+}
+
 func (c *CLI) MountVolumes(ctx context.Context) ([]string, error) {
 	var mountPoints []string
+
+	logger := log.GetLoggerFromContextOrDiscard(ctx)
 
 	devices, err := mount.ListBlockDevices()
 	if err != nil {
@@ -59,7 +69,7 @@ func (c *CLI) MountVolumes(ctx context.Context) ([]string, error) {
 			if err := device.Mount(mountDir); err != nil {
 				return nil, fmt.Errorf("failed to mount device: %v", err)
 			}
-			log.Infof("Device %v on %v is mounted", device.DeviceName, mountDir)
+			logger.Infof("Device %v on %v is mounted", device.DeviceName, mountDir)
 			mountPoints = append(mountPoints, mountDir)
 		}
 		if ctx.Err() != nil {
@@ -69,83 +79,26 @@ func (c *CLI) MountVolumes(ctx context.Context) ([]string, error) {
 	return mountPoints, nil
 }
 
-//nolint:cyclop
-func (c *CLI) ExportResults(ctx context.Context, res *results.Results, errs families.RunErrors) []error {
-	familiesSet := []struct {
-		enabled  bool
-		name     string
-		exporter func(context.Context, *results.Results, families.RunErrors) error
-	}{
-		{
-			c.FamiliesConfig.SBOM.Enabled,
-			"sbom",
-			c.ExportSbomResult,
-		},
-		{
-			c.FamiliesConfig.Vulnerabilities.Enabled,
-			"vulnerabilities",
-			c.ExportVulResult,
-		},
-		{
-			c.FamiliesConfig.Secrets.Enabled,
-			"secrets",
-			c.ExportSecretsResult,
-		},
-		{
-			c.FamiliesConfig.Exploits.Enabled,
-			"exploits",
-			c.ExportExploitsResult,
-		},
-		{
-			c.FamiliesConfig.Malware.Enabled,
-			"malware",
-			c.ExportMalwareResult,
-		},
-		{
-			c.FamiliesConfig.Misconfiguration.Enabled,
-			"misconfiguration",
-			c.ExportMisconfigurationResult,
-		},
-		{
-			c.FamiliesConfig.Rootkits.Enabled,
-			"rootkits",
-			c.ExportRootkitResult,
-		},
-	}
-
-	result := make([]error, 0, len(familiesSet))
-	for _, f := range familiesSet {
-		if !f.enabled {
-			continue
-		}
-		if err := f.exporter(ctx, res, errs); err != nil {
-			err = fmt.Errorf("failed to export %s result to server: %w", f.name, err)
-			log.Error(err)
-			result = append(result, err)
-		}
-	}
-
-	return result
-}
-
 func (c *CLI) WatchForAbort(ctx context.Context, cancel context.CancelFunc, interval time.Duration) {
 	go func() {
 		timer := time.NewTicker(interval)
 		defer timer.Stop()
+
+		logger := log.GetLoggerFromContextOrDiscard(ctx)
 
 		for {
 			select {
 			case <-timer.C:
 				aborted, err := c.IsAborted(ctx)
 				if err != nil {
-					log.Errorf("Failed to retrieve scan result state: %v", err)
+					logger.Errorf("Failed to retrieve scan result state: %v", err)
 				}
 				if aborted {
 					cancel()
 					return
 				}
 			case <-ctx.Done():
-				log.Debugf("Stop watching for abort event as context is cancelled")
+				logger.Debugf("Stop watching for abort event as context is cancelled")
 				return
 			}
 		}

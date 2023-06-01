@@ -19,16 +19,9 @@ import (
 	"context"
 
 	"github.com/openclarity/vmclarity/shared/pkg/families"
-	"github.com/openclarity/vmclarity/shared/pkg/families/results"
 )
 
 type Presenter interface {
-	ExportSbomResult(context.Context, *results.Results, families.RunErrors) error
-	ExportVulResult(context.Context, *results.Results, families.RunErrors) error
-	ExportSecretsResult(context.Context, *results.Results, families.RunErrors) error
-	ExportMalwareResult(context.Context, *results.Results, families.RunErrors) error
-	ExportExploitsResult(context.Context, *results.Results, families.RunErrors) error
-	ExportMisconfigurationResult(context.Context, *results.Results, families.RunErrors) error
-	ExportRootkitResult(context.Context, *results.Results, families.RunErrors) error
-	SetScanResultID(string)
+	ExportFamilyResult(ctx context.Context, res families.FamilyResult) error
+	SetScanResultID(scanResultID string)
 }
