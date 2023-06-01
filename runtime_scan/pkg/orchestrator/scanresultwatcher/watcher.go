@@ -254,6 +254,7 @@ func (w *Watcher) reconcileInit(ctx context.Context, scanResult *models.TargetSc
 		scanResult.Status.General.Errors = utils.PointerTo([]string{err.Error()})
 		scanResult.Status.General.LastTransitionTime = utils.PointerTo(time.Now().UTC())
 	case errors.As(err, &retryableError):
+		// nolint:wrapcheck
 		return common.NewRequeueAfterError(retryableError.RetryAfter(), err.Error())
 	case err != nil:
 		scanResult.Status.General.State = utils.PointerTo(models.TargetScanStateStateDONE)
@@ -357,6 +358,7 @@ func (w *Watcher) cleanupResources(ctx context.Context, scanResult *models.Targe
 		case errors.As(err, &fatalError):
 			scanResult.ResourceCleanup = utils.PointerTo(models.ResourceCleanupStateFAILED)
 		case errors.As(err, &retryableError):
+			// nolint:wrapcheck
 			return common.NewRequeueAfterError(retryableError.RetryAfter(), err.Error())
 		case err != nil:
 			scanResult.ResourceCleanup = utils.PointerTo(models.ResourceCleanupStateFAILED)

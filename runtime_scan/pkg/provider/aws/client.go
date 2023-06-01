@@ -349,7 +349,6 @@ func (c *Client) RunTargetScan(ctx context.Context, config *provider.ScanJobConf
 				After: InstanceReadynessAfter,
 			}
 		}
-		return
 	}()
 
 	// Create volume snapshot from the root volume of the Target Instance used for scanning by:
@@ -454,8 +453,6 @@ func (c *Client) RunTargetScan(ctx context.Context, config *provider.ScanJobConf
 			}
 			return
 		}
-
-		return
 	}()
 	wg.Wait()
 	close(errs)
@@ -463,6 +460,7 @@ func (c *Client) RunTargetScan(ctx context.Context, config *provider.ScanJobConf
 	// NOTE: make sure to drain results channel
 	for e := range errs {
 		if e != nil {
+			// nolint:typecheck
 			err = errors.Join(err, e)
 		}
 	}
@@ -770,6 +768,7 @@ func (c *Client) RemoveTargetScan(ctx context.Context, config *provider.ScanJobC
 	// NOTE: make sure to drain results channel
 	for e := range errs {
 		if e != nil {
+			// nolint:typecheck
 			err = errors.Join(err, e)
 		}
 	}

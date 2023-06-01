@@ -128,6 +128,7 @@ func (i *Instance) Delete(ctx context.Context) error {
 	return nil
 }
 
+// nolint:cyclop
 func (i *Instance) AttachVolume(ctx context.Context, volume *Volume, deviceName string) error {
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithFields(logrus.Fields{
 		"InstanceID": i.ID,
@@ -150,7 +151,6 @@ func (i *Instance) AttachVolume(ctx context.Context, volume *Volume, deviceName 
 
 	logger.Tracef("Found %d volumes", len(describeOut.Volumes))
 
-	var volumeAttached bool
 	for _, vol := range describeOut.Volumes {
 		logger.WithFields(logrus.Fields{
 			"VolumeState": vol.State,
@@ -161,8 +161,7 @@ func (i *Instance) AttachVolume(ctx context.Context, volume *Volume, deviceName 
 			for _, attachment := range vol.Attachments {
 				if *attachment.VolumeId == volume.ID && *attachment.InstanceId == i.ID {
 					logger.Trace("Volume is already attached to the instance")
-					volumeAttached = true
-					break
+					return nil
 				}
 			}
 		case ec2types.VolumeStateAvailable:
@@ -175,18 +174,23 @@ func (i *Instance) AttachVolume(ctx context.Context, volume *Volume, deviceName 
 				options.Region = i.Region
 			})
 			if err != nil {
-				return fmt.Errorf("failed to attach volume: %v", err)
+				return fmt.Errorf("failed to attach volume: %w", err)
 			}
-			volumeAttached = true
-			break
+			return nil
+		case ec2types.VolumeStateDeleted, ec2types.VolumeStateDeleting, ec2types.VolumeStateError:
+			return FatalError{
+				Err: fmt.Errorf("cannot attach volume with state: %s", vol.State),
+			}
+		case ec2types.VolumeStateCreating:
 		default:
-			continue
+			return RetryableError{
+				Err:   fmt.Errorf("cannot attach volume with state: %s", vol.State),
+				After: 5 * time.Minute,
+			}
 		}
 	}
 
-	if !volumeAttached {
-		return fmt.Errorf("failed to attach volume due to its state. VolumeID=%s", volume.ID)
+	return FatalError{
+		Err: fmt.Errorf("failed to find volume. VolumeID=%s", volume.ID),
 	}
-
-	return nil
 }
