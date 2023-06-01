@@ -174,7 +174,7 @@ func (w *Watcher) reconcileDue(ctx context.Context, scanConfig *models.ScanConfi
 		return fmt.Errorf("failed to reconcile new Scan for ScanConfig. ScanConfigID=%s: %w", *scanConfig.Id, err)
 	}
 	nextOperationTime := schedule.OperationTime.NextAfter(schedule.Window.Next().Start())
-
+	// FIXME: disable ScanConfig if it was a oneshot
 	scanConfigPatch := &models.ScanConfig{
 		Scheduled: &models.RuntimeScheduleScanConfig{
 			CronLine:      scanConfig.Scheduled.CronLine,

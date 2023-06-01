@@ -1668,6 +1668,7 @@ components:
         - DONE
         - PENDING
         - SKIPPED
+        - FAILED
 
     TargetScanResult:
       type: object

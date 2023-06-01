@@ -26,6 +26,7 @@ const (
 // Defines values for ResourceCleanupState.
 const (
 	ResourceCleanupStateDONE    ResourceCleanupState = "DONE"
+	ResourceCleanupStateFAILED  ResourceCleanupState = "FAILED"
 	ResourceCleanupStatePENDING ResourceCleanupState = "PENDING"
 	ResourceCleanupStateSKIPPED ResourceCleanupState = "SKIPPED"
 )

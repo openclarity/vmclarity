@@ -49,7 +49,7 @@ func New(c Config) *Watcher {
 
 type Watcher struct {
 	backend           *backendclient.BackendClient
-	provider          provider.Client
+	provider          provider.Provider
 	scannerConfig     ScannerConfig
 	pollPeriod        time.Duration
 	reconcileTimeout  time.Duration
@@ -246,28 +246,24 @@ func (w *Watcher) reconcileInit(ctx context.Context, scanResult *models.TargetSc
 		return fmt.Errorf("failed to create ScanJobConfig for ScanResult. ScanResult=%s: %w", scanResultID, err)
 	}
 
-	state, err := w.provider.RunTargetScan(ctx, jobConfig)
-	if err != nil {
-		return fmt.Errorf("failed to create scanner for Target. ScanResultID=%s TargetID=%s: %w",
-			scanResultID, scanResult.Target.Id, err)
-	}
+	err = w.provider.RunTargetScan(ctx, jobConfig)
 
-	switch state {
-	case models.TargetScanStateStateINIT:
-		// FIXME(chrisgacsal): fix using common.NewRequeueAfterError gets Reconciler to be killed.
-		// return common.NewRequeueAfterError(DefaultRequeueInterval,
-		// 	fmt.Sprintf("scanner instance for Target is not ready yet. ScanResultID=%s TargetID=%s",
-		// 		scanResultID, *target.Id))
-		logger.Infof("Scanner instance for Target is not ready yet. ScanResultID=%s TargetID=%s",
-			scanResultID, *target.Id)
-		return nil
-	case models.TargetScanStateStateATTACHED:
+	var fatalError provider.FatalError
+	var retryableError provider.RetryableError
+	switch {
+	case errors.As(err, &fatalError):
+		scanResult.Status.General.State = utils.PointerTo(models.TargetScanStateStateDONE)
+		scanResult.Status.General.Errors = utils.PointerTo([]string{err.Error()})
+		scanResult.Status.General.LastTransitionTime = utils.PointerTo(time.Now().UTC())
+	case errors.As(err, &retryableError):
+		return common.NewRequeueAfterError(retryableError.RetryAfter(), err.Error())
+	case err != nil:
+		scanResult.Status.General.State = utils.PointerTo(models.TargetScanStateStateDONE)
+		scanResult.Status.General.Errors = utils.PointerTo([]string{err.Error()})
+		scanResult.Status.General.LastTransitionTime = utils.PointerTo(time.Now().UTC())
+	default:
 		scanResult.Status.General.State = utils.PointerTo(models.TargetScanStateStateATTACHED)
 		scanResult.Status.General.LastTransitionTime = utils.PointerTo(time.Now().UTC())
-	case models.TargetScanStateStateABORTED, models.TargetScanStateStateDONE, models.TargetScanStateStateINPROGRESS, models.TargetScanStateStateNOTSCANNED:
-		return fmt.Errorf("invalid response from Provider: returned state is not allowed: %s", state)
-	default:
-		return nil
 	}
 
 	scanResultPatch := models.TargetScanResult{
@@ -355,17 +351,20 @@ func (w *Watcher) cleanupResources(ctx context.Context, scanResult *models.Targe
 			return fmt.Errorf("failed to to create ScanJobConfigg for ScanResult. ScanResultID=%s: %w", scanResultID, err)
 		}
 
-		state, err := w.provider.RemoveTargetScan(ctx, jobConfig)
-		if err != nil {
-			return fmt.Errorf("failed to cleanup resources for ScanResult. ScanResultID=%s: %w", *scanResult.Id, err)
+		err = w.provider.RemoveTargetScan(ctx, jobConfig)
+
+		var fatalError provider.FatalError
+		var retryableError provider.RetryableError
+		switch {
+		case errors.As(err, &fatalError):
+			scanResult.ResourceCleanup = utils.PointerTo(models.ResourceCleanupStateFAILED)
+		case errors.As(err, &retryableError):
+			return common.NewRequeueAfterError(retryableError.RetryAfter(), err.Error())
+		case err != nil:
+			scanResult.ResourceCleanup = utils.PointerTo(models.ResourceCleanupStateFAILED)
+		default:
+			scanResult.ResourceCleanup = utils.PointerTo(models.ResourceCleanupStateDONE)
 		}
-		if state == models.ResourceCleanupStatePENDING {
-			// nolint:wrapcheck
-			return common.NewRequeueAfterError(DefaultRequeueInterval,
-				fmt.Sprintf("cleaning up scanner instance for Target is in progress. ScanResultID=%s TargetID=%s",
-					scanResultID, *target.Id))
-		}
-		scanResult.ResourceCleanup = utils.PointerTo(models.ResourceCleanupStateDONE)
 	}
 
 	scanResultPatch := models.TargetScanResult{

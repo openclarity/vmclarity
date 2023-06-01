@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	awstype "github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
@@ -71,7 +72,9 @@ func (c *Client) DiscoverScopes(ctx context.Context) (*models.Scopes, error) {
 		Regions: convertToAPIRegions(regions),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("FromAwsScope failed: %w", err)
+		return nil, FatalError{
+			Err: fmt.Errorf("failed to cast AwsAccountScope to ScopeType: %w", err),
+		}
 	}
 
 	return &models.Scopes{
@@ -85,7 +88,9 @@ func (c *Client) DiscoverTargets(ctx context.Context, scanScope *models.ScanScop
 
 	awsScanScope, err := scanScope.AsAwsScanScope()
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert as aws scope: %w", err)
+		return nil, FatalError{
+			Err: fmt.Errorf("failed to cast ScanScopeType to AwsAccountScope: %w", err),
+		}
 	}
 
 	scope := convertFromAPIScanScope(&awsScanScope)
@@ -95,7 +100,9 @@ func (c *Client) DiscoverTargets(ctx context.Context, scanScope *models.ScanScop
 		return nil, fmt.Errorf("failed to get regions to scan: %w", err)
 	}
 	if len(regions) == 0 {
-		return nil, fmt.Errorf("no regions to scan")
+		return nil, FatalError{
+			Err: errors.New("no regions to scan"),
+		}
 	}
 
 	filters = append(filters, EC2FiltersFromTags(scope.TagSelector)...)
@@ -118,7 +125,9 @@ func (c *Client) DiscoverTargets(ctx context.Context, scanScope *models.ScanScop
 			for _, instance := range instances {
 				target, err := getVMInfoFromInstance(instance)
 				if err != nil {
-					return nil, fmt.Errorf("failed convert EC2 Instance to TargetType: %w", err)
+					return nil, FatalError{
+						Err: fmt.Errorf("failed convert EC2 Instance to TargetType: %w", err),
+					}
 				}
 				targets = append(targets, target)
 			}
@@ -137,7 +146,9 @@ func (c *Client) DiscoverTargets(ctx context.Context, scanScope *models.ScanScop
 			for _, instance := range instances {
 				target, err := getVMInfoFromInstance(instance)
 				if err != nil {
-					return nil, fmt.Errorf("failed convert EC2 Instance to TargetType: %w", err)
+					return nil, FatalError{
+						Err: fmt.Errorf("failed convert EC2 Instance to TargetType: %w", err),
+					}
 				}
 				targets = append(targets, target)
 			}
@@ -282,13 +293,18 @@ func (c *Client) createInstance(ctx context.Context, config *provider.ScanJobCon
 	return instanceFromEC2Instance(&out.Instances[0], c.ec2Client, config), nil
 }
 
-// nolint:cyclop,gocognit,maintidx
-func (c *Client) RunTargetScan(ctx context.Context, config *provider.ScanJobConfig) (models.TargetScanStateState, error) {
-	state := models.TargetScanStateStateINIT
+const (
+	InstanceReadynessAfter         = 5 * time.Minute
+	SnapshotReadynessAfter         = 5 * time.Minute
+	VolumeReadynessAfter           = 5 * time.Minute
+	VolumeAttachmentReadynessAfter = 2 * time.Minute
+)
 
+// nolint:cyclop,gocognit,maintidx
+func (c *Client) RunTargetScan(ctx context.Context, config *provider.ScanJobConfig) error {
 	vmInfo, err := config.TargetInfo.AsVMInfo()
 	if err != nil {
-		return state, fmt.Errorf("failed to convert TargetInfo to VMInfo: %w", err)
+		return FatalError{Err: err}
 	}
 
 	logger := log.GetLoggerFromContextOrDefault(ctx).WithFields(logrus.Fields{
@@ -303,7 +319,7 @@ func (c *Client) RunTargetScan(ctx context.Context, config *provider.ScanJobConf
 
 	// Create scanner instance in same region/location as the VMClarity server deployed
 	numOfGoroutines := 2
-	results := make(chan operationResult, numOfGoroutines)
+	errs := make(chan error, numOfGoroutines)
 	var scannnerInstance *Instance
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -315,29 +331,24 @@ func (c *Client) RunTargetScan(ctx context.Context, config *provider.ScanJobConf
 		var err error
 		scannnerInstance, err = c.createInstance(ctx, config)
 		if err != nil {
-			results <- operationResult{
-				done: false,
-				err:  fmt.Errorf("failed to create scanner VM instance: %w", err),
-			}
+			errs <- WrapError(fmt.Errorf("failed to create scanner VM instance: %w", err))
 			return
 		}
 
 		ready, err := scannnerInstance.IsReady(ctx)
 		if err != nil {
-			results <- operationResult{
-				done: false,
-				err:  fmt.Errorf("failed to get scanner VM instance state: %w", err),
-			}
+			errs <- WrapError(fmt.Errorf("failed to get scanner VM instance state: %w", err))
 			return
 		}
 		logger.WithFields(logrus.Fields{
 			"ScannerInstanceID": scannnerInstance.ID,
-		}).Debugf("Scanner instance snapshot is ready: %t", ready)
-		results <- operationResult{
-			done: ready,
-			err:  nil,
+		}).Debugf("Scanner instance is ready: %t", ready)
+		if !ready {
+			errs <- RetryableError{
+				Err:   errors.New("scanner instance is not ready"),
+				After: InstanceReadynessAfter,
+			}
 		}
-
 		return
 	}()
 
@@ -354,9 +365,8 @@ func (c *Client) RunTargetScan(ctx context.Context, config *provider.ScanJobConf
 
 		targetVMLocation, err := NewLocation(vmInfo.Location)
 		if err != nil {
-			results <- operationResult{
-				done: false,
-				err:  fmt.Errorf("failed to parse Location for target VM instance: %w", err),
+			errs <- FatalError{
+				Err: fmt.Errorf("failed to parse Location for target VM instance: %w", err),
 			}
 			return
 		}
@@ -364,16 +374,12 @@ func (c *Client) RunTargetScan(ctx context.Context, config *provider.ScanJobConf
 		var SrcEC2Instance *ec2types.Instance
 		SrcEC2Instance, err = c.getInstanceWithID(ctx, vmInfo.InstanceID, targetVMLocation.Region)
 		if err != nil {
-			results <- operationResult{
-				done: false,
-				err:  fmt.Errorf("failed to fetch target VM instance: %w", err),
-			}
+			errs <- WrapError(fmt.Errorf("failed to fetch target VM instance: %w", err))
 			return
 		}
 		if SrcEC2Instance == nil {
-			results <- operationResult{
-				done: false,
-				err:  fmt.Errorf("failed to find target VM instance. InstanceID=%s", vmInfo.InstanceID),
+			errs <- FatalError{
+				Err: fmt.Errorf("failed to find target VM instance. InstanceID=%s", vmInfo.InstanceID),
 			}
 			return
 		}
@@ -383,31 +389,23 @@ func (c *Client) RunTargetScan(ctx context.Context, config *provider.ScanJobConf
 
 		srcVol := srcInstance.GetRootVolume()
 		if srcVol == nil {
-			results <- operationResult{
-				done: false,
-				err:  errors.New("failed to get root block device for target VM instance"),
-			}
+			errs <- FatalError{errors.New("failed to get root block device for target VM instance")}
 			return
 		}
 
 		logger.WithField("TargetVolumeID", srcVol.ID).Debug("Creating target volume snapshot for target VM instance")
 		srcVolSnapshot, err := srcVol.CreateSnapshot(ctx)
 		if err != nil {
-			results <- operationResult{
-				done: false,
-				err: fmt.Errorf("failed to create volume snapshot from target volume. TargetVolumeID=%s: %w",
-					srcVol.ID, err),
-			}
+			errs <- WrapError(fmt.Errorf("failed to create volume snapshot from target volume. TargetVolumeID=%s: %w",
+				srcVol.ID, err))
 			return
 		}
 
 		ready, err := srcVolSnapshot.IsReady(ctx)
 		if err != nil {
-			results <- operationResult{
-				done: ready,
-				err: fmt.Errorf("failed to get volume snapshot state. TargetVolumeSnapshotID=%s: %w",
-					srcVolSnapshot.ID, err),
-			}
+			err = fmt.Errorf("failed to get volume snapshot state. TargetVolumeSnapshotID=%s: %w",
+				srcVolSnapshot.ID, err)
+			errs <- WrapError(err)
 			return
 		}
 
@@ -416,9 +414,9 @@ func (c *Client) RunTargetScan(ctx context.Context, config *provider.ScanJobConf
 			"TargetVolumeSnapshotID": srcVolSnapshot.ID,
 		}).Debugf("Target volume snapshot is ready: %t", ready)
 		if !ready {
-			results <- operationResult{
-				done: ready,
-				err:  nil,
+			errs <- RetryableError{
+				Err:   errors.New("target volume snapshot is not ready"),
+				After: SnapshotReadynessAfter,
 			}
 			return
 		}
@@ -429,21 +427,17 @@ func (c *Client) RunTargetScan(ctx context.Context, config *provider.ScanJobConf
 		}).Debug("Copying target volume snapshot to scanner location")
 		destVolSnapshot, err = srcVolSnapshot.Copy(ctx, config.Region)
 		if err != nil {
-			results <- operationResult{
-				done: false,
-				err: fmt.Errorf("failed to copy target volume snapshot to location. TargetVolumeSnapshotID=%s Location=%s: %w",
-					srcVolSnapshot.ID, config.Region, err),
-			}
+			err = fmt.Errorf("failed to copy target volume snapshot to location. TargetVolumeSnapshotID=%s Location=%s: %w",
+				srcVolSnapshot.ID, config.Region, err)
+			errs <- WrapError(err)
 			return
 		}
 
 		ready, err = destVolSnapshot.IsReady(ctx)
 		if err != nil {
-			results <- operationResult{
-				done: ready,
-				err: fmt.Errorf("failed to get volume snapshot state. ScannerVolumeSnapshotID=%s: %w",
-					srcVolSnapshot.ID, err),
-			}
+			err = fmt.Errorf("failed to get volume snapshot state. ScannerVolumeSnapshotID=%s: %w",
+				srcVolSnapshot.ID, err)
+			errs <- WrapError(err)
 			return
 		}
 
@@ -452,32 +446,28 @@ func (c *Client) RunTargetScan(ctx context.Context, config *provider.ScanJobConf
 			"TargetVolumeSnapshotID":  srcVolSnapshot.ID,
 			"ScannerVolumeSnapshotID": destVolSnapshot.ID,
 		}).Debugf("Scanner volume snapshot is ready: %t", ready)
-		results <- operationResult{
-			done: ready,
-			err:  nil,
+
+		if !ready {
+			errs <- RetryableError{
+				Err:   errors.New("scanner volume snapshot is not ready"),
+				After: SnapshotReadynessAfter,
+			}
+			return
 		}
 
 		return
 	}()
 	wg.Wait()
-	close(results)
+	close(errs)
 
-	operationsAreDone := true
 	// NOTE: make sure to drain results channel
-	for result := range results {
-		// Pick the error from the first operation result which failed
-		if err == nil && result.err != nil {
-			err = result.err
-		}
-		// Update operationsAreDone to false if there is even a single operation which is not done
-		if !result.done {
-			operationsAreDone = false
+	for e := range errs {
+		if e != nil {
+			err = errors.Join(err, e)
 		}
 	}
-
-	logger.Tracef("All operations are done: %t", operationsAreDone)
-	if err != nil || !operationsAreDone {
-		return state, err
+	if err != nil {
+		return err
 	}
 
 	// Create volume to be scanned from snapshot
@@ -488,12 +478,14 @@ func (c *Client) RunTargetScan(ctx context.Context, config *provider.ScanJobConf
 	}).Debug("Creating scanner volume from volume snapshot for scanner VM instance")
 	scannerVol, err := destVolSnapshot.CreateVolume(ctx, scannerInstanceAZ)
 	if err != nil {
-		return state, fmt.Errorf("failed to create volume from snapshot. SnapshotID=%s: %w", destVolSnapshot.ID, err)
+		err = fmt.Errorf("failed to create volume from snapshot. SnapshotID=%s: %w", destVolSnapshot.ID, err)
+		return WrapError(err)
 	}
 
 	ready, err := scannerVol.IsReady(ctx)
 	if err != nil {
-		return state, fmt.Errorf("failed to check if scanner volume is ready. ScannerVolumeID=%s: %w", scannerVol.ID, err)
+		err = fmt.Errorf("failed to check if scanner volume is ready. ScannerVolumeID=%s: %w", scannerVol.ID, err)
+		return WrapError(err)
 	}
 	logger.WithFields(logrus.Fields{
 		"ScannerAvailabilityZone": scannerInstanceAZ,
@@ -501,7 +493,10 @@ func (c *Client) RunTargetScan(ctx context.Context, config *provider.ScanJobConf
 		"ScannerVolumeID":         scannerVol.ID,
 	}).Debugf("Scanner volume is ready: %t", ready)
 	if !ready {
-		return state, nil
+		return RetryableError{
+			Err:   fmt.Errorf("scanner volume is not ready. ScannerVolumeID=%s", scannerVol.ID),
+			After: VolumeReadynessAfter,
+		}
 	}
 
 	// Attach volume to be scanned to scanner instance
@@ -513,8 +508,9 @@ func (c *Client) RunTargetScan(ctx context.Context, config *provider.ScanJobConf
 	}).Debug("Attaching scanner volume to scanner VM instance")
 	err = scannnerInstance.AttachVolume(ctx, scannerVol, config.BlockDeviceName)
 	if err != nil {
-		return state, fmt.Errorf("failed to attach volume to scanner instance. ScannerVolumeID=%s ScannerInstanceID=%s: %w",
+		err = fmt.Errorf("failed to attach volume to scanner instance. ScannerVolumeID=%s ScannerInstanceID=%s: %w",
 			scannerVol.ID, scannnerInstance.ID, err)
+		return WrapError(err)
 	}
 
 	// Wait until the volume is attached to the scanner instance
@@ -526,16 +522,18 @@ func (c *Client) RunTargetScan(ctx context.Context, config *provider.ScanJobConf
 	}).Debug("Checking if scanner volume is attached to scanner VM instance")
 	ready, err = scannerVol.IsAttached(ctx)
 	if err != nil {
-		return state, fmt.Errorf("failed to check if volume is attached to scanner instance. ScannerVolumeID=%s ScannerInstanceID=%s: %w",
+		err = fmt.Errorf("failed to check if volume is attached to scanner instance. ScannerVolumeID=%s ScannerInstanceID=%s: %w",
 			scannerVol.ID, scannnerInstance.ID, err)
+		return WrapError(err)
 	}
 	if !ready {
-		return state, nil
+		return RetryableError{
+			Err:   fmt.Errorf("scanner volume is not attached yet. ScannerVolumeID=%s", scannerVol.ID),
+			After: VolumeAttachmentReadynessAfter,
+		}
 	}
 
-	state = models.TargetScanStateStateATTACHED
-
-	return state, nil
+	return nil
 }
 
 // deleteInstances terminates all instances which meet the conditions defined by the filters argument.
@@ -663,12 +661,10 @@ func (c *Client) deleteVolumeSnapshots(ctx context.Context, filters []ec2types.F
 // RemoveTargetScan removes all the cloud resources associated with a Scan defined by config parameter.
 // The operation is idempotent, therefore it is safe to call it multiple times.
 // nolint:cyclop,gocognit
-func (c *Client) RemoveTargetScan(ctx context.Context, config *provider.ScanJobConfig) (models.ResourceCleanupState, error) {
-	state := models.ResourceCleanupStatePENDING
-
+func (c *Client) RemoveTargetScan(ctx context.Context, config *provider.ScanJobConfig) error {
 	vmInfo, err := config.TargetInfo.AsVMInfo()
 	if err != nil {
-		return state, fmt.Errorf("failed to convert TargetInfo to VMInfo: %w", err)
+		return FatalError{Err: err}
 	}
 
 	logger := log.GetLoggerFromContextOrDefault(ctx).WithFields(logrus.Fields{
@@ -679,9 +675,10 @@ func (c *Client) RemoveTargetScan(ctx context.Context, config *provider.ScanJobC
 	ec2Tags := EC2TagsFromScanMetadata(config.ScanMetadata)
 	ec2Filters := EC2FiltersFromEC2Tags(ec2Tags)
 
-	var wg sync.WaitGroup
 	numOfGoroutines := 3
-	results := make(chan operationResult, numOfGoroutines)
+	errs := make(chan error, numOfGoroutines)
+
+	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -690,12 +687,15 @@ func (c *Client) RemoveTargetScan(ctx context.Context, config *provider.ScanJobC
 		logger.Debug("Deleting scanner VM Instance.")
 		done, err := c.deleteInstances(ctx, ec2Filters, config.Region)
 		if err != nil {
-			results <- operationResult{false, fmt.Errorf("failed to delete scanner VM instance: %w", err)}
+			errs <- WrapError(fmt.Errorf("failed to delete scanner VM instance: %w", err))
 			return
 		}
 		// Deleting scanner VM instance is in-progress, thus cannot proceed with deleting the scanner volume.
 		if !done {
-			results <- operationResult{false, nil}
+			errs <- RetryableError{
+				Err:   errors.New("deleting Scanner VM instance is in-progress"),
+				After: InstanceReadynessAfter,
+			}
 			return
 		}
 
@@ -703,10 +703,17 @@ func (c *Client) RemoveTargetScan(ctx context.Context, config *provider.ScanJobC
 		logger.Debug("Deleting scanner volume.")
 		done, err = c.deleteVolumes(ctx, ec2Filters, config.Region)
 		if err != nil {
-			results <- operationResult{false, fmt.Errorf("failed to delete scanner volume: %w", err)}
+			errs <- WrapError(fmt.Errorf("failed to delete scanner volume: %w", err))
 			return
 		}
-		results <- operationResult{done, nil}
+
+		if !done {
+			errs <- RetryableError{
+				Err:   errors.New("deleting Scanner volume is in-progress"),
+				After: VolumeReadynessAfter,
+			}
+			return
+		}
 	}()
 
 	// Delete volume snapshot created for the scanner volume
@@ -717,10 +724,16 @@ func (c *Client) RemoveTargetScan(ctx context.Context, config *provider.ScanJobC
 		logger.Debug("Deleting scanner volume snapshot.")
 		done, err := c.deleteVolumeSnapshots(ctx, ec2Filters, config.Region)
 		if err != nil {
-			results <- operationResult{false, fmt.Errorf("failed to delete scanner volume snapshot: %w", err)}
+			errs <- WrapError(fmt.Errorf("failed to delete scanner volume snapshot: %w", err))
 			return
 		}
-		results <- operationResult{done, nil}
+		if !done {
+			errs <- RetryableError{
+				Err:   errors.New("deleting Scanner volume snapshot is in-progress"),
+				After: SnapshotReadynessAfter,
+			}
+			return
+		}
 	}()
 
 	// Delete volume snapshot created from the Target instance volume
@@ -730,40 +743,38 @@ func (c *Client) RemoveTargetScan(ctx context.Context, config *provider.ScanJobC
 
 		location, err := NewLocation(vmInfo.Location)
 		if err != nil {
-			results <- operationResult{false, fmt.Errorf("failed to parse Location string. Location=%s: %w", vmInfo.Location, err)}
+			errs <- FatalError{
+				Err: fmt.Errorf("failed to parse Location string. Location=%s: %w", vmInfo.Location, err),
+			}
 			return
 		}
 
 		logger.WithField("TargetLocation", vmInfo.Location).Debug("Deleting target volume snapshot.")
 		done, err := c.deleteVolumeSnapshots(ctx, ec2Filters, location.Region)
 		if err != nil {
-			results <- operationResult{false, fmt.Errorf("failed to delete target volume snapshot: %w", err)}
+			errs <- fmt.Errorf("failed to delete target volume snapshot: %w", err)
 			return
 		}
-		results <- operationResult{done, nil}
+
+		if !done {
+			errs <- RetryableError{
+				Err:   errors.New("deleting Target volume snapshot is in-progress"),
+				After: SnapshotReadynessAfter,
+			}
+			return
+		}
 	}()
 	wg.Wait()
-	close(results)
+	close(errs)
 
-	cleanupDone := true
 	// NOTE: make sure to drain results channel
-	for result := range results {
-		// Pick the error from the first operation result which failed
-		if err == nil && result.err != nil {
-			err = result.err
-		}
-		// Update cleanupDone to false if there is even a single operation which is not done
-		if !result.done {
-			cleanupDone = false
+	for e := range errs {
+		if e != nil {
+			err = errors.Join(err, e)
 		}
 	}
-	if err != nil || !cleanupDone {
-		return state, err
-	}
 
-	state = models.ResourceCleanupStateDONE
-
-	return state, nil
+	return err
 }
 
 func (c *Client) GetInstances(ctx context.Context, filters []ec2types.Filter, excludeTags []models.Tag, regionID string) ([]Instance, error) {

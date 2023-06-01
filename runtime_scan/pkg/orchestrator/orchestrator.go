@@ -33,7 +33,7 @@ type Orchestrator struct {
 	cancelFunc  context.CancelFunc
 }
 
-func New(config *Config, p provider.Client, b *backendclient.BackendClient) *Orchestrator {
+func New(config *Config, p provider.Provider, b *backendclient.BackendClient) *Orchestrator {
 	scanConfigWatcherConfig := config.ScanConfigWatcherConfig.WithBackendClient(b)
 	discoveryConfig := config.DiscoveryConfig.WithBackendClient(b).WithProviderClient(p)
 	scanWatcherConfig := config.ScanWatcherConfig.WithBackendClient(b).WithProviderClient(p)

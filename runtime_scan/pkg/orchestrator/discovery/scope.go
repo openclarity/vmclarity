@@ -31,7 +31,7 @@ const (
 
 type ScopeDiscoverer struct {
 	backendClient  *backendclient.BackendClient
-	providerClient provider.Client
+	providerClient provider.Provider
 }
 
 func New(config Config) *ScopeDiscoverer {

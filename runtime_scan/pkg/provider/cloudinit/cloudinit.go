@@ -28,17 +28,15 @@ import (
 var cloudInitTemplate string
 
 func New(data any) (string, error) {
-	// parse cloud-init template
 	tmpl, err := template.New("cloud-init").Funcs(sprig.FuncMap()).Parse(cloudInitTemplate)
 	if err != nil {
-		return "", fmt.Errorf("failed to parse cloud-init template: %v", err)
+		return "", fmt.Errorf("failed to parse cloud-init template: %w", err)
 	}
 
-	// execute template using data
-	var cloudInitBuf bytes.Buffer
-	if err := tmpl.Execute(&cloudInitBuf, data); err != nil {
-		return "", fmt.Errorf("failed to execute cloud-init template: %v", err)
+	var b bytes.Buffer
+	if err = tmpl.Execute(&b, data); err != nil {
+		return "", fmt.Errorf("failed to generate cloud-init from template: %w", err)
 	}
 
-	return cloudInitBuf.String(), nil
+	return b.String(), nil
 }

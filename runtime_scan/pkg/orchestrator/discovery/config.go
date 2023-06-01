@@ -28,7 +28,7 @@ const (
 
 type Config struct {
 	Backend           *backendclient.BackendClient
-	Provider          provider.Client
+	Provider          provider.Provider
 	DiscoveryInterval time.Duration
 }
 
@@ -37,7 +37,7 @@ func (c Config) WithBackendClient(b *backendclient.BackendClient) Config {
 	return c
 }
 
-func (c Config) WithProviderClient(p provider.Client) Config {
+func (c Config) WithProviderClient(p provider.Provider) Config {
 	c.Provider = p
 	return c
 }

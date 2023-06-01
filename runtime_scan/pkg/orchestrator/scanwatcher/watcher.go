@@ -49,7 +49,7 @@ func New(c Config) *Watcher {
 
 type Watcher struct {
 	backend          *backendclient.BackendClient
-	provider         provider.Client
+	provider         provider.Provider
 	pollPeriod       time.Duration
 	reconcileTimeout time.Duration
 	scanTimeout      time.Duration
