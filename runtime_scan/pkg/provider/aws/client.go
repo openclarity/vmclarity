@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"sync"
-	"time"
 
 	awstype "github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
@@ -218,7 +217,9 @@ func (c *Client) createInstance(ctx context.Context, config *provider.ScanJobCon
 
 	userData, err := cloudinit.New(config)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate cloud-init: %w", err)
+		return nil, FatalError{
+			Err: fmt.Errorf("failed to generate cloud-init: %w", err),
+		}
 	}
 	userDataBase64 := base64.StdEncoding.EncodeToString([]byte(userData))
 
@@ -292,13 +293,6 @@ func (c *Client) createInstance(ctx context.Context, config *provider.ScanJobCon
 
 	return instanceFromEC2Instance(&out.Instances[0], c.ec2Client, config), nil
 }
-
-const (
-	InstanceReadynessAfter         = 5 * time.Minute
-	SnapshotReadynessAfter         = 5 * time.Minute
-	VolumeReadynessAfter           = 5 * time.Minute
-	VolumeAttachmentReadynessAfter = 2 * time.Minute
-)
 
 // nolint:cyclop,gocognit,maintidx
 func (c *Client) RunTargetScan(ctx context.Context, config *provider.ScanJobConfig) error {
@@ -386,7 +380,7 @@ func (c *Client) RunTargetScan(ctx context.Context, config *provider.ScanJobConf
 
 		logger.WithField("TargetInstanceID", srcInstance.ID).Trace("Found target VM instance")
 
-		srcVol := srcInstance.GetRootVolume()
+		srcVol := srcInstance.RootVolume()
 		if srcVol == nil {
 			errs <- FatalError{errors.New("failed to get root block device for target VM instance")}
 			return
@@ -875,7 +869,7 @@ func (c *Client) ListAllRegions(ctx context.Context, isRecursive bool) ([]Region
 				options.Region = region.Name
 			})
 			if err != nil {
-				logger.Warnf("Failed to describe vpcs. Region=%s: %v", region.Name, err)
+				logger.Errorf("Failed to describe vpcs. Region=%s: %v", region.Name, err)
 				continue
 			}
 			ret[i].VPCs = convertAwsVPCs(vpcs.Vpcs)
@@ -893,7 +887,7 @@ func (c *Client) ListAllRegions(ctx context.Context, isRecursive bool) ([]Region
 					options.Region = region.Name
 				})
 				if err != nil {
-					logger.Warnf("Failed to describe security groups. Region=%s, VpcID=%v: %v", region.Name, vpc.ID, err)
+					logger.Errorf("Failed to describe security groups. Region=%s, VpcID=%s: %v", region.Name, vpc.ID, err)
 					continue
 				}
 				ret[i].VPCs[i2].SecurityGroups = getSecurityGroupsFromEC2SecurityGroups(securityGroups.SecurityGroups)

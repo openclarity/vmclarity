@@ -49,46 +49,18 @@ type Instance struct {
 	ec2Client *ec2.Client
 }
 
-func (i *Instance) GetLocation() string {
+func (i *Instance) Location() string {
 	return i.Region + "/" + i.VpcID
 }
 
-func (i *Instance) GetRootVolume() *Volume {
-	var root Volume
-	for idx, vol := range i.Volumes {
-		if idx == 0 {
-			root = vol
-		}
+func (i *Instance) RootVolume() *Volume {
+	for _, vol := range i.Volumes {
 		if vol.BlockDeviceName == i.RootDeviceName {
-			root = vol
-			break
+			return &vol
 		}
 	}
 
-	return &root
-}
-
-func (i *Instance) WaitForReady(ctx context.Context, timeout time.Duration, interval time.Duration) error {
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
-	timer := time.NewTicker(interval)
-	defer timer.Stop()
-
-	for {
-		select {
-		case <-timer.C:
-			ready, err := i.IsReady(ctx)
-			if err != nil {
-				return fmt.Errorf("failed to get VM instance state. InstanceID=%s: %w", i.ID, err)
-			}
-			if ready {
-				return nil
-			}
-		case <-ctx.Done():
-			return fmt.Errorf("failed to wait until VM Instance is in ready state. InstanceID=%s: %w", i.ID, ctx.Err())
-		}
-	}
+	return nil
 }
 
 func (i *Instance) IsReady(ctx context.Context) (bool, error) {
@@ -166,13 +138,13 @@ func (i *Instance) AttachVolume(ctx context.Context, volume *Volume, deviceName 
 			}
 		case ec2types.VolumeStateAvailable:
 			logger.Trace("Attaching volume to instance")
-			_, err := i.ec2Client.AttachVolume(ctx, &ec2.AttachVolumeInput{
+
+			attachVolParams := &ec2.AttachVolumeInput{
 				Device:     utils.PointerTo(deviceName),
 				InstanceId: utils.PointerTo(i.ID),
 				VolumeId:   utils.PointerTo(volume.ID),
-			}, func(options *ec2.Options) {
-				options.Region = i.Region
-			})
+			}
+			_, err := i.ec2Client.AttachVolume(ctx, attachVolParams, options)
 			if err != nil {
 				return fmt.Errorf("failed to attach volume: %w", err)
 			}
@@ -182,10 +154,9 @@ func (i *Instance) AttachVolume(ctx context.Context, volume *Volume, deviceName 
 				Err: fmt.Errorf("cannot attach volume with state: %s", vol.State),
 			}
 		case ec2types.VolumeStateCreating:
-		default:
 			return RetryableError{
 				Err:   fmt.Errorf("cannot attach volume with state: %s", vol.State),
-				After: 5 * time.Minute,
+				After: VolumeReadynessAfter,
 			}
 		}
 	}

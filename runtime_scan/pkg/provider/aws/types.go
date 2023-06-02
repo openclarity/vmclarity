@@ -16,8 +16,6 @@
 package aws
 
 import (
-	"time"
-
 	"github.com/openclarity/vmclarity/api/models"
 )
 
@@ -43,11 +41,7 @@ const (
 	VpcIDFilterName           = "vpc-id"
 	SecurityGroupIDFilterName = "instance.group-id"
 	InstanceStateFilterName   = "instance-state-name"
-)
-
-const (
-	DefaultWaitForReadyTimeout  = 15 * time.Minute
-	DefaultWaitForReadyInterval = 15 * time.Second
+	SnapshotIDFilterName      = "snapshot-id"
 )
 
 type ScanScope struct {

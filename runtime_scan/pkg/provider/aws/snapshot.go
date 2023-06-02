@@ -18,7 +18,6 @@ package aws
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -77,11 +76,10 @@ func (s *Snapshot) Copy(ctx context.Context, region string) (*Snapshot, error) {
 	for _, snap := range describeOut.Snapshots {
 		switch snap.State {
 		case ec2types.SnapshotStateError, ec2types.SnapshotStateRecoverable:
-			// We want to recreate the snapshot if it is in error or recoverable state. Cleanup will take care of
-			// removing these as well.
+			return nil, FatalError{
+				Err: fmt.Errorf("failed to copy volume snapshot with state: %s", snap.State),
+			}
 		case ec2types.SnapshotStateRecovering, ec2types.SnapshotStatePending, ec2types.SnapshotStateCompleted:
-			fallthrough
-		default:
 			return &Snapshot{
 				ec2Client: s.ec2Client,
 				ID:        *snap.SnapshotId,
@@ -92,7 +90,7 @@ func (s *Snapshot) Copy(ctx context.Context, region string) (*Snapshot, error) {
 		}
 	}
 
-	createParams := &ec2.CopySnapshotInput{
+	copySnapParams := &ec2.CopySnapshotInput{
 		SourceRegion:     &s.Region,
 		SourceSnapshotId: &s.ID,
 		Description:      utils.PointerTo(EC2SnapshotDescription),
@@ -104,9 +102,9 @@ func (s *Snapshot) Copy(ctx context.Context, region string) (*Snapshot, error) {
 		},
 	}
 
-	snap, err := s.ec2Client.CopySnapshot(ctx, createParams, options)
+	snap, err := s.ec2Client.CopySnapshot(ctx, copySnapParams, options)
 	if err != nil {
-		return nil, fmt.Errorf("failed to copy snapshot with %s id from region %s to region %s: %w",
+		return nil, fmt.Errorf("failed to copy snapshot between regions. SnapshotID=%s SourceRegion=%s DestinationRegion=%s: %w",
 			s.ID, s.Region, region, err)
 	}
 
@@ -136,29 +134,6 @@ func (s *Snapshot) Delete(ctx context.Context) error {
 	return nil
 }
 
-func (s *Snapshot) WaitForReady(ctx context.Context, timeout time.Duration, interval time.Duration) error {
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
-	timer := time.NewTicker(interval)
-	defer timer.Stop()
-
-	for {
-		select {
-		case <-timer.C:
-			ready, err := s.IsReady(ctx)
-			if err != nil {
-				return fmt.Errorf("failed to get volume snapshot state. SnapshotID=%s: %w", s.ID, err)
-			}
-			if ready {
-				return nil
-			}
-		case <-ctx.Done():
-			return fmt.Errorf("failed to wait until volume snapshot is in ready state. SnapshotID=%s: %w", s.ID, ctx.Err())
-		}
-	}
-}
-
 func (s *Snapshot) IsReady(ctx context.Context) (bool, error) {
 	var ready bool
 
@@ -171,16 +146,16 @@ func (s *Snapshot) IsReady(ctx context.Context) (bool, error) {
 		return ready, fmt.Errorf("failed to describe snapshot. SnapshotID=%s: %w", s.ID, err)
 	}
 
-	if len(out.Snapshots) != 1 {
-		return ready, fmt.Errorf("got unexcpected number of snapshots (%d). Excpecting 1. SnapshotID=%s",
-			len(out.Snapshots), s.ID)
+	for _, snap := range out.Snapshots {
+		if snap.SnapshotId == nil {
+			continue
+		}
+		if *snap.SnapshotId == s.ID && snap.State == ec2types.SnapshotStateCompleted {
+			return true, nil
+		}
 	}
 
-	if out.Snapshots[0].State == ec2types.SnapshotStateCompleted {
-		ready = true
-	}
-
-	return ready, nil
+	return false, nil
 }
 
 func (s *Snapshot) CreateVolume(ctx context.Context, az string) (*Volume, error) {
@@ -202,7 +177,7 @@ func (s *Snapshot) CreateVolume(ctx context.Context, az string) (*Volume, error)
 
 	ec2Filters := EC2FiltersFromEC2Tags(ec2TagsForVolume)
 	ec2Filters = append(ec2Filters, ec2types.Filter{
-		Name:   utils.PointerTo("snapshot-id"),
+		Name:   utils.PointerTo(SnapshotIDFilterName),
 		Values: []string{s.ID},
 	})
 
@@ -221,13 +196,11 @@ func (s *Snapshot) CreateVolume(ctx context.Context, az string) (*Volume, error)
 
 	for _, vol := range describeOut.Volumes {
 		switch vol.State {
-		case ec2types.VolumeStateDeleted, ec2types.VolumeStateDeleting:
-			// We want to re-create the volume if it is in deleting or deleted state
-		case ec2types.VolumeStateAvailable, ec2types.VolumeStateCreating, ec2types.VolumeStateInUse, ec2types.VolumeStateError:
-			// We want to return the volume even if it is in error state to avoid creating new volumes where
-			// which might get into error state as well.
-			fallthrough
-		default:
+		case ec2types.VolumeStateDeleted, ec2types.VolumeStateDeleting, ec2types.VolumeStateError:
+			return nil, FatalError{
+				Err: fmt.Errorf("found volume in unexpected state. VolumeID=%s: %s", vol.VolumeId, vol.State),
+			}
+		case ec2types.VolumeStateAvailable, ec2types.VolumeStateCreating, ec2types.VolumeStateInUse:
 			return &Volume{
 				ec2Client: s.ec2Client,
 				ID:        *vol.VolumeId,

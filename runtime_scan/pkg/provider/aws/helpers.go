@@ -422,7 +422,7 @@ func getVMInfoFromInstance(i Instance) (models.TargetType, error) {
 		InstanceProvider: utils.PointerTo(AWSProvider),
 		InstanceType:     i.InstanceType,
 		LaunchTime:       i.LaunchTime,
-		Location:         i.GetLocation(),
+		Location:         i.Location(),
 		ObjectType:       "VMInfo",
 		Platform:         i.Platform,
 		SecurityGroups:   utils.PointerTo(i.SecurityGroups),

@@ -33,6 +33,11 @@ const (
 	DefaultRetryAfter     = 15 * time.Second
 	RetryServerErrorAfter = time.Minute
 
+	InstanceReadynessAfter         = 5 * time.Minute
+	SnapshotReadynessAfter         = 5 * time.Minute
+	VolumeReadynessAfter           = 5 * time.Minute
+	VolumeAttachmentReadynessAfter = 2 * time.Minute
+
 	ErrorCodeUnauthorizedOperation = "UnauthorizedOperation"
 )
 
