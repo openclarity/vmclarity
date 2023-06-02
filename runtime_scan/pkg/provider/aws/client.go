@@ -743,6 +743,10 @@ func (c *Client) RemoveTargetScan(ctx context.Context, config *provider.ScanJobC
 			return
 		}
 
+		if location.Region == config.Region {
+			return
+		}
+
 		logger.WithField("TargetLocation", vmInfo.Location).Debug("Deleting target volume snapshot.")
 		done, err := c.deleteVolumeSnapshots(ctx, ec2Filters, location.Region)
 		if err != nil {

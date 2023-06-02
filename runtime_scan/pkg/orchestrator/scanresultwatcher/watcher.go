@@ -251,11 +251,11 @@ func (w *Watcher) reconcileInit(ctx context.Context, scanResult *models.TargetSc
 	switch {
 	case errors.As(err, &fatalError):
 		scanResult.Status.General.State = utils.PointerTo(models.TargetScanStateStateDONE)
-		scanResult.Status.General.Errors = utils.PointerTo(utils.UnwrapErrorStrings(err))
+		scanResult.Status.General.Errors = utils.PointerTo([]string{fatalError.Error()})
 		scanResult.Status.General.LastTransitionTime = utils.PointerTo(time.Now().UTC())
 	case errors.As(err, &retryableError):
 		// nolint:wrapcheck
-		return common.NewRequeueAfterError(retryableError.RetryAfter(), err.Error())
+		return common.NewRequeueAfterError(retryableError.RetryAfter(), retryableError.Error())
 	case err != nil:
 		scanResult.Status.General.State = utils.PointerTo(models.TargetScanStateStateDONE)
 		scanResult.Status.General.Errors = utils.PointerTo(utils.UnwrapErrorStrings(err))
@@ -359,7 +359,7 @@ func (w *Watcher) cleanupResources(ctx context.Context, scanResult *models.Targe
 			scanResult.ResourceCleanup = utils.PointerTo(models.ResourceCleanupStateFAILED)
 		case errors.As(err, &retryableError):
 			// nolint:wrapcheck
-			return common.NewRequeueAfterError(retryableError.RetryAfter(), err.Error())
+			return common.NewRequeueAfterError(retryableError.RetryAfter(), retryableError.Error())
 		case err != nil:
 			scanResult.ResourceCleanup = utils.PointerTo(models.ResourceCleanupStateFAILED)
 		default:

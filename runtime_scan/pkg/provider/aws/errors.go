@@ -30,7 +30,7 @@ type (
 )
 
 const (
-	DefaultRetryAfter     = 15 * time.Second
+	DefaultRetryAfter     = 5 * time.Second
 	RetryServerErrorAfter = time.Minute
 
 	InstanceReadynessAfter         = 5 * time.Minute
