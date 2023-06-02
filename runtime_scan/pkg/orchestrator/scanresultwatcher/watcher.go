@@ -251,14 +251,14 @@ func (w *Watcher) reconcileInit(ctx context.Context, scanResult *models.TargetSc
 	switch {
 	case errors.As(err, &fatalError):
 		scanResult.Status.General.State = utils.PointerTo(models.TargetScanStateStateDONE)
-		scanResult.Status.General.Errors = utils.PointerTo([]string{err.Error()})
+		scanResult.Status.General.Errors = utils.PointerTo(utils.UnwrapErrorStrings(err))
 		scanResult.Status.General.LastTransitionTime = utils.PointerTo(time.Now().UTC())
 	case errors.As(err, &retryableError):
 		// nolint:wrapcheck
 		return common.NewRequeueAfterError(retryableError.RetryAfter(), err.Error())
 	case err != nil:
 		scanResult.Status.General.State = utils.PointerTo(models.TargetScanStateStateDONE)
-		scanResult.Status.General.Errors = utils.PointerTo([]string{err.Error()})
+		scanResult.Status.General.Errors = utils.PointerTo(utils.UnwrapErrorStrings(err))
 		scanResult.Status.General.LastTransitionTime = utils.PointerTo(time.Now().UTC())
 	default:
 		scanResult.Status.General.State = utils.PointerTo(models.TargetScanStateStateATTACHED)
