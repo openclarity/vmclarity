@@ -38,7 +38,7 @@ const (
 	VolumeReadynessAfter           = 5 * time.Minute
 	VolumeAttachmentReadynessAfter = 2 * time.Minute
 
-	ErrorCodeUnauthorizedOperation = "UnauthorizedOperation"
+	AWSUnauthorizedOperation = "UnauthorizedOperation"
 )
 
 func WrapError(err error) error {
@@ -52,19 +52,19 @@ func WrapError(err error) error {
 		return err
 	}
 
-	var awsApiError smithy.APIError
-	if errors.As(err, &awsApiError) {
-		if awsApiError.ErrorCode() == ErrorCodeUnauthorizedOperation {
-			return FatalError{err}
+	var awsAPIError smithy.APIError
+	if errors.As(err, &awsAPIError) {
+		if awsAPIError.ErrorCode() == AWSUnauthorizedOperation {
+			return FatalError{Err: err}
 		}
 
-		switch awsApiError.ErrorFault() {
+		switch awsAPIError.ErrorFault() {
 		case smithy.FaultServer:
-			return RetryableError{err, RetryServerErrorAfter}
+			return RetryableError{Err: err, After: RetryServerErrorAfter}
 		case smithy.FaultClient, smithy.FaultUnknown:
-			return FatalError{err}
+			return FatalError{Err: err}
 		}
 	}
 
-	return RetryableError{err, DefaultRetryAfter}
+	return RetryableError{Err: err, After: DefaultRetryAfter}
 }

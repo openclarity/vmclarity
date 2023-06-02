@@ -65,8 +65,3 @@ type Region struct {
 	Name string
 	VPCs []VPC
 }
-
-type operationResult struct {
-	done bool
-	err  error
-}

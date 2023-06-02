@@ -198,7 +198,7 @@ func (s *Snapshot) CreateVolume(ctx context.Context, az string) (*Volume, error)
 		switch vol.State {
 		case ec2types.VolumeStateDeleted, ec2types.VolumeStateDeleting, ec2types.VolumeStateError:
 			return nil, FatalError{
-				Err: fmt.Errorf("found volume in unexpected state. VolumeID=%s: %s", vol.VolumeId, vol.State),
+				Err: fmt.Errorf("found volume in unexpected state. VolumeID=%s: %s", *vol.VolumeId, vol.State),
 			}
 		case ec2types.VolumeStateAvailable, ec2types.VolumeStateCreating, ec2types.VolumeStateInUse:
 			return &Volume{

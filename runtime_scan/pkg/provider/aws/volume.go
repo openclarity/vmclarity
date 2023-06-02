@@ -135,29 +135,34 @@ func (v *Volume) WaitForReady(ctx context.Context, timeout time.Duration, interv
 }
 
 func (v *Volume) IsReady(ctx context.Context) (bool, error) {
-	var ready bool
-
 	out, err := v.ec2Client.DescribeVolumes(ctx, &ec2.DescribeVolumesInput{
 		VolumeIds: []string{v.ID},
 	}, func(options *ec2.Options) {
 		options.Region = v.Region
 	})
 	if err != nil {
-		return ready, fmt.Errorf("failed to describe volumes. VolumeID=%s: %w", v.ID, err)
+		return false, fmt.Errorf("failed to describe volumes. VolumeID=%s: %w", v.ID, err)
 	}
 
 	if len(out.Volumes) != 1 {
-		return ready, fmt.Errorf("got unexcpected number of volumes (%d). Excpecting 1. VolumeID=%s",
+		return false, fmt.Errorf("got unexcpected number of volumes (%d). Excpecting 1. VolumeID=%s",
 			len(out.Volumes), v.ID)
 	}
 
-	switch out.Volumes[0].State {
+	volState := out.Volumes[0].State
+	switch volState {
 	case ec2types.VolumeStateAvailable, ec2types.VolumeStateInUse:
-		ready = true
+		return true, nil
+	case ec2types.VolumeStateCreating:
+		return false, nil
+	case ec2types.VolumeStateDeleted, ec2types.VolumeStateDeleting, ec2types.VolumeStateError:
+		return false, FatalError{
+			Err: fmt.Errorf("volume is not ready due to its state: %s", volState),
+		}
 	default:
 	}
 
-	return ready, nil
+	return false, nil
 }
 
 func (v *Volume) WaitForAttached(ctx context.Context, timeout time.Duration, interval time.Duration) error {

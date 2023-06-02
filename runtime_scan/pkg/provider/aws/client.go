@@ -382,7 +382,9 @@ func (c *Client) RunTargetScan(ctx context.Context, config *provider.ScanJobConf
 
 		srcVol := srcInstance.RootVolume()
 		if srcVol == nil {
-			errs <- FatalError{errors.New("failed to get root block device for target VM instance")}
+			errs <- FatalError{
+				Err: errors.New("failed to get root block device for target VM instance"),
+			}
 			return
 		}
 
