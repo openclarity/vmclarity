@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	DefaultWaitForVolRetryInterval = utils.DefaultResourceReadyCheckIntervalSec * time.Second
+	DefaultWaitForVolRetryInterval = 15 * time.Second
 )
 
 type ScanResultID = models.ScanResultID
