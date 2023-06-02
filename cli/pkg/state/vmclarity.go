@@ -29,7 +29,6 @@ import (
 )
 
 const (
-	DefaultWaitForVolTimeout       = utils.DefaultResourceReadyWaitTimeoutMin * time.Minute
 	DefaultWaitForVolRetryInterval = utils.DefaultResourceReadyCheckIntervalSec * time.Second
 )
 
@@ -41,11 +40,9 @@ type VMClarityState struct {
 	scanResultID models.ScanResultID
 }
 
+// nolint:cyclop
 func (v *VMClarityState) WaitForVolumeAttachment(ctx context.Context) error {
 	logger := log.GetLoggerFromContextOrDiscard(ctx)
-
-	ctx, cancel := context.WithTimeout(ctx, DefaultWaitForVolTimeout)
-	defer cancel()
 
 	timer := time.NewTicker(DefaultWaitForVolRetryInterval)
 	defer timer.Stop()
@@ -58,9 +55,19 @@ func (v *VMClarityState) WaitForVolumeAttachment(ctx context.Context) error {
 				logger.Errorf("failed to get scan result status: %v", err)
 				break
 			}
-			// wait for status attached (meaning volume was attached and can be mounted).
-			if *status.General.State == models.TargetScanStateStateATTACHED {
+
+			if status == nil || status.General == nil || status.General.State == nil {
+				return errors.New("invalid API response: status or status.general or status.general.state is nil")
+			}
+
+			switch *status.General.State {
+			case models.TargetScanStateStateINIT:
+			case models.TargetScanStateStateABORTED:
+				// Do nothing as WaitForAborted is responsible for handling this case
+			case models.TargetScanStateStateATTACHED, models.TargetScanStateStateINPROGRESS:
 				return nil
+			case models.TargetScanStateStateDONE, models.TargetScanStateStateNOTSCANNED:
+				return fmt.Errorf("failed to wait for volume attachment as ScanResult is %s state", *status.General.State)
 			}
 		case <-ctx.Done():
 			return fmt.Errorf("waiting for volume ready was canceled: %w", ctx.Err())
