@@ -183,19 +183,21 @@ The private subnet (VmClarityScannerSubnet) hosts the VM snapshot instances
 Figure 2. VMClarity Cloud Formation Resources
 ![VMClarity CloudFormation Resources](img/vmclarity-cf-basic.svg)
 
-To begin either:
-* Download the latest stable VMClarity.cfn from the choosen VMClarity release
-  [here](https://github.com/openclarity/vmclarity/releases)
-
-* Clone or copy the [AWS CloudFormation template](installation/aws/VmClarity.cfn)
-  file from main to deploy the latest development code.
-
 ### Deploy the VMClarity AWS CloudFormation Stack
 
-Go to the AWS CloudFormation service page: > Create Stack > With New Resources
+Click [here](https://console.aws.amazon.com/cloudformation/home#/stacks/create/review?stackName=VMClarity&templateURL=https://s3.eu-west-2.amazonaws.com/vmclarity-v0.4.0/VmClarity.cfn) to start the VMClarity CloudFormation Stack wizard.
+
+Alternatively:
+* Obtain the CloudFormation template using one of the following:
+  * Download the latest stable VMClarity.cfn from the chosen VMClarity release
+    [here](https://github.com/openclarity/vmclarity/releases)
+  * Clone or copy the [AWS CloudFormation template](installation/aws/VmClarity.cfn)
+    file from main to deploy the latest development code.
+* Go to the AWS CloudFormation service page: > Create Stack > With New Resources
 (standard)> Check "Template is ready", and Check "Upload a template file" >
 Upload a template file/Choose file.
 
+In the VMClarity CloudFormation Stack wizard:
 - Name the stack
 - Select the InstanceType (defaults to t2.large for the VMClarity Server, and the scanner VMs)
 - KeyName - Choose your SSH key for the EC2 instance
@@ -285,7 +287,7 @@ Figure 11. VMClarity Dashboard
 
 <img src="img/vmclarity-dashboard-data.png" alt="VMClarity Dashboard with Findings" width="90%" height="90%" title="VMClarity Dashboard with Findings" />
 
-## Roadmap
+# Roadmap
 VMClarity project roadmap is available [here](https://github.com/orgs/openclarity/projects/2/views/7).
 
 # VMClarity Project Goals
