@@ -10,14 +10,17 @@ Software Bill Of Materials (SBOM) and security threats such as vulnerabilities, 
 # Table of Contents<!-- omit in toc -->
 
 - [Why VMClarity?](#why-vmclarity)
+- [Demo](#demo)
+- [Quick Start](#quick-start)
 - [Overview](#overview)
-- [VMClarity Project Goals](#vmclarity-project-goals)
 - [High Level Architecture](#high-level-architecture)
 - [Getting Started](#getting-started)
   - [Installing on AWS](#installing-on-aws)
     - [Deploy the VMClarity AWS CloudFormation Stack](#deploy-the-vmclarity-aws-cloudformation-stack)
     - [Accessing the API and UI](#accessing-the-api-and-ui)
   - [Configure Your First Scan](#configure-your-first-scan)
+- [Roadmap](#roadmap)
+- [VMClarity Project Goals](#vmclarity-project-goals)
 - [Contributing](#contributing)
 - [Code of Conduct](#code-of-conduct)
 - [License](#license)
@@ -45,6 +48,21 @@ However, there are challenges with assembling and managing these tools yourself:
 - Siloed reporting and visualization
 
 The VMClarity project is focused on unifying detection and management of VM security threats in an agentless manner.
+
+# Demo
+<img src="./img/vmclarity_demo.gif" alt="VMClarity demo" />
+
+# Quick start
+1. Deploy the VMClarity AWS CloudFormation [stack](https://console.aws.amazon.com/cloudformation/home#/stacks/create/review?stackName=VMClarity&templateURL=https://s3.eu-west-2.amazonaws.com/vmclarity-v0.4.0/VmClarity.cfn).
+   1. Specify the SSH key to be used to connect to VMClarity under 'KeyName'
+   2. Once deployed, copy VmClarity SSH Address from the "Outputs" tab
+2. Open an SSH tunnel to VMClarity API/UI:
+```
+ssh -N -L 8888:localhost:8888 -i  "<Path to the SSH key specified in 1.i>" ubuntu@<VmClarity SSH Address specified in 1.ii>
+```
+3. Access VMClarity UI in <http://localhost:8888>
+
+Check [Getting Started](#getting-started) for more details.
 
 # Overview
 
@@ -80,33 +98,6 @@ These tools include:
   - [Lynis](https://github.com/CISOfy/lynis)
 - Rootkits
   - [Chkrootkit](https://github.com/Magentron/chkrootkit)
-
-# VMClarity Project Goals
-
-- **Increase the adoption of VMClarity**: One of the primary goals of VMClarity
-  is to reduce the number of vulnerable VMs in the world. We hope to do this by
-  getting more people involved in the project. This involves feature development,
-  marketing efforts, improving the user experience, and providing additional
-  documentation and resources to make it easier for users to get started.
-
-- **Improve the accuracy of VMClarity**: Another goal is to enhance the
-  accuracy across all supported types of threat detection by improving the
-  analysis and result merging logic performed by VMClarity to reduce false
-  positives. This involves researching and developing improved algorithms and
-  heuristics used by VMClarity.
-
-- **Expand VMClarity's functionality**: A third goal is to expand the
-  functionality of VMClarity by adding additional tools to each family, adding
-  additional families of threats to detect, and integrating with other security
-  tools to provide a more comprehensive security solution.
-
-- **Foster a community around VMClarity**: VMClarity will only be successful if
-  we foster a community of users and developers around the project. The health
-  of VMClarity depends on organizing events, creating a forum for users to drive
-  requirements and use cases, and contributing to open-source projects related to
-  VMClarity. Building a strong community around VMClarity will help it be more
-  widely adopted and more effective at detecting and managing virtual machine
-  threats.
 
 # High Level Architecture
 
@@ -293,6 +284,36 @@ Figure 10. VMClarity Scan List
 Figure 11. VMClarity Dashboard
 
 <img src="img/vmclarity-dashboard-data.png" alt="VMClarity Dashboard with Findings" width="90%" height="90%" title="VMClarity Dashboard with Findings" />
+
+## Roadmap
+VMClarity project roadmap is available [here](https://github.com/orgs/openclarity/projects/2/views/7).
+
+# VMClarity Project Goals
+
+- **Increase the adoption of VMClarity**: One of the primary goals of VMClarity
+  is to reduce the number of vulnerable VMs in the world. We hope to do this by
+  getting more people involved in the project. This involves feature development,
+  marketing efforts, improving the user experience, and providing additional
+  documentation and resources to make it easier for users to get started.
+
+- **Improve the accuracy of VMClarity**: Another goal is to enhance the
+  accuracy across all supported types of threat detection by improving the
+  analysis and result merging logic performed by VMClarity to reduce false
+  positives. This involves researching and developing improved algorithms and
+  heuristics used by VMClarity.
+
+- **Expand VMClarity's functionality**: A third goal is to expand the
+  functionality of VMClarity by adding additional tools to each family, adding
+  additional families of threats to detect, and integrating with other security
+  tools to provide a more comprehensive security solution.
+
+- **Foster a community around VMClarity**: VMClarity will only be successful if
+  we foster a community of users and developers around the project. The health
+  of VMClarity depends on organizing events, creating a forum for users to drive
+  requirements and use cases, and contributing to open-source projects related to
+  VMClarity. Building a strong community around VMClarity will help it be more
+  widely adopted and more effective at detecting and managing virtual machine
+  threats.
 
 # Contributing
 
