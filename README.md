@@ -187,7 +187,7 @@ To begin either:
 * Download the latest stable VMClarity.cfn from the choosen VMClarity release
   [here](https://github.com/openclarity/vmclarity/releases)
 
-* Clone or copy the ![AWS CloudFormation template](installation/aws/VmClarity.cfn)
+* Clone or copy the [AWS CloudFormation template](installation/aws/VmClarity.cfn)
   file from main to deploy the latest development code.
 
 ### Deploy the VMClarity AWS CloudFormation Stack
