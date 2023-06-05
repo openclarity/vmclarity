@@ -45,9 +45,7 @@ import (
 )
 
 const (
-	DefaultWatcherInterval  = 2 * time.Minute
-	DefaultReadynessTimeout = 30 * time.Minute
-	DefaultScanTimeout      = 4 * time.Hour
+	DefaultWatcherInterval = 2 * time.Minute
 )
 
 var (
@@ -162,7 +160,7 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	logger.Infof("init config")
+	logger.Infof("Initializing configuration...")
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)

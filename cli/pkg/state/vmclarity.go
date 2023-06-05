@@ -67,7 +67,7 @@ func (v *VMClarityState) WaitForVolumeAttachment(ctx context.Context) error {
 			case models.TargetScanStateStateATTACHED, models.TargetScanStateStateINPROGRESS:
 				return nil
 			case models.TargetScanStateStateDONE, models.TargetScanStateStateNOTSCANNED:
-				return fmt.Errorf("failed to wait for volume attachment as ScanResult is %s state", *status.General.State)
+				return fmt.Errorf("failed to wait for volume attachment as ScanResult is in %s state", *status.General.State)
 			}
 		case <-ctx.Done():
 			return fmt.Errorf("waiting for volume ready was canceled: %w", ctx.Err())
