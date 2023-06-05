@@ -45,20 +45,16 @@ However, there are challenges with assembling and managing these tools yourself:
 The VMClarity project is focused on unifying detection and management of VM security threats in an agentless manner.
 
 # Quick start
+
 ## Install VMClarity
 
-<details><summary>On AWS</summary>
-<p>
+### AWS
 
 1. Start the CloudFormation [wizard](https://console.aws.amazon.com/cloudformation/home#/stacks/create/review?stackName=VMClarity&templateURL=https://s3.eu-west-2.amazonaws.com/vmclarity-v0.4.0/VmClarity.cfn), or upload the [latest](https://github.com/openclarity/vmclarity/releases/latest) CloudFormation template 
 2. Specify the SSH key to be used to connect to VMClarity under 'KeyName'
 3. Once deployed, copy VmClarity SSH Address from the "Outputs" tab
 
-</p>
-</details>
-
 For a detailed installation guide, please see [AWS](installation/aws/README.md).
-For a detailed UI tour, please see [tour](TOUR.md).
 
 ## Access VMClarity UI
 1. Open an SSH tunnel to VMClarity server
@@ -69,7 +65,7 @@ For a detailed UI tour, please see [tour](TOUR.md).
 2. Access VMClarity UI in the browser: http://localhost:8888/
 3. Access the [API](/api/openapi.yaml) via http://localhost:8888/api
 
-
+For a detailed UI tour, please see [tour](TOUR.md).
 
 # Overview
 
