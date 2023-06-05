@@ -814,15 +814,6 @@ Resources:
                 "aws:ResourceTag/Owner": "VMClarity"
           #
           # ##########################
-
-          # ##########################
-          #
-          - Effect: "Allow"
-            Action:
-              - "sts:DecodeAuthorizationMessage"
-            Resource: "*"
-          #
-          # ##########################
       Roles:
         - !Ref VmClarityServerRole
   # Create a IAM role which will contain the policy above.
