@@ -24,7 +24,7 @@ type (
 // Returned slice is nil if err is nil.
 // Slice with the original err as a single element is returned if err does not implement `Unwrap() error`
 // or `Unwrap []error` interfaces.
-// UnwrapErrors does not perform recursive lookup, so only the provider err is unwrapped.
+// UnwrapErrors does not perform recursive lookup, so only the top level err is unwrapped.
 func UnwrapErrors(err error) []error {
 	if err == nil {
 		return nil
@@ -53,7 +53,7 @@ func UnwrapErrors(err error) []error {
 // Returned slice is nil if provider err is nil.
 // Slice with the original err as a single element is returned if err does not implement `Unwrap() error`
 // or `Unwrap []error` interfaces.
-// UnwrapErrorStrings does not perform recursive lookup, so only the provider err is unwrapped.
+// UnwrapErrorStrings does not perform recursive lookup, so only the top level err is unwrapped.
 func UnwrapErrorStrings(err error) []string {
 	if err == nil {
 		return nil
