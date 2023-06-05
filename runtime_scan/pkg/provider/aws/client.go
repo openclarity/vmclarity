@@ -311,7 +311,7 @@ func (c *Client) RunTargetScan(ctx context.Context, config *provider.ScanJobConf
 	// Note(chrisgacsal): In order to speed up the initialization process the scanner instance and the volume are created
 	//                    in parallel.
 
-	// Create scanner instance in same region/location as the VMClarity server deployed
+	// Create scanner instance
 	numOfGoroutines := 2
 	errs := make(chan error, numOfGoroutines)
 	var scannnerInstance *Instance

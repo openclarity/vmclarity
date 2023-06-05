@@ -165,29 +165,6 @@ func (v *Volume) IsReady(ctx context.Context) (bool, error) {
 	return false, nil
 }
 
-func (v *Volume) WaitForAttached(ctx context.Context, timeout time.Duration, interval time.Duration) error {
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
-	timer := time.NewTicker(interval)
-	defer timer.Stop()
-
-	for {
-		select {
-		case <-timer.C:
-			attached, err := v.IsAttached(ctx)
-			if err != nil {
-				return fmt.Errorf("failed to get volume state. VolumeID=%s: %w", v.ID, err)
-			}
-			if attached {
-				return nil
-			}
-		case <-ctx.Done():
-			return fmt.Errorf("failed to wait until volume is in attached state. VolumeID=%s: %w", v.ID, ctx.Err())
-		}
-	}
-}
-
 func (v *Volume) IsAttached(ctx context.Context) (bool, error) {
 	var attached bool
 
