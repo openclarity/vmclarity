@@ -50,7 +50,10 @@ type Instance struct {
 }
 
 func (i *Instance) Location() string {
-	return i.Region + "/" + i.VpcID
+	return Location{
+		Region: i.Region,
+		Vpc:    i.VpcID,
+	}.String()
 }
 
 func (i *Instance) RootVolume() *Volume {
