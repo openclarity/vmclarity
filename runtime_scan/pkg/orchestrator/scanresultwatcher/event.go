@@ -38,5 +38,5 @@ func (e *ScanResultReconcileEvent) ToFields() log.Fields {
 }
 
 func (e ScanResultReconcileEvent) String() string {
-	return fmt.Sprintf("ScanResultID=%s ScanID=%s TargetID=%s", e.ScanID, e.ScanID, e.TargetID)
+	return fmt.Sprintf("ScanResultID=%s ScanID=%s TargetID=%s", e.ScanResultID, e.ScanID, e.TargetID)
 }
