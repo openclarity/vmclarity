@@ -49,14 +49,14 @@ func (w *ScheduleWindow) In(t time.Time) bool {
 	return true
 }
 
-// Before returns true if the t time is before the timeframe represented by w ScheduleWindow, otherwise it returns false.
+// Before returns true if w ScheduleWindow is before t time.Time, otherwise false.
 func (w *ScheduleWindow) Before(t time.Time) bool {
-	return t.Before(w.start)
+	return w.end.Before(t)
 }
 
-// After returns true if the t time is after the timeframe represented by w ScheduleWindow, otherwise it returns false.
+// After returns true if w ScheduleWindow is after t time.Time, otherwise false.
 func (w *ScheduleWindow) After(t time.Time) bool {
-	return t.After(w.end)
+	return w.start.After(t)
 }
 
 // Next returns a new ScheduleWindow which represents the timeframe after w ScheduleWindow.
@@ -138,7 +138,7 @@ func (o OperationTime) NextAfter(t time.Time) *OperationTime {
 	return &o
 }
 
-// Time returns tim.Time represented by the OperationTime.
+// Time returns time.Time represented by the OperationTime.
 func (o *OperationTime) Time() time.Time {
 	return o.time
 }
@@ -196,7 +196,7 @@ func isCronPeriodic(c *cronexpr.Expression) bool {
 type ScheduleState int8
 
 const (
-	// ScheduleStateDisabled means the ScanConfig isi disabled no Scan needs to be scheduled for it.
+	// ScheduleStateDisabled means the ScanConfig is disabled no Scan needs to be scheduled for it.
 	ScheduleStateDisabled ScheduleState = iota
 	// ScheduleStateUnscheduled means the ScanConfig does not define a schedule.
 	ScheduleStateUnscheduled
@@ -206,7 +206,7 @@ const (
 	ScheduleStateDue
 	// ScheduleStateOverdue means the OperationTime for ScanConfig is in the past compared to
 	// the current ScheduleWindow, but it has recurring schedule, therefore the new OperationTime needs
-	// to be calculated which is in the next ScheduleWindow.
+	// to be calculated from the cron expression.
 	ScheduleStateOverdue
 )
 
@@ -282,7 +282,7 @@ func NewScanConfigSchedule(scanConfig *models.ScanConfig, window *ScheduleWindow
 	}
 
 	// Check whether the operationTime is before the window meaning that it is in the past compared to the window.
-	if window.Before(operationTime.Time()) {
+	if window.After(operationTime.Time()) {
 		// If the operationTime is not a recurring that means it represents a one time event in the past,
 		// therefore it is done.
 		if !operationTime.IsRecurring() {
