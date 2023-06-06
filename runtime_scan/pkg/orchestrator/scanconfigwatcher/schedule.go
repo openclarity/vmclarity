@@ -24,19 +24,23 @@ import (
 	"github.com/openclarity/vmclarity/api/models"
 )
 
+// The ScheduleWindow represents a timeframe defined by the start and end timestamps.
 type ScheduleWindow struct {
 	start time.Time
 	end   time.Time
 }
 
+// Start returns the beginning of the ScheduleWindow.
 func (w *ScheduleWindow) Start() time.Time {
 	return w.start
 }
 
+// End returns the end of the ScheduleWindow.
 func (w *ScheduleWindow) End() time.Time {
 	return w.end
 }
 
+// In returns true if the t time is within the w ScheduleWindow, otherwise it returns false.
 func (w *ScheduleWindow) In(t time.Time) bool {
 	if t.Before(w.start) || t.After(w.end) {
 		return false
@@ -45,14 +49,17 @@ func (w *ScheduleWindow) In(t time.Time) bool {
 	return true
 }
 
+// Before returns true if the t time is before the timeframe represented by w ScheduleWindow, otherwise it returns false.
 func (w *ScheduleWindow) Before(t time.Time) bool {
 	return t.Before(w.start)
 }
 
+// After returns true if the t time is after the timeframe represented by w ScheduleWindow, otherwise it returns false.
 func (w *ScheduleWindow) After(t time.Time) bool {
 	return t.After(w.end)
 }
 
+// Next returns a new ScheduleWindow which represents the timeframe after w ScheduleWindow.
 func (w ScheduleWindow) Next() *ScheduleWindow {
 	return &ScheduleWindow{
 		start: w.end,
@@ -60,6 +67,7 @@ func (w ScheduleWindow) Next() *ScheduleWindow {
 	}
 }
 
+// Next returns a new ScheduleWindow which represents the timeframe before w ScheduleWindow.
 func (w ScheduleWindow) Prev() *ScheduleWindow {
 	return &ScheduleWindow{
 		start: w.start.Add(-1 * w.end.Sub(w.start)),
@@ -71,6 +79,18 @@ func (w ScheduleWindow) String() string {
 	return fmt.Sprintf("start: %s, end: %s", w.start.Format(time.RFC3339), w.end.Format(time.RFC3339))
 }
 
+// NewScheduleWindow returns a new ScheduleWindow representing a timeframe where now parameter defines the middle of the
+// calculated timeframe.
+//
+//	+--------------------+
+//	|   ScheduleWindow   |
+//	+--------------------+
+//	          ^
+//	         now (middle)
+//
+//	<-------------------->
+//	         size
+//
 // nolint:gomnd
 func NewScheduleWindow(now time.Time, size time.Duration) *ScheduleWindow {
 	return &ScheduleWindow{
@@ -79,11 +99,15 @@ func NewScheduleWindow(now time.Time, size time.Duration) *ScheduleWindow {
 	}
 }
 
+// OperationTime is a single point in time defined by the time parameter. Providing an optional cron parameter makes the
+// OperationTime recurring in case the cron expression represents a recurring cadence.
 type OperationTime struct {
 	time time.Time
 	cron *cronexpr.Expression
 }
 
+// Next returns a new OperationTime representing the next cadence in case cron parameter is provided,
+// otherwise it returns itself.
 func (o OperationTime) Next() *OperationTime {
 	if o.cron != nil && !o.cron.Next(o.time).IsZero() {
 		o.time = o.cron.Next(o.time)
@@ -92,6 +116,8 @@ func (o OperationTime) Next() *OperationTime {
 	return &o
 }
 
+// Next returns a new OperationTime representing time which is after then the provided t time. It returns itself
+// if t is zero or o has no cron set.
 func (o OperationTime) NextAfter(t time.Time) *OperationTime {
 	if t.IsZero() {
 		return &o
@@ -112,10 +138,12 @@ func (o OperationTime) NextAfter(t time.Time) *OperationTime {
 	return &o
 }
 
+// Time returns tim.Time represented by the OperationTime
 func (o *OperationTime) Time() time.Time {
 	return o.time
 }
 
+// IsRecurring returns true of cron is set and its expression defines a recurring cadence.
 func (o *OperationTime) IsRecurring() bool {
 	next := o.Next()
 	return !o.Time().Equal(next.Time())
@@ -125,6 +153,7 @@ func (o OperationTime) String() string {
 	return o.Time().Format(time.RFC3339)
 }
 
+// NewOperationTime returns a OperationTime created by using the provided t time and c cron expression.
 func NewOperationTime(t time.Time, c *cronexpr.Expression) *OperationTime {
 	// Check if c cron expression represents a single point in time which case it is used instead of t time.
 	if c != nil {
@@ -167,10 +196,17 @@ func isCronPeriodic(c *cronexpr.Expression) bool {
 type ScheduleState int8
 
 const (
+	// ScheduleStateDisabled means the ScanConfig isi disabled no Scan needs to be scheduled for it.
 	ScheduleStateDisabled ScheduleState = iota
+	// ScheduleStateUnscheduled means the ScanConfig does not define a schedule.
 	ScheduleStateUnscheduled
+	// ScheduleStateNotDue means the OperationTime for ScanConfig is in the future based on the current ScheduleWindow.
 	ScheduleStateNotDue
+	// ScheduleStateDue means the OperationTime for ScanConfig is in the current ScheduleWindow.
 	ScheduleStateDue
+	// ScheduleStateOverdue means the OperationTime for ScanConfig is in the past compared to
+	// the current ScheduleWindow, but it has recurring schedule, therefore the new OperationTime needs
+	// to be calculated which is in the next ScheduleWindow.
 	ScheduleStateOverdue
 )
 
@@ -191,6 +227,8 @@ func (s ScheduleState) String() string {
 	}
 }
 
+// ScanConfigSchedule defines the state of scheduling based on the OperationTime and the ScheduleWindow where former is
+// calculated using the ScanConfig schedule.
 type ScanConfigSchedule struct {
 	State         ScheduleState
 	OperationTime *OperationTime
@@ -201,6 +239,8 @@ func (w ScanConfigSchedule) String() string {
 	return fmt.Sprintf("state: %s, operation time: [%s], schedule window: [%s]", w.State, w.OperationTime, w.Window)
 }
 
+// NewScanConfigSchedule returns a ScanConfigSchedule using the provided scanConfig models.ScanConfig and
+// window ScheduleWindow.
 // nolint:cyclop
 func NewScanConfigSchedule(scanConfig *models.ScanConfig, window *ScheduleWindow) (*ScanConfigSchedule, error) {
 	if scanConfig.Disabled != nil && *scanConfig.Disabled {
@@ -241,7 +281,10 @@ func NewScanConfigSchedule(scanConfig *models.ScanConfig, window *ScheduleWindow
 		}, nil
 	}
 
+	// Check whether the operationTime is before the window meaning that it is in the past compared to the window.
 	if window.Before(operationTime.Time()) {
+		// If the operationTime is not a recurring that means it represents a one time event in the past,
+		// therefore it is done.
 		if !operationTime.IsRecurring() {
 			return &ScanConfigSchedule{
 				State:         ScheduleStateUnscheduled,
@@ -249,6 +292,8 @@ func NewScanConfigSchedule(scanConfig *models.ScanConfig, window *ScheduleWindow
 				Window:        window,
 			}, nil
 		}
+		// The operationTime is recurring which means we unexpectedly skipped some iterations therefore
+		// it needs to be scheduled for the next ScheduleWindow.
 		return &ScanConfigSchedule{
 			State:         ScheduleStateOverdue,
 			OperationTime: operationTime,
