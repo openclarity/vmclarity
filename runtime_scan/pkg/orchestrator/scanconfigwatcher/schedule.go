@@ -138,7 +138,7 @@ func (o OperationTime) NextAfter(t time.Time) *OperationTime {
 	return &o
 }
 
-// Time returns tim.Time represented by the OperationTime
+// Time returns tim.Time represented by the OperationTime.
 func (o *OperationTime) Time() time.Time {
 	return o.time
 }
