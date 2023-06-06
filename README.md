@@ -22,13 +22,13 @@ Software Bill Of Materials (SBOM) and security threats such as vulnerabilities, 
 
 # Why VMClarity?
 
-Virtual machines (VMs) are the most used service across all hypescalers. AWS,
+Virtual machines (VMs) are the most used service across all hyperscalers. AWS,
 Azure, GCP, and others have virtual computing services that are used not only
 as standalone VM services but also as the most popular method for hosting
 containers (e.g., Docker, Kubernetes).
 
 VMs are vulnerable to multiple threats:
-- Software vulnerabilties
+- Software vulnerabilities
 - Leaked Secrets/Passwords
 - Malware
 - System Misconfiguration
@@ -59,7 +59,7 @@ For a detailed installation guide, please see [AWS](installation/aws/README.md).
 ## Access VMClarity UI
 1. Open an SSH tunnel to VMClarity server
     ```
-    ssh -N -L 8888:localhost:8888 -i  "<Path to the SSH key specified in 1.1.i>" ubuntu@<VmClarity SSH Address specified in 1.1.ii>
+    ssh -N -L 8888:localhost:8888 -i  "<Path to the SSH key specified during install>" ubuntu@<VmClarity SSH Address copied during install>
     ```
 
 2. Access VMClarity UI in the browser: http://localhost:8888/
