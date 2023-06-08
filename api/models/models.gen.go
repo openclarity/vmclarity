@@ -333,7 +333,14 @@ type PodInfo struct {
 	PodName    *string `json:"podName,omitempty"`
 }
 
-// ResourceCleanupState defines model for ResourceCleanupState.
+// ResourceCleanupState Describes the state of resource cleanup.
+//
+// | State   | Description                                                |
+// | ------- | ---------------------------------------------------------- |
+// | Pending | Initial state for cleaning up resources                    |
+// | Skipped | Resource cleanup has been skipped due to Delete Job Policy |
+// | Failed  | Cleaning up resources has been failed                      |
+// | Done    | Resources have been successfully cleaned up                |
 type ResourceCleanupState string
 
 // Rootkit defines model for Rootkit.
@@ -744,10 +751,19 @@ type TargetScanResult struct {
 	Id                *string               `json:"id,omitempty"`
 	Malware           *MalwareScan          `json:"malware,omitempty"`
 	Misconfigurations *MisconfigurationScan `json:"misconfigurations,omitempty"`
-	ResourceCleanup   *ResourceCleanupState `json:"resourceCleanup,omitempty"`
-	Revision          *int                  `json:"revision,omitempty"`
-	Rootkits          *RootkitScan          `json:"rootkits,omitempty"`
-	Sboms             *SbomScan             `json:"sboms,omitempty"`
+
+	// ResourceCleanup Describes the state of resource cleanup.
+	//
+	// | State   | Description                                                |
+	// | ------- | ---------------------------------------------------------- |
+	// | Pending | Initial state for cleaning up resources                    |
+	// | Skipped | Resource cleanup has been skipped due to Delete Job Policy |
+	// | Failed  | Cleaning up resources has been failed                      |
+	// | Done    | Resources have been successfully cleaned up                |
+	ResourceCleanup *ResourceCleanupState `json:"resourceCleanup,omitempty"`
+	Revision        *int                  `json:"revision,omitempty"`
+	Rootkits        *RootkitScan          `json:"rootkits,omitempty"`
+	Sboms           *SbomScan             `json:"sboms,omitempty"`
 
 	// Scan Describes an expandable relationship to Scan object
 	Scan    *ScanRelationship `json:"scan,omitempty"`
@@ -780,12 +796,34 @@ type TargetScanResults struct {
 
 // TargetScanState defines model for TargetScanState.
 type TargetScanState struct {
-	Errors             *[]string             `json:"errors"`
-	LastTransitionTime *time.Time            `json:"lastTransitionTime,omitempty"`
-	State              *TargetScanStateState `json:"state,omitempty"`
+	Errors             *[]string  `json:"errors"`
+	LastTransitionTime *time.Time `json:"lastTransitionTime,omitempty"`
+
+	// State Describes the state of TargetScan/ScanResult.
+	//
+	// | State       | Description                                                                                       |
+	// | ----------- | ------------------------------------------------------------------------------------------------- |
+	// | NotScanned  | Scanners are skipped for ScanResult                                                               |
+	// | Pending     | Initial state for ScanResult waiting for being scheduled                                          |
+	// | Scheduled   | ScanResult which has been scheduled on Provider                                                   |
+	// | ReadyToScan | Provider acknowledged that scanner for ScanResult is ready to run                                 |
+	// | Aborted     | ScanResult has been aborted and all running Scanners need to be cancelled and shutdown gracefully |
+	// | InProgress  | Scanners are being run on the Asset                                                               |
+	// | Done        | Running Scanners on Asset has been finished                                                       |
+	State *TargetScanStateState `json:"state,omitempty"`
 }
 
-// TargetScanStateState defines model for TargetScanState.State.
+// TargetScanStateState Describes the state of TargetScan/ScanResult.
+//
+// | State       | Description                                                                                       |
+// | ----------- | ------------------------------------------------------------------------------------------------- |
+// | NotScanned  | Scanners are skipped for ScanResult                                                               |
+// | Pending     | Initial state for ScanResult waiting for being scheduled                                          |
+// | Scheduled   | ScanResult which has been scheduled on Provider                                                   |
+// | ReadyToScan | Provider acknowledged that scanner for ScanResult is ready to run                                 |
+// | Aborted     | ScanResult has been aborted and all running Scanners need to be cancelled and shutdown gracefully |
+// | InProgress  | Scanners are being run on the Asset                                                               |
+// | Done        | Running Scanners on Asset has been finished                                                       |
 type TargetScanStateState string
 
 // TargetScanStatus defines model for TargetScanStatus.

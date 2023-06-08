@@ -1664,6 +1664,15 @@ components:
 
     ResourceCleanupState:
       type: string
+      description: |
+        Describes the state of resource cleanup.
+        
+        | State   | Description                                                |
+        | ------- | ---------------------------------------------------------- |
+        | Pending | Initial state for cleaning up resources                    |
+        | Skipped | Resource cleanup has been skipped due to Delete Job Policy |
+        | Failed  | Cleaning up resources has been failed                      |
+        | Done    | Resources have been successfully cleaned up                |
       enum:
         - Pending
         - Skipped
@@ -1759,6 +1768,18 @@ components:
       properties:
         state:
           type: string
+          description: |
+            Describes the state of TargetScan/ScanResult.
+
+            | State       | Description                                                                                       |
+            | ----------- | ------------------------------------------------------------------------------------------------- |
+            | NotScanned  | Scanners are skipped for ScanResult                                                               |
+            | Pending     | Initial state for ScanResult waiting for being scheduled                                          |
+            | Scheduled   | ScanResult which has been scheduled on Provider                                                   |
+            | ReadyToScan | Provider acknowledged that scanner for ScanResult is ready to run                                 |
+            | Aborted     | ScanResult has been aborted and all running Scanners need to be cancelled and shutdown gracefully |
+            | InProgress  | Scanners are being run on the Asset                                                               |
+            | Done        | Running Scanners on Asset has been finished                                                       |
           enum:
             - NotScanned
             - Pending
