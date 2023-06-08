@@ -1239,6 +1239,7 @@ components:
           $ref: '#/components/schemas/ScanScopeType'
         timeoutSeconds:
           type: integer
+          minimum: 0
           description: |
             The maximum time in seconds that a scan started from this config
             should run for before being automatically aborted.
@@ -1288,6 +1289,7 @@ components:
           readOnly: true
         timeoutSeconds:
           type: integer
+          minimum: 0
           description: |
             The maximum time in seconds that a scan started from this config
             should run for before being automatically aborted.
@@ -1328,6 +1330,7 @@ components:
           $ref: '#/components/schemas/ScanScopeType'
         timeoutSeconds:
           type: integer
+          minimum: 0
           description: |
             The maximum time in seconds that a scan started from this config
             should run for before being automatically aborted.

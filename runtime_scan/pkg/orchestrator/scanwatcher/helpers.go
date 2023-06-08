@@ -30,11 +30,11 @@ func isScanTimedOut(scan *models.Scan, timeout time.Duration) bool {
 	}
 
 	now := time.Now().UTC()
-
-	// Set timeoutTime to global timeout provided to the ScanWatcher controller
+	// Use the provided timeout to calculate the timeoutTime by default.
 	timeoutTime := scan.StartTime.Add(timeout)
-	// Calculate and use timeoutTime from Scan.ScanConfigSnapshot.TimeoutSeconds if set
-	if timeoutSeconds, ok := scan.GetTimeoutSeconds(); ok {
+	// Use Scan.ScanConfigSnapshot.TimeoutSeconds to calculate timeoutTime
+	// if it is set and its value is bigger than zero.
+	if timeoutSeconds := scan.GetTimeoutSeconds(); timeoutSeconds > 0 {
 		timeoutTime = scan.StartTime.Add(time.Duration(timeoutSeconds) * time.Second)
 	}
 
