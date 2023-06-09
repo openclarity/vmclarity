@@ -18,28 +18,10 @@ package scanwatcher
 import (
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/shared/pkg/utils"
 )
-
-func isScanTimedOut(scan *models.Scan, timeout time.Duration) bool {
-	if scan == nil || scan.StartTime == nil {
-		return false
-	}
-
-	now := time.Now().UTC()
-	// Use the provided timeout to calculate the timeoutTime by default.
-	timeoutTime := scan.StartTime.Add(timeout)
-	// Use Scan.ScanConfigSnapshot.TimeoutSeconds to calculate timeoutTime
-	// if it is set and its value is bigger than zero.
-	if timeoutSeconds := scan.GetTimeoutSeconds(); timeoutSeconds > 0 {
-		timeoutTime = scan.StartTime.Add(time.Duration(timeoutSeconds) * time.Second)
-	}
-
-	return now.After(timeoutTime)
-}
 
 func newVulnerabilityScanSummary() *models.VulnerabilityScanSummary {
 	return &models.VulnerabilityScanSummary{
