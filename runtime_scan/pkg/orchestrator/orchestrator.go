@@ -51,6 +51,7 @@ func New(config *Config, p provider.Provider, b *backendclient.BackendClient) *O
 			scanwatcher.New(scanWatcherConfig),
 			scanresultwatcher.New(scanResultWatcherConfig),
 		},
+		controllerStartupDelay: config.ControllerStartupDelay,
 	}
 }
 
