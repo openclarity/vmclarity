@@ -1613,7 +1613,7 @@ components:
           type: string
         # TODO(paralta) Check if image needs to be a required property
         image:
-          $ref: '#/components/schemas/ContainerImageInfo' 
+          $ref: '#/components/schemas/ContainerImageInfo'
         id:
           type: string
         createdAt:
@@ -1648,7 +1648,7 @@ components:
         size:
           type: integer
       required:
-        - objectType 
+        - objectType
 
     DirInfo:
       type: object
@@ -1678,12 +1678,31 @@ components:
           readOnly: true
 
     ResourceCleanupState:
-      type: string
-      enum:
-        - Pending
-        - Skipped
-        - Failed
-        - Done
+      type: object
+      properties:
+        state:
+          type: string
+          enum:
+            - Pending
+            - Skipped
+            - Failed
+            - Done
+          description: |
+            Describes the state of resource cleanup.
+
+            | State   | Description                                                |
+            | ------- | ---------------------------------------------------------- |
+            | Pending | Initial state for cleaning up resources                    |
+            | Skipped | Resource cleanup has been skipped due to Delete Job Policy |
+            | Failed  | Cleaning up resources has been failed                      |
+            | Done    | Resources have been successfully cleaned up                |
+        reason:
+          type: string
+        message:
+          type: string
+        lastTransitionTime:
+          type: string
+          format: date-time
 
     AssetScanTemplate:
       type: object
@@ -1718,20 +1737,8 @@ components:
               $ref: '#/components/schemas/ScanRelationship'
             status:
               $ref: '#/components/schemas/AssetScanStatus'
-            sboms:
-              $ref: '#/components/schemas/SbomScan'
-            vulnerabilities:
-              $ref: '#/components/schemas/VulnerabilityScan'
-            malware:
-              $ref: '#/components/schemas/MalwareScan'
-            rootkits:
-              $ref: '#/components/schemas/RootkitScan'
-            secrets:
-              $ref: '#/components/schemas/SecretScan'
-            misconfigurations:
-              $ref: '#/components/schemas/MisconfigurationScan'
-            exploits:
-              $ref: '#/components/schemas/ExploitScan'
+            scannerStatus:
+              $ref: '#/components/schemas/AssetScannerStatusGroup'
             findingsProcessed:
               type: boolean
             resourceCleanup:
@@ -1903,47 +1910,88 @@ components:
         assetScan:
           $ref: '#/components/schemas/AssetScan'
 
-    AssetScanStatus:
+    AssetScannerStatusGroup:
       type: object
       properties:
         general:
-          $ref: '#/components/schemas/AssetScanState'
+          $ref: '#/components/schemas/AssetScannerStatus'
         sbom:
-          $ref: '#/components/schemas/AssetScanState'
+          $ref: '#/components/schemas/AssetScannerStatus'
         vulnerabilities:
-          $ref: '#/components/schemas/AssetScanState'
+          $ref: '#/components/schemas/AssetScannerStatus'
         malware:
-          $ref: '#/components/schemas/AssetScanState'
+          $ref: '#/components/schemas/AssetScannerStatus'
         rootkits:
-          $ref: '#/components/schemas/AssetScanState'
+          $ref: '#/components/schemas/AssetScannerStatus'
         secrets:
-          $ref: '#/components/schemas/AssetScanState'
+          $ref: '#/components/schemas/AssetScannerStatus'
         misconfigurations:
-          $ref: '#/components/schemas/AssetScanState'
+          $ref: '#/components/schemas/AssetScannerStatus'
         exploits:
-          $ref: '#/components/schemas/AssetScanState'
+          $ref: '#/components/schemas/AssetScannerStatus'
 
-    AssetScanState:
+    AssetScanStatus:
       type: object
       properties:
         state:
           type: string
           enum:
-            - NotScanned
             - Pending
             - Scheduled
             - ReadyToScan
             - InProgress
             - Aborted
+            - Failed
             - Done
+          description: |
+            Describes the state of ScanResult.
+            
+            | State       | Description                                                                                       |
+            | ----------- | ------------------------------------------------------------------------------------------------- |
+            | Pending     | Initial state for ScanResult waiting for being scheduled                                          |
+            | Scheduled   | ScanResult which has been scheduled on Provider                                                   |
+            | ReadyToScan | Provider acknowledged that scanner for ScanResult is ready to run                                 |
+            | InProgress  | Scanners are being run on the Target                                                              |
+            | Aborted     | ScanResult has been aborted and all running Scanners need to be cancelled and shutdown gracefully |
+            | Failed      | Running Scanners on Target has failed, check *reason* and *message* fields for the details        |
+            | Done        | Running Scanners on Target has finished with no errors                                            |
+        reason:
+          type: string
+        message:
+          type: string
         lastTransitionTime:
           type: string
           format: date-time
-        errors:
-          type: array
-          items:
-            type: string
-          nullable: true
+
+    AssetScannerStatus:
+      type: object
+      properties:
+        state:
+          type: string
+          enum:
+            - Pending
+            - InProgress
+            - Aborted
+            - Skipped
+            - Failed
+            - Done
+          description: |
+            Describes the scanner state.
+            
+            | State       | Description                                                                           |
+            | ----------- | ------------------------------------------------------------------------------------- |
+            | Pending     | Scanner is scheduled and waiting for ScanResult state transition to ReadyToScan state |
+            | InProgress  | Scanning is being performed                                                           |
+            | Skipped     | Scanner is **not** scheduled                                                          |
+            | Failed      | Scanner has failed, check *reason* and *message* fields for the details               |
+            | Done        | Scanner has finished scanning with no errors                                          |
+        reason:
+          type: string
+        message:
+          type: string
+        lastTransitionTime:
+          type: string
+          format: date-time
 
     Package:
       type: object
@@ -2500,7 +2548,7 @@ components:
       required: true
       schema:
         type: string
-        
+
     ifmatch:
       name: If-Match
       in: header
