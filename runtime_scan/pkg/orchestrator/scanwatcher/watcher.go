@@ -538,9 +538,14 @@ func (w *Watcher) reconcileAborted(ctx context.Context, scan *models.Scan) error
 	scan.EndTime = utils.PointerTo(time.Now())
 	scan.State = utils.PointerTo(models.ScanStateFailed)
 
-	err = w.backend.PatchScan(ctx, scanID, scan)
+	scanPatch := &models.Scan{
+		State:     scan.State,
+		EndTime:   scan.EndTime,
+		TargetIDs: scan.TargetIDs,
+	}
+	err = w.backend.PatchScan(ctx, scanID, scanPatch)
 	if err != nil {
-		return fmt.Errorf("failed to patch Scan with %s id: %w", scanID, err)
+		return fmt.Errorf("failed to patch Scan. ScanID=%s: %w", scanID, err)
 	}
 
 	return nil
