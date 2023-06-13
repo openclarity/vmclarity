@@ -80,7 +80,7 @@ func (w *Watcher) GetScanResults(ctx context.Context) ([]ScanResultReconcileEven
 	logger := log.GetLoggerFromContextOrDiscard(ctx)
 	logger.Debugf("Fetching ScanResults which need to be reconciled")
 
-	filter := fmt.Sprintf("status/general/state ne '%s' or status/general/state ne '%s' or resourceCleanup eq '%s'",
+	filter := fmt.Sprintf("(status/general/state ne '%s' and status/general/state ne '%s') or resourceCleanup eq '%s'",
 		models.TargetScanStateStateDone, models.TargetScanStateStateNotScanned, models.ResourceCleanupStatePending)
 	selector := "id,scan/id,target/id"
 	params := models.GetScanResultsParams{
@@ -217,7 +217,7 @@ func (w *Watcher) reconcilePending(ctx context.Context, scanResult *models.Targe
 	}
 
 	scanResult.Status.General.State = utils.PointerTo(models.TargetScanStateStateScheduled)
-	scanResult.Status.General.LastTransitionTime = utils.PointerTo(time.Now().UTC())
+	scanResult.Status.General.LastTransitionTime = utils.PointerTo(time.Now())
 
 	scanResultPatch := models.TargetScanResult{
 		Status: scanResult.Status,
@@ -274,17 +274,17 @@ func (w *Watcher) reconcileScheduled(ctx context.Context, scanResult *models.Tar
 	case errors.As(err, &fatalError):
 		scanResult.Status.General.State = utils.PointerTo(models.TargetScanStateStateDone)
 		scanResult.Status.General.Errors = utils.PointerTo([]string{fatalError.Error()})
-		scanResult.Status.General.LastTransitionTime = utils.PointerTo(time.Now().UTC())
+		scanResult.Status.General.LastTransitionTime = utils.PointerTo(time.Now())
 	case errors.As(err, &retryableError):
 		// nolint:wrapcheck
 		return common.NewRequeueAfterError(retryableError.RetryAfter(), retryableError.Error())
 	case err != nil:
 		scanResult.Status.General.State = utils.PointerTo(models.TargetScanStateStateDone)
 		scanResult.Status.General.Errors = utils.PointerTo(utils.UnwrapErrorStrings(err))
-		scanResult.Status.General.LastTransitionTime = utils.PointerTo(time.Now().UTC())
+		scanResult.Status.General.LastTransitionTime = utils.PointerTo(time.Now())
 	default:
 		scanResult.Status.General.State = utils.PointerTo(models.TargetScanStateStateReadyToScan)
-		scanResult.Status.General.LastTransitionTime = utils.PointerTo(time.Now().UTC())
+		scanResult.Status.General.LastTransitionTime = utils.PointerTo(time.Now())
 	}
 
 	scanResultPatch := models.TargetScanResult{
