@@ -78,11 +78,14 @@ func (r *Reconciler[T]) Start(ctx context.Context) {
 				// item with the duration specified, otherwise mark the
 				// item as Done.
 				var requeueAfterError RequeueAfterError
-				if errors.As(err, &requeueAfterError) {
+				switch {
+				case errors.As(err, &requeueAfterError):
 					logger.Infof("Requeue item: %v", err)
 					r.Queue.RequeueAfter(item, requeueAfterError.d)
-				} else {
+				case err != nil:
 					logger.Errorf("Failed to reconcile item: %v", err)
+					fallthrough
+				default:
 					r.Queue.Done(item)
 				}
 			}
