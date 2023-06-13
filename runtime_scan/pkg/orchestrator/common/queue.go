@@ -45,7 +45,7 @@ type Queue[T ReconcileEvent] struct {
 	// A map used as a set of unique items which are in the queue. This is
 	// used by Enqueue and Has to provide a quick reference to whats in the
 	// queue without needing to loop through the queue slice.
-	inqueue map[string]T
+	inqueue map[string]struct{}
 
 	// A map used as a set of unique items which are processing. This keeps
 	// track of items which have been Dequeued but are still being
@@ -55,12 +55,12 @@ type Queue[T ReconcileEvent] struct {
 	// We use a separate map for this instead of reusing inqueue to prevent
 	// calls to Done() removing items from inqueue when they are actually
 	// in the queue slice.
-	processing map[string]T
+	processing map[string]struct{}
 
 	// A map to track items which have been scheduled to be queued at a
 	// later date. We keep track of these items to prevent them being
 	// enqueued earlier than their scheduled time through Enqueue.
-	waitingForEnqueue map[string]T
+	waitingForEnqueue map[string]struct{}
 
 	// A mutex lock which protects the queue from simultaneous reads and
 	// writes ensuring the queue can be used by multiple go routines safely.
@@ -71,9 +71,9 @@ func NewQueue[T ReconcileEvent]() *Queue[T] {
 	return &Queue[T]{
 		itemAdded:         make(chan struct{}),
 		queue:             make([]T, 0),
-		inqueue:           make(map[string]T),
-		processing:        make(map[string]T),
-		waitingForEnqueue: make(map[string]T),
+		inqueue:           make(map[string]struct{}),
+		processing:        make(map[string]struct{}),
+		waitingForEnqueue: make(map[string]struct{}),
 	}
 }
 
@@ -108,7 +108,7 @@ func (q *Queue[T]) Dequeue(ctx context.Context) (T, error) {
 	q.queue = q.queue[1:]
 	itemKey := item.Hash()
 	delete(q.inqueue, itemKey)
-	q.processing[itemKey] = item
+	q.processing[itemKey] = struct{}{}
 
 	return item, nil
 }
@@ -145,7 +145,7 @@ func (q *Queue[T]) enqueueAfter(item T, d time.Duration) {
 		return
 	}
 
-	q.waitingForEnqueue[itemKey] = item
+	q.waitingForEnqueue[itemKey] = struct{}{}
 	go func() {
 		<-time.After(d)
 		q.l.Lock()
@@ -164,7 +164,7 @@ func (q *Queue[T]) enqueue(item T) {
 	_, isWaitingForEnqueue := q.waitingForEnqueue[itemKey]
 	if !inQueue && !isProcessing && !isWaitingForEnqueue {
 		q.queue = append(q.queue, item)
-		q.inqueue[itemKey] = item
+		q.inqueue[itemKey] = struct{}{}
 
 		select {
 		case q.itemAdded <- struct{}{}:
