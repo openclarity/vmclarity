@@ -417,6 +417,7 @@ func hasExcludeTags(excludeTags []models.Tag, instanceTags []ec2types.Tag) bool 
 func getVMInfoFromInstance(i Instance) (models.TargetType, error) {
 	targetType := models.TargetType{}
 	err := targetType.FromVMInfo(models.VMInfo{
+		Architecture:     utils.PointerTo(i.Architecture),
 		Image:            i.Image,
 		InstanceID:       i.ID,
 		InstanceProvider: utils.PointerTo(models.AWS),
