@@ -22,33 +22,26 @@ import (
 )
 
 const (
-	EnvScannerRegion       = "VMCLARITY_AWS_SCANNER_REGION"
-	EnvSubnetID            = "VMCLARITY_AWS_SUBNET_ID"
-	EnvSecurityGroupID     = "VMCLARITY_AWS_SECURITY_GROUP_ID"
-	EnvKeyPairName         = "VMCLARITY_AWS_KEYPAIR_NAME"
-	EnvScannerImage        = "VMCLARITY_AWS_SCANNER_AMI_ID"
-	EnvScannerInstanceType = "VMCLARITY_AWS_SCANNER_INSTANCE_TYPE"
-	EnvBlockDeviceName     = "VMCLARITY_AWS_BLOCK_DEVICE_NAME"
-
+	DefaultEnvPrefix           = "VMCLARITY_AWS"
 	DefaultScannerInstanceType = "t2.large"
 	DefaultBlockDeviceName     = "xvdh"
 )
 
 type Config struct {
 	// Region where the Scanner instance needs to be created
-	ScannerRegion string
+	ScannerRegion string `mapstructure:"scanner_region"`
 	// SubnetID where the Scanner instance needs to be created
-	SubnetID string
+	SubnetID string `mapstructure:"subnet_id"`
 	// SecurityGroupID which needs to be attached to the Scanner instance
-	SecurityGroupID string
+	SecurityGroupID string `mapstructure:"security_group_id"`
 	// KeyPairName is the name of the SSH KeyPair to use for Scanner instance launch
-	KeyPairName string
+	KeyPairName string `mapstructure:"keypair_name"`
 	// ScannerImage is the AMI image used for creating Scanner instance
-	ScannerImage string
+	ScannerImage string `mapstructure:"scanner_ami_id"`
 	// ScannerInstanceType is the instance type used for Scanner instance
-	ScannerInstanceType string
+	ScannerInstanceType string `mapstructure:"scanner_instance_type"`
 	// BlockDeviceName contains the block device name used for attaching Scanner volume to the Scanner instance
-	BlockDeviceName string
+	BlockDeviceName string `mapstructure:"block_device_name"`
 }
 
 func (c *Config) Validate() error {
@@ -79,20 +72,21 @@ func NewConfig() (*Config, error) {
 	// Avoid modifying the global instance
 	v := viper.New()
 
+	v.SetEnvPrefix(DefaultEnvPrefix)
 	v.AllowEmptyEnv(true)
 	v.AutomaticEnv()
 
-	_ = v.BindEnv("ScannerRegion", EnvScannerRegion)
-	_ = v.BindEnv("SubnetID", EnvSubnetID)
-	_ = v.BindEnv("SecurityGroupID", EnvSecurityGroupID)
-	_ = v.BindEnv("KeyPairName", EnvKeyPairName)
-	_ = v.BindEnv("ScannerImage", EnvScannerImage)
+	_ = v.BindEnv("scanner_region")
+	_ = v.BindEnv("subnet_id")
+	_ = v.BindEnv("security_group_id")
+	_ = v.BindEnv("keypair_name")
+	_ = v.BindEnv("scanner_ami_id")
 
-	_ = v.BindEnv("ScannerInstanceType", EnvScannerInstanceType)
-	v.SetDefault("ScannerInstanceType", DefaultScannerInstanceType)
+	_ = v.BindEnv("scanner_instance_type")
+	v.SetDefault("scanner_instance_type", DefaultScannerInstanceType)
 
-	_ = v.BindEnv("BlockDeviceName", EnvBlockDeviceName)
-	v.SetDefault("BlockDeviceName", DefaultBlockDeviceName)
+	_ = v.BindEnv("block_device_name")
+	v.SetDefault("block_device_name", DefaultBlockDeviceName)
 
 	config := &Config{}
 	if err := v.Unmarshal(config); err != nil {
