@@ -73,7 +73,7 @@ const (
 	DefaultGrypeServerTimeout = 2 * time.Minute
 
 	DefaultControllerStartupDelay = 15 * time.Second
-	DefaultProviderKind           = "aws"
+	DefaultProviderKind           = models.AWS
 )
 
 type Config struct {
@@ -128,7 +128,7 @@ func LoadConfig(backendHost string, backendPort int, baseURL string) (*Config, e
 
 	var providerKind models.CloudProvider
 	switch strings.ToLower(viper.GetString(ProviderKind)) {
-	case "aws":
+	case strings.ToLower(string(models.AWS)):
 		fallthrough
 	default:
 		providerKind = models.AWS
