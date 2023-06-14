@@ -46,23 +46,23 @@ type Config struct {
 
 func (c *Config) Validate() error {
 	if c.ScannerRegion == "" {
-		return fmt.Errorf("parameter Region must not be nil")
+		return fmt.Errorf("parameter Region must be provided")
 	}
 
 	if c.SubnetID == "" {
-		return fmt.Errorf("parameter SubnetID must not be nil")
+		return fmt.Errorf("parameter SubnetID must be provided")
 	}
 
 	if c.SecurityGroupID == "" {
-		return fmt.Errorf("parameter SecurityGroupID must not be nil")
+		return fmt.Errorf("parameter SecurityGroupID must be provided")
 	}
 
 	if c.ScannerImage == "" {
-		return fmt.Errorf("parameter ScannerImage must not be nil")
+		return fmt.Errorf("parameter ScannerImage must be provided")
 	}
 
 	if c.ScannerInstanceType == "" {
-		return fmt.Errorf("parameter ScannerInstanceType must not be nil")
+		return fmt.Errorf("parameter ScannerInstanceType must be provided")
 	}
 
 	return nil
