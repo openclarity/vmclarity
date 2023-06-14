@@ -93,15 +93,15 @@ Resources:
           Fn::Sub: |
             #!/bin/bash -xe
             apt-get update -y
+            
+            apt-get -y install python3-pip
+            
+            pip3 install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
+            
+            ln -s /usr/local/init/ubuntu/cfn-hup /etc/init.d/cfn-hup
 
-            mkdir -p /opt/aws/bin
-
-            wget https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
-
-            python3 -m easy_install --script-dir /opt/aws/bin aws-cfn-bootstrap-py3-latest.tar.gz
-
-            /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource VmClarityServer --configsets full_install --region ${AWS::Region}
-            /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource VmClarityServer --region ${AWS::Region}
+            /usr/local/bin/cfn-init -v --stack ${AWS::StackName} --resource VmClarityServer --configsets full_install --region ${AWS::Region}
+            /usr/local/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource VmClarityServer --region ${AWS::Region}
     Metadata:
       AWS::CloudFormation::Init:
         configSets:
@@ -135,7 +135,7 @@ Resources:
 
                 [Service]
                 Type=simple
-                ExecStart=/opt/aws/bin/cfn-hup
+                ExecStart=/usr/local/bin/cfn-hup
                 Restart=always
 
                 [Install]
@@ -874,6 +874,7 @@ Parameters:
       - m6i.large
       - t2.large
       - t3.large
+      - t4g.large
     ConstraintDescription: must be a valid EC2 instance type.
   ScannerInstanceType:
     Description: VmClarity Scanner Instance Type
@@ -1048,52 +1049,72 @@ Metadata:
       ExternalDBPassword:
         default: External DB Password
 Mappings:
-  # For every type we want AWS hardware virtualisation on amd64 (HVM64)
+  # For every type we want AWS hardware virtualisation on amd64 (HVMAMD64) or arm64 (HVMARM64)
   AWSInstanceType2Arch:
     t2.large:
-      Arch: HVM64
+      Arch: HVMAMD64
     t3.large:
-      Arch: HVM64
+      Arch: HVMAMD64
     m6i.large:
-      Arch: HVM64
-  # These are all Ubuntu 20.04 LTS AMIs in the different regions.
+      Arch: HVMAMD64
+    t4g.large:
+      Arch: HVMARM64
+  # These are all Ubuntu 22.04 LTS AMIs in the different regions.
   AWSRegionArch2AMI:
     us-east-1:
-      HVM64: ami-01d08089481510ba2
+      HVMAMD64: ami-06a1f46caddb5669e
+      HVMARM64: ami-02dd4bca4caaab354
     us-west-2:
-      HVM64: ami-0e6dff8bde9a09539
+      HVMAMD64: ami-022c9f1a24f813bf9
+      HVMARM64: ami-08133f9f7ea98ef23
     us-west-1:
-      HVM64: ami-064562725417500be
+      HVMAMD64: ami-075138a50b1af6e68
+      HVMARM64: ami-072f6c9c5a0332bfa
     eu-west-1:
-      HVM64: ami-04e2e94de097d3986
+      HVMAMD64: ami-0242bc425da698fba
+      HVMARM64: ami-0f72149ab824e6f24
     eu-west-2:
-      HVM64: ami-08d3a4ad06c8a70fe
+      HVMAMD64: ami-020f28df2f62420b2
+      HVMARM64: ami-05d4420b63a57d172
     eu-west-3:
-      HVM64: ami-018de3a6e45331551
+      HVMAMD64: ami-0ab2608f742779f18
+      HVMARM64: ami-06bc526981bc54c12
     eu-central-1:
-      HVM64: ami-0d0dd86aa7fe3c8a9
+      HVMAMD64: ami-074543d9faf9c0509
+      HVMARM64: ami-0f5ff9c6972e3cb7e
     ap-northeast-1:
-      HVM64: ami-0d745f1ee4bb88b89
+      HVMAMD64: ami-03baa3575a5f30358
+      HVMARM64: ami-09e0ffffa4777b921
     ap-northeast-2:
-      HVM64: ami-05a5333b72d3d1c93
+      HVMAMD64: ami-091a822378848a5bf
+      HVMARM64: ami-0dce6b1f4c1fc4685
     ap-northeast-3:
-      HVM64: ami-0eb4557358e2c9386
+      HVMAMD64: ami-06034fd7b1512312d
+      HVMARM64: ami-02b32d2b54aa063a0
     ap-southeast-1:
-      HVM64: ami-0fbb51b4aa5671449
+      HVMAMD64: ami-09dac21d1664bc313
+      HVMARM64: ami-0ad5e53ed8dae4da4
     ap-southeast-2:
-      HVM64: ami-030a8d0e06463671c
+      HVMAMD64: ami-08631d91a2bc26238
+      HVMARM64: ami-0d8a10b063fcb94f8
     ap-south-1:
-      HVM64: ami-0340ea71c538887c3
+      HVMAMD64: ami-0eb22e4d8a8d4fde8
+      HVMARM64: ami-0978fee9454483943
     us-east-2:
-      HVM64: ami-0066d036f9777ec38
+      HVMAMD64: ami-019147b1cc2ada37e
+      HVMARM64: ami-00280fb6ed84811ce
     ca-central-1:
-      HVM64: ami-0ab6f6340b2a4fb77
+      HVMAMD64: ami-021ca25871f1697f7
+      HVMARM64: ami-05ab25f05d7114b80
     sa-east-1:
-      HVM64: ami-07e7afb5e1e58e8da
+      HVMAMD64: ami-009dac42914e64b32
+      HVMARM64: ami-0c5352b81fe4cbbec
     cn-north-1:
-      HVM64: ami-0741e7b8b4fb0001c
+      HVMAMD64: ami-0d688c694ae459a67
+      HVMARM64: ami-00eddefb8771f3b44
     cn-northwest-1:
-      HVM64: ami-0883e8062ff31f727
+      HVMAMD64: ami-0f34360021b18ed7a
+      HVMARM64: ami-0a6a7cc68db8260ad
 Conditions:
   BackendContainerImageOverridden: !Not
     - !Equals
