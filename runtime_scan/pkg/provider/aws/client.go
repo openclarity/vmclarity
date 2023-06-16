@@ -21,8 +21,9 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
-	awstype "github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -232,11 +233,37 @@ func (c *Client) createInstance(ctx context.Context, region string, config *prov
 	}
 	userDataBase64 := base64.StdEncoding.EncodeToString([]byte(userData))
 
+	// Determine the architecture used for creating Scanner instance
+	var architecture string
+	if c.config.InstanceArchToUse != "" {
+		architecture = c.config.InstanceArchToUse
+	} else {
+		vmInfo, err := config.TargetInfo.AsVMInfo()
+		if err != nil {
+			return nil, FatalError{Err: err}
+		}
+		architecture = *vmInfo.Architecture
+	}
+
+	// Find AMI for Scanner instance based on the architecture
+	imageID, err := c.imageIDByArchitectureType(ctx, architecture)
+	if err != nil {
+		return nil, FatalError{Err: err}
+	}
+
+	// Find architecture specific InstanceType for Scanner instance
+	instanceType, ok := c.config.InstanceTypeMapping[architecture]
+	if !ok {
+		return nil, FatalError{
+			Err: fmt.Errorf("failed to find instance type for architecture. Arch=%s", architecture),
+		}
+	}
+
 	runParams := &ec2.RunInstancesInput{
 		MaxCount:     utils.PointerTo[int32](1),
 		MinCount:     utils.PointerTo[int32](1),
-		ImageId:      utils.PointerTo(c.config.ScannerImage),
-		InstanceType: ec2types.InstanceType(c.config.ScannerInstanceType),
+		ImageId:      utils.PointerTo(imageID),
+		InstanceType: ec2types.InstanceType(instanceType),
 		TagSpecifications: []ec2types.TagSpecification{
 			{
 				ResourceType: ec2types.ResourceTypeInstance,
@@ -291,7 +318,7 @@ func (c *Client) createInstance(ctx context.Context, region string, config *prov
 	// if retryMaxAttempts value is 0 it will be ignored
 	out, err := c.ec2Client.RunInstances(ctx, runParams, options, func(options *ec2.Options) {
 		options.RetryMaxAttempts = retryMaxAttempts
-		options.RetryMode = awstype.RetryModeStandard
+		options.RetryMode = aws.RetryModeStandard
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create instance: %w", err)
@@ -844,6 +871,7 @@ func (c *Client) getInstancesFromDescribeInstancesOutput(ctx context.Context, re
 				LaunchTime:       *instance.LaunchTime,
 				VpcID:            *instance.VpcId,
 				SecurityGroups:   getSecurityGroupsIDs(instance.SecurityGroups),
+				Architecture:     string(instance.Architecture),
 
 				ec2Client: c.ec2Client,
 			})
@@ -913,4 +941,69 @@ func (c *Client) ListAllRegions(ctx context.Context, isRecursive bool) ([]Region
 	}
 
 	return ret, nil
+}
+
+func (c *Client) imageIDByArchitectureType(ctx context.Context, archType string) (string, error) {
+	logger := log.GetLoggerFromContextOrDiscard(ctx)
+
+	opts := func(options *ec2.Options) {
+		options.Region = c.config.ScannerRegion
+	}
+
+	filters := []ec2types.Filter{
+		{
+			Name:   utils.PointerTo(ArchitectureFilterName),
+			Values: []string{archType},
+		},
+		{
+			Name:   utils.PointerTo(ENASupportFilterName),
+			Values: []string{"true"},
+		},
+		{
+			Name:   utils.PointerTo(AMINameFilterName),
+			Values: []string{c.config.ImageNameFilter},
+		},
+		{
+			Name:   utils.PointerTo(VirtualizationTypeFilterName),
+			Values: []string{"hvm"},
+		},
+	}
+
+	imagesParams := &ec2.DescribeImagesInput{
+		ExecutableUsers:   []string{"all"},
+		Filters:           filters,
+		IncludeDeprecated: utils.PointerTo(false),
+		Owners:            c.config.ImageOwners,
+	}
+
+	images, err := c.ec2Client.DescribeImages(ctx, imagesParams, opts)
+	if err != nil {
+		return "", fmt.Errorf("failed to fetch AMI for architecture type. ArchType=%s ImageNameFilter=%s: %w",
+			archType, c.config.ImageNameFilter, err)
+	}
+
+	// Find the latest image
+	var imageID string
+	var imageCreation time.Time
+	for _, image := range images.Images {
+		if image.ImageId != nil && image.CreationDate != nil {
+			creation, err := time.Parse(time.RFC3339, *image.CreationDate)
+			if err != nil {
+				logger.Errorf("Failed to parse creation date of AMI. Date=%s: %v", *image.CreationDate, err)
+				continue
+			}
+
+			if creation.After(imageCreation) {
+				imageID = *image.ImageId
+				imageCreation = creation
+			}
+		}
+	}
+
+	if imageID == "" {
+		return imageID, fmt.Errorf("failed to find AMI for architecture type. ArchType=%s ImageNameFilter=%s",
+			archType, c.config.ImageNameFilter)
+	}
+
+	return imageID, nil
 }

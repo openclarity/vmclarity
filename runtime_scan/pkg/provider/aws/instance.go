@@ -43,6 +43,7 @@ type Instance struct {
 	LaunchTime       time.Time
 	RootDeviceName   string
 	Volumes          []Volume
+	Architecture     string
 
 	Metadata provider.ScanMetadata
 

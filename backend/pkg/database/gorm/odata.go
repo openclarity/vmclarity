@@ -360,6 +360,7 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 				},
 			},
 			"instanceProvider": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"architecture":     odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 		},
 	},
 	"SecurityGroup": {

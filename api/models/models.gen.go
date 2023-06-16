@@ -828,6 +828,7 @@ type Targets struct {
 
 // VMInfo defines model for VMInfo.
 type VMInfo struct {
+	Architecture     *string          `json:"architecture,omitempty"`
 	Image            string           `json:"image"`
 	InstanceID       string           `json:"instanceID"`
 	InstanceProvider *CloudProvider   `json:"instanceProvider,omitempty"`

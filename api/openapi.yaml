@@ -1633,6 +1633,8 @@ components:
         launchTime:
           type: string
           format: date-time
+        architecture:
+          type: string
       required:
         - objectType
         - instanceID
