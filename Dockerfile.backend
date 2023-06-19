@@ -13,7 +13,7 @@ FROM --platform=$BUILDPLATFORM golang:1.20.5-alpine@sha256:fd9d9d7194ec40a9a6ae8
 
 COPY --from=xx / /
 
-RUN apk add --update --no-cache git clang lld binutils-gold
+RUN apk add --update --no-cache git clang lld
 
 ARG TARGETPLATFORM
 
