@@ -13,37 +13,35 @@ FROM --platform=$BUILDPLATFORM golang:1.20.5-bullseye AS builder
 
 COPY --from=xx / /
 
-RUN apt-get update && apt-get install -y clang lld
-
 ARG TARGETPLATFORM
 
-RUN xx-apt-get install -y libc6-dev zlib1g-dev
+RUN apt-get update && xx-apt-get install -y --no-install-recommends gcc libc6-dev
 
-# lld has issues building static binaries for ppc so prefer ld for it
-RUN [ "$(xx-info arch)" != "ppc64le" ] || XX_CC_PREFER_LINKER=ld xx-clang --setup-target-triple
+# Copy vmclarity code to /build
+COPY . /build
 
-RUN xx-go --wrap
+# Build backend code
+WORKDIR /build/backend
 
-WORKDIR /usr/local/src/vmclarity
+ARG VERSION
+ARG BUILD_TIMESTAMP
+ARG COMMIT_HASH
 
-ARG GOPROXY
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=1 \
+    xx-go build -ldflags="-s -w \
+     -X 'github.com/openclarity/vmclarity/backend/pkg/version.Version=${VERSION}' \
+     -X 'github.com/openclarity/vmclarity/backend/pkg/version.CommitHash=${COMMIT_HASH}' \
+     -X 'github.com/openclarity/vmclarity/backend/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}'" -o backend ./cmd/backend/main.go
 
-ENV CGO_ENABLED=1
-
-COPY go.mod go.sum ./
-COPY api/go.mod api/go.sum ./api/
-RUN go mod download
-
-COPY . .
-
-RUN go build -o /go/bin/vmclarity -v -ldflags="-w -extldflags -static" -tags 'static_build' ./backend/cmd/backend/main.go
-RUN xx-verify /go/bin/vmclarity
+RUN xx-verify backend
 
 FROM alpine:3.18
 
 WORKDIR /app
 
-COPY --from=builder /go/bin/vmclarity ./backend
-COPY --from=site-build /app/ui-build/build site
+COPY --from=builder ["/build/backend/backend", "./backend"]
+COPY --from=site-build ["/app/ui-build/build", "site"]
 
 ENTRYPOINT ["/app/backend"]
