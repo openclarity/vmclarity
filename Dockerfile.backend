@@ -17,7 +17,7 @@ RUN apk add --update alpine-sdk ca-certificates openssl clang lld
 
 ARG TARGETPLATFORM
 
-RUN xx-apk --update add musl-dev gcc
+RUN xx-apk --update add musl-dev gcc binutils-gold
 
 # lld has issues building static binaries for ppc so prefer ld for it
 RUN [ "$(xx-info arch)" != "ppc64le" ] || XX_CC_PREFER_LINKER=ld xx-clang --setup-target-triple
