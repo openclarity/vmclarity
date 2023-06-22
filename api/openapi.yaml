@@ -1510,12 +1510,16 @@ components:
         - $ref: '#/components/schemas/VMInfo'
         - $ref: '#/components/schemas/PodInfo'
         - $ref: '#/components/schemas/DirInfo'
+        - $ref: '#/components/schemas/ContainerImageInfo'
+        - $ref: '#/components/schemas/ContainerInfo'
       discriminator:
         propertyName: objectType
         mapping:
           VMInfo: '#/components/schemas/VMInfo'
           PodInfo: '#/components/schemas/PodInfo'
           DirInfo: '#/components/schemas/DirInfo'
+          ContainerImageInfo: '#/components/schemas/ContainerImageInfo'
+          ContainerInfo: '#/components/schemas/ContainerInfo'
 
     VMInfo:
       type: object

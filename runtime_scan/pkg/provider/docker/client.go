@@ -18,9 +18,17 @@ package docker
 import (
 	"context"
 	"fmt"
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
+	"time"
+
 	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
+	"github.com/openclarity/vmclarity/shared/pkg/utils"
 )
+
+var _ provider.Discoverer = &Client{}
+var _ provider.Scanner = &Client{}
 
 type Client struct {
 	dockerClient *client.Client
@@ -52,4 +60,134 @@ func New(ctx context.Context) (*Client, error) {
 
 func (c Client) Kind() models.CloudProvider {
 	return models.Docker
+}
+
+func (c Client) DiscoverAssets(ctx context.Context) ([]models.AssetType, error) {
+	var ret []models.AssetType
+
+	// TODO: collect container images
+	// TODO (paralta) split collect images and collect containers to other funcs
+	// TODO (paralta) add go routines
+	images, err := c.dockerClient.ImageList(ctx, types.ImageListOptions{})
+	if err != nil {
+		return nil, provider.FatalError{
+			Err: fmt.Errorf("failed to get images. Provider=%s: %w", models.Docker, err),
+		}
+	}
+
+	for _, i := range images {
+		asset, err := c.getAssetFromImage(ctx, i.ID)
+		if err != nil {
+			return nil, provider.FatalError{
+				Err: fmt.Errorf("failed to create AssetType from ContainerImageInfo. Provider=%s: %w", models.Docker, err),
+			}
+		}
+		ret = append(ret, asset)
+	}
+
+	// TODO: collect containers
+	containers, err := c.dockerClient.ContainerList(ctx, types.ContainerListOptions{
+		All: true,
+	})
+	if err != nil {
+		return nil, provider.FatalError{
+			Err: fmt.Errorf("failed to get containers. Provider=%s: %w", models.Docker, err),
+		}
+	}
+
+	for _, container := range containers {
+		inspect, err := c.dockerClient.ContainerInspect(ctx, container.ID)
+		if err != nil {
+			return nil, provider.FatalError{
+				Err: fmt.Errorf("failed to get container. Provider=%s: %w", models.Docker, err),
+			}
+		}
+
+		created, err := time.Parse(time.RFC3339, inspect.Created)
+		if err != nil {
+			return nil, provider.FatalError{
+				Err: fmt.Errorf("failed to parse time. Provider=%s: %w", models.Docker, err),
+			}
+		}
+
+		imageInfo, err := c.getContainerImageInfoFromImage(ctx, container.ImageID)
+		if err != nil {
+			// TODO (paralta) If image not required this should not be fatal
+			return nil, provider.FatalError{
+				Err: err,
+			}
+		}
+
+		asset := models.AssetType{}
+		err = asset.FromContainerInfo(models.ContainerInfo{
+			ContainerName: utils.PointerTo(inspect.Name),
+			CreatedAt:     utils.PointerTo(created),
+			Id:            utils.PointerTo(container.ID),
+			Image:         utils.PointerTo(imageInfo),
+			Labels:        convertTags(container.Labels),
+			Location:      nil, // TODO (paralta) Clarify what is location
+			ObjectType:    "ContainerInfo",
+		})
+		if err != nil {
+			return nil, provider.FatalError{
+				Err: fmt.Errorf("failed to create AssetType from ContainerInfo. Provider=%s: %w", models.Docker, err),
+			}
+		}
+		ret = append(ret, asset)
+	}
+
+	return ret, nil
+}
+
+func (c Client) getContainerImageInfoFromImage(ctx context.Context, id string) (models.ContainerImageInfo, error) {
+	i, _, err := c.dockerClient.ImageInspectWithRaw(ctx, id)
+	if err != nil {
+		return models.ContainerImageInfo{}, fmt.Errorf("failed to get image. Provider=%s: %w", models.Docker, err)
+	}
+
+	return models.ContainerImageInfo{
+		Architecture: utils.PointerTo(i.Architecture),
+		Id:           utils.PointerTo(i.ID),
+		Labels:       convertTags(i.Config.Labels),
+		ObjectType:   "ContainerImageInfo",
+		Os:           utils.PointerTo(i.Os),
+		Size:         utils.PointerTo(int(i.Size)),
+	}, err
+}
+
+func (c Client) getAssetFromImage(ctx context.Context, id string) (models.AssetType, error) {
+	asset := models.AssetType{}
+
+	info, err := c.getContainerImageInfoFromImage(ctx, id)
+	if err != nil {
+		return asset, err
+	}
+
+	err = asset.FromContainerImageInfo(info)
+	if err != nil {
+		return asset, fmt.Errorf("failed to create AssetType from ContainerImageInfo. Provider=%s: %w", models.Docker, err)
+	}
+
+	return asset, err
+}
+
+func convertTags(tags map[string]string) *[]models.Tag {
+	ret := make([]models.Tag, 0, len(tags))
+	for key, val := range tags {
+		ret = append(ret, models.Tag{
+			Key:   key,
+			Value: val,
+		})
+	}
+	return &ret
+}
+
+func (c Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
+	//TODO implement me
+	panic("implement me")
 }

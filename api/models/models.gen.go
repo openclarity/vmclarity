@@ -24,17 +24,11 @@ const (
 
 // Defines values for CloudProvider.
 const (
-<<<<<<< HEAD
 	AWS      CloudProvider = "AWS"
 	Azure    CloudProvider = "Azure"
+	Docker   CloudProvider = "Docker"
 	External CloudProvider = "External"
 	GCP      CloudProvider = "GCP"
-=======
-	AWS    CloudProvider = "AWS"
-	Azure  CloudProvider = "Azure"
-	Docker CloudProvider = "Docker"
-	GCP    CloudProvider = "GCP"
->>>>>>> bf22d96 (feat(docker): Add Docker client constructor)
 )
 
 // Defines values for MisconfigurationSeverity.
@@ -1280,6 +1274,62 @@ func (t *AssetType) MergeDirInfo(v DirInfo) error {
 	return err
 }
 
+// AsContainerImageInfo returns the union data inside the AssetType as a ContainerImageInfo
+func (t AssetType) AsContainerImageInfo() (ContainerImageInfo, error) {
+	var body ContainerImageInfo
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromContainerImageInfo overwrites any union data inside the AssetType as the provided ContainerImageInfo
+func (t *AssetType) FromContainerImageInfo(v ContainerImageInfo) error {
+	v.ObjectType = "ContainerImageInfo"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeContainerImageInfo performs a merge with any union data inside the AssetType, using the provided ContainerImageInfo
+func (t *AssetType) MergeContainerImageInfo(v ContainerImageInfo) error {
+	v.ObjectType = "ContainerImageInfo"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+// AsContainerInfo returns the union data inside the AssetType as a ContainerInfo
+func (t AssetType) AsContainerInfo() (ContainerInfo, error) {
+	var body ContainerInfo
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromContainerInfo overwrites any union data inside the AssetType as the provided ContainerInfo
+func (t *AssetType) FromContainerInfo(v ContainerInfo) error {
+	v.ObjectType = "ContainerInfo"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeContainerInfo performs a merge with any union data inside the AssetType, using the provided ContainerInfo
+func (t *AssetType) MergeContainerInfo(v ContainerInfo) error {
+	v.ObjectType = "ContainerInfo"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
 func (t AssetType) Discriminator() (string, error) {
 	var discriminator struct {
 		Discriminator string `json:"objectType"`
@@ -1294,6 +1344,10 @@ func (t AssetType) ValueByDiscriminator() (interface{}, error) {
 		return nil, err
 	}
 	switch discriminator {
+	case "ContainerImageInfo":
+		return t.AsContainerImageInfo()
+	case "ContainerInfo":
+		return t.AsContainerInfo()
 	case "DirInfo":
 		return t.AsDirInfo()
 	case "PodInfo":
