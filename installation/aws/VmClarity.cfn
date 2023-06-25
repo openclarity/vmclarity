@@ -238,6 +238,10 @@ Resources:
                     BACKEND_REST_PORT=8888
                     # Container image for Scanner instance
                     SCANNER_CONTAINER_IMAGE=${ScannerContainerImage}
+                    # Scanner container working directory
+                    SCANNER_WORKING_DIRECTORY=/opt/vmclarity
+                    # Scanner container output directory
+                    SCANNER_OUTPUT_DIRECTORY=/var/opt/vmclarity
                     # Trivy server address
                     TRIVY_SERVER_ADDRESS=http://__BACKEND_REST_HOST__:9992
                     # Grype server address
@@ -298,13 +302,13 @@ Resources:
                 EnvironmentFile=/etc/vmclarity/service.env
                 ExecStartPre=-/usr/bin/docker stop %n
                 ExecStartPre=-/usr/bin/docker rm %n
-                ExecStartPre=/usr/bin/mkdir -p /opt/vmclarity
+                ExecStartPre=/usr/bin/mkdir -p ${SCANNER_WORKING_DIRECTORY}
                 ExecStartPre=/usr/bin/docker pull ${BACKEND_CONTAINER_IMAGE}
                 ExecStart=/usr/bin/docker run \
                   --rm --name %n \
                   --network vmclarity \
                   -p 0.0.0.0:8888:8888/tcp \
-                  -v /opt/vmclarity:/data \
+                  -v ${SCANNER_WORKING_DIRECTORY}:/data \
                   --env-file /etc/vmclarity/config.env \
                   ${BACKEND_CONTAINER_IMAGE} \
                   run \

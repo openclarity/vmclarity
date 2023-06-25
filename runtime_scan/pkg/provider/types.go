@@ -59,6 +59,8 @@ type ScanJobConfig struct {
 	ScannerImage     string // Scanner Container Image to use containing the vmclarity-cli and tools
 	ScannerCLIConfig string // Scanner CLI config yaml (families config yaml)
 	VMClarityAddress string // The backend address for the scanner CLI to export too
+	WorkingDir       string // The directory in which VMClarity will be installed inside the scanner container
+	OutputDir        string // The directory in which VMClarity results wil be output inside the scanner container
 
 	ScanMetadata
 	models.ScannerInstanceCreationConfig

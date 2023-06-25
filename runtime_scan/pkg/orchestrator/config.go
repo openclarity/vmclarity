@@ -35,6 +35,8 @@ import (
 const (
 	DeleteJobPolicy               = "DELETE_JOB_POLICY"
 	ScannerContainerImage         = "SCANNER_CONTAINER_IMAGE"
+	ScannerWorkingDirectory       = "SCANNER_WORKING_DIRECTORY"
+	ScannerOutputDirectory        = "SCANNER_OUTPUT_DIRECTORY"
 	GitleaksBinaryPath            = "GITLEAKS_BINARY_PATH"
 	ClamBinaryPath                = "CLAM_BINARY_PATH"
 	FreshclamBinaryPath           = "FRESHCLAM_BINARY_PATH"
@@ -136,6 +138,8 @@ func LoadConfig(backendHost string, backendPort int, baseURL string) (*Config, e
 	switch strings.ToLower(viper.GetString(ProviderKind)) {
 	case strings.ToLower(string(models.Azure)):
 		providerKind = models.Azure
+	case strings.ToLower(string(models.GCP)):
+		providerKind = models.GCP
 	case strings.ToLower(string(models.AWS)):
 		fallthrough
 	default:
@@ -165,6 +169,8 @@ func LoadConfig(backendHost string, backendPort int, baseURL string) (*Config, e
 			ScannerConfig: assetscanwatcher.ScannerConfig{
 				DeleteJobPolicy:               assetscanwatcher.GetDeleteJobPolicyType(viper.GetString(DeleteJobPolicy)),
 				ScannerImage:                  viper.GetString(ScannerContainerImage),
+				ScannerOutputDirectory:        viper.GetString(ScannerOutputDirectory),
+				ScannerWorkingDirectory:       viper.GetString(ScannerWorkingDirectory),
 				ScannerBackendAddress:         viper.GetString(ScannerBackendAddress),
 				GitleaksBinaryPath:            viper.GetString(GitleaksBinaryPath),
 				LynisInstallPath:              viper.GetString(LynisInstallPath),
