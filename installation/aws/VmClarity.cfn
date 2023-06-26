@@ -338,7 +338,7 @@ Resources:
 
                     [Install]
                     WantedBy=multi-user.target
-                  - ExploitDBServerContainerImage: !If [ExploitDBServerContainerImageOverridden, !Ref ExploitDBServerContainerImageOverride, "ghcr.io/openclarity/exploit-db-server:v0.2.0"]
+                  - ExploitDBServerContainerImage: !If [ExploitDBServerContainerImageOverridden, !Ref ExploitDBServerContainerImageOverride, "ghcr.io/openclarity/exploit-db-server:v0.1.2"]
               mode: "000644"
             "/etc/trivy-server/config.env":
               content: |
@@ -404,7 +404,7 @@ Resources:
 
                     [Install]
                     WantedBy=multi-user.target
-                  - GrypeServerContainerImage: !If [GrypeServerContainerImageOverridden, !Ref GrypeServerContainerImageOverride, "ghcr.io/openclarity/grype-server:v0.3.0"]
+                  - GrypeServerContainerImage: !If [GrypeServerContainerImageOverridden, !Ref GrypeServerContainerImageOverride, "ghcr.io/openclarity/grype-server:v0.2.0"]
               mode: "000644"
             "/lib/systemd/system/vmclarity_freshclam_mirror.service":
               content:
@@ -429,7 +429,7 @@ Resources:
 
                     [Install]
                     WantedBy=multi-user.target
-                  - FreshclamMirrorContainerImage: !If [FreshclamMirrorContainerImageOverridden, !Ref FreshclamMirrorContainerImageOverride, "ghcr.io/openclarity/freshclam-mirror:v0.2.0"]
+                  - FreshclamMirrorContainerImage: !If [FreshclamMirrorContainerImageOverridden, !Ref FreshclamMirrorContainerImageOverride, "ghcr.io/openclarity/freshclam-mirror:v0.1.0"]
               mode: "000644"
             "/lib/systemd/system/postgres.service":
               content:
@@ -874,7 +874,6 @@ Parameters:
       - m6i.large
       - t2.large
       - t3.large
-      - t4g.large
     ConstraintDescription: must be a valid EC2 instance type.
   ScannerInstanceType:
     Description: VmClarity Scanner Instance Type
@@ -1049,72 +1048,52 @@ Metadata:
       ExternalDBPassword:
         default: External DB Password
 Mappings:
-  # For every type we want AWS hardware virtualisation on amd64 (HVMAMD64) or arm64 (HVMARM64)
+  # For every type we want AWS hardware virtualisation on amd64 (HVM64)
   AWSInstanceType2Arch:
     t2.large:
-      Arch: HVMAMD64
+      Arch: HVM64
     t3.large:
-      Arch: HVMAMD64
+      Arch: HVM64
     m6i.large:
-      Arch: HVMAMD64
-    t4g.large:
-      Arch: HVMARM64
+      Arch: HVM64
   # These are all Ubuntu 22.04 LTS AMIs in the different regions.
   AWSRegionArch2AMI:
     us-east-1:
-      HVMAMD64: ami-06a1f46caddb5669e
-      HVMARM64: ami-02dd4bca4caaab354
+      HVM64: ami-003d3d03cfe1b0468
     us-west-2:
-      HVMAMD64: ami-022c9f1a24f813bf9
-      HVMARM64: ami-08133f9f7ea98ef23
+      HVM64: ami-032f8589b3e7f4e5b
     us-west-1:
-      HVMAMD64: ami-075138a50b1af6e68
-      HVMARM64: ami-072f6c9c5a0332bfa
+      HVM64: ami-0ff832bdf91944651
     eu-west-1:
-      HVMAMD64: ami-0242bc425da698fba
-      HVMARM64: ami-0f72149ab824e6f24
+      HVM64: ami-0786f5bc3943ad52d
     eu-west-2:
-      HVMAMD64: ami-020f28df2f62420b2
-      HVMARM64: ami-05d4420b63a57d172
+      HVM64: ami-0ccdcf8ea5cace030
     eu-west-3:
-      HVMAMD64: ami-0ab2608f742779f18
-      HVMARM64: ami-06bc526981bc54c12
+      HVM64: ami-0b108d96bcb0de81c
     eu-central-1:
-      HVMAMD64: ami-074543d9faf9c0509
-      HVMARM64: ami-0f5ff9c6972e3cb7e
+      HVM64: ami-03f1cc6c8b9c0b899
     ap-northeast-1:
-      HVMAMD64: ami-03baa3575a5f30358
-      HVMARM64: ami-09e0ffffa4777b921
+      HVM64: ami-0c597cc9c10ca9088
     ap-northeast-2:
-      HVMAMD64: ami-091a822378848a5bf
-      HVMARM64: ami-0dce6b1f4c1fc4685
+      HVM64: ami-0502b8f5f0ca3ed7d
     ap-northeast-3:
-      HVMAMD64: ami-06034fd7b1512312d
-      HVMARM64: ami-02b32d2b54aa063a0
+      HVM64: ami-040b504c67641f0cc
     ap-southeast-1:
-      HVMAMD64: ami-09dac21d1664bc313
-      HVMARM64: ami-0ad5e53ed8dae4da4
+      HVM64: ami-0d21214905506a7f4
     ap-southeast-2:
-      HVMAMD64: ami-08631d91a2bc26238
-      HVMARM64: ami-0d8a10b063fcb94f8
+      HVM64: ami-09fb5e610ae14ee00
     ap-south-1:
-      HVMAMD64: ami-0eb22e4d8a8d4fde8
-      HVMARM64: ami-0978fee9454483943
+      HVM64: ami-0dc886bce1f85f67e
     us-east-2:
-      HVMAMD64: ami-019147b1cc2ada37e
-      HVMARM64: ami-00280fb6ed84811ce
+      HVM64: ami-05f4e4084abd205cf
     ca-central-1:
-      HVMAMD64: ami-021ca25871f1697f7
-      HVMARM64: ami-05ab25f05d7114b80
+      HVM64: ami-02da4d5de61d161c5
     sa-east-1:
-      HVMAMD64: ami-009dac42914e64b32
-      HVMARM64: ami-0c5352b81fe4cbbec
+      HVM64: ami-0cd79c08dc1353a91
     cn-north-1:
-      HVMAMD64: ami-0d688c694ae459a67
-      HVMARM64: ami-00eddefb8771f3b44
+      HVM64: ami-00194330730a60fd2
     cn-northwest-1:
-      HVMAMD64: ami-0f34360021b18ed7a
-      HVMARM64: ami-0a6a7cc68db8260ad
+      HVM64: ami-0502019189405b959
 Conditions:
   BackendContainerImageOverridden: !Not
     - !Equals
