@@ -138,12 +138,14 @@ func LoadConfig(backendHost string, backendPort int, baseURL string) (*Config, e
 		providerKind = models.Azure
 	case strings.ToLower(string(models.GCP)):
 		providerKind = models.GCP
+	case strings.ToLower(string(models.Docker)):
+		providerKind = models.Docker
 	case strings.ToLower(string(models.External)):
 		providerKind = models.External
 	case strings.ToLower(string(models.AWS)):
-		fallthrough
-	default:
 		providerKind = models.AWS
+	default:
+		return nil, fmt.Errorf("unsupported provider: %s", providerKind)
 	}
 
 	c := &Config{

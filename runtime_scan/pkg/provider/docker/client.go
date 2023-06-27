@@ -27,9 +27,6 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/utils"
 )
 
-var _ provider.Discoverer = &Client{}
-var _ provider.Scanner = &Client{}
-
 type Client struct {
 	dockerClient *client.Client
 	config       *Config
@@ -139,6 +136,16 @@ func (c Client) DiscoverAssets(ctx context.Context) ([]models.AssetType, error) 
 	return ret, nil
 }
 
+func (c Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (c Client) getContainerImageInfoFromImage(ctx context.Context, id string) (models.ContainerImageInfo, error) {
 	i, _, err := c.dockerClient.ImageInspectWithRaw(ctx, id)
 	if err != nil {
@@ -180,14 +187,4 @@ func convertTags(tags map[string]string) *[]models.Tag {
 		})
 	}
 	return &ret
-}
-
-func (c Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (c Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
-	//TODO implement me
-	panic("implement me")
 }
