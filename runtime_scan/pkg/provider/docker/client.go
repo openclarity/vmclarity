@@ -17,6 +17,7 @@ package docker
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -25,6 +26,7 @@ import (
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 	"github.com/openclarity/vmclarity/shared/pkg/utils"
+	"sync"
 )
 
 type Client struct {
@@ -60,59 +62,101 @@ func (c Client) Kind() models.CloudProvider {
 }
 
 func (c Client) DiscoverAssets(ctx context.Context) ([]models.AssetType, error) {
-	var ret []models.AssetType
+	var err error
+	wg := &sync.WaitGroup{}
+	errs := make(chan error, 2)
+	assets := make(chan models.AssetType)
 
-	// TODO: collect container images
-	// TODO (paralta) split collect images and collect containers to other funcs
-	// TODO (paralta) add go routines
+	wg.Add(1)
+	go c.getImages(ctx, assets, errs, wg)
+
+	wg.Add(1)
+	go c.getContainers(ctx, assets, errs, wg)
+
+	go func() {
+		wg.Wait()
+		close(errs)
+		close(assets)
+	}()
+
+	var ret []models.AssetType
+	for t := range assets {
+		ret = append(ret, t)
+	}
+
+	for e := range errs {
+		if e != nil {
+			// nolint:typecheck
+			err = errors.Join(err, e)
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return ret, nil
+}
+
+func (c Client) getImages(ctx context.Context, assets chan models.AssetType, errs chan error, wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	images, err := c.dockerClient.ImageList(ctx, types.ImageListOptions{})
 	if err != nil {
-		return nil, provider.FatalError{
+		errs <- provider.FatalError{
 			Err: fmt.Errorf("failed to get images. Provider=%s: %w", models.Docker, err),
 		}
+		return
 	}
 
 	for _, i := range images {
 		asset, err := c.getAssetFromImage(ctx, i.ID)
 		if err != nil {
-			return nil, provider.FatalError{
+			errs <- provider.FatalError{
 				Err: fmt.Errorf("failed to create AssetType from ContainerImageInfo. Provider=%s: %w", models.Docker, err),
 			}
+			return
 		}
-		ret = append(ret, asset)
+		assets <- asset
 	}
+}
 
-	// TODO: collect containers
+func (c Client) getContainers(ctx context.Context, assets chan models.AssetType, errs chan error, wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	containers, err := c.dockerClient.ContainerList(ctx, types.ContainerListOptions{
 		All: true,
 	})
 	if err != nil {
-		return nil, provider.FatalError{
+		errs <- provider.FatalError{
 			Err: fmt.Errorf("failed to get containers. Provider=%s: %w", models.Docker, err),
 		}
+		return
 	}
 
 	for _, container := range containers {
 		inspect, err := c.dockerClient.ContainerInspect(ctx, container.ID)
 		if err != nil {
-			return nil, provider.FatalError{
+			errs <- provider.FatalError{
 				Err: fmt.Errorf("failed to get container. Provider=%s: %w", models.Docker, err),
 			}
+			return
 		}
 
 		created, err := time.Parse(time.RFC3339, inspect.Created)
 		if err != nil {
-			return nil, provider.FatalError{
+			errs <- provider.FatalError{
 				Err: fmt.Errorf("failed to parse time. Provider=%s: %w", models.Docker, err),
 			}
+			return
 		}
 
 		imageInfo, err := c.getContainerImageInfoFromImage(ctx, container.ImageID)
 		if err != nil {
 			// TODO (paralta) If image not required this should not be fatal
-			return nil, provider.FatalError{
+			errs <- provider.FatalError{
 				Err: err,
 			}
+			return
 		}
 
 		asset := models.AssetType{}
@@ -126,14 +170,13 @@ func (c Client) DiscoverAssets(ctx context.Context) ([]models.AssetType, error) 
 			ObjectType:    "ContainerInfo",
 		})
 		if err != nil {
-			return nil, provider.FatalError{
+			errs <- provider.FatalError{
 				Err: fmt.Errorf("failed to create AssetType from ContainerInfo. Provider=%s: %w", models.Docker, err),
 			}
+			return
 		}
-		ret = append(ret, asset)
+		assets <- asset
 	}
-
-	return ret, nil
 }
 
 func (c Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
