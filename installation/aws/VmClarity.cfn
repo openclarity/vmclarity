@@ -273,7 +273,7 @@ Resources:
                       - !Ref "AWS::Region"
                       - !FindInMap
                         - AWSInstanceType2Arch
-                        - !Ref InstanceType
+                        - !Ref ScannerInstanceType
                         - Arch
                     ScannerContainerImage: !If [ScannerContainerImageOverridden, !Ref ScannerContainerImageOverride, "ghcr.io/openclarity/vmclarity-cli:latest"]
               mode: "000644"
