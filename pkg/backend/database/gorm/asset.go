@@ -310,6 +310,42 @@ func (t *AssetsTableHandler) checkUniqueness(asset models.Asset) (*models.Asset,
 			}
 		}
 		return nil, nil // nolint:nilnil
+	case models.ContainerInfo:
+		var assets []Asset
+		// In the case of creating or updating an asset, needs to be checked whether other asset exists with same Id and Location.
+		filter := fmt.Sprintf("id ne '%s' and assetInfo/Id eq '%s' and assetInfo/location eq '%s'", *asset.Id, info.Id, info.Location)
+		err = ODataQuery(t.DB, assetSchemaName, &filter, nil, nil, nil, nil, nil, true, &assets)
+		if err != nil {
+			return nil, err
+		}
+		if len(assets) > 0 {
+			var apiAsset models.Asset
+			if err := json.Unmarshal(assets[0].Data, &apiAsset); err != nil {
+				return nil, fmt.Errorf("failed to convert DB model to API model: %w", err)
+			}
+			return &apiAsset, &common.ConflictError{
+				Reason: fmt.Sprintf("Asset Container exists with same Id=%q and location=%q", info.Id, info.Location),
+			}
+		}
+		return nil, nil // nolint:nilnil
+	case models.ContainerImageInfo:
+		var assets []Asset
+		// In the case of creating or updating an asset, needs to be checked whether other asset exists with same Id.
+		filter := fmt.Sprintf("id ne '%s' and assetInfo/Id eq '%s'", *asset.Id, info.Id)
+		err = ODataQuery(t.DB, assetSchemaName, &filter, nil, nil, nil, nil, nil, true, &assets)
+		if err != nil {
+			return nil, err
+		}
+		if len(assets) > 0 {
+			var apiAsset models.Asset
+			if err := json.Unmarshal(assets[0].Data, &apiAsset); err != nil {
+				return nil, fmt.Errorf("failed to convert DB model to API model: %w", err)
+			}
+			return &apiAsset, &common.ConflictError{
+				Reason: fmt.Sprintf("Asset ContainerImage exists with same Id=%q", info.Id),
+			}
+		}
+		return nil, nil // nolint:nilnil
 	default:
 		return nil, fmt.Errorf("asset type is not supported (%T): %w", discriminator, err)
 	}
