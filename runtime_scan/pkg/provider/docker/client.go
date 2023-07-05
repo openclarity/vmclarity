@@ -19,7 +19,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/docker/docker/api/types"
+	types "github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/mount"
+	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
 	"time"
 
@@ -180,13 +184,105 @@ func (c Client) getContainers(ctx context.Context, assets chan models.AssetType,
 }
 
 func (c Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
-	//TODO implement me
-	panic("implement me")
+	// TODO(paralta) Implement run scan for Docker Images
+	containerInfo, err := config.AssetInfo.AsContainerInfo()
+	if err != nil {
+		return provider.FatalError{Err: err}
+	}
+	if containerInfo.ObjectType != "ContainerInfo" {
+		return provider.FatalError{
+			Err: fmt.Errorf("run target scan not implemented for current object type (%s). Provider=%s", models.Docker, containerInfo.ObjectType),
+		}
+	}
+
+	volumeName := "scan_" + config.ScanID + "_container_" + *containerInfo.Id
+	resp, err := c.dockerClient.VolumeList(ctx, volume.ListOptions{
+		Filters: filters.NewArgs(filters.Arg("name", volumeName)),
+	})
+	if err != nil {
+		return provider.FatalError{
+			Err: fmt.Errorf("failed to get volumes. Provider=%s: %w", models.Docker, err),
+		}
+	}
+	if len(resp.Volumes) == 0 {
+		_, err = c.dockerClient.VolumeCreate(ctx, volume.CreateOptions{
+			Name: volumeName,
+		})
+		if err != nil {
+			return provider.FatalError{
+				Err: fmt.Errorf("failed to create volume. Provider=%s: %w", models.Docker, err),
+			}
+		}
+	}
+
+	// TODO(paralta) Check if volume is empty before adding new content
+	readCloser, err := c.dockerClient.ContainerExport(ctx, *containerInfo.Id)
+	if err != nil {
+		return provider.FatalError{
+			Err: fmt.Errorf("failed to export container. Provider=%s: %w", models.Docker, err),
+		}
+	}
+
+	// Create an ephemeral container to populate volume with export output
+	_, err = c.dockerClient.ImagePull(ctx, "alpine", types.ImagePullOptions{})
+	if err != nil {
+		return provider.FatalError{
+			Err: fmt.Errorf("failed to pull helper image. Provider=%s: %w", models.Docker, err),
+		}
+	}
+	response, err := c.dockerClient.ContainerCreate(ctx,
+		&container.Config{
+			Image: "alpine",
+		},
+		&container.HostConfig{
+			Mounts: []mount.Mount{
+				{
+					Type:   mount.TypeVolume,
+					Source: volumeName,
+					Target: "/data",
+				},
+			},
+		}, nil, nil, "helper")
+	if err != nil {
+		return provider.FatalError{
+			Err: fmt.Errorf("failed to create helper container. Provider=%s: %w", models.Docker, err),
+		}
+	}
+	defer func() {
+		err = c.dockerClient.ContainerRemove(ctx, response.ID, types.ContainerRemoveOptions{})
+		if err != nil {
+			_ = fmt.Errorf("failed to remove helper container. Provider=%s: %w", models.Docker, err)
+		}
+	}()
+
+	err = c.dockerClient.CopyToContainer(ctx, response.ID, "/data", readCloser, types.CopyToContainerOptions{})
+	if err != nil {
+		return provider.FatalError{
+			Err: fmt.Errorf("failed to copy data to container. Provider=%s: %w", models.Docker, err),
+		}
+	}
+
+	// TODO(adamtagscherer) Get scanconfig.yaml into scan container
+	// TODO(adamtagscherer) Start scan container
+
+	return nil
 }
 
 func (c Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
-	//TODO implement me
-	panic("implement me")
+
+	containerInfo, err := config.AssetInfo.AsContainerInfo()
+	if err != nil {
+		return provider.FatalError{Err: err}
+	}
+
+	volumeName := "scan_" + config.ScanID + "_container_" + *containerInfo.Id
+	err = c.dockerClient.VolumeRemove(ctx, volumeName, false)
+	if err != nil {
+		return provider.FatalError{
+			Err: fmt.Errorf("failed to remove volume. Provider=%s: %w", models.Docker, err),
+		}
+	}
+	return nil
 }
 
 func (c Client) getContainerImageInfoFromImage(ctx context.Context, id string) (models.ContainerImageInfo, error) {
