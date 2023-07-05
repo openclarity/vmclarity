@@ -1416,6 +1416,10 @@ components:
         terminated:
           type: string
           format: date-time
+          nullable: true
+          x-omitempty: true
+          x-go-type-skip-optional-pointer: true
+          x-go-type: nullable[time.Time]
         lastSeen:
           type: string
           format: date-time

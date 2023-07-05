@@ -125,7 +125,7 @@ func (sd *Discoverer) DiscoverAndCreateAssets(ctx context.Context) error {
 	// Patch all assets which were not found by this discovery as terminated
 	for _, asset := range *assetResp.Items {
 		assetData := models.Asset{
-			Terminated: &discoveryTime,
+			Terminated: models.Nullable(discoveryTime),
 		}
 
 		err := sd.backendClient.PatchAsset(ctx, assetData, *asset.Id)
