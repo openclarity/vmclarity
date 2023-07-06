@@ -1604,6 +1604,8 @@ components:
           type: string
         id:
           type: string
+        name:
+          type: string
         labels:
           type: array
           items:

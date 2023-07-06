@@ -305,6 +305,7 @@ type ContainerImageInfo struct {
 	Architecture *string `json:"architecture,omitempty"`
 	Id           *string `json:"id,omitempty"`
 	Labels       *[]Tag  `json:"labels"`
+	Name         *string `json:"name,omitempty"`
 	ObjectType   string  `json:"objectType"`
 	Os           *string `json:"os,omitempty"`
 	Size         *int    `json:"size,omitempty"`
