@@ -27,10 +27,12 @@ import (
 	"github.com/docker/docker/client"
 	"time"
 
+	"github.com/ghodss/yaml"
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 	"github.com/openclarity/vmclarity/shared/pkg/utils"
 	"io"
+	"os"
 	"strings"
 	"sync"
 )
@@ -256,8 +258,28 @@ func (c Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfig
 		}
 	}
 
-	// TODO(adamtagscherer) Get scanconfig.yaml into scan container
+	err = c.createScanConfigFile(config)
+	if err != nil {
+		return provider.FatalError{
+			Err: fmt.Errorf("failed to create scanconfig.yaml file. Provider=%s: %w", models.Docker, err),
+		}
+	}
+
 	// TODO(adamtagscherer) Start scan container
+
+	return nil
+}
+
+func (c Client) createScanConfigFile(config *provider.ScanJobConfig) error {
+	configAsByte, err := yaml.Marshal(config)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(os.TempDir()+"scanconfig.yaml", configAsByte, 0644)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -274,8 +296,15 @@ func (c Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobCon
 		}
 	}
 
-	// TODO(adamtagscherer) Remove scanconfig.yaml
+	err = os.Remove(os.TempDir() + "scanconfig.yaml")
+	if err != nil {
+		return provider.FatalError{
+			Err: fmt.Errorf("failed to remove scanconfig.yaml. Provider=%s: %w", models.Docker, err),
+		}
+	}
+
 	// TODO(adamtagscherer) Remove scan container
+
 	return nil
 }
 
