@@ -33,6 +33,8 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/utils"
 	"io"
 	"os"
+	"path"
+	"path/filepath"
 	"strings"
 	"sync"
 )
@@ -258,14 +260,14 @@ func (c Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfig
 		}
 	}
 
-	scanConfigFileName, err := c.createScanConfigFile(config)
+	scanConfigFilePath, err := c.createScanConfigFile(config)
 	if err != nil {
 		return provider.FatalError{
 			Err: fmt.Errorf("failed to create scanconfig.yaml file. Provider=%s: %w", models.Docker, err),
 		}
 	}
 
-	err = c.startScan(ctx, scanName, scanConfigFileName, config)
+	err = c.startScan(ctx, scanName, scanConfigFilePath, config)
 	if err != nil {
 		return provider.FatalError{
 			Err: fmt.Errorf("failed to run scan on the scanner container. Provider=%s: %w", models.Docker, err),
@@ -275,27 +277,51 @@ func (c Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfig
 	return nil
 }
 
-func (c Client) startScan(ctx context.Context, volumeName string, scanConfigFileName string, config *provider.ScanJobConfig) error {
-	_, err := c.dockerClient.ImagePull(ctx, config.ScannerImage, types.ImagePullOptions{})
+func (c Client) startScan(ctx context.Context, volumeName string, scanConfigFilePath string, config *provider.ScanJobConfig) error {
+	pl, err := c.dockerClient.ImagePull(ctx, config.ScannerImage, types.ImagePullOptions{})
 	if err != nil {
 		return err
 	}
+	_, _ = io.Copy(io.Discard, pl)
+	_ = pl.Close()
+
+	script := fmt.Sprintf(`
+/app/vmclarity-cli \
+--config /tmp/%s \
+--server %s \
+--scan-result-id %s
+`, filepath.Base(scanConfigFilePath), config.VMClarityAddress, config.ScanResultID)
 
 	resp, err := c.dockerClient.ContainerCreate(
 		ctx,
 		&container.Config{
-			Image: config.ScannerImage,
+			Image:      config.ScannerImage,
+			Entrypoint: []string{"sh", "-c", script},
 		},
 		&container.HostConfig{
-			Binds: []string{},
+			Binds: []string{fmt.Sprintf("%s:/tmp", path.Dir(scanConfigFilePath))},
 			Mounts: []mount.Mount{
 				{
 					Type:   mount.TypeVolume,
-					Source: scanName,
+					Source: volumeName,
 					Target: "/data",
 				},
 			},
-		}, nil, nil, "")
+		},
+		nil,
+		nil,
+		"",
+	)
+	if err != nil {
+		return err
+	}
+
+	err = c.dockerClient.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c Client) createScanConfigFile(config *provider.ScanJobConfig) (string, error) {
@@ -304,17 +330,17 @@ func (c Client) createScanConfigFile(config *provider.ScanJobConfig) (string, er
 		return "", err
 	}
 
-	scanConfigFileName, err := getScanConfigFileName(config)
+	scanConfigFilePath, err := getScanConfigFileName(config)
 	if err != nil {
 		return "", err
 	}
 
-	err = os.WriteFile(scanConfigFileName, configAsByte, 0644)
+	err = os.WriteFile(scanConfigFilePath, configAsByte, 0644)
 	if err != nil {
 		return "", err
 	}
 
-	return scanConfigFileName, nil
+	return scanConfigFilePath, nil
 }
 
 func (c Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
@@ -333,7 +359,7 @@ func (c Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobCon
 	if err != nil {
 		return provider.FatalError{Err: err}
 	}
-	err = os.Remove(scanConfigFileName)
+	err = os.Remove(path.Dir(scanConfigFileName))
 	if err != nil {
 		return provider.FatalError{
 			Err: fmt.Errorf("failed to remove scan config file. Provider=%s: %w", models.Docker, err),
