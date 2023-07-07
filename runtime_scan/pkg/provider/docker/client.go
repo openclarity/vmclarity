@@ -258,30 +258,63 @@ func (c Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfig
 		}
 	}
 
-	err = c.createScanConfigFile(config)
+	scanConfigFileName, err := c.createScanConfigFile(config)
 	if err != nil {
 		return provider.FatalError{
 			Err: fmt.Errorf("failed to create scanconfig.yaml file. Provider=%s: %w", models.Docker, err),
 		}
 	}
 
-	// TODO(adamtagscherer) Start scan container
+	err = c.startScan(ctx, scanName, scanConfigFileName, config)
+	if err != nil {
+		return provider.FatalError{
+			Err: fmt.Errorf("failed to run scan on the scanner container. Provider=%s: %w", models.Docker, err),
+		}
+	}
 
 	return nil
 }
 
-func (c Client) createScanConfigFile(config *provider.ScanJobConfig) error {
+func (c Client) startScan(ctx context.Context, volumeName string, scanConfigFileName string, config *provider.ScanJobConfig) error {
+	_, err := c.dockerClient.ImagePull(ctx, config.ScannerImage, types.ImagePullOptions{})
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.dockerClient.ContainerCreate(
+		ctx,
+		&container.Config{
+			Image: config.ScannerImage,
+		},
+		&container.HostConfig{
+			Binds: []string{},
+			Mounts: []mount.Mount{
+				{
+					Type:   mount.TypeVolume,
+					Source: scanName,
+					Target: "/data",
+				},
+			},
+		}, nil, nil, "")
+}
+
+func (c Client) createScanConfigFile(config *provider.ScanJobConfig) (string, error) {
 	configAsByte, err := yaml.Marshal(config)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	err = os.WriteFile(os.TempDir()+"scanconfig.yaml", configAsByte, 0644)
+	scanConfigFileName, err := getScanConfigFileName(config)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	err = os.WriteFile(scanConfigFileName, configAsByte, 0644)
+	if err != nil {
+		return "", err
+	}
+
+	return scanConfigFileName, nil
 }
 
 func (c Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
@@ -296,10 +329,14 @@ func (c Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobCon
 		}
 	}
 
-	err = os.Remove(os.TempDir() + "scanconfig.yaml")
+	scanConfigFileName, err := getScanConfigFileName(config)
+	if err != nil {
+		return provider.FatalError{Err: err}
+	}
+	err = os.Remove(scanConfigFileName)
 	if err != nil {
 		return provider.FatalError{
-			Err: fmt.Errorf("failed to remove scanconfig.yaml. Provider=%s: %w", models.Docker, err),
+			Err: fmt.Errorf("failed to remove scan config file. Provider=%s: %w", models.Docker, err),
 		}
 	}
 
@@ -360,6 +397,16 @@ func getScanName(config *provider.ScanJobConfig) (string, error) {
 		}
 	}
 	return "scan_" + config.ScanID + "_asset_" + strings.Replace(id, ":", "_", -1), nil
+}
+
+func getScanConfigFileName(config *provider.ScanJobConfig) (string, error) {
+	scanName, err := getScanName(config)
+	if err != nil {
+		return "", provider.FatalError{Err: err}
+	}
+
+	// TODO (adamtagscherer): check if os.TempDir() doesn't create a new unique directory every time it's being called
+	return os.TempDir() + scanName + "_scanconfig.yaml", nil
 }
 
 func getAssetId(config *provider.ScanJobConfig) (string, error) {
