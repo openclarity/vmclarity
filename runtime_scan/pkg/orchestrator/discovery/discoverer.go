@@ -45,11 +45,11 @@ func New(config Config) *Discoverer {
 	}
 }
 
-func (sd *Discoverer) Start(ctx context.Context) {
+func (d *Discoverer) Start(ctx context.Context) {
 	go func() {
 		for {
 			log.Debug("Discovering available assets")
-			err := sd.DiscoverAndCreateAssets(ctx)
+			err := d.DiscoverAndCreateAssets(ctx)
 			if err != nil {
 				log.Warnf("Failed to discover assets: %v", err)
 			}
@@ -65,10 +65,10 @@ func (sd *Discoverer) Start(ctx context.Context) {
 	}()
 }
 
-func (sd *Discoverer) DiscoverAndCreateAssets(ctx context.Context) error {
+func (d *Discoverer) DiscoverAndCreateAssets(ctx context.Context) error {
 	discoveryTime := time.Now()
 
-	assetTypes, err := sd.providerClient.DiscoverAssets(ctx)
+	assetTypes, err := d.providerClient.DiscoverAssets(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to discover assets from provider: %w", err)
 	}
@@ -80,18 +80,18 @@ func (sd *Discoverer) DiscoverAndCreateAssets(ctx context.Context) error {
 			LastSeen:  &discoveryTime,
 			FirstSeen: &discoveryTime,
 		}
-		_, err := sd.backendClient.PostAsset(ctx, assetData)
+		_, err := d.backendClient.PostAsset(ctx, assetData)
 		if err == nil {
 			continue
 		}
 
 		var conflictError backendclient.AssetConflictError
 		if !errors.As(err, &conflictError) {
-			// If there is an error, and its not a conflict telling
+			// If there is an error, and it's not a conflict telling
 			// us that the asset already exists, then we need to
 			// keep track of it and log it as a failure to
 			// complete discovery. We don't fail instantly here
-			// because discovering the assets is a heavy operation
+			// because discovering the assets is a heavy operation,
 			// so we want to give the best chance to create all the
 			// assets in the DB before failing.
 			errs = append(errs, fmt.Errorf("failed to post asset: %v", err))
@@ -102,7 +102,7 @@ func (sd *Discoverer) DiscoverAndCreateAssets(ctx context.Context) error {
 		// which matches the unique properties of this asset, in this
 		// case we'll patch the just AssetInfo and FirstSeen instead.
 		assetData.FirstSeen = nil
-		err = sd.backendClient.PatchAsset(ctx, assetData, *conflictError.ConflictingAsset.Id)
+		err = d.backendClient.PatchAsset(ctx, assetData, *conflictError.ConflictingAsset.Id)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to patch asset: %v", err))
 		}
@@ -116,7 +116,7 @@ func (sd *Discoverer) DiscoverAndCreateAssets(ctx context.Context) error {
 	// need to filter these assets by provider so that we don't find assets
 	// which don't belong to us. We need to give the provider some kind of
 	// identity in this case.
-	assetResp, err := sd.backendClient.GetAssets(ctx, models.GetAssetsParams{
+	assetResp, err := d.backendClient.GetAssets(ctx, models.GetAssetsParams{
 		Filter: utils.PointerTo(fmt.Sprintf("terminatedOn eq null and (lastSeen eq null or lastSeen lt %s)", discoveryTime.Format(time.RFC3339))),
 		Select: utils.PointerTo("id"),
 	})
@@ -131,7 +131,7 @@ func (sd *Discoverer) DiscoverAndCreateAssets(ctx context.Context) error {
 			TerminatedOn: &discoveryTime,
 		}
 
-		err := sd.backendClient.PatchAsset(ctx, assetData, *asset.Id)
+		err := d.backendClient.PatchAsset(ctx, assetData, *asset.Id)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to patch asset: %v", err))
 		}

@@ -76,11 +76,14 @@ func (c *Client) DiscoverAssets(ctx context.Context) ([]models.AssetType, error)
 		return nil, fmt.Errorf("failed to get regions: %w", err)
 	}
 
+	logger := log.GetLoggerFromContextOrDiscard(ctx)
+
 	assets := make([]models.AssetType, 0)
 	for _, region := range regions {
 		instances, err := c.GetInstances(ctx, []ec2types.Filter{}, region.Name)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get instances: %w", err)
+			logger.Warnf("Failed to get instances. region=%v: %v", region, err)
+			continue
 		}
 
 		for _, instance := range instances {

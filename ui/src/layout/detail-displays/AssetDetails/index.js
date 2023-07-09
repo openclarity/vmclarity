@@ -62,12 +62,12 @@ const AssetDetails = ({assetData, withAssetLink=false, withAssetScansLink=false}
                     <TitleValueDisplayRow>
                         <TitleValueDisplay title="Name">{instanceID}</TitleValueDisplay>
                         <TitleValueDisplay title="Type">{objectType}</TitleValueDisplay>
+                        <TitleValueDisplay title="Location">{location}</TitleValueDisplay>
+                    </TitleValueDisplayRow>
+                    <TitleValueDisplayRow>
                         <TitleValueDisplay title="First Seen">{formatDate(firstSeen)}</TitleValueDisplay>
                         <TitleValueDisplay title="Last Seen">{formatDate(lastSeen)}</TitleValueDisplay>
                         <TitleValueDisplay title="Terminated On">{formatDate(terminatedOn)}</TitleValueDisplay>
-                    </TitleValueDisplayRow>
-                    <TitleValueDisplayRow>
-                        <TitleValueDisplay title="Location">{location}</TitleValueDisplay>
                     </TitleValueDisplayRow>
                     <TitleValueDisplayRow>
                         <TitleValueDisplay title="Labels"><TagsList items={formatTagsToStringsList(tags)} /></TitleValueDisplay>
