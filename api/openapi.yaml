@@ -1211,9 +1211,6 @@ components:
           type: array
           items:
             type: string
-          default:
-            - grype
-            - trivy
 
     SBOMConfig:
       type: object
@@ -1224,9 +1221,6 @@ components:
           type: array
           items:
             type: string
-          default:
-            - syft
-            - trivy
 
     MalwareConfig:
       type: object
@@ -1237,8 +1231,6 @@ components:
           type: array
           items:
             type: string
-          default:
-            - clam
 
     RootkitsConfig:
       type: object
@@ -1249,8 +1241,6 @@ components:
           type: array
           items:
             type: string
-          default:
-            - chkrootkit
 
     SecretsConfig:
       type: object
@@ -1261,8 +1251,6 @@ components:
           type: array
           items:
             type: string
-          default:
-            - gitleaks
 
     MisconfigurationsConfig:
       type: object
@@ -1273,8 +1261,6 @@ components:
           type: array
           items:
             type: string
-          default:
-            - lynis
 
     ExploitsConfig:
       type: object
@@ -1285,8 +1271,6 @@ components:
           type: array
           items:
             type: string
-          default:
-            - exploitdb
 
     ScanConfigs:
       type: object

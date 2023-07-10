@@ -24,7 +24,7 @@ func (c *VulnerabilitiesConfig) IsEnabled() bool {
 }
 
 func (c *VulnerabilitiesConfig) GetScannersList() []string {
-	if c != nil && c.Scanners != nil {
+	if c != nil && c.Scanners != nil && len(*c.Scanners) != 0 {
 		return *c.Scanners
 	}
 
@@ -36,7 +36,7 @@ func (c *SecretsConfig) IsEnabled() bool {
 }
 
 func (c *SecretsConfig) GetScannersList() []string {
-	if c != nil && c.Scanners != nil {
+	if c != nil && c.Scanners != nil && len(*c.Scanners) != 0 {
 		return *c.Scanners
 	}
 
@@ -48,7 +48,7 @@ func (c *SBOMConfig) IsEnabled() bool {
 }
 
 func (c *SBOMConfig) GetAnalyzersList() []string {
-	if c != nil && c.Analyzers != nil {
+	if c != nil && c.Analyzers != nil && len(*c.Analyzers) != 0 {
 		return *c.Analyzers
 	}
 
@@ -60,7 +60,7 @@ func (c *RootkitsConfig) IsEnabled() bool {
 }
 
 func (c *RootkitsConfig) GetScannersList() []string {
-	if c != nil && c.Scanners != nil {
+	if c != nil && c.Scanners != nil && len(*c.Scanners) != 0 {
 		return *c.Scanners
 	}
 
@@ -72,7 +72,7 @@ func (c *MisconfigurationsConfig) IsEnabled() bool {
 }
 
 func (c *MisconfigurationsConfig) GetScannersList() []string {
-	if c != nil && c.Scanners != nil {
+	if c != nil && c.Scanners != nil && len(*c.Scanners) != 0 {
 		return *c.Scanners
 	}
 
@@ -84,7 +84,7 @@ func (c *MalwareConfig) IsEnabled() bool {
 }
 
 func (c *MalwareConfig) GetScannersList() []string {
-	if c != nil && c.Scanners != nil {
+	if c != nil && c.Scanners != nil && len(*c.Scanners) != 0 {
 		return *c.Scanners
 	}
 
@@ -96,7 +96,7 @@ func (c *ExploitsConfig) IsEnabled() bool {
 }
 
 func (c *ExploitsConfig) GetScannersList() []string {
-	if c != nil && c.Scanners != nil {
+	if c != nil && c.Scanners != nil && len(*c.Scanners) != 0 {
 		return *c.Scanners
 	}
 
