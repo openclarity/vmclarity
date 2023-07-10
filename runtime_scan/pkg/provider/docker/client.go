@@ -290,7 +290,7 @@ func (c Client) startScan(ctx context.Context, volumeName string, scanConfigFile
 --config /tmp/%s \
 --server %s \
 --scan-result-id %s
-`, filepath.Base(scanConfigFilePath), config.VMClarityAddress, config.ScanResultID)
+`, filepath.Base(scanConfigFilePath), config.VMClarityAddress, config.AssetScanID)
 
 	resp, err := c.dockerClient.ContainerCreate(
 		ctx,
