@@ -1207,42 +1207,86 @@ components:
       properties:
         enabled:
           type: boolean
+        scanners:
+          type: array
+          items:
+            type: string
+          default:
+            - grype
+            - trivy
 
     SBOMConfig:
       type: object
       properties:
         enabled:
           type: boolean
+        analyzers:
+          type: array
+          items:
+            type: string
+          default:
+            - syft
+            - trivy
 
     MalwareConfig:
       type: object
       properties:
         enabled:
           type: boolean
+        scanners:
+          type: array
+          items:
+            type: string
+          default:
+            - clam
 
     RootkitsConfig:
       type: object
       properties:
         enabled:
           type: boolean
+        scanners:
+          type: array
+          items:
+            type: string
+          default:
+            - chkrootkit
 
     SecretsConfig:
       type: object
       properties:
         enabled:
           type: boolean
+        scanners:
+          type: array
+          items:
+            type: string
+          default:
+            - gitleaks
 
     MisconfigurationsConfig:
       type: object
       properties:
         enabled:
           type: boolean
+        scanners:
+          type: array
+          items:
+            type: string
+          default:
+            - lynis
 
     ExploitsConfig:
       type: object
       properties:
         enabled:
           type: boolean
+        scanners:
+          type: array
+          items:
+            type: string
+          default:
+            - exploitdb
 
     ScanConfigs:
       type: object
