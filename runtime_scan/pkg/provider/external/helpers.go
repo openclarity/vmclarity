@@ -1,0 +1,133 @@
+package external
+
+import (
+	"fmt"
+
+	"google.golang.org/protobuf/types/known/timestamppb"
+
+	"github.com/openclarity/vmclarity/api/models"
+	provider_service "github.com/openclarity/vmclarity/runtime_scan/pkg/provider/external/proto"
+	"github.com/openclarity/vmclarity/shared/pkg/utils"
+)
+
+func convertAssetToModels(asset *provider_service.Asset) (models.Asset, error) {
+	if asset == nil {
+		return models.Asset{}, fmt.Errorf("asset is nil")
+	}
+
+	assetType := models.AssetType{}
+	switch asset.AssetType.(type) {
+	case *provider_service.Asset_Vminfo:
+		vminfo := asset.GetVminfo()
+
+		if err := assetType.FromVMInfo(models.VMInfo{
+			Image:            vminfo.Image,
+			InstanceID:       vminfo.Id,
+			InstanceProvider: utils.PointerTo(models.External),
+			InstanceType:     vminfo.InstanceType,
+			LaunchTime:       vminfo.LaunchTime.AsTime(),
+			Location:         vminfo.Location,
+			Platform:         vminfo.Platform,
+			SecurityGroups:   &[]models.SecurityGroup{},
+			Tags:             convertTagsToModels(vminfo.Tags),
+		}); err != nil {
+			return models.Asset{}, fmt.Errorf("failed to convert asset from VMInfo: %v", err)
+		}
+	case *provider_service.Asset_Dirinfo:
+		dirinfo := asset.GetDirinfo()
+
+		if err := assetType.FromDirInfo(models.DirInfo{
+			DirName:  utils.PointerTo(dirinfo.String()),
+			Location: utils.PointerTo(dirinfo.Location),
+		}); err != nil {
+			return models.Asset{}, fmt.Errorf("failed to convert asset from Dirinfo: %v", err)
+		}
+	case *provider_service.Asset_Podinfo:
+		podinfo := asset.GetPodinfo()
+
+		if err := assetType.FromPodInfo(models.PodInfo{
+			PodName:  utils.PointerTo(podinfo.String()),
+			Location: utils.PointerTo(podinfo.Location),
+		}); err != nil {
+			return models.Asset{}, fmt.Errorf("failed to convert asset from Podinfo: %v", err)
+		}
+	default:
+		return models.Asset{}, fmt.Errorf("unsupported asset type: %t", asset.AssetType)
+	}
+
+	return models.Asset{
+		AssetInfo: &assetType,
+	}, nil
+}
+
+func convertAssetFromModels(asset models.Asset) (*provider_service.Asset, error) {
+	value, err := asset.AssetInfo.ValueByDiscriminator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to value by discriminator from asset info: %v", err)
+	}
+
+	switch info := value.(type) {
+	case models.VMInfo:
+		return &provider_service.Asset{
+			AssetType: &provider_service.Asset_Vminfo{Vminfo: &provider_service.VMInfo{
+				Id:           info.InstanceID,
+				Location:     info.Location,
+				Image:        info.Image,
+				InstanceType: info.InstanceType,
+				Platform:     info.Platform,
+				Tags:         convertTagsFromModels(info.Tags),
+				LaunchTime:   timestamppb.New(info.LaunchTime),
+			}},
+		}, nil
+	case models.DirInfo:
+		return &provider_service.Asset{
+			AssetType: &provider_service.Asset_Dirinfo{Dirinfo: &provider_service.DirInfo{
+				DirName:  *info.DirName,
+				Location: *info.Location,
+			}},
+		}, nil
+	case models.PodInfo:
+		return &provider_service.Asset{
+			AssetType: &provider_service.Asset_Podinfo{Podinfo: &provider_service.PodInfo{
+				PodName:  *info.PodName,
+				Location: *info.Location,
+			}},
+		}, nil
+	default:
+		return nil, fmt.Errorf("unsupported asset type: %t", info)
+	}
+}
+
+func convertTagsToModels(tags []*provider_service.Tag) *[]models.Tag {
+	var ret []models.Tag
+
+	if len(tags) == 0 {
+		return nil
+	}
+
+	for _, tag := range tags {
+		ret = append(ret, models.Tag{
+			Key:   tag.Key,
+			Value: tag.Val,
+		})
+	}
+
+	return &ret
+}
+
+func convertTagsFromModels(tags *[]models.Tag) []*provider_service.Tag {
+	var ret []*provider_service.Tag
+
+	if tags == nil {
+		return nil
+	}
+
+	for _, tag := range *tags {
+		ret = append(ret, &provider_service.Tag{
+			Key: tag.Key,
+			Val: tag.Value,
+		})
+	}
+
+	return ret
+}
