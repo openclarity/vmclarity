@@ -287,7 +287,7 @@ func (c Client) startScan(ctx context.Context, volumeName string, scanConfigFile
 /app/vmclarity-cli \
 --config /tmp/%s \
 --server %s \
---scan-result-id %s
+--asset-scan-id %s
 `, filepath.Base(scanConfigFilePath), config.VMClarityAddress, config.AssetScanID)
 
 	resp, err := c.dockerClient.ContainerCreate(
