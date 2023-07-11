@@ -54,9 +54,7 @@ func New(ctx context.Context) (*Client, error) {
 		return nil, fmt.Errorf("failed to validate provider configuration. Provider=%s: %w", models.Docker, err)
 	}
 
-	dockerClient := &client.Client{}
-
-	err = client.FromEnv(dockerClient)
+	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return nil, fmt.Errorf("failed to load provider configuration. Provider=%s: %w", models.Docker, err)
 	}
