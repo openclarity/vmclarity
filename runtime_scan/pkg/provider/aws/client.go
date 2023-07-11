@@ -89,10 +89,9 @@ func (c *Client) DiscoverAssets(ctx context.Context) ([]models.AssetType, error)
 		for _, instance := range instances {
 			asset, err := getVMInfoFromInstance(instance)
 			if err != nil {
-				//return nil, FatalError{
-				//	Err: fmt.Errorf("failed convert EC2 Instance to AssetType: %w", err),
-				//}
-				continue
+				return nil, FatalError{
+					Err: fmt.Errorf("failed convert EC2 Instance to AssetType: %w", err),
+				}
 			}
 			assets = append(assets, asset)
 		}
