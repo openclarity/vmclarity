@@ -85,9 +85,6 @@ type ScannerConfig struct {
 	// tools.
 	ScannerImage string
 
-	ScannerWorkingDirectory string
-	ScannerOutputDirectory  string
-
 	// The gitleaks binary path in the scanner image container.
 	GitleaksBinaryPath string
 

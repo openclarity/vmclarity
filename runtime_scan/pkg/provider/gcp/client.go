@@ -88,21 +88,21 @@ func (c Client) Kind() models.CloudProvider {
 }
 
 // nolint:cyclop
-func (c *Client) RunTargetScan(ctx context.Context, config *provider.ScanJobConfig) error {
-	// convert TargetInfo to vmInfo
-	vminfo, err := config.TargetInfo.AsVMInfo()
+func (c *Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
+	// convert AssetInfo to vmInfo
+	vminfo, err := config.AssetInfo.AsVMInfo()
 	if err != nil {
-		return provider.FatalErrorf("unable to get vminfo from target: %w", err)
+		return provider.FatalErrorf("unable to get vminfo from AssetInfo: %w", err)
 	}
 
 	logger := log.GetLoggerFromContextOrDefault(ctx).WithFields(logrus.Fields{
-		"ScanResultID":   config.ScanResultID,
-		"TargetLocation": vminfo.Location,
-		"InstanceID":     vminfo.InstanceID,
-		"ScannerZone":    c.gcpConfig.ScannerZone,
-		"Provider":       string(c.Kind()),
+		"AssetScanID":   config.AssetScanID,
+		"AssetLocation": vminfo.Location,
+		"InstanceID":    vminfo.InstanceID,
+		"ScannerZone":   c.gcpConfig.ScannerZone,
+		"Provider":      string(c.Kind()),
 	})
-	logger.Debugf("Running target scan")
+	logger.Debugf("Running asset scan")
 
 	targetName := vminfo.InstanceID
 	targetZone := vminfo.Location
@@ -159,11 +159,11 @@ func (c *Client) RunTargetScan(ctx context.Context, config *provider.ScanJobConf
 	return nil
 }
 
-func (c *Client) RemoveTargetScan(ctx context.Context, config *provider.ScanJobConfig) error {
+func (c *Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
 	logger := log.GetLoggerFromContextOrDefault(ctx).WithFields(logrus.Fields{
-		"scanResultID": config.ScanResultID,
-		"ScannerZone":  c.gcpConfig.ScannerZone,
-		"Provider":     string(c.Kind()),
+		"AssetScanID": config.AssetScanID,
+		"ScannerZone": c.gcpConfig.ScannerZone,
+		"Provider":    string(c.Kind()),
 	})
 
 	err := c.ensureScannerVirtualMachineDeleted(ctx, config)
@@ -187,60 +187,27 @@ func (c *Client) RemoveTargetScan(ctx context.Context, config *provider.ScanJobC
 	return nil
 }
 
-func (c *Client) DiscoverScopes(ctx context.Context) (*models.Scopes, error) {
-	var ret models.Scopes
-	ret.ScopeInfo = &models.ScopeType{}
-	var regions []models.GcpRegion
-
-	gcpRegions, err := c.listAllRegions(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to list regions: %w", err)
-	}
-
-	for _, region := range gcpRegions {
-		regions = append(regions, models.GcpRegion{
-			Name:  *region.Name,
-			Zones: utils.PointerTo(getZonesLastPart(region.Zones)),
-		})
-	}
-
-	err = ret.ScopeInfo.FromGcpProjectScope(models.GcpProjectScope{
-		ProjectID: c.gcpConfig.ProjectID,
-		Regions:   &regions,
-	})
-	if err != nil {
-		return nil, provider.FatalErrorf("failed to convert from gcp project scope: %v", err)
-	}
-
-	return &ret, nil
-}
-
 // nolint: cyclop
-func (c *Client) DiscoverTargets(ctx context.Context, scanScope *models.ScanScopeType) ([]models.TargetType, error) {
-	var ret []models.TargetType
+func (c *Client) DiscoverAssets(ctx context.Context) ([]models.AssetType, error) {
+	var ret []models.AssetType
 
-	gcpScanScope, err := scanScope.AsGcpScanScope()
+	regions, err := c.listAllRegions(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert as gcp scan scope: %v", err)
+		return nil, fmt.Errorf("failed to list all regions: %v", err)
 	}
 
-	// get list of zones to scan
-	zones, err := c.getZonesToScanFromScanScope(ctx, gcpScanScope)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get zones to scan from scan scope: %w", err)
+	var zones []string
+	for _, region := range regions {
+		zones = append(zones, region.Zones...)
 	}
 
-	// prepare include and exclude tags filter
-	//filter := prepareTagsFilter(gcpScanScope.InstanceTagSelector, gcpScanScope.InstanceTagExclusion)
-
-	// TODO (erezf) unfortunately the tags filter is broken in the google api, so I will need to fetch all instances in required zones, and filter by tags in memory.
 	for _, zone := range zones {
-		targets, err := c.listInstances(ctx, nil, zone, gcpScanScope)
+		assets, err := c.listInstances(ctx, nil, zone)
 		if err != nil {
 			return nil, fmt.Errorf("failed to list instances: %w", err)
 		}
 
-		ret = append(ret, targets...)
+		ret = append(ret, assets...)
 	}
 
 	return ret, nil
@@ -265,66 +232,8 @@ func getInstanceBootDisk(vm *computepb.Instance) (*computepb.AttachedDisk, error
 	return nil, fmt.Errorf("failed to find instance boot disk")
 }
 
-//func prepareTagsFilter(includeTags *[]models.Tag, excludeTags *[]models.Tag) string {
-//	filter := ""
-//
-//	if includeTags != nil {
-//		for _, tag := range *includeTags {
-//			filter += fmt.Sprintf("tags.items=%v AND ", tag.Key)
-//		}
-//	}
-//
-//	if excludeTags != nil {
-//		for _, tag := range *excludeTags {
-//			filter += fmt.Sprintf("-tags.items != %v AND ", tag.Key)
-//		}
-//	}
-//
-//	return strings.TrimSuffix(filter, " AND ")
-//}
-
-func (c *Client) getZonesToScanFromScanScope(ctx context.Context, scope models.GcpScanScope) ([]string, error) {
-	var zones []string
-	if scope.AllRegions != nil && *scope.AllRegions {
-		regions, err := c.listAllRegions(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to list regions: %w", err)
-		}
-		for _, region := range regions {
-			zones = append(zones, getZonesLastPart(region.Zones)...)
-		}
-		return zones, nil
-	}
-
-	if scope.Regions == nil {
-		return nil, fmt.Errorf("no regions specifies in scan scope")
-	}
-
-	// list zones for specified regions
-	for _, region := range *scope.Regions {
-		if region.Zones == nil {
-			// user did not specify zones, meaning he wants to scan all zones in that region
-			// first, get the region information from gcp
-			retRegion, err := c.regionsClient.Get(ctx, &computepb.GetRegionRequest{
-				Project: c.gcpConfig.ProjectID,
-				Region:  region.Name,
-			})
-			if err != nil {
-				_, err := handleGcpRequestError(err, "get region")
-				return nil, err
-			}
-
-			zones = append(zones, getZonesLastPart(retRegion.Zones)...)
-		} else {
-			// user specified specific zones to scan in that region
-			zones = append(zones, *region.Zones...)
-		}
-	}
-	return zones, nil
-}
-
-func (c *Client) listInstances(ctx context.Context, filter *string, zone string, scanScope models.GcpScanScope) ([]models.TargetType, error) {
-	var ret []models.TargetType
+func (c *Client) listInstances(ctx context.Context, filter *string, zone string) ([]models.AssetType, error) {
+	var ret []models.AssetType
 
 	it := c.instancesClient.List(ctx, &computepb.ListInstancesRequest{
 		Filter:     filter,
@@ -341,10 +250,7 @@ func (c *Client) listInstances(ctx context.Context, filter *string, zone string,
 			_, err := handleGcpRequestError(err, "list vms")
 			return nil, err
 		}
-		if !isInScopeByTags(resp, scanScope.InstanceTagSelector, scanScope.InstanceTagExclusion) {
-			logrus.Debugf("Ignoring vm %v due to tags filters", *resp.Name)
-			continue
-		}
+
 		info, err := c.getVMInfoFromVirtualMachine(resp)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get vminfo from virtual machine: %w", err)
@@ -353,63 +259,6 @@ func (c *Client) listInstances(ctx context.Context, filter *string, zone string,
 	}
 
 	return ret, nil
-}
-
-func isInScopeByTags(vm *computepb.Instance, includeTags *[]models.Tag, excludeTags *[]models.Tag) bool {
-	if !hasIncludeTags(vm, includeTags) {
-		return false
-	}
-	if hasExcludeTags(vm, excludeTags) {
-		return false
-	}
-	return true
-}
-
-// AND logic - if tags = {tag1:val1, tag2:val2},
-// then a vm will be excluded/included only if it has ALL of these tags ({tag1:val1, tag2:val2}).
-func hasIncludeTags(vm *computepb.Instance, tags *[]models.Tag) bool {
-	if tags == nil {
-		return true
-	}
-	if len(*tags) == 0 {
-		return true
-	}
-	if len(vm.Tags.Items) == 0 {
-		return false
-	}
-
-	return hasTags(vm.Tags, tags)
-}
-
-// AND logic - if tags = {tag1:val1, tag2:val2},
-// then a vm will be excluded/included only if it has ALL of these tags ({tag1:val1, tag2:val2}).
-func hasExcludeTags(vm *computepb.Instance, tags *[]models.Tag) bool {
-	if tags == nil {
-		return false
-	}
-	if len(*tags) == 0 {
-		return false
-	}
-	if len(vm.Tags.Items) == 0 {
-		return false
-	}
-
-	return hasTags(vm.Tags, tags)
-}
-
-func hasTags(vmTags *computepb.Tags, modelsTags *[]models.Tag) bool {
-	instanceTags := convertTagsToMap(vmTags)
-
-	for _, tag := range *modelsTags {
-		val, ok := instanceTags[tag.Key]
-		if !ok {
-			return false
-		}
-		if !(strings.Compare(val, tag.Value) == 0) {
-			return false
-		}
-	}
-	return true
 }
 
 func (c *Client) listAllRegions(ctx context.Context) ([]*computepb.Region, error) {
@@ -434,11 +283,11 @@ func (c *Client) listAllRegions(ctx context.Context) ([]*computepb.Region, error
 	return ret, nil
 }
 
-func (c *Client) getVMInfoFromVirtualMachine(vm *computepb.Instance) (models.TargetType, error) {
-	targetType := models.TargetType{}
+func (c *Client) getVMInfoFromVirtualMachine(vm *computepb.Instance) (models.AssetType, error) {
+	assetType := models.AssetType{}
 	launchTime, err := time.Parse(time.RFC3339, *vm.CreationTimestamp)
 	if err != nil {
-		return models.TargetType{}, fmt.Errorf("failed to parse time: %v", *vm.CreationTimestamp)
+		return models.AssetType{}, fmt.Errorf("failed to parse time: %v", *vm.CreationTimestamp)
 	}
 	// get boot disk name
 	diskName := getLastURLPart(vm.Disks[0].Source)
@@ -459,7 +308,7 @@ func (c *Client) getVMInfoFromVirtualMachine(vm *computepb.Instance) (models.Tar
 		image = getLastURLPart(disk.SourceImage)
 	}
 
-	err = targetType.FromVMInfo(models.VMInfo{
+	err = assetType.FromVMInfo(models.VMInfo{
 		InstanceProvider: utils.PointerTo(models.GCP),
 		InstanceID:       *vm.Name,
 		Image:            image,
@@ -471,10 +320,10 @@ func (c *Client) getVMInfoFromVirtualMachine(vm *computepb.Instance) (models.Tar
 		Tags:             convertTags(vm.Tags),
 	})
 	if err != nil {
-		return models.TargetType{}, provider.FatalErrorf("failed to create TargetType from VMInfo: %w", err)
+		return models.AssetType{}, provider.FatalErrorf("failed to create AssetType from VMInfo: %w", err)
 	}
 
-	return targetType, nil
+	return assetType, nil
 }
 
 // convertTags converts gcp instance tags in the form []string{key1=val1} into models.Tag{Key: key1, Value: val1}

@@ -38,7 +38,7 @@ const (
 )
 
 func scannerVMNameFromJobConfig(config *provider.ScanJobConfig) string {
-	return fmt.Sprintf("vmclarity-scanner-%s", config.ScanResultID)
+	return fmt.Sprintf("vmclarity-scanner-%s", config.AssetScanID)
 }
 
 func (c *Client) ensureScannerVirtualMachine(ctx context.Context, config *provider.ScanJobConfig) (*computepb.Instance, error) {

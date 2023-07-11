@@ -43,7 +43,6 @@ func TestNewCloudInit(t *testing.T) {
 				ScannerImage:     "ghcr.io/openclarity/vmclarity-cli:latest",
 				ScannerCLIConfig: ScannerCLIConfig,
 				VMClarityAddress: "10.1.1.1:8888",
-
 				ScanMetadata: provider.ScanMetadata{
 					AssetScanID: "d6ff6f55-5d53-4934-bef5-c3abb70a7f76",
 				},

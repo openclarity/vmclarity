@@ -31,7 +31,7 @@ var (
 )
 
 func snapshotNameFromJobConfig(config *provider.ScanJobConfig) string {
-	return fmt.Sprintf("snapshot-%s", config.ScanResultID)
+	return fmt.Sprintf("snapshot-%s", config.AssetScanID)
 }
 
 func (c *Client) ensureSnapshotFromAttachedDisk(ctx context.Context, config *provider.ScanJobConfig, disk *computepb.AttachedDisk) (*computepb.Snapshot, error) {
