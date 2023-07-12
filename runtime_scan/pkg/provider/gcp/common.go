@@ -16,13 +16,13 @@
 package gcp
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"path"
 	"time"
 
-	"github.com/googleapis/gax-go/v2/apierror"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/api/googleapi"
 
@@ -32,28 +32,23 @@ import (
 func handleGcpRequestError(err error, actionTmpl string, parts ...interface{}) (bool, error) {
 	action := fmt.Sprintf(actionTmpl, parts...)
 
-	if e, ok := err.(*apierror.APIError); ok {
-		origError := e.Unwrap()
-		if e, ok := origError.(*googleapi.Error); ok {
-			sc := e.Code
-			switch {
-			case sc >= http.StatusBadRequest && sc < http.StatusInternalServerError:
-				// Client errors (BadRequest/Unauthorized etc) are Fatal. We
-				// also return true to indicate we have NotFound which is a
-				// special case in a lot of processing.
-				return sc == http.StatusNotFound, provider.FatalErrorf("error from gcp while %s: %w", action, err)
-			default:
-				// Everything else is a normal error which can be
-				// logged as a failure and then the reconciler will try
-				// again on the next loop.
-				return false, fmt.Errorf("error from gcp while %s: %w", action, err)
-			}
-		} else {
-			// Error should be a googleapi.Error.
-			return false, provider.FatalErrorf("unexpected error from gcp while %s: %w", action, err)
+	var gAPIError *googleapi.Error
+	if errors.As(err, &gAPIError) {
+		sc := gAPIError.Code
+		switch {
+		case sc >= http.StatusBadRequest && sc < http.StatusInternalServerError:
+			// Client errors (BadRequest/Unauthorized etc) are Fatal. We
+			// also return true to indicate we have NotFound which is a
+			// special case in a lot of processing.
+			return sc == http.StatusNotFound, provider.FatalErrorf("error from gcp while %s: %w", action, gAPIError)
+		default:
+			// Everything else is a normal error which can be
+			// logged as a failure and then the reconciler will try
+			// again on the next loop.
+			return false, fmt.Errorf("error from gcp while %s: %w", action, gAPIError)
 		}
 	} else {
-		// Error should be a apierror.APIError.
+		// Error should be a googleapi.Error
 		return false, provider.FatalErrorf("unexpected error from gcp while %s: %w", action, err)
 	}
 }

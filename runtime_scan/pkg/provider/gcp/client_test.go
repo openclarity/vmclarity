@@ -6,6 +6,8 @@ import (
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 
+	"github.com/google/go-cmp/cmp"
+
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/shared/pkg/utils"
 )
@@ -178,7 +180,7 @@ func Test_getZonesLastPart(t *testing.T) {
 			args: args{
 				zones: []string{},
 			},
-			want: nil,
+			want: []string{},
 		},
 		{
 			name: "get two zones",
@@ -190,8 +192,9 @@ func Test_getZonesLastPart(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getZonesLastPart(tt.args.zones); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("getZonesLastPart() = %v, want %v", got, tt.want)
+			got := getZonesLastPart(tt.args.zones)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("getZonesLastPart() mismatch (-want, +got):\n%s", diff)
 			}
 		})
 	}

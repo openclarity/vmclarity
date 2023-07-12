@@ -17,6 +17,7 @@ package gcp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -198,7 +199,7 @@ func (c *Client) DiscoverAssets(ctx context.Context) ([]models.AssetType, error)
 
 	var zones []string
 	for _, region := range regions {
-		zones = append(zones, region.Zones...)
+		zones = append(zones, getZonesLastPart(region.Zones)...)
 	}
 
 	for _, zone := range zones {
@@ -213,12 +214,22 @@ func (c *Client) DiscoverAssets(ctx context.Context) ([]models.AssetType, error)
 	return ret, nil
 }
 
-// [https://www.googleapis.com/compute/v1/projects/gcp-etigcp-nprd-12855/zones/us-central1-c, https://www.googleapis.com/compute/v1/projects/gcp-etigcp-nprd-12855/zones/us-central1-a] -> [us-central1-c, us-central1-a]
+// getZonesLastPart converts a list of zone URLs into a list of zone IDs.
+// For example input:
+//
+// [
+//
+//	https://www.googleapis.com/compute/v1/projects/gcp-etigcp-nprd-12855/zones/us-central1-c,
+//	https://www.googleapis.com/compute/v1/projects/gcp-etigcp-nprd-12855/zones/us-central1-a
+//
+// ]
+//
+// returns [us-central1-c, us-central1-a].
 func getZonesLastPart(zones []string) []string {
-	var ret []string
-
+	ret := make([]string, 0, len(zones))
 	for _, zone := range zones {
-		ret = append(ret, getLastURLPart(&zone))
+		z := zone
+		ret = append(ret, getLastURLPart(&z))
 	}
 	return ret
 }
@@ -243,15 +254,15 @@ func (c *Client) listInstances(ctx context.Context, filter *string, zone string)
 	})
 	for {
 		resp, err := it.Next()
-		if err == iterator.Done {
+		if errors.Is(err, iterator.Done) {
 			break
 		}
 		if err != nil {
-			_, err := handleGcpRequestError(err, "list vms")
+			_, err = handleGcpRequestError(err, "listing instances for project %s zone %s", c.gcpConfig.ProjectID, zone)
 			return nil, err
 		}
 
-		info, err := c.getVMInfoFromVirtualMachine(resp)
+		info, err := c.getVMInfoFromVirtualMachine(ctx, resp)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get vminfo from virtual machine: %w", err)
 		}
@@ -270,7 +281,7 @@ func (c *Client) listAllRegions(ctx context.Context) ([]*computepb.Region, error
 	})
 	for {
 		resp, err := it.Next()
-		if err == iterator.Done {
+		if errors.Is(err, iterator.Done) {
 			break
 		}
 		if err != nil {
@@ -283,7 +294,7 @@ func (c *Client) listAllRegions(ctx context.Context) ([]*computepb.Region, error
 	return ret, nil
 }
 
-func (c *Client) getVMInfoFromVirtualMachine(vm *computepb.Instance) (models.AssetType, error) {
+func (c *Client) getVMInfoFromVirtualMachine(ctx context.Context, vm *computepb.Instance) (models.AssetType, error) {
 	assetType := models.AssetType{}
 	launchTime, err := time.Parse(time.RFC3339, *vm.CreationTimestamp)
 	if err != nil {
@@ -296,7 +307,7 @@ func (c *Client) getVMInfoFromVirtualMachine(vm *computepb.Instance) (models.Ass
 	var image string
 
 	// get disk from gcp
-	disk, err := c.disksClient.Get(context.TODO(), &computepb.GetDiskRequest{
+	disk, err := c.disksClient.Get(ctx, &computepb.GetDiskRequest{
 		Disk:    diskName,
 		Project: c.gcpConfig.ProjectID,
 		Zone:    getLastURLPart(vm.Zone),
@@ -326,8 +337,9 @@ func (c *Client) getVMInfoFromVirtualMachine(vm *computepb.Instance) (models.Ass
 	return assetType, nil
 }
 
-// convertTags converts gcp instance tags in the form []string{key1=val1} into models.Tag{Key: key1, Value: val1}
-// in case the tag does not contain equal sign, the Key will be the tag and the Value will be empty
+// convertTags converts gcp instance tags in the form []string{key1=val1} into
+// models.Tag{Key: key1, Value: val1}. If the tag does not contain the equals
+// sign, the Key will be the tag and the Value will be empty.
 func convertTags(tags *computepb.Tags) *[]models.Tag {
 	ret := make([]models.Tag, 0, len(tags.Items))
 	for _, item := range tags.Items {
@@ -340,6 +352,7 @@ func convertTags(tags *computepb.Tags) *[]models.Tag {
 	return &ret
 }
 
+// TODO(sambetts) Remove this unused function.
 func convertTagsToMap(tags *computepb.Tags) map[string]string {
 	ret := make(map[string]string, len(tags.Items))
 	for _, item := range tags.Items {
@@ -349,11 +362,10 @@ func convertTagsToMap(tags *computepb.Tags) map[string]string {
 	return ret
 }
 
-func getKeyValue(str string) (key, value string) {
-	spl := strings.Split(str, "=")
-	key = spl[0]
-	if len(spl) > 1 {
-		value = spl[1]
+func getKeyValue(str string) (string, string) {
+	key, value, found := strings.Cut(str, "=")
+	if found {
+		return key, value
 	}
-	return
+	return str, ""
 }
