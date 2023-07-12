@@ -107,6 +107,16 @@ func (c *Client) ensureScannerVirtualMachine(ctx context.Context, config *provid
 		},
 	}
 
+	if c.gcpConfig.ScannerSSHPublicKey != "" {
+		req.InstanceResource.Metadata.Items = append(
+			req.InstanceResource.Metadata.Items,
+			&computepb.Items{
+				Key:   utils.PointerTo("ssh-keys"),
+				Value: utils.PointerTo(fmt.Sprintf("vmclarity:%s", c.gcpConfig.ScannerSSHPublicKey)),
+			},
+		)
+	}
+
 	_, err = c.instancesClient.Insert(ctx, req)
 	if err != nil {
 		_, err := handleGcpRequestError(err, "unable to create instance %v", vmName)

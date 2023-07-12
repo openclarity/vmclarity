@@ -26,19 +26,21 @@ import (
 const (
 	DefaultEnvPrefix = "VMCLARITY_GCP"
 
-	projectID          = "project_id"
-	scannerZone        = "scanner_zone"
-	scannerSubnetwork  = "scanner_subnetwork"
-	scannerMachineType = "scanner_machine_type"
-	scannerSourceImage = "scanner_source_image"
+	projectID           = "project_id"
+	scannerZone         = "scanner_zone"
+	scannerSubnetwork   = "scanner_subnetwork"
+	scannerMachineType  = "scanner_machine_type"
+	scannerSourceImage  = "scanner_source_image"
+	scannerSSHPublicKey = "scanner_ssh_public_key"
 )
 
 type Config struct {
-	ProjectID          string `mapstructure:"project_id"`
-	ScannerZone        string `mapstructure:"scanner_zone"`
-	ScannerSubnetwork  string `mapstructure:"scanner_subnetwork"`
-	ScannerMachineType string `mapstructure:"scanner_machine_type"`
-	ScannerSourceImage string `mapstructure:"scanner_source_image"`
+	ProjectID           string `mapstructure:"project_id"`
+	ScannerZone         string `mapstructure:"scanner_zone"`
+	ScannerSubnetwork   string `mapstructure:"scanner_subnetwork"`
+	ScannerMachineType  string `mapstructure:"scanner_machine_type"`
+	ScannerSourceImage  string `mapstructure:"scanner_source_image"`
+	ScannerSSHPublicKey string `mapstructure:"scanner_ssh_public_key"`
 }
 
 func NewConfig() (Config, error) {
@@ -54,6 +56,7 @@ func NewConfig() (Config, error) {
 	_ = v.BindEnv(scannerSubnetwork)
 	_ = v.BindEnv(scannerMachineType)
 	_ = v.BindEnv(scannerSourceImage)
+	_ = v.BindEnv(scannerSSHPublicKey)
 
 	config := Config{}
 	if err := v.Unmarshal(&config, viper.DecodeHook(mapstructure.TextUnmarshallerHookFunc())); err != nil {
