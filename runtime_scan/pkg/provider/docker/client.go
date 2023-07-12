@@ -27,7 +27,6 @@ import (
 	"github.com/docker/docker/client"
 	"time"
 
-	"github.com/ghodss/yaml"
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 	"github.com/openclarity/vmclarity/shared/pkg/utils"
@@ -323,17 +322,12 @@ func (c Client) startScan(ctx context.Context, volumeName string, scanConfigFile
 }
 
 func (c Client) createScanConfigFile(config *provider.ScanJobConfig) (string, error) {
-	configAsByte, err := yaml.Marshal(config)
-	if err != nil {
-		return "", err
-	}
-
 	scanConfigFilePath, err := getScanConfigFileName(config)
 	if err != nil {
 		return "", err
 	}
 
-	err = os.WriteFile(scanConfigFilePath, configAsByte, 0644)
+	err = os.WriteFile(scanConfigFilePath, []byte(config.ScannerCLIConfig), 0644)
 	if err != nil {
 		return "", err
 	}
