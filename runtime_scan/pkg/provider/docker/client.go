@@ -257,6 +257,7 @@ func (c Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfig
 		}
 	}
 
+	// TODO(paralta) Check if config file exists
 	scanConfigFilePath, err := c.createScanConfigFile(config)
 	if err != nil {
 		return provider.FatalError{
@@ -289,6 +290,7 @@ func (c Client) startScan(ctx context.Context, volumeName string, scanConfigFile
 --asset-scan-id %s
 `, filepath.Base(scanConfigFilePath), config.VMClarityAddress, config.AssetScanID)
 
+	// TODO(paralta) Check if container already created
 	resp, err := c.dockerClient.ContainerCreate(
 		ctx,
 		&container.Config{
@@ -301,7 +303,7 @@ func (c Client) startScan(ctx context.Context, volumeName string, scanConfigFile
 				{
 					Type:   mount.TypeVolume,
 					Source: volumeName,
-					Target: "/data",
+					Target: "/mnt/snapshot",
 				},
 			},
 		},

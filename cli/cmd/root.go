@@ -108,6 +108,20 @@ var rootCmd = &cobra.Command{
 				return err
 			}
 			setMountPointsForFamiliesInput(mountPoints, config)
+		} else {
+			// Check if volume already mounted
+			scanPath := "/mnt/snapshot"
+			entries, err := os.ReadDir(scanPath)
+			if err != nil {
+				err = fmt.Errorf("failed to read %s directory: %w", scanPath, err)
+				if e := cli.MarkDone(ctx, []error{err}); e != nil {
+					logger.Errorf("Failed to update asset scan stat to completed with errors: %v", e)
+				}
+				return err
+			}
+			if len(entries) > 0 {
+				setMountPointsForFamiliesInput([]string{scanPath}, config)
+			}
 		}
 
 		err = cli.MarkInProgress(ctx)
