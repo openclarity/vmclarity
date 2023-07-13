@@ -103,7 +103,7 @@ const AssetsTable = () => {
                     ...findingsColumnsFiltersConfig
                 ]}
                 filters={[
-                    ...(hideTerminated ? ["(terminatedOn ne null)"] : [])
+                    ...(hideTerminated ? ["(terminatedOn eq null)"] : [])
                 ]}
                 defaultSortBy={{sortIds: ["lastSeen", "terminatedOn"], desc: true}}
                 withMargin
