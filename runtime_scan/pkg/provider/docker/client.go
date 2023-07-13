@@ -211,7 +211,6 @@ func (c Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfig
 		}
 	}
 
-	// TODO(paralta) Check if volume is empty before adding export content
 	readCloser, err := c.export(ctx, config)
 	if err != nil {
 		return provider.FatalError{
@@ -257,31 +256,50 @@ func (c Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfig
 		}
 	}
 
-	// TODO(paralta) Check if config file exists
-	scanConfigFilePath, err := c.createScanConfigFile(config)
+	err = c.createScanConfigFile(config)
 	if err != nil {
 		return provider.FatalError{
 			Err: fmt.Errorf("failed to create scanconfig.yaml file. Provider=%s: %w", models.Docker, err),
 		}
 	}
 
-	err = c.startScan(ctx, scanName, scanConfigFilePath, config)
+	containerId, err := c.createScanContainer(ctx, config)
 	if err != nil {
 		return provider.FatalError{
-			Err: fmt.Errorf("failed to run scan on the scanner container. Provider=%s: %w", models.Docker, err),
+			Err: fmt.Errorf("failed to create scan container. Provider=%s: %w", models.Docker, err),
 		}
+	}
+
+	err = c.dockerClient.ContainerStart(ctx, containerId, types.ContainerStartOptions{})
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func (c Client) startScan(ctx context.Context, volumeName string, scanConfigFilePath string, config *provider.ScanJobConfig) error {
+func (c Client) createScanContainer(ctx context.Context, config *provider.ScanJobConfig) (string, error) {
+	// Check if scan container already created
+	scanName, err := getScanName(config)
+	if err != nil {
+		return "", provider.FatalError{Err: err}
+	}
+	containerId, err := c.getContainerIdFromContainerName(ctx, scanName)
+	if containerId != "" {
+		return containerId, nil
+	}
+
 	pl, err := c.dockerClient.ImagePull(ctx, config.ScannerImage, types.ImagePullOptions{})
 	if err != nil {
-		return err
+		return "", err
 	}
 	_, _ = io.Copy(io.Discard, pl)
 	_ = pl.Close()
+
+	scanConfigFilePath, err := getScanConfigFileName(config)
+	if err != nil {
+		return "", err
+	}
 
 	script := fmt.Sprintf(`
 /app/vmclarity-cli \
@@ -290,7 +308,6 @@ func (c Client) startScan(ctx context.Context, volumeName string, scanConfigFile
 --asset-scan-id %s
 `, filepath.Base(scanConfigFilePath), config.VMClarityAddress, config.AssetScanID)
 
-	// TODO(paralta) Check if container already created
 	resp, err := c.dockerClient.ContainerCreate(
 		ctx,
 		&container.Config{
@@ -302,39 +319,61 @@ func (c Client) startScan(ctx context.Context, volumeName string, scanConfigFile
 			Mounts: []mount.Mount{
 				{
 					Type:   mount.TypeVolume,
-					Source: volumeName,
+					Source: scanName,
 					Target: "/mnt/snapshot",
 				},
 			},
 		},
 		nil,
 		nil,
-		"",
+		scanName,
 	)
+	if err != nil {
+		return "", err
+	}
+
+	return resp.ID, nil
+}
+
+func (c Client) getContainerIdFromContainerName(ctx context.Context, scanName string) (string, error) {
+	filters := filters.NewArgs()
+	filters.Add("name", scanName)
+	containers, err := c.dockerClient.ContainerList(ctx, types.ContainerListOptions{
+		All:     true,
+		Filters: filters,
+	})
+	if err != nil {
+		return "", provider.FatalError{
+			Err: fmt.Errorf("failed to get containers. Provider=%s: %w", models.Docker, err),
+		}
+	}
+	if len(containers) == 0 {
+		return "", provider.FatalError{
+			Err: fmt.Errorf("scan container not found. Provider=%s: %w", models.Docker, err),
+		}
+	}
+	if len(containers) > 1 {
+		return "", provider.FatalError{
+			Err: fmt.Errorf("found more than one scan container. Provider=%s: %w", models.Docker, err),
+		}
+	}
+	return containers[0].ID, nil
+}
+
+func (c Client) createScanConfigFile(config *provider.ScanJobConfig) error {
+	scanConfigFilePath, err := getScanConfigFileName(config)
 	if err != nil {
 		return err
 	}
 
-	err = c.dockerClient.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
-	if err != nil {
-		return err
+	if _, err := os.Stat(scanConfigFilePath); errors.Is(err, os.ErrNotExist) {
+		err = os.WriteFile(scanConfigFilePath, []byte(config.ScannerCLIConfig), 0644)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
-}
-
-func (c Client) createScanConfigFile(config *provider.ScanJobConfig) (string, error) {
-	scanConfigFilePath, err := getScanConfigFileName(config)
-	if err != nil {
-		return "", err
-	}
-
-	err = os.WriteFile(scanConfigFilePath, []byte(config.ScannerCLIConfig), 0644)
-	if err != nil {
-		return "", err
-	}
-
-	return scanConfigFilePath, nil
 }
 
 func (c Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
@@ -360,8 +399,16 @@ func (c Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobCon
 		}
 	}
 
-	// TODO(adamtagscherer) Remove scan container
-
+	containerId, err := c.getContainerIdFromContainerName(ctx, scanName)
+	if err != nil {
+		return provider.FatalError{Err: err}
+	}
+	err = c.dockerClient.ContainerRemove(ctx, containerId, types.ContainerRemoveOptions{})
+	if err != nil {
+		return provider.FatalError{
+			Err: fmt.Errorf("failed to remove scan container. Provider=%s: %w", models.Docker, err),
+		}
+	}
 	return nil
 }
 
