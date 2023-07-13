@@ -62,8 +62,9 @@ func (c *Client) ensureDiskFromSnapshot(ctx context.Context, config *provider.Sc
 		Project: c.gcpConfig.ProjectID,
 		Zone:    c.gcpConfig.ScannerZone,
 		DiskResource: &computepb.Disk{
-			Name:           &diskName,
-			Type:           utils.PointerTo(fmt.Sprintf("zones/%v/diskTypes/pd-standard", c.gcpConfig.ScannerZone)),
+			Name: &diskName,
+			// Use pd-balanced so that we have SSD not spinning HDD
+			Type:           utils.PointerTo(fmt.Sprintf("zones/%v/diskTypes/pd-balanced", c.gcpConfig.ScannerZone)),
 			SourceSnapshot: utils.PointerTo(snapshot.GetSelfLink()),
 			SizeGb:         snapshot.DiskSizeGb, // specify the size of the source disk (target scan)
 		},

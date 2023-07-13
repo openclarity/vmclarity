@@ -90,6 +90,7 @@ func (c *Client) ensureScannerVirtualMachine(ctx context.Context, config *provid
 			Disks: []*computepb.AttachedDisk{
 				{
 					InitializeParams: &computepb.AttachedDiskInitializeParams{
+						DiskType:    utils.PointerTo(fmt.Sprintf("zones/%s/diskTypes/pd-balanced", zone)),
 						DiskSizeGb:  utils.PointerTo[int64](DiskSizeGB),
 						SourceImage: &c.gcpConfig.ScannerSourceImage,
 					},
