@@ -34,7 +34,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 	"sync"
 )
 
@@ -64,11 +63,11 @@ func New(ctx context.Context) (*Client, error) {
 	}, nil
 }
 
-func (c Client) Kind() models.CloudProvider {
+func (c *Client) Kind() models.CloudProvider {
 	return models.Docker
 }
 
-func (c Client) DiscoverAssets(ctx context.Context) ([]models.AssetType, error) {
+func (c *Client) DiscoverAssets(ctx context.Context) ([]models.AssetType, error) {
 	var err error
 	wg := &sync.WaitGroup{}
 	errs := make(chan error, 2)
@@ -104,7 +103,7 @@ func (c Client) DiscoverAssets(ctx context.Context) ([]models.AssetType, error) 
 	return ret, nil
 }
 
-func (c Client) getImages(ctx context.Context, assets chan models.AssetType, errs chan error, wg *sync.WaitGroup) {
+func (c *Client) getImages(ctx context.Context, assets chan models.AssetType, errs chan error, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	images, err := c.dockerClient.ImageList(ctx, types.ImageListOptions{})
@@ -127,7 +126,23 @@ func (c Client) getImages(ctx context.Context, assets chan models.AssetType, err
 	}
 }
 
-func (c Client) getContainers(ctx context.Context, assets chan models.AssetType, errs chan error, wg *sync.WaitGroup) {
+func (c *Client) getAssetFromImage(ctx context.Context, id string) (models.AssetType, error) {
+	asset := models.AssetType{}
+
+	info, err := c.getContainerImageInfoFromImage(ctx, id)
+	if err != nil {
+		return asset, err
+	}
+
+	err = asset.FromContainerImageInfo(info)
+	if err != nil {
+		return asset, fmt.Errorf("failed to create AssetType from ContainerImageInfo. Provider=%s: %w", models.Docker, err)
+	}
+
+	return asset, err
+}
+
+func (c *Client) getContainers(ctx context.Context, assets chan models.AssetType, errs chan error, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	containers, err := c.dockerClient.ContainerList(ctx, types.ContainerListOptions{
@@ -186,73 +201,29 @@ func (c Client) getContainers(ctx context.Context, assets chan models.AssetType,
 	}
 }
 
-func (c Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
-
-	scanName, err := getScanName(config)
+func (c *Client) getContainerImageInfoFromImage(ctx context.Context, id string) (models.ContainerImageInfo, error) {
+	i, _, err := c.dockerClient.ImageInspectWithRaw(ctx, id)
 	if err != nil {
-		return provider.FatalError{Err: err}
-	}
-	resp, err := c.dockerClient.VolumeList(ctx, volume.ListOptions{
-		Filters: filters.NewArgs(filters.Arg("name", scanName)),
-	})
-	if err != nil {
-		return provider.FatalError{
-			Err: fmt.Errorf("failed to get volumes. Provider=%s: %w", models.Docker, err),
-		}
-	}
-	if len(resp.Volumes) == 0 {
-		_, err = c.dockerClient.VolumeCreate(ctx, volume.CreateOptions{
-			Name: scanName,
-		})
-		if err != nil {
-			return provider.FatalError{
-				Err: fmt.Errorf("failed to create volume. Provider=%s: %w", models.Docker, err),
-			}
-		}
+		return models.ContainerImageInfo{}, fmt.Errorf("failed to get image. Provider=%s: %w", models.Docker, err)
 	}
 
-	readCloser, err := c.export(ctx, config)
-	if err != nil {
-		return provider.FatalError{
-			Err: fmt.Errorf("failed to export target. Provider=%s: %w", models.Docker, err),
-		}
-	}
+	return models.ContainerImageInfo{
+		Architecture: utils.PointerTo(i.Architecture),
+		Id:           utils.PointerTo(i.ID),
+		Labels:       convertTags(i.Config.Labels),
+		Name:         utils.PointerTo(i.Config.Image),
+		ObjectType:   "ContainerImageInfo",
+		Os:           utils.PointerTo(i.Os),
+		Size:         utils.PointerTo(int(i.Size)),
+	}, err
+}
 
-	// Create an ephemeral container to populate volume with export output
-	_, err = c.dockerClient.ImagePull(ctx, "alpine", types.ImagePullOptions{})
+func (c *Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
+
+	err := c.prepareScanVolume(ctx, config)
 	if err != nil {
 		return provider.FatalError{
-			Err: fmt.Errorf("failed to pull helper image. Provider=%s: %w", models.Docker, err),
-		}
-	}
-	response, err := c.dockerClient.ContainerCreate(ctx,
-		&container.Config{
-			Image: "alpine",
-		},
-		&container.HostConfig{
-			Mounts: []mount.Mount{
-				{
-					Type:   mount.TypeVolume,
-					Source: scanName,
-					Target: "/data",
-				},
-			},
-		}, nil, nil, "")
-	if err != nil {
-		return provider.FatalError{
-			Err: fmt.Errorf("failed to create helper container. Provider=%s: %w", models.Docker, err),
-		}
-	}
-	defer func() {
-		err = c.dockerClient.ContainerRemove(ctx, response.ID, types.ContainerRemoveOptions{})
-		if err != nil {
-			_ = fmt.Errorf("failed to remove helper container. Provider=%s: %w", models.Docker, err)
-		}
-	}()
-	err = c.dockerClient.CopyToContainer(ctx, response.ID, "/data", readCloser, types.CopyToContainerOptions{})
-	if err != nil {
-		return provider.FatalError{
-			Err: fmt.Errorf("failed to copy data to container. Provider=%s: %w", models.Docker, err),
+			Err: fmt.Errorf("failed to prepare scan volume. Provider=%s: %w", models.Docker, err),
 		}
 	}
 
@@ -272,18 +243,142 @@ func (c Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfig
 
 	err = c.dockerClient.ContainerStart(ctx, containerId, types.ContainerStartOptions{})
 	if err != nil {
+		return provider.FatalError{
+			Err: fmt.Errorf("failed to start scan container. Provider=%s: %w", models.Docker, err),
+		}
+	}
+
+	return nil
+}
+
+func (c *Client) prepareScanVolume(ctx context.Context, config *provider.ScanJobConfig) error {
+	scanName, err := getScanName(config)
+	if err != nil {
+		return err
+	}
+
+	// Create volume if not found
+	resp, err := c.dockerClient.VolumeList(ctx, volume.ListOptions{
+		Filters: filters.NewArgs(filters.Arg("name", scanName)),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to get volumes. Provider=%s: %w", models.Docker, err)
+	}
+	if len(resp.Volumes) == 1 {
+		fmt.Printf("scan volume already created. Provider=%s", models.Docker)
+		return nil
+	}
+	if len(resp.Volumes) == 0 {
+		_, err = c.dockerClient.VolumeCreate(ctx, volume.CreateOptions{
+			Name: scanName,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to create volume. Provider=%s: %w", models.Docker, err)
+		}
+	}
+
+	readCloser, err := c.export(ctx, config)
+	if err != nil {
+		return fmt.Errorf("failed to export target. Provider=%s: %w", models.Docker, err)
+	}
+
+	// Create an ephemeral container to populate volume with export output
+	_, err = c.dockerClient.ImagePull(ctx, "alpine", types.ImagePullOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to pull helper image. Provider=%s: %w", models.Docker, err)
+	}
+	response, err := c.dockerClient.ContainerCreate(ctx,
+		&container.Config{
+			Image: "alpine",
+		},
+		&container.HostConfig{
+			Mounts: []mount.Mount{
+				{
+					Type:   mount.TypeVolume,
+					Source: scanName,
+					Target: "/data",
+				},
+			},
+		}, nil, nil, "")
+	if err != nil {
+		return fmt.Errorf("failed to create helper container. Provider=%s: %w", models.Docker, err)
+	}
+	defer func() {
+		err = c.dockerClient.ContainerRemove(ctx, response.ID, types.ContainerRemoveOptions{})
+		if err != nil {
+			_ = fmt.Errorf("failed to remove helper container. Provider=%s: %w", models.Docker, err)
+		}
+	}()
+	err = c.dockerClient.CopyToContainer(ctx, response.ID, "/data", readCloser, types.CopyToContainerOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to copy data to container. Provider=%s: %w", models.Docker, err)
+	}
+	return nil
+}
+
+func (c *Client) export(ctx context.Context, config *provider.ScanJobConfig) (io.ReadCloser, error) {
+	objectType, err := config.AssetInfo.Discriminator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get asset object type. Provider=%s: %w", models.Docker, err)
+	}
+
+	switch objectType {
+	case "ContainerInfo":
+		id, err := getAssetId(config)
+		if err != nil {
+			return nil, err
+		}
+		return c.dockerClient.ContainerExport(ctx, id)
+	case "ContainerImageInfo":
+		name, err := getAssetName(config)
+		if err != nil {
+			return nil, err
+		}
+		// Create an ephemeral container to export asset
+		response, err := c.dockerClient.ContainerCreate(ctx,
+			&container.Config{
+				Image: name,
+			}, nil, nil, nil, "")
+		if err != nil {
+			return nil, fmt.Errorf("failed to create helper container. Provider=%s: %w", models.Docker, err)
+		}
+		defer func() {
+			err = c.dockerClient.ContainerRemove(ctx, response.ID, types.ContainerRemoveOptions{})
+			if err != nil {
+				_ = fmt.Errorf("failed to remove helper container. Provider=%s: %w", models.Docker, err)
+			}
+		}()
+		return c.dockerClient.ContainerExport(ctx, response.ID)
+	default:
+		return nil, fmt.Errorf("get raw contents not implemented for current object type (%s). Provider=%s", models.Docker, objectType)
+	}
+}
+
+func (c *Client) createScanConfigFile(config *provider.ScanJobConfig) error {
+	scanConfigFilePath, err := getScanConfigFileName(config)
+	if err != nil {
+		return err
+	}
+
+	_, err = os.Stat(scanConfigFilePath)
+	if errors.Is(err, os.ErrNotExist) {
+		err = os.WriteFile(scanConfigFilePath, []byte(config.ScannerCLIConfig), 0644)
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (c Client) createScanContainer(ctx context.Context, config *provider.ScanJobConfig) (string, error) {
-	// Check if scan container already created
+func (c *Client) createScanContainer(ctx context.Context, config *provider.ScanJobConfig) (string, error) {
 	scanName, err := getScanName(config)
 	if err != nil {
-		return "", provider.FatalError{Err: err}
+		return "", err
 	}
+
 	containerId, err := c.getContainerIdFromContainerName(ctx, scanName)
 	if containerId != "" {
 		return containerId, nil
@@ -301,18 +396,18 @@ func (c Client) createScanContainer(ctx context.Context, config *provider.ScanJo
 		return "", err
 	}
 
-	script := fmt.Sprintf(`
-/app/vmclarity-cli \
---config /tmp/%s \
---server %s \
---asset-scan-id %s
-`, filepath.Base(scanConfigFilePath), config.VMClarityAddress, config.AssetScanID)
-
 	resp, err := c.dockerClient.ContainerCreate(
 		ctx,
 		&container.Config{
-			Image:      config.ScannerImage,
-			Entrypoint: []string{"sh", "-c", script},
+			Image: config.ScannerImage,
+			Entrypoint: []string{"sh", "-c",
+				fmt.Sprintf(
+					"/app/vmclarity-cli --config /tmp/%s --server %s --asset-scan-id %s",
+					filepath.Base(scanConfigFilePath),
+					config.VMClarityAddress,
+					config.AssetScanID,
+				),
+			},
 		},
 		&container.HostConfig{
 			Binds: []string{fmt.Sprintf("%s:/tmp", path.Dir(scanConfigFilePath))},
@@ -335,48 +430,25 @@ func (c Client) createScanContainer(ctx context.Context, config *provider.ScanJo
 	return resp.ID, nil
 }
 
-func (c Client) getContainerIdFromContainerName(ctx context.Context, scanName string) (string, error) {
-	filters := filters.NewArgs()
-	filters.Add("name", scanName)
+func (c *Client) getContainerIdFromContainerName(ctx context.Context, scanName string) (string, error) {
+
 	containers, err := c.dockerClient.ContainerList(ctx, types.ContainerListOptions{
 		All:     true,
-		Filters: filters,
+		Filters: filters.NewArgs(filters.Arg("name", scanName)),
 	})
 	if err != nil {
-		return "", provider.FatalError{
-			Err: fmt.Errorf("failed to get containers. Provider=%s: %w", models.Docker, err),
-		}
+		return "", fmt.Errorf("failed to get containers. Provider=%s: %w", models.Docker, err)
 	}
 	if len(containers) == 0 {
-		return "", provider.FatalError{
-			Err: fmt.Errorf("scan container not found. Provider=%s: %w", models.Docker, err),
-		}
+		return "", fmt.Errorf("scan container not found. Provider=%s: %w", models.Docker, err)
 	}
 	if len(containers) > 1 {
-		return "", provider.FatalError{
-			Err: fmt.Errorf("found more than one scan container. Provider=%s: %w", models.Docker, err),
-		}
+		return "", fmt.Errorf("found more than one scan container. Provider=%s: %w", models.Docker, err)
 	}
 	return containers[0].ID, nil
 }
 
-func (c Client) createScanConfigFile(config *provider.ScanJobConfig) error {
-	scanConfigFilePath, err := getScanConfigFileName(config)
-	if err != nil {
-		return err
-	}
-
-	if _, err := os.Stat(scanConfigFilePath); errors.Is(err, os.ErrNotExist) {
-		err = os.WriteFile(scanConfigFilePath, []byte(config.ScannerCLIConfig), 0644)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (c Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
+func (c *Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
 	scanName, err := getScanName(config)
 	if err != nil {
 		return provider.FatalError{Err: err}
@@ -410,176 +482,4 @@ func (c Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobCon
 		}
 	}
 	return nil
-}
-
-func (c Client) getContainerImageInfoFromImage(ctx context.Context, id string) (models.ContainerImageInfo, error) {
-	i, _, err := c.dockerClient.ImageInspectWithRaw(ctx, id)
-	if err != nil {
-		return models.ContainerImageInfo{}, fmt.Errorf("failed to get image. Provider=%s: %w", models.Docker, err)
-	}
-
-	return models.ContainerImageInfo{
-		Architecture: utils.PointerTo(i.Architecture),
-		Id:           utils.PointerTo(i.ID),
-		Labels:       convertTags(i.Config.Labels),
-		Name:         utils.PointerTo(i.Config.Image),
-		ObjectType:   "ContainerImageInfo",
-		Os:           utils.PointerTo(i.Os),
-		Size:         utils.PointerTo(int(i.Size)),
-	}, err
-}
-
-func (c Client) getAssetFromImage(ctx context.Context, id string) (models.AssetType, error) {
-	asset := models.AssetType{}
-
-	info, err := c.getContainerImageInfoFromImage(ctx, id)
-	if err != nil {
-		return asset, err
-	}
-
-	err = asset.FromContainerImageInfo(info)
-	if err != nil {
-		return asset, fmt.Errorf("failed to create AssetType from ContainerImageInfo. Provider=%s: %w", models.Docker, err)
-	}
-
-	return asset, err
-}
-
-func convertTags(tags map[string]string) *[]models.Tag {
-	ret := make([]models.Tag, 0, len(tags))
-	for key, val := range tags {
-		ret = append(ret, models.Tag{
-			Key:   key,
-			Value: val,
-		})
-	}
-	return &ret
-}
-
-func getScanName(config *provider.ScanJobConfig) (string, error) {
-	id, err := getAssetId(config)
-	if err != nil {
-		return "", provider.FatalError{
-			fmt.Errorf("failed to get scan name. Provider=%s: %w", models.Docker, err),
-		}
-	}
-	return "scan_" + config.ScanID + "_asset_" + strings.Replace(id, ":", "_", -1), nil
-}
-
-func getScanConfigFileName(config *provider.ScanJobConfig) (string, error) {
-	scanName, err := getScanName(config)
-	if err != nil {
-		return "", provider.FatalError{Err: err}
-	}
-
-	// TODO (adamtagscherer): check if os.TempDir() doesn't create a new unique directory every time it's being called
-	return os.TempDir() + scanName + "_scanconfig.yaml", nil
-}
-
-func getAssetId(config *provider.ScanJobConfig) (string, error) {
-	objectType, err := config.AssetInfo.Discriminator()
-	if err != nil {
-		return "", provider.FatalError{
-			Err: fmt.Errorf("failed to get asset object type. Provider=%s: %w", models.Docker, err),
-		}
-	}
-
-	switch objectType {
-	case "ContainerInfo":
-		containerInfo, err := config.AssetInfo.AsContainerInfo()
-		if err != nil {
-			return "", provider.FatalError{
-				Err: fmt.Errorf("failed to get asset id. Provider=%s: %w", models.Docker, err),
-			}
-		}
-		return *containerInfo.Id, nil
-	case "ContainerImageInfo":
-		containerImageInfo, err := config.AssetInfo.AsContainerImageInfo()
-		if err != nil {
-			return "", provider.FatalError{
-				Err: fmt.Errorf("failed to get asset id. Provider=%s: %w", models.Docker, err),
-			}
-		}
-		return *containerImageInfo.Id, nil
-	default:
-		return "", provider.FatalError{
-			Err: fmt.Errorf("get asset id not implemented for current object type (%s). Provider=%s", models.Docker, objectType),
-		}
-	}
-}
-
-func getAssetName(config *provider.ScanJobConfig) (string, error) {
-	objectType, err := config.AssetInfo.Discriminator()
-	if err != nil {
-		return "", provider.FatalError{
-			Err: fmt.Errorf("failed to get asset object type. Provider=%s: %w", models.Docker, err),
-		}
-	}
-
-	switch objectType {
-	case "ContainerInfo":
-		containerInfo, err := config.AssetInfo.AsContainerInfo()
-		if err != nil {
-			return "", provider.FatalError{
-				Err: fmt.Errorf("failed to get asset name. Provider=%s: %w", models.Docker, err),
-			}
-		}
-		return *containerInfo.ContainerName, nil
-	case "ContainerImageInfo":
-		containerImageInfo, err := config.AssetInfo.AsContainerImageInfo()
-		if err != nil {
-			return "", provider.FatalError{
-				Err: fmt.Errorf("failed to get asset name. Provider=%s: %w", models.Docker, err),
-			}
-		}
-		return *containerImageInfo.Name, nil
-	default:
-		return "", provider.FatalError{
-			Err: fmt.Errorf("get asset id not implemented for current object type (%s). Provider=%s", models.Docker, objectType),
-		}
-	}
-}
-
-func (c Client) export(ctx context.Context, config *provider.ScanJobConfig) (io.ReadCloser, error) {
-	objectType, err := config.AssetInfo.Discriminator()
-	if err != nil {
-		return nil, provider.FatalError{
-			Err: fmt.Errorf("failed to get asset object type. Provider=%s: %w", models.Docker, err),
-		}
-	}
-
-	switch objectType {
-	case "ContainerInfo":
-		id, err := getAssetId(config)
-		if err != nil {
-			return nil, provider.FatalError{Err: err}
-		}
-		return c.dockerClient.ContainerExport(ctx, id)
-	case "ContainerImageInfo":
-		name, err := getAssetName(config)
-		if err != nil {
-			return nil, provider.FatalError{Err: err}
-		}
-		// Create an ephemeral container to export asset
-		response, err := c.dockerClient.ContainerCreate(ctx,
-			&container.Config{
-				Image: name,
-			}, nil, nil, nil, "")
-		if err != nil {
-			return nil, provider.FatalError{
-				Err: fmt.Errorf("failed to create helper container. Provider=%s: %w", models.Docker, err),
-			}
-		}
-		defer func() {
-			err = c.dockerClient.ContainerRemove(ctx, response.ID, types.ContainerRemoveOptions{})
-			if err != nil {
-				_ = fmt.Errorf("failed to remove helper container. Provider=%s: %w", models.Docker, err)
-			}
-		}()
-		return c.dockerClient.ContainerExport(ctx, response.ID)
-	default:
-		return nil, provider.FatalError{
-			Err: fmt.Errorf("get raw contents not implemented for current object type (%s). Provider=%s", models.Docker, objectType),
-		}
-	}
 }
