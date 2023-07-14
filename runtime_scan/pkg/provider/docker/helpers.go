@@ -22,7 +22,7 @@ func convertTags(tags map[string]string) *[]models.Tag {
 func getScanName(config *provider.ScanJobConfig) (string, error) {
 	id, err := getAssetId(config)
 	if err != nil {
-		return "", fmt.Errorf("failed to get scan name: %w", err)
+		return "", fmt.Errorf("failed to get scan id: %w", err)
 	}
 	return "scan_" + config.ScanID + "_asset_" + strings.Replace(id, ":", "_", -1), nil
 }
