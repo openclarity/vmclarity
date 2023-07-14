@@ -26,46 +26,27 @@ func (c *Client) getContainers(ctx context.Context) ([]models.AssetType, error) 
 	assets := make([]models.AssetType, 0, len(containers))
 
 	// Process each container in an independent processor goroutine
-	errGroup, errGroupCtx := errgroup.WithContext(ctx)
+	processGroup, processCtx := errgroup.WithContext(ctx)
 	for _, container := range containers {
-		errGroup.Go(
-			// errGroup expects a function with empty signature, so we use a function
+		processGroup.Go(
+			// processGroup expects a function with empty signature, so we use a function
 			// generator to enable adding arguments. This avoids issues when using loop
-			// variables in goroutines.
+			// variables in goroutines via shared memory space.
 			//
 			// If any processor returns an error, it will stop all processors.
-			// TODO: Decide what the acceptance criteria should be (e.g. >= 50% container processed)
+			// IDEA: Decide what the acceptance criteria should be (e.g. >= 50% container processed)
 			func(container types.Container) func() error {
 				return func() error {
 					// Get container info
-					info, err := c.dockerClient.ContainerInspect(errGroupCtx, container.ID)
+					info, err := c.getContainerInfo(processCtx, container)
 					if err != nil {
-						return fmt.Errorf("failed to inspect container: %w", err)
-					}
-
-					containerCreatedAt, err := time.Parse(time.RFC3339, info.Created)
-					if err != nil {
-						return fmt.Errorf("failed to parse time: %w", err)
-					}
-
-					// Get container image info
-					imageInfo, err := c.getContainerImageInfo(errGroupCtx, container.ImageID)
-					if err != nil {
-						// TODO (paralta) If image not required this should not be fatal -- resolved
 						logger.Warnf("Failed to get container. id=%v: %v", container.ID, err)
-						return nil
+						return nil // skip fail
 					}
 
+					// Convert to asset
 					asset := models.AssetType{}
-					err = asset.FromContainerInfo(models.ContainerInfo{
-						ContainerName: utils.PointerTo(info.Name),
-						CreatedAt:     utils.PointerTo(containerCreatedAt),
-						Id:            utils.PointerTo(container.ID),
-						Image:         utils.PointerTo(imageInfo),
-						Labels:        convertTags(container.Labels),
-						Location:      nil, // TODO (paralta) Clarify what is location
-						ObjectType:    "ContainerInfo",
-					})
+					err = asset.FromContainerInfo(info)
 					if err != nil {
 						return fmt.Errorf("failed to create AssetType from ContainerInfo: %w", err)
 					}
@@ -82,12 +63,41 @@ func (c *Client) getContainers(ctx context.Context) ([]models.AssetType, error) 
 	}
 
 	// This will block until all the processors have executed successfully or until
-	// first error. If an error is returned by any processors, errGroup will cancel
-	// execution via errGroupCtx and return that error.
-	err = errGroup.Wait()
+	// the first error. If an error is returned by any processors, processGroup will
+	// cancel execution via processCtx and return that error.
+	err = processGroup.Wait()
 	if err != nil {
 		return nil, fmt.Errorf("failed to process containers: %w", err)
 	}
 
 	return assets, nil
+}
+
+func (c *Client) getContainerInfo(ctx context.Context, container types.Container) (models.ContainerInfo, error) {
+	// Inspect container
+	info, err := c.dockerClient.ContainerInspect(ctx, container.ID)
+	if err != nil {
+		return models.ContainerInfo{}, fmt.Errorf("failed to inspect container: %w", err)
+	}
+
+	createdAt, err := time.Parse(time.RFC3339, info.Created)
+	if err != nil {
+		return models.ContainerInfo{}, fmt.Errorf("failed to parse time: %w", err)
+	}
+
+	// Get container image info
+	imageInfo, err := c.getContainerImageInfo(ctx, container.ImageID)
+	if err != nil {
+		return models.ContainerInfo{}, err
+	}
+
+	return models.ContainerInfo{
+		ContainerName: utils.PointerTo(info.Name),
+		CreatedAt:     utils.PointerTo(createdAt),
+		Id:            utils.PointerTo(container.ID),
+		Image:         utils.PointerTo(imageInfo),
+		Labels:        convertTags(container.Labels),
+		Location:      nil, // TODO (paralta) Clarify what is location
+		ObjectType:    "ContainerInfo",
+	}, nil
 }

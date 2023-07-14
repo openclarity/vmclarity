@@ -25,22 +25,22 @@ func (c *Client) getImages(ctx context.Context) ([]models.AssetType, error) {
 	assets := make([]models.AssetType, 0, len(images))
 
 	// Process each image in an independent processor goroutine
-	errGroup, errGroupCtx := errgroup.WithContext(ctx)
+	processGroup, processCtx := errgroup.WithContext(ctx)
 	for _, image := range images {
-		errGroup.Go(
-			// errGroup expects a function with empty signature, so we use a function
+		processGroup.Go(
+			// processGroup expects a function with empty signature, so we use a function
 			// generator to enable adding arguments. This avoids issues when using loop
-			// variables in goroutines.
+			// variables in goroutines via shared memory space.
 			//
 			// If any processor returns an error, it will stop all processors.
-			// TODO: Decide what the acceptance criteria should be (e.g. >= 50% images processed)
+			// IDEA: Decide what the acceptance criteria should be (e.g. >= 50% images processed)
 			func(image types.ImageSummary) func() error {
 				return func() error {
 					// Get container image info
-					info, err := c.getContainerImageInfo(errGroupCtx, image.ID)
+					info, err := c.getContainerImageInfo(processCtx, image.ID)
 					if err != nil {
 						logger.Warnf("Failed to get image. id=%v: %v", image.ID, err)
-						return nil
+						return nil // skip fail
 					}
 
 					// Convert to asset
@@ -62,9 +62,9 @@ func (c *Client) getImages(ctx context.Context) ([]models.AssetType, error) {
 	}
 
 	// This will block until all the processors have executed successfully or until
-	// first error. If an error is returned by any processors, errGroup will cancel
-	// execution via errGroupCtx and return that error.
-	err = errGroup.Wait()
+	// the first error. If an error is returned by any processors, processGroup will
+	// cancel execution via processCtx and return that error.
+	err = processGroup.Wait()
 	if err != nil {
 		return nil, fmt.Errorf("failed to process images: %w", err)
 	}
