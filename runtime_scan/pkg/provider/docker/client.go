@@ -23,6 +23,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/mount"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
 	"github.com/openclarity/vmclarity/api/models"
@@ -67,17 +68,13 @@ func (c *Client) DiscoverAssets(ctx context.Context) ([]models.AssetType, error)
 	// Get image assets
 	imageAssets, err := c.getImages(ctx)
 	if err != nil {
-		return nil, provider.FatalError{
-			Err: fmt.Errorf("failed to get images. Provider=%s: %w", models.Docker, err),
-		}
+		return nil, provider.FatalErrorf("failed to get images. Provider=%s: %w", models.Docker, err)
 	}
 
 	// Get container assets
 	containerAssets, err := c.getContainers(ctx)
 	if err != nil {
-		return nil, provider.FatalError{
-			Err: fmt.Errorf("failed to get containers. Provider=%s: %w", models.Docker, err),
-		}
+		return nil, provider.FatalErrorf("failed to get containers. Provider=%s: %w", models.Docker, err)
 	}
 
 	// Combine assets
@@ -90,30 +87,22 @@ func (c *Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfi
 
 	err := c.prepareScanVolume(ctx, config)
 	if err != nil {
-		return provider.FatalError{
-			Err: fmt.Errorf("failed to prepare scan volume. Provider=%s: %w", models.Docker, err),
-		}
+		return provider.FatalErrorf("failed to prepare scan volume. Provider=%s: %w", models.Docker, err)
 	}
 
 	err = c.createScanConfigFile(config)
 	if err != nil {
-		return provider.FatalError{
-			Err: fmt.Errorf("failed to create scanconfig.yaml file. Provider=%s: %w", models.Docker, err),
-		}
+		return provider.FatalErrorf("failed to create scanconfig.yaml file. Provider=%s: %w", models.Docker, err)
 	}
 
 	containerId, err := c.createScanContainer(ctx, config)
 	if err != nil {
-		return provider.FatalError{
-			Err: fmt.Errorf("failed to create scan container. Provider=%s: %w", models.Docker, err),
-		}
+		return provider.FatalErrorf("failed to create scan container. Provider=%s: %w", models.Docker, err)
 	}
 
 	err = c.dockerClient.ContainerStart(ctx, containerId, types.ContainerStartOptions{})
 	if err != nil {
-		return provider.FatalError{
-			Err: fmt.Errorf("failed to start scan container. Provider=%s: %w", models.Docker, err),
-		}
+		return provider.FatalErrorf("failed to start scan container. Provider=%s: %w", models.Docker, err)
 	}
 
 	return nil
@@ -130,10 +119,10 @@ func (c *Client) prepareScanVolume(ctx context.Context, config *provider.ScanJob
 		Filters: filters.NewArgs(filters.Arg("name", scanName)),
 	})
 	if err != nil {
-		return fmt.Errorf("failed to get volumes. Provider=%s: %w", models.Docker, err)
+		return fmt.Errorf("failed to get volumes: %w", err)
 	}
 	if len(resp.Volumes) == 1 {
-		fmt.Printf("scan volume already created. Provider=%s", models.Docker)
+		fmt.Printf("scan volume already created")
 		return nil
 	}
 	if len(resp.Volumes) == 0 {
@@ -141,19 +130,19 @@ func (c *Client) prepareScanVolume(ctx context.Context, config *provider.ScanJob
 			Name: scanName,
 		})
 		if err != nil {
-			return fmt.Errorf("failed to create volume. Provider=%s: %w", models.Docker, err)
+			return fmt.Errorf("failed to create volume: %w", err)
 		}
 	}
 
 	readCloser, err := c.export(ctx, config)
 	if err != nil {
-		return fmt.Errorf("failed to export target. Provider=%s: %w", models.Docker, err)
+		return fmt.Errorf("failed to export target: %w", err)
 	}
 
 	// Create an ephemeral container to populate volume with export output
 	_, err = c.dockerClient.ImagePull(ctx, "alpine", types.ImagePullOptions{})
 	if err != nil {
-		return fmt.Errorf("failed to pull helper image. Provider=%s: %w", models.Docker, err)
+		return fmt.Errorf("failed to pull helper image: %w", err)
 	}
 	response, err := c.dockerClient.ContainerCreate(ctx,
 		&container.Config{
@@ -169,17 +158,17 @@ func (c *Client) prepareScanVolume(ctx context.Context, config *provider.ScanJob
 			},
 		}, nil, nil, "")
 	if err != nil {
-		return fmt.Errorf("failed to create helper container. Provider=%s: %w", models.Docker, err)
+		return fmt.Errorf("failed to create helper container: %w", err)
 	}
 	defer func() {
 		err = c.dockerClient.ContainerRemove(ctx, response.ID, types.ContainerRemoveOptions{})
 		if err != nil {
-			_ = fmt.Errorf("failed to remove helper container. Provider=%s: %w", models.Docker, err)
+			_ = fmt.Errorf("failed to remove helper container: %w", err)
 		}
 	}()
 	err = c.dockerClient.CopyToContainer(ctx, response.ID, "/data", readCloser, types.CopyToContainerOptions{})
 	if err != nil {
-		return fmt.Errorf("failed to copy data to container. Provider=%s: %w", models.Docker, err)
+		return fmt.Errorf("failed to copy data to container: %w", err)
 	}
 	return nil
 }
@@ -187,7 +176,7 @@ func (c *Client) prepareScanVolume(ctx context.Context, config *provider.ScanJob
 func (c *Client) export(ctx context.Context, config *provider.ScanJobConfig) (io.ReadCloser, error) {
 	objectType, err := config.AssetInfo.Discriminator()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get asset object type. Provider=%s: %w", models.Docker, err)
+		return nil, fmt.Errorf("failed to get asset object type: %w", err)
 	}
 
 	switch objectType {
@@ -204,21 +193,24 @@ func (c *Client) export(ctx context.Context, config *provider.ScanJobConfig) (io
 		}
 		// Create an ephemeral container to export asset
 		response, err := c.dockerClient.ContainerCreate(ctx,
-			&container.Config{
-				Image: name,
-			}, nil, nil, nil, "")
+			&container.Config{Image: name},
+			nil,
+			nil,
+			nil,
+			"",
+		)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create helper container. Provider=%s: %w", models.Docker, err)
+			return nil, fmt.Errorf("failed to create helper container: %w", err)
 		}
 		defer func() {
 			err = c.dockerClient.ContainerRemove(ctx, response.ID, types.ContainerRemoveOptions{})
 			if err != nil {
-				_ = fmt.Errorf("failed to remove helper container. Provider=%s: %w", models.Docker, err)
+				_ = fmt.Errorf("failed to remove helper container: %w", err)
 			}
 		}()
 		return c.dockerClient.ContainerExport(ctx, response.ID)
 	default:
-		return nil, fmt.Errorf("get raw contents not implemented for current object type (%s). Provider=%s", models.Docker, objectType)
+		return nil, fmt.Errorf("get raw contents not implemented for current object type (%s)", objectType)
 	}
 }
 
@@ -264,7 +256,19 @@ func (c *Client) createScanContainer(ctx context.Context, config *provider.ScanJ
 		return "", err
 	}
 
-	resp, err := c.dockerClient.ContainerCreate(
+	networkResp, err := c.dockerClient.NetworkCreate(
+		ctx,
+		scanName,
+		types.NetworkCreate{
+			CheckDuplicate: true,
+			Driver:         "bridge",
+		},
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to scan network: %w", err)
+	}
+
+	containerResp, err := c.dockerClient.ContainerCreate(
 		ctx,
 		&container.Config{
 			Image: config.ScannerImage,
@@ -287,7 +291,13 @@ func (c *Client) createScanContainer(ctx context.Context, config *provider.ScanJ
 				},
 			},
 		},
-		nil,
+		&network.NetworkingConfig{
+			EndpointsConfig: map[string]*network.EndpointSettings{
+				scanName: {
+					NetworkID: networkResp.ID,
+				},
+			},
+		},
 		nil,
 		scanName,
 	)
@@ -295,7 +305,7 @@ func (c *Client) createScanContainer(ctx context.Context, config *provider.ScanJ
 		return "", err
 	}
 
-	return resp.ID, nil
+	return containerResp.ID, nil
 }
 
 func (c *Client) getContainerIdFromContainerName(ctx context.Context, scanName string) (string, error) {
@@ -305,13 +315,13 @@ func (c *Client) getContainerIdFromContainerName(ctx context.Context, scanName s
 		Filters: filters.NewArgs(filters.Arg("name", scanName)),
 	})
 	if err != nil {
-		return "", fmt.Errorf("failed to get containers. Provider=%s: %w", models.Docker, err)
+		return "", fmt.Errorf("failed to list containers: %w", err)
 	}
 	if len(containers) == 0 {
-		return "", fmt.Errorf("scan container not found. Provider=%s: %w", models.Docker, err)
+		return "", fmt.Errorf("scan container not found: %w", err)
 	}
 	if len(containers) > 1 {
-		return "", fmt.Errorf("found more than one scan container. Provider=%s: %w", models.Docker, err)
+		return "", fmt.Errorf("found more than one scan container: %w", err)
 	}
 	return containers[0].ID, nil
 }
@@ -319,35 +329,57 @@ func (c *Client) getContainerIdFromContainerName(ctx context.Context, scanName s
 func (c *Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
 	scanName, err := getScanName(config)
 	if err != nil {
-		return provider.FatalError{Err: err}
+		return provider.FatalErrorf("failed to get scan name. Provider=%s: %w", models.Docker, err)
 	}
+
 	err = c.dockerClient.VolumeRemove(ctx, scanName, false)
 	if err != nil {
-		return provider.FatalError{
-			Err: fmt.Errorf("failed to remove volume. Provider=%s: %w", models.Docker, err),
-		}
+		return provider.FatalErrorf("failed to remove volume. Provider=%s: %w", models.Docker, err)
 	}
 
 	scanConfigFileName, err := getScanConfigFileName(config)
 	if err != nil {
-		return provider.FatalError{Err: err}
+		return provider.FatalErrorf("failed to get scan config file name. Provider=%s: %w", models.Docker, err)
 	}
 	err = os.Remove(path.Dir(scanConfigFileName))
 	if err != nil {
-		return provider.FatalError{
-			Err: fmt.Errorf("failed to remove scan config file. Provider=%s: %w", models.Docker, err),
-		}
+		return provider.FatalErrorf("failed to remove scan config file. Provider=%s: %w", models.Docker, err)
 	}
 
 	containerId, err := c.getContainerIdFromContainerName(ctx, scanName)
 	if err != nil {
-		return provider.FatalError{Err: err}
+		return provider.FatalErrorf("failed to get scan container id. Provider=%s: %w", models.Docker, err)
 	}
 	err = c.dockerClient.ContainerRemove(ctx, containerId, types.ContainerRemoveOptions{})
 	if err != nil {
-		return provider.FatalError{
-			Err: fmt.Errorf("failed to remove scan container. Provider=%s: %w", models.Docker, err),
-		}
+		return provider.FatalErrorf("failed to remove scan container. Provider=%s: %w", models.Docker, err)
 	}
+
+	networkId, err := c.getNetworkIdFromNetworkName(ctx, scanName)
+	if err != nil {
+		return provider.FatalErrorf("failed to get scan network id. Provider=%s: %w", models.Docker, err)
+	}
+	err = c.dockerClient.NetworkRemove(ctx, networkId)
+	if err != nil {
+		return provider.FatalErrorf("failed to remove scan network. Provider=%s: %w", models.Docker, err)
+	}
+
 	return nil
+}
+
+func (c *Client) getNetworkIdFromNetworkName(ctx context.Context, scanName string) (string, error) {
+
+	networks, err := c.dockerClient.NetworkList(ctx, types.NetworkListOptions{
+		Filters: filters.NewArgs(filters.Arg("name", scanName)),
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to list networks: %w", err)
+	}
+	if len(networks) == 0 {
+		return "", fmt.Errorf("scan network not found: %w", err)
+	}
+	if len(networks) > 1 {
+		return "", fmt.Errorf("found more than one scan network: %w", err)
+	}
+	return networks[0].ID, nil
 }
