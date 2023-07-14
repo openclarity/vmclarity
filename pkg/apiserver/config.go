@@ -39,6 +39,11 @@ const (
 	DatabaseDriver   = "DATABASE_DRIVER"
 	EnableDBInfoLogs = "ENABLE_DB_INFO_LOGS"
 
+	ZitadelIssuerEnvVar              = "ZITADEL_ISSUER"
+	ZitadelProjectIDEnvVar           = "ZITADEL_PROJECT_ID"
+	ZitadelAppKeyPathEnvVar          = "ZITADEL_APP_KEY_PATH"
+	ZitadelOrchestratorKeyPathEnvVar = "ZITADEL_ORCHESTRATOR_KEY_PATH"
+
 	LocalDBPath = "LOCAL_DB_PATH"
 
 	FakeDataEnvVar      = "FAKE_DATA"
@@ -63,6 +68,12 @@ type Config struct {
 	DBPort           string `json:"db-port,omitempty"`
 	EnableDBInfoLogs bool   `json:"enable-db-info-logs"`
 	EnableFakeData   bool   `json:"enable-fake-data"`
+
+	// auth config
+	ZitadelIssuer              string `json:"zitadel-issuer"`
+	ZitadelProjectID           string `json:"zitadel-project-id"`
+	ZitadelAppKeyPath          string `json:"zitadel-app-key-path"`
+	ZitadelOrchestratorKeyPath string `json:"zitadel-orchestrator-key-path"`
 
 	LocalDBPath string    `json:"local-db-path,omitempty"`
 	LogLevel    log.Level `json:"log-level,omitempty"`
@@ -96,6 +107,11 @@ func LoadConfig() (*Config, error) {
 	config.DBName = viper.GetString(DBNameEnvVar)
 	config.EnableDBInfoLogs = viper.GetBool(EnableDBInfoLogs)
 	config.EnableFakeData = viper.GetBool(FakeDataEnvVar)
+
+	config.ZitadelIssuer = viper.GetString(ZitadelIssuerEnvVar)
+	config.ZitadelProjectID = viper.GetString(ZitadelProjectIDEnvVar)
+	config.ZitadelAppKeyPath = viper.GetString(ZitadelAppKeyPathEnvVar)
+	config.ZitadelOrchestratorKeyPath = viper.GetString(ZitadelOrchestratorKeyPathEnvVar)
 
 	config.LocalDBPath = viper.GetString(LocalDBPath)
 

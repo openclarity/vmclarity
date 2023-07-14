@@ -18,6 +18,7 @@ package rest
 import (
 	"context"
 	"fmt"
+	"github.com/openclarity/vmclarity/backend/pkg/config"
 	"time"
 
 	"github.com/deepmap/oapi-codegen/pkg/middleware"
@@ -49,7 +50,7 @@ func CreateRESTServer(port int, dbHandler databaseTypes.Database) (*Server, erro
 		return nil, fmt.Errorf("failed to create rest server: %w", err)
 	}
 	return &Server{
-		port:       port,
+		port:       config.BackendRestPort,
 		echoServer: e,
 	}, nil
 }
@@ -72,9 +73,13 @@ func createEchoServer(dbHandler databaseTypes.Database) (*echo.Echo, error) {
 	// the API group against the OpenAPI schema.
 	e.Use(middleware.OapiRequestValidator(swagger))
 
-	apiImpl := &ServerImpl{
-		dbHandler: dbHandler,
+	// Create API zitadel authentication middleware
+	authMiddleware, err := newAuthMiddleware(config.ZitadelIssuer, config.ZitadelAppKeyPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create auth middleware: %v", err)
 	}
+	apiGroup.Use(authMiddleware)
+
 	// Register paths with the backend implementation
 	server.RegisterHandlers(e, apiImpl)
 
