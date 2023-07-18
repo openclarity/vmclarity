@@ -26,8 +26,10 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
+	"github.com/ghodss/yaml"
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
+	families "github.com/openclarity/vmclarity/shared/pkg/families"
 	"github.com/openclarity/vmclarity/shared/pkg/log"
 	"io"
 	"os"
@@ -260,9 +262,21 @@ func (c *Client) export(ctx context.Context, config *provider.ScanJobConfig) (io
 func (c *Client) createScanConfigFile(config *provider.ScanJobConfig) error {
 	scanConfigFilePath := getScanConfigFileName(config)
 
-	_, err := os.Stat(scanConfigFilePath)
+	// Add volume mount point to family configuration
+	familiesConfig := families.Config{}
+	err := yaml.Unmarshal([]byte(config.ScannerCLIConfig), &familiesConfig)
+	if err != nil {
+		return err
+	}
+	families.SetMountPointsForFamiliesInput([]string{MountPointPath}, &familiesConfig)
+	familiesConfigByte, err := yaml.Marshal(familiesConfig)
+	if err != nil {
+		return err
+	}
+
+	_, err = os.Stat(scanConfigFilePath)
 	if errors.Is(err, os.ErrNotExist) {
-		err = os.WriteFile(scanConfigFilePath, []byte(config.ScannerCLIConfig), 0644)
+		err = os.WriteFile(scanConfigFilePath, familiesConfigByte, 0644)
 	}
 	if err != nil {
 		return err
