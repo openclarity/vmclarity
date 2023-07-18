@@ -222,11 +222,11 @@ func (c *Client) export(ctx context.Context, config *provider.ScanJobConfig) (io
 	}
 
 	switch value := objectType.(type) {
-	case *models.ContainerInfo:
+	case models.ContainerInfo:
 		id := *value.Id
 		return c.dockerClient.ContainerExport(ctx, id)
 
-	case *models.ContainerImageInfo:
+	case models.ContainerImageInfo:
 		name := *value.Name
 		// Create an ephemeral container to export asset
 		containerResp, err := c.dockerClient.ContainerCreate(ctx,
@@ -248,7 +248,12 @@ func (c *Client) export(ctx context.Context, config *provider.ScanJobConfig) (io
 		return c.dockerClient.ContainerExport(ctx, containerResp.ID)
 
 	default:
-		return nil, fmt.Errorf("get raw contents not implemented for current object type (%s)", objectType)
+		unknownType, err := config.AssetInfo.Discriminator()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get asset object type: %w", err)
+		}
+
+		return nil, fmt.Errorf("get raw contents not implemented for current object type (%s)", unknownType)
 	}
 }
 
