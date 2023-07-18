@@ -43,19 +43,9 @@ const (
 
 type Client struct {
 	dockerClient *client.Client
-	config       *Config
 }
 
 func New(_ context.Context) (*Client, error) {
-	config, err := NewConfig()
-	if err != nil {
-		return nil, fmt.Errorf("invalid configuration. Provider=%s: %w", models.Docker, err)
-	}
-
-	if err = config.Validate(); err != nil {
-		return nil, fmt.Errorf("failed to validate provider configuration. Provider=%s: %w", models.Docker, err)
-	}
-
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return nil, fmt.Errorf("failed to load provider configuration. Provider=%s: %w", models.Docker, err)
@@ -63,7 +53,6 @@ func New(_ context.Context) (*Client, error) {
 
 	return &Client{
 		dockerClient: dockerClient,
-		config:       config,
 	}, nil
 }
 
