@@ -35,6 +35,10 @@ import (
 	"path/filepath"
 )
 
+const (
+	MountPointPath = "/mnt/snapshot"
+)
+
 type Client struct {
 	dockerClient *client.Client
 	config       *Config
@@ -110,21 +114,14 @@ func (c *Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfi
 }
 
 func (c *Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
-	scanName, err := getScanName(config)
-	if err != nil {
-		return provider.FatalErrorf("failed to get scan name. Provider=%s: %w", models.Docker, err)
-	}
 
-	scanConfigFileName, err := getScanConfigFileName(config)
-	if err != nil {
-		return provider.FatalErrorf("failed to get scan config file name. Provider=%s: %w", models.Docker, err)
-	}
-	err = os.Remove(path.Dir(scanConfigFileName))
+	scanConfigFileName := getScanConfigFileName(config)
+	err := os.Remove(path.Dir(scanConfigFileName))
 	if err != nil {
 		return provider.FatalErrorf("failed to remove scan config file. Provider=%s: %w", models.Docker, err)
 	}
 
-	containerId, err := c.getContainerIdFromContainerName(ctx, scanName)
+	containerId, err := c.getContainerIdFromContainerName(ctx, config.AssetScanID)
 	if err != nil {
 		return provider.FatalErrorf("failed to get scan container id. Provider=%s: %w", models.Docker, err)
 	}
@@ -133,12 +130,12 @@ func (c *Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobCo
 		return provider.FatalErrorf("failed to remove scan container. Provider=%s: %w", models.Docker, err)
 	}
 
-	err = c.dockerClient.VolumeRemove(ctx, scanName, true)
+	err = c.dockerClient.VolumeRemove(ctx, config.AssetScanID, true)
 	if err != nil {
 		return provider.FatalErrorf("failed to remove volume. Provider=%s: %w", models.Docker, err)
 	}
 
-	networkId, err := c.getNetworkIdFromNetworkName(ctx, scanName)
+	networkId, err := c.getNetworkIdFromNetworkName(ctx, config.AssetScanID)
 	if err != nil {
 		return provider.FatalErrorf("failed to get scan network id. Provider=%s: %w", models.Docker, err)
 	}
@@ -153,14 +150,9 @@ func (c *Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobCo
 func (c *Client) prepareScanVolume(ctx context.Context, config *provider.ScanJobConfig) error {
 	logger := log.GetLoggerFromContextOrDiscard(ctx)
 
-	scanName, err := getScanName(config)
-	if err != nil {
-		return err
-	}
-
 	// Create volume if not found
 	volumeResp, err := c.dockerClient.VolumeList(ctx, volume.ListOptions{
-		Filters: filters.NewArgs(filters.Arg("name", scanName)),
+		Filters: filters.NewArgs(filters.Arg("name", config.AssetScanID)),
 	})
 	if err != nil {
 		return fmt.Errorf("failed to get volumes: %w", err)
@@ -171,7 +163,7 @@ func (c *Client) prepareScanVolume(ctx context.Context, config *provider.ScanJob
 	}
 	if len(volumeResp.Volumes) == 0 {
 		_, err = c.dockerClient.VolumeCreate(ctx, volume.CreateOptions{
-			Name: scanName,
+			Name: config.AssetScanID,
 		})
 		if err != nil {
 			return fmt.Errorf("failed to create volume: %w", err)
@@ -196,7 +188,7 @@ func (c *Client) prepareScanVolume(ctx context.Context, config *provider.ScanJob
 			Mounts: []mount.Mount{
 				{
 					Type:   mount.TypeVolume,
-					Source: scanName,
+					Source: config.AssetScanID,
 					Target: "/data",
 				},
 			},
@@ -220,24 +212,18 @@ func (c *Client) prepareScanVolume(ctx context.Context, config *provider.ScanJob
 func (c *Client) export(ctx context.Context, config *provider.ScanJobConfig) (io.ReadCloser, error) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx)
 
-	objectType, err := config.AssetInfo.Discriminator()
+	objectType, err := config.AssetInfo.ValueByDiscriminator()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get asset object type: %w", err)
 	}
 
-	switch objectType {
-	case "ContainerInfo":
-		id, err := getAssetId(config)
-		if err != nil {
-			return nil, err
-		}
+	switch value := objectType.(type) {
+	case *models.ContainerInfo:
+		id := *value.Id
 		return c.dockerClient.ContainerExport(ctx, id)
 
-	case "ContainerImageInfo":
-		name, err := getAssetName(config)
-		if err != nil {
-			return nil, err
-		}
+	case *models.ContainerImageInfo:
+		name := *value.Name
 		// Create an ephemeral container to export asset
 		containerResp, err := c.dockerClient.ContainerCreate(ctx,
 			&container.Config{Image: name},
@@ -256,18 +242,16 @@ func (c *Client) export(ctx context.Context, config *provider.ScanJobConfig) (io
 			}
 		}()
 		return c.dockerClient.ContainerExport(ctx, containerResp.ID)
+
 	default:
 		return nil, fmt.Errorf("get raw contents not implemented for current object type (%s)", objectType)
 	}
 }
 
 func (c *Client) createScanConfigFile(config *provider.ScanJobConfig) error {
-	scanConfigFilePath, err := getScanConfigFileName(config)
-	if err != nil {
-		return err
-	}
+	scanConfigFilePath := getScanConfigFileName(config)
 
-	_, err = os.Stat(scanConfigFilePath)
+	_, err := os.Stat(scanConfigFilePath)
 	if errors.Is(err, os.ErrNotExist) {
 		err = os.WriteFile(scanConfigFilePath, []byte(config.ScannerCLIConfig), 0644)
 	}
@@ -279,12 +263,7 @@ func (c *Client) createScanConfigFile(config *provider.ScanJobConfig) error {
 }
 
 func (c *Client) createScanContainer(ctx context.Context, config *provider.ScanJobConfig) (string, error) {
-	scanName, err := getScanName(config)
-	if err != nil {
-		return "", err
-	}
-
-	containerId, err := c.getContainerIdFromContainerName(ctx, scanName)
+	containerId, err := c.getContainerIdFromContainerName(ctx, config.AssetScanID)
 	if containerId != "" {
 		return containerId, nil
 	}
@@ -296,14 +275,9 @@ func (c *Client) createScanContainer(ctx context.Context, config *provider.ScanJ
 	_, _ = io.Copy(io.Discard, pl)
 	_ = pl.Close()
 
-	scanConfigFilePath, err := getScanConfigFileName(config)
-	if err != nil {
-		return "", err
-	}
-
 	networkResp, err := c.dockerClient.NetworkCreate(
 		ctx,
-		scanName,
+		config.AssetScanID,
 		types.NetworkCreate{
 			CheckDuplicate: true,
 			Driver:         "bridge",
@@ -313,6 +287,7 @@ func (c *Client) createScanContainer(ctx context.Context, config *provider.ScanJ
 		return "", fmt.Errorf("failed to create scan network: %w", err)
 	}
 
+	scanConfigFilePath := getScanConfigFileName(config)
 	containerResp, err := c.dockerClient.ContainerCreate(
 		ctx,
 		&container.Config{
@@ -331,20 +306,20 @@ func (c *Client) createScanContainer(ctx context.Context, config *provider.ScanJ
 			Mounts: []mount.Mount{
 				{
 					Type:   mount.TypeVolume,
-					Source: scanName,
-					Target: "/mnt/snapshot",
+					Source: config.AssetScanID,
+					Target: MountPointPath,
 				},
 			},
 		},
 		&network.NetworkingConfig{
 			EndpointsConfig: map[string]*network.EndpointSettings{
-				scanName: {
+				config.AssetScanID: {
 					NetworkID: networkResp.ID,
 				},
 			},
 		},
 		nil,
-		scanName,
+		config.AssetScanID,
 	)
 	if err != nil {
 		return "", err
