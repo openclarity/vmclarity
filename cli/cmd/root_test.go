@@ -30,7 +30,7 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/families/vulnerabilities"
 )
 
-func Test_setMountPointsForFamiliesInput(t *testing.T) {
+func Test_SetMountPointsForFamiliesInput(t *testing.T) {
 	type args struct {
 		mountPoints    []string
 		familiesConfig *families.Config
@@ -128,8 +128,8 @@ func Test_setMountPointsForFamiliesInput(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := setMountPointsForFamiliesInput(tt.args.mountPoints, tt.args.familiesConfig); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("setMountPointsForFamiliesInput() = %v, want %v", got, tt.want)
+			if got := families.SetMountPointsForFamiliesInput(tt.args.mountPoints, tt.args.familiesConfig); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("SetMountPointsForFamiliesInput() = %v, want %v", got, tt.want)
 			}
 		})
 	}

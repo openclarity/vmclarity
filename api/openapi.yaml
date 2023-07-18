@@ -1579,8 +1579,6 @@ components:
           type: string
         containerName:
           type: string
-        location:
-          type: string
         # TODO(paralta) Check if image needs to be a required property
         image:
           $ref: '#/components/schemas/ContainerImageInfo' 

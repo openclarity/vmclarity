@@ -318,7 +318,6 @@ type ContainerInfo struct {
 	Id            *string             `json:"id,omitempty"`
 	Image         *ContainerImageInfo `json:"image,omitempty"`
 	Labels        *[]Tag              `json:"labels"`
-	Location      *string             `json:"location,omitempty"`
 	ObjectType    string              `json:"objectType"`
 }
 
