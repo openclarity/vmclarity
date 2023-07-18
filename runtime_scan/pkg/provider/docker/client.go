@@ -176,10 +176,14 @@ func (c *Client) prepareScanVolume(ctx context.Context, config *provider.ScanJob
 	}
 
 	// Create an ephemeral container to populate volume with export output
-	_, err = c.dockerClient.ImagePull(ctx, "alpine", types.ImagePullOptions{})
+	pl, err := c.dockerClient.ImagePull(ctx, "alpine", types.ImagePullOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to pull helper image: %w", err)
 	}
+	// ImagePull function's description: It's up to the caller to handle the io.ReadCloser and close it properly.
+	_, _ = io.Copy(io.Discard, pl)
+	_ = pl.Close()
+
 	containerResp, err := c.dockerClient.ContainerCreate(ctx,
 		&container.Config{
 			Image: "alpine",
@@ -272,6 +276,7 @@ func (c *Client) createScanContainer(ctx context.Context, config *provider.ScanJ
 	if err != nil {
 		return "", err
 	}
+	// ImagePull function's description: It's up to the caller to handle the io.ReadCloser and close it properly.
 	_, _ = io.Copy(io.Discard, pl)
 	_ = pl.Close()
 
@@ -292,13 +297,14 @@ func (c *Client) createScanContainer(ctx context.Context, config *provider.ScanJ
 		ctx,
 		&container.Config{
 			Image: config.ScannerImage,
-			Entrypoint: []string{"sh", "-c",
-				fmt.Sprintf(
-					"/app/vmclarity-cli --config /tmp/%s --server %s --asset-scan-id %s",
-					filepath.Base(scanConfigFilePath),
-					config.VMClarityAddress,
-					config.AssetScanID,
-				),
+			Entrypoint: []string{
+				"/app/vmclarity-cli",
+				"--config",
+				"/tmp/" + filepath.Base(scanConfigFilePath),
+				"--server",
+				config.VMClarityAddress,
+				"--asset-scan-id",
+				config.AssetScanID,
 			},
 		},
 		&container.HostConfig{
