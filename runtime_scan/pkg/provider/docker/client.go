@@ -151,6 +151,9 @@ func (c *Client) createScanAssetVolume(ctx context.Context, config *provider.Sca
 	if err != nil {
 		return "", fmt.Errorf("failed to get volumes: %w", err)
 	}
+	if len(volumesResp.Volumes) > 1 {
+		return "", fmt.Errorf("invalid number of volumes found")
+	}
 	if len(volumesResp.Volumes) == 1 {
 		logger.Infof("Scan volume=%s already exists", volumeName)
 		return volumeName, nil
@@ -204,11 +207,19 @@ func (c *Client) createScanAssetVolume(ctx context.Context, config *provider.Sca
 	}()
 
 	// Export asset data to tar reader
-	assetContents, err := c.exportAsset(ctx, config)
+	assetContents, exportCleanup, err := c.exportAsset(ctx, config)
 	if err != nil {
 		return "", fmt.Errorf("failed to export asset: %w", err)
 	}
-	defer assetContents.Close()
+	defer func() {
+		err := assetContents.Close()
+		if err != nil {
+			logger.Errorf("failed to close asset contents stream: %s", err.Error())
+		}
+		if exportCleanup != nil {
+			exportCleanup()
+		}
+	}()
 
 	// Copy asset data to ephemeral container
 	err = c.dockerClient.CopyToContainer(ctx, containerResp.ID, "/data", assetContents, types.CopyToContainerOptions{})
@@ -375,12 +386,12 @@ func (c *Client) getNetworkIdFromName(ctx context.Context, networkName string) (
 	return networks[0].ID, nil
 }
 
-func (c *Client) exportAsset(ctx context.Context, config *provider.ScanJobConfig) (io.ReadCloser, error) {
+func (c *Client) exportAsset(ctx context.Context, config *provider.ScanJobConfig) (io.ReadCloser, func(), error) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx)
 
 	objectType, err := config.AssetInfo.ValueByDiscriminator()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get asset object type: %w", err)
+		return nil, nil, fmt.Errorf("failed to get asset object type: %w", err)
 	}
 
 	switch value := objectType.(type) {
@@ -388,9 +399,9 @@ func (c *Client) exportAsset(ctx context.Context, config *provider.ScanJobConfig
 		containerID := *value.Id
 		contents, err := c.dockerClient.ContainerExport(ctx, containerID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to export container: %w", err)
+			return nil, nil, fmt.Errorf("failed to export container: %w", err)
 		}
-		return contents, nil
+		return contents, nil, nil
 
 	case models.ContainerImageInfo:
 		// Create an ephemeral container to export asset
@@ -404,23 +415,25 @@ func (c *Client) exportAsset(ctx context.Context, config *provider.ScanJobConfig
 			"",
 		)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create helper container: %w", err)
+			return nil, nil, fmt.Errorf("failed to create helper container: %w", err)
 		}
-		defer func() {
+
+		cleanup := func() {
 			err := c.dockerClient.ContainerRemove(ctx, containerResp.ID, types.ContainerRemoveOptions{Force: true})
 			if err != nil {
-				logger.Errorf("Failed to remove helper container=%s: %v", containerResp.ID, err)
+				logger.Errorf("failed to remove helper container=%s: %v", containerResp.ID, err)
 			}
-		}()
+		}
 
 		contents, err := c.dockerClient.ContainerExport(ctx, containerResp.ID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to export container: %w", err)
+			cleanup()
+			return nil, nil, fmt.Errorf("failed to export container: %w", err)
 		}
-		return contents, nil
+		return contents, cleanup, nil
 
 	default:
-		return nil, fmt.Errorf("failed to export asset object type %T: Not implemented", value)
+		return nil, nil, fmt.Errorf("failed to export asset object type %T: Not implemented", value)
 	}
 }
 
