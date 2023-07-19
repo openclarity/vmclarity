@@ -1,0 +1,46 @@
+version: '3'
+
+services:
+  apiserver:
+    image: docker.io/tehsmash/vmclarity-apiserver:microservices
+    command:
+      - run
+    environment:
+      DATABASE_DRIVER: LOCAL
+      LOCAL_DB_PATH: /app/vmclarity.db
+  orchestrator:
+    image: docker.io/tehsmash/vmclarity-orchestrator:microservices
+    command:
+      - run
+    environment:
+      APISERVER_HOST: apiserver
+      APISERVER_PORT: 8888
+      SCANNER_CONTAINER_IMAGE: docker.io/tehsmash/vmclarity-cli:microservices
+      PROVIDER: aws
+      AWS_REGION: eu-west-2
+      VMCLARITY_AWS_SCANNER_REGION: eu-west-2
+      VMCLARITY_AWS_SUBNET_ID: subnet-098e23d0e83f7fcac
+      VMCLARITY_AWS_SECURITY_GROUP_ID: sg-084c9f331796c7a92
+      VMCLARITY_AWS_KEYPAIR_NAME: sambetts-dev
+      VMCLARITY_AWS_SCANNER_AMI_ID: ami-08d3a4ad06c8a70fe
+      VMCLARITY_AWS_SCANNER_INSTANCE_TYPE: t2.large
+  ui:
+    image: docker.io/tehsmash/vmclarity-ui:microservices
+  uibackend:
+    command:
+      - run
+    image: docker.io/tehsmash/vmclarity-uibackend:microservices
+    environment:
+      APISERVER_HOST: apiserver
+      APISERVER_PORT: 8888
+  gateway:
+    image: nginx
+    ports:
+      - "8080:80"
+    configs:
+      - source: gateway_config
+        target: /etc/nginx/nginx.conf
+
+configs:
+  gateway_config:
+    file: ./gateway.conf

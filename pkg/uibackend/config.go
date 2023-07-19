@@ -13,11 +13,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package version
+package uibackend
 
-// overridden using ldflags.
-var (
-	Version        string
-	CommitHash     string
-	BuildTimestamp string
+import (
+	"github.com/spf13/viper"
 )
+
+const (
+	APIServerHost       = "APISERVER_HOST"
+	APIServerDisableTLS = "APISERVER_DISABLE_TLS"
+	APIServerPort       = "APISERVER_PORT"
+)
+
+type Config struct {
+	APIServerHost string `json:"apiserver-host,omitempty"`
+	APIServerPort int    `json:"apiserver-port,omitempty"`
+}
+
+func LoadConfig() (*Config, error) {
+	viper.AutomaticEnv()
+
+	c := &Config{
+		APIServerHost: viper.GetString(APIServerHost),
+		APIServerPort: viper.GetInt(APIServerPort),
+	}
+	return c, nil
+}

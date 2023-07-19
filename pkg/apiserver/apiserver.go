@@ -17,11 +17,8 @@ package apiserver
 
 import (
 	"context"
-	"fmt"
-	"net"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 
 	"github.com/Portshift/go-utils/healthz"
@@ -30,10 +27,7 @@ import (
 	"github.com/openclarity/vmclarity/pkg/apiserver/database"
 	databaseTypes "github.com/openclarity/vmclarity/pkg/apiserver/database/types"
 	"github.com/openclarity/vmclarity/pkg/apiserver/rest"
-	"github.com/openclarity/vmclarity/pkg/orchestrator"
-	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
 	"github.com/openclarity/vmclarity/pkg/shared/log"
-	uibackend "github.com/openclarity/vmclarity/pkg/uibackend/rest"
 )
 
 func createDatabaseConfig(config *_config.Config) databaseTypes.DBConfig {
@@ -81,32 +75,13 @@ func Run(ctx context.Context) {
 		go database.CreateDemoData(ctx, dbHandler)
 	}
 
-	backendAddress := fmt.Sprintf("http://%s%s", net.JoinHostPort(config.BackendRestHost, strconv.Itoa(config.BackendRestPort)), rest.BaseURL)
-	backendClient, err := backendclient.Create(backendAddress)
-	if err != nil {
-		logger.Fatalf("Failed to create a backend client: %v", err)
-	}
-
-	uiBackendServer := uibackend.CreateUIBackedServer(backendClient)
-
 	// nolint:contextcheck
-	restServer, err := rest.CreateRESTServer(config.BackendRestPort, dbHandler, config.UISitePath, uiBackendServer)
+	restServer, err := rest.CreateRESTServer(config.BackendRestPort, dbHandler)
 	if err != nil {
 		logger.Fatalf("Failed to create REST server: %v", err)
 	}
 	restServer.Start(ctx, errChan)
 	defer restServer.Stop(ctx)
-
-	if config.DisableOrchestrator {
-		logger.Infof("Runtime orchestrator is disabled")
-	} else {
-		if err = startOrchestrator(ctx, config, backendClient); err != nil {
-			logger.Fatalf("Failed to start orchestrator: %v", err)
-		}
-	}
-
-	// Background processing must start after rest server was started.
-	uiBackendServer.StartBackgroundProcessing(ctx)
 
 	healthServer.SetIsReady(true)
 	logger.Info("VMClarity backend is ready")
@@ -123,20 +98,4 @@ func Run(ctx context.Context) {
 		cancel()
 		logger.Warningf("Received a termination signal: %v", s)
 	}
-}
-
-func startOrchestrator(ctx context.Context, config *_config.Config, client *backendclient.BackendClient) error {
-	orchestratorConfig, err := orchestrator.LoadConfig(config.BackendRestHost, config.BackendRestPort, rest.BaseURL)
-	if err != nil {
-		return fmt.Errorf("failed to load Orchestrator config: %w", err)
-	}
-
-	o, err := orchestrator.New(ctx, orchestratorConfig, client)
-	if err != nil {
-		return fmt.Errorf("failed to initialize Orchestrator: %w", err)
-	}
-
-	o.Start(ctx)
-
-	return nil
 }

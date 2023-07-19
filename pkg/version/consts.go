@@ -13,6 +13,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cli
+package version
 
-var GitRevision string
+import "fmt"
+
+// overridden using ldflags.
+var (
+	Version        string
+	CommitHash     string
+	BuildTimestamp string
+)
+
+func String() string {
+	return fmt.Sprintf("%s (%s)", Version, CommitHash)
+}

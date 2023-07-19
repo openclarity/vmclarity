@@ -42,8 +42,6 @@ const (
 	FakeDataEnvVar      = "FAKE_DATA"
 	DisableOrchestrator = "DISABLE_ORCHESTRATOR"
 
-	UISitePath = "UI_SITE_PATH" // TODO: UI site should be moved out of the backend to nginx
-
 	LogLevel = "LOG_LEVEL"
 )
 
@@ -53,8 +51,6 @@ type Config struct {
 	HealthCheckAddress string `json:"health-check-address,omitempty"`
 
 	DisableOrchestrator bool `json:"disable_orchestrator"`
-
-	UISitePath string `json:"ui_site_path"`
 
 	// database config
 	DatabaseDriver   string `json:"database-driver,omitempty"`
@@ -78,8 +74,6 @@ func LoadConfig() (*Config, error) {
 	config.HealthCheckAddress = viper.GetString(HealthCheckAddress)
 
 	config.DisableOrchestrator = viper.GetBool(DisableOrchestrator)
-
-	config.UISitePath = viper.GetString(UISitePath)
 
 	config.DatabaseDriver = viper.GetString(DatabaseDriver)
 	config.DBPassword = viper.GetString(DBPasswordEnvVar)

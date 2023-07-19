@@ -27,14 +27,14 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     go build -ldflags="-s -w -extldflags -static \
      -X 'github.com/openclarity/vmclarity/pkg/version.Version=${VERSION}' \
      -X 'github.com/openclarity/vmclarity/pkg/version.CommitHash=${COMMIT_HASH}' \
-     -X 'github.com/openclarity/vmclarity/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}'" -o bin/vmclarity-apiserver ./cmd/vmclarity-apiserver/main.go
+     -X 'github.com/openclarity/vmclarity/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}'" -o bin/vmclarity-orchestrator ./cmd/vmclarity-orchestrator/main.go
 
-RUN xx-verify bin/vmclarity-apiserver
+RUN xx-verify bin/vmclarity-orchestrator
 
 FROM alpine:3.18
 
 WORKDIR /app
 
-COPY --from=builder ["/build/bin/vmclarity-apiserver", "./vmclarity-apiserver"]
+COPY --from=builder ["/build/bin/vmclarity-orchestrator", "./vmclarity-orchestrator"]
 
-ENTRYPOINT ["/app/vmclarity-apiserver"]
+ENTRYPOINT ["/app/vmclarity-orchestrator"]

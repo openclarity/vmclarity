@@ -28,14 +28,10 @@ import (
 	"github.com/openclarity/vmclarity/pkg/apiserver/common"
 	databaseTypes "github.com/openclarity/vmclarity/pkg/apiserver/database/types"
 	"github.com/openclarity/vmclarity/pkg/shared/log"
-	uiserver "github.com/openclarity/vmclarity/pkg/uibackend/api/server"
-	uirest "github.com/openclarity/vmclarity/pkg/uibackend/rest"
 )
 
 const (
 	shutdownTimeoutSec = 10
-	BaseURL            = "/api"
-	UIBackendBaseURL   = "/ui/api"
 )
 
 type ServerImpl struct {
@@ -47,8 +43,8 @@ type Server struct {
 	echoServer *echo.Echo
 }
 
-func CreateRESTServer(port int, dbHandler databaseTypes.Database, uiSitePath string, uiBackendAPIImpl *uirest.ServerImpl) (*Server, error) {
-	e, err := createEchoServer(dbHandler, uiSitePath, uiBackendAPIImpl)
+func CreateRESTServer(port int, dbHandler databaseTypes.Database) (*Server, error) {
+	e, err := createEchoServer(dbHandler)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create rest server: %v", err)
 	}
@@ -58,7 +54,7 @@ func CreateRESTServer(port int, dbHandler databaseTypes.Database, uiSitePath str
 	}, nil
 }
 
-func createEchoServer(dbHandler databaseTypes.Database, uiSitePath string, uiBackendAPIImpl *uirest.ServerImpl) (*echo.Echo, error) {
+func createEchoServer(dbHandler databaseTypes.Database) (*echo.Echo, error) {
 	swagger, err := server.GetSwagger()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load swagger spec: %v", err)
@@ -72,38 +68,15 @@ func createEchoServer(dbHandler databaseTypes.Database, uiSitePath string, uiBac
 	// Recover any panics into HTTP 500
 	e.Use(echomiddleware.Recover())
 
-	// Create a router group for the backend /api base URL
-	apiGroup := e.Group(BaseURL)
-
 	// Use oapi-codegen validation middleware to validate
 	// the API group against the OpenAPI schema.
-	apiGroup.Use(middleware.OapiRequestValidator(swagger))
+	e.Use(middleware.OapiRequestValidator(swagger))
 
 	apiImpl := &ServerImpl{
 		dbHandler: dbHandler,
 	}
 	// Register paths with the backend implementation
-	server.RegisterHandlers(apiGroup, apiImpl)
-
-	uiBackendSwagger, err := uiserver.GetSwagger()
-	if err != nil {
-		return nil, fmt.Errorf("failed to load UI swagger spec: %v", err)
-	}
-	// Create a router group for the UI backend /ui/api base URL
-	uiBackendAPIGroup := e.Group(UIBackendBaseURL)
-
-	uiBackendAPIGroup.Use(middleware.OapiRequestValidator(uiBackendSwagger))
-
-	// Register paths with the UI backend implementation
-	uiserver.RegisterHandlers(uiBackendAPIGroup, uiBackendAPIImpl)
-
-	// https://sunde.dev/blog/Echo_Golang_server_for_a_Single_Page_Application_(SPA)
-	e.Use(echomiddleware.StaticWithConfig(echomiddleware.StaticConfig{
-		Root:   uiSitePath,   // This is the path to your SPA build folder, the folder that is created from running "npm build"
-		Index:  "index.html", // This is the default html page for your SPA
-		Browse: false,
-		HTML5:  true,
-	}))
+	server.RegisterHandlers(e, apiImpl)
 
 	return e, nil
 }

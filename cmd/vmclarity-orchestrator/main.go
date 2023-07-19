@@ -19,14 +19,13 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
-	"github.com/openclarity/vmclarity/pkg/apiserver"
-	"github.com/openclarity/vmclarity/pkg/apiserver/config"
-	databaseTypes "github.com/openclarity/vmclarity/pkg/apiserver/database/types"
+	"github.com/openclarity/vmclarity/pkg/orchestrator"
 	"github.com/openclarity/vmclarity/pkg/shared/log"
 	"github.com/openclarity/vmclarity/pkg/version"
 )
@@ -34,15 +33,15 @@ import (
 const (
 	LogLevelFlag         = "log-level"
 	LogLevelDefaultValue = "warning"
-	ExecutableName       = "vmclarity-apiserver"
+	ExecutableName       = "vmclarity-orchestrator"
 )
 
 var (
 	logLevel = LogLevelDefaultValue
 	rootCmd  = &cobra.Command{
 		Use:   ExecutableName,
-		Short: "VMClarity Backend",
-		Long:  "VMClarity Backend",
+		Short: "VMClarity Orchestrator",
+		Long:  "VMClarity Orchestrator",
 		Version: fmt.Sprintf("Version: %s \nCommit: %s\nBuild Time: %s",
 			version.Version, version.CommitHash, version.BuildTimestamp),
 		SilenceUsage: true,
@@ -50,19 +49,14 @@ var (
 )
 
 func init() {
-	viper.SetDefault(config.HealthCheckAddress, ":8081")
-	viper.SetDefault(config.BackendRestPort, "8888")
-	viper.SetDefault(config.DatabaseDriver, databaseTypes.DBDriverTypeLocal)
-	viper.SetDefault(config.DisableOrchestrator, "false")
-	viper.AutomaticEnv()
-
 	cmdRun := cobra.Command{
 		Use:     "run",
 		Run:     runCommand,
 		Short:   "Starts the server",
-		Long:    "Starts the VMClarity API server",
+		Long:    "Starts the VMClarity Orchestrator",
 		Example: ExecutableName + " run",
 	}
+
 	cmdRun.PersistentFlags().StringVar(&logLevel,
 		LogLevelFlag,
 		LogLevelDefaultValue,
@@ -72,7 +66,7 @@ func init() {
 		Use:     "version",
 		Run:     versionCommand,
 		Short:   "Displays the version",
-		Long:    "Displays the version of the VMClarity API server",
+		Long:    "Displays the version of the VMClarity Orchestrator",
 		Example: ExecutableName + " version",
 	}
 
@@ -84,14 +78,33 @@ func main() {
 	cobra.CheckErr(rootCmd.Execute())
 }
 
-// Main entry point for the API server, triggered by the `run` command.
-func runCommand(_ *cobra.Command, _ []string) {
-	log.InitLogger(logLevel, os.Stderr)
+// Main entry point for the orchestrator, triggered by the `run` command.
+func runCommand(cmd *cobra.Command, _ []string) {
+	ctx, cancel := context.WithCancel(cmd.Context())
 
-	ctx := context.Background()
+	log.InitLogger(logLevel, os.Stderr)
 	logger := logrus.WithContext(ctx)
 	ctx = log.SetLoggerForContext(ctx, logger)
-	apiserver.Run(ctx)
+
+	orchestratorConfig, err := orchestrator.LoadConfig()
+	if err != nil {
+		logger.Fatalf("failed to load Orchestrator config: %v", err)
+	}
+
+	o, err := orchestrator.New(ctx, orchestratorConfig)
+	if err != nil {
+		logger.Fatalf("failed to initialize Orchestrator: %v", err)
+	}
+
+	o.Start(ctx)
+
+	// Wait for deactivation
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+
+	s := <-sig
+	cancel()
+	logger.Warningf("Received a termination signal: %v", s)
 }
 
 // Command to display the version.

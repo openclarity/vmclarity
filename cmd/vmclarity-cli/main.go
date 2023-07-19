@@ -18,5 +18,6 @@ package main
 import "github.com/openclarity/vmclarity/cmd/vmclarity-cli/root"
 
 func main() {
+	// test
 	root.Execute()
 }
