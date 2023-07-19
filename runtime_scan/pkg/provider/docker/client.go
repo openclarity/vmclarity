@@ -29,7 +29,7 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
-	families "github.com/openclarity/vmclarity/shared/pkg/families"
+	"github.com/openclarity/vmclarity/shared/pkg/families"
 	"github.com/openclarity/vmclarity/shared/pkg/log"
 	"io"
 	"os"
@@ -37,8 +37,11 @@ import (
 	"path/filepath"
 )
 
-const (
-	MountPointPath = "/mnt/snapshot"
+var (
+	// mountPointPath defines the location in the container where assets will be mounted
+	mountPointPath = "/mnt/snapshot"
+	// helperImage defines helper container image that performs init tasks
+	helperImage = "alpine"
 )
 
 type Client struct {
@@ -62,13 +65,13 @@ func (c *Client) Kind() models.CloudProvider {
 
 func (c *Client) DiscoverAssets(ctx context.Context) ([]models.AssetType, error) {
 	// Get image assets
-	imageAssets, err := c.getImages(ctx)
+	imageAssets, err := c.getImageAssets(ctx)
 	if err != nil {
 		return nil, provider.FatalErrorf("failed to get images. Provider=%s: %w", models.Docker, err)
 	}
 
 	// Get container assets
-	containerAssets, err := c.getContainers(ctx)
+	containerAssets, err := c.getContainerAssets(ctx)
 	if err != nil {
 		return nil, provider.FatalErrorf("failed to get containers. Provider=%s: %w", models.Docker, err)
 	}
@@ -80,18 +83,17 @@ func (c *Client) DiscoverAssets(ctx context.Context) ([]models.AssetType, error)
 }
 
 func (c *Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
-
-	err := c.prepareScanVolume(ctx, config)
+	assetVolume, err := c.createScanAssetVolume(ctx, config)
 	if err != nil {
 		return provider.FatalErrorf("failed to prepare scan volume. Provider=%s: %w", models.Docker, err)
 	}
 
-	err = c.createScanConfigFile(config)
+	networkID, err := c.createScanNetwork(ctx, config)
 	if err != nil {
-		return provider.FatalErrorf("failed to create scanconfig.yaml file. Provider=%s: %w", models.Docker, err)
+		return provider.FatalErrorf("failed to prepare scan network. Provider=%s: %w", models.Docker, err)
 	}
 
-	containerID, err := c.createScanContainer(ctx, config)
+	containerID, err := c.createScanContainer(ctx, assetVolume, networkID, config)
 	if err != nil {
 		return provider.FatalErrorf("failed to create scan container. Provider=%s: %w", models.Docker, err)
 	}
@@ -105,14 +107,7 @@ func (c *Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfi
 }
 
 func (c *Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
-
-	scanConfigFileName := getScanConfigFileName(config)
-	err := os.Remove(path.Dir(scanConfigFileName))
-	if err != nil {
-		return provider.FatalErrorf("failed to remove scan config file. Provider=%s: %w", models.Docker, err)
-	}
-
-	containerID, err := c.getContainerIdFromContainerName(ctx, config.AssetScanID)
+	containerID, err := c.getContainerIdFromName(ctx, config.AssetScanID)
 	if err != nil {
 		return provider.FatalErrorf("failed to get scan container id. Provider=%s: %w", models.Docker, err)
 	}
@@ -121,12 +116,18 @@ func (c *Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobCo
 		return provider.FatalErrorf("failed to remove scan container. Provider=%s: %w", models.Docker, err)
 	}
 
+	scanConfigFileName := getScanConfigFilePath(config)
+	err = os.Remove(scanConfigFileName)
+	if err != nil {
+		return provider.FatalErrorf("failed to remove scan config file. Provider=%s: %w", models.Docker, err)
+	}
+
 	err = c.dockerClient.VolumeRemove(ctx, config.AssetScanID, true)
 	if err != nil {
 		return provider.FatalErrorf("failed to remove volume. Provider=%s: %w", models.Docker, err)
 	}
 
-	networkID, err := c.getNetworkIdFromNetworkName(ctx, config.AssetScanID)
+	networkID, err := c.getNetworkIdFromName(ctx, config.AssetScanID)
 	if err != nil {
 		return provider.FatalErrorf("failed to get scan network id. Provider=%s: %w", models.Docker, err)
 	}
@@ -138,170 +139,100 @@ func (c *Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobCo
 	return nil
 }
 
-func (c *Client) prepareScanVolume(ctx context.Context, config *provider.ScanJobConfig) error {
+// createScanAssetVolume returns volume name or error
+func (c *Client) createScanAssetVolume(ctx context.Context, config *provider.ScanJobConfig) (string, error) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx)
+	volumeName := config.AssetScanID
 
 	// Create volume if not found
-	volumeResp, err := c.dockerClient.VolumeList(ctx, volume.ListOptions{
-		Filters: filters.NewArgs(filters.Arg("name", config.AssetScanID)),
+	volumesResp, err := c.dockerClient.VolumeList(ctx, volume.ListOptions{
+		Filters: filters.NewArgs(filters.Arg("name", volumeName)),
 	})
 	if err != nil {
-		return fmt.Errorf("failed to get volumes: %w", err)
+		return "", fmt.Errorf("failed to get volumes: %w", err)
 	}
-	if len(volumeResp.Volumes) == 1 {
-		logger.Infof("scan volume already created")
-		return nil
+	if len(volumesResp.Volumes) == 1 {
+		logger.Infof("Scan volume=%s already exists", volumeName)
+		return volumeName, nil
 	}
-	if len(volumeResp.Volumes) == 0 {
+	if len(volumesResp.Volumes) == 0 {
 		_, err = c.dockerClient.VolumeCreate(ctx, volume.CreateOptions{
-			Name: config.AssetScanID,
+			Name: volumeName,
 		})
 		if err != nil {
-			return fmt.Errorf("failed to create volume: %w", err)
+			return "", fmt.Errorf("failed to create scan volume: %w", err)
 		}
 	}
 
-	rawContents, err := c.export(ctx, config)
+	// Pull image for ephemeral container
+	imagePullResp, err := c.dockerClient.ImagePull(ctx, helperImage, types.ImagePullOptions{})
 	if err != nil {
-		return fmt.Errorf("failed to export target: %w", err)
+		return "", fmt.Errorf("failed to pull helper image: %w", err)
 	}
 
-	// Create an ephemeral container to populate volume with export output
-	pl, err := c.dockerClient.ImagePull(ctx, "alpine", types.ImagePullOptions{})
-	if err != nil {
-		return fmt.Errorf("failed to pull helper image: %w", err)
-	}
-	// ImagePull function's description: It's up to the caller to handle the io.ReadCloser and close it properly.
-	_, _ = io.Copy(io.Discard, pl)
-	_ = pl.Close()
+	// Drain response to avoid blocking
+	_, _ = io.Copy(io.Discard, imagePullResp)
+	_ = imagePullResp.Close()
 
-	containerResp, err := c.dockerClient.ContainerCreate(ctx,
+	// Create an ephemeral container to populate volume with asset contents
+	containerResp, err := c.dockerClient.ContainerCreate(
+		ctx,
 		&container.Config{
-			Image: "alpine",
+			Image: helperImage,
 		},
 		&container.HostConfig{
 			Mounts: []mount.Mount{
 				{
 					Type:   mount.TypeVolume,
-					Source: config.AssetScanID,
+					Source: volumeName,
 					Target: "/data",
 				},
 			},
-		}, nil, nil, "")
+		},
+		nil,
+		nil,
+		"",
+	)
 	if err != nil {
-		return fmt.Errorf("failed to create helper container: %w", err)
+		return "", fmt.Errorf("failed to create helper container: %w", err)
 	}
 	defer func() {
-		err = c.dockerClient.ContainerRemove(ctx, containerResp.ID, types.ContainerRemoveOptions{Force: true})
+		err := c.dockerClient.ContainerRemove(ctx, containerResp.ID, types.ContainerRemoveOptions{Force: true})
 		if err != nil {
-			logger.Errorf("failed to remove helper container: %s", err.Error())
+			logger.Errorf("Failed to remove helper container=%s: %v", containerResp.ID, err)
 		}
 	}()
-	err = c.dockerClient.CopyToContainer(ctx, containerResp.ID, "/data", rawContents, types.CopyToContainerOptions{})
+
+	// Export asset data to tar reader
+	assetContents, err := c.exportAsset(ctx, config)
 	if err != nil {
-		return fmt.Errorf("failed to copy data to container: %w", err)
+		return "", fmt.Errorf("failed to export asset: %w", err)
 	}
-	return nil
+	defer assetContents.Close()
+
+	// Copy asset data to ephemeral container
+	err = c.dockerClient.CopyToContainer(ctx, containerResp.ID, "/data", assetContents, types.CopyToContainerOptions{})
+	if err != nil {
+		return "", fmt.Errorf("failed to copy asset to container: %w", err)
+	}
+
+	return volumeName, nil
 }
 
-func (c *Client) export(ctx context.Context, config *provider.ScanJobConfig) (io.ReadCloser, error) {
-	logger := log.GetLoggerFromContextOrDiscard(ctx)
+// createScanNetwork returns network id or error
+func (c *Client) createScanNetwork(ctx context.Context, config *provider.ScanJobConfig) (string, error) {
+	networkName := config.AssetScanID
 
-	objectType, err := config.AssetInfo.ValueByDiscriminator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get asset object type: %w", err)
+	// Do nothing if network already exists
+	networkID, _ := c.getNetworkIdFromName(ctx, networkName)
+	if networkID != "" {
+		return networkID, nil
 	}
 
-	switch value := objectType.(type) {
-	case models.ContainerInfo:
-		id := *value.Id
-		rawContents, err := c.dockerClient.ContainerExport(ctx, id)
-		if err != nil {
-			return nil, fmt.Errorf("failed to export container: %w", err)
-		}
-		return rawContents, nil
-
-	case models.ContainerImageInfo:
-		name := *value.Name
-		// Create an ephemeral container to export asset
-		containerResp, err := c.dockerClient.ContainerCreate(ctx,
-			&container.Config{Image: name},
-			nil,
-			nil,
-			nil,
-			"",
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create helper container: %w", err)
-		}
-		defer func() {
-			err = c.dockerClient.ContainerRemove(ctx, containerResp.ID, types.ContainerRemoveOptions{Force: true})
-			if err != nil {
-				logger.Errorf("failed to remove helper container: %s", err.Error())
-			}
-		}()
-		rawContents, err := c.dockerClient.ContainerExport(ctx, containerResp.ID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to export container: %w", err)
-		}
-		return rawContents, nil
-
-	default:
-		unknownType, err := config.AssetInfo.Discriminator()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get asset object type: %w", err)
-		}
-
-		return nil, fmt.Errorf("get raw contents not implemented for current object type (%s)", unknownType)
-	}
-}
-
-func (c *Client) createScanConfigFile(config *provider.ScanJobConfig) error {
-	scanConfigFilePath := getScanConfigFileName(config)
-
-	// Add volume mount point to family configuration
-	familiesConfig := families.Config{}
-	err := yaml.Unmarshal([]byte(config.ScannerCLIConfig), &familiesConfig)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshal family scan configuration: %w", err)
-	}
-	families.SetMountPointsForFamiliesInput([]string{MountPointPath}, &familiesConfig)
-	familiesConfigByte, err := yaml.Marshal(familiesConfig)
-	if err != nil {
-		return fmt.Errorf("failed to marshal family scan configuration: %w", err)
-	}
-
-	_, err = os.Stat(scanConfigFilePath)
-	if errors.Is(err, os.ErrNotExist) {
-		err = os.WriteFile(scanConfigFilePath, familiesConfigByte, 0644)
-	}
-	if err != nil {
-		return fmt.Errorf("failed to create scan configuration file: %w", err)
-	}
-
-	return nil
-}
-
-func (c *Client) createScanContainer(ctx context.Context, config *provider.ScanJobConfig) (string, error) {
-	containerID, err := c.getContainerIdFromContainerName(ctx, config.AssetScanID)
-	if err != nil {
-		return "", fmt.Errorf("failed to get container id: %w", err)
-	}
-	if containerID != "" {
-		return containerID, nil
-	}
-
-	pl, err := c.dockerClient.ImagePull(ctx, config.ScannerImage, types.ImagePullOptions{})
-	if err != nil {
-		return "", fmt.Errorf("failed to pull scanner image: %w", err)
-	}
-	// ImagePull function's description: It's up to the caller to handle the io.ReadCloser and close it properly.
-	_, _ = io.Copy(io.Discard, pl)
-	_ = pl.Close()
-
+	// Create network
 	networkResp, err := c.dockerClient.NetworkCreate(
 		ctx,
-		config.AssetScanID,
+		networkName,
 		types.NetworkCreate{
 			CheckDuplicate: true,
 			Driver:         "bridge",
@@ -311,7 +242,65 @@ func (c *Client) createScanContainer(ctx context.Context, config *provider.ScanJ
 		return "", fmt.Errorf("failed to create scan network: %w", err)
 	}
 
-	scanConfigFilePath := getScanConfigFileName(config)
+	return networkResp.ID, nil
+}
+
+// createScanConfigFile returns scan config file path identical to getScanConfigFilePath or error
+func (c *Client) createScanConfigFile(config *provider.ScanJobConfig) (string, error) {
+	scanConfigFilePath := getScanConfigFilePath(config)
+
+	// Add volume mount point to family configuration
+	familiesConfig := families.Config{}
+	err := yaml.Unmarshal([]byte(config.ScannerCLIConfig), &familiesConfig)
+	if err != nil {
+		return "", fmt.Errorf("failed to unmarshal family scan configuration: %w", err)
+	}
+
+	families.SetMountPointsForFamiliesInput([]string{mountPointPath}, &familiesConfig)
+	familiesConfigByte, err := yaml.Marshal(familiesConfig)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal family scan configuration: %w", err)
+	}
+
+	// Create scan config file
+	_, err = os.Stat(scanConfigFilePath)
+	if errors.Is(err, os.ErrNotExist) {
+		err = os.WriteFile(scanConfigFilePath, familiesConfigByte, 0644)
+	}
+	if err != nil {
+		return "", fmt.Errorf("failed to create scan configuration file: %w", err)
+	}
+
+	return scanConfigFilePath, nil
+}
+
+// createScanContainer returns container id or error
+func (c *Client) createScanContainer(ctx context.Context, assetVolume, networkID string, config *provider.ScanJobConfig) (string, error) {
+	containerName := config.AssetScanID
+
+	// Do nothing if scan container already exists
+	containerID, _ := c.getContainerIdFromName(ctx, containerName)
+	if containerID != "" {
+		return containerID, nil
+	}
+
+	// Create scan config file
+	scanConfigFilePath, err := c.createScanConfigFile(config)
+	if err != nil {
+		return "", fmt.Errorf("failed to create scan config file: %w", err)
+	}
+
+	// Pull scanner image
+	imagePullResp, err := c.dockerClient.ImagePull(ctx, config.ScannerImage, types.ImagePullOptions{})
+	if err != nil {
+		return "", fmt.Errorf("failed to pull scanner image: %w", err)
+	}
+
+	// Drain response to avoid blocking
+	_, _ = io.Copy(io.Discard, imagePullResp)
+	_ = imagePullResp.Close()
+
+	// Create scan container
 	containerResp, err := c.dockerClient.ContainerCreate(
 		ctx,
 		&container.Config{
@@ -331,20 +320,20 @@ func (c *Client) createScanContainer(ctx context.Context, config *provider.ScanJ
 			Mounts: []mount.Mount{
 				{
 					Type:   mount.TypeVolume,
-					Source: config.AssetScanID,
-					Target: MountPointPath,
+					Source: assetVolume,
+					Target: mountPointPath,
 				},
 			},
 		},
 		&network.NetworkingConfig{
 			EndpointsConfig: map[string]*network.EndpointSettings{
 				config.AssetScanID: {
-					NetworkID: networkResp.ID,
+					NetworkID: networkID,
 				},
 			},
 		},
 		nil,
-		config.AssetScanID,
+		containerName,
 	)
 	if err != nil {
 		return "", fmt.Errorf("failed to create scan container: %w", err)
@@ -353,11 +342,10 @@ func (c *Client) createScanContainer(ctx context.Context, config *provider.ScanJ
 	return containerResp.ID, nil
 }
 
-func (c *Client) getContainerIdFromContainerName(ctx context.Context, scanName string) (string, error) {
-
+func (c *Client) getContainerIdFromName(ctx context.Context, containerName string) (string, error) {
 	containers, err := c.dockerClient.ContainerList(ctx, types.ContainerListOptions{
 		All:     true,
-		Filters: filters.NewArgs(filters.Arg("name", scanName)),
+		Filters: filters.NewArgs(filters.Arg("name", containerName)),
 	})
 	if err != nil {
 		return "", fmt.Errorf("failed to list containers: %w", err)
@@ -371,10 +359,9 @@ func (c *Client) getContainerIdFromContainerName(ctx context.Context, scanName s
 	return containers[0].ID, nil
 }
 
-func (c *Client) getNetworkIdFromNetworkName(ctx context.Context, scanName string) (string, error) {
-
+func (c *Client) getNetworkIdFromName(ctx context.Context, networkName string) (string, error) {
 	networks, err := c.dockerClient.NetworkList(ctx, types.NetworkListOptions{
-		Filters: filters.NewArgs(filters.Arg("name", scanName)),
+		Filters: filters.NewArgs(filters.Arg("name", networkName)),
 	})
 	if err != nil {
 		return "", fmt.Errorf("failed to list networks: %w", err)
@@ -388,9 +375,57 @@ func (c *Client) getNetworkIdFromNetworkName(ctx context.Context, scanName strin
 	return networks[0].ID, nil
 }
 
-func getScanConfigFileName(config *provider.ScanJobConfig) string {
-	// TODO (adamtagscherer): check if os.TempDir() doesn't create a new unique directory every time it's being called
-	return os.TempDir() + config.AssetScanID + "_scanconfig.yaml"
+func (c *Client) exportAsset(ctx context.Context, config *provider.ScanJobConfig) (io.ReadCloser, error) {
+	logger := log.GetLoggerFromContextOrDiscard(ctx)
+
+	objectType, err := config.AssetInfo.ValueByDiscriminator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get asset object type: %w", err)
+	}
+
+	switch value := objectType.(type) {
+	case models.ContainerInfo:
+		containerID := *value.Id
+		contents, err := c.dockerClient.ContainerExport(ctx, containerID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to export container: %w", err)
+		}
+		return contents, nil
+
+	case models.ContainerImageInfo:
+		// Create an ephemeral container to export asset
+		image := *value.Name
+		containerResp, err := c.dockerClient.ContainerCreate(
+			ctx,
+			&container.Config{Image: image},
+			nil,
+			nil,
+			nil,
+			"",
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create helper container: %w", err)
+		}
+		defer func() {
+			err := c.dockerClient.ContainerRemove(ctx, containerResp.ID, types.ContainerRemoveOptions{Force: true})
+			if err != nil {
+				logger.Errorf("Failed to remove helper container=%s: %v", containerResp.ID, err)
+			}
+		}()
+
+		contents, err := c.dockerClient.ContainerExport(ctx, containerResp.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to export container: %w", err)
+		}
+		return contents, nil
+
+	default:
+		return nil, fmt.Errorf("failed to export asset object type %T: Not implemented", value)
+	}
+}
+
+func getScanConfigFilePath(config *provider.ScanJobConfig) string {
+	return path.Join(os.TempDir(), config.AssetScanID+"_scanconfig.yaml")
 }
 
 func convertTags(tags map[string]string) *[]models.Tag {

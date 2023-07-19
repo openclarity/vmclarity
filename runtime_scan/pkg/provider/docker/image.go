@@ -26,7 +26,7 @@ import (
 	"sync"
 )
 
-func (c *Client) getImages(ctx context.Context) ([]models.AssetType, error) {
+func (c *Client) getImageAssets(ctx context.Context) ([]models.AssetType, error) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx)
 
 	// List all docker images

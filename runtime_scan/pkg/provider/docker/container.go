@@ -27,7 +27,7 @@ import (
 	"time"
 )
 
-func (c *Client) getContainers(ctx context.Context) ([]models.AssetType, error) {
+func (c *Client) getContainerAssets(ctx context.Context) ([]models.AssetType, error) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx)
 
 	// List all docker containers
@@ -53,7 +53,7 @@ func (c *Client) getContainers(ctx context.Context) ([]models.AssetType, error) 
 			func(container types.Container) func() error {
 				return func() error {
 					// Get container info
-					info, err := c.getContainerInfo(processCtx, container)
+					info, err := c.getContainerInfo(processCtx, container.ID, container.ImageID)
 					if err != nil {
 						logger.Warnf("Failed to get container. id=%v: %v", container.ID, err)
 						return nil // skip fail
@@ -88,9 +88,9 @@ func (c *Client) getContainers(ctx context.Context) ([]models.AssetType, error) 
 	return assets, nil
 }
 
-func (c *Client) getContainerInfo(ctx context.Context, container types.Container) (models.ContainerInfo, error) {
+func (c *Client) getContainerInfo(ctx context.Context, containerID, imageID string) (models.ContainerInfo, error) {
 	// Inspect container
-	info, err := c.dockerClient.ContainerInspect(ctx, container.ID)
+	info, err := c.dockerClient.ContainerInspect(ctx, containerID)
 	if err != nil {
 		return models.ContainerInfo{}, fmt.Errorf("failed to inspect container: %w", err)
 	}
@@ -101,7 +101,7 @@ func (c *Client) getContainerInfo(ctx context.Context, container types.Container
 	}
 
 	// Get container image info
-	imageInfo, err := c.getContainerImageInfo(ctx, container.ImageID)
+	imageInfo, err := c.getContainerImageInfo(ctx, imageID)
 	if err != nil {
 		return models.ContainerInfo{}, err
 	}
@@ -109,9 +109,9 @@ func (c *Client) getContainerInfo(ctx context.Context, container types.Container
 	return models.ContainerInfo{
 		ContainerName: utils.PointerTo(info.Name),
 		CreatedAt:     utils.PointerTo(createdAt),
-		Id:            utils.PointerTo(container.ID),
+		Id:            utils.PointerTo(containerID),
 		Image:         utils.PointerTo(imageInfo),
-		Labels:        convertTags(container.Labels),
+		Labels:        convertTags(info.Config.Labels),
 		ObjectType:    "ContainerInfo",
 	}, nil
 }
