@@ -215,7 +215,11 @@ func (c *Client) export(ctx context.Context, config *provider.ScanJobConfig) (io
 	switch value := objectType.(type) {
 	case models.ContainerInfo:
 		id := *value.Id
-		return c.dockerClient.ContainerExport(ctx, id)
+		rawContents, err := c.dockerClient.ContainerExport(ctx, id)
+		if err != nil {
+			return nil, fmt.Errorf("failed to export container: %w", err)
+		}
+		return rawContents, nil
 
 	case models.ContainerImageInfo:
 		name := *value.Name
@@ -233,10 +237,14 @@ func (c *Client) export(ctx context.Context, config *provider.ScanJobConfig) (io
 		defer func() {
 			err = c.dockerClient.ContainerRemove(ctx, containerResp.ID, types.ContainerRemoveOptions{Force: true})
 			if err != nil {
-				logger.Errorf("failed to remove helper container: %w", err)
+				logger.Errorf("failed to remove helper container: %s", err.Error())
 			}
 		}()
-		return c.dockerClient.ContainerExport(ctx, containerResp.ID)
+		rawContents, err := c.dockerClient.ContainerExport(ctx, containerResp.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to export container: %w", err)
+		}
+		return rawContents, nil
 
 	default:
 		unknownType, err := config.AssetInfo.Discriminator()
@@ -276,6 +284,9 @@ func (c *Client) createScanConfigFile(config *provider.ScanJobConfig) error {
 
 func (c *Client) createScanContainer(ctx context.Context, config *provider.ScanJobConfig) (string, error) {
 	containerID, err := c.getContainerIdFromContainerName(ctx, config.AssetScanID)
+	if err != nil {
+		return "", fmt.Errorf("failed to get container id: %w", err)
+	}
 	if containerID != "" {
 		return containerID, nil
 	}
