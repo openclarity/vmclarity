@@ -17,6 +17,7 @@ package families
 
 import (
 	kubeclarityutils "github.com/openclarity/kubeclarity/shared/pkg/utils"
+
 	"github.com/openclarity/vmclarity/shared/pkg/families/exploits"
 	"github.com/openclarity/vmclarity/shared/pkg/families/malware"
 	misconfigurationTypes "github.com/openclarity/vmclarity/shared/pkg/families/misconfiguration/types"

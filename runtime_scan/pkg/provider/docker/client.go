@@ -19,6 +19,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"os"
+	"path"
+	"path/filepath"
+
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
@@ -27,20 +32,17 @@ import (
 	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
 	"github.com/ghodss/yaml"
+
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 	"github.com/openclarity/vmclarity/shared/pkg/families"
 	"github.com/openclarity/vmclarity/shared/pkg/log"
-	"io"
-	"os"
-	"path"
-	"path/filepath"
 )
 
 var (
-	// mountPointPath defines the location in the container where assets will be mounted
+	// mountPointPath defines the location in the container where assets will be mounted.
 	mountPointPath = "/mnt/snapshot"
-	// helperImage defines helper container image that performs init tasks
+	// helperImage defines helper container image that performs init tasks.
 	helperImage = "alpine"
 )
 
@@ -83,7 +85,7 @@ func (c *Client) DiscoverAssets(ctx context.Context) ([]models.AssetType, error)
 }
 
 func (c *Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
-	assetVolume, err := c.createScanAssetVolume(ctx, config)
+	assetVolume, err := c.prepareScanAssetVolume(ctx, config)
 	if err != nil {
 		return provider.FatalErrorf("failed to prepare scan volume. Provider=%s: %w", models.Docker, err)
 	}
@@ -107,7 +109,7 @@ func (c *Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfi
 }
 
 func (c *Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
-	containerID, err := c.getContainerIdFromName(ctx, config.AssetScanID)
+	containerID, err := c.getContainerIDFromName(ctx, config.AssetScanID)
 	if err != nil {
 		return provider.FatalErrorf("failed to get scan container id. Provider=%s: %w", models.Docker, err)
 	}
@@ -127,7 +129,7 @@ func (c *Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobCo
 		return provider.FatalErrorf("failed to remove volume. Provider=%s: %w", models.Docker, err)
 	}
 
-	networkID, err := c.getNetworkIdFromName(ctx, config.AssetScanID)
+	networkID, err := c.getNetworkIDFromName(ctx, config.AssetScanID)
 	if err != nil {
 		return provider.FatalErrorf("failed to get scan network id. Provider=%s: %w", models.Docker, err)
 	}
@@ -139,32 +141,15 @@ func (c *Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobCo
 	return nil
 }
 
-// createScanAssetVolume returns volume name or error
-func (c *Client) createScanAssetVolume(ctx context.Context, config *provider.ScanJobConfig) (string, error) {
+// prepareScanAssetVolume returns volume name or error.
+func (c *Client) prepareScanAssetVolume(ctx context.Context, config *provider.ScanJobConfig) (string, error) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx)
 	volumeName := config.AssetScanID
 
 	// Create volume if not found
-	volumesResp, err := c.dockerClient.VolumeList(ctx, volume.ListOptions{
-		Filters: filters.NewArgs(filters.Arg("name", volumeName)),
-	})
+	err := c.createScanAssetVolume(ctx, volumeName)
 	if err != nil {
-		return "", fmt.Errorf("failed to get volumes: %w", err)
-	}
-	if len(volumesResp.Volumes) > 1 {
-		return "", fmt.Errorf("invalid number of volumes found")
-	}
-	if len(volumesResp.Volumes) == 1 {
-		logger.Infof("Scan volume=%s already exists", volumeName)
-		return volumeName, nil
-	}
-	if len(volumesResp.Volumes) == 0 {
-		_, err = c.dockerClient.VolumeCreate(ctx, volume.CreateOptions{
-			Name: volumeName,
-		})
-		if err != nil {
-			return "", fmt.Errorf("failed to create scan volume: %w", err)
-		}
+		return "", fmt.Errorf("failed to create scan volume : %w", err)
 	}
 
 	// Pull image for ephemeral container
@@ -230,12 +215,38 @@ func (c *Client) createScanAssetVolume(ctx context.Context, config *provider.Sca
 	return volumeName, nil
 }
 
-// createScanNetwork returns network id or error
+func (c *Client) createScanAssetVolume(ctx context.Context, volumeName string) error {
+	logger := log.GetLoggerFromContextOrDiscard(ctx)
+
+	// Create volume if not found
+	volumesResp, err := c.dockerClient.VolumeList(ctx, volume.ListOptions{
+		Filters: filters.NewArgs(filters.Arg("name", volumeName)),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to get volumes: %w", err)
+	}
+
+	if len(volumesResp.Volumes) == 1 {
+		logger.Infof("Scan volume=%s already exists", volumeName)
+		return nil
+	}
+	if len(volumesResp.Volumes) == 0 {
+		_, err = c.dockerClient.VolumeCreate(ctx, volume.CreateOptions{
+			Name: volumeName,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to create scan volume: %w", err)
+		}
+	}
+	return fmt.Errorf("invalid number of volumes found")
+}
+
+// createScanNetwork returns network id or error.
 func (c *Client) createScanNetwork(ctx context.Context, config *provider.ScanJobConfig) (string, error) {
 	networkName := config.AssetScanID
 
 	// Do nothing if network already exists
-	networkID, _ := c.getNetworkIdFromName(ctx, networkName)
+	networkID, _ := c.getNetworkIDFromName(ctx, networkName)
 	if networkID != "" {
 		return networkID, nil
 	}
@@ -256,7 +267,7 @@ func (c *Client) createScanNetwork(ctx context.Context, config *provider.ScanJob
 	return networkResp.ID, nil
 }
 
-// createScanConfigFile returns scan config file path identical to getScanConfigFilePath or error
+// createScanConfigFile returns scan config file path identical to getScanConfigFilePath or error.
 func (c *Client) createScanConfigFile(config *provider.ScanJobConfig) (string, error) {
 	scanConfigFilePath := getScanConfigFilePath(config)
 
@@ -276,7 +287,7 @@ func (c *Client) createScanConfigFile(config *provider.ScanJobConfig) (string, e
 	// Create scan config file
 	_, err = os.Stat(scanConfigFilePath)
 	if errors.Is(err, os.ErrNotExist) {
-		err = os.WriteFile(scanConfigFilePath, familiesConfigByte, 0644)
+		err = os.WriteFile(scanConfigFilePath, familiesConfigByte, 0o600) // nolint:gomnd,gofumpt
 	}
 	if err != nil {
 		return "", fmt.Errorf("failed to create scan configuration file: %w", err)
@@ -285,12 +296,12 @@ func (c *Client) createScanConfigFile(config *provider.ScanJobConfig) (string, e
 	return scanConfigFilePath, nil
 }
 
-// createScanContainer returns container id or error
+// createScanContainer returns container id or error.
 func (c *Client) createScanContainer(ctx context.Context, assetVolume, networkID string, config *provider.ScanJobConfig) (string, error) {
 	containerName := config.AssetScanID
 
 	// Do nothing if scan container already exists
-	containerID, _ := c.getContainerIdFromName(ctx, containerName)
+	containerID, _ := c.getContainerIDFromName(ctx, containerName)
 	if containerID != "" {
 		return containerID, nil
 	}
@@ -353,7 +364,7 @@ func (c *Client) createScanContainer(ctx context.Context, assetVolume, networkID
 	return containerResp.ID, nil
 }
 
-func (c *Client) getContainerIdFromName(ctx context.Context, containerName string) (string, error) {
+func (c *Client) getContainerIDFromName(ctx context.Context, containerName string) (string, error) {
 	containers, err := c.dockerClient.ContainerList(ctx, types.ContainerListOptions{
 		All:     true,
 		Filters: filters.NewArgs(filters.Arg("name", containerName)),
@@ -370,7 +381,7 @@ func (c *Client) getContainerIdFromName(ctx context.Context, containerName strin
 	return containers[0].ID, nil
 }
 
-func (c *Client) getNetworkIdFromName(ctx context.Context, networkName string) (string, error) {
+func (c *Client) getNetworkIDFromName(ctx context.Context, networkName string) (string, error) {
 	networks, err := c.dockerClient.NetworkList(ctx, types.NetworkListOptions{
 		Filters: filters.NewArgs(filters.Arg("name", networkName)),
 	})

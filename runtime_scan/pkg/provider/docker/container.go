@@ -18,13 +18,15 @@ package docker
 import (
 	"context"
 	"fmt"
+	"sync"
+	"time"
+
 	"github.com/docker/docker/api/types"
+	"golang.org/x/sync/errgroup"
+
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/shared/pkg/log"
 	"github.com/openclarity/vmclarity/shared/pkg/utils"
-	"golang.org/x/sync/errgroup"
-	"sync"
-	"time"
 )
 
 func (c *Client) getContainerAssets(ctx context.Context) ([]models.AssetType, error) {
