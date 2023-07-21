@@ -44,6 +44,8 @@ var (
 	mountPointPath = "/mnt/snapshot"
 	// helperImage defines helper container image that performs init tasks.
 	helperImage = "alpine"
+	// networkName defines the user defined bridge network where we attach the scanner container.
+	networkName = "vmclarity"
 )
 
 type Client struct {
@@ -90,7 +92,7 @@ func (c *Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfi
 		return provider.FatalErrorf("failed to prepare scan volume. Provider=%s: %w", models.Docker, err)
 	}
 
-	networkID, err := c.createScanNetwork(ctx, config)
+	networkID, err := c.createScanNetwork(ctx)
 	if err != nil {
 		return provider.FatalErrorf("failed to prepare scan network. Provider=%s: %w", models.Docker, err)
 	}
@@ -127,15 +129,6 @@ func (c *Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobCo
 	err = c.dockerClient.VolumeRemove(ctx, config.AssetScanID, true)
 	if err != nil {
 		return provider.FatalErrorf("failed to remove volume. Provider=%s: %w", models.Docker, err)
-	}
-
-	networkID, err := c.getNetworkIDFromName(ctx, config.AssetScanID)
-	if err != nil {
-		return provider.FatalErrorf("failed to get scan network id. Provider=%s: %w", models.Docker, err)
-	}
-	err = c.dockerClient.NetworkRemove(ctx, networkID)
-	if err != nil {
-		return provider.FatalErrorf("failed to remove scan network. Provider=%s: %w", models.Docker, err)
 	}
 
 	return nil
@@ -242,9 +235,7 @@ func (c *Client) createScanAssetVolume(ctx context.Context, volumeName string) e
 }
 
 // createScanNetwork returns network id or error.
-func (c *Client) createScanNetwork(ctx context.Context, config *provider.ScanJobConfig) (string, error) {
-	networkName := config.AssetScanID
-
+func (c *Client) createScanNetwork(ctx context.Context) (string, error) {
 	// Do nothing if network already exists
 	networkID, _ := c.getNetworkIDFromName(ctx, networkName)
 	if networkID != "" {
