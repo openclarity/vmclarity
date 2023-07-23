@@ -115,7 +115,7 @@ func convertAssetFromModels(asset models.Asset) (*provider_service.Asset, error)
 }
 
 func convertTagsToModels(tags []*provider_service.Tag) *[]models.Tag {
-	var ret []models.Tag
+	ret := make([]models.Tag, 0)
 
 	if len(tags) == 0 {
 		return nil
@@ -132,7 +132,7 @@ func convertTagsToModels(tags []*provider_service.Tag) *[]models.Tag {
 }
 
 func convertTagsFromModels(tags *[]models.Tag) []*provider_service.Tag {
-	var ret []*provider_service.Tag
+	ret := make([]*provider_service.Tag, 0)
 
 	if tags == nil {
 		return nil

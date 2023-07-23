@@ -18,7 +18,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"net"
 	"time"
 
@@ -105,7 +104,7 @@ func (p *Provider) RunAssetScan(context.Context, *provider_service.RunAssetScanP
 
 func main() {
 	flag.Parse()
-	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:24230"))
+	lis, err := net.Listen("tcp", "localhost:24230")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

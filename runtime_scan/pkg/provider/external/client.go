@@ -68,7 +68,7 @@ func (c Client) Kind() models.CloudProvider {
 }
 
 func (c *Client) DiscoverAssets(ctx context.Context) ([]models.AssetType, error) {
-	var ret []models.AssetType
+	ret := make([]models.AssetType, 0)
 
 	res, err := c.providerClient.DiscoverAssets(ctx, &provider_service.DiscoverAssetsParams{})
 	if err != nil {
