@@ -360,16 +360,18 @@ func createVMInfo(instanceID, location, image, instanceType, platform string,
 ) *models.AssetType {
 	info := models.AssetType{}
 	err := info.FromVMInfo(models.VMInfo{
-		Image:               image,
-		InstanceID:          instanceID,
-		InstanceProvider:    &instanceProvider,
-		InstanceType:        instanceType,
-		LaunchTime:          launchTime,
-		Location:            location,
-		Platform:            platform,
-		Tags:                &tags,
-		RootVolumeSizeGB:    rootVolumeSizeGB,
-		RootVolumeEncrypted: rootVolumeEncrypted,
+		Image:            image,
+		InstanceID:       instanceID,
+		InstanceProvider: &instanceProvider,
+		InstanceType:     instanceType,
+		LaunchTime:       launchTime,
+		Location:         location,
+		Platform:         platform,
+		Tags:             &tags,
+		RootVolume: models.RootVolume{
+			Encrypted: rootVolumeEncrypted,
+			SizeGB:    rootVolumeSizeGB,
+		},
 	})
 	if err != nil {
 		panic(err)

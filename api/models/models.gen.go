@@ -504,6 +504,12 @@ type PodInfo struct {
 // ResourceCleanupState defines model for ResourceCleanupState.
 type ResourceCleanupState string
 
+// RootVolume Information about VM root volume
+type RootVolume struct {
+	Encrypted bool `json:"encrypted"`
+	SizeGB    int  `json:"sizeGB"`
+}
+
 // Rootkit defines model for Rootkit.
 type Rootkit struct {
 	Message     *string      `json:"message,omitempty"`
@@ -875,18 +881,19 @@ type Tag struct {
 
 // VMInfo defines model for VMInfo.
 type VMInfo struct {
-	Image               string           `json:"image"`
-	InstanceID          string           `json:"instanceID"`
-	InstanceProvider    *CloudProvider   `json:"instanceProvider,omitempty"`
-	InstanceType        string           `json:"instanceType"`
-	LaunchTime          time.Time        `json:"launchTime"`
-	Location            string           `json:"location"`
-	ObjectType          string           `json:"objectType"`
-	Platform            string           `json:"platform"`
-	RootVolumeEncrypted bool             `json:"rootVolumeEncrypted"`
-	RootVolumeSizeGB    int              `json:"rootVolumeSizeGB"`
-	SecurityGroups      *[]SecurityGroup `json:"securityGroups"`
-	Tags                *[]Tag           `json:"tags"`
+	Image            string         `json:"image"`
+	InstanceID       string         `json:"instanceID"`
+	InstanceProvider *CloudProvider `json:"instanceProvider,omitempty"`
+	InstanceType     string         `json:"instanceType"`
+	LaunchTime       time.Time      `json:"launchTime"`
+	Location         string         `json:"location"`
+	ObjectType       string         `json:"objectType"`
+	Platform         string         `json:"platform"`
+
+	// RootVolume Information about VM root volume
+	RootVolume     RootVolume       `json:"rootVolume"`
+	SecurityGroups *[]SecurityGroup `json:"securityGroups"`
+	Tags           *[]Tag           `json:"tags"`
 }
 
 // VulnerabilitiesConfig defines model for VulnerabilitiesConfig.

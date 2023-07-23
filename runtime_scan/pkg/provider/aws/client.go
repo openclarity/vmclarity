@@ -775,16 +775,15 @@ func (c *Client) getInstancesFromDescribeInstancesOutput(ctx context.Context, re
 			}
 
 			if err := validateInstanceFields(instance); err != nil {
-				logger.Errorf("Instance validation failed. instance id=%v: %v", getStringPointerValOrEmpty(instance.InstanceId), err)
+				logger.Errorf("Instance validation failed. instance id=%v: %v", utils.StringPointerValOrEmpty(instance.InstanceId), err)
 				continue
 			}
 			rootVol, err := getRootVolumeInfo(ctx, c.ec2Client, instance, regionID)
 			if err != nil {
-				logger.Warnf("Couldn't get root volume info. instance id=%v: %v", getStringPointerValOrEmpty(instance.InstanceId), err)
-				rootVol = &rootVolumeInfo{
-					DeviceName: getStringPointerValOrEmpty(instance.RootDeviceName),
-					SizeGB:     0,
-					Encrypted:  false,
+				logger.Warnf("Couldn't get root volume info. instance id=%v: %v", utils.StringPointerValOrEmpty(instance.InstanceId), err)
+				rootVol = &models.RootVolume{
+					SizeGB:    0,
+					Encrypted: false,
 				}
 			}
 
@@ -799,8 +798,8 @@ func (c *Client) getInstancesFromDescribeInstancesOutput(ctx context.Context, re
 				LaunchTime:          *instance.LaunchTime,
 				VpcID:               *instance.VpcId,
 				SecurityGroups:      getSecurityGroupsIDs(instance.SecurityGroups),
-				RootDeviceName:      rootVol.DeviceName,
-				RootVolumeSizeGB:    rootVol.SizeGB,
+				RootDeviceName:      utils.StringPointerValOrEmpty(instance.RootDeviceName),
+				RootVolumeSizeGB:    int32(rootVol.SizeGB),
 				RootVolumeEncrypted: rootVol.Encrypted,
 
 				ec2Client: c.ec2Client,
@@ -816,10 +815,13 @@ type rootVolumeInfo struct {
 	Encrypted  bool
 }
 
-func getRootVolumeInfo(ctx context.Context, client *ec2.Client, i ec2types.Instance, region string) (*rootVolumeInfo, error) {
+func getRootVolumeInfo(ctx context.Context, client *ec2.Client, i ec2types.Instance, region string) (*models.RootVolume, error) {
+	if i.RootDeviceName == nil || *i.RootDeviceName == "" {
+		return nil, fmt.Errorf("RootDeviceName is not set")
+	}
 	logger := log.GetLoggerFromContextOrDiscard(ctx)
 	for _, mapping := range i.BlockDeviceMappings {
-		if getStringPointerValOrEmpty(mapping.DeviceName) == getStringPointerValOrEmpty(i.RootDeviceName) {
+		if utils.StringPointerValOrEmpty(mapping.DeviceName) == utils.StringPointerValOrEmpty(i.RootDeviceName) {
 			if mapping.Ebs == nil {
 				return nil, fmt.Errorf("EBS of the root volume is nil")
 			}
@@ -847,10 +849,9 @@ func getRootVolumeInfo(ctx context.Context, client *ec2.Client, i ec2types.Insta
 				}).Warnf("Found more than 1 root volume, using the first")
 			}
 
-			return &rootVolumeInfo{
-				DeviceName: getStringPointerValOrEmpty(mapping.DeviceName),
-				SizeGB:     getInt32PointerValOrEmpty(describeOut.Volumes[0].Size),
-				Encrypted:  getBoolPointerValOrFalse(describeOut.Volumes[0].Encrypted),
+			return &models.RootVolume{
+				SizeGB:    int(utils.Int32PointerValOrEmpty(describeOut.Volumes[0].Size)),
+				Encrypted: utils.BoolPointerValOrFalse(describeOut.Volumes[0].Encrypted),
 			}, nil
 		}
 	}

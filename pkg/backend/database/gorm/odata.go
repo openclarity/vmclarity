@@ -388,15 +388,17 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 	},
 	"VMInfo": {
 		Fields: odatasql.Schema{
-			"objectType":          odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
-			"instanceID":          odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
-			"location":            odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
-			"launchTime":          odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
-			"platform":            odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
-			"instanceType":        odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
-			"image":               odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
-			"rootVolumeSizeGB":    odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
-			"rootVolumeEncrypted": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"objectType":   odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"instanceID":   odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"location":     odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"launchTime":   odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"platform":     odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"instanceType": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"image":        odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"rootVolume": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"RootVolume"},
+			},
 			"tags": odatasql.FieldMeta{
 				FieldType: odatasql.CollectionFieldType,
 				CollectionItemMeta: &odatasql.FieldMeta{
@@ -412,6 +414,12 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 				},
 			},
 			"instanceProvider": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+		},
+	},
+	"RootVolume": {
+		Fields: odatasql.Schema{
+			"sizeGB":    odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"encrypted": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 		},
 	},
 	"SecurityGroup": {

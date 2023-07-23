@@ -228,43 +228,44 @@ type rootVolumeInfo struct {
 	Encrypted bool
 }
 
-func (c *Client) getRootVolumeInfo(ctx context.Context, vm *armcompute.VirtualMachine) *rootVolumeInfo {
+func (c *Client) getRootVolumeInfo(ctx context.Context, vm *armcompute.VirtualMachine) *models.RootVolume {
 	logger := log.GetLoggerFromContextOrDiscard(ctx)
-	ret := &rootVolumeInfo{
-		SizeGB:    *vm.Properties.StorageProfile.OSDisk.DiskSizeGB,
+	ret := &models.RootVolume{
+		SizeGB:    int(utils.Int32PointerValOrEmpty(vm.Properties.StorageProfile.OSDisk.DiskSizeGB)),
 		Encrypted: false,
 	}
-	osDiskID, err := arm.ParseResourceID(*vm.Properties.StorageProfile.OSDisk.ManagedDisk.ID)
+	osDiskID, err := arm.ParseResourceID(utils.StringPointerValOrEmpty(vm.Properties.StorageProfile.OSDisk.ManagedDisk.ID))
 	if err != nil {
-		logger.Warnf("Failed to parse disk ID. DiskID=%v: %v", *vm.Properties.StorageProfile.OSDisk.ManagedDisk.ID, err)
+		logger.Warnf("Failed to parse disk ID. DiskID=%v: %v",
+			utils.StringPointerValOrEmpty(vm.Properties.StorageProfile.OSDisk.ManagedDisk.ID), err)
 		return ret
 	}
 	osDisk, err := c.disksClient.Get(context.TODO(), osDiskID.ResourceGroupName, osDiskID.Name, nil)
 	if err != nil {
-		logger.Warnf("Failed to get OS disk. DiskID=%v: %v", *vm.Properties.StorageProfile.OSDisk.ManagedDisk.ID, err)
+		logger.Warnf("Failed to get OS disk. DiskID=%v: %v",
+			utils.StringPointerValOrEmpty(vm.Properties.StorageProfile.OSDisk.ManagedDisk.ID), err)
 		return ret
 	}
 	ret.Encrypted = isEncrypted(osDisk)
-	ret.SizeGB = *osDisk.Disk.Properties.DiskSizeGB
+	ret.SizeGB = int(utils.Int32PointerValOrEmpty(osDisk.Disk.Properties.DiskSizeGB))
 
 	return ret
 }
 
-func getVMInfoFromVirtualMachine(vm *armcompute.VirtualMachine, rootVol *rootVolumeInfo) (models.AssetType, error) {
+func getVMInfoFromVirtualMachine(vm *armcompute.VirtualMachine, rootVol *models.RootVolume) (models.AssetType, error) {
 	assetType := models.AssetType{}
 	err := assetType.FromVMInfo(models.VMInfo{
-		ObjectType:          "VMInfo",
-		InstanceProvider:    utils.PointerTo(models.Azure),
-		InstanceID:          *vm.ID,
-		Image:               createImageURN(vm.Properties.StorageProfile.ImageReference),
-		InstanceType:        *vm.Type,
-		LaunchTime:          *vm.Properties.TimeCreated,
-		Location:            *vm.Location,
-		Platform:            string(*vm.Properties.StorageProfile.OSDisk.OSType),
-		RootVolumeEncrypted: rootVol.Encrypted,
-		RootVolumeSizeGB:    int(rootVol.SizeGB),
-		SecurityGroups:      &[]models.SecurityGroup{},
-		Tags:                convertTags(vm.Tags),
+		ObjectType:       "VMInfo",
+		InstanceProvider: utils.PointerTo(models.Azure),
+		InstanceID:       *vm.ID,
+		Image:            createImageURN(vm.Properties.StorageProfile.ImageReference),
+		InstanceType:     *vm.Type,
+		LaunchTime:       *vm.Properties.TimeCreated,
+		Location:         *vm.Location,
+		Platform:         string(*vm.Properties.StorageProfile.OSDisk.OSType),
+		RootVolume:       *rootVol,
+		SecurityGroups:   &[]models.SecurityGroup{},
+		Tags:             convertTags(vm.Tags),
 	})
 	if err != nil {
 		err = fmt.Errorf("failed to create AssetType from VMInfo: %w", err)
