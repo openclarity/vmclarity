@@ -66,22 +66,38 @@ func (p *Provider) RemoveAssetScan(context.Context, *provider_service.RemoveAsse
 
 func (p *Provider) RunAssetScan(context.Context, *provider_service.RunAssetScanParams) (*provider_service.RunAssetScanResult, error) {
 	// Create all resources needed in order to start the scan.
-	// It can be spinning up a VM or snapshoting a volume.
-	// It should be non blocking and idompetent...
+	// It can be spinning up a VM or snapshotting a volume.
+	// It should be non-blocking and idempotent.
 
 	if !p.ReadyToScan {
 		// flip the ready to scan bit, so next time we're getting called, ERR_NONE will be returned.
 		p.ReadyToScan = true
 
-		// Tell VMClarity that resources are not ready and RunAssetScan should be called again in the next iteration.
+		// Tell VMClarity that resources are not ready and RunAssetScan should be called again in 30 seconds from now.
 		return &provider_service.RunAssetScanResult{
-			ErrType: provider_service.ErrorType_ERR_RETRYABLE,
-		}, fmt.Errorf("not all resources are ready")
+			Err: &provider_service.Error{ErrorType: &provider_service.Error_ErrRetry{
+				ErrRetry: &provider_service.ErrorRetryable{
+					Err:   "not all resources are ready for scanning",
+					After: 30,
+				},
+			}},
+		}, nil
 	}
+
+	// In case there was some fatal error that can not be recovered, a fatal error should be returned:
+	//return &provider_service.RunAssetScanResult{
+	//	Err: &provider_service.Error{ErrorType: &provider_service.Error_ErrFatal{
+	//		ErrFatal: &provider_service.ErrorFatal{
+	//			Err: "failed to scan due to fatal error",
+	//		},
+	//	}},
+	//}, nil
 
 	// when all the resource creation is done and ready, an error type of ErrorType_ERR_NONE should be return.
 	return &provider_service.RunAssetScanResult{
-		ErrType: provider_service.ErrorType_ERR_NONE,
+		Err: &provider_service.Error{ErrorType: &provider_service.Error_ErrNone{
+			ErrNone: &provider_service.ErrorNone{},
+		}},
 	}, nil
 }
 

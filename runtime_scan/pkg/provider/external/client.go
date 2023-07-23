@@ -89,68 +89,44 @@ func (c *Client) DiscoverAssets(ctx context.Context) ([]models.AssetType, error)
 }
 
 func (c *Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
-	asset, err := convertAssetFromModels(config.Asset)
+	scanJobConfig, err := convertScanJobConfig(config)
 	if err != nil {
-		return fmt.Errorf("failed to convert asset from models asset: %v", err)
+		return fmt.Errorf("failed to convert scan job config: %v", err)
 	}
 
 	res, err := c.providerClient.RunAssetScan(ctx, &provider_service.RunAssetScanParams{
-		ScanJobConfig: &provider_service.ScanJobConfig{
-			ScannerImage:     config.ScannerImage,
-			ScannerCLIConfig: config.ScannerCLIConfig,
-			VmClarityAddress: config.VMClarityAddress,
-			ScanMetadata: &provider_service.ScanMetadata{
-				ScanID:      config.ScanID,
-				AssetScanID: config.AssetScanID,
-				AssetID:     config.AssetID,
-			},
-			ScannerInstanceCreationConfig: &provider_service.ScannerInstanceCreationConfig{
-				MaxPrice:         *config.MaxPrice,                // TODO define as pointer in proto
-				RetryMaxAttempts: int32(*config.RetryMaxAttempts), // TODO define as pointer in proto
-				UseSpotInstances: config.UseSpotInstances,
-			},
-			Asset: asset,
-		},
+		ScanJobConfig: scanJobConfig,
 	})
-
-	switch res.ErrType {
-	case provider_service.ErrorType_ERR_NONE:
-		return nil
-	case provider_service.ErrorType_ERR_RETRYABLE:
-		return provider.RetryableError{
-			Err:   err,
-			After: 2 * time.Minute,
-		}
-	case provider_service.ErrorType_ERR_FATAL:
+	if err != nil {
 		return provider.FatalErrorf("failed to run asset scan: %v", err)
 	}
 
-	return nil
+	if res.Err == nil {
+		return provider.FatalErrorf("failed to run asset scan: an error type must be set")
+	}
+
+	switch res.Err.ErrorType.(type) {
+	case *provider_service.Error_ErrNone:
+		return nil
+	case *provider_service.Error_ErrRetry:
+		retryableErr := res.GetErr().GetErrRetry()
+		return provider.RetryableErrorf(time.Second*time.Duration(retryableErr.After), retryableErr.Err)
+	case *provider_service.Error_ErrFatal:
+		fatalErr := res.GetErr().GetErrFatal()
+		return provider.FatalErrorf("failed to run asset scan: %v", fatalErr.Err)
+	default:
+		return provider.FatalErrorf("failed to run asset scan: error type is not supported: %t", res.Err.GetErrorType())
+	}
 }
 
 func (c *Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
-	asset, err := convertAssetFromModels(config.Asset)
+	scanJobConfig, err := convertScanJobConfig(config)
 	if err != nil {
-		return fmt.Errorf("failed to convert asset from models asset: %v", err)
+		return fmt.Errorf("failed to convert scan job config: %v", err)
 	}
 
 	_, err = c.providerClient.RemoveAssetScan(ctx, &provider_service.RemoveAssetScanParams{
-		ScanJobConfig: &provider_service.ScanJobConfig{
-			ScannerImage:     config.ScannerImage,
-			ScannerCLIConfig: config.ScannerCLIConfig,
-			VmClarityAddress: config.VMClarityAddress,
-			ScanMetadata: &provider_service.ScanMetadata{
-				ScanID:      config.ScanID,
-				AssetScanID: config.AssetScanID,
-				AssetID:     config.AssetID,
-			},
-			ScannerInstanceCreationConfig: &provider_service.ScannerInstanceCreationConfig{
-				MaxPrice:         *config.MaxPrice,                // TODO define as pointer in proto
-				RetryMaxAttempts: int32(*config.RetryMaxAttempts), // TODO define as pointer in proto
-				UseSpotInstances: config.UseSpotInstances,
-			},
-			Asset: asset,
-		},
+		ScanJobConfig: scanJobConfig,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to remove asset scan: %v", err)

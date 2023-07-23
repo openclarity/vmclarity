@@ -21,6 +21,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 	provider_service "github.com/openclarity/vmclarity/runtime_scan/pkg/provider/external/proto"
 	"github.com/openclarity/vmclarity/shared/pkg/utils"
 )
@@ -52,7 +53,7 @@ func convertAssetToModels(asset *provider_service.Asset) (models.Asset, error) {
 		dirinfo := asset.GetDirinfo()
 
 		if err := assetType.FromDirInfo(models.DirInfo{
-			DirName:  utils.PointerTo(dirinfo.String()),
+			DirName:  utils.PointerTo(dirinfo.DirName),
 			Location: utils.PointerTo(dirinfo.Location),
 		}); err != nil {
 			return models.Asset{}, fmt.Errorf("failed to convert asset from Dirinfo: %v", err)
@@ -61,7 +62,7 @@ func convertAssetToModels(asset *provider_service.Asset) (models.Asset, error) {
 		podinfo := asset.GetPodinfo()
 
 		if err := assetType.FromPodInfo(models.PodInfo{
-			PodName:  utils.PointerTo(podinfo.String()),
+			PodName:  utils.PointerTo(podinfo.PodName),
 			Location: utils.PointerTo(podinfo.Location),
 		}); err != nil {
 			return models.Asset{}, fmt.Errorf("failed to convert asset from Podinfo: %v", err)
@@ -145,4 +146,34 @@ func convertTagsFromModels(tags *[]models.Tag) []*provider_service.Tag {
 	}
 
 	return ret
+}
+
+func convertScanJobConfig(config *provider.ScanJobConfig) (*provider_service.ScanJobConfig, error) {
+	asset, err := convertAssetFromModels(config.Asset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert asset from models asset: %v", err)
+	}
+
+	ret := provider_service.ScanJobConfig{
+		ScannerImage:     config.ScannerImage,
+		ScannerCLIConfig: config.ScannerCLIConfig,
+		VmClarityAddress: config.VMClarityAddress,
+		ScanMetadata: &provider_service.ScanMetadata{
+			ScanID:      config.ScanID,
+			AssetScanID: config.AssetScanID,
+			AssetID:     config.AssetID,
+		},
+		ScannerInstanceCreationConfig: &provider_service.ScannerInstanceCreationConfig{
+			UseSpotInstances: config.UseSpotInstances,
+		},
+		Asset: asset,
+	}
+	if config.MaxPrice != nil {
+		ret.ScannerInstanceCreationConfig.MaxPrice = *config.MaxPrice
+	}
+	if config.RetryMaxAttempts != nil {
+		ret.ScannerInstanceCreationConfig.RetryMaxAttempts = int32(*config.RetryMaxAttempts)
+	}
+
+	return &ret, nil
 }

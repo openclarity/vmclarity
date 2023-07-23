@@ -16,12 +16,13 @@ service Provider {
   // It must return nil if all the resources are created and ready.
   // It also must be idempotent.
 
-  // If ErrorType is RetryAble, then RunAssetScan will be called again in the next iteration.
-  // If ErrorType is Fatal, Then AssetScan will be aborted, and RunAssetScan will not be called again.
-  // if ErrorType is None, Than AssetScan state shift to Ready, and the scanner can run.
+  // RunAssetScan should never return an error, instead use the err field in RunAssetScanResult:
+  // If err is of type ErrorRetryable, then RunAssetScan will be called again in the next iteration.
+  // If err is of type ErrorFatal, then AssetScan will be aborted, and RunAssetScan will not be called again.
+  // if err is of type ErrorNone, then AssetScan state shift to Ready, and the scanner can run.
 
   // The VMClarity CLI image is provided and can be used as a scanning tool, or otherwise, you can use your own scanning tool.
-  // In case you don't use the VMClarity CLI, you should update AssetScan state: Ready, Aborted, Done, InProgress etc.
+  // In case you don't use the VMClarity CLI, you should update AssetScan state in the backend: Ready, Aborted, Done, InProgress etc.
   rpc RunAssetScan(RunAssetScanParams) returns (RunAssetScanResult){}
 
   rpc RemoveAssetScan(RemoveAssetScanParams) returns (RemoveAssetScanResult){}
@@ -38,7 +39,7 @@ message RunAssetScanParams {
 }
 
 message RunAssetScanResult {
-  ErrorType errType = 1;
+  Error err = 1;
 }
 
 message RemoveAssetScanParams {
@@ -46,6 +47,14 @@ message RemoveAssetScanParams {
 }
 
 message RemoveAssetScanResult {}
+
+message Error {
+  oneof errorType {
+    ErrorNone errNone = 1;
+    ErrorRetryable errRetry = 2;
+    ErrorFatal errFatal = 3;
+  }
+}
 
 message Asset {
   oneof assetType {
@@ -110,8 +119,14 @@ message Tag {
   string val = 2;
 }
 
-enum ErrorType {
-  ERR_NONE = 0;
-  ERR_RETRYABLE = 1;
-  ERR_FATAL = 2;
+message ErrorNone {}
+
+message ErrorFatal {
+  string err = 1;
+}
+
+message ErrorRetryable {
+  string err = 1;
+  // The duration in seconds that needs to wait until next retry.
+  uint32 after = 2;
 }
