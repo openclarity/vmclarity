@@ -62,35 +62,39 @@ func Test_convertAssetToModels(t *testing.T) {
 		{
 			name: "nil asset",
 			args: args{
-				asset: nil},
+				asset: nil,
+			},
 			want:    models.Asset{},
 			wantErr: true,
 		},
 		{
 			name: "unsupported asset type",
 			args: args{
-				asset: &provider_service.Asset{}},
+				asset: &provider_service.Asset{},
+			},
 			want:    models.Asset{},
 			wantErr: true,
 		},
 		{
 			name: "vm info",
 			args: args{
-				asset: &provider_service.Asset{AssetType: &provider_service.Asset_Vminfo{Vminfo: &provider_service.VMInfo{
-					Id:           "id1",
-					Location:     "location1",
-					Image:        "image1",
-					InstanceType: "type1",
-					Platform:     "linux",
-					Tags: []*provider_service.Tag{
-						{
-							Key: "key1",
-							Val: "val1",
+				asset: &provider_service.Asset{
+					AssetType: &provider_service.Asset_Vminfo{Vminfo: &provider_service.VMInfo{
+						Id:           "id1",
+						Location:     "location1",
+						Image:        "image1",
+						InstanceType: "type1",
+						Platform:     "linux",
+						Tags: []*provider_service.Tag{
+							{
+								Key: "key1",
+								Val: "val1",
+							},
 						},
-					},
-					LaunchTime: timestamppb.New(timeNow),
-				}},
-				}},
+						LaunchTime: timestamppb.New(timeNow),
+					}},
+				},
+			},
 			want: models.Asset{
 				AssetInfo: &wantVMInfo,
 			},
@@ -99,11 +103,13 @@ func Test_convertAssetToModels(t *testing.T) {
 		{
 			name: "dir info",
 			args: args{
-				asset: &provider_service.Asset{AssetType: &provider_service.Asset_Dirinfo{Dirinfo: &provider_service.DirInfo{
-					DirName:  "dir1",
-					Location: "dirLocation1",
-				}},
-				}},
+				asset: &provider_service.Asset{
+					AssetType: &provider_service.Asset_Dirinfo{Dirinfo: &provider_service.DirInfo{
+						DirName:  "dir1",
+						Location: "dirLocation1",
+					}},
+				},
+			},
 			want: models.Asset{
 				AssetInfo: &wantDirInfo,
 			},
@@ -112,11 +118,13 @@ func Test_convertAssetToModels(t *testing.T) {
 		{
 			name: "pod info",
 			args: args{
-				asset: &provider_service.Asset{AssetType: &provider_service.Asset_Podinfo{Podinfo: &provider_service.PodInfo{
-					PodName:  "pod1",
-					Location: "podLocation1",
-				}},
-				}},
+				asset: &provider_service.Asset{
+					AssetType: &provider_service.Asset_Podinfo{Podinfo: &provider_service.PodInfo{
+						PodName:  "pod1",
+						Location: "podLocation1",
+					}},
+				},
+			},
 			want: models.Asset{
 				AssetInfo: &wantPodInfo,
 			},
@@ -214,10 +222,11 @@ func Test_convertAssetFromModels(t *testing.T) {
 					AssetInfo: &dirinfo,
 				},
 			},
-			want: &provider_service.Asset{AssetType: &provider_service.Asset_Dirinfo{Dirinfo: &provider_service.DirInfo{
-				DirName:  "dir1",
-				Location: "dirLocation1",
-			}},
+			want: &provider_service.Asset{
+				AssetType: &provider_service.Asset_Dirinfo{Dirinfo: &provider_service.DirInfo{
+					DirName:  "dir1",
+					Location: "dirLocation1",
+				}},
 			},
 			wantErr: false,
 		},
@@ -228,10 +237,11 @@ func Test_convertAssetFromModels(t *testing.T) {
 					AssetInfo: &podinfo,
 				},
 			},
-			want: &provider_service.Asset{AssetType: &provider_service.Asset_Podinfo{Podinfo: &provider_service.PodInfo{
-				PodName:  "pod1",
-				Location: "podLocation1",
-			}},
+			want: &provider_service.Asset{
+				AssetType: &provider_service.Asset_Podinfo{Podinfo: &provider_service.PodInfo{
+					PodName:  "pod1",
+					Location: "podLocation1",
+				}},
 			},
 			wantErr: false,
 		},

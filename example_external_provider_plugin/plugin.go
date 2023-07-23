@@ -64,6 +64,8 @@ func (p *Provider) RemoveAssetScan(context.Context, *provider_service.RemoveAsse
 	return &provider_service.RemoveAssetScanResult{}, nil
 }
 
+const retryAfterSec = 30
+
 func (p *Provider) RunAssetScan(context.Context, *provider_service.RunAssetScanParams) (*provider_service.RunAssetScanResult, error) {
 	// Create all resources needed in order to start the scan.
 	// It can be spinning up a VM or snapshotting a volume.
@@ -78,7 +80,7 @@ func (p *Provider) RunAssetScan(context.Context, *provider_service.RunAssetScanP
 			Err: &provider_service.Error{ErrorType: &provider_service.Error_ErrRetry{
 				ErrRetry: &provider_service.ErrorRetryable{
 					Err:   "not all resources are ready for scanning",
-					After: 30,
+					After: retryAfterSec,
 				},
 			}},
 		}, nil
