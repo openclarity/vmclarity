@@ -230,6 +230,7 @@ func (c *Client) createScanAssetVolume(ctx context.Context, volumeName string) e
 		if err != nil {
 			return fmt.Errorf("failed to create scan volume: %w", err)
 		}
+		return nil
 	}
 	return fmt.Errorf("invalid number of volumes found")
 }
