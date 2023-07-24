@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package rest
+package common
 
 import (
 	"fmt"
@@ -29,14 +29,14 @@ import (
 )
 
 // nolint:wrapcheck
-func sendError(ctx echo.Context, code int, message string) error {
+func SendError(ctx echo.Context, code int, message string) error {
 	log.Error(message)
 	response := &models.ApiResponse{Message: &message}
 	return ctx.JSON(code, response)
 }
 
 // nolint:wrapcheck,unparam
-func sendResponse(ctx echo.Context, code int, object interface{}) error {
+func SendResponse(ctx echo.Context, code int, object interface{}) error {
 	return ctx.JSON(code, object)
 }
 

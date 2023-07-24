@@ -31,10 +31,10 @@ import (
 func (s *ServerImpl) GetAssets(ctx echo.Context, params models.GetAssetsParams) error {
 	dbAssets, err := s.dbHandler.AssetsTable().GetAssets(params)
 	if err != nil {
-		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get assets from db: %v", err))
+		return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get assets from db: %v", err))
 	}
 
-	return sendResponse(ctx, http.StatusOK, dbAssets)
+	return common.SendResponse(ctx, http.StatusOK, dbAssets)
 }
 
 // nolint:cyclop
@@ -42,7 +42,7 @@ func (s *ServerImpl) PostAssets(ctx echo.Context) error {
 	var asset models.Asset
 	err := ctx.Bind(&asset)
 	if err != nil {
-		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
+		return common.SendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
 
 	createdAsset, err := s.dbHandler.AssetsTable().CreateAsset(asset)
@@ -55,40 +55,40 @@ func (s *ServerImpl) PostAssets(ctx echo.Context) error {
 				Message: utils.PointerTo(conflictErr.Reason),
 				Asset:   &createdAsset,
 			}
-			return sendResponse(ctx, http.StatusConflict, existResponse)
+			return common.SendResponse(ctx, http.StatusConflict, existResponse)
 		case errors.As(err, &validationErr):
-			return sendError(ctx, http.StatusBadRequest, err.Error())
+			return common.SendError(ctx, http.StatusBadRequest, err.Error())
 		default:
-			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to create asset in db: %v", err))
+			return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to create asset in db: %v", err))
 		}
 	}
 
-	return sendResponse(ctx, http.StatusCreated, createdAsset)
+	return common.SendResponse(ctx, http.StatusCreated, createdAsset)
 }
 
 func (s *ServerImpl) GetAssetsAssetID(ctx echo.Context, assetID models.AssetID, params models.GetAssetsAssetIDParams) error {
 	asset, err := s.dbHandler.AssetsTable().GetAsset(assetID, params)
 	if err != nil {
 		if errors.Is(err, databaseTypes.ErrNotFound) {
-			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Asset with ID %v not found", assetID))
+			return common.SendError(ctx, http.StatusNotFound, fmt.Sprintf("Asset with ID %v not found", assetID))
 		}
-		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get asset from db. assetID=%v: %v", assetID, err))
+		return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get asset from db. assetID=%v: %v", assetID, err))
 	}
 
-	return sendResponse(ctx, http.StatusOK, asset)
+	return common.SendResponse(ctx, http.StatusOK, asset)
 }
 
 func (s *ServerImpl) PutAssetsAssetID(ctx echo.Context, assetID models.AssetID, params models.PutAssetsAssetIDParams) error {
 	var asset models.Asset
 	err := ctx.Bind(&asset)
 	if err != nil {
-		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
+		return common.SendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
 
 	// PUT request might not contain the ID in the body, so set it from
 	// the URL field so that the DB layer knows which object is being updated.
 	if asset.Id != nil && *asset.Id != assetID {
-		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *asset.Id, assetID))
+		return common.SendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *asset.Id, assetID))
 	}
 	asset.Id = &assetID
 
@@ -99,36 +99,36 @@ func (s *ServerImpl) PutAssetsAssetID(ctx echo.Context, assetID models.AssetID, 
 		var preconditionFailedErr *databaseTypes.PreconditionFailedError
 		switch true {
 		case errors.Is(err, databaseTypes.ErrNotFound):
-			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Asset with ID %v not found", assetID))
+			return common.SendError(ctx, http.StatusNotFound, fmt.Sprintf("Asset with ID %v not found", assetID))
 		case errors.As(err, &conflictErr):
 			existResponse := &models.AssetExists{
 				Message: utils.PointerTo(conflictErr.Reason),
 				Asset:   &updatedAsset,
 			}
-			return sendResponse(ctx, http.StatusConflict, existResponse)
+			return common.SendResponse(ctx, http.StatusConflict, existResponse)
 		case errors.As(err, &validationErr):
-			return sendError(ctx, http.StatusBadRequest, err.Error())
+			return common.SendError(ctx, http.StatusBadRequest, err.Error())
 		case errors.As(err, &preconditionFailedErr):
-			return sendError(ctx, http.StatusPreconditionFailed, err.Error())
+			return common.SendError(ctx, http.StatusPreconditionFailed, err.Error())
 		default:
-			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get asset from db. assetID=%v: %v", assetID, err))
+			return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get asset from db. assetID=%v: %v", assetID, err))
 		}
 	}
 
-	return sendResponse(ctx, http.StatusOK, updatedAsset)
+	return common.SendResponse(ctx, http.StatusOK, updatedAsset)
 }
 
 func (s *ServerImpl) PatchAssetsAssetID(ctx echo.Context, assetID models.AssetID, params models.PatchAssetsAssetIDParams) error {
 	var asset models.Asset
 	err := ctx.Bind(&asset)
 	if err != nil {
-		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
+		return common.SendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
 
 	// PATCH request might not contain the ID in the body, so set it from
 	// the URL field so that the DB layer knows which object is being updated.
 	if asset.Id != nil && *asset.Id != assetID {
-		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *asset.Id, assetID))
+		return common.SendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *asset.Id, assetID))
 	}
 	asset.Id = &assetID
 
@@ -138,21 +138,21 @@ func (s *ServerImpl) PatchAssetsAssetID(ctx echo.Context, assetID models.AssetID
 		var preconditionFailedErr *databaseTypes.PreconditionFailedError
 		switch true {
 		case errors.Is(err, databaseTypes.ErrNotFound):
-			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Asset with ID %v not found", assetID))
+			return common.SendError(ctx, http.StatusNotFound, fmt.Sprintf("Asset with ID %v not found", assetID))
 		case errors.As(err, &conflictErr):
 			existResponse := &models.AssetExists{
 				Message: utils.PointerTo(conflictErr.Reason),
 				Asset:   &updatedAsset,
 			}
-			return sendResponse(ctx, http.StatusConflict, existResponse)
+			return common.SendResponse(ctx, http.StatusConflict, existResponse)
 		case errors.As(err, &preconditionFailedErr):
-			return sendError(ctx, http.StatusPreconditionFailed, err.Error())
+			return common.SendError(ctx, http.StatusPreconditionFailed, err.Error())
 		default:
-			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get asset from db. assetID=%v: %v", assetID, err))
+			return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get asset from db. assetID=%v: %v", assetID, err))
 		}
 	}
 
-	return sendResponse(ctx, http.StatusOK, updatedAsset)
+	return common.SendResponse(ctx, http.StatusOK, updatedAsset)
 }
 
 func (s *ServerImpl) DeleteAssetsAssetID(ctx echo.Context, assetID models.AssetID) error {
@@ -162,10 +162,10 @@ func (s *ServerImpl) DeleteAssetsAssetID(ctx echo.Context, assetID models.AssetI
 
 	if err := s.dbHandler.AssetsTable().DeleteAsset(assetID); err != nil {
 		if errors.Is(err, databaseTypes.ErrNotFound) {
-			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Asset with ID %v not found", assetID))
+			return common.SendError(ctx, http.StatusNotFound, fmt.Sprintf("Asset with ID %v not found", assetID))
 		}
-		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to delete asset from db. assetID=%v: %v", assetID, err))
+		return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to delete asset from db. assetID=%v: %v", assetID, err))
 	}
 
-	return sendResponse(ctx, http.StatusOK, &success)
+	return common.SendResponse(ctx, http.StatusOK, &success)
 }

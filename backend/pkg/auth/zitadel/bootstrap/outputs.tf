@@ -12,3 +12,13 @@ resource local_file file_vmclarity_app_api_key {
   content  = zitadel_application_key.vmclarity_app_api_key.key_details
   filename = "machinekey/vmclarity-api-key.json"
 }
+
+resource local_file file_vmclarity_oidc_client_data {
+  content  = <<-EOT
+  {
+    "client_id": "${zitadel_application_oidc.vmclarity_app_oidc.client_id}",
+    "client_secret": "${zitadel_application_oidc.vmclarity_app_oidc.client_secret}"
+  }
+  EOT
+  filename = "machinekey/vmclarity_oidc_client_data.json"
+}

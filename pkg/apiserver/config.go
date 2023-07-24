@@ -18,6 +18,7 @@ package apiserver
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	databaseTypes "github.com/openclarity/vmclarity/pkg/apiserver/database/types"
 
@@ -39,10 +40,14 @@ const (
 	DatabaseDriver   = "DATABASE_DRIVER"
 	EnableDBInfoLogs = "ENABLE_DB_INFO_LOGS"
 
-	ZitadelIssuerEnvVar              = "ZITADEL_ISSUER"
-	ZitadelProjectIDEnvVar           = "ZITADEL_PROJECT_ID"
-	ZitadelAppKeyPathEnvVar          = "ZITADEL_APP_KEY_PATH"
-	ZitadelOrchestratorKeyPathEnvVar = "ZITADEL_ORCHESTRATOR_KEY_PATH"
+	OIDCIssuerEnvVar       = "OIDC_ISSUER"
+	OIDCClientIDEnvVar     = "OIDC_CLIENT_ID"
+	OIDCClientSecretEnvVar = "OIDC_CLIENT_SECRET"
+	OIDCAppFilePathEnvVar  = "OIDC_APP_FILE_PATH"
+	OIDCScopesEnvVar       = "OIDC_SCOPES"
+	OIDCRolesScopeEnvVar   = "OIDC_ROLES_SCOPE"
+
+	OrchestratorKeyPathEnvVar = "ORCHESTRATOR_KEY_PATH"
 
 	LocalDBPath = "LOCAL_DB_PATH"
 
@@ -70,13 +75,21 @@ type Config struct {
 	EnableFakeData   bool   `json:"enable-fake-data"`
 
 	// auth config
-	ZitadelIssuer              string `json:"zitadel-issuer"`
-	ZitadelProjectID           string `json:"zitadel-project-id"`
-	ZitadelAppKeyPath          string `json:"zitadel-app-key-path"`
-	ZitadelOrchestratorKeyPath string `json:"zitadel-orchestrator-key-path"`
+	OIDCIssuer       string `json:"oidc-issuer"`
+	OIDCClientID     string `json:"oidc-client-id"`
+	OIDCClientSecret string `json:"oidc-client-secret"`
+	OIDCAppFilePath  string `json:"oidc-app-file-path"`
+	OIDCScopes       string `json:"oidc-scopes"`
+	OIDCRolesScope   string `json:"oidc-roles-scope"`
+
+	OrchestratorKeyPath string `json:"orchestrator-key-path"`
 
 	LocalDBPath string    `json:"local-db-path,omitempty"`
 	LogLevel    log.Level `json:"log-level,omitempty"`
+}
+
+func (config *Config) GetOIDCScopes() []string {
+	return strings.Split(config.OIDCScopes, ",")
 }
 
 func setConfigDefaults() {
@@ -108,10 +121,14 @@ func LoadConfig() (*Config, error) {
 	config.EnableDBInfoLogs = viper.GetBool(EnableDBInfoLogs)
 	config.EnableFakeData = viper.GetBool(FakeDataEnvVar)
 
-	config.ZitadelIssuer = viper.GetString(ZitadelIssuerEnvVar)
-	config.ZitadelProjectID = viper.GetString(ZitadelProjectIDEnvVar)
-	config.ZitadelAppKeyPath = viper.GetString(ZitadelAppKeyPathEnvVar)
-	config.ZitadelOrchestratorKeyPath = viper.GetString(ZitadelOrchestratorKeyPathEnvVar)
+	config.OIDCIssuer = viper.GetString(OIDCIssuerEnvVar)
+	config.OIDCClientID = viper.GetString(OIDCClientIDEnvVar)
+	config.OIDCClientSecret = viper.GetString(OIDCClientSecretEnvVar)
+	config.OIDCAppFilePath = viper.GetString(OIDCAppFilePathEnvVar)
+	config.OIDCScopes = viper.GetString(OIDCScopesEnvVar)
+	config.OIDCRolesScope = viper.GetString(OIDCRolesScopeEnvVar)
+
+	config.OrchestratorKeyPath = viper.GetString(OrchestratorKeyPathEnvVar)
 
 	config.LocalDBPath = viper.GetString(LocalDBPath)
 

@@ -19,9 +19,7 @@ package backendclient
 import (
 	"context"
 	"fmt"
-	"github.com/zitadel/oidc/pkg/oidc"
 	"github.com/zitadel/zitadel-go/v2/pkg/client/middleware"
-	"github.com/zitadel/zitadel-go/v2/pkg/client/zitadel"
 	"net/http"
 
 	"github.com/openclarity/vmclarity/api/client"
@@ -31,13 +29,6 @@ import (
 
 type BackendClient struct {
 	apiClient client.ClientWithResponsesInterface
-}
-
-type AuthConfig struct {
-	Issuer     string
-	ProjectID  string
-	JWTKeyPath string
-	Insecure   bool
 }
 
 func Create(serverAddress string) (*BackendClient, error) {
@@ -51,10 +42,8 @@ func Create(serverAddress string) (*BackendClient, error) {
 	}, nil
 }
 
-func CreateWithAuth(serverAddress string, authConfig AuthConfig) (*BackendClient, error) {
-	tokenSource, err := middleware.JWTProfileFromPath(authConfig.JWTKeyPath)(
-		authConfig.Issuer, []string{oidc.ScopeOpenID, zitadel.ScopeProjectID(authConfig.ProjectID)},
-	)
+func CreateWithAuth(serverAddress, oidcKeyPath, oidcIssuer string, scopes []string) (*BackendClient, error) {
+	tokenSource, err := middleware.JWTProfileFromPath(oidcKeyPath)(oidcIssuer, scopes)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create JWT token source: %w", err)
 	}

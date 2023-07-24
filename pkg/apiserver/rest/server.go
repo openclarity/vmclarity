@@ -18,6 +18,7 @@ package rest
 import (
 	"context"
 	"fmt"
+	"github.com/openclarity/vmclarity/backend/pkg/auth"
 	"github.com/openclarity/vmclarity/backend/pkg/config"
 	"time"
 
@@ -73,8 +74,8 @@ func createEchoServer(dbHandler databaseTypes.Database) (*echo.Echo, error) {
 	// the API group against the OpenAPI schema.
 	e.Use(middleware.OapiRequestValidator(swagger))
 
-	// Create API zitadel authentication middleware
-	authMiddleware, err := newAuthMiddleware(config.ZitadelIssuer, config.ZitadelAppKeyPath)
+	// Create OIDC API authentication middleware
+	authMiddleware, err := auth.NewOIDCMiddleware(config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create auth middleware: %v", err)
 	}
