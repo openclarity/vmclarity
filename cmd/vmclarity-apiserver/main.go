@@ -24,17 +24,17 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/openclarity/vmclarity/pkg/backend"
-	"github.com/openclarity/vmclarity/pkg/backend/config"
-	databaseTypes "github.com/openclarity/vmclarity/pkg/backend/database/types"
-	"github.com/openclarity/vmclarity/pkg/backend/version"
+	"github.com/openclarity/vmclarity/pkg/apiserver"
+	"github.com/openclarity/vmclarity/pkg/apiserver/config"
+	databaseTypes "github.com/openclarity/vmclarity/pkg/apiserver/database/types"
+	"github.com/openclarity/vmclarity/pkg/apiserver/version"
 	"github.com/openclarity/vmclarity/pkg/shared/log"
 )
 
 const (
 	LogLevelFlag         = "log-level"
 	LogLevelDefaultValue = "warning"
-	ExecutableName       = "vmclarity-backend"
+	ExecutableName       = "vmclarity-apiserver"
 )
 
 var (
@@ -61,7 +61,7 @@ func init() {
 		Use:     "run",
 		Run:     runCommand,
 		Short:   "Starts the server",
-		Long:    "Starts the VMClarity backend server",
+		Long:    "Starts the VMClarity API server",
 		Example: ExecutableName + " run",
 	}
 	cmdRun.PersistentFlags().StringVar(&logLevel,
@@ -73,7 +73,7 @@ func init() {
 		Use:     "version",
 		Run:     versionCommand,
 		Short:   "Displays the version",
-		Long:    "Displays the version of the VMClarity backend server",
+		Long:    "Displays the version of the VMClarity API server",
 		Example: ExecutableName + " version",
 	}
 
@@ -93,7 +93,7 @@ func runCommand(_ *cobra.Command, _ []string) {
 	ctx := context.Background()
 	logger := logrus.WithContext(ctx)
 	ctx = log.SetLoggerForContext(ctx, logger)
-	backend.Run(ctx)
+	apiserver.Run(ctx)
 }
 
 // Command to display the version.

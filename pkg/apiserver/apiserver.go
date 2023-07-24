@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package backend
+package apiserver
 
 import (
 	"context"
@@ -26,10 +26,10 @@ import (
 
 	"github.com/Portshift/go-utils/healthz"
 
-	_config "github.com/openclarity/vmclarity/pkg/backend/config"
-	"github.com/openclarity/vmclarity/pkg/backend/database"
-	databaseTypes "github.com/openclarity/vmclarity/pkg/backend/database/types"
-	"github.com/openclarity/vmclarity/pkg/backend/rest"
+	_config "github.com/openclarity/vmclarity/pkg/apiserver/config"
+	"github.com/openclarity/vmclarity/pkg/apiserver/database"
+	databaseTypes "github.com/openclarity/vmclarity/pkg/apiserver/database/types"
+	"github.com/openclarity/vmclarity/pkg/apiserver/rest"
 	"github.com/openclarity/vmclarity/pkg/orchestrator"
 	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
 	"github.com/openclarity/vmclarity/pkg/shared/log"

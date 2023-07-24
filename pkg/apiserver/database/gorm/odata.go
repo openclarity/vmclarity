@@ -22,8 +22,8 @@ import (
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
-	"github.com/openclarity/vmclarity/pkg/backend/database/odatasql"
-	"github.com/openclarity/vmclarity/pkg/backend/database/odatasql/jsonsql"
+	"github.com/openclarity/vmclarity/pkg/apiserver/database/odatasql"
+	"github.com/openclarity/vmclarity/pkg/apiserver/database/odatasql/jsonsql"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 

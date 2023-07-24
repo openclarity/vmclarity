@@ -33,17 +33,17 @@ ENV CGO_ENABLED=1
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     go build -ldflags="-s -w -extldflags -static \
-     -X 'github.com/openclarity/vmclarity/pkg/backend/version.Version=${VERSION}' \
-     -X 'github.com/openclarity/vmclarity/pkg/backend/version.CommitHash=${COMMIT_HASH}' \
-     -X 'github.com/openclarity/vmclarity/pkg/backend/version.BuildTimestamp=${BUILD_TIMESTAMP}'" -o bin/vmclarity-backend ./cmd/vmclarity-backend/main.go
+     -X 'github.com/openclarity/vmclarity/pkg/apiserver/version.Version=${VERSION}' \
+     -X 'github.com/openclarity/vmclarity/pkg/apiserver/version.CommitHash=${COMMIT_HASH}' \
+     -X 'github.com/openclarity/vmclarity/pkg/apiserver/version.BuildTimestamp=${BUILD_TIMESTAMP}'" -o bin/vmclarity-apiserver ./cmd/vmclarity-apiserver/main.go
 
-RUN xx-verify bin/vmclarity-backend
+RUN xx-verify bin/vmclarity-apiserver
 
 FROM alpine:3.18
 
 WORKDIR /app
 
-COPY --from=builder ["/build/bin/vmclarity-backend", "./vmclarity-backend"]
+COPY --from=builder ["/build/bin/vmclarity-apiserver", "./vmclarity-apiserver"]
 COPY --from=site-build ["/app/ui-build/build", "site"]
 
-ENTRYPOINT ["/app/vmclarity-backend"]
+ENTRYPOINT ["/app/vmclarity-apiserver"]

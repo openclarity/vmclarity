@@ -25,7 +25,7 @@ help: ## This help.
 build: ui build-all-go ## Build All
 
 .PHONY: build-all-go
-build-all-go: backend cli ## Build All GO executables
+build-all-go: bin/vmclarity-apiserver cli ## Build All GO executables
 
 .PHONY: ui
 ui: ## Build UI
@@ -33,10 +33,9 @@ ui: ## Build UI
 	@(cd ui; npm i ; npm run build; )
 	@ls -l ui/build
 
-.PHONY: backend
-backend: ## Build Backend
-	@(echo "Building Backend ..." )
-	go build -race -o bin/vmclarity-backend cmd/vmclarity-backend/main.go
+bin/vmclarity-apiserver: $(shell find api/models) $(shell find api/server) $(shell find api/client) $(shell find cmd/vmclarity-apiserver) $(shell find pkg) go.mod go.sum ## Build apiserver
+	@(echo "Building API server..." )
+	go build -race -o bin/vmclarity-apiserver cmd/vmclarity-apiserver/main.go
 
 .PHONY: cli
 cli: ## Build CLI
@@ -44,10 +43,10 @@ cli: ## Build CLI
 	go build -race -ldflags="-X 'github.com/openclarity/vmclarity/pkg/cli.GitRevision=${VERSION}'" -o bin/vmclarity-cli cmd/vmclarity-cli/main.go
 
 .PHONY: docker
-docker: docker-backend docker-cli ## Build All Docker images
+docker: docker-apiserver docker-cli ## Build All Docker images
 
 .PHONY: push-docker
-push-docker: push-docker-backend push-docker-cli ## Build and Push All Docker images
+push-docker: push-docker-apiserver push-docker-cli ## Build and Push All Docker images
 
 ifneq ($(strip $(VMCLARITY_TOOLS_BASE)),)
 VMCLARITY_TOOLS_CLI_DOCKER_ARG=--build-arg VMCLARITY_TOOLS_BASE=${VMCLARITY_TOOLS_BASE}
@@ -68,26 +67,22 @@ push-docker-cli: docker-cli ## Build and Push CLI Docker image
 	@echo "Publishing cli docker image ..."
 	docker push $(DOCKER_IMAGE)-cli:$(DOCKER_TAG)
 
-.PHONY: docker-backend
-docker-backend: ## Build Backend Docker image
-	@(echo "Building backend docker image ..." )
-	docker build --file ./Dockerfile.backend --build-arg VERSION=${VERSION} \
+.PHONY: docker-apiserver
+docker-apiserver: ## Build Backend Docker image
+	@(echo "Building API server docker image ..." )
+	docker build --file ./Dockerfile.apiserver --build-arg VERSION=${VERSION} \
 		--build-arg BUILD_TIMESTAMP=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ") \
 		--build-arg COMMIT_HASH=$(shell git rev-parse HEAD) \
-		-t ${DOCKER_IMAGE}-backend:${DOCKER_TAG} .
+		-t ${DOCKER_IMAGE}-apiserver:${DOCKER_TAG} .
 
-.PHONY: push-docker-backend
-push-docker-backend: docker-backend ## Build and Push Backend Docker image
-	@echo "Publishing backend docker image ..."
-	docker push ${DOCKER_IMAGE}-backend:${DOCKER_TAG}
+.PHONY: push-docker-apiserver
+push-docker-apiserver: docker-apiserver ## Build and Push Backend Docker image
+	@echo "Publishing API server docker image ..."
+	docker push ${DOCKER_IMAGE}-apiserver:${DOCKER_TAG}
 
 .PHONY: test
 test: ## Run Unit Tests
 	@go test ./...
-
-.PHONY: clean-backend
-clean-backend:
-	@(rm -rf backend/bin ; echo "Backend cleanup done" )
 
 .PHONY: clean-ui
 clean-ui:

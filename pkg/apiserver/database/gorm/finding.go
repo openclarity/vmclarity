@@ -24,8 +24,8 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/pkg/backend/common"
-	"github.com/openclarity/vmclarity/pkg/backend/database/types"
+	"github.com/openclarity/vmclarity/pkg/apiserver/common"
+	"github.com/openclarity/vmclarity/pkg/apiserver/database/types"
 )
 
 type Finding struct {
