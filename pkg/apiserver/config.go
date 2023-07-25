@@ -45,7 +45,8 @@ const (
 	OIDCClientSecretEnvVar = "OIDC_CLIENT_SECRET"
 	OIDCAppFilePathEnvVar  = "OIDC_APP_FILE_PATH"
 	OIDCScopesEnvVar       = "OIDC_SCOPES"
-	OIDCRolesScopeEnvVar   = "OIDC_ROLES_SCOPE"
+	OIDCRolesClaimEnvVar   = "OIDC_ROLES_CLAIM"
+	OIDCRolesClaimDefault  = "roles"
 
 	OrchestratorKeyPathEnvVar = "ORCHESTRATOR_KEY_PATH"
 
@@ -80,7 +81,7 @@ type Config struct {
 	OIDCClientSecret string `json:"oidc-client-secret"`
 	OIDCAppFilePath  string `json:"oidc-app-file-path"`
 	OIDCScopes       string `json:"oidc-scopes"`
-	OIDCRolesScope   string `json:"oidc-roles-scope"`
+	OIDCRolesClaim   string `json:"oidc-roles-claim"`
 
 	OrchestratorKeyPath string `json:"orchestrator-key-path"`
 
@@ -90,6 +91,13 @@ type Config struct {
 
 func (config *Config) GetOIDCScopes() []string {
 	return strings.Split(config.OIDCScopes, ",")
+}
+
+func (config *Config) GetOIDCRolesClaim() string {
+	if config.OIDCRolesClaim == "" {
+		return OIDCRolesClaimDefault
+	}
+	return config.OIDCRolesClaim
 }
 
 func setConfigDefaults() {
@@ -126,7 +134,7 @@ func LoadConfig() (*Config, error) {
 	config.OIDCClientSecret = viper.GetString(OIDCClientSecretEnvVar)
 	config.OIDCAppFilePath = viper.GetString(OIDCAppFilePathEnvVar)
 	config.OIDCScopes = viper.GetString(OIDCScopesEnvVar)
-	config.OIDCRolesScope = viper.GetString(OIDCRolesScopeEnvVar)
+	config.OIDCRolesClaim = viper.GetString(OIDCRolesClaimEnvVar)
 
 	config.OrchestratorKeyPath = viper.GetString(OrchestratorKeyPathEnvVar)
 

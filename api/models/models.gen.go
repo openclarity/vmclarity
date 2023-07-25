@@ -27,6 +27,10 @@ const (
 	AssetScanEstimationStateStateReasonUnexpected AssetScanEstimationStateStateReason = "Unexpected"
 )
 
+const (
+	IamPolicyScopes = "IamPolicy.Scopes"
+)
+
 // Defines values for AssetScanStateState.
 const (
 	AssetScanStateStateAborted     AssetScanStateState = "Aborted"

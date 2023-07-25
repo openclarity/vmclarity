@@ -18,8 +18,8 @@ package rest
 import (
 	"context"
 	"fmt"
-	"github.com/openclarity/vmclarity/backend/pkg/auth"
-	"github.com/openclarity/vmclarity/backend/pkg/config"
+	"github.com/getkin/kin-openapi/openapi3filter"
+	"github.com/openclarity/vmclarity/backend/pkg/iam"
 	"time"
 
 	"github.com/deepmap/oapi-codegen/pkg/middleware"
@@ -62,6 +62,13 @@ func createEchoServer(dbHandler databaseTypes.Database) (*echo.Echo, error) {
 		return nil, fmt.Errorf("failed to load swagger spec: %w", err)
 	}
 
+	// Create IAM provider
+	iamProvider, err := iam.NewOIDCProvider(config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create iam provider: %v", err)
+	}
+
+	// Create server
 	e := echo.New()
 
 	// Log all requests
@@ -70,16 +77,16 @@ func createEchoServer(dbHandler databaseTypes.Database) (*echo.Echo, error) {
 	// Recover any panics into HTTP 500
 	e.Use(echomiddleware.Recover())
 
-	// Use oapi-codegen validation middleware to validate
-	// the API group against the OpenAPI schema.
-	e.Use(middleware.OapiRequestValidator(swagger))
+	// Create a router group for the backend /api base URL
+	apiGroup := e.Group(BaseURL)
 
-	// Create OIDC API authentication middleware
-	authMiddleware, err := auth.NewOIDCMiddleware(config)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create auth middleware: %v", err)
-	}
-	apiGroup.Use(authMiddleware)
+	// Use oapi-codegen validation middleware to validate the API group against the
+	// OpenAPI schema along with IAM provider.
+	apiGroup.Use(middleware.OapiRequestValidatorWithOptions(swagger, &middleware.Options{
+		Options: openapi3filter.Options{
+			AuthenticationFunc: iam.OapiAuthenticatorForProvider(iamProvider),
+		},
+	}))
 
 	// Register paths with the backend implementation
 	server.RegisterHandlers(e, apiImpl)
