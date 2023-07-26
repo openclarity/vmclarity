@@ -51,9 +51,6 @@ resource zitadel_login_policy openclarity_login_policy {
 resource zitadel_project vmclarity_project {
   name                     = "vmclarity"
   org_id                   = zitadel_org.openclarity_org.id
-  project_role_assertion   = true
-  project_role_check       = true
-  has_project_check        = true
   private_labeling_setting = "PRIVATE_LABELING_SETTING_ENFORCE_PROJECT_RESOURCE_OWNER_POLICY"
 }
 

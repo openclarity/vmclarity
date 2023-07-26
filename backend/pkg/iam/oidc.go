@@ -18,6 +18,7 @@ package iam
 import (
 	"context"
 	"fmt"
+	"github.com/openclarity/vmclarity/api/client"
 	"github.com/openclarity/vmclarity/backend/pkg/config"
 	"github.com/zitadel/oidc/pkg/client/rs"
 	"github.com/zitadel/oidc/pkg/oidc"
@@ -35,6 +36,10 @@ type oidcProvider struct {
 // NewOIDCProvider creates a Provider which intercepts requests and checks for a
 // correct Bearer token using OAuth2 introspection by sending the token to the
 // introspection endpoint.
+//
+// TODO: Enable support for creating ResourceServer for file data from string.
+// TODO: This can be achieved using functional options, e.g. WithKey().
+// TODO: Test against different OIDCs to check if this works. Tested against: Zitadel.
 func NewOIDCProvider(config config.OIDC) (Provider, error) {
 	// Add custom OIDC options
 	var options []rs.Option
@@ -64,6 +69,8 @@ func NewOIDCProvider(config config.OIDC) (Provider, error) {
 }
 
 func (provider *oidcProvider) Authenticate(ctx context.Context, request *http.Request) (*User, error) {
+	// TODO: Explore caching options to reduce checks against identity server
+
 	// Validate authorization header
 	authHeader := request.Header.Get("Authorization")
 	if authHeader == "" {
@@ -81,11 +88,6 @@ func (provider *oidcProvider) Authenticate(ctx context.Context, request *http.Re
 	}
 
 	// Get user roles from token role claim
-	//
-	//TODO: The returned role claims might not be structured as a map, could also be
-	// a slice or a string, so check how to support. This has been tested against
-	// Zitadel which returns map, but compare against other providers to see if it
-	// works.
 	userRoles := make(map[string]bool)
 	if tokenRolesClaim := token.GetClaim(provider.rolesClaim); tokenRolesClaim != nil {
 		if tokenRolesMap, ok := tokenRolesClaim.(map[string]interface{}); ok {
@@ -106,36 +108,32 @@ func (provider *oidcProvider) Authenticate(ctx context.Context, request *http.Re
 	}, nil
 }
 
-type oidcInjector struct {
-	tokenSource oauth2.TokenSource
-}
-
-// NewOIDCInjector creates an Injector which creates OAuth2 token source from key
-// file to generate tokens that are injected in requests.
-func NewOIDCInjector(issuer, keyPath string, scopes []string) (Injector, error) {
+// NewOIDCAuthInjectorFromKey creates a client injector which creates OAuth2 token
+// source from key file to generate tokens that are injected in requests.
+//
+// TODO: Add support for injectors from file data string and Personal Access Tokens
+func NewOIDCAuthInjectorFromKey(issuer, keyPath string, scopes []string) (client.RequestEditorFn, error) {
 	// Get token source and token
 	tokenSource, err := middleware.JWTProfileFromPath(keyPath)(issuer, append(scopes, oidc.ScopeOpenID))
 	if err != nil {
 		return nil, fmt.Errorf("unable to create OIDC token source: %w", err)
 	}
-
 	token, err := tokenSource.Token()
 	if err != nil {
 		return nil, fmt.Errorf("unable to fetch OIDC token: %w", err)
 	}
 
-	// Return Injector with reusable token source to prevent request spikes
-	return &oidcInjector{
-		tokenSource: oauth2.ReuseTokenSource(token, tokenSource),
+	// Use reusable token source to prevent request spikes
+	tokenSource = oauth2.ReuseTokenSource(token, tokenSource)
+
+	// Return client token injector function
+	return func(_ context.Context, request *http.Request) error {
+		token, err := tokenSource.Token()
+		if err != nil {
+			return err
+		}
+
+		token.SetAuthHeader(request)
+		return nil
 	}, nil
-}
-
-func (injector *oidcInjector) Inject(_ context.Context, request *http.Request) error {
-	token, err := injector.tokenSource.Token()
-	if err != nil {
-		return err
-	}
-
-	token.SetAuthHeader(request)
-	return nil
 }

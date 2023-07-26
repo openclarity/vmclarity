@@ -1,3 +1,5 @@
+# RBAC policy file defines role to assets permissions.
+# This can be given to the user.
 p, api:reader, api, get
 p, api:writer, api, put
 p, api:writer, api, post

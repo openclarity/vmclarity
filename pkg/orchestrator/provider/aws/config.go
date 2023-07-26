@@ -90,7 +90,7 @@ func NewConfig() (*Config, error) {
 
 	config := &Config{}
 	if err := v.Unmarshal(config); err != nil {
-		// return nil, fmt.Errorf("failed to parse provider configuration. Provider=AWS: %w", err)
+		return nil, fmt.Errorf("failed to parse provider configuration. Provider=AWS: %w", err)
 	}
 
 	return config, nil

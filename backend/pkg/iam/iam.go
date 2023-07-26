@@ -45,13 +45,11 @@ type User struct {
 	Roles map[string]bool `json:"roles"`
 }
 
-// Injector implements client-side authentication data injection.
-type Injector interface {
-	Inject(ctx context.Context, request *http.Request) error
-}
-
 // Provider implements server-side IAM synchronization policy.
 type Provider interface {
+	// Authenticate validates and verifies user auth details from request against
+	// some auth provider. It should also be able to fetch permissions associated
+	// with that key from some location.
 	Authenticate(ctx context.Context, request *http.Request) (*User, error)
 }
 
