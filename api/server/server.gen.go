@@ -347,7 +347,7 @@ func (w *ServerInterfaceWrapper) PutAssetScanEstimationsAssetScanEstimationID(ct
 func (w *ServerInterfaceWrapper) GetAssetScans(ctx echo.Context) error {
 	var err error
 
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer", "api:reader"})
+	ctx.Set(IamPolicyScopes, []string{"api:reader"})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetAssetScansParams
@@ -409,8 +409,7 @@ func (w *ServerInterfaceWrapper) GetAssetScans(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) PostAssetScans(ctx echo.Context) error {
 	var err error
 
-	// Invoke the callback with all the unmarshaled arguments
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer", "api:reader"})
+	ctx.Set(IamPolicyScopes, []string{"api:reader"})
 
 	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.PostAssetScans(ctx)
@@ -428,7 +427,7 @@ func (w *ServerInterfaceWrapper) GetAssetScansAssetScanID(ctx echo.Context) erro
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter assetScanID: %s", err))
 	}
 
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer", "api:reader"})
+	ctx.Set(IamPolicyScopes, []string{"api:reader"})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetAssetScansAssetScanIDParams
@@ -462,7 +461,7 @@ func (w *ServerInterfaceWrapper) PatchAssetScansAssetScanID(ctx echo.Context) er
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter assetScanID: %s", err))
 	}
 
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer", "api:reader"})
+	ctx.Set(IamPolicyScopes, []string{"api:reader"})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params PatchAssetScansAssetScanIDParams
@@ -500,7 +499,7 @@ func (w *ServerInterfaceWrapper) PutAssetScansAssetScanID(ctx echo.Context) erro
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter assetScanID: %s", err))
 	}
 
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer", "api:reader"})
+	ctx.Set(IamPolicyScopes, []string{"api:reader"})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params PutAssetScansAssetScanIDParams
@@ -531,7 +530,7 @@ func (w *ServerInterfaceWrapper) PutAssetScansAssetScanID(ctx echo.Context) erro
 func (w *ServerInterfaceWrapper) GetAssets(ctx echo.Context) error {
 	var err error
 
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer", "api:reader"})
+	ctx.Set(IamPolicyScopes, []string{"api:reader"})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetAssetsParams
@@ -593,8 +592,7 @@ func (w *ServerInterfaceWrapper) GetAssets(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) PostAssets(ctx echo.Context) error {
 	var err error
 
-	// Invoke the callback with all the unmarshaled arguments
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer"})
+	ctx.Set(IamPolicyScopes, []string{"api:writer"})
 
 	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.PostAssets(ctx)
@@ -630,7 +628,7 @@ func (w *ServerInterfaceWrapper) GetAssetsAssetID(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter assetID: %s", err))
 	}
 
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer", "api:reader"})
+	ctx.Set(IamPolicyScopes, []string{"api:reader"})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetAssetsAssetIDParams
@@ -664,7 +662,7 @@ func (w *ServerInterfaceWrapper) PatchAssetsAssetID(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter assetID: %s", err))
 	}
 
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer"})
+	ctx.Set(IamPolicyScopes, []string{"api:writer"})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params PatchAssetsAssetIDParams
@@ -702,7 +700,7 @@ func (w *ServerInterfaceWrapper) PutAssetsAssetID(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter assetID: %s", err))
 	}
 
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer"})
+	ctx.Set(IamPolicyScopes, []string{"api:writer"})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params PutAssetsAssetIDParams
@@ -733,7 +731,7 @@ func (w *ServerInterfaceWrapper) PutAssetsAssetID(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) GetFindings(ctx echo.Context) error {
 	var err error
 
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer", "api:reader"})
+	ctx.Set(IamPolicyScopes, []string{"api:reader"})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetFindingsParams
@@ -795,8 +793,7 @@ func (w *ServerInterfaceWrapper) GetFindings(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) PostFindings(ctx echo.Context) error {
 	var err error
 
-	// Invoke the callback with all the unmarshaled arguments
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer", "api:reader"})
+	ctx.Set(IamPolicyScopes, []string{"api:reader"})
 
 	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.PostFindings(ctx)
@@ -814,8 +811,7 @@ func (w *ServerInterfaceWrapper) DeleteFindingsFindingID(ctx echo.Context) error
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter findingID: %s", err))
 	}
 
-	// Invoke the callback with all the unmarshaled arguments
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer", "api:reader"})
+	ctx.Set(IamPolicyScopes, []string{"api:reader"})
 
 	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.DeleteFindingsFindingID(ctx, findingID)
@@ -833,7 +829,7 @@ func (w *ServerInterfaceWrapper) GetFindingsFindingID(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter findingID: %s", err))
 	}
 
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer", "api:reader"})
+	ctx.Set(IamPolicyScopes, []string{"api:reader"})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetFindingsFindingIDParams
@@ -867,8 +863,7 @@ func (w *ServerInterfaceWrapper) PatchFindingsFindingID(ctx echo.Context) error 
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter findingID: %s", err))
 	}
 
-	// Invoke the callback with all the unmarshaled arguments
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer", "api:reader"})
+	ctx.Set(IamPolicyScopes, []string{"api:reader"})
 
 	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.PatchFindingsFindingID(ctx, findingID)
@@ -886,8 +881,7 @@ func (w *ServerInterfaceWrapper) PutFindingsFindingID(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter findingID: %s", err))
 	}
 
-	// Invoke the callback with all the unmarshaled arguments
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer", "api:reader"})
+	ctx.Set(IamPolicyScopes, []string{"api:reader"})
 
 	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.PutFindingsFindingID(ctx, findingID)
@@ -907,7 +901,7 @@ func (w *ServerInterfaceWrapper) GetOpenAPISpec(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) GetScanConfigs(ctx echo.Context) error {
 	var err error
 
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer", "api:reader"})
+	ctx.Set(IamPolicyScopes, []string{"api:reader"})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetScanConfigsParams
@@ -969,8 +963,7 @@ func (w *ServerInterfaceWrapper) GetScanConfigs(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) PostScanConfigs(ctx echo.Context) error {
 	var err error
 
-	// Invoke the callback with all the unmarshaled arguments
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer", "api:reader"})
+	ctx.Set(IamPolicyScopes, []string{"api:reader"})
 
 	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.PostScanConfigs(ctx)
@@ -988,8 +981,7 @@ func (w *ServerInterfaceWrapper) DeleteScanConfigsScanConfigID(ctx echo.Context)
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter scanConfigID: %s", err))
 	}
 
-	// Invoke the callback with all the unmarshaled arguments
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer", "api:reader"})
+	ctx.Set(IamPolicyScopes, []string{"api:reader"})
 
 	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.DeleteScanConfigsScanConfigID(ctx, scanConfigID)
@@ -1007,7 +999,7 @@ func (w *ServerInterfaceWrapper) GetScanConfigsScanConfigID(ctx echo.Context) er
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter scanConfigID: %s", err))
 	}
 
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer", "api:reader"})
+	ctx.Set(IamPolicyScopes, []string{"api:reader"})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetScanConfigsScanConfigIDParams
@@ -1041,7 +1033,7 @@ func (w *ServerInterfaceWrapper) PatchScanConfigsScanConfigID(ctx echo.Context) 
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter scanConfigID: %s", err))
 	}
 
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer", "api:reader"})
+	ctx.Set(IamPolicyScopes, []string{"api:reader"})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params PatchScanConfigsScanConfigIDParams
@@ -1079,7 +1071,7 @@ func (w *ServerInterfaceWrapper) PutScanConfigsScanConfigID(ctx echo.Context) er
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter scanConfigID: %s", err))
 	}
 
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer", "api:reader"})
+	ctx.Set(IamPolicyScopes, []string{"api:reader"})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params PutScanConfigsScanConfigIDParams
@@ -1299,7 +1291,7 @@ func (w *ServerInterfaceWrapper) PutScanEstimationsScanEstimationID(ctx echo.Con
 func (w *ServerInterfaceWrapper) GetScans(ctx echo.Context) error {
 	var err error
 
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer", "api:reader"})
+	ctx.Set(IamPolicyScopes, []string{"api:reader"})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetScansParams
@@ -1361,8 +1353,7 @@ func (w *ServerInterfaceWrapper) GetScans(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) PostScans(ctx echo.Context) error {
 	var err error
 
-	// Invoke the callback with all the unmarshaled arguments
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer", "api:reader"})
+	ctx.Set(IamPolicyScopes, []string{"api:reader"})
 
 	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.PostScans(ctx)
@@ -1380,8 +1371,7 @@ func (w *ServerInterfaceWrapper) DeleteScansScanID(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter scanID: %s", err))
 	}
 
-	// Invoke the callback with all the unmarshaled arguments
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer", "api:reader"})
+	ctx.Set(IamPolicyScopes, []string{"api:reader"})
 
 	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.DeleteScansScanID(ctx, scanID)
@@ -1399,7 +1389,7 @@ func (w *ServerInterfaceWrapper) GetScansScanID(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter scanID: %s", err))
 	}
 
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer", "api:reader"})
+	ctx.Set(IamPolicyScopes, []string{"api:reader"})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetScansScanIDParams
@@ -1433,7 +1423,7 @@ func (w *ServerInterfaceWrapper) PatchScansScanID(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter scanID: %s", err))
 	}
 
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer", "api:reader"})
+	ctx.Set(IamPolicyScopes, []string{"api:reader"})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params PatchScansScanIDParams
@@ -1471,7 +1461,7 @@ func (w *ServerInterfaceWrapper) PutScansScanID(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter scanID: %s", err))
 	}
 
-	ctx.Set(IamPolicyScopes, []string{"api:admin", "api:writer", "api:reader"})
+	ctx.Set(IamPolicyScopes, []string{"api:reader"})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params PutScansScanIDParams

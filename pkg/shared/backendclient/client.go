@@ -19,7 +19,6 @@ package backendclient
 import (
 	"context"
 	"fmt"
-	"github.com/zitadel/zitadel-go/v2/pkg/client/middleware"
 	"net/http"
 
 	"github.com/openclarity/vmclarity/api/client"
@@ -31,35 +30,8 @@ type BackendClient struct {
 	apiClient client.ClientWithResponsesInterface
 }
 
-func Create(serverAddress string) (*BackendClient, error) {
-	apiClient, err := client.NewClientWithResponses(serverAddress)
-	if err != nil {
-		return nil, fmt.Errorf("unable to create VMClarity API client. serverAddress=%v: %w", serverAddress, err)
-	}
-
-	return &BackendClient{
-		apiClient: apiClient,
-	}, nil
-}
-
-func CreateWithAuth(serverAddress, oidcKeyPath, oidcIssuer string, scopes []string) (*BackendClient, error) {
-	tokenSource, err := middleware.JWTProfileFromPath(oidcKeyPath)(oidcIssuer, scopes)
-	if err != nil {
-		return nil, fmt.Errorf("unable to create JWT token source: %w", err)
-	}
-
-	jwtInjector := func(ctx context.Context, req *http.Request) error {
-		// TODO: check if the source is returning cached token
-		token, err := tokenSource.Token()
-		if err != nil {
-			return err
-		}
-
-		token.SetAuthHeader(req)
-		return nil
-	}
-
-	apiClient, err := client.NewClientWithResponses(serverAddress, client.WithRequestEditorFn(jwtInjector))
+func Create(serverAddress string, options ...client.ClientOption) (*BackendClient, error) {
+	apiClient, err := client.NewClientWithResponses(serverAddress, options...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create VMClarity API client. serverAddress=%v: %w", serverAddress, err)
 	}

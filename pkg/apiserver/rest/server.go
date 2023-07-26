@@ -63,7 +63,7 @@ func createEchoServer(dbHandler databaseTypes.Database) (*echo.Echo, error) {
 	}
 
 	// Create IAM provider
-	iamProvider, err := iam.NewOIDCProvider(config)
+	iamProvider, err := iam.NewOIDCProvider(config.OIDC)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create iam provider: %v", err)
 	}

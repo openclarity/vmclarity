@@ -1,3 +1,18 @@
+// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package iam
 
 import (
@@ -7,7 +22,6 @@ import (
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/openclarity/vmclarity/api/models"
 	"net/http"
-	"strings"
 )
 
 const userCtxKey = "user"
@@ -18,9 +32,14 @@ type User struct {
 	Roles map[string]bool `json:"roles"`
 }
 
-// Provider implements IAM synchronization policy.
+// Provider implements server-side IAM synchronization policy.
 type Provider interface {
 	Authenticate(ctx context.Context, request *http.Request) (*User, error)
+}
+
+// Injector implements client-side authentication data injection.
+type Injector interface {
+	Inject(ctx context.Context, req *http.Request) error
 }
 
 // OapiAuthenticatorForProvider creates an OpenAPI authenticator for a given Provider
@@ -37,15 +56,15 @@ func OapiAuthenticatorForProvider(m Provider) openapi3filter.AuthenticationFunc 
 			eCtx.Set(userCtxKey, user)
 		}
 
-		// Authorize - this can be done somewhere else in the chain by inferring user
-		// data from context
+		// Authorize - this can be done somewhere else in the chain by inferring
+		// user/role data from context
 		return authorize(user, input.Scopes)
 	}
 }
 
-// GetAllowedRolesFromContext returns a list of roles from context allowed to
+// GetRequiredRolesFromContext returns a list of roles from context required to
 // perform a request.
-func GetAllowedRolesFromContext(ctx context.Context) []string {
+func GetRequiredRolesFromContext(ctx context.Context) []string {
 	requiredRoles, _ := ctx.Value(models.IamPolicyScopes).([]string)
 	return requiredRoles
 }
@@ -59,13 +78,12 @@ func GetUserFromContext(ctx context.Context) (*User, error) {
 	return user, nil
 }
 
-// authorize authorizes the request by returning nil if the User has at least one
-// role from allowedRoles.
-func authorize(user *User, allowedRoles []string) error {
-	for _, e := range allowedRoles {
-		if _, ok := user.Roles[e]; ok {
-			return nil
+// authorize authorizes the request by returning nil if the User has all requiredRoles.
+func authorize(user *User, requiredRoles []string) error {
+	for _, role := range requiredRoles {
+		if _, ok := user.Roles[role]; !ok {
+			return fmt.Errorf("not allowed, requires %s", role)
 		}
 	}
-	return fmt.Errorf("not allowed, requires at least one of: %s", strings.Join(allowedRoles, ", "))
+	return nil
 }

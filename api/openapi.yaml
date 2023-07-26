@@ -52,7 +52,6 @@ paths:
         required: true
       security:
         - IamPolicy:
-            - api:admin
             - api:writer
       responses:
         201:
@@ -114,7 +113,6 @@ paths:
         required: true
       security:
         - IamPolicy:
-            - api:admin
             - api:writer
       responses:
         200:
@@ -164,7 +162,6 @@ paths:
         required: true
       security:
         - IamPolicy:
-            - api:admin
             - api:writer
       responses:
         200:
@@ -3259,7 +3256,5 @@ components:
 # Specify global IAM policy
 security:
   - IamPolicy:
-    # User needs to have at least one of these roles to access APIs
-    - api:admin
-    - api:writer
+    # User needs to have these roles to access APIs
     - api:reader

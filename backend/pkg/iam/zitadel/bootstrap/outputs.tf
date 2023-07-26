@@ -12,3 +12,7 @@ resource local_file file_vmclarity_app_api_key {
   content  = zitadel_application_key.vmclarity_app_api_key.key_details
   filename = "machinekey/vmclarity-api-key.json"
 }
+
+output vmclarity_project_id {
+  value = zitadel_project.vmclarity_project.id
+}

@@ -27,10 +27,25 @@ import (
 )
 
 const (
+	OIDCIssuerEnvVar        = "OIDC_ISSUER"
+	OIDCClientIDEnvVar      = "OIDC_CLIENT_ID"
+	OIDCClientSecretEnvVar  = "OIDC_CLIENT_SECRET"
+	OIDCClientKeyPathEnvVar = "OIDC_CLIENT_KEY_PATH"
+	OIDCScopesEnvVar        = "OIDC_SCOPES"
+	OIDCRolesClaimEnvVar    = "OIDC_ROLES_CLAIM"
+	OIDCRolesClaimDefault   = "roles" // default role claim
+	OIDCTokenURLEnvVar      = "OIDC_TOKEN_URL"
+	OIDCIntrospectURLEnvVar = "OIDC_INTROSPECT_URL"
+
 	BackendRestHost       = "BACKEND_REST_HOST"
 	BackendRestDisableTLS = "BACKEND_REST_DISABLE_TLS" // nolint:gosec
 	BackendRestPort       = "BACKEND_REST_PORT"
 	HealthCheckAddress    = "HEALTH_CHECK_ADDRESS"
+
+	DisableOrchestrator       = "DISABLE_ORCHESTRATOR"
+	OrchestratorKeyPathEnvVar = "ORCHESTRATOR_KEY_PATH"
+
+	UISitePath = "UI_SITE_PATH" // TODO: UI site should be moved out of the backend to nginx
 
 	DBNameEnvVar     = "DB_NAME"
 	DBUserEnvVar     = "DB_USER"
@@ -59,13 +74,21 @@ const (
 )
 
 type Config struct {
+	// Embed auth config
+	OIDC
+
+	// Backend
 	BackendRestHost    string `json:"backend-rest-host,omitempty"`
 	BackendRestPort    int    `json:"backend-rest-port,omitempty"`
 	HealthCheckAddress string `json:"health-check-address,omitempty"`
 
-	DisableOrchestrator bool `json:"disable_orchestrator"`
+	DisableOrchestrator bool   `json:"disable_orchestrator"`
+	OrchestratorKeyPath string `json:"orchestrator-key-path"`
 
-	// database config
+	// UI
+	UISitePath string `json:"ui_site_path"`
+
+	// Database config
 	DatabaseDriver   string `json:"database-driver,omitempty"`
 	DBName           string `json:"db-name,omitempty"`
 	DBUser           string `json:"db-user,omitempty"`
@@ -74,30 +97,31 @@ type Config struct {
 	DBPort           string `json:"db-port,omitempty"`
 	EnableDBInfoLogs bool   `json:"enable-db-info-logs"`
 	EnableFakeData   bool   `json:"enable-fake-data"`
+	LocalDBPath      string `json:"local-db-path,omitempty"`
 
-	// auth config
-	OIDCIssuer       string `json:"oidc-issuer"`
-	OIDCClientID     string `json:"oidc-client-id"`
-	OIDCClientSecret string `json:"oidc-client-secret"`
-	OIDCAppFilePath  string `json:"oidc-app-file-path"`
-	OIDCScopes       string `json:"oidc-scopes"`
-	OIDCRolesClaim   string `json:"oidc-roles-claim"`
-
-	OrchestratorKeyPath string `json:"orchestrator-key-path"`
-
-	LocalDBPath string    `json:"local-db-path,omitempty"`
-	LogLevel    log.Level `json:"log-level,omitempty"`
+	LogLevel log.Level `json:"log-level,omitempty"`
 }
 
-func (config *Config) GetOIDCScopes() []string {
-	return strings.Split(config.OIDCScopes, ",")
+type OIDC struct {
+	Issuer        string `json:"oidc-issuer"`
+	ClientID      string `json:"oidc-client-id"`
+	ClientSecret  string `json:"oidc-client-secret"`
+	ClientKeyPath string `json:"oidc-client-key-path"`
+	Scopes        string `json:"oidc-scopes"`
+	RolesClaim    string `json:"oidc-roles-claim"`
+	TokenURL      string `json:"oidc-token-url"`
+	IntrospectURL string `json:"oidc-introspect-url"`
 }
 
-func (config *Config) GetOIDCRolesClaim() string {
-	if config.OIDCRolesClaim == "" {
+func (oidc *OIDC) GetScopes() []string {
+	return strings.Split(oidc.Scopes, ",")
+}
+
+func (oidc *OIDC) GetRolesClaim() string {
+	if oidc.RolesClaim == "" {
 		return OIDCRolesClaimDefault
 	}
-	return config.OIDCRolesClaim
+	return oidc.RolesClaim
 }
 
 func setConfigDefaults() {
@@ -114,12 +138,28 @@ func LoadConfig() (*Config, error) {
 
 	config := &Config{}
 
+	// Auth
+	config.OIDC.Issuer = viper.GetString(OIDCIssuerEnvVar)
+	config.OIDC.ClientID = viper.GetString(OIDCClientIDEnvVar)
+	config.OIDC.ClientSecret = viper.GetString(OIDCClientSecretEnvVar)
+	config.OIDC.ClientKeyPath = viper.GetString(OIDCClientKeyPathEnvVar)
+	config.OIDC.Scopes = viper.GetString(OIDCScopesEnvVar)
+	config.OIDC.RolesClaim = viper.GetString(OIDCRolesClaimEnvVar)
+	config.OIDC.TokenURL = viper.GetString(OIDCTokenURLEnvVar)
+	config.OIDC.IntrospectURL = viper.GetString(OIDCIntrospectURLEnvVar)
+
+	// Backend
 	config.BackendRestHost = viper.GetString(BackendRestHost)
 	config.BackendRestPort = viper.GetInt(BackendRestPort)
 	config.HealthCheckAddress = viper.GetString(HealthCheckAddress)
 
 	config.DisableOrchestrator = viper.GetBool(DisableOrchestrator)
+	config.OrchestratorKeyPath = viper.GetString(OrchestratorKeyPathEnvVar)
 
+	// UI
+	config.UISitePath = viper.GetString(UISitePath)
+
+	// Database
 	config.DatabaseDriver = viper.GetString(DatabaseDriver)
 	config.DBPassword = viper.GetString(DBPasswordEnvVar)
 	config.DBUser = viper.GetString(DBUserEnvVar)
@@ -128,18 +168,9 @@ func LoadConfig() (*Config, error) {
 	config.DBName = viper.GetString(DBNameEnvVar)
 	config.EnableDBInfoLogs = viper.GetBool(EnableDBInfoLogs)
 	config.EnableFakeData = viper.GetBool(FakeDataEnvVar)
-
-	config.OIDCIssuer = viper.GetString(OIDCIssuerEnvVar)
-	config.OIDCClientID = viper.GetString(OIDCClientIDEnvVar)
-	config.OIDCClientSecret = viper.GetString(OIDCClientSecretEnvVar)
-	config.OIDCAppFilePath = viper.GetString(OIDCAppFilePathEnvVar)
-	config.OIDCScopes = viper.GetString(OIDCScopesEnvVar)
-	config.OIDCRolesClaim = viper.GetString(OIDCRolesClaimEnvVar)
-
-	config.OrchestratorKeyPath = viper.GetString(OrchestratorKeyPathEnvVar)
-
 	config.LocalDBPath = viper.GetString(LocalDBPath)
 
+	// Common
 	logLevel, err := log.ParseLevel(viper.GetString(LogLevel))
 	if err != nil {
 		logLevel = log.WarnLevel
