@@ -310,6 +310,24 @@ func (t *AssetsTableHandler) checkUniqueness(asset models.Asset) (*models.Asset,
 			}
 		}
 		return nil, nil // nolint:nilnil
+	case models.DirInfo:
+		var assets []Asset
+		// In the case of creating or updating a asset, needs to be checked whether other asset exists with same DirName and Location.
+		filter := fmt.Sprintf("id ne '%s' and assetInfo/dirName eq '%s' and assetInfo/location eq '%s'", *asset.Id, *info.DirName, *info.Location)
+		err = ODataQuery(t.DB, assetSchemaName, &filter, nil, nil, nil, nil, nil, true, &assets)
+		if err != nil {
+			return nil, err
+		}
+		if len(assets) > 0 {
+			var apiAsset models.Asset
+			if err := json.Unmarshal(assets[0].Data, &apiAsset); err != nil {
+				return nil, fmt.Errorf("failed to convert DB model to API model: %w", err)
+			}
+			return &apiAsset, &common.ConflictError{
+				Reason: fmt.Sprintf("Asset directory exists with same name=%q and location=%q", *info.DirName, *info.Location),
+			}
+		}
+		return nil, nil // nolint:nilnil
 	default:
 		return nil, fmt.Errorf("asset type is not supported (%T): %w", discriminator, err)
 	}
