@@ -53,7 +53,7 @@ func NewOIDCProvider(config config.OIDC) (Provider, error) {
 		resourceServer, err = rs.NewResourceServerClientCredentials(config.Issuer, config.ClientID, config.ClientSecret, options...)
 	}
 	if err != nil {
-		return nil, fmt.Errorf("could not create OIDC IAM provider: %w", err)
+		return nil, fmt.Errorf("could not create OIDC resource server: %w", err)
 	}
 
 	// Return OIDC Provider

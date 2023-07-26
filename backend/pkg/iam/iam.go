@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"github.com/deepmap/oapi-codegen/pkg/middleware"
 	"github.com/getkin/kin-openapi/openapi3filter"
+	"github.com/labstack/echo/v4"
 	"github.com/openclarity/vmclarity/api/models"
 	"net/http"
 )
@@ -64,18 +65,25 @@ func OapiAuthenticatorForProvider(m Provider) openapi3filter.AuthenticationFunc 
 
 // GetRequiredRolesFromContext returns a list of roles from context required to
 // perform a request.
-func GetRequiredRolesFromContext(ctx context.Context) []string {
-	requiredRoles, _ := ctx.Value(models.IamPolicyScopes).([]string)
+func GetRequiredRolesFromContext(ctx echo.Context) []string {
+	ctxData := ctx.Get(models.IamPolicyScopes)
+	if ctxData == nil {
+		return nil
+	}
+
+	requiredRoles, _ := ctxData.([]string)
 	return requiredRoles
 }
 
 // GetUserFromContext returns User from context or throws an error.
-func GetUserFromContext(ctx context.Context) (*User, error) {
-	user, ok := ctx.Value(userCtxKey).(*User)
-	if !ok || user == nil {
-		return nil, fmt.Errorf("no user found in context")
+func GetUserFromContext(ctx echo.Context) *User {
+	ctxData := ctx.Get(userCtxKey)
+	if ctxData == nil {
+		return nil
 	}
-	return user, nil
+
+	user, _ := ctxData.(*User)
+	return user
 }
 
 // authorize authorizes the request by returning nil if the User has all requiredRoles.
