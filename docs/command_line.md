@@ -7,7 +7,7 @@
 
 If we want to report results to the VMClarity backend, we need to create asset and asset scan object before scan because it requires asset-scan-id
 
-## Reporting results to VMClarity backand:
+## Reporting results to VMClarity backend:
 
 ```
 ASSET_ID=$(./cli/bin/vmclarity-cli asset-create --from-json-file assets/dir-asset.json --server http://localhost:8888/api)

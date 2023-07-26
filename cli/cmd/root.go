@@ -25,9 +25,7 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/log"
 )
 
-var (
-	logger *logrus.Entry
-)
+var logger *logrus.Entry
 
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{

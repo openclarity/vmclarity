@@ -285,6 +285,7 @@ func (t *AssetsTableHandler) DeleteAsset(assetID models.AssetID) error {
 	return nil
 }
 
+// nolint: cyclop
 func (t *AssetsTableHandler) checkUniqueness(asset models.Asset) (*models.Asset, error) {
 	discriminator, err := asset.AssetInfo.ValueByDiscriminator()
 	if err != nil {

@@ -1,7 +1,18 @@
-/*
-Copyright © 2023 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-*/
 package cmd
 
 import (
@@ -16,7 +27,7 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/utils"
 )
 
-// standaloneCmd represents the standalone command
+// assetScanCreateCmd represents the standalone command.
 var assetScanCreateCmd = &cobra.Command{
 	Use:   "asset-scan-create",
 	Short: "Create asset scan",
@@ -43,8 +54,12 @@ func init() {
 	rootCmd.AddCommand(assetScanCreateCmd)
 	assetScanCreateCmd.Flags().String("server", "", "VMClarity server to create asset to, for example: http://localhost:9999/api")
 	assetScanCreateCmd.Flags().String("asset-id", "", "Asset ID for asset scan")
-	assetScanCreateCmd.MarkFlagRequired("server")
-	assetScanCreateCmd.MarkFlagRequired("asset-id")
+	if err := assetScanCreateCmd.MarkFlagRequired("server"); err != nil {
+		logger.Fatalf("Failed to mark server flag as required: %v", err)
+	}
+	if err := assetScanCreateCmd.MarkFlagRequired("asset-id"); err != nil {
+		logger.Fatalf("Failed to mark asset-id flag as required: %v", err)
+	}
 }
 
 func createAssetScan(ctx context.Context, server, assetID string) (string, error) {

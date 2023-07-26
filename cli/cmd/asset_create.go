@@ -1,7 +1,18 @@
-/*
-Copyright © 2023 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-*/
 package cmd
 
 import (
@@ -17,7 +28,7 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 )
 
-// standaloneCmd represents the standalone command
+// assetCreateCmd represents the standalone command.
 var assetCreateCmd = &cobra.Command{
 	Use:   "asset-create",
 	Short: "Create asset",
@@ -33,7 +44,7 @@ var assetCreateCmd = &cobra.Command{
 			logger.Fatalf("Unable to get VMClarity server address: %v", err)
 		}
 
-		assetType, err := getAssetFromJsonFile(filename)
+		assetType, err := getAssetFromJSONFile(filename)
 		if err != nil {
 			logger.Fatalf("Failed to get asset from json file: %v", err)
 		}
@@ -56,28 +67,31 @@ func init() {
 
 	assetCreateCmd.Flags().String("from-json-file", "", "asset json filename")
 	assetCreateCmd.Flags().String("server", "", "VMClarity server to create asset to, for example: http://localhost:9999/api")
-	assetCreateCmd.MarkFlagRequired("from-json-file")
-	assetCreateCmd.MarkFlagRequired("server")
-
+	if err := assetCreateCmd.MarkFlagRequired("from-json-file"); err != nil {
+		logger.Fatalf("Failed to mark from-json-file flag as required: %v", err)
+	}
+	if err := assetCreateCmd.MarkFlagRequired("server"); err != nil {
+		logger.Fatalf("Failed to mark server flag as required: %v", err)
+	}
 }
 
-func getAssetFromJsonFile(filename string) (*models.AssetType, error) {
+func getAssetFromJSONFile(filename string) (*models.AssetType, error) {
 	file, err := os.Open(filename)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open file: %v", err)
 	}
 	defer file.Close()
 
 	// get the file size
 	stat, err := file.Stat()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get file stat: %v", err)
 	}
 	// read the file
 	bs := make([]byte, stat.Size())
 	_, err = file.Read(bs)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read file: %v", err)
 	}
 
 	assetType := &models.AssetType{}
