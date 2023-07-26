@@ -1,0 +1,7 @@
+p, api:reader, api, get
+p, api:writer, api, put
+p, api:writer, api, post
+p, api:writer, api, patch
+p, api:admin, api, delete
+g, api:writer, api:reader
+g, api:admin, api:writer

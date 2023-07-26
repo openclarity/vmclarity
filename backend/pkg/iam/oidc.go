@@ -110,8 +110,8 @@ type oidcInjector struct {
 	tokenSource oauth2.TokenSource
 }
 
-// NewOIDCInjector creates an Injector which uses OAuth2 token source to generate
-// tokens that are injected in requests.
+// NewOIDCInjector creates an Injector which creates OAuth2 token source from key
+// file to generate tokens that are injected in requests.
 func NewOIDCInjector(issuer, keyPath string, scopes []string) (Injector, error) {
 	// Get token source and token
 	tokenSource, err := middleware.JWTProfileFromPath(keyPath)(issuer, append(scopes, oidc.ScopeOpenID))
@@ -130,12 +130,12 @@ func NewOIDCInjector(issuer, keyPath string, scopes []string) (Injector, error) 
 	}, nil
 }
 
-func (injector *oidcInjector) Inject(_ context.Context, req *http.Request) error {
+func (injector *oidcInjector) Inject(_ context.Context, request *http.Request) error {
 	token, err := injector.tokenSource.Token()
 	if err != nil {
 		return err
 	}
 
-	token.SetAuthHeader(req)
+	token.SetAuthHeader(request)
 	return nil
 }

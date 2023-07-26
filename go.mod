@@ -39,6 +39,7 @@ require (
 	github.com/openclarity/kubeclarity/shared v0.0.0
 	github.com/openclarity/vmclarity/api v0.0.0
 	github.com/parnurzeal/gorequest v0.2.16
+	github.com/qiangmzsx/string-adapter v1.0.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
@@ -51,7 +52,6 @@ require (
 	google.golang.org/api v0.143.0
 	google.golang.org/grpc v1.58.2
 	google.golang.org/protobuf v1.31.0
-	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/datatypes v1.2.0
 	gorm.io/driver/postgres v1.5.2
@@ -86,6 +86,7 @@ require (
 	github.com/CycloneDX/cyclonedx-gomod v1.4.0 // indirect
 	github.com/DataDog/zstd v1.4.5 // indirect
 	github.com/GoogleCloudPlatform/docker-credential-gcr v2.0.5+incompatible // indirect
+	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible // indirect
 	github.com/MakeNowJust/heredoc v1.0.0 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
@@ -168,6 +169,7 @@ require (
 	github.com/dlclark/regexp2 v1.4.0 // indirect
 	github.com/docker/cli v24.0.5+incompatible // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
+	github.com/docker/docker v23.0.3+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.7.0 // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
@@ -179,7 +181,6 @@ require (
 	github.com/ekzhu/minhash-lsh v0.0.0-20171225071031-5c06ee8586a1 // indirect
 	github.com/emicklei/go-restful/v3 v3.10.2 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
-	github.com/envoyproxy/protoc-gen-validate v1.0.1 // indirect
 	github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d // indirect
 	github.com/facebookincubator/nvdtools v0.1.5 // indirect
 	github.com/fatih/color v1.15.0 // indirect
@@ -234,7 +235,6 @@ require (
 	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/gosuri/uitable v0.0.4 // indirect
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.15.0 // indirect
 	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect

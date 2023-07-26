@@ -52,7 +52,7 @@ paths:
         required: true
       security:
         - IamPolicy:
-            - api:writer
+            - api:post
       responses:
         201:
           description: A new asset was created.
@@ -113,7 +113,7 @@ paths:
         required: true
       security:
         - IamPolicy:
-            - api:writer
+            - api:put
       responses:
         200:
           description: Updated asset successfully.
@@ -162,7 +162,7 @@ paths:
         required: true
       security:
         - IamPolicy:
-            - api:writer
+            - api:patch
       responses:
         200:
           description: Updated asset successfully.
@@ -198,7 +198,7 @@ paths:
         - $ref: '#/components/parameters/assetID'
       security:
         - IamPolicy:
-            - api:admin
+            - api:delete
       responses:
         200:
           $ref: '#/components/responses/Success'
@@ -3253,8 +3253,7 @@ components:
       scheme: bearer
       bearerFormat: JWT
 
-# Specify global IAM policy
+# Specify global RBAC requirements, must be in form of asset:action, e.g. api:get
 security:
   - IamPolicy:
-    # User needs to have these roles to access APIs
-    - api:reader
+    - api:get

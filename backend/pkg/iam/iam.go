@@ -17,20 +17,37 @@ package iam
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
+	"github.com/casbin/casbin"
 	"github.com/deepmap/oapi-codegen/pkg/middleware"
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/labstack/echo/v4"
-	"github.com/openclarity/vmclarity/api/models"
+	scas "github.com/qiangmzsx/string-adapter"
 	"net/http"
+	"strings"
 )
 
 const userCtxKey = "user"
 
-// User defines an authenticated user
+var (
+	//go:embed rbac_model.conf
+	rbacModel string
+	//go:embed rbac_policy.csv
+	rbacPolicy string
+	// rbacEnforcer enforces RBAC rules for CanPerform, e.g. https://www.aserto.com/blog/building-rbac-in-go
+	rbacEnforcer = casbin.NewEnforcer(casbin.NewModel(rbacModel), scas.NewAdapter(rbacPolicy))
+)
+
+// User defines an authenticated user.
 type User struct {
 	ID    string          `json:"id"`
 	Roles map[string]bool `json:"roles"`
+}
+
+// Injector implements client-side authentication data injection.
+type Injector interface {
+	Inject(ctx context.Context, request *http.Request) error
 }
 
 // Provider implements server-side IAM synchronization policy.
@@ -38,12 +55,7 @@ type Provider interface {
 	Authenticate(ctx context.Context, request *http.Request) (*User, error)
 }
 
-// Injector implements client-side authentication data injection.
-type Injector interface {
-	Inject(ctx context.Context, req *http.Request) error
-}
-
-// OapiAuthenticatorForProvider creates an OpenAPI authenticator for a given Provider
+// OapiAuthenticatorForProvider creates an OpenAPI authenticator using a specific Provider.
 func OapiAuthenticatorForProvider(m Provider) openapi3filter.AuthenticationFunc {
 	return func(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
 		// Authenticate
@@ -57,25 +69,25 @@ func OapiAuthenticatorForProvider(m Provider) openapi3filter.AuthenticationFunc 
 			eCtx.Set(userCtxKey, user)
 		}
 
-		// Authorize - this can be done somewhere else in the chain by inferring
-		// user/role data from context
-		return authorize(user, input.Scopes)
+		// Authorize
+		if len(input.Scopes) == 0 {
+			return nil
+		}
+		for _, scope := range input.Scopes {
+			reqScope := strings.Split(scope, ":")
+			if len(reqScope) != 2 {
+				return fmt.Errorf("unknown asset:action defined for route %s", input.RequestValidationInput.Route.Path)
+			}
+			asset, action := reqScope[0], reqScope[1]
+			if CanPerform(user, asset, action) {
+				return nil
+			}
+		}
+		return fmt.Errorf("not allowed, missing required permissions")
 	}
 }
 
-// GetRequiredRolesFromContext returns a list of roles from context required to
-// perform a request.
-func GetRequiredRolesFromContext(ctx echo.Context) []string {
-	ctxData := ctx.Get(models.IamPolicyScopes)
-	if ctxData == nil {
-		return nil
-	}
-
-	requiredRoles, _ := ctxData.([]string)
-	return requiredRoles
-}
-
-// GetUserFromContext returns User from context or throws an error.
+// GetUserFromContext returns User from context.
 func GetUserFromContext(ctx echo.Context) *User {
 	ctxData := ctx.Get(userCtxKey)
 	if ctxData == nil {
@@ -86,12 +98,12 @@ func GetUserFromContext(ctx echo.Context) *User {
 	return user
 }
 
-// authorize authorizes the request by returning nil if the User has all requiredRoles.
-func authorize(user *User, requiredRoles []string) error {
-	for _, role := range requiredRoles {
-		if _, ok := user.Roles[role]; !ok {
-			return fmt.Errorf("not allowed, requires %s", role)
+// CanPerform checks if User is allowed to perform an action on an asset.
+func CanPerform(user *User, asset, action string) bool {
+	for role := range user.Roles {
+		if ok, _ := rbacEnforcer.EnforceSafe(role, asset, action); ok {
+			return true
 		}
 	}
-	return nil
+	return false
 }

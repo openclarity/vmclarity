@@ -82,6 +82,8 @@ resource zitadel_application_key vmclarity_app_api_key {
   expiration_date = ""
 }
 
+
+// OIDC App can be used to enable UI
 resource zitadel_application_oidc vmclarity_app_oidc {
   org_id                      = zitadel_org.openclarity_org.id
   project_id                  = zitadel_project.vmclarity_project.id
