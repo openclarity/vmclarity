@@ -205,6 +205,19 @@ Resources:
                   # has been detected.
                   systemctl daemon-reload
 
+                  # Create directory required for grype-server
+                  /usr/bin/mkdir -p /opt/grype-server
+                  /usr/bin/chown -R 1000:1000 /opt/grype-server
+
+                  # Create directory required for vmclarity apiserver
+                  /usr/bin/mkdir -p /opt/vmclarity
+
+                  # Create directory for exploit db server
+                  /usr/bin/mkdir -p /opt/exploits
+
+                  # Create directory for trivy server
+                  /usr/bin/mkdir -p /opt/trivy-server
+
                   # Enable and start/restart VMClarity backend
                   systemctl enable vmclarity.service
                   systemctl restart vmclarity.service
@@ -221,7 +234,8 @@ Resources:
                         image: ${APIServerContainerImage}
                         command:
                           - run
-                          - --log-level info
+                          - --log-level
+                          - info
                         ports:
                           - "8888:8888"
                         env_file: ./apiserver.env
@@ -231,29 +245,51 @@ Resources:
                             target: /data
                         logging:
                           driver: journald
+                        deploy:
+                          mode: replicated
+                          replicas: 1
+                          restart_policy:
+                            condition: on-failure
 
                       orchestrator:
                         image: ${OrchestratorContainerImage}
                         command:
                           - run
-                          - --log-level info
+                          - --log-level
+                          - info
                         env_file: ./orchestrator.env
                         logging:
                           driver: journald
+                        deploy:
+                          mode: replicated
+                          replicas: 1
+                          restart_policy:
+                            condition: on-failure
 
                       ui:
                         image: ${UIContainerImage}
                         logging:
                           driver: journald
+                        deploy:
+                          mode: replicated
+                          replicas: 1
+                          restart_policy:
+                            condition: on-failure
 
                       uibackend:
                         image: ${UIBackendContainerImage}
                         command:
                           - run
-                          - --log-level info
+                          - --log-level
+                          - info
                         env_file: ./uibackend.env
                         logging:
                           driver: journald
+                        deploy:
+                          mode: replicated
+                          replicas: 1
+                          restart_policy:
+                            condition: on-failure
 
                       gateway:
                         image: nginx
@@ -264,6 +300,11 @@ Resources:
                             target: /etc/nginx/nginx.conf
                         logging:
                           driver: journald
+                        deploy:
+                          mode: replicated
+                          replicas: 1
+                          restart_policy:
+                            condition: on-failure
 
                       exploit-db-server:
                         image: ${ExploitDBServerContainerImage}
@@ -275,6 +316,11 @@ Resources:
                             target: /vuls
                         logging:
                           driver: journald
+                        deploy:
+                          mode: replicated
+                          replicas: 1
+                          restart_policy:
+                            condition: on-failure
 
                       trivy-server:
                         image: ${TrivyServerContainerImage}
@@ -289,12 +335,18 @@ Resources:
                             target: /home/scanner/.cache
                         logging:
                           driver: journald
+                        deploy:
+                          mode: replicated
+                          replicas: 1
+                          restart_policy:
+                            condition: on-failure
 
                       grype-server:
                         image: ${GrypeServerContainerImage}
                         command:
                           - run
-                          - --log-level warning
+                          - --log-level
+                          - warning
                         ports:
                           - "9991:9991"
                         env_file: ./grype-server.env
@@ -304,6 +356,11 @@ Resources:
                             target: /opt/grype-server
                         logging:
                           driver: journald
+                        deploy:
+                          mode: replicated
+                          replicas: 1
+                          restart_policy:
+                            condition: on-failure
 
                       freshclam-mirror:
                         image: ${FreshclamMirrorContainerImage}
@@ -311,6 +368,11 @@ Resources:
                           - "1000:80"
                         logging:
                           driver: journald
+                        deploy:
+                          mode: replicated
+                          replicas: 1
+                          restart_policy:
+                            condition: on-failure
 
                       postgresql:
                         image: ${PostgresqlContainerImage}
@@ -321,6 +383,11 @@ Resources:
                           - postgres
                         logging:
                           driver: journald
+                        deploy:
+                          mode: replicated
+                          replicas: 1
+                          restart_policy:
+                            condition: on-failure
 
                     configs:
                       gateway_config:
@@ -359,6 +426,8 @@ Resources:
                     APISERVER_PORT=8888
                     # Container image for Scanner instance
                     SCANNER_CONTAINER_IMAGE=${ScannerContainerImage}
+                    # API Server Address for the Scanner to connect to
+                    SCANNER_VMCLARITY_APISERVER_ADDRESS=http://__CONTROLPLANE_HOST__:8888
                     # Trivy server address
                     TRIVY_SERVER_ADDRESS=http://__CONTROLPLANE_HOST__:9992
                     # Grype server address
@@ -423,6 +492,43 @@ Resources:
                     POSTGRESQL_DATABASE=vmclarity
               mode: "000644"
 
+            "/etc/vmclarity/gateway.conf":
+              content: |
+                events {
+                    worker_connections 1024;
+                }
+
+                http {
+                    upstream ui {
+                        server ui:80;
+                    }
+
+                    upstream uibackend {
+                        server uibackend:8890;
+                    }
+
+                    upstream apiserver {
+                        server apiserver:8888;
+                    }
+
+                    server {
+                        listen 80;
+
+                        location / {
+                            proxy_pass http://ui/;
+                        }
+
+                        location /ui/api/ {
+                            proxy_pass http://uibackend/;
+                        }
+
+                        location /api/ {
+                            proxy_pass http://apiserver/;
+                        }
+                    }
+                }
+              mode: "000644"
+
             "/lib/systemd/system/vmclarity.service":
               content: |
                 [Unit]
@@ -434,8 +540,9 @@ Resources:
                 TimeoutStartSec=0
                 Restart=always
                 Type=oneshot
+                RemainAfterExit=true
                 EnvironmentFile=/etc/vmclarity/service.env
-                ExecStart=/usr/bin/docker compose -p vmclarity -f /etc/vmclarity/vmclarity.yaml --wait -d up --remove-orphans
+                ExecStart=/usr/bin/docker compose -p vmclarity -f /etc/vmclarity/vmclarity.yaml up -d --wait --remove-orphans
                 ExecStop=/usr/bin/docker compose -p vmclarity -f /etc/vmclarity/vmclarity.yaml down
 
                 [Install]
