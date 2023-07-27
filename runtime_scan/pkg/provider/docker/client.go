@@ -39,10 +39,8 @@ import (
 	"github.com/openclarity/vmclarity/shared/pkg/log"
 )
 
-var (
-	// mountPointPath defines the location in the container where assets will be mounted.
-	mountPointPath = "/mnt/snapshot"
-)
+// mountPointPath defines the location in the container where assets will be mounted.
+var mountPointPath = "/mnt/snapshot"
 
 type Client struct {
 	dockerClient *client.Client
