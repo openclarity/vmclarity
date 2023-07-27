@@ -46,6 +46,13 @@ const (
 	ResourceCleanupStateSkipped ResourceCleanupState = "Skipped"
 )
 
+// Defines values for RootVolumeEncrypted.
+const (
+	No      RootVolumeEncrypted = "No"
+	Unknown RootVolumeEncrypted = "Unknown"
+	Yes     RootVolumeEncrypted = "Yes"
+)
+
 // Defines values for RootkitType.
 const (
 	APPLICATION RootkitType = "APPLICATION"
@@ -506,9 +513,12 @@ type ResourceCleanupState string
 
 // RootVolume Information about VM root volume
 type RootVolume struct {
-	Encrypted bool `json:"encrypted"`
-	SizeGB    int  `json:"sizeGB"`
+	Encrypted RootVolumeEncrypted `json:"encrypted"`
+	SizeGB    int                 `json:"sizeGB"`
 }
+
+// RootVolumeEncrypted defines model for RootVolume.Encrypted.
+type RootVolumeEncrypted string
 
 // Rootkit defines model for Rootkit.
 type Rootkit struct {

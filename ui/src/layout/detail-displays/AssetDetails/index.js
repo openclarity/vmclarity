@@ -83,7 +83,7 @@ const AssetDetails = ({assetData, withAssetLink=false, withAssetScansLink=false}
                     </TitleValueDisplayRow>
                     <TitleValueDisplayRow>
                         <TitleValueDisplay title="Root Volume Size">{sizeGB} GB</TitleValueDisplay>
-                        <TitleValueDisplay title="Encrypted Root Volume">{encrypted ? "Yes" : "No"}</TitleValueDisplay>
+                        <TitleValueDisplay title="Encrypted Root Volume">{encrypted}</TitleValueDisplay>
                     </TitleValueDisplayRow>
                 </>
             )}

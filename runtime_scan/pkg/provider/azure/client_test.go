@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v4"
+	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/shared/pkg/utils"
 )
 
@@ -14,7 +15,7 @@ func Test_isEncrypted(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want bool
+		want models.RootVolumeEncrypted
 	}{
 		{
 			name: "encrypted",
@@ -29,7 +30,7 @@ func Test_isEncrypted(t *testing.T) {
 					},
 				},
 			},
-			want: true,
+			want: models.Yes,
 		},
 		{
 			name: "not encrypted",
@@ -42,7 +43,7 @@ func Test_isEncrypted(t *testing.T) {
 					},
 				},
 			},
-			want: false,
+			want: models.No,
 		},
 	}
 	for _, tt := range tests {

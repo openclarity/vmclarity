@@ -783,7 +783,7 @@ func (c *Client) getInstancesFromDescribeInstancesOutput(ctx context.Context, re
 				logger.Warnf("Couldn't get root volume info. instance id=%v: %v", utils.StringPointerValOrEmpty(instance.InstanceId), err)
 				rootVol = &models.RootVolume{
 					SizeGB:    0,
-					Encrypted: false,
+					Encrypted: models.Unknown,
 				}
 			}
 
@@ -807,12 +807,6 @@ func (c *Client) getInstancesFromDescribeInstancesOutput(ctx context.Context, re
 		}
 	}
 	return ret
-}
-
-type rootVolumeInfo struct {
-	DeviceName string
-	SizeGB     int32
-	Encrypted  bool
 }
 
 func getRootVolumeInfo(ctx context.Context, client *ec2.Client, i ec2types.Instance, region string) (*models.RootVolume, error) {
@@ -851,12 +845,22 @@ func getRootVolumeInfo(ctx context.Context, client *ec2.Client, i ec2types.Insta
 
 			return &models.RootVolume{
 				SizeGB:    int(utils.Int32PointerValOrEmpty(describeOut.Volumes[0].Size)),
-				Encrypted: utils.BoolPointerValOrFalse(describeOut.Volumes[0].Encrypted),
+				Encrypted: encryptedToAPI(describeOut.Volumes[0].Encrypted),
 			}, nil
 		}
 	}
 
 	return nil, fmt.Errorf("instance doesn't have a root volume block device mapping")
+}
+
+func encryptedToAPI(encrypted *bool) models.RootVolumeEncrypted {
+	if encrypted == nil {
+		return models.Unknown
+	}
+	if *encrypted {
+		return models.Yes
+	}
+	return models.No
 }
 
 func (c *Client) ListAllRegions(ctx context.Context) ([]Region, error) {

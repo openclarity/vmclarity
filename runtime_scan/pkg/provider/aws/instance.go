@@ -43,7 +43,7 @@ type Instance struct {
 	LaunchTime          time.Time
 	RootDeviceName      string
 	RootVolumeSizeGB    int32
-	RootVolumeEncrypted bool
+	RootVolumeEncrypted models.RootVolumeEncrypted
 	Volumes             []Volume
 
 	Metadata provider.ScanMetadata

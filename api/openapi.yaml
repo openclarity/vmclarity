@@ -1387,7 +1387,11 @@ components:
         sizeGB:
           type: integer
         encrypted:
-          type: boolean
+          type: string
+          enum:
+            - Yes
+            - No
+            - Unknown
       required:
         - sizeGB
         - encrypted
