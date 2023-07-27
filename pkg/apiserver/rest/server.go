@@ -84,7 +84,7 @@ func createEchoServer(dbHandler databaseTypes.Database) (*echo.Echo, error) {
 	// OpenAPI schema along with IAM provider.
 	apiGroup.Use(middleware.OapiRequestValidatorWithOptions(swagger, &middleware.Options{
 		Options: openapi3filter.Options{
-			AuthenticationFunc: iam.OapiAuthenticatorForProvider(iamProvider),
+			AuthenticationFunc: iam.OapiFilterForProvider(iamProvider),
 		},
 	}))
 

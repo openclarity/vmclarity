@@ -31,9 +31,9 @@ const (
 	OIDCClientIDEnvVar      = "OIDC_CLIENT_ID"
 	OIDCClientSecretEnvVar  = "OIDC_CLIENT_SECRET"
 	OIDCClientKeyPathEnvVar = "OIDC_CLIENT_KEY_PATH"
-	OIDCScopesEnvVar        = "OIDC_SCOPES"
-	OIDCRolesClaimEnvVar    = "OIDC_ROLES_CLAIM"
-	OIDCRolesClaimDefault   = "roles" // default role claim
+	OIDCExtraScopesEnvVar   = "OIDC_EXTRA_SCOPES"
+	OIDCRoleClaimEnvVar     = "OIDC_ROLE_CLAIM"
+	OIDCRoleClaimDefault    = "roles"
 	OIDCTokenURLEnvVar      = "OIDC_TOKEN_URL"
 	OIDCIntrospectURLEnvVar = "OIDC_INTROSPECT_URL"
 
@@ -107,21 +107,21 @@ type OIDC struct {
 	ClientID      string `json:"oidc-client-id"`
 	ClientSecret  string `json:"oidc-client-secret"`
 	ClientKeyPath string `json:"oidc-client-key-path"`
-	Scopes        string `json:"oidc-scopes"`
-	RolesClaim    string `json:"oidc-roles-claim"`
+	ExtraScopes   string `json:"oidc-extra-scopes"` // defines additional scopes to fetch defined as comma-separated string
+	RoleClaim     string `json:"oidc-roles-claim"`  // defines a JWT token claim that contains authorization user roles
 	TokenURL      string `json:"oidc-token-url"`
 	IntrospectURL string `json:"oidc-introspect-url"`
 }
 
-func (oidc *OIDC) GetScopes() []string {
-	return strings.Split(oidc.Scopes, ",")
+func (oidc *OIDC) GetExtraScopes() []string {
+	return strings.Split(oidc.ExtraScopes, ",")
 }
 
-func (oidc *OIDC) GetRolesClaim() string {
-	if oidc.RolesClaim == "" {
-		return OIDCRolesClaimDefault
+func (oidc *OIDC) GetRoleClaim() string {
+	if oidc.RoleClaim == "" {
+		return OIDCRoleClaimDefault
 	}
-	return oidc.RolesClaim
+	return oidc.RoleClaim
 }
 
 func setConfigDefaults() {
@@ -143,8 +143,8 @@ func LoadConfig() (*Config, error) {
 	config.OIDC.ClientID = viper.GetString(OIDCClientIDEnvVar)
 	config.OIDC.ClientSecret = viper.GetString(OIDCClientSecretEnvVar)
 	config.OIDC.ClientKeyPath = viper.GetString(OIDCClientKeyPathEnvVar)
-	config.OIDC.Scopes = viper.GetString(OIDCScopesEnvVar)
-	config.OIDC.RolesClaim = viper.GetString(OIDCRolesClaimEnvVar)
+	config.OIDC.ExtraScopes = viper.GetString(OIDCExtraScopesEnvVar)
+	config.OIDC.RoleClaim = viper.GetString(OIDCRoleClaimEnvVar)
 	config.OIDC.TokenURL = viper.GetString(OIDCTokenURLEnvVar)
 	config.OIDC.IntrospectURL = viper.GetString(OIDCIntrospectURLEnvVar)
 
