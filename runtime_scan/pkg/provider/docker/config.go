@@ -22,7 +22,9 @@ import (
 )
 
 const (
-	DefaultEnvPrefix = "VMCLARITY_DOCKER"
+	DefaultEnvPrefix   = "VMCLARITY_DOCKER"
+	DefaultHelperImage = "alpine:3.18.2"
+	DefaultNetworkName = "vmclarity"
 )
 
 type Config struct {
@@ -41,10 +43,10 @@ func NewConfig() (*Config, error) {
 	v.AutomaticEnv()
 
 	_ = v.BindEnv("helper_image")
-	v.SetDefault("helper_image", "alpine:3.18.2")
+	v.SetDefault("helper_image", DefaultHelperImage)
 
 	_ = v.BindEnv("network_name")
-	v.SetDefault("network_name", "vmclarity")
+	v.SetDefault("network_name", DefaultNetworkName)
 
 	config := &Config{}
 	if err := v.Unmarshal(config); err != nil {
