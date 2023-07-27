@@ -42,17 +42,19 @@ import (
 var (
 	// mountPointPath defines the location in the container where assets will be mounted.
 	mountPointPath = "/mnt/snapshot"
-	// helperImage defines helper container image that performs init tasks.
-	helperImage = "alpine"
-	// networkName defines the user defined bridge network where we attach the scanner container.
-	networkName = "vmclarity"
 )
 
 type Client struct {
 	dockerClient *client.Client
+	config       *Config
 }
 
 func New(_ context.Context) (*Client, error) {
+	config, err := NewConfig()
+	if err != nil {
+		return nil, fmt.Errorf("invalid configuration. Provider=%s: %w", models.Docker, err)
+	}
+
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return nil, fmt.Errorf("failed to load provider configuration. Provider=%s: %w", models.Docker, err)
@@ -60,6 +62,7 @@ func New(_ context.Context) (*Client, error) {
 
 	return &Client{
 		dockerClient: dockerClient,
+		config:       config,
 	}, nil
 }
 
@@ -146,7 +149,7 @@ func (c *Client) prepareScanAssetVolume(ctx context.Context, config *provider.Sc
 	}
 
 	// Pull image for ephemeral container
-	imagePullResp, err := c.dockerClient.ImagePull(ctx, helperImage, types.ImagePullOptions{})
+	imagePullResp, err := c.dockerClient.ImagePull(ctx, c.config.HelperImage, types.ImagePullOptions{})
 	if err != nil {
 		return "", fmt.Errorf("failed to pull helper image: %w", err)
 	}
@@ -159,7 +162,7 @@ func (c *Client) prepareScanAssetVolume(ctx context.Context, config *provider.Sc
 	containerResp, err := c.dockerClient.ContainerCreate(
 		ctx,
 		&container.Config{
-			Image: helperImage,
+			Image: c.config.HelperImage,
 		},
 		&container.HostConfig{
 			Mounts: []mount.Mount{
@@ -238,7 +241,7 @@ func (c *Client) createScanAssetVolume(ctx context.Context, volumeName string) e
 // createScanNetwork returns network id or error.
 func (c *Client) createScanNetwork(ctx context.Context) (string, error) {
 	// Do nothing if network already exists
-	networkID, _ := c.getNetworkIDFromName(ctx, networkName)
+	networkID, _ := c.getNetworkIDFromName(ctx, c.config.NetworkName)
 	if networkID != "" {
 		return networkID, nil
 	}
@@ -246,7 +249,7 @@ func (c *Client) createScanNetwork(ctx context.Context) (string, error) {
 	// Create network
 	networkResp, err := c.dockerClient.NetworkCreate(
 		ctx,
-		networkName,
+		c.config.NetworkName,
 		types.NetworkCreate{
 			CheckDuplicate: true,
 			Driver:         "bridge",
