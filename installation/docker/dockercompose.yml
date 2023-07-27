@@ -2,44 +2,127 @@ version: '3'
 
 services:
   apiserver:
-    image: docker.io/tehsmash/vmclarity-apiserver:microservices
+    image: ${APIServerContainerImage:-ghcr.io/openclarity/vmclarity-apiserver:latest}
     command:
       - run
-    environment:
-      DATABASE_DRIVER: LOCAL
-      LOCAL_DB_PATH: /app/vmclarity.db
+      - --log-level
+      - info
+    ports:
+      - "8888:8888"
+    env_file: ./apiserver.env
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
   orchestrator:
-    image: docker.io/tehsmash/vmclarity-orchestrator:microservices
+    image: ${OrchestratorContainerImage:-ghcr.io/openclarity/vmclarity-apiserver:latest}
     command:
       - run
-    environment:
-      APISERVER_HOST: apiserver
-      APISERVER_PORT: 8888
-      SCANNER_CONTAINER_IMAGE: docker.io/tehsmash/vmclarity-cli:microservices
-      PROVIDER: aws
-      AWS_REGION: eu-west-2
-      VMCLARITY_AWS_SCANNER_REGION: eu-west-2
-      VMCLARITY_AWS_SUBNET_ID: subnet-098e23d0e83f7fcac
-      VMCLARITY_AWS_SECURITY_GROUP_ID: sg-084c9f331796c7a92
-      VMCLARITY_AWS_KEYPAIR_NAME: sambetts-dev
-      VMCLARITY_AWS_SCANNER_AMI_ID: ami-08d3a4ad06c8a70fe
-      VMCLARITY_AWS_SCANNER_INSTANCE_TYPE: t2.large
+      - --log-level
+      - info
+    env_file: ./orchestrator.env
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
   ui:
-    image: docker.io/tehsmash/vmclarity-ui:microservices
+    image: ${UIContainerImage:-ghcr.io/openclarity/vmclarity-apiserver:latest}
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
   uibackend:
+    image: ${UIBackendContainerImage:-ghcr.io/openclarity/vmclarity-apiserver:latest}
     command:
       - run
-    image: docker.io/tehsmash/vmclarity-uibackend:microservices
-    environment:
-      APISERVER_HOST: apiserver
-      APISERVER_PORT: 8888
+      - --log-level
+      - info
+    env_file: ./uibackend.env
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
   gateway:
     image: nginx
     ports:
-      - "8080:80"
+      - "80:80"
     configs:
       - source: gateway_config
         target: /etc/nginx/nginx.conf
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  exploit-db-server:
+    image: ${ExploitDBServerContainerImage:-ghcr.io/openclarity/exploit-db-server:v0.1.2}
+    ports:
+      - "1326:1326"
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  trivy-server:
+    image: ${TrivyServerContainerImage:-docker.io/aquasec/trivy:0.41.0}
+    command:
+      - server
+    ports:
+      - "9992:9992"
+    env_file: ./trivy-server.env
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  grype-server:
+    image: ${GrypeServerContainerImage:-ghcr.io/openclarity/grype-server:v0.2.0}
+    command:
+      - run
+      - --log-level
+      - warning
+    ports:
+      - "9991:9991"
+    env_file: ./grype-server.env
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  freshclam-mirror:
+    image: ${FreshclamMirrorContainerImage:-ghcr.io/openclarity/freshclam-mirror:v0.1.0}
+    ports:
+      - "1000:80"
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  postgresql:
+    image: ${PostgresqlContainerImage:-docker.io/bitnami/postgresql:12.14.0-debian-11-r28}
+    env_file: ./postgres.env
+    ports:
+      - "5432:5432"
+    profiles:
+      - postgres
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
 
 configs:
   gateway_config:
