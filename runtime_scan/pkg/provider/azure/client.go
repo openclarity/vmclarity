@@ -235,7 +235,7 @@ func (c *Client) getRootVolumeInfo(ctx context.Context, vm *armcompute.VirtualMa
 			utils.StringPointerValOrEmpty(vm.Properties.StorageProfile.OSDisk.ManagedDisk.ID), err)
 		return ret
 	}
-	osDisk, err := c.disksClient.Get(context.TODO(), osDiskID.ResourceGroupName, osDiskID.Name, nil)
+	osDisk, err := c.disksClient.Get(ctx, osDiskID.ResourceGroupName, osDiskID.Name, nil)
 	if err != nil {
 		logger.Warnf("Failed to get OS disk. DiskID=%v: %v",
 			utils.StringPointerValOrEmpty(vm.Properties.StorageProfile.OSDisk.ManagedDisk.ID), err)
