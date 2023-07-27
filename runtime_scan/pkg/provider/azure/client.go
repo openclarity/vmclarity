@@ -223,11 +223,6 @@ func (c *Client) processVirtualMachineListIntoAssetTypes(ctx context.Context, vm
 	return ret, nil
 }
 
-type rootVolumeInfo struct {
-	SizeGB    int32
-	Encrypted bool
-}
-
 func (c *Client) getRootVolumeInfo(ctx context.Context, vm *armcompute.VirtualMachine) *models.RootVolume {
 	logger := log.GetLoggerFromContextOrDiscard(ctx)
 	ret := &models.RootVolume{
