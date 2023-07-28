@@ -21,6 +21,8 @@ import (
 	"time"
 
 	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
+	"github.com/openclarity/vmclarity/pkg/shared/log"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/orchestrator/assetscanprocessor"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/orchestrator/assetscanwatcher"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/orchestrator/discovery"
@@ -29,9 +31,9 @@ import (
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider/aws"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider/azure"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider/docker"
+	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider/external"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider/gcp"
-	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
-	"github.com/openclarity/vmclarity/shared/pkg/log"
 )
 
 type Orchestrator struct {
@@ -101,10 +103,14 @@ func NewProvider(ctx context.Context, kind models.CloudProvider) (provider.Provi
 	switch kind {
 	case models.Azure:
 		return azure.New(ctx)
+	case models.Docker:
+		return docker.New(ctx)
 	case models.AWS:
 		return aws.New(ctx)
 	case models.GCP:
 		return gcp.New(ctx)
+	case models.External:
+		return external.New(ctx)
 	default:
 		return nil, fmt.Errorf("unsupported provider: %s", kind)
 	}

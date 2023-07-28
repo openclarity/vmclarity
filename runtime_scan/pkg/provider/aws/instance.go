@@ -25,24 +25,26 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/pkg/shared/log"
+	"github.com/openclarity/vmclarity/pkg/shared/utils"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
-	"github.com/openclarity/vmclarity/shared/pkg/log"
-	"github.com/openclarity/vmclarity/shared/pkg/utils"
 )
 
 type Instance struct {
-	ID               string
-	Region           string
-	VpcID            string
-	SecurityGroups   []models.SecurityGroup
-	AvailabilityZone string
-	Image            string
-	InstanceType     string
-	Platform         string
-	Tags             []models.Tag
-	LaunchTime       time.Time
-	RootDeviceName   string
-	Volumes          []Volume
+	ID                  string
+	Region              string
+	VpcID               string
+	SecurityGroups      []models.SecurityGroup
+	AvailabilityZone    string
+	Image               string
+	InstanceType        string
+	Platform            string
+	Tags                []models.Tag
+	LaunchTime          time.Time
+	RootDeviceName      string
+	RootVolumeSizeGB    int32
+	RootVolumeEncrypted models.RootVolumeEncrypted
+	Volumes             []Volume
 
 	Metadata provider.ScanMetadata
 

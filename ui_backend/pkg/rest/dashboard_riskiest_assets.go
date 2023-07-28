@@ -25,7 +25,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	backendmodels "github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/shared/pkg/utils"
+	"github.com/openclarity/vmclarity/pkg/shared/utils"
 	"github.com/openclarity/vmclarity/ui_backend/api/models"
 )
 
@@ -240,6 +240,10 @@ func getAssetType(provider *backendmodels.CloudProvider) (*models.AssetType, err
 		return utils.PointerTo(models.AzureInstance), nil
 	case backendmodels.GCP:
 		return utils.PointerTo(models.GCPInstance), nil
+	case backendmodels.Docker:
+		return utils.PointerTo(models.DockerInstance), nil
+	case backendmodels.External:
+		return utils.PointerTo(models.ExternalInstance), nil
 	default:
 		return nil, fmt.Errorf("unsupported provider: %v", *provider)
 	}

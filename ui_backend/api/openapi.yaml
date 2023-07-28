@@ -494,6 +494,8 @@ components:
         - 'AWS EC2 Instance'
         - 'Azure Instance'
         - 'GCP Instance'
+        - 'Docker Instance'
+        - 'External Instance'
 
   responses:
     UnknownError:

@@ -22,7 +22,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/openclarity/vmclarity/cli/pkg"
-	"github.com/openclarity/vmclarity/shared/pkg/log"
+	"github.com/openclarity/vmclarity/pkg/shared/log"
 )
 
 var logger *logrus.Entry

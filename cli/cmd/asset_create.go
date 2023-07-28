@@ -26,7 +26,7 @@ import (
 
 	"github.com/openclarity/vmclarity/api/models"
 	cliutils "github.com/openclarity/vmclarity/cli/pkg/utils"
-	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
+	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
 )
 
 // assetCreateCmd represents the standalone command.

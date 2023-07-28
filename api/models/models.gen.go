@@ -24,9 +24,11 @@ const (
 
 // Defines values for CloudProvider.
 const (
-	AWS   CloudProvider = "AWS"
-	Azure CloudProvider = "Azure"
-	GCP   CloudProvider = "GCP"
+	AWS      CloudProvider = "AWS"
+	Azure    CloudProvider = "Azure"
+	Docker   CloudProvider = "Docker"
+	External CloudProvider = "External"
+	GCP      CloudProvider = "GCP"
 )
 
 // Defines values for MisconfigurationSeverity.
@@ -42,6 +44,13 @@ const (
 	ResourceCleanupStateFailed  ResourceCleanupState = "Failed"
 	ResourceCleanupStatePending ResourceCleanupState = "Pending"
 	ResourceCleanupStateSkipped ResourceCleanupState = "Skipped"
+)
+
+// Defines values for RootVolumeEncrypted.
+const (
+	No      RootVolumeEncrypted = "No"
+	Unknown RootVolumeEncrypted = "Unknown"
+	Yes     RootVolumeEncrypted = "Yes"
 )
 
 // Defines values for RootkitType.
@@ -298,6 +307,27 @@ type Assets struct {
 // CloudProvider defines model for CloudProvider.
 type CloudProvider string
 
+// ContainerImageInfo defines model for ContainerImageInfo.
+type ContainerImageInfo struct {
+	Architecture *string `json:"architecture,omitempty"`
+	Id           *string `json:"id,omitempty"`
+	Labels       *[]Tag  `json:"labels"`
+	Name         *string `json:"name,omitempty"`
+	ObjectType   string  `json:"objectType"`
+	Os           *string `json:"os,omitempty"`
+	Size         *int    `json:"size,omitempty"`
+}
+
+// ContainerInfo defines model for ContainerInfo.
+type ContainerInfo struct {
+	ContainerName *string             `json:"containerName,omitempty"`
+	CreatedAt     *time.Time          `json:"createdAt,omitempty"`
+	Id            *string             `json:"id,omitempty"`
+	Image         *ContainerImageInfo `json:"image,omitempty"`
+	Labels        *[]Tag              `json:"labels"`
+	ObjectType    string              `json:"objectType"`
+}
+
 // DirInfo defines model for DirInfo.
 type DirInfo struct {
 	DirName    *string `json:"dirName,omitempty"`
@@ -480,6 +510,15 @@ type PodInfo struct {
 
 // ResourceCleanupState defines model for ResourceCleanupState.
 type ResourceCleanupState string
+
+// RootVolume Information about VM root volume
+type RootVolume struct {
+	Encrypted RootVolumeEncrypted `json:"encrypted"`
+	SizeGB    int                 `json:"sizeGB"`
+}
+
+// RootVolumeEncrypted defines model for RootVolume.Encrypted.
+type RootVolumeEncrypted string
 
 // Rootkit defines model for Rootkit.
 type Rootkit struct {
@@ -852,16 +891,19 @@ type Tag struct {
 
 // VMInfo defines model for VMInfo.
 type VMInfo struct {
-	Image            string           `json:"image"`
-	InstanceID       string           `json:"instanceID"`
-	InstanceProvider *CloudProvider   `json:"instanceProvider,omitempty"`
-	InstanceType     string           `json:"instanceType"`
-	LaunchTime       time.Time        `json:"launchTime"`
-	Location         string           `json:"location"`
-	ObjectType       string           `json:"objectType"`
-	Platform         string           `json:"platform"`
-	SecurityGroups   *[]SecurityGroup `json:"securityGroups"`
-	Tags             *[]Tag           `json:"tags"`
+	Image            string         `json:"image"`
+	InstanceID       string         `json:"instanceID"`
+	InstanceProvider *CloudProvider `json:"instanceProvider,omitempty"`
+	InstanceType     string         `json:"instanceType"`
+	LaunchTime       time.Time      `json:"launchTime"`
+	Location         string         `json:"location"`
+	ObjectType       string         `json:"objectType"`
+	Platform         string         `json:"platform"`
+
+	// RootVolume Information about VM root volume
+	RootVolume     RootVolume       `json:"rootVolume"`
+	SecurityGroups *[]SecurityGroup `json:"securityGroups"`
+	Tags           *[]Tag           `json:"tags"`
 }
 
 // VulnerabilitiesConfig defines model for VulnerabilitiesConfig.
@@ -1251,6 +1293,62 @@ func (t *AssetType) MergeDirInfo(v DirInfo) error {
 	return err
 }
 
+// AsContainerImageInfo returns the union data inside the AssetType as a ContainerImageInfo
+func (t AssetType) AsContainerImageInfo() (ContainerImageInfo, error) {
+	var body ContainerImageInfo
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromContainerImageInfo overwrites any union data inside the AssetType as the provided ContainerImageInfo
+func (t *AssetType) FromContainerImageInfo(v ContainerImageInfo) error {
+	v.ObjectType = "ContainerImageInfo"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeContainerImageInfo performs a merge with any union data inside the AssetType, using the provided ContainerImageInfo
+func (t *AssetType) MergeContainerImageInfo(v ContainerImageInfo) error {
+	v.ObjectType = "ContainerImageInfo"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+// AsContainerInfo returns the union data inside the AssetType as a ContainerInfo
+func (t AssetType) AsContainerInfo() (ContainerInfo, error) {
+	var body ContainerInfo
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromContainerInfo overwrites any union data inside the AssetType as the provided ContainerInfo
+func (t *AssetType) FromContainerInfo(v ContainerInfo) error {
+	v.ObjectType = "ContainerInfo"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeContainerInfo performs a merge with any union data inside the AssetType, using the provided ContainerInfo
+func (t *AssetType) MergeContainerInfo(v ContainerInfo) error {
+	v.ObjectType = "ContainerInfo"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
 func (t AssetType) Discriminator() (string, error) {
 	var discriminator struct {
 		Discriminator string `json:"objectType"`
@@ -1265,6 +1363,10 @@ func (t AssetType) ValueByDiscriminator() (interface{}, error) {
 		return nil, err
 	}
 	switch discriminator {
+	case "ContainerImageInfo":
+		return t.AsContainerImageInfo()
+	case "ContainerInfo":
+		return t.AsContainerInfo()
 	case "DirInfo":
 		return t.AsDirInfo()
 	case "PodInfo":

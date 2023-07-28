@@ -23,8 +23,8 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 
 	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/pkg/shared/utils"
 	"github.com/openclarity/vmclarity/runtime_scan/pkg/provider"
-	"github.com/openclarity/vmclarity/shared/pkg/utils"
 )
 
 func EC2TagsFromScanMetadata(meta provider.ScanMetadata) []ec2types.Tag {
@@ -168,13 +168,6 @@ func getInstanceState(result *ec2.DescribeInstancesOutput, instanceID string) ec
 	return ec2types.InstanceStateNamePending
 }
 
-func getPointerValOrEmpty(val *string) string {
-	if val == nil {
-		return ""
-	}
-	return *val
-}
-
 func validateInstanceFields(instance ec2types.Instance) error {
 	if instance.InstanceId == nil {
 		return fmt.Errorf("instance id does not exist")
@@ -239,8 +232,12 @@ func getVMInfoFromInstance(i Instance) (models.AssetType, error) {
 		Location:         i.Location(),
 		ObjectType:       "VMInfo",
 		Platform:         i.Platform,
-		SecurityGroups:   utils.PointerTo(i.SecurityGroups),
-		Tags:             utils.PointerTo(i.Tags),
+		RootVolume: models.RootVolume{
+			Encrypted: i.RootVolumeEncrypted,
+			SizeGB:    int(i.RootVolumeSizeGB),
+		},
+		SecurityGroups: utils.PointerTo(i.SecurityGroups),
+		Tags:           utils.PointerTo(i.Tags),
 	})
 	if err != nil {
 		err = fmt.Errorf("failed to create AssetType from VMInfo: %w", err)
