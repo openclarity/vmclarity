@@ -41,16 +41,18 @@ require (
 	github.com/spf13/viper v1.16.0
 	github.com/vulsio/go-exploitdb v0.4.5
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
+	golang.org/x/sync v0.3.0
 	google.golang.org/api v0.132.0
 	google.golang.org/grpc v1.56.2
 	google.golang.org/protobuf v1.31.0
+	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/datatypes v1.2.0
 	gorm.io/driver/postgres v1.5.2
 	gorm.io/driver/sqlite v1.5.1
 	gorm.io/gorm v1.25.0
 	gotest.tools/v3 v3.5.0
-	k8s.io/apimachinery v0.27.3
+	k8s.io/apimachinery v0.27.4
 
 )
 
@@ -408,7 +410,6 @@ require (
 	golang.org/x/mod v0.10.0 // indirect
 	golang.org/x/net v0.12.0 // indirect
 	golang.org/x/oauth2 v0.10.0 // indirect
-	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
 	golang.org/x/term v0.10.0 // indirect
 	golang.org/x/text v0.11.0 // indirect
@@ -425,7 +426,6 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/neurosnap/sentences.v1 v1.0.6 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gorm.io/driver/mysql v1.5.0 // indirect
 	helm.sh/helm/v3 v3.11.1 // indirect
 	k8s.io/api v0.26.3 // indirect
