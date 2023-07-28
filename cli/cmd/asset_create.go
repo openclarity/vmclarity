@@ -25,6 +25,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/openclarity/vmclarity/api/models"
+	cliutils "github.com/openclarity/vmclarity/cli/pkg/utils"
 	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
 )
 
@@ -43,10 +44,17 @@ var assetCreateCmd = &cobra.Command{
 		if err != nil {
 			logger.Fatalf("Unable to get VMClarity server address: %v", err)
 		}
-
 		assetType, err := getAssetFromJSONFile(filename)
 		if err != nil {
 			logger.Fatalf("Failed to get asset from json file: %v", err)
+		}
+		updateIfExist, err := cmd.Flags().GetBool("update-if-exists")
+		if err != nil {
+			logger.Fatalf("Unable to get update-if-exists flag vaule: %v", err)
+		}
+		jsonPath, err := cmd.Flags().GetString("jsonpath")
+		if err != nil {
+			logger.Fatalf("Unable to get jsonpath: %v", err)
 		}
 
 		_, err = assetType.ValueByDiscriminator()
@@ -54,11 +62,14 @@ var assetCreateCmd = &cobra.Command{
 			logger.Fatalf("Failed to determine asset type: %v", err)
 		}
 
-		assetID, err := createAsset(context.TODO(), assetType, server)
+		asset, err := createAsset(context.TODO(), assetType, server, updateIfExist)
 		if err != nil {
 			logger.Fatalf("Failed to create asset: %v", err)
 		}
-		fmt.Println(assetID)
+
+		if err := cliutils.PrintJSONData(asset, jsonPath); err != nil {
+			logger.Fatalf("Failed to print jsonpath: %v", err)
+		}
 	},
 }
 
@@ -67,6 +78,8 @@ func init() {
 
 	assetCreateCmd.Flags().String("from-json-file", "", "asset json filename")
 	assetCreateCmd.Flags().String("server", "", "VMClarity server to create asset to, for example: http://localhost:9999/api")
+	assetCreateCmd.Flags().Bool("update-if-exists", false, "the asset will be updated the asset if it exists")
+	assetCreateCmd.Flags().String("jsonpath", "", "print selected value of asset")
 	if err := assetCreateCmd.MarkFlagRequired("from-json-file"); err != nil {
 		logger.Fatalf("Failed to mark from-json-file flag as required: %v", err)
 	}
@@ -102,10 +115,10 @@ func getAssetFromJSONFile(filename string) (*models.AssetType, error) {
 	return assetType, nil
 }
 
-func createAsset(ctx context.Context, assetType *models.AssetType, server string) (string, error) {
+func createAsset(ctx context.Context, assetType *models.AssetType, server string, updateIfExist bool) (*models.Asset, error) {
 	client, err := backendclient.Create(server)
 	if err != nil {
-		return "", fmt.Errorf("failed to create VMClarity API client: %w", err)
+		return nil, fmt.Errorf("failed to create VMClarity API client: %w", err)
 	}
 
 	creationTime := time.Now()
@@ -116,28 +129,20 @@ func createAsset(ctx context.Context, assetType *models.AssetType, server string
 	}
 	asset, err := client.PostAsset(ctx, assetData)
 	if err == nil {
-		return *asset.Id, nil
+		return asset, nil
 	}
 	var conflictError backendclient.AssetConflictError
-	if !errors.As(err, &conflictError) {
-		// If there is an error, and it's not a conflict telling
-		// us that the asset already exists, then we need to
-		// keep track of it and log it as a failure to
-		// complete discovery. We don't fail instantly here
-		// because discovering the assets is a heavy operation,
-		// so we want to give the best chance to create all the
-		// assets in the DB before failing.
-		return "", fmt.Errorf("failed to post asset: %v", err)
-	}
-
 	// As we got a conflict it means there is an existing asset
 	// which matches the unique properties of this asset, in this
-	// case we'll patch the just AssetInfo and FirstSeen instead.
+	// case if the update-if-exists flag is set we'll patch the just AssetInfo and FirstSeen instead.
+	if !(errors.As(err, &conflictError) && updateIfExist) {
+		return nil, fmt.Errorf("failed to post asset: %v", err)
+	}
 	assetData.FirstSeen = nil
 	err = client.PatchAsset(ctx, assetData, *conflictError.ConflictingAsset.Id)
 	if err != nil {
-		return "", fmt.Errorf("failed to patch asset: %v", err)
+		return nil, fmt.Errorf("failed to patch asset: %v", err)
 	}
 
-	return *conflictError.ConflictingAsset.Id, nil
+	return conflictError.ConflictingAsset, nil
 }
