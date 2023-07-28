@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/openclarity/vmclarity/backend/pkg/iam"
+	"github.com/openclarity/vmclarity/backend/pkg/iam/provider"
 	"time"
 
 	"github.com/deepmap/oapi-codegen/pkg/middleware"
@@ -63,9 +64,9 @@ func createEchoServer(dbHandler databaseTypes.Database) (*echo.Echo, error) {
 	}
 
 	// Create IAM provider
-	iamProvider, err := iam.NewOIDCProvider(config.OIDC)
+	iamProvider, err := provider.NewProvider(*config)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create iam provider: %v", err)
+		return nil, fmt.Errorf("failed to create IAM provider: %v", err)
 	}
 
 	// Create server

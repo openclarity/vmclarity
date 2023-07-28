@@ -27,10 +27,19 @@ import (
 
 const userCtxKey = "user"
 
-// User defines an authenticated user.
+// Logic flow:
+// - Provider -> Interacts with IDP to authenticate, authorizer to authorize HTTP request, and syncer to sync user roles.
+// - RoleSyncer -> Interacts with some kind of store (e.g. database or from JWT token claim) to fetch and sync user roles.
+// - Authorizer -> Decides if a User can perform a given action on an asset based on provided rules.
+
+// User defines an authenticated user. This object should never be created. It is
+// only returned by IAM providers and GetUserFromContext.
 type User struct {
 	ID    string   `json:"id"`
 	Roles []string `json:"roles"`
+
+	// JwtClaims helps holds JWT Claims
+	JwtClaims map[string]interface{} `json:"jwt-claims"`
 }
 
 // GetUserFromContext returns User from context.
@@ -51,47 +60,81 @@ type Injector interface {
 	Inject(ctx context.Context, request *http.Request) error
 }
 
+type RoleSyncerType string
+
+// RoleSyncer implements server-side User role synchronization from a specific source.
+type RoleSyncer interface {
+	Type() RoleSyncerType
+	Sync(ctx context.Context, user *User) error
+}
+
+// Authorizer implements authorization methods from a specific source.
+type Authorizer interface {
+	CanPerform(ctx context.Context, user *User, asset, action string) (bool, error)
+}
+
 // Provider implements server-side IAM synchronization policy.
-// TODO: Consider separating auth and authz, e.g. permission fetcher can be passed to Provider.
 type Provider interface {
+	// RoleSyncer returns selected RoleSyncer to use for Provider.
+	RoleSyncer() RoleSyncer
+
+	// Authorizer returns selected Authorizer to use for provider
+	Authorizer() Authorizer
+
 	// Authenticate validates and verifies user auth details from request against an
-	// auth provider. It should also be able to fetch permissions associated with the
-	// user from some location (e.g. directly from the token, db,...).
+	// auth provider. Only User.ID should be set and any private fields required to
+	// interact with RoleSyncer.
 	Authenticate(ctx context.Context, request *http.Request) (*User, error)
 }
 
 // OapiFilterForProvider creates an OpenAPI filter function which handles request
 // authentication and authorization using a specific Provider.
-func OapiFilterForProvider(m Provider) openapi3filter.AuthenticationFunc {
+//
+// Provider will first authenticate the client from request data, synchronize
+// user roles on success, and finally try to authorize the request. This ensures
+// that the User has all the required data to interact with IAM policies.
+func OapiFilterForProvider(provider Provider) openapi3filter.AuthenticationFunc {
 	return func(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
 		// TODO: Explore caching options to reduce checks against identity server
 
 		// Authenticate
-		user, err := m.Authenticate(ctx, input.RequestValidationInput.Request)
+		user, err := provider.Authenticate(ctx, input.RequestValidationInput.Request)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to authenticate user: %w", err)
 		}
 
-		// Update request context with user data
-		if eCtx := middleware.GetEchoContext(ctx); eCtx != nil {
-			eCtx.Set(userCtxKey, user)
+		// Sync user roles
+		err = provider.RoleSyncer().Sync(ctx, user)
+		if err != nil {
+			return fmt.Errorf("failed to sync user roles: %w", err)
 		}
 
-		// Authorize. Route permissions are defined as "asset:action", so we
+		// Authorize
+		// Route permissions are defined as "asset:action", so we
 		// extract the asset and action from the requested permission scope
-		if len(input.Scopes) == 0 {
-			return nil
-		}
 		for _, scope := range input.Scopes {
+			// Fetch authorization request data
 			reqScope := strings.Split(scope, ":")
 			if len(reqScope) != 2 {
 				return fmt.Errorf("unknown asset:action found: %s", scope)
 			}
 			asset, action := reqScope[0], reqScope[1]
-			if CanPerform(user, asset, action) {
-				return nil
+
+			// Authorize request
+			authorized, err := provider.Authorizer().CanPerform(ctx, user, asset, action)
+			if err != nil {
+				return fmt.Errorf("failed to check authorization: %w", err)
+			}
+			if !authorized {
+				return fmt.Errorf("not allowed, missing required permissions")
 			}
 		}
-		return fmt.Errorf("not allowed, missing required permissions")
+
+		// Success
+		// Update request context with user data
+		if eCtx := middleware.GetEchoContext(ctx); eCtx != nil {
+			eCtx.Set(userCtxKey, user)
+		}
+		return nil
 	}
 }

@@ -24,18 +24,24 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"strings"
 )
 
 const (
-	OIDCIssuerEnvVar        = "OIDC_ISSUER"
-	OIDCClientIDEnvVar      = "OIDC_CLIENT_ID"
-	OIDCClientSecretEnvVar  = "OIDC_CLIENT_SECRET"
-	OIDCClientKeyPathEnvVar = "OIDC_CLIENT_KEY_PATH"
-	OIDCExtraScopesEnvVar   = "OIDC_EXTRA_SCOPES"
-	OIDCRoleClaimEnvVar     = "OIDC_ROLE_CLAIM"
-	OIDCRoleClaimDefault    = "roles"
-	OIDCTokenURLEnvVar      = "OIDC_TOKEN_URL"
-	OIDCIntrospectURLEnvVar = "OIDC_INTROSPECT_URL"
+	AuthOIDCIssuerEnvVar        = "AUTH_OIDC_ISSUER"
+	AuthOIDCClientIDEnvVar      = "AUTH_OIDC_CLIENT_ID"
+	AuthOIDCClientSecretEnvVar  = "AUTH_OIDC_CLIENT_SECRET"
+	AuthOIDCClientKeyPathEnvVar = "AUTH_OIDC_CLIENT_KEY_PATH"
+	AuthOIDCTokenURLEnvVar      = "AUTH_OIDC_TOKEN_URL"
+	AuthOIDCIntrospectURLEnvVar = "AUTH_OIDC_INTROSPECT_URL"
+
+	AuthInjectionJwtIssuerEnvVar      = "AUTH_INJECT_JWT_ISSUER"
+	AuthInjectionJwtKeyPathEnvVar     = "AUTH_INJECT_JWT_KEY_PATH"
+	AuthInjectionJwtExtraScopesEnvVar = "AUTH_INJECT_JWT_EXTRA_SCOPES"
+
+	AuthRoleSyncJwtRoleClaimEnvVar = "AUTH_ROLE_SYNC_JWT_ROLE_CLAIM"
+
+	AuthorizationRbacRuleFilePathEnvVar = "AUTHZ_RBAC_RULE_FILE_PATH"
 
 	BackendRestHost       = "BACKEND_REST_HOST"
 	BackendRestDisableTLS = "BACKEND_REST_DISABLE_TLS" // nolint:gosec
@@ -73,17 +79,36 @@ const (
 	LogLevel = "LOG_LEVEL"
 )
 
+type Authentication struct {
+	OIDC AuthenticationOIDC `json:"oidc"` // iam.Provider - OpenID Connect
+}
+
+type AuthInjection struct {
+	JWT AuthInjectionJwt `json:"jwt"` // iam.Injector - JWT
+}
+
+type AuthRoleSynchronization struct {
+	JWTRoleClaim string `json:"jwt-role-claim"` // iam.RoleSyncer - JWT Role Claim
+}
+
+type Authorization struct {
+	RBACLocal AuthorizationRBACLocal `json:"rbac-local"` // iam.Authorizer - RBAC Local
+}
+
 type Config struct {
-	// Embed auth config
-	OIDC
+	// IAM config
+	Authentication          Authentication          `json:"authentication"`
+	AuthInjection           AuthInjection           `json:"auth-injection"`
+	AuthRoleSynchronization AuthRoleSynchronization `json:"auth-role-synchronization"`
+	Authorization           Authorization           `json:"authorization"`
 
 	// Backend
 	BackendRestHost    string `json:"backend-rest-host,omitempty"`
 	BackendRestPort    int    `json:"backend-rest-port,omitempty"`
 	HealthCheckAddress string `json:"health-check-address,omitempty"`
 
-	DisableOrchestrator bool   `json:"disable_orchestrator"`
-	OrchestratorKeyPath string `json:"orchestrator-key-path"`
+	DisableOrchestrator     bool   `json:"disable_orchestrator"`
+	OrchestratorAuthKeyPath string `json:"orchestrator-auth-key-path"`
 
 	// UI
 	UISitePath string `json:"ui_site_path"`
@@ -102,26 +127,27 @@ type Config struct {
 	LogLevel log.Level `json:"log-level,omitempty"`
 }
 
-type OIDC struct {
-	Issuer        string `json:"oidc-issuer"`
-	ClientID      string `json:"oidc-client-id"`
-	ClientSecret  string `json:"oidc-client-secret"`
-	ClientKeyPath string `json:"oidc-client-key-path"`
-	ExtraScopes   string `json:"oidc-extra-scopes"` // defines additional scopes to fetch defined as comma-separated string
-	RoleClaim     string `json:"oidc-roles-claim"`  // defines a JWT token claim that contains authorization user roles
-	TokenURL      string `json:"oidc-token-url"`
-	IntrospectURL string `json:"oidc-introspect-url"`
+type AuthenticationOIDC struct {
+	Issuer        string `json:"issuer"`
+	ClientID      string `json:"client-id"`
+	ClientSecret  string `json:"client-secret"`
+	ClientKeyPath string `json:"client-key-path"`
+	TokenURL      string `json:"token-url"`
+	IntrospectURL string `json:"introspect-url"`
 }
 
-func (oidc *OIDC) GetExtraScopes() []string {
-	return strings.Split(oidc.ExtraScopes, ",")
+type AuthInjectionJwt struct {
+	Issuer      string `json:"issuer"`
+	KeyPath     string `json:"key-path"`
+	ExtraScopes string `json:"extra-scopes"` // defines additional scopes to fetch defined as a comma-separated string
 }
 
-func (oidc *OIDC) GetRoleClaim() string {
-	if oidc.RoleClaim == "" {
-		return OIDCRoleClaimDefault
-	}
-	return oidc.RoleClaim
+func (jwt *AuthInjectionJwt) GetExtraScopes() []string {
+	return strings.Split(jwt.ExtraScopes, ",")
+}
+
+type AuthorizationRBACLocal struct {
+	RuleFilePath string `json:"rule-file-path"`
 }
 
 func setConfigDefaults() {
@@ -139,14 +165,27 @@ func LoadConfig() (*Config, error) {
 	config := &Config{}
 
 	// Auth
-	config.OIDC.Issuer = viper.GetString(OIDCIssuerEnvVar)
-	config.OIDC.ClientID = viper.GetString(OIDCClientIDEnvVar)
-	config.OIDC.ClientSecret = viper.GetString(OIDCClientSecretEnvVar)
-	config.OIDC.ClientKeyPath = viper.GetString(OIDCClientKeyPathEnvVar)
-	config.OIDC.ExtraScopes = viper.GetString(OIDCExtraScopesEnvVar)
-	config.OIDC.RoleClaim = viper.GetString(OIDCRoleClaimEnvVar)
-	config.OIDC.TokenURL = viper.GetString(OIDCTokenURLEnvVar)
-	config.OIDC.IntrospectURL = viper.GetString(OIDCIntrospectURLEnvVar)
+	oidc := &config.Authentication.OIDC
+	oidc.Issuer = viper.GetString(AuthOIDCIssuerEnvVar)
+	oidc.ClientID = viper.GetString(AuthOIDCClientIDEnvVar)
+	oidc.ClientSecret = viper.GetString(AuthOIDCClientSecretEnvVar)
+	oidc.ClientKeyPath = viper.GetString(AuthOIDCClientKeyPathEnvVar)
+	oidc.TokenURL = viper.GetString(AuthOIDCTokenURLEnvVar)
+	oidc.IntrospectURL = viper.GetString(AuthOIDCIntrospectURLEnvVar)
+
+	// AuthInjection
+	injectJwt := &config.AuthInjection.JWT
+	injectJwt.Issuer = viper.GetString(AuthInjectionJwtIssuerEnvVar)
+	injectJwt.KeyPath = viper.GetString(AuthInjectionJwtKeyPathEnvVar)
+	injectJwt.ExtraScopes = viper.GetString(AuthInjectionJwtExtraScopesEnvVar)
+
+	// AuthRoleSynchronization
+	syncRoleJwt := &config.AuthRoleSynchronization.JWTRoleClaim
+	*syncRoleJwt = viper.GetString(AuthRoleSyncJwtRoleClaimEnvVar)
+
+	// Authorization
+	authzRbacLocal := &config.Authorization.RBACLocal
+	authzRbacLocal.RuleFilePath = viper.GetString(AuthorizationRbacRuleFilePathEnvVar)
 
 	// Backend
 	config.BackendRestHost = viper.GetString(BackendRestHost)
@@ -154,7 +193,7 @@ func LoadConfig() (*Config, error) {
 	config.HealthCheckAddress = viper.GetString(HealthCheckAddress)
 
 	config.DisableOrchestrator = viper.GetBool(DisableOrchestrator)
-	config.OrchestratorKeyPath = viper.GetString(OrchestratorKeyPathEnvVar)
+	config.OrchestratorAuthKeyPath = viper.GetString(OrchestratorKeyPathEnvVar)
 
 	// UI
 	config.UISitePath = viper.GetString(UISitePath)

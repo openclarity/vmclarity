@@ -1,6 +1,6 @@
 # All possible options and their defaults: https://github.com/zitadel/zitadel/blob/main/cmd/setup/steps.yaml
 FirstInstance:
-  MachineKeyPath: /machinekey/zitadel-admin-sa.json
+  MachineKeyPath: /secrets/zitadel-admin-sa.json
   Org:
 #    Human:
 #      # use the loginname root@zitadel.localhost

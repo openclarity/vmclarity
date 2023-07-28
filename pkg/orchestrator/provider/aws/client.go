@@ -49,9 +49,9 @@ func New(ctx context.Context) (*Client, error) {
 		return nil, fmt.Errorf("invalid configuration. Provider=AWS: %w", err)
 	}
 
-	if err = config.Validate(); err != nil {
-		return nil, fmt.Errorf("failed to validate provider configuration. Provider=AWS: %w", err)
-	}
+	//if err = config.Validate(); err != nil {
+	//	return nil, fmt.Errorf("failed to validate provider configuration. Provider=AWS: %w", err)
+	//}
 
 	awsClient := Client{
 		config: config,

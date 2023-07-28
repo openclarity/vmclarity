@@ -5,7 +5,7 @@ services:
     restart: "always"
     networks:
       - "zitadel"
-    image: "ghcr.io/zitadel/zitadel:latest"
+    image: "ghcr.io/zitadel/zitadel:v2.30.0"
     command: 'start-from-init --config /zitadel-config.yaml --config /zitadel-secrets.yaml --steps /zitadel-init-steps.yaml --masterkey "${ZITADEL_MASTERKEY}" --tlsMode disabled'
     depends_on:
       certs:
@@ -14,7 +14,7 @@ services:
       - "8080:8080"
       - "8443:443"
     volumes:
-      - "./bootstrap/machinekey:/machinekey"
+      - "./bootstrap/secrets:/secrets"
       - "./zitadel-config.yaml:/zitadel-config.yaml:ro"
       - "./zitadel-secrets.yaml:/zitadel-secrets.yaml:ro"
       - "./zitadel-init-steps.yaml:/zitadel-init-steps.yaml:ro"

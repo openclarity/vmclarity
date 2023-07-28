@@ -2,7 +2,7 @@
 // Organization configuration
 //----------------------------------------
 resource zitadel_org openclarity_org {
-  name = "openclarity"
+  name = "openclarity-org"
 }
 
 resource zitadel_domain openclarity_domain {

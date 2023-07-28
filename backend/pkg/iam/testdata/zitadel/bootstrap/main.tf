@@ -11,5 +11,5 @@ provider "zitadel" {
   domain           = "localhost"
   insecure         = "true"
   port             = "8080"
-  jwt_profile_file = "machinekey/zitadel-admin-sa.json"
+  jwt_profile_file = "secrets/zitadel-admin-sa.json"
 }
