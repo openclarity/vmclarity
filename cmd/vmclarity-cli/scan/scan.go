@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmd
+package scan
 
 import (
 	"context"
@@ -27,9 +27,13 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/openclarity/vmclarity/cli/pkg/cli"
-	"github.com/openclarity/vmclarity/cli/pkg/presenter"
-	"github.com/openclarity/vmclarity/cli/pkg/state"
+	"github.com/openclarity/vmclarity/cmd/vmclarity-cli/root"
+	"github.com/openclarity/vmclarity/pkg/cli"
+
+	"github.com/openclarity/vmclarity/pkg/cli/state"
+
+	"github.com/openclarity/vmclarity/pkg/cli/presenter"
+
 	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
 	"github.com/openclarity/vmclarity/pkg/shared/families"
 	"github.com/openclarity/vmclarity/pkg/shared/log"
@@ -46,31 +50,31 @@ var scanCmd = &cobra.Command{
 	Short: "Scan",
 	Long:  `Run scanner families`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logger.Infof("Running...")
+		root.Logger.Infof("Running...")
 
 		// Main context which remains active even if the scan is aborted allowing post-processing operations
 		// like updating asset scan state
-		ctx := log.SetLoggerForContext(cmd.Context(), logger)
+		ctx := log.SetLoggerForContext(cmd.Context(), root.Logger)
 
 		cfgFile, err := cmd.Flags().GetString("config")
 		if err != nil {
-			logger.Fatalf("Unable to get config file name: %v", err)
+			root.Logger.Fatalf("Unable to get config file name: %v", err)
 		}
 		server, err := cmd.Flags().GetString("server")
 		if err != nil {
-			logger.Fatalf("Unable to get VMClarity server address: %v", err)
+			root.Logger.Fatalf("Unable to get VMClarity server address: %v", err)
 		}
 		output, err := cmd.Flags().GetString("output")
 		if err != nil {
-			logger.Fatalf("Unable to get output file name: %v", err)
+			root.Logger.Fatalf("Unable to get output file name: %v", err)
 		}
 		assetScanID, err := cmd.Flags().GetString("asset-scan-id")
 		if err != nil {
-			logger.Fatalf("Unable to get asset scan ID: %v", err)
+			root.Logger.Fatalf("Unable to get asset scan ID: %v", err)
 		}
 		mountVolume, err := cmd.Flags().GetBool("mount-attached-volume")
 		if err != nil {
-			logger.Fatalf("Unable to get mount attached volume flag: %v", err)
+			root.Logger.Fatalf("Unable to get mount attached volume flag: %v", err)
 		}
 
 		config := loadConfig(cfgFile)
@@ -89,7 +93,7 @@ var scanCmd = &cobra.Command{
 		if err := cli.WaitForReadyState(abortCtx); err != nil {
 			err = fmt.Errorf("failed to wait for AssetScan being ready to scan: %w", err)
 			if e := cli.MarkDone(ctx, []error{err}); e != nil {
-				logger.Errorf("Failed to update AssetScan status to completed with errors: %v", e)
+				root.Logger.Errorf("Failed to update AssetScan status to completed with errors: %v", e)
 			}
 			return err
 		}
@@ -103,7 +107,7 @@ var scanCmd = &cobra.Command{
 			if err != nil {
 				err = fmt.Errorf("failed to mount attached volume: %w", err)
 				if e := cli.MarkDone(ctx, []error{err}); e != nil {
-					logger.Errorf("Failed to update asset scan stat to completed with errors: %v", e)
+					root.Logger.Errorf("Failed to update asset scan stat to completed with errors: %v", e)
 				}
 				return err
 			}
@@ -115,7 +119,7 @@ var scanCmd = &cobra.Command{
 			return fmt.Errorf("failed to inform server %v scan has started: %w", server, err)
 		}
 
-		logger.Infof("Running scanners...")
+		root.Logger.Infof("Running scanners...")
 		runErrors := families.New(config).Run(abortCtx, cli)
 
 		err = cli.MarkDone(ctx, runErrors)
@@ -124,7 +128,7 @@ var scanCmd = &cobra.Command{
 		}
 
 		if len(runErrors) > 0 {
-			logger.Errorf("Errors when running families: %+v", runErrors)
+			root.Logger.Errorf("Errors when running families: %+v", runErrors)
 		}
 
 		return nil
@@ -133,7 +137,7 @@ var scanCmd = &cobra.Command{
 
 // nolint: gochecknoinits
 func init() {
-	rootCmd.AddCommand(scanCmd)
+	root.RootCmd.AddCommand(scanCmd)
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
@@ -152,7 +156,7 @@ func init() {
 
 // loadConfig reads in config file and ENV variables if set.
 func loadConfig(cfgFile string) *families.Config {
-	logger.Infof("Initializing configuration...")
+	root.Logger.Infof("Initializing configuration...")
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
@@ -182,7 +186,7 @@ func loadConfig(cfgFile string) *families.Config {
 	if logrus.IsLevelEnabled(logrus.InfoLevel) {
 		configB, err := yaml.Marshal(config)
 		cobra.CheckErr(err)
-		logger.Infof("Using config file (%s):\n%s", viper.ConfigFileUsed(), string(configB))
+		root.Logger.Infof("Using config file (%s):\n%s", viper.ConfigFileUsed(), string(configB))
 	}
 
 	return config

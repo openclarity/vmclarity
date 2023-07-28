@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmd
+package root
 
 import (
 	"os"
@@ -21,25 +21,25 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/openclarity/vmclarity/cli/pkg"
+	"github.com/openclarity/vmclarity/pkg/cli"
 	"github.com/openclarity/vmclarity/pkg/shared/log"
 )
 
-var logger *logrus.Entry
+var Logger *logrus.Entry
 
-// rootCmd represents the base command when called without any subcommands.
-var rootCmd = &cobra.Command{
+// RootCmd represents the base command when called without any subcommands.
+var RootCmd = &cobra.Command{
 	Use:          "vmclarity",
 	Short:        "VMClarity",
 	Long:         `VMClarity`,
-	Version:      pkg.GitRevision,
+	Version:      cli.GitRevision,
 	SilenceUsage: true,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	cobra.CheckErr(rootCmd.Execute())
+	cobra.CheckErr(RootCmd.Execute())
 }
 
 // nolint: gochecknoinits
@@ -51,5 +51,5 @@ func init() {
 
 func initLogger() {
 	log.InitLogger(logrus.InfoLevel.String(), os.Stderr)
-	logger = logrus.WithField("app", "vmclarity")
+	Logger = logrus.WithField("app", "vmclarity")
 }
