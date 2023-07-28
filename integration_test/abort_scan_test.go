@@ -10,32 +10,25 @@ import (
 )
 
 var _ = Describe("Aborting a scan", func() {
-	scope := models.AwsScanScope{
-		AllRegions: utils.PointerTo(true),
-		InstanceTagSelector: &[]models.Tag{
-			{
-				Key:   "ScanConfig",
-				Value: "test",
-			},
-		},
-		ObjectType: "AwsScanScope",
-	}
-	var scanScopeType models.ScanScopeType
-	err := scanScopeType.FromAwsScanScope(scope)
-	Expect(err).NotTo(HaveOccurred())
 
+	scope := "contains(assetInfo.labels, '{\"key\":\"scanconfig\",\"value\":\"test\"}')"
 	newScanConfig := models.ScanConfig{
 		Name: utils.PointerTo("Scan Config"),
-		ScanFamiliesConfig: &models.ScanFamiliesConfig{
-			Exploits: &models.ExploitsConfig{
-				Enabled: utils.PointerTo(true),
+		ScanTemplate: &models.ScanTemplate{
+			AssetScanTemplate: &models.AssetScanTemplate{
+				ScanFamiliesConfig: &models.ScanFamiliesConfig{
+					Exploits: &models.ExploitsConfig{
+						Enabled: utils.PointerTo(true),
+					},
+					Sbom: &models.SBOMConfig{
+						Enabled: utils.PointerTo(true),
+					},
+					Vulnerabilities: &models.VulnerabilitiesConfig{
+						Enabled: utils.PointerTo(true),
+					},
+				},
 			},
-			Sbom: &models.SBOMConfig{
-				Enabled: utils.PointerTo(true),
-			},
-			Vulnerabilities: &models.VulnerabilitiesConfig{
-				Enabled: utils.PointerTo(true),
-			},
+			Scope: &scope,
 		},
 		Scheduled: &models.RuntimeScheduleScanConfig{
 			CronLine: utils.PointerTo("0 */4 * * *"),
@@ -43,7 +36,6 @@ var _ = Describe("Aborting a scan", func() {
 				time.Date(2023, 1, 20, 15, 46, 18, 0, time.UTC),
 			),
 		},
-		Scope: &scanScopeType,
 	}
 
 	Context("which is running", func() {
@@ -52,16 +44,19 @@ var _ = Describe("Aborting a scan", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			updateScanConfig := models.ScanConfig{
-				MaxParallelScanners: apiScanConfig.MaxParallelScanners,
-				Name:                apiScanConfig.Name,
-				ScanFamiliesConfig:  apiScanConfig.ScanFamiliesConfig,
+				Name: apiScanConfig.Name,
+				ScanTemplate: &models.ScanTemplate{
+					AssetScanTemplate: &models.AssetScanTemplate{
+						ScanFamiliesConfig: apiScanConfig.ScanTemplate.AssetScanTemplate.ScanFamiliesConfig,
+					},
+					MaxParallelScanners: apiScanConfig.ScanTemplate.MaxParallelScanners,
+					Scope:               apiScanConfig.ScanTemplate.Scope,
+				},
 				Scheduled: &models.RuntimeScheduleScanConfig{
 					CronLine:      utils.PointerTo("0 */4 * * *"),
 					OperationTime: utils.PointerTo(time.Now()),
 				},
-				Scope: apiScanConfig.Scope,
 			}
-
 			err = client.PatchScanConfig(ctx, *apiScanConfig.Id, &updateScanConfig)
 			Expect(err).NotTo(HaveOccurred())
 
