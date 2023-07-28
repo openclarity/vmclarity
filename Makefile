@@ -71,7 +71,7 @@ push-docker-cli: docker-cli ## Build and Push CLI Docker image
 	docker push $(DOCKER_IMAGE)-cli:$(DOCKER_TAG)
 
 .PHONY: docker-orchestrator
-docker-orchestrator: ## Build Backend Docker image
+docker-orchestrator: ## Build Backend Orchestrator image
 	@(echo "Building orchestrator docker image ..." )
 	docker build --file ./Dockerfile.orchestrator --build-arg VERSION=${VERSION} \
 		--build-arg BUILD_TIMESTAMP=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ") \
@@ -79,12 +79,12 @@ docker-orchestrator: ## Build Backend Docker image
 		-t ${DOCKER_IMAGE}-orchestrator:${DOCKER_TAG} .
 
 .PHONY: push-docker-orchestrator
-push-docker-orchestrator: docker-orchestrator ## Build and Push Backend Docker image
+push-docker-orchestrator: docker-orchestrator ## Build and Push Orchestrator Docker image
 	@echo "Publishing orchestrator docker image ..."
 	docker push ${DOCKER_IMAGE}-orchestrator:${DOCKER_TAG}
 
 .PHONY: docker-apiserver
-docker-apiserver: ## Build Backend Docker image
+docker-apiserver: ## Build Backend API Server image
 	@(echo "Building apiserver docker image ..." )
 	docker build --file ./Dockerfile.apiserver --build-arg VERSION=${VERSION} \
 		--build-arg BUILD_TIMESTAMP=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ") \
@@ -92,23 +92,23 @@ docker-apiserver: ## Build Backend Docker image
 		-t ${DOCKER_IMAGE}-apiserver:${DOCKER_TAG} .
 
 .PHONY: push-docker-apiserver
-push-docker-apiserver: docker-apiserver ## Build and Push Backend Docker image
+push-docker-apiserver: docker-apiserver ## Build and Push API Server Docker image
 	@echo "Publishing apiserver docker image ..."
 	docker push ${DOCKER_IMAGE}-apiserver:${DOCKER_TAG}
 
 .PHONY: docker-ui
-docker-ui: ## Build Backend Docker image
+docker-ui: ## Build UI image
 	@(echo "Building ui docker image ..." )
 	docker build --file ./Dockerfile.ui \
 		-t ${DOCKER_IMAGE}-ui:${DOCKER_TAG} .
 
 .PHONY: push-docker-ui
-push-docker-ui: docker-ui ## Build and Push Backend Docker image
+push-docker-ui: docker-ui ## Build and Push UI Docker image
 	@echo "Publishing ui docker image ..."
 	docker push ${DOCKER_IMAGE}-ui:${DOCKER_TAG}
 
 .PHONY: docker-uibackend
-docker-uibackend: ## Build Backend Docker image
+docker-uibackend: ## Build UI Backend Docker image
 	@(echo "Building uibackend docker image ..." )
 	docker build --file ./Dockerfile.uibackend --build-arg VERSION=${VERSION} \
 		--build-arg BUILD_TIMESTAMP=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ") \
@@ -116,7 +116,7 @@ docker-uibackend: ## Build Backend Docker image
 		-t ${DOCKER_IMAGE}-uibackend:${DOCKER_TAG} .
 
 .PHONY: push-docker-uibackend
-push-docker-uibackend: docker-uibackend ## Build and Push Backend Docker image
+push-docker-uibackend: docker-uibackend ## Build and Push UI Backend Docker image
 	@echo "Publishing uibackend docker image ..."
 	docker push ${DOCKER_IMAGE}-uibackend:${DOCKER_TAG}
 

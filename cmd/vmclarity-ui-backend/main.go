@@ -63,7 +63,7 @@ func init() {
 	cmdRun := cobra.Command{
 		Use:     "run",
 		Run:     runCommand,
-		Short:   "Starts the server",
+		Short:   "Starts the UI Backend",
 		Long:    "Starts the VMClarity UI Backend",
 		Example: ExecutableName + " run",
 	}
@@ -123,7 +123,7 @@ func runCommand(cmd *cobra.Command, _ []string) {
 	server.RegisterHandlers(e, handler)
 
 	go func() {
-		if err := e.Start(":8890"); err != nil && errors.Is(err, http.ErrServerClosed) {
+		if err := e.Start(config.ListenAddress); err != nil && errors.Is(err, http.ErrServerClosed) {
 			logger.Fatalf("HTTP server shutdown %v", err)
 		}
 	}()

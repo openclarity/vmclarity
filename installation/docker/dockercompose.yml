@@ -15,9 +15,13 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
+    volumes:
+      - type: volume
+        source: apiserver-db-data
+        target: /data
 
   orchestrator:
-    image: ${OrchestratorContainerImage:-ghcr.io/openclarity/vmclarity-apiserver:latest}
+    image: ${OrchestratorContainerImage:-ghcr.io/openclarity/vmclarity-orchestrator:latest}
     command:
       - run
       - --log-level
@@ -30,7 +34,7 @@ services:
         condition: on-failure
 
   ui:
-    image: ${UIContainerImage:-ghcr.io/openclarity/vmclarity-apiserver:latest}
+    image: ${UIContainerImage:-ghcr.io/openclarity/vmclarity-ui:latest}
     deploy:
       mode: replicated
       replicas: 1
@@ -38,7 +42,7 @@ services:
         condition: on-failure
 
   uibackend:
-    image: ${UIBackendContainerImage:-ghcr.io/openclarity/vmclarity-apiserver:latest}
+    image: ${UIBackendContainerImage:-ghcr.io/openclarity/vmclarity-uibackend:latest}
     command:
       - run
       - --log-level
@@ -87,7 +91,7 @@ services:
         condition: on-failure
 
   grype-server:
-    image: ${GrypeServerContainerImage:-ghcr.io/openclarity/grype-server:v0.2.0}
+    image: ${GrypeServerContainerImage:-ghcr.io/openclarity/grype-server:v0.2.3}
     command:
       - run
       - --log-level
@@ -127,3 +131,6 @@ services:
 configs:
   gateway_config:
     file: ./gateway.conf
+
+volumes:
+  apiserver-db-data:

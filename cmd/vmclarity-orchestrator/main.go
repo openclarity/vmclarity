@@ -52,7 +52,7 @@ func init() {
 	cmdRun := cobra.Command{
 		Use:     "run",
 		Run:     runCommand,
-		Short:   "Starts the server",
+		Short:   "Starts the orchestrator",
 		Long:    "Starts the VMClarity Orchestrator",
 		Example: ExecutableName + " run",
 	}

@@ -20,12 +20,14 @@ import (
 )
 
 const (
+	ListenAddress       = "LISTEN_ADDRESS"
 	APIServerHost       = "APISERVER_HOST"
 	APIServerDisableTLS = "APISERVER_DISABLE_TLS"
 	APIServerPort       = "APISERVER_PORT"
 )
 
 type Config struct {
+	ListenAddress string `json:"listen-address,omitempty"`
 	APIServerHost string `json:"apiserver-host,omitempty"`
 	APIServerPort int    `json:"apiserver-port,omitempty"`
 }
@@ -33,7 +35,10 @@ type Config struct {
 func LoadConfig() (*Config, error) {
 	viper.AutomaticEnv()
 
+	viper.SetDefault(ListenAddress, ":8890")
+
 	c := &Config{
+		ListenAddress: viper.GetString(ListenAddress),
 		APIServerHost: viper.GetString(APIServerHost),
 		APIServerPort: viper.GetInt(APIServerPort),
 	}

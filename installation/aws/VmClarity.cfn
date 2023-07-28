@@ -988,25 +988,25 @@ Parameters:
     ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
   APIServerContainerImageOverride:
     Description: >
-      Name of the container image used for deploying VMClarity server.
+      Name of the container image used for deploying VMClarity API server.
       "ghcr.io/openclarity/vmclarity-apiserver:latest" will be used if not overridden.
     Type: String
     Default: ''
   OrchestratorContainerImageOverride:
     Description: >
-      Name of the container image used for deploying VMClarity server.
+      Name of the container image used for deploying VMClarity orchestrator.
       "ghcr.io/openclarity/vmclarity-orchestrator:latest" will be used if not overridden.
     Type: String
     Default: ''
   UIContainerImageOverride:
     Description: >
-      Name of the container image used for deploying VMClarity server.
+      Name of the container image used for deploying VMClarity UI.
       "ghcr.io/openclarity/vmclarity-ui:latest" will be used if not overridden.
     Type: String
     Default: ''
   UIBackendContainerImageOverride:
     Description: >
-      Name of the container image used for deploying VMClarity server.
+      Name of the container image used for deploying VMClarity UI backend.
       "ghcr.io/openclarity/vmclarity-ui-backend:latest" will be used if not overridden.
     Type: String
     Default: ''
