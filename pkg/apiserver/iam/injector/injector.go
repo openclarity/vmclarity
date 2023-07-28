@@ -13,23 +13,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package common
+package injector
 
 import (
-	"github.com/labstack/echo/v4"
-	log "github.com/sirupsen/logrus"
-
-	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
 )
 
-// nolint:wrapcheck
-func SendError(ctx echo.Context, code int, message string) error {
-	log.Error(message)
-	response := &models.ApiResponse{Message: &message}
-	return ctx.JSON(code, response)
+// Options defines Factory creating options for iam.Injector.
+//
+// TODO: Add support for other sources.
+type Options struct {
+	FromAccessToken string `json:"from-access-token"`
 }
 
-// nolint:wrapcheck,unparam
-func SendResponse(ctx echo.Context, code int, object interface{}) error {
-	return ctx.JSON(code, object)
+// NewInjector creates a new iam.Injector from config.
+// TODO: Use Factory pattern when this supports multiple iam.Injector.
+func NewInjector(options Options) (iam.Injector, error) {
+	return newTokenInjector(options.FromAccessToken)
 }

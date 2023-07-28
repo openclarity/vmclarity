@@ -31,27 +31,27 @@ import (
 func (s *ServerImpl) GetScanConfigs(ctx echo.Context, params models.GetScanConfigsParams) error {
 	scanConfigs, err := s.dbHandler.ScanConfigsTable().GetScanConfigs(params)
 	if err != nil {
-		return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scan configs from db: %v", err))
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scan configs from db: %v", err))
 	}
-	return common.SendResponse(ctx, http.StatusOK, scanConfigs)
+	return sendResponse(ctx, http.StatusOK, scanConfigs)
 }
 
 func (s *ServerImpl) GetScanConfigsScanConfigID(ctx echo.Context, scanConfigID models.ScanConfigID, params models.GetScanConfigsScanConfigIDParams) error {
 	sc, err := s.dbHandler.ScanConfigsTable().GetScanConfig(scanConfigID, params)
 	if err != nil {
 		if errors.Is(err, databaseTypes.ErrNotFound) {
-			return common.SendError(ctx, http.StatusNotFound, fmt.Sprintf("ScanConfig with ID %v not found", scanConfigID))
+			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("ScanConfig with ID %v not found", scanConfigID))
 		}
-		return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scan config from db. scanConfigID=%v: %v", scanConfigID, err))
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scan config from db. scanConfigID=%v: %v", scanConfigID, err))
 	}
-	return common.SendResponse(ctx, http.StatusOK, sc)
+	return sendResponse(ctx, http.StatusOK, sc)
 }
 
 func (s *ServerImpl) PostScanConfigs(ctx echo.Context) error {
 	var scanConfig models.ScanConfig
 	err := ctx.Bind(&scanConfig)
 	if err != nil {
-		return common.SendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
 
 	createdScanConfig, err := s.dbHandler.ScanConfigsTable().CreateScanConfig(scanConfig)
@@ -64,15 +64,15 @@ func (s *ServerImpl) PostScanConfigs(ctx echo.Context) error {
 				Message:    utils.PointerTo(conflictErr.Reason),
 				ScanConfig: &createdScanConfig,
 			}
-			return common.SendResponse(ctx, http.StatusConflict, existResponse)
+			return sendResponse(ctx, http.StatusConflict, existResponse)
 		case errors.As(err, &validationErr):
-			return common.SendError(ctx, http.StatusBadRequest, err.Error())
+			return sendError(ctx, http.StatusBadRequest, err.Error())
 		default:
-			return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to create scan config in db: %v", err))
+			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to create scan config in db: %v", err))
 		}
 	}
 
-	return common.SendResponse(ctx, http.StatusCreated, createdScanConfig)
+	return sendResponse(ctx, http.StatusCreated, createdScanConfig)
 }
 
 func (s *ServerImpl) DeleteScanConfigsScanConfigID(ctx echo.Context, scanConfigID models.ScanConfigID) error {
@@ -82,25 +82,25 @@ func (s *ServerImpl) DeleteScanConfigsScanConfigID(ctx echo.Context, scanConfigI
 
 	if err := s.dbHandler.ScanConfigsTable().DeleteScanConfig(scanConfigID); err != nil {
 		if errors.Is(err, databaseTypes.ErrNotFound) {
-			return common.SendError(ctx, http.StatusNotFound, fmt.Sprintf("ScanConfig with ID %v not found", scanConfigID))
+			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("ScanConfig with ID %v not found", scanConfigID))
 		}
-		return common.SendError(ctx, http.StatusInternalServerError, err.Error())
+		return sendError(ctx, http.StatusInternalServerError, err.Error())
 	}
 
-	return common.SendResponse(ctx, http.StatusOK, &success)
+	return sendResponse(ctx, http.StatusOK, &success)
 }
 
 func (s *ServerImpl) PatchScanConfigsScanConfigID(ctx echo.Context, scanConfigID models.ScanConfigID, params models.PatchScanConfigsScanConfigIDParams) error {
 	var scanConfig models.ScanConfig
 	err := ctx.Bind(&scanConfig)
 	if err != nil {
-		return common.SendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
 
 	// PATCH request might not contain the ID in the body, so set it from
 	// the URL field so that the DB layer knows which object is being updated.
 	if scanConfig.Id != nil && *scanConfig.Id != scanConfigID {
-		return common.SendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *scanConfig.Id, scanConfigID))
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *scanConfig.Id, scanConfigID))
 	}
 	scanConfig.Id = &scanConfigID
 
@@ -111,36 +111,36 @@ func (s *ServerImpl) PatchScanConfigsScanConfigID(ctx echo.Context, scanConfigID
 		var preconditionFailedErr *databaseTypes.PreconditionFailedError
 		switch true {
 		case errors.Is(err, databaseTypes.ErrNotFound):
-			return common.SendError(ctx, http.StatusNotFound, fmt.Sprintf("ScanConfig with ID %v not found", scanConfigID))
+			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("ScanConfig with ID %v not found", scanConfigID))
 		case errors.As(err, &conflictErr):
 			existResponse := &models.ScanConfigExists{
 				Message:    utils.PointerTo(conflictErr.Reason),
 				ScanConfig: &updatedScanConfig,
 			}
-			return common.SendResponse(ctx, http.StatusConflict, existResponse)
+			return sendResponse(ctx, http.StatusConflict, existResponse)
 		case errors.As(err, &validationErr):
-			return common.SendError(ctx, http.StatusBadRequest, err.Error())
+			return sendError(ctx, http.StatusBadRequest, err.Error())
 		case errors.As(err, &preconditionFailedErr):
-			return common.SendError(ctx, http.StatusPreconditionFailed, err.Error())
+			return sendError(ctx, http.StatusPreconditionFailed, err.Error())
 		default:
-			return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update scan config in db. scanConfigID=%v: %v", scanConfigID, err))
+			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update scan config in db. scanConfigID=%v: %v", scanConfigID, err))
 		}
 	}
 
-	return common.SendResponse(ctx, http.StatusOK, updatedScanConfig)
+	return sendResponse(ctx, http.StatusOK, updatedScanConfig)
 }
 
 func (s *ServerImpl) PutScanConfigsScanConfigID(ctx echo.Context, scanConfigID models.ScanConfigID, params models.PutScanConfigsScanConfigIDParams) error {
 	var scanConfig models.ScanConfig
 	err := ctx.Bind(&scanConfig)
 	if err != nil {
-		return common.SendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
 
 	// PUT request might not contain the ID in the body, so set it from the
 	// URL field so that the DB layer knows which object is being updated.
 	if scanConfig.Id != nil && *scanConfig.Id != scanConfigID {
-		return common.SendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *scanConfig.Id, scanConfigID))
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *scanConfig.Id, scanConfigID))
 	}
 	scanConfig.Id = &scanConfigID
 
@@ -151,21 +151,21 @@ func (s *ServerImpl) PutScanConfigsScanConfigID(ctx echo.Context, scanConfigID m
 		var preconditionFailedErr *databaseTypes.PreconditionFailedError
 		switch true {
 		case errors.Is(err, databaseTypes.ErrNotFound):
-			return common.SendError(ctx, http.StatusNotFound, fmt.Sprintf("ScanConfig with ID %v not found", scanConfigID))
+			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("ScanConfig with ID %v not found", scanConfigID))
 		case errors.As(err, &conflictErr):
 			existResponse := &models.ScanConfigExists{
 				Message:    utils.PointerTo(conflictErr.Reason),
 				ScanConfig: &updatedScanConfig,
 			}
-			return common.SendResponse(ctx, http.StatusConflict, existResponse)
+			return sendResponse(ctx, http.StatusConflict, existResponse)
 		case errors.As(err, &validationErr):
-			return common.SendError(ctx, http.StatusBadRequest, err.Error())
+			return sendError(ctx, http.StatusBadRequest, err.Error())
 		case errors.As(err, &preconditionFailedErr):
-			return common.SendError(ctx, http.StatusPreconditionFailed, err.Error())
+			return sendError(ctx, http.StatusPreconditionFailed, err.Error())
 		default:
-			return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update scan config in db. scanConfigID=%v: %v", scanConfigID, err))
+			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update scan config in db. scanConfigID=%v: %v", scanConfigID, err))
 		}
 	}
 
-	return common.SendResponse(ctx, http.StatusOK, updatedScanConfig)
+	return sendResponse(ctx, http.StatusOK, updatedScanConfig)
 }

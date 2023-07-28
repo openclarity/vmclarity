@@ -13,26 +13,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package injector
+package authorizer
 
 import (
-	"context"
-	"github.com/openclarity/vmclarity/backend/pkg/iam"
-	"net/http"
+	"github.com/openclarity/vmclarity/pkg/apiserver/config"
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
 )
 
-type tokenInjector struct {
-	accessToken string
-}
-
-// newTokenInjector creates an iam.Injector which adds personal access token to request.
-func newTokenInjector(accessToken string) (iam.Injector, error) {
-	return &tokenInjector{
-		accessToken: accessToken,
-	}, nil
-}
-
-func (injector *tokenInjector) Inject(_ context.Context, request *http.Request) error {
-	request.Header.Set("Authorization", "Bearer "+injector.accessToken)
-	return nil
+// NewAuthorizer creates a new iam.Authorizer from config.
+// TODO: Use Factory pattern when this supports multiple iam.Authorizer.
+func NewAuthorizer(config config.Authorization) (iam.Authorizer, error) {
+	return newLocalRBACAuthorizer(config.RBACRuleFilePath)
 }

@@ -21,6 +21,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/openclarity/vmclarity/pkg/apiserver/rest"
+
 	"github.com/Portshift/go-utils/healthz"
 
 	"github.com/openclarity/vmclarity/pkg/apiserver/database"
@@ -68,7 +70,7 @@ func Run(ctx context.Context, config *Config) {
 	}
 
 	// nolint:contextcheck
-	restServer, err := rest.CreateRESTServer(config.BackendRestPort, dbHandler)
+	restServer, err := rest.CreateRESTServer(config, dbHandler)
 	if err != nil {
 		logger.Fatalf("Failed to create REST server: %v", err)
 	}

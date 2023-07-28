@@ -31,27 +31,27 @@ import (
 func (s *ServerImpl) GetFindings(ctx echo.Context, params models.GetFindingsParams) error {
 	findings, err := s.dbHandler.FindingsTable().GetFindings(params)
 	if err != nil {
-		return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get findings from db: %v", err))
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get findings from db: %v", err))
 	}
-	return common.SendResponse(ctx, http.StatusOK, findings)
+	return sendResponse(ctx, http.StatusOK, findings)
 }
 
 func (s *ServerImpl) GetFindingsFindingID(ctx echo.Context, findingID models.FindingID, params models.GetFindingsFindingIDParams) error {
 	sc, err := s.dbHandler.FindingsTable().GetFinding(findingID, params)
 	if err != nil {
 		if errors.Is(err, databaseTypes.ErrNotFound) {
-			return common.SendError(ctx, http.StatusNotFound, fmt.Sprintf("Finding with ID %v not found", findingID))
+			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Finding with ID %v not found", findingID))
 		}
-		return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get finding from db. findingID=%v: %v", findingID, err))
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get finding from db. findingID=%v: %v", findingID, err))
 	}
-	return common.SendResponse(ctx, http.StatusOK, sc)
+	return sendResponse(ctx, http.StatusOK, sc)
 }
 
 func (s *ServerImpl) PostFindings(ctx echo.Context) error {
 	var finding models.Finding
 	err := ctx.Bind(&finding)
 	if err != nil {
-		return common.SendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
 
 	createdFinding, err := s.dbHandler.FindingsTable().CreateFinding(finding)
@@ -64,15 +64,15 @@ func (s *ServerImpl) PostFindings(ctx echo.Context) error {
 				Message: utils.PointerTo(conflictErr.Reason),
 				Finding: &createdFinding,
 			}
-			return common.SendResponse(ctx, http.StatusConflict, existResponse)
+			return sendResponse(ctx, http.StatusConflict, existResponse)
 		case errors.As(err, &validationErr):
-			return common.SendError(ctx, http.StatusBadRequest, err.Error())
+			return sendError(ctx, http.StatusBadRequest, err.Error())
 		default:
-			return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to create finding in db: %v", err))
+			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to create finding in db: %v", err))
 		}
 	}
 
-	return common.SendResponse(ctx, http.StatusCreated, createdFinding)
+	return sendResponse(ctx, http.StatusCreated, createdFinding)
 }
 
 func (s *ServerImpl) DeleteFindingsFindingID(ctx echo.Context, findingID models.FindingID) error {
@@ -82,25 +82,25 @@ func (s *ServerImpl) DeleteFindingsFindingID(ctx echo.Context, findingID models.
 
 	if err := s.dbHandler.FindingsTable().DeleteFinding(findingID); err != nil {
 		if errors.Is(err, databaseTypes.ErrNotFound) {
-			return common.SendError(ctx, http.StatusNotFound, fmt.Sprintf("Finding with ID %v not found", findingID))
+			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Finding with ID %v not found", findingID))
 		}
-		return common.SendError(ctx, http.StatusInternalServerError, err.Error())
+		return sendError(ctx, http.StatusInternalServerError, err.Error())
 	}
 
-	return common.SendResponse(ctx, http.StatusOK, &success)
+	return sendResponse(ctx, http.StatusOK, &success)
 }
 
 func (s *ServerImpl) PatchFindingsFindingID(ctx echo.Context, findingID models.FindingID) error {
 	var finding models.Finding
 	err := ctx.Bind(&finding)
 	if err != nil {
-		return common.SendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
 
 	// PATCH request might not contain the ID in the body, so set it from
 	// the URL field so that the DB layer knows which object is being updated.
 	if finding.Id != nil && *finding.Id != findingID {
-		return common.SendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *finding.Id, findingID))
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *finding.Id, findingID))
 	}
 	finding.Id = &findingID
 	updatedFinding, err := s.dbHandler.FindingsTable().UpdateFinding(finding)
@@ -108,28 +108,28 @@ func (s *ServerImpl) PatchFindingsFindingID(ctx echo.Context, findingID models.F
 		var validationErr *common.BadRequestError
 		switch true {
 		case errors.Is(err, databaseTypes.ErrNotFound):
-			return common.SendError(ctx, http.StatusNotFound, fmt.Sprintf("Finding with ID %v not found", findingID))
+			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Finding with ID %v not found", findingID))
 		case errors.As(err, &validationErr):
-			return common.SendError(ctx, http.StatusBadRequest, err.Error())
+			return sendError(ctx, http.StatusBadRequest, err.Error())
 		default:
-			return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update finding in db. findingID=%v: %v", findingID, err))
+			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update finding in db. findingID=%v: %v", findingID, err))
 		}
 	}
 
-	return common.SendResponse(ctx, http.StatusOK, updatedFinding)
+	return sendResponse(ctx, http.StatusOK, updatedFinding)
 }
 
 func (s *ServerImpl) PutFindingsFindingID(ctx echo.Context, findingID models.FindingID) error {
 	var finding models.Finding
 	err := ctx.Bind(&finding)
 	if err != nil {
-		return common.SendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
 
 	// PUT request might not contain the ID in the body, so set it from the
 	// URL field so that the DB layer knows which object is being updated.
 	if finding.Id != nil && *finding.Id != findingID {
-		return common.SendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *finding.Id, findingID))
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *finding.Id, findingID))
 	}
 	finding.Id = &findingID
 
@@ -138,13 +138,13 @@ func (s *ServerImpl) PutFindingsFindingID(ctx echo.Context, findingID models.Fin
 		var validationErr *common.BadRequestError
 		switch true {
 		case errors.Is(err, databaseTypes.ErrNotFound):
-			return common.SendError(ctx, http.StatusNotFound, fmt.Sprintf("Finding with ID %v not found", findingID))
+			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Finding with ID %v not found", findingID))
 		case errors.As(err, &validationErr):
-			return common.SendError(ctx, http.StatusBadRequest, err.Error())
+			return sendError(ctx, http.StatusBadRequest, err.Error())
 		default:
-			return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update finding in db. findingID=%v: %v", findingID, err))
+			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update finding in db. findingID=%v: %v", findingID, err))
 		}
 	}
 
-	return common.SendResponse(ctx, http.StatusOK, updatedFinding)
+	return sendResponse(ctx, http.StatusOK, updatedFinding)
 }

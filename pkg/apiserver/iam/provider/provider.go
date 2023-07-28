@@ -16,23 +16,25 @@
 package provider
 
 import (
-	"github.com/openclarity/vmclarity/backend/pkg/config"
-	"github.com/openclarity/vmclarity/backend/pkg/iam"
-	"github.com/openclarity/vmclarity/backend/pkg/iam/authorizer"
-	"github.com/openclarity/vmclarity/backend/pkg/iam/role_syncer"
+	"fmt"
+
+	"github.com/openclarity/vmclarity/pkg/apiserver/config"
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam/authorizer"
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam/rolesyncer"
 )
 
 // NewProvider creates a new iam.Provider from config.
 // TODO: Use Factory pattern when this supports multiple iam.Provider.
 func NewProvider(config config.Config) (iam.Provider, error) {
-	roleSyncer, err := role_syncer.NewRoleSyncer(config.AuthRoleSynchronization)
+	roleSyncer, err := rolesyncer.NewRoleSyncer(config.AuthRoleSynchronization)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed creating role syncer: %w", err)
 	}
 
 	authzer, err := authorizer.NewAuthorizer(config.Authorization)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed creating authorizer: %w", err)
 	}
 
 	return newOIDCIdentityProvider(config.Authentication.OIDC, roleSyncer, authzer)

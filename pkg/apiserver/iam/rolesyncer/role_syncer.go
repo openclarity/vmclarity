@@ -13,15 +13,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package authorizer
+package rolesyncer
 
 import (
-	"github.com/openclarity/vmclarity/backend/pkg/config"
-	"github.com/openclarity/vmclarity/backend/pkg/iam"
+	"github.com/openclarity/vmclarity/pkg/apiserver/config"
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
 )
 
-// NewAuthorizer creates a new iam.Authorizer from config.
-// TODO: Use Factory pattern when this supports multiple iam.Authorizer.
-func NewAuthorizer(config config.Authorization) (iam.Authorizer, error) {
-	return newLocalRBACAuthorizer(config.RBACRuleFilePath)
+// NewRoleSyncer creates a new iam.RoleSyncer from config.
+// TODO: Use Factory pattern when this supports multiple iam.RoleSyncer.
+func NewRoleSyncer(config config.AuthRoleSynchronization) (iam.RoleSyncer, error) {
+	return newJwtRoleSyncer(config.JWTRoleClaim), nil
 }

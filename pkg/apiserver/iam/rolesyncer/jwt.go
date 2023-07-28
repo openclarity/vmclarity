@@ -13,12 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package role_syncer
+package rolesyncer
 
 import (
 	"context"
 	"fmt"
-	"github.com/openclarity/vmclarity/backend/pkg/iam"
+
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
 )
 
 var RoleSyncerTypeJwt iam.RoleSyncerType = "jwt"
@@ -49,7 +50,7 @@ func (roleSyncer *jwtRoleSyncer) Sync(ctx context.Context, user *iam.User) error
 	// Get user roles from token
 	tokenRoles, ok := user.JwtClaims[roleSyncer.roleClaim]
 	if !ok {
-		return fmt.Errorf("cannot get user roles from token claim %s")
+		return fmt.Errorf("cannot get user roles from token claim")
 	}
 
 	// Get user roles from token roles

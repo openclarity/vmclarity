@@ -13,15 +13,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package role_syncer
+package injector
 
 import (
-	"github.com/openclarity/vmclarity/backend/pkg/config"
-	"github.com/openclarity/vmclarity/backend/pkg/iam"
+	"context"
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
+	"net/http"
 )
 
-// NewRoleSyncer creates a new iam.RoleSyncer from config.
-// TODO: Use Factory pattern when this supports multiple iam.RoleSyncer.
-func NewRoleSyncer(config config.AuthRoleSynchronization) (iam.RoleSyncer, error) {
-	return newJwtRoleSyncer(config.JWTRoleClaim), nil
+type tokenInjector struct {
+	accessToken string
+}
+
+// newTokenInjector creates an iam.Injector which adds personal access token to request.
+func newTokenInjector(accessToken string) (iam.Injector, error) {
+	return &tokenInjector{
+		accessToken: accessToken,
+	}, nil
+}
+
+func (injector *tokenInjector) Inject(_ context.Context, request *http.Request) error {
+	request.Header.Set("Authorization", "Bearer "+injector.accessToken)
+	return nil
 }

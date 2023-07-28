@@ -115,27 +115,6 @@ resource zitadel_user_grant vmclarity_orchestrator_sa_user_grant {
   depends_on = [zitadel_project_role.vmclarity_project_role]
 }
 
-resource zitadel_machine_user vmclarity_cli_sa {
-  org_id            = zitadel_org.openclarity_org.id
-  user_name         = "vmclarity-cli-sa@vmclarity.io"
-  name              = "VMClarity CLI Service Account"
-  access_token_type = "ACCESS_TOKEN_TYPE_JWT"
-}
-
-resource zitadel_personal_access_token vmclarity_cli_pat_key {
-  org_id          = zitadel_org.openclarity_org.id
-  user_id         = zitadel_machine_user.vmclarity_cli_sa.id
-  expiration_date = ""
-}
-
-resource zitadel_user_grant vmclarity_cli_sa_user_grant {
-  org_id     = zitadel_org.openclarity_org.id
-  project_id = zitadel_project.vmclarity_project.id
-  role_keys  = ["api:admin"]
-  user_id    = zitadel_machine_user.vmclarity_cli_sa.id
-  depends_on = [zitadel_project_role.vmclarity_project_role]
-}
-
 //----------------------------------------
 // Project role action configuration
 //----------------------------------------

@@ -19,9 +19,11 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+
 	"github.com/casbin/casbin"
 	fileadapter "github.com/casbin/casbin/persist/file-adapter"
-	"github.com/openclarity/vmclarity/backend/pkg/iam"
+
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
 )
 
 //go:embed rbac_model.conf
@@ -48,7 +50,7 @@ func (authorizer *localRBACAuthorizer) CanPerform(_ context.Context, user *iam.U
 	for _, role := range user.Roles {
 		allowed, err := authorizer.enforcer.EnforceSafe(role, asset, action)
 		if err != nil {
-			return false, err
+			return false, fmt.Errorf("failed checking auth role: %w", err)
 		}
 		if allowed {
 			return true, nil

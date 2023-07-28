@@ -2129,6 +2129,7 @@ components:
 
     AssetScanTemplate:
       type: object
+      x-go-type-name: "AssetScanTemplate"
       properties:
         scanFamiliesConfig:
           $ref: '#/components/schemas/ScanFamiliesConfig'

@@ -18,11 +18,12 @@ package iam
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/deepmap/oapi-codegen/pkg/middleware"
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/labstack/echo/v4"
-	"net/http"
-	"strings"
 )
 
 const userCtxKey = "user"

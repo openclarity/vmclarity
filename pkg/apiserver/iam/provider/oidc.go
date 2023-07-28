@@ -18,13 +18,16 @@ package provider
 import (
 	"context"
 	"fmt"
-	"github.com/openclarity/vmclarity/backend/pkg/config"
-	"github.com/openclarity/vmclarity/backend/pkg/iam"
-	"github.com/openclarity/vmclarity/backend/pkg/iam/role_syncer"
-	"github.com/zitadel/oidc/pkg/client/rs"
-	"github.com/zitadel/oidc/pkg/oidc"
 	"net/http"
 	"strings"
+
+	"github.com/zitadel/oidc/pkg/oidc"
+
+	"github.com/zitadel/oidc/pkg/client/rs"
+
+	"github.com/openclarity/vmclarity/pkg/apiserver/config"
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam/rolesyncer"
 )
 
 type oidcIDP struct {
@@ -41,7 +44,7 @@ type oidcIDP struct {
 func newOIDCIdentityProvider(config config.AuthenticationOIDC, roleSyncer iam.RoleSyncer, authorizer iam.Authorizer) (iam.Provider, error) {
 	// Check RoleSyncer support
 	switch roleSyncerType := roleSyncer.Type(); roleSyncerType {
-	case role_syncer.RoleSyncerTypeJwt:
+	case rolesyncer.RoleSyncerTypeJwt:
 	// supported
 	default:
 		return nil, fmt.Errorf("unsupported role syncer type provided: %s", roleSyncerType)

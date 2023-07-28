@@ -31,17 +31,17 @@ import (
 func (s *ServerImpl) GetScans(ctx echo.Context, params models.GetScansParams) error {
 	scans, err := s.dbHandler.ScansTable().GetScans(params)
 	if err != nil {
-		return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scans from db: %v", err))
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scans from db: %v", err))
 	}
 
-	return common.SendResponse(ctx, http.StatusOK, scans)
+	return sendResponse(ctx, http.StatusOK, scans)
 }
 
 func (s *ServerImpl) PostScans(ctx echo.Context) error {
 	var scan models.Scan
 	err := ctx.Bind(&scan)
 	if err != nil {
-		return common.SendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
 
 	createdScan, err := s.dbHandler.ScansTable().CreateScan(scan)
@@ -54,15 +54,15 @@ func (s *ServerImpl) PostScans(ctx echo.Context) error {
 				Message: utils.PointerTo(conflictErr.Reason),
 				Scan:    &createdScan,
 			}
-			return common.SendResponse(ctx, http.StatusConflict, existResponse)
+			return sendResponse(ctx, http.StatusConflict, existResponse)
 		case errors.As(err, &validationErr):
-			return common.SendError(ctx, http.StatusBadRequest, err.Error())
+			return sendError(ctx, http.StatusBadRequest, err.Error())
 		default:
-			return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to create scan in db: %v", err))
+			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to create scan in db: %v", err))
 		}
 	}
 
-	return common.SendResponse(ctx, http.StatusCreated, createdScan)
+	return sendResponse(ctx, http.StatusCreated, createdScan)
 }
 
 func (s *ServerImpl) DeleteScansScanID(ctx echo.Context, scanID models.ScanID) error {
@@ -72,36 +72,36 @@ func (s *ServerImpl) DeleteScansScanID(ctx echo.Context, scanID models.ScanID) e
 
 	if err := s.dbHandler.ScansTable().DeleteScan(scanID); err != nil {
 		if errors.Is(err, databaseTypes.ErrNotFound) {
-			return common.SendError(ctx, http.StatusNotFound, fmt.Sprintf("Scan with ID %v not found", scanID))
+			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Scan with ID %v not found", scanID))
 		}
-		return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to delete scan from db. scanID=%v: %v", scanID, err))
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to delete scan from db. scanID=%v: %v", scanID, err))
 	}
 
-	return common.SendResponse(ctx, http.StatusOK, &success)
+	return sendResponse(ctx, http.StatusOK, &success)
 }
 
 func (s *ServerImpl) GetScansScanID(ctx echo.Context, scanID models.ScanID, params models.GetScansScanIDParams) error {
 	scan, err := s.dbHandler.ScansTable().GetScan(scanID, params)
 	if err != nil {
 		if errors.Is(err, databaseTypes.ErrNotFound) {
-			return common.SendError(ctx, http.StatusNotFound, fmt.Sprintf("Scan with ID %v not found", scanID))
+			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Scan with ID %v not found", scanID))
 		}
-		return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scan from db. id=%v: %v", scanID, err))
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scan from db. id=%v: %v", scanID, err))
 	}
-	return common.SendResponse(ctx, http.StatusOK, scan)
+	return sendResponse(ctx, http.StatusOK, scan)
 }
 
 func (s *ServerImpl) PatchScansScanID(ctx echo.Context, scanID models.ScanID, params models.PatchScansScanIDParams) error {
 	var scan models.Scan
 	err := ctx.Bind(&scan)
 	if err != nil {
-		return common.SendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
 
 	// PATCH request might not contain the ID in the body, so set it from
 	// the URL field so that the DB layer knows which object is being updated.
 	if scan.Id != nil && *scan.Id != scanID {
-		return common.SendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *scan.Id, scanID))
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *scan.Id, scanID))
 	}
 	scan.Id = &scanID
 
@@ -112,36 +112,36 @@ func (s *ServerImpl) PatchScansScanID(ctx echo.Context, scanID models.ScanID, pa
 		var preconditionFailedErr *databaseTypes.PreconditionFailedError
 		switch true {
 		case errors.Is(err, databaseTypes.ErrNotFound):
-			return common.SendError(ctx, http.StatusNotFound, fmt.Sprintf("Scan with ID %v not found", scanID))
+			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Scan with ID %v not found", scanID))
 		case errors.As(err, &conflictErr):
 			existResponse := &models.ScanExists{
 				Message: utils.PointerTo(conflictErr.Reason),
 				Scan:    &updatedScan,
 			}
-			return common.SendResponse(ctx, http.StatusConflict, existResponse)
+			return sendResponse(ctx, http.StatusConflict, existResponse)
 		case errors.As(err, &validationErr):
-			return common.SendError(ctx, http.StatusBadRequest, err.Error())
+			return sendError(ctx, http.StatusBadRequest, err.Error())
 		case errors.As(err, &preconditionFailedErr):
-			return common.SendError(ctx, http.StatusPreconditionFailed, err.Error())
+			return sendError(ctx, http.StatusPreconditionFailed, err.Error())
 		default:
-			return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update scan in db. scanID=%v: %v", scanID, err))
+			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update scan in db. scanID=%v: %v", scanID, err))
 		}
 	}
 
-	return common.SendResponse(ctx, http.StatusOK, updatedScan)
+	return sendResponse(ctx, http.StatusOK, updatedScan)
 }
 
 func (s *ServerImpl) PutScansScanID(ctx echo.Context, scanID models.ScanID, params models.PutScansScanIDParams) error {
 	var scan models.Scan
 	err := ctx.Bind(&scan)
 	if err != nil {
-		return common.SendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
 
 	// PUT request might not contain the ID in the body, so set it from the
 	// URL field so that the DB layer knows which object is being updated.
 	if scan.Id != nil && *scan.Id != scanID {
-		return common.SendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *scan.Id, scanID))
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *scan.Id, scanID))
 	}
 	scan.Id = &scanID
 
@@ -152,21 +152,21 @@ func (s *ServerImpl) PutScansScanID(ctx echo.Context, scanID models.ScanID, para
 		var preconditionFailedErr *databaseTypes.PreconditionFailedError
 		switch true {
 		case errors.Is(err, databaseTypes.ErrNotFound):
-			return common.SendError(ctx, http.StatusNotFound, fmt.Sprintf("Scan with ID %v not found", scanID))
+			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Scan with ID %v not found", scanID))
 		case errors.As(err, &conflictErr):
 			existResponse := &models.ScanExists{
 				Message: utils.PointerTo(conflictErr.Reason),
 				Scan:    &updatedScan,
 			}
-			return common.SendResponse(ctx, http.StatusConflict, existResponse)
+			return sendResponse(ctx, http.StatusConflict, existResponse)
 		case errors.As(err, &validationErr):
-			return common.SendError(ctx, http.StatusBadRequest, err.Error())
+			return sendError(ctx, http.StatusBadRequest, err.Error())
 		case errors.As(err, &preconditionFailedErr):
-			return common.SendError(ctx, http.StatusPreconditionFailed, err.Error())
+			return sendError(ctx, http.StatusPreconditionFailed, err.Error())
 		default:
-			return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to save scan in db. scanID=%v: %v", scanID, err))
+			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to save scan in db. scanID=%v: %v", scanID, err))
 		}
 	}
 
-	return common.SendResponse(ctx, http.StatusOK, updatedScan)
+	return sendResponse(ctx, http.StatusOK, updatedScan)
 }

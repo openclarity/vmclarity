@@ -90,3 +90,9 @@ issues:
     - path: pkg/apiserver/database/demo.go
       linters:
         - gomnd
+    - path: pkg/backend/iam
+      linters:
+        - gomnd
+    - path: pkg/backend/backend.go
+      linters:
+        - cyclop

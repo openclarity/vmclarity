@@ -31,8 +31,8 @@ const (
 
 	AuthOIDCIssuerEnvVar        = "AUTH_OIDC_ISSUER"
 	AuthOIDCClientIDEnvVar      = "AUTH_OIDC_CLIENT_ID"
-	AuthOIDCClientSecretEnvVar  = "AUTH_OIDC_CLIENT_SECRET"
-	AuthOIDCTokenURLEnvVar      = "AUTH_OIDC_TOKEN_URL"
+	AuthOIDCClientSecretEnvVar  = "AUTH_OIDC_CLIENT_SECRET" // #nosec G101
+	AuthOIDCTokenURLEnvVar      = "AUTH_OIDC_TOKEN_URL"     // #nosec G101
 	AuthOIDCIntrospectURLEnvVar = "AUTH_OIDC_INTROSPECT_URL"
 
 	AuthRoleSyncJwtRoleClaimEnvVar = "AUTH_ROLE_SYNC_JWT_ROLE_CLAIM"
@@ -44,11 +44,6 @@ const (
 	BackendRestPort       = "BACKEND_REST_PORT"
 	HealthCheckAddress    = "HEALTH_CHECK_ADDRESS"
 
-	DisableOrchestrator               = "DISABLE_ORCHESTRATOR"
-	OrchestratorAuthBearerTokenEnvVar = "ORCHESTRATOR_AUTH_BEARER_TOKEN"
-
-	UISitePath = "UI_SITE_PATH" // TODO: UI site should be moved out of the backend to nginx
-
 	DBNameEnvVar     = "DB_NAME"
 	DBUserEnvVar     = "DB_USER"
 	DBPasswordEnvVar = "DB_PASS"
@@ -57,20 +52,11 @@ const (
 	DatabaseDriver   = "DATABASE_DRIVER"
 	EnableDBInfoLogs = "ENABLE_DB_INFO_LOGS"
 
-	OIDCIssuerEnvVar       = "OIDC_ISSUER"
-	OIDCClientIDEnvVar     = "OIDC_CLIENT_ID"
-	OIDCClientSecretEnvVar = "OIDC_CLIENT_SECRET"
-	OIDCAppFilePathEnvVar  = "OIDC_APP_FILE_PATH"
-	OIDCScopesEnvVar       = "OIDC_SCOPES"
-	OIDCRolesClaimEnvVar   = "OIDC_ROLES_CLAIM"
-	OIDCRolesClaimDefault  = "roles"
-
-	OrchestratorKeyPathEnvVar = "ORCHESTRATOR_KEY_PATH"
-
 	LocalDBPath = "LOCAL_DB_PATH"
 
-	FakeDataEnvVar      = "FAKE_DATA"
-	DisableOrchestrator = "DISABLE_ORCHESTRATOR"
+	FakeDataEnvVar                    = "FAKE_DATA"
+	OrchestratorAuthBearerTokenEnvVar = "ORCHESTRATOR_AUTH_BEARER_TOKEN"
+	DisableOrchestrator               = "DISABLE_ORCHESTRATOR"
 
 	LogLevel = "LOG_LEVEL"
 )
@@ -107,11 +93,9 @@ type Config struct {
 	BackendRestPort    int    `json:"backend-rest-port,omitempty"`
 	HealthCheckAddress string `json:"health-check-address,omitempty"`
 
+	// Orchestrator
 	DisableOrchestrator         bool   `json:"disable_orchestrator"`
 	OrchestratorAuthBearerToken string `json:"orchestrator-auth-bearer-token"`
-
-	// UI
-	UISitePath string `json:"ui_site_path"`
 
 	// Database config
 	DatabaseDriver   string `json:"database-driver,omitempty"`
@@ -190,9 +174,6 @@ func LoadConfig() (*Config, error) {
 
 	config.DisableOrchestrator = viper.GetBool(DisableOrchestrator)
 	config.OrchestratorAuthBearerToken = viper.GetString(OrchestratorAuthBearerTokenEnvVar)
-
-	// UI
-	config.UISitePath = viper.GetString(UISitePath)
 
 	// Database
 	config.DatabaseDriver = viper.GetString(DatabaseDriver)

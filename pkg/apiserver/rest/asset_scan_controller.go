@@ -32,17 +32,17 @@ import (
 func (s *ServerImpl) GetAssetScans(ctx echo.Context, params models.GetAssetScansParams) error {
 	dbAssetScans, err := s.dbHandler.AssetScansTable().GetAssetScans(params)
 	if err != nil {
-		return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scans results from db: %v", err))
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scans results from db: %v", err))
 	}
 
-	return common.SendResponse(ctx, http.StatusOK, dbAssetScans)
+	return sendResponse(ctx, http.StatusOK, dbAssetScans)
 }
 
 func (s *ServerImpl) PostAssetScans(ctx echo.Context) error {
 	var assetScan models.AssetScan
 	err := ctx.Bind(&assetScan)
 	if err != nil {
-		return common.SendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
 
 	status, ok := assetScan.GetResourceCleanupStatus()
@@ -65,24 +65,24 @@ func (s *ServerImpl) PostAssetScans(ctx echo.Context) error {
 				Message:   utils.PointerTo(conflictErr.Reason),
 				AssetScan: &createdAssetScan,
 			}
-			return common.SendResponse(ctx, http.StatusConflict, existResponse)
+			return sendResponse(ctx, http.StatusConflict, existResponse)
 		}
-		return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to create asset scan in db: %v", err))
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to create asset scan in db: %v", err))
 	}
 
-	return common.SendResponse(ctx, http.StatusCreated, createdAssetScan)
+	return sendResponse(ctx, http.StatusCreated, createdAssetScan)
 }
 
 func (s *ServerImpl) GetAssetScansAssetScanID(ctx echo.Context, assetScanID models.AssetScanID, params models.GetAssetScansAssetScanIDParams) error {
 	dbAssetScan, err := s.dbHandler.AssetScansTable().GetAssetScan(assetScanID, params)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return common.SendError(ctx, http.StatusNotFound, err.Error())
+			return sendError(ctx, http.StatusNotFound, err.Error())
 		}
-		return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get asset scan from db. assetScanID=%v: %v", assetScanID, err))
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get asset scan from db. assetScanID=%v: %v", assetScanID, err))
 	}
 
-	return common.SendResponse(ctx, http.StatusOK, dbAssetScan)
+	return sendResponse(ctx, http.StatusOK, dbAssetScan)
 }
 
 // nolint:cyclop
@@ -91,16 +91,16 @@ func (s *ServerImpl) PatchAssetScansAssetScanID(ctx echo.Context, assetScanID mo
 	var assetScan models.AssetScan
 	err := ctx.Bind(&assetScan)
 	if err != nil {
-		return common.SendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
 
 	// check that an asset scan with that id exists.
 	existingAssetScan, err := s.dbHandler.AssetScansTable().GetAssetScan(assetScanID, models.GetAssetScansAssetScanIDParams{})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return common.SendError(ctx, http.StatusNotFound, fmt.Sprintf("asset scan was not found. assetScanID=%v: %v", assetScanID, err))
+			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("asset scan was not found. assetScanID=%v: %v", assetScanID, err))
 		}
-		return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get asset scan. assetScanID=%v: %v", assetScanID, err))
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get asset scan. assetScanID=%v: %v", assetScanID, err))
 	}
 
 	// check for valid resource cleanup state transition
@@ -118,7 +118,7 @@ func (s *ServerImpl) PatchAssetScansAssetScanID(ctx echo.Context, assetScanID mo
 	// PATCH request might not contain the ID in the body, so set it from
 	// the URL field so that the DB layer knows which object is being updated.
 	if assetScan.Id != nil && *assetScan.Id != assetScanID {
-		return common.SendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *assetScan.Id, assetScanID))
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *assetScan.Id, assetScanID))
 	}
 	assetScan.Id = &assetScanID
 
@@ -133,17 +133,17 @@ func (s *ServerImpl) PatchAssetScansAssetScanID(ctx echo.Context, assetScanID mo
 				Message:   utils.PointerTo(conflictErr.Reason),
 				AssetScan: &updatedAssetScan,
 			}
-			return common.SendResponse(ctx, http.StatusConflict, existResponse)
+			return sendResponse(ctx, http.StatusConflict, existResponse)
 		case errors.As(err, &validationErr):
-			return common.SendError(ctx, http.StatusBadRequest, err.Error())
+			return sendError(ctx, http.StatusBadRequest, err.Error())
 		case errors.As(err, &preconditionFailedErr):
-			return common.SendError(ctx, http.StatusPreconditionFailed, err.Error())
+			return sendError(ctx, http.StatusPreconditionFailed, err.Error())
 		default:
-			return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update asset scan in db. assetScanID=%v: %v", assetScanID, err))
+			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update asset scan in db. assetScanID=%v: %v", assetScanID, err))
 		}
 	}
 
-	return common.SendResponse(ctx, http.StatusOK, updatedAssetScan)
+	return sendResponse(ctx, http.StatusOK, updatedAssetScan)
 }
 
 // nolint:cyclop
@@ -152,16 +152,16 @@ func (s *ServerImpl) PutAssetScansAssetScanID(ctx echo.Context, assetScanID mode
 	var assetScan models.AssetScan
 	err := ctx.Bind(&assetScan)
 	if err != nil {
-		return common.SendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
 
 	// check that an asset scan with that id exists.
 	existingAssetScan, err := s.dbHandler.AssetScansTable().GetAssetScan(assetScanID, models.GetAssetScansAssetScanIDParams{})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return common.SendError(ctx, http.StatusNotFound, fmt.Sprintf("asset scan was not found. assetScanID=%v: %v", assetScanID, err))
+			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("asset scan was not found. assetScanID=%v: %v", assetScanID, err))
 		}
-		return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get asset scan. assetScanID=%v: %v", assetScanID, err))
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get asset scan. assetScanID=%v: %v", assetScanID, err))
 	}
 
 	// check for valid resource cleanup state transition
@@ -183,7 +183,7 @@ func (s *ServerImpl) PutAssetScansAssetScanID(ctx echo.Context, assetScanID mode
 	// PUT request might not contain the ID in the body, so set it from
 	// the URL field so that the DB layer knows which object is being updated.
 	if assetScan.Id != nil && *assetScan.Id != assetScanID {
-		return common.SendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *assetScan.Id, assetScanID))
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *assetScan.Id, assetScanID))
 	}
 	assetScan.Id = &assetScanID
 
@@ -198,15 +198,15 @@ func (s *ServerImpl) PutAssetScansAssetScanID(ctx echo.Context, assetScanID mode
 				Message:   utils.PointerTo(conflictErr.Reason),
 				AssetScan: &updatedAssetScan,
 			}
-			return common.SendResponse(ctx, http.StatusConflict, existResponse)
+			return sendResponse(ctx, http.StatusConflict, existResponse)
 		case errors.As(err, &validationErr):
-			return common.SendError(ctx, http.StatusBadRequest, err.Error())
+			return sendError(ctx, http.StatusBadRequest, err.Error())
 		case errors.As(err, &preconditionFailedErr):
-			return common.SendError(ctx, http.StatusPreconditionFailed, err.Error())
+			return sendError(ctx, http.StatusPreconditionFailed, err.Error())
 		default:
-			return common.SendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update asset scan in db. assetScanID=%v: %v", assetScanID, err))
+			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to update asset scan in db. assetScanID=%v: %v", assetScanID, err))
 		}
 	}
 
-	return common.SendResponse(ctx, http.StatusOK, updatedAssetScan)
+	return sendResponse(ctx, http.StatusOK, updatedAssetScan)
 }
