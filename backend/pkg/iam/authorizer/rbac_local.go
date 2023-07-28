@@ -44,7 +44,6 @@ func newLocalRBACAuthorizer(csvRuleFilePath string) (iam.Authorizer, error) {
 	}, nil
 }
 
-// CanPerform checks if User is allowed to perform an action on an asset.
 func (authorizer *localRBACAuthorizer) CanPerform(_ context.Context, user *iam.User, asset, action string) (bool, error) {
 	for _, role := range user.Roles {
 		allowed, err := authorizer.enforcer.EnforceSafe(role, asset, action)

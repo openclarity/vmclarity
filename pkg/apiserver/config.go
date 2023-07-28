@@ -24,20 +24,16 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"strings"
 )
 
 const (
+	IAMEnabledEnvVar = "IAM_ENABLED"
+
 	AuthOIDCIssuerEnvVar        = "AUTH_OIDC_ISSUER"
 	AuthOIDCClientIDEnvVar      = "AUTH_OIDC_CLIENT_ID"
 	AuthOIDCClientSecretEnvVar  = "AUTH_OIDC_CLIENT_SECRET"
-	AuthOIDCClientKeyPathEnvVar = "AUTH_OIDC_CLIENT_KEY_PATH"
 	AuthOIDCTokenURLEnvVar      = "AUTH_OIDC_TOKEN_URL"
 	AuthOIDCIntrospectURLEnvVar = "AUTH_OIDC_INTROSPECT_URL"
-
-	AuthInjectionJwtIssuerEnvVar      = "AUTH_INJECT_JWT_ISSUER"
-	AuthInjectionJwtKeyPathEnvVar     = "AUTH_INJECT_JWT_KEY_PATH"
-	AuthInjectionJwtExtraScopesEnvVar = "AUTH_INJECT_JWT_EXTRA_SCOPES"
 
 	AuthRoleSyncJwtRoleClaimEnvVar = "AUTH_ROLE_SYNC_JWT_ROLE_CLAIM"
 
@@ -48,8 +44,8 @@ const (
 	BackendRestPort       = "BACKEND_REST_PORT"
 	HealthCheckAddress    = "HEALTH_CHECK_ADDRESS"
 
-	DisableOrchestrator       = "DISABLE_ORCHESTRATOR"
-	OrchestratorKeyPathEnvVar = "ORCHESTRATOR_KEY_PATH"
+	DisableOrchestrator               = "DISABLE_ORCHESTRATOR"
+	OrchestratorAuthBearerTokenEnvVar = "ORCHESTRATOR_AUTH_BEARER_TOKEN"
 
 	UISitePath = "UI_SITE_PATH" // TODO: UI site should be moved out of the backend to nginx
 
@@ -79,12 +75,16 @@ const (
 	LogLevel = "LOG_LEVEL"
 )
 
-type Authentication struct {
-	OIDC AuthenticationOIDC `json:"oidc"` // iam.Provider - OpenID Connect
+type AuthenticationOIDC struct {
+	Issuer        string `json:"issuer"`
+	ClientID      string `json:"client-id"`
+	ClientSecret  string `json:"client-secret"`
+	TokenURL      string `json:"token-url"`
+	IntrospectURL string `json:"introspect-url"`
 }
 
-type AuthInjection struct {
-	JWT AuthInjectionJwt `json:"jwt"` // iam.Injector - JWT
+type Authentication struct {
+	OIDC AuthenticationOIDC `json:"oidc"` // iam.Provider - OpenID Connect
 }
 
 type AuthRoleSynchronization struct {
@@ -92,13 +92,13 @@ type AuthRoleSynchronization struct {
 }
 
 type Authorization struct {
-	RBACLocal AuthorizationRBACLocal `json:"rbac-local"` // iam.Authorizer - RBAC Local
+	RBACRuleFilePath string `json:"rbac-local"` // iam.Authorizer - RBAC Local
 }
 
 type Config struct {
 	// IAM config
+	IamEnabled              bool                    `json:"iam-enabled"`
 	Authentication          Authentication          `json:"authentication"`
-	AuthInjection           AuthInjection           `json:"auth-injection"`
 	AuthRoleSynchronization AuthRoleSynchronization `json:"auth-role-synchronization"`
 	Authorization           Authorization           `json:"authorization"`
 
@@ -107,8 +107,8 @@ type Config struct {
 	BackendRestPort    int    `json:"backend-rest-port,omitempty"`
 	HealthCheckAddress string `json:"health-check-address,omitempty"`
 
-	DisableOrchestrator     bool   `json:"disable_orchestrator"`
-	OrchestratorAuthKeyPath string `json:"orchestrator-auth-key-path"`
+	DisableOrchestrator         bool   `json:"disable_orchestrator"`
+	OrchestratorAuthBearerToken string `json:"orchestrator-auth-bearer-token"`
 
 	// UI
 	UISitePath string `json:"ui_site_path"`
@@ -164,28 +164,24 @@ func LoadConfig() (*Config, error) {
 
 	config := &Config{}
 
-	// Auth
+	// IAM
+	config.IamEnabled = viper.GetBool(IAMEnabledEnvVar)
+
+	// Auth - OIDC
 	oidc := &config.Authentication.OIDC
 	oidc.Issuer = viper.GetString(AuthOIDCIssuerEnvVar)
 	oidc.ClientID = viper.GetString(AuthOIDCClientIDEnvVar)
 	oidc.ClientSecret = viper.GetString(AuthOIDCClientSecretEnvVar)
-	oidc.ClientKeyPath = viper.GetString(AuthOIDCClientKeyPathEnvVar)
 	oidc.TokenURL = viper.GetString(AuthOIDCTokenURLEnvVar)
 	oidc.IntrospectURL = viper.GetString(AuthOIDCIntrospectURLEnvVar)
 
-	// AuthInjection
-	injectJwt := &config.AuthInjection.JWT
-	injectJwt.Issuer = viper.GetString(AuthInjectionJwtIssuerEnvVar)
-	injectJwt.KeyPath = viper.GetString(AuthInjectionJwtKeyPathEnvVar)
-	injectJwt.ExtraScopes = viper.GetString(AuthInjectionJwtExtraScopesEnvVar)
+	// AuthRoleSynchronization - JWT Role Claim
+	syncRole := &config.AuthRoleSynchronization
+	syncRole.JWTRoleClaim = viper.GetString(AuthRoleSyncJwtRoleClaimEnvVar)
 
-	// AuthRoleSynchronization
-	syncRoleJwt := &config.AuthRoleSynchronization.JWTRoleClaim
-	*syncRoleJwt = viper.GetString(AuthRoleSyncJwtRoleClaimEnvVar)
-
-	// Authorization
-	authzRbacLocal := &config.Authorization.RBACLocal
-	authzRbacLocal.RuleFilePath = viper.GetString(AuthorizationRbacRuleFilePathEnvVar)
+	// Authorization - RBAC Local
+	authzRbacLocal := &config.Authorization
+	authzRbacLocal.RBACRuleFilePath = viper.GetString(AuthorizationRbacRuleFilePathEnvVar)
 
 	// Backend
 	config.BackendRestHost = viper.GetString(BackendRestHost)
@@ -193,7 +189,7 @@ func LoadConfig() (*Config, error) {
 	config.HealthCheckAddress = viper.GetString(HealthCheckAddress)
 
 	config.DisableOrchestrator = viper.GetBool(DisableOrchestrator)
-	config.OrchestratorAuthKeyPath = viper.GetString(OrchestratorKeyPathEnvVar)
+	config.OrchestratorAuthBearerToken = viper.GetString(OrchestratorAuthBearerTokenEnvVar)
 
 	// UI
 	config.UISitePath = viper.GetString(UISitePath)

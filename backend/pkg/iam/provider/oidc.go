@@ -37,8 +37,6 @@ type oidcIDP struct {
 // correct Bearer token using OAuth2 introspection by sending the token to the
 // introspection endpoint.
 //
-// TODO: Enable support for creating resource server from file data string.
-// TODO: This can be achieved using functional options, e.g. WithKey(string), WithKeyFile(filepath).
 // TODO: Test against different OIDCs to check if this works. Tested against: Zitadel.
 func newOIDCIdentityProvider(config config.AuthenticationOIDC, roleSyncer iam.RoleSyncer, authorizer iam.Authorizer) (iam.Provider, error) {
 	// Check RoleSyncer support
@@ -58,13 +56,7 @@ func newOIDCIdentityProvider(config config.AuthenticationOIDC, roleSyncer iam.Ro
 	}
 
 	// Create resource server which provides introspection functionality
-	var resourceServer rs.ResourceServer
-	var err error
-	if config.ClientKeyPath != "" {
-		resourceServer, err = rs.NewResourceServerFromKeyFile(config.Issuer, config.ClientKeyPath, options...)
-	} else {
-		resourceServer, err = rs.NewResourceServerClientCredentials(config.Issuer, config.ClientID, config.ClientSecret, options...)
-	}
+	resourceServer, err := rs.NewResourceServerClientCredentials(config.Issuer, config.ClientID, config.ClientSecret, options...)
 	if err != nil {
 		return nil, fmt.Errorf("could not create OIDC resource server: %w", err)
 	}

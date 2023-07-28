@@ -16,12 +16,18 @@
 package injector
 
 import (
-	"github.com/openclarity/vmclarity/backend/pkg/config"
 	"github.com/openclarity/vmclarity/backend/pkg/iam"
 )
 
+// Options defines Factory creating options for iam.Injector.
+//
+// TODO: Add support for other sources.
+type Options struct {
+	FromAccessToken string `json:"from-access-token"`
+}
+
 // NewInjector creates a new iam.Injector from config.
 // TODO: Use Factory pattern when this supports multiple iam.Injector.
-func NewInjector(config config.AuthInjection) (iam.Injector, error) {
-	return newJWTInjector(config.JWT.Issuer, config.JWT.KeyPath, config.JWT.GetExtraScopes())
+func NewInjector(options Options) (iam.Injector, error) {
+	return newTokenInjector(options.FromAccessToken)
 }

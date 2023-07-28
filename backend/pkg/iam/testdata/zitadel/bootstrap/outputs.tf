@@ -1,18 +1,12 @@
-resource local_file file_vmclarity_cli_sa_key {
-  content  = zitadel_machine_key.vmclarity_cli_sa_key.key_details
-  filename = "machinekey/vmclarity-cli-sa-admin.json"
-}
-
-resource local_file file_vmclarity_orchestrator_sa_key {
-  content  = zitadel_machine_key.vmclarity_orchestrator_sa_key.key_details
-  filename = "machinekey/vmclarity-orchestrator-sa-admin.json"
-}
-
-resource local_file file_vmclarity_app_api_key {
-  content  = zitadel_application_key.vmclarity_app_api_key.key_details
-  filename = "machinekey/vmclarity-api-key.json"
-}
-
-output vmclarity_project_id {
-  value = zitadel_project.vmclarity_project.id
+resource local_file file_vmclarity_data {
+  content  = <<-EOT
+    {
+      "project_id": "${zitadel_project.vmclarity_project.id}",
+      "app_client_id": "${zitadel_application_api.vmclarity_app_api.client_id}",
+      "app_client_secret": "${zitadel_application_api.vmclarity_app_api.client_secret}",
+      "orchestrator_pam": "${zitadel_personal_access_token.vmclarity_orchestrator_pat_key.token}",
+      "cli_pam": "${zitadel_personal_access_token.vmclarity_cli_pat_key.token}"
+    }
+  EOT
+  filename = "generated/vmclarity-data.json"
 }

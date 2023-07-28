@@ -63,10 +63,13 @@ func createEchoServer(dbHandler databaseTypes.Database) (*echo.Echo, error) {
 		return nil, fmt.Errorf("failed to load swagger spec: %w", err)
 	}
 
-	// Create IAM provider
-	iamProvider, err := provider.NewProvider(*config)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create IAM provider: %v", err)
+	// Configure IAM provider
+	var iamProvider iam.Provider
+	if config.IamEnabled {
+		iamProvider, err = provider.NewProvider(*config)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create IAM provider: %v", err)
+		}
 	}
 
 	// Create server

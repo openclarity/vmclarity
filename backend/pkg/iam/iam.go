@@ -65,11 +65,13 @@ type RoleSyncerType string
 // RoleSyncer implements server-side User role synchronization from a specific source.
 type RoleSyncer interface {
 	Type() RoleSyncerType
+	// Sync synchronizes user roles either from a local source (e.g. JWT claims) or using an API request.
 	Sync(ctx context.Context, user *User) error
 }
 
 // Authorizer implements authorization methods from a specific source.
 type Authorizer interface {
+	// CanPerform checks if User is allowed to perform an action on an asset.
 	CanPerform(ctx context.Context, user *User, asset, action string) (bool, error)
 }
 
@@ -78,11 +80,11 @@ type Provider interface {
 	// RoleSyncer returns selected RoleSyncer to use for Provider.
 	RoleSyncer() RoleSyncer
 
-	// Authorizer returns selected Authorizer to use for provider
+	// Authorizer returns selected Authorizer to use for Provider.
 	Authorizer() Authorizer
 
 	// Authenticate validates and verifies user auth details from request against an
-	// auth provider. Only User.ID should be set and any private fields required to
+	// auth provider. Only User.ID should be set and dependency fields required to
 	// interact with RoleSyncer.
 	Authenticate(ctx context.Context, request *http.Request) (*User, error)
 }
@@ -94,6 +96,12 @@ type Provider interface {
 // user roles on success, and finally try to authorize the request. This ensures
 // that the User has all the required data to interact with IAM policies.
 func OapiFilterForProvider(provider Provider) openapi3filter.AuthenticationFunc {
+	if provider == nil {
+		return func(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
+			return nil
+		}
+	}
+
 	return func(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
 		// TODO: Explore caching options to reduce checks against identity server
 

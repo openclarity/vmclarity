@@ -2,7 +2,7 @@
 // Organization configuration
 //----------------------------------------
 resource zitadel_org openclarity_org {
-  name = "openclarity-org"
+  name = "openclarity"
 }
 
 resource zitadel_domain openclarity_domain {
@@ -68,17 +68,8 @@ resource zitadel_application_api vmclarity_app_api {
   org_id           = zitadel_org.openclarity_org.id
   project_id       = zitadel_project.vmclarity_project.id
   name             = "API"
-  auth_method_type = "API_AUTH_METHOD_TYPE_PRIVATE_KEY_JWT"
+  auth_method_type = "API_AUTH_METHOD_TYPE_BASIC"
 }
-
-resource zitadel_application_key vmclarity_app_api_key {
-  org_id          = zitadel_org.openclarity_org.id
-  project_id      = zitadel_project.vmclarity_project.id
-  app_id          = zitadel_application_api.vmclarity_app_api.id
-  key_type        = "KEY_TYPE_JSON"
-  expiration_date = ""
-}
-
 
 // OIDC App can be used to enable UI
 resource zitadel_application_oidc vmclarity_app_oidc {
@@ -110,10 +101,9 @@ resource zitadel_machine_user vmclarity_orchestrator_sa {
   access_token_type = "ACCESS_TOKEN_TYPE_JWT"
 }
 
-resource zitadel_machine_key vmclarity_orchestrator_sa_key {
+resource zitadel_personal_access_token vmclarity_orchestrator_pat_key {
   org_id          = zitadel_org.openclarity_org.id
   user_id         = zitadel_machine_user.vmclarity_orchestrator_sa.id
-  key_type        = "KEY_TYPE_JSON"
   expiration_date = ""
 }
 
@@ -132,10 +122,9 @@ resource zitadel_machine_user vmclarity_cli_sa {
   access_token_type = "ACCESS_TOKEN_TYPE_JWT"
 }
 
-resource zitadel_machine_key vmclarity_cli_sa_key {
+resource zitadel_personal_access_token vmclarity_cli_pat_key {
   org_id          = zitadel_org.openclarity_org.id
   user_id         = zitadel_machine_user.vmclarity_cli_sa.id
-  key_type        = "KEY_TYPE_JSON"
   expiration_date = ""
 }
 

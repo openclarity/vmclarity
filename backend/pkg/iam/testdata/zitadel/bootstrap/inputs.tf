@@ -1,9 +1,11 @@
 variable "idp_github_client_id" {
-  type = string
+  type    = string
+  default = "123"
 }
 
 variable "idp_github_client_secret" {
-  type = string
+  type    = string
+  default = "123"
 }
 
 variable "project_roles" {
@@ -21,5 +23,6 @@ variable "default_project_role" {
 // DEBUG - Management resources
 //--------------------------------------------------------------------------------------
 variable "debug_initial_admin_password" {
-  type = string
+  type    = string
+  default = "Password1!"
 }
