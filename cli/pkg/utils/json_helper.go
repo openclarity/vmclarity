@@ -30,7 +30,7 @@ func PrintJSONData(data interface{}, fields string) error {
 		if err != nil {
 			return fmt.Errorf("failed to marshal data: %v", err)
 		}
-		fmt.Printf("asset: %s", string(dataB))
+		fmt.Println(string(dataB))
 		return nil
 	}
 	j := jsonpath.New("parser")

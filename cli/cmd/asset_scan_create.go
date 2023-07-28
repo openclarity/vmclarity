@@ -101,9 +101,7 @@ func createAssetScan(ctx context.Context, server, assetID string) (*models.Asset
 func createEmptyAssetScanForAsset(asset models.Asset) models.AssetScan {
 	return models.AssetScan{
 		Asset: &models.AssetRelationship{
-			AssetInfo: asset.AssetInfo,
-			FirstSeen: asset.FirstSeen,
-			Id:        *asset.Id,
+			Id: *asset.Id,
 		},
 		Status: &models.AssetScanStatus{
 			General: &models.AssetScanState{

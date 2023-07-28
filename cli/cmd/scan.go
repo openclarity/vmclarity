@@ -54,7 +54,7 @@ var scanCmd = &cobra.Command{
 
 		cfgFile, err := cmd.Flags().GetString("config")
 		if err != nil {
-			logger.Fatalf("Unable to get asset json file name: %v", err)
+			logger.Fatalf("Unable to get config file name: %v", err)
 		}
 		server, err := cmd.Flags().GetString("server")
 		if err != nil {

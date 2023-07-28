@@ -36,7 +36,7 @@ var assetCreateCmd = &cobra.Command{
 	Long:  `It creates asset. It's useful in the CI/CD mode without VMClarity orchestration`,
 	Run: func(cmd *cobra.Command, args []string) {
 		logger.Infof("Creating asset...")
-		filename, err := cmd.Flags().GetString("from-json-file")
+		filename, err := cmd.Flags().GetString("file")
 		if err != nil {
 			logger.Fatalf("Unable to get asset json file name: %v", err)
 		}
@@ -48,7 +48,7 @@ var assetCreateCmd = &cobra.Command{
 		if err != nil {
 			logger.Fatalf("Failed to get asset from json file: %v", err)
 		}
-		updateIfExist, err := cmd.Flags().GetBool("update-if-exists")
+		updateIfExists, err := cmd.Flags().GetBool("update-if-exists")
 		if err != nil {
 			logger.Fatalf("Unable to get update-if-exists flag vaule: %v", err)
 		}
@@ -62,7 +62,7 @@ var assetCreateCmd = &cobra.Command{
 			logger.Fatalf("Failed to determine asset type: %v", err)
 		}
 
-		asset, err := createAsset(context.TODO(), assetType, server, updateIfExist)
+		asset, err := createAsset(context.TODO(), assetType, server, updateIfExists)
 		if err != nil {
 			logger.Fatalf("Failed to create asset: %v", err)
 		}
@@ -76,12 +76,12 @@ var assetCreateCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(assetCreateCmd)
 
-	assetCreateCmd.Flags().String("from-json-file", "", "asset json filename")
+	assetCreateCmd.Flags().String("file", "", "asset json filename")
 	assetCreateCmd.Flags().String("server", "", "VMClarity server to create asset to, for example: http://localhost:9999/api")
 	assetCreateCmd.Flags().Bool("update-if-exists", false, "the asset will be updated the asset if it exists")
 	assetCreateCmd.Flags().String("jsonpath", "", "print selected value of asset")
-	if err := assetCreateCmd.MarkFlagRequired("from-json-file"); err != nil {
-		logger.Fatalf("Failed to mark from-json-file flag as required: %v", err)
+	if err := assetCreateCmd.MarkFlagRequired("file"); err != nil {
+		logger.Fatalf("Failed to mark file flag as required: %v", err)
 	}
 	if err := assetCreateCmd.MarkFlagRequired("server"); err != nil {
 		logger.Fatalf("Failed to mark server flag as required: %v", err)
@@ -100,6 +100,7 @@ func getAssetFromJSONFile(filename string) (*models.AssetType, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get file stat: %v", err)
 	}
+
 	// read the file
 	bs := make([]byte, stat.Size())
 	_, err = file.Read(bs)
@@ -115,7 +116,7 @@ func getAssetFromJSONFile(filename string) (*models.AssetType, error) {
 	return assetType, nil
 }
 
-func createAsset(ctx context.Context, assetType *models.AssetType, server string, updateIfExist bool) (*models.Asset, error) {
+func createAsset(ctx context.Context, assetType *models.AssetType, server string, updateIfExists bool) (*models.Asset, error) {
 	client, err := backendclient.Create(server)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create VMClarity API client: %w", err)
@@ -135,7 +136,7 @@ func createAsset(ctx context.Context, assetType *models.AssetType, server string
 	// As we got a conflict it means there is an existing asset
 	// which matches the unique properties of this asset, in this
 	// case if the update-if-exists flag is set we'll patch the just AssetInfo and FirstSeen instead.
-	if !(errors.As(err, &conflictError) && updateIfExist) {
+	if !errors.As(err, &conflictError) || !updateIfExists {
 		return nil, fmt.Errorf("failed to post asset: %v", err)
 	}
 	assetData.FirstSeen = nil
