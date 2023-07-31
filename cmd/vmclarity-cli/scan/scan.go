@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package root
+package scan
 
 import (
 	"context"
@@ -27,6 +27,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/openclarity/vmclarity/cmd/vmclarity-cli/logutil"
 	"github.com/openclarity/vmclarity/pkg/cli"
 
 	"github.com/openclarity/vmclarity/pkg/cli/state"
@@ -44,36 +45,36 @@ const (
 )
 
 // scanCmd represents the scan command.
-var scanCmd = &cobra.Command{
+var ScanCmd = &cobra.Command{
 	Use:   "scan",
 	Short: "Scan",
 	Long:  `Run scanner families`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logger.Infof("Running...")
+		logutil.Logger.Infof("Running...")
 
 		// Main context which remains active even if the scan is aborted allowing post-processing operations
 		// like updating asset scan state
-		ctx := log.SetLoggerForContext(cmd.Context(), logger)
+		ctx := log.SetLoggerForContext(cmd.Context(), logutil.Logger)
 
 		cfgFile, err := cmd.Flags().GetString("config")
 		if err != nil {
-			logger.Fatalf("Unable to get config file name: %v", err)
+			logutil.Logger.Fatalf("Unable to get config file name: %v", err)
 		}
 		server, err := cmd.Flags().GetString("server")
 		if err != nil {
-			logger.Fatalf("Unable to get VMClarity server address: %v", err)
+			logutil.Logger.Fatalf("Unable to get VMClarity server address: %v", err)
 		}
 		output, err := cmd.Flags().GetString("output")
 		if err != nil {
-			logger.Fatalf("Unable to get output file name: %v", err)
+			logutil.Logger.Fatalf("Unable to get output file name: %v", err)
 		}
 		assetScanID, err := cmd.Flags().GetString("asset-scan-id")
 		if err != nil {
-			logger.Fatalf("Unable to get asset scan ID: %v", err)
+			logutil.Logger.Fatalf("Unable to get asset scan ID: %v", err)
 		}
 		mountVolume, err := cmd.Flags().GetBool("mount-attached-volume")
 		if err != nil {
-			logger.Fatalf("Unable to get mount attached volume flag: %v", err)
+			logutil.Logger.Fatalf("Unable to get mount attached volume flag: %v", err)
 		}
 
 		config := loadConfig(cfgFile)
@@ -92,7 +93,7 @@ var scanCmd = &cobra.Command{
 		if err := cli.WaitForReadyState(abortCtx); err != nil {
 			err = fmt.Errorf("failed to wait for AssetScan being ready to scan: %w", err)
 			if e := cli.MarkDone(ctx, []error{err}); e != nil {
-				logger.Errorf("Failed to update AssetScan status to completed with errors: %v", e)
+				logutil.Logger.Errorf("Failed to update AssetScan status to completed with errors: %v", e)
 			}
 			return err
 		}
@@ -106,7 +107,7 @@ var scanCmd = &cobra.Command{
 			if err != nil {
 				err = fmt.Errorf("failed to mount attached volume: %w", err)
 				if e := cli.MarkDone(ctx, []error{err}); e != nil {
-					logger.Errorf("Failed to update asset scan stat to completed with errors: %v", e)
+					logutil.Logger.Errorf("Failed to update asset scan stat to completed with errors: %v", e)
 				}
 				return err
 			}
@@ -118,7 +119,7 @@ var scanCmd = &cobra.Command{
 			return fmt.Errorf("failed to inform server %v scan has started: %w", server, err)
 		}
 
-		logger.Infof("Running scanners...")
+		logutil.Logger.Infof("Running scanners...")
 		runErrors := families.New(config).Run(abortCtx, cli)
 
 		err = cli.MarkDone(ctx, runErrors)
@@ -127,7 +128,7 @@ var scanCmd = &cobra.Command{
 		}
 
 		if len(runErrors) > 0 {
-			logger.Errorf("Errors when running families: %+v", runErrors)
+			logutil.Logger.Errorf("Errors when running families: %+v", runErrors)
 		}
 
 		return nil
@@ -136,26 +137,24 @@ var scanCmd = &cobra.Command{
 
 // nolint: gochecknoinits
 func init() {
-	rootCmd.AddCommand(scanCmd)
-
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-	scanCmd.Flags().String("config", "", "config file (default is $HOME/.vmclarity.yaml)")
-	scanCmd.Flags().String("output", "", "set output directory path. Stdout is used if not set.")
-	scanCmd.Flags().String("server", "", "VMClarity server to export asset scans to, for example: http://localhost:9999/api")
-	scanCmd.Flags().String("asset-scan-id", "", "the AssetScan ID to monitor and report results to")
-	scanCmd.Flags().Bool("mount-attached-volume", false, "discover for an attached volume and mount it before the scan")
+	ScanCmd.Flags().String("config", "", "config file (default is $HOME/.vmclarity.yaml)")
+	ScanCmd.Flags().String("output", "", "set output directory path. Stdout is used if not set.")
+	ScanCmd.Flags().String("server", "", "VMClarity server to export asset scans to, for example: http://localhost:9999/api")
+	ScanCmd.Flags().String("asset-scan-id", "", "the AssetScan ID to monitor and report results to")
+	ScanCmd.Flags().Bool("mount-attached-volume", false, "discover for an attached volume and mount it before the scan")
 
 	// TODO(sambetts) we may have to change this to our own validation when
 	// we add the CI/CD scenario and there isn't an existing asset-scan-id
 	// in the backend to PATCH
-	scanCmd.MarkFlagsRequiredTogether("server", "asset-scan-id")
+	ScanCmd.MarkFlagsRequiredTogether("server", "asset-scan-id")
 }
 
 // loadConfig reads in config file and ENV variables if set.
 func loadConfig(cfgFile string) *families.Config {
-	logger.Infof("Initializing configuration...")
+	logutil.Logger.Infof("Initializing configuration...")
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
@@ -185,7 +184,7 @@ func loadConfig(cfgFile string) *families.Config {
 	if logrus.IsLevelEnabled(logrus.InfoLevel) {
 		configB, err := yaml.Marshal(config)
 		cobra.CheckErr(err)
-		logger.Infof("Using config file (%s):\n%s", viper.ConfigFileUsed(), string(configB))
+		logutil.Logger.Infof("Using config file (%s):\n%s", viper.ConfigFileUsed(), string(configB))
 	}
 
 	return config

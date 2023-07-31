@@ -21,11 +21,12 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
+	"github.com/openclarity/vmclarity/cmd/vmclarity-cli/asset"
+	"github.com/openclarity/vmclarity/cmd/vmclarity-cli/logutil"
+	"github.com/openclarity/vmclarity/cmd/vmclarity-cli/scan"
 	"github.com/openclarity/vmclarity/pkg/cli"
 	"github.com/openclarity/vmclarity/pkg/shared/log"
 )
-
-var logger *logrus.Entry
 
 // RootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
@@ -47,9 +48,12 @@ func init() {
 	cobra.OnInitialize(
 		initLogger,
 	)
+	rootCmd.AddCommand(scan.ScanCmd)
+	rootCmd.AddCommand(asset.AssetCreateCmd)
+	rootCmd.AddCommand(asset.AssetScanCreateCmd)
 }
 
 func initLogger() {
 	log.InitLogger(logrus.InfoLevel.String(), os.Stderr)
-	logger = logrus.WithField("app", "vmclarity")
+	logutil.Logger = logrus.WithField("app", "vmclarity")
 }
