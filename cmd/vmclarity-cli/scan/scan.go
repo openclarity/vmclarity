@@ -44,7 +44,7 @@ const (
 	DefaultMountTimeout    = 10 * time.Minute
 )
 
-// scanCmd represents the scan command.
+// ScanCmd represents the scan command.
 var ScanCmd = &cobra.Command{
 	Use:   "scan",
 	Short: "Scan",
