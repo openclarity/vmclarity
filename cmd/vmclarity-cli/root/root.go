@@ -25,10 +25,10 @@ import (
 	"github.com/openclarity/vmclarity/pkg/shared/log"
 )
 
-var Logger *logrus.Entry
+var logger *logrus.Entry
 
 // RootCmd represents the base command when called without any subcommands.
-var RootCmd = &cobra.Command{
+var rootCmd = &cobra.Command{
 	Use:          "vmclarity",
 	Short:        "VMClarity",
 	Long:         `VMClarity`,
@@ -39,7 +39,7 @@ var RootCmd = &cobra.Command{
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	cobra.CheckErr(RootCmd.Execute())
+	cobra.CheckErr(rootCmd.Execute())
 }
 
 // nolint: gochecknoinits
@@ -51,5 +51,5 @@ func init() {
 
 func initLogger() {
 	log.InitLogger(logrus.InfoLevel.String(), os.Stderr)
-	Logger = logrus.WithField("app", "vmclarity")
+	logger = logrus.WithField("app", "vmclarity")
 }
