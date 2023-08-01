@@ -44,6 +44,9 @@ func beforeSuite(ctx context.Context) {
 	)
 	Expect(err).NotTo(HaveOccurred())
 
+	_, err = os.Create(os.ExpandEnv("$HOME/vmclarity.db"))
+	Expect(err).NotTo(HaveOccurred())
+
 	err = cli.WithOsEnv(opts)
 	Expect(err).NotTo(HaveOccurred())
 
