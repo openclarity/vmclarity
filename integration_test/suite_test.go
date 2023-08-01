@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/integration_test/testenv"
-	"github.com/openclarity/vmclarity/shared/pkg/backendclient"
+	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
 	"os"
 	"strconv"
 	"testing"
@@ -36,9 +36,9 @@ func beforeSuite(ctx context.Context) {
 	ctx = logr.NewContext(ctx, log)
 
 	opts, err := cli.NewProjectOptions(
-		[]string{"../deploy/docker-compose.yml"},
-		cli.WithName("vm-clarity"),
-		cli.WithWorkingDirectory("../deploy"),
+		[]string{"../installation/docker/docker-compose.yaml"},
+		cli.WithName("vmclarity"),
+		cli.WithWorkingDirectory("../installation/docker"),
 		cli.WithResolvedPaths(true),
 		cli.WithProfiles([]string{""}),
 	)

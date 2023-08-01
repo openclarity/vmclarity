@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	vmClarityBackendContainerName = "vm-clarity-backend"
+	vmClarityBackendContainerName = "vmclarity-backend"
 	stateRunning                  = "running"
 	healthStateHealthy            = "healthy"
 )
