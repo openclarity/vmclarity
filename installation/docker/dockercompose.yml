@@ -68,7 +68,7 @@ services:
         condition: on-failure
 
   exploit-db-server:
-    image: ${ExploitDBServerContainerImage:-ghcr.io/openclarity/exploit-db-server:v0.1.2}
+    image: ${ExploitDBServerContainerImage:-ghcr.io/openclarity/exploit-db-server:v0.2.3}
     ports:
       - "1326:1326"
     deploy:
@@ -90,8 +90,23 @@ services:
       restart_policy:
         condition: on-failure
 
+  grype-server-init:
+    image: ${GrypeServerContainerImage:-ghcr.io/openclarity/grype-server:v0.4.0}
+    user: root
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - chown -R 1000:1000 /data
+    volumes:
+      - type: volume
+        source: grype-server-db
+        target: /data
+
   grype-server:
-    image: ${GrypeServerContainerImage:-ghcr.io/openclarity/grype-server:v0.2.3}
+    image: ${GrypeServerContainerImage:-ghcr.io/openclarity/grype-server:v0.4.0}
+    depends_on:
+      grype-server-init:
+        condition: service_completed_successfully
     command:
       - run
       - --log-level
@@ -104,6 +119,10 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
+    volumes:
+      - type: volume
+        source: grype-server-db
+        target: /data
 
   freshclam-mirror:
     image: ${FreshclamMirrorContainerImage:-ghcr.io/openclarity/freshclam-mirror:v0.1.0}
@@ -134,3 +153,4 @@ configs:
 
 volumes:
   apiserver-db-data:
+  grype-server-db:
