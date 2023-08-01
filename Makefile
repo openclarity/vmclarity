@@ -124,6 +124,11 @@ push-docker-uibackend: docker-uibackend ## Build and Push UI Backend Docker imag
 test: ## Run Unit Tests
 	@go test ./...
 
+.PHONY: integration-test
+integration-test: ## Run go integration test against code
+	@cd integration_test && \
+    go test -v -failfast -test.v -test.paniconexit0 -timeout 2h -ginkgo.v .
+
 .PHONY: clean-ui
 clean-ui:
 	@(rm -rf ui/build ; echo "UI cleanup done" )
