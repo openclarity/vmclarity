@@ -9,6 +9,14 @@ cat << 'EOF' > /etc/vmclarity/deploy.sh
 #!/bin/bash
 set -euo pipefail
 
+# Install the latest version of docker from the offical
+# docker repository instead of the older version built into
+# ubuntu, so that we can use docker compose v2.
+#
+# To install this we need to add the docker apt repo gpg key
+# to the apt keyring, and then add the apt sources based on
+# our version of ubuntu. Then we can finally apt install all
+# the required docker components.
 apt-get update
 apt-get install -y ca-certificates curl gnupg
 mkdir -p /etc/apt/keyrings

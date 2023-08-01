@@ -7,8 +7,8 @@ builds:
       - CGO_ENABLED=0
     ldflags:
       - "-s -w"
-      - "-X github.com/openclarity/vmclarity/pkg/version.Version={{ .Version }}" 
-      - "-X github.com/openclarity/vmclarity/pkg/version.GitRevision={{.Commit}}"
+      - "-X github.com/openclarity/vmclarity/pkg/version.Version={{ .Version }}"
+      - "-X github.com/openclarity/vmclarity/pkg/version.CommitHash={{.Commit}}"
       - "-X github.com/openclarity/vmclarity/pkg/version.BuildTimestamp={{.Timestamp}}"
     goos:
       - linux

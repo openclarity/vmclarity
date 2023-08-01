@@ -24,7 +24,6 @@ import (
 	"github.com/openclarity/vmclarity/cmd/vmclarity-cli/asset"
 	"github.com/openclarity/vmclarity/cmd/vmclarity-cli/logutil"
 	"github.com/openclarity/vmclarity/cmd/vmclarity-cli/scan"
-	"github.com/openclarity/vmclarity/pkg/cli"
 	"github.com/openclarity/vmclarity/pkg/shared/log"
 	"github.com/openclarity/vmclarity/pkg/version"
 )

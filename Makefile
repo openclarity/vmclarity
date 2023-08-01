@@ -180,12 +180,12 @@ gomod-tidy:
 .PHONY: gen-api
 gen-api: gen-apiserver-api gen-uibackend-api ## Generating API code
 
-.PHONY: api-backend
+.PHONY: gen-apiserver-api
 gen-apiserver-api: ## Generating API for backend code
 	@(echo "Generating API for backend code ..." )
 	@(cd api; go generate)
 
-.PHONY: api-ui
+.PHONY: gen-uibackend-api
 gen-uibackend-api: ## Generating API for UI backend code
 	@(echo "Generating API for UI backend code ..." )
 	@(cd pkg/uibackend/api; go generate)
