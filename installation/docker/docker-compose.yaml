@@ -5,8 +5,6 @@ services:
     image: ghcr.io/openclarity/vmclarity-backend:latest
     command: ["run"]
     container_name: vmclarity-backend
-    networks:
-      - vmclarity
     ports:
       - "8888:8888"
     expose:
@@ -30,8 +28,6 @@ services:
   exploit-db-server:
     image: ghcr.io/openclarity/exploit-db-server:v0.2.3
     container_name: exploit-db-server
-    networks:
-      - vmclarity
     expose:
       - "1326"
 
@@ -39,8 +35,6 @@ services:
     image: docker.io/aquasec/trivy:0.41.0
     container_name: trivy-server
     command: ["server"]
-    networks:
-      - vmclarity
     expose:
       - "9992"
     environment:
@@ -51,8 +45,6 @@ services:
     image: ghcr.io/openclarity/grype-server:v0.4.0
     command: ["run"]
     container_name: grype-server
-    networks:
-      - vmclarity
     expose:
       - "9991"
     environment:
@@ -61,19 +53,15 @@ services:
   freshclam-mirror:
     image: ghcr.io/openclarity/freshclam-mirror:v0.2.0
     container_name: freshclam-mirror
-    networks:
-      - vmclarity
     expose:
       - "80"
 
   ubuntu:
     image: ubuntu:latest
     command: ["sleep", "infinity"]
-    networks:
-      - vmclarity
     labels:
       scanconfig: test
 
 networks:
-  vmclarity:
+  default:
     name: vmclarity
