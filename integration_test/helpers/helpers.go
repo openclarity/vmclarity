@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"github.com/google/uuid"
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 	"time"
@@ -8,7 +9,7 @@ import (
 
 func GetDefaultScanConfig() models.ScanConfig {
 	return models.ScanConfig{
-		Name: utils.PointerTo("test"),
+		Name: utils.PointerTo(uuid.New().String()),
 		ScanTemplate: &models.ScanTemplate{
 			AssetScanTemplate: &models.AssetScanTemplate{
 				ScanFamiliesConfig: &models.ScanFamiliesConfig{
