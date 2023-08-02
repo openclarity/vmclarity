@@ -5,59 +5,20 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/integration_test/helpers"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 	"time"
 )
 
 var _ = Describe("Aborting a scan", func() {
 
-	scope := "contains(assetInfo.labels, '{\"key\":\"scanconfig\",\"value\":\"test\"}')"
-	newScanConfig := models.ScanConfig{
-		Name: utils.PointerTo("Scan Config"),
-		ScanTemplate: &models.ScanTemplate{
-			AssetScanTemplate: &models.AssetScanTemplate{
-				ScanFamiliesConfig: &models.ScanFamiliesConfig{
-					Exploits: &models.ExploitsConfig{
-						Enabled: utils.PointerTo(true),
-					},
-					Sbom: &models.SBOMConfig{
-						Enabled: utils.PointerTo(true),
-					},
-					Vulnerabilities: &models.VulnerabilitiesConfig{
-						Enabled: utils.PointerTo(true),
-					},
-				},
-			},
-			Scope: &scope,
-		},
-		Scheduled: &models.RuntimeScheduleScanConfig{
-			CronLine: utils.PointerTo("0 */4 * * *"),
-			OperationTime: utils.PointerTo(
-				time.Date(2023, 1, 20, 15, 46, 18, 0, time.UTC),
-			),
-		},
-	}
-
 	Context("which is running", func() {
 		It("should stop successfully", func(ctx SpecContext) {
-			apiScanConfig, err := client.PostScanConfig(ctx, newScanConfig)
+			apiScanConfig, err := client.PostScanConfig(ctx, helpers.GetDefaultScanConfig())
 			Expect(err).NotTo(HaveOccurred())
 
-			updateScanConfig := models.ScanConfig{
-				Name: apiScanConfig.Name,
-				ScanTemplate: &models.ScanTemplate{
-					AssetScanTemplate: &models.AssetScanTemplate{
-						ScanFamiliesConfig: apiScanConfig.ScanTemplate.AssetScanTemplate.ScanFamiliesConfig,
-					},
-					MaxParallelScanners: apiScanConfig.ScanTemplate.MaxParallelScanners,
-					Scope:               apiScanConfig.ScanTemplate.Scope,
-				},
-				Scheduled: &models.RuntimeScheduleScanConfig{
-					CronLine:      utils.PointerTo("0 */4 * * *"),
-					OperationTime: utils.PointerTo(time.Now()),
-				},
-			}
-			err = client.PatchScanConfig(ctx, *apiScanConfig.Id, &updateScanConfig)
+			updateScanConfig := helpers.UpdateScanConfigToStartNow(apiScanConfig)
+			err = client.PatchScanConfig(ctx, *apiScanConfig.Id, updateScanConfig)
 			Expect(err).NotTo(HaveOccurred())
 
 			odataFilter := fmt.Sprintf(
