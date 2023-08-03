@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	vmClarityBackendContainerName = "vmclarity-backend"
+	vmclarityAPIServerServiceName = "apiserver"
 	stateRunning                  = "running"
 	healthStateHealthy            = "healthy"
 )
@@ -116,7 +116,8 @@ func (e *Environment) ServicesReady(ctx context.Context) (bool, error) {
 		return false, err
 	}
 
-	if len(services) != len(ps) {
+	initServices := e.InitServices()
+	if len(services)-len(initServices) != len(ps) {
 		return false, nil
 	}
 
@@ -137,12 +138,23 @@ func (e *Environment) Services() []string {
 	return services
 }
 
+func (e *Environment) InitServices() []string {
+	services := make([]string, 0, len(e.project.Services))
+	for _, srv := range e.project.Services {
+		val, ok := srv.Labels["type"]
+		if ok && val == "init" {
+			services = append(services, srv.Name)
+		}
+	}
+	return services
+}
+
 func (e *Environment) VMClarityURL() (*url.URL, error) {
 	var vmClarityBackend types.ServiceConfig
 	var ok bool
 
 	for _, srv := range e.project.Services {
-		if srv.Name == vmClarityBackendContainerName {
+		if srv.Name == vmclarityAPIServerServiceName {
 			vmClarityBackend = srv
 			ok = true
 			break
@@ -150,11 +162,11 @@ func (e *Environment) VMClarityURL() (*url.URL, error) {
 	}
 
 	if !ok {
-		return nil, errors.Errorf("container with name %s is not available", vmClarityBackendContainerName)
+		return nil, errors.Errorf("container with name %s is not available", vmclarityAPIServerServiceName)
 	}
 
 	if len(vmClarityBackend.Ports) < 1 {
-		return nil, errors.Errorf("container with name %s has no ports published", vmClarityBackendContainerName)
+		return nil, errors.Errorf("container with name %s has no ports published", vmclarityAPIServerServiceName)
 	}
 
 	port := vmClarityBackend.Ports[0].Published
@@ -166,6 +178,5 @@ func (e *Environment) VMClarityURL() (*url.URL, error) {
 	return &url.URL{
 		Scheme: "http",
 		Host:   fmt.Sprintf("%s:%s", hostIP, port),
-		Path:   "api",
 	}, nil
 }

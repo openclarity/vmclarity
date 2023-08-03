@@ -32,6 +32,13 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+      - type: bind
+        source: /tmp
+        target: /tmp
 
   ui:
     image: ${UIContainerImage:-ghcr.io/openclarity/vmclarity-ui:latest}
@@ -101,6 +108,8 @@ services:
       - type: volume
         source: grype-server-db
         target: /data
+    labels:
+      type: init
 
   grype-server:
     image: ${GrypeServerContainerImage:-ghcr.io/openclarity/grype-server:v0.4.0}
@@ -155,6 +164,14 @@ services:
       - source: swagger_config
         target: /usr/share/nginx/html/swagger-config.json
 
+  ubuntu:
+    image: ubuntu:latest
+    command: ["sleep", "infinity"]
+    profiles:
+      - integration-test
+    labels:
+      scanconfig: test
+
 configs:
   gateway_config:
     file: ./gateway.conf
@@ -164,3 +181,7 @@ configs:
 volumes:
   apiserver-db-data:
   grype-server-db:
+
+networks:
+  default:
+    name: vmclarity

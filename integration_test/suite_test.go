@@ -36,15 +36,12 @@ func beforeSuite(ctx context.Context) {
 	ctx = logr.NewContext(ctx, log)
 
 	opts, err := cli.NewProjectOptions(
-		[]string{"../installation/docker/docker-compose.yaml"},
+		[]string{"../installation/docker/dockercompose.yml"},
 		cli.WithName("vmclarity"),
 		cli.WithWorkingDirectory("../installation/docker"),
 		cli.WithResolvedPaths(true),
-		cli.WithProfiles([]string{""}),
+		cli.WithProfiles([]string{"integration-test"}),
 	)
-	Expect(err).NotTo(HaveOccurred())
-
-	_, err = os.Create(os.ExpandEnv("$HOME/vmclarity.db"))
 	Expect(err).NotTo(HaveOccurred())
 
 	err = cli.WithOsEnv(opts)
