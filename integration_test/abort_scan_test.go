@@ -21,14 +21,13 @@ var _ = Describe("Aborting a scan", func() {
 			err = client.PatchScanConfig(ctx, *apiScanConfig.Id, updateScanConfig)
 			Expect(err).NotTo(HaveOccurred())
 
-			odataFilter := fmt.Sprintf(
-				"scanConfig/id eq '%s' and state ne '%s' and state ne '%s'",
-				*apiScanConfig.Id,
-				models.ScanStateDone,
-				models.ScanStateFailed,
-			)
 			params := models.GetScansParams{
-				Filter: &odataFilter,
+				Filter: utils.PointerTo(fmt.Sprintf(
+					"scanConfig/id eq '%s' and state ne '%s' and state ne '%s'",
+					*apiScanConfig.Id,
+					models.ScanStateDone,
+					models.ScanStateFailed,
+				)),
 			}
 			var scans *models.Scans
 			Eventually(func() bool {
@@ -41,6 +40,19 @@ var _ = Describe("Aborting a scan", func() {
 				State: utils.PointerTo(models.ScanStateAborted),
 			})
 			Expect(err).NotTo(HaveOccurred())
+
+			params = models.GetScansParams{
+				Filter: utils.PointerTo(fmt.Sprintf(
+					"scanConfig/id eq '%s' and state eq '%s'",
+					*apiScanConfig.Id,
+					models.ScanStateAborted,
+				)),
+			}
+			Eventually(func() bool {
+				scans, err = client.GetScans(ctx, params)
+				Expect(err).NotTo(HaveOccurred())
+				return len(*scans.Items) == 1
+			}, time.Second*60, time.Second).Should(BeTrue())
 		})
 	})
 })
