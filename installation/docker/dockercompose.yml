@@ -158,8 +158,8 @@ services:
       - source: swagger_config
         target: /usr/share/nginx/html/swagger-config.json
 
-  ubuntu:
-    image: ubuntu:latest
+  alpine:
+    image: alpine:3.18.2
     command: ["sleep", "infinity"]
     profiles:
       - integration-test
