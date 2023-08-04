@@ -15,7 +15,7 @@ var _ = Describe("Running a basic scan", func() {
 	Context("which scans a docker container", func() {
 		It("should finish successfully", func(ctx SpecContext) {
 
-			// Check if asset discovered
+			By("waiting until test asset is found")
 			assetsParams := models.GetAssetsParams{
 				Filter: utils.PointerTo(fmt.Sprintf("assetInfo.containerName eq '/vmclarity-ubuntu-1'")),
 			}
@@ -25,14 +25,16 @@ var _ = Describe("Running a basic scan", func() {
 				return len(*assets.Items) == 1
 			}, time.Second*60, time.Second).Should(BeTrue())
 
+			By("applying a scan configuration")
 			apiScanConfig, err := client.PostScanConfig(ctx, helpers.GetDefaultScanConfig())
 			Expect(err).NotTo(HaveOccurred())
 
+			By("updating a scan configuration to run now")
 			updateScanConfig := helpers.UpdateScanConfigToStartNow(apiScanConfig)
 			err = client.PatchScanConfig(ctx, *apiScanConfig.Id, updateScanConfig)
 			Expect(err).NotTo(HaveOccurred())
 
-			// Check if scan is running
+			By("waiting until scan starts")
 			scanParams := models.GetScansParams{
 				Filter: utils.PointerTo(fmt.Sprintf(
 					"scanConfig/id eq '%s' and state ne '%s' and state ne '%s'",
@@ -48,7 +50,7 @@ var _ = Describe("Running a basic scan", func() {
 				return len(*scans.Items) == 1
 			}, time.Second*60, time.Second).Should(BeTrue())
 
-			// Check if scan is finished
+			By("waiting until scan state changes to done")
 			scanParams = models.GetScansParams{
 				Filter: utils.PointerTo(fmt.Sprintf(
 					"scanConfig/id eq '%s' and state eq '%s'",
@@ -59,8 +61,8 @@ var _ = Describe("Running a basic scan", func() {
 			Eventually(func() bool {
 				scans, err = client.GetScans(ctx, scanParams)
 				Expect(err).NotTo(HaveOccurred())
-				return len(*scans.Items) == 1
-			}, time.Second*360, time.Second).Should(BeTrue())
+				return len(*scans.Items) == 1 && *(*scans.Items)[0].State == models.ScanStateDone
+			}, time.Second*120, time.Second).Should(BeTrue())
 		})
 	})
 })

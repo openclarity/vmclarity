@@ -14,13 +14,16 @@ var _ = Describe("Aborting a scan", func() {
 
 	Context("which is running", func() {
 		It("should stop successfully", func(ctx SpecContext) {
+			By("applying a scan configuration")
 			apiScanConfig, err := client.PostScanConfig(ctx, helpers.GetDefaultScanConfig())
 			Expect(err).NotTo(HaveOccurred())
 
+			By("updating a scan configuration to run now")
 			updateScanConfig := helpers.UpdateScanConfigToStartNow(apiScanConfig)
 			err = client.PatchScanConfig(ctx, *apiScanConfig.Id, updateScanConfig)
 			Expect(err).NotTo(HaveOccurred())
 
+			By("waiting until scan starts")
 			params := models.GetScansParams{
 				Filter: utils.PointerTo(fmt.Sprintf(
 					"scanConfig/id eq '%s' and state ne '%s' and state ne '%s'",
@@ -36,11 +39,13 @@ var _ = Describe("Aborting a scan", func() {
 				return len(*scans.Items) == 1
 			}, time.Second*60, time.Second).Should(BeTrue())
 
+			By("aborting a scan")
 			err = client.PatchScan(ctx, *(*scans.Items)[0].Id, &models.Scan{
 				State: utils.PointerTo(models.ScanStateAborted),
 			})
 			Expect(err).NotTo(HaveOccurred())
 
+			By("waiting until scan state changes to aborted")
 			params = models.GetScansParams{
 				Filter: utils.PointerTo(fmt.Sprintf(
 					"scanConfig/id eq '%s' and state eq '%s'",
