@@ -57,6 +57,29 @@ func GetSBOMScanConfig() models.ScanConfig {
 	}
 }
 
+func GetCustomScanConfig(scope string, timeoutSeconds int) models.ScanConfig {
+	return models.ScanConfig{
+		Name: utils.PointerTo(uuid.New().String()),
+		ScanTemplate: &models.ScanTemplate{
+			AssetScanTemplate: &models.AssetScanTemplate{
+				ScanFamiliesConfig: &models.ScanFamiliesConfig{
+					Sbom: &models.SBOMConfig{
+						Enabled: utils.PointerTo(true),
+					},
+				},
+			},
+			Scope:          utils.PointerTo(scope),
+			TimeoutSeconds: utils.PointerTo(timeoutSeconds),
+		},
+		Scheduled: &models.RuntimeScheduleScanConfig{
+			CronLine: utils.PointerTo("0 */4 * * *"),
+			OperationTime: utils.PointerTo(
+				time.Date(2023, 1, 20, 15, 46, 18, 0, time.UTC),
+			),
+		},
+	}
+}
+
 func UpdateScanConfigToStartNow(config *models.ScanConfig) *models.ScanConfig {
 	return &models.ScanConfig{
 		Name: config.Name,
@@ -66,6 +89,7 @@ func UpdateScanConfigToStartNow(config *models.ScanConfig) *models.ScanConfig {
 			},
 			MaxParallelScanners: config.ScanTemplate.MaxParallelScanners,
 			Scope:               config.ScanTemplate.Scope,
+			TimeoutSeconds:      config.ScanTemplate.TimeoutSeconds,
 		},
 		Scheduled: &models.RuntimeScheduleScanConfig{
 			CronLine:      utils.PointerTo("0 */4 * * *"),
