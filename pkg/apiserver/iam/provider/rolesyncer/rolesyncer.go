@@ -13,28 +13,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package injector
+package rolesyncer
 
 import (
 	"fmt"
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
-	"github.com/openclarity/vmclarity/pkg/apiserver/iam/injector/envbearer"
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam/provider/rolesyncer/jwtrole"
 )
 
-// Options defines parameters for different iam.Injector.
-//
-// TODO: Extend to add support for other iam.Injector.
-type Options struct {
-	BearerTokenEnv string `json:"bearer-token-env"`
-}
-
-// New creates a new iam.Injector.
-func New(kind models.IamInjector, options Options) (iam.Injector, error) {
+// New creates a new iam.RoleSyncer.
+func New(kind models.IamRoleSyncer) (iam.RoleSyncer, error) {
 	switch kind {
-	case models.InjectorBearerToken:
-		return envbearer.New(options.BearerTokenEnv)
+	case models.RoleSyncerJWT:
+		return jwtrole.New()
 	default:
-		return nil, fmt.Errorf("injector: not implemented for %s", kind)
+		return nil, fmt.Errorf("rolesyncer: not implemented for %s", kind)
 	}
 }

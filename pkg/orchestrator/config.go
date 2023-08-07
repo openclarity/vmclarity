@@ -35,10 +35,11 @@ import (
 )
 
 const (
-	APIServerHost       = "APISERVER_HOST"
-	APIServerDisableTLS = "APISERVER_DISABLE_TLS"
-	APIServerPort       = "APISERVER_PORT"
-	HealthCheckAddress  = "HEALTH_CHECK_ADDRESS"
+	APIServerHost               = "APISERVER_HOST"
+	APIServerDisableTLS         = "APISERVER_DISABLE_TLS"
+	APIServerPort               = "APISERVER_PORT"
+	HealthCheckAddress  		= "HEALTH_CHECK_ADDRESS"
+	ApiServerAuthEnvBearerToken = "APISERVER_AUTH_ENV_BEARER_TOKEN"
 
 	DeleteJobPolicy               = "DELETE_JOB_POLICY"
 	ScannerContainerImage         = "SCANNER_CONTAINER_IMAGE"
@@ -101,9 +102,10 @@ const (
 type Config struct {
 	ProviderKind models.CloudProvider
 
-	APIServerHost      string `json:"apiserver-host,omitempty"`
-	APIServerPort      int    `json:"apiserver-port,omitempty"`
-	HealthCheckAddress string `json:"health-check-address,omitempty"`
+	APIServerHost               string `json:"apiserver-host,omitempty"`
+	APIServerPort               int    `json:"apiserver-port,omitempty"`
+	HealthCheckAddress 			string `json:"health-check-address,omitempty"`
+	ApiServerAuthEnvBearerToken string `json:"apiserver-auth-env-bearer-token,omitempty"`
 
 	// The Orchestrator starts the Controller(s) in a sequence and the ControllerStartupDelay is used for waiting
 	// before starting each Controller to avoid them hitting the API at the same time and allow one Controller
@@ -181,6 +183,7 @@ func LoadConfig() (*Config, error) {
 
 	apiServerHost := viper.GetString(APIServerHost)
 	apiServerPort := viper.GetInt(APIServerPort)
+	apiServerAuthEnvBearerToken := viper.GetString(ApiServerAuthEnvBearerToken)
 
 	scannerAPIServerAddress := viper.GetString(ScannerAPIServerAddress)
 	if scannerAPIServerAddress == "" {
@@ -193,11 +196,12 @@ func LoadConfig() (*Config, error) {
 	}
 
 	c := &Config{
-		APIServerHost:          apiServerHost,
-		APIServerPort:          apiServerPort,
-		HealthCheckAddress:     viper.GetString(HealthCheckAddress),
-		ProviderKind:           providerKind,
-		ControllerStartupDelay: viper.GetDuration(ControllerStartupDelay),
+		APIServerHost:               apiServerHost,
+		APIServerPort:               apiServerPort,
+		HealthCheckAddress:     	 viper.GetString(HealthCheckAddress),
+		ApiServerAuthEnvBearerToken: apiServerAuthEnvBearerToken,
+		ProviderKind:                providerKind,
+		ControllerStartupDelay:      viper.GetDuration(ControllerStartupDelay),
 		DiscoveryConfig: discovery.Config{
 			DiscoveryInterval: viper.GetDuration(DiscoveryInterval),
 		},

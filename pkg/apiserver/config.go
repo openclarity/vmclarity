@@ -29,16 +29,6 @@ import (
 const (
 	IAMEnabledEnvVar = "IAM_ENABLED"
 
-	AuthOIDCIssuerEnvVar        = "AUTH_OIDC_ISSUER"
-	AuthOIDCClientIDEnvVar      = "AUTH_OIDC_CLIENT_ID"
-	AuthOIDCClientSecretEnvVar  = "AUTH_OIDC_CLIENT_SECRET" // #nosec G101
-	AuthOIDCTokenURLEnvVar      = "AUTH_OIDC_TOKEN_URL"     // #nosec G101
-	AuthOIDCIntrospectURLEnvVar = "AUTH_OIDC_INTROSPECT_URL"
-
-	AuthRoleSyncJwtRoleClaimEnvVar = "AUTH_ROLE_SYNC_JWT_ROLE_CLAIM"
-
-	AuthorizationRbacRuleFilePathEnvVar = "AUTHZ_RBAC_RULE_FILE_PATH"
-
 	BackendRestHost       = "BACKEND_REST_HOST"
 	BackendRestDisableTLS = "BACKEND_REST_DISABLE_TLS" // nolint:gosec
 	BackendRestPort       = "BACKEND_REST_PORT"
@@ -54,39 +44,15 @@ const (
 
 	LocalDBPath = "LOCAL_DB_PATH"
 
-	FakeDataEnvVar                    = "FAKE_DATA"
-	OrchestratorAuthBearerTokenEnvVar = "ORCHESTRATOR_AUTH_BEARER_TOKEN"
-	DisableOrchestrator               = "DISABLE_ORCHESTRATOR"
+	FakeDataEnvVar      = "FAKE_DATA"
+	DisableOrchestrator = "DISABLE_ORCHESTRATOR"
 
 	LogLevel = "LOG_LEVEL"
 )
 
-type AuthenticationOIDC struct {
-	Issuer        string `json:"issuer"`
-	ClientID      string `json:"client-id"`
-	ClientSecret  string `json:"client-secret"`
-	TokenURL      string `json:"token-url"`
-	IntrospectURL string `json:"introspect-url"`
-}
-
-type Authentication struct {
-	OIDC AuthenticationOIDC `json:"oidc"` // iam.Provider - OpenID Connect
-}
-
-type AuthRoleSynchronization struct {
-	JWTRoleClaim string `json:"jwt-role-claim"` // iam.RoleSyncer - JWT Role Claim
-}
-
-type Authorization struct {
-	RBACRuleFilePath string `json:"rbac-local"` // iam.Authorizer - RBAC Local
-}
-
 type Config struct {
 	// IAM config
-	IamEnabled              bool                    `json:"iam-enabled"`
-	Authentication          Authentication          `json:"authentication"`
-	AuthRoleSynchronization AuthRoleSynchronization `json:"auth-role-synchronization"`
-	Authorization           Authorization           `json:"authorization"`
+	IamEnabled bool `json:"iam-enabled"`
 
 	// Backend
 	BackendRestHost    string `json:"backend-rest-host,omitempty"`
@@ -94,8 +60,7 @@ type Config struct {
 	HealthCheckAddress string `json:"health-check-address,omitempty"`
 
 	// Orchestrator
-	DisableOrchestrator         bool   `json:"disable_orchestrator"`
-	OrchestratorAuthBearerToken string `json:"orchestrator-auth-bearer-token"`
+	DisableOrchestrator bool `json:"disable_orchestrator"`
 
 	// Database config
 	DatabaseDriver   string `json:"database-driver,omitempty"`
@@ -151,29 +116,12 @@ func LoadConfig() (*Config, error) {
 	// IAM
 	config.IamEnabled = viper.GetBool(IAMEnabledEnvVar)
 
-	// Auth - OIDC
-	oidc := &config.Authentication.OIDC
-	oidc.Issuer = viper.GetString(AuthOIDCIssuerEnvVar)
-	oidc.ClientID = viper.GetString(AuthOIDCClientIDEnvVar)
-	oidc.ClientSecret = viper.GetString(AuthOIDCClientSecretEnvVar)
-	oidc.TokenURL = viper.GetString(AuthOIDCTokenURLEnvVar)
-	oidc.IntrospectURL = viper.GetString(AuthOIDCIntrospectURLEnvVar)
-
-	// AuthRoleSynchronization - JWT Role Claim
-	syncRole := &config.AuthRoleSynchronization
-	syncRole.JWTRoleClaim = viper.GetString(AuthRoleSyncJwtRoleClaimEnvVar)
-
-	// Authorization - RBAC Local
-	authzRbacLocal := &config.Authorization
-	authzRbacLocal.RBACRuleFilePath = viper.GetString(AuthorizationRbacRuleFilePathEnvVar)
-
 	// Backend
 	config.BackendRestHost = viper.GetString(BackendRestHost)
 	config.BackendRestPort = viper.GetInt(BackendRestPort)
 	config.HealthCheckAddress = viper.GetString(HealthCheckAddress)
 
 	config.DisableOrchestrator = viper.GetBool(DisableOrchestrator)
-	config.OrchestratorAuthBearerToken = viper.GetString(OrchestratorAuthBearerTokenEnvVar)
 
 	// Database
 	config.DatabaseDriver = viper.GetString(DatabaseDriver)

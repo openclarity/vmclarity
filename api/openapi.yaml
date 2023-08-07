@@ -1316,6 +1316,26 @@ components:
         - External
         - Kubernetes
 
+    IamAuthenticator:
+      type: string
+      enum:
+        - AuthenticatorOIDC
+
+    IamRoleSyncer:
+      type: string
+      enum:
+        - RoleSyncerJWT
+
+    IamAuthorizer:
+      type: string
+      enum:
+        - AuthorizerLocalRBAC
+
+    IamInjector:
+      type: string
+      enum:
+        - InjectorBearerToken
+
     Scans:
       type: object
       properties:

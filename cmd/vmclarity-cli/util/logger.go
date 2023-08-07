@@ -13,26 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package injector
+package util
 
 import (
-	"context"
-	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
-	"net/http"
+	"github.com/sirupsen/logrus"
 )
 
-type tokenInjector struct {
-	accessToken string
-}
-
-// newTokenInjector creates an iam.Injector which adds personal access token to request.
-func newTokenInjector(accessToken string) (iam.Injector, error) {
-	return &tokenInjector{
-		accessToken: accessToken,
-	}, nil
-}
-
-func (injector *tokenInjector) Inject(_ context.Context, request *http.Request) error {
-	request.Header.Set("Authorization", "Bearer "+injector.accessToken)
-	return nil
-}
+var Logger *logrus.Entry

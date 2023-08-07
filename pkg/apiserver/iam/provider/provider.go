@@ -17,25 +17,66 @@ package provider
 
 import (
 	"fmt"
-
-	"github.com/openclarity/vmclarity/pkg/apiserver/config"
+	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
-	"github.com/openclarity/vmclarity/pkg/apiserver/iam/authorizer"
-	"github.com/openclarity/vmclarity/pkg/apiserver/iam/rolesyncer"
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam/provider/authenticator"
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam/provider/authorizer"
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam/provider/rolesyncer"
 )
 
-// NewProvider creates a new iam.Provider from config.
-// TODO: Use Factory pattern when this supports multiple iam.Provider.
-func NewProvider(config config.Config) (iam.Provider, error) {
-	roleSyncer, err := rolesyncer.NewRoleSyncer(config.AuthRoleSynchronization)
+// New creates a new iam.Provider.
+//
+// TODO: Add support for creating dynamic types.
+func New() (iam.Provider, error) {
+	auth, err := authenticator.New(models.AuthenticatorOIDC)
 	if err != nil {
-		return nil, fmt.Errorf("failed creating role syncer: %w", err)
+		return nil, fmt.Errorf("iam: failed creating authenticator: %w", err)
 	}
 
-	authzer, err := authorizer.NewAuthorizer(config.Authorization)
+	roleSyncer, err := rolesyncer.New(models.RoleSyncerJWT)
 	if err != nil {
-		return nil, fmt.Errorf("failed creating authorizer: %w", err)
+		return nil, fmt.Errorf("iam: failed creating role syncer: %w", err)
 	}
 
-	return newOIDCIdentityProvider(config.Authentication.OIDC, roleSyncer, authzer)
+	authz, err := authorizer.New(models.AuthorizerLocalRBAC)
+	if err != nil {
+		return nil, fmt.Errorf("iam: failed creating authorizer: %w", err)
+	}
+
+	return &provider{
+		authenticator: auth,
+		roleSyncer:    roleSyncer,
+		authorizer:    authz,
+	}, nil
 }
+
+// NewFromParams creates a new iam.Provider from params.
+func NewFromParams(authenticator iam.Authenticator, roleSyncer iam.RoleSyncer, authorizer iam.Authorizer) (iam.Provider, error) {
+	if authenticator == nil {
+		return nil, fmt.Errorf("iam: authenticator is nil")
+	}
+	if roleSyncer == nil {
+		return nil, fmt.Errorf("iam: role syncer is nil")
+	}
+	if authorizer == nil {
+		return nil, fmt.Errorf("iam: authorizer is nil")
+	}
+
+	return &provider{
+		authenticator: authenticator,
+		roleSyncer:    roleSyncer,
+		authorizer:    authorizer,
+	}, nil
+}
+
+type provider struct {
+	authenticator iam.Authenticator
+	roleSyncer    iam.RoleSyncer
+	authorizer    iam.Authorizer
+}
+
+func (p *provider) Authenticator() iam.Authenticator { return p.authenticator }
+
+func (p *provider) RoleSyncer() iam.RoleSyncer { return p.roleSyncer }
+
+func (p *provider) Authorizer() iam.Authorizer { return p.authorizer }

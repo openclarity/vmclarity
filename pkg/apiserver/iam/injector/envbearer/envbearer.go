@@ -13,28 +13,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package injector
+package envbearer
 
 import (
+	"context"
 	"fmt"
-	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
-	"github.com/openclarity/vmclarity/pkg/apiserver/iam/injector/envbearer"
+	"net/http"
+	"os"
 )
 
-// Options defines parameters for different iam.Injector.
-//
-// TODO: Extend to add support for other iam.Injector.
-type Options struct {
-	BearerTokenEnv string `json:"bearer-token-env"`
+// New creates an injector which adds Bearer token read from env variable to request.
+func New(tokenEnv string) (iam.Injector, error) {
+	if tokenEnv == "" {
+		return nil, fmt.Errorf("bearer: cannot use emtpy token env variable for injector")
+	}
+
+	return &bearer{
+		tokenEnv: tokenEnv,
+	}, nil
 }
 
-// New creates a new iam.Injector.
-func New(kind models.IamInjector, options Options) (iam.Injector, error) {
-	switch kind {
-	case models.InjectorBearerToken:
-		return envbearer.New(options.BearerTokenEnv)
-	default:
-		return nil, fmt.Errorf("injector: not implemented for %s", kind)
-	}
+type bearer struct {
+	tokenEnv string
+}
+
+func (injector *bearer) Inject(_ context.Context, request *http.Request) error {
+	request.Header.Set("Authorization", "Bearer "+os.Getenv(injector.tokenEnv))
+	return nil
 }

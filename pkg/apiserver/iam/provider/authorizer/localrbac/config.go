@@ -13,28 +13,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package injector
+package localrbac
 
 import (
 	"fmt"
-	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
-	"github.com/openclarity/vmclarity/pkg/apiserver/iam/injector/envbearer"
+	"github.com/spf13/viper"
 )
 
-// Options defines parameters for different iam.Injector.
-//
-// TODO: Extend to add support for other iam.Injector.
-type Options struct {
-	BearerTokenEnv string `json:"bearer-token-env"`
+const authzLocalRbacRuleFilePathEnvVar = "AUTHZ_LOCAL_RBAC_RULE_FILEPATH"
+
+type Config struct {
+	RuleFilePath string `json:"rule-filepath"`
 }
 
-// New creates a new iam.Injector.
-func New(kind models.IamInjector, options Options) (iam.Injector, error) {
-	switch kind {
-	case models.InjectorBearerToken:
-		return envbearer.New(options.BearerTokenEnv)
-	default:
-		return nil, fmt.Errorf("injector: not implemented for %s", kind)
+func LoadConfig() (*Config, error) {
+	return &Config{
+		RuleFilePath: viper.GetString(authzLocalRbacRuleFilePathEnvVar),
+	}, nil
+}
+
+func (c *Config) Validate() error {
+	if c.RuleFilePath == "" {
+		return fmt.Errorf("localrbac: must specify issuer")
 	}
+
+	return nil
 }

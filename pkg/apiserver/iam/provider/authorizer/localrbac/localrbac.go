@@ -13,44 +13,55 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package authorizer
+package localrbac
 
 import (
 	"context"
 	_ "embed"
 	"fmt"
-
 	"github.com/casbin/casbin"
 	fileadapter "github.com/casbin/casbin/persist/file-adapter"
-
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
 )
 
 //go:embed rbac_model.conf
 var rbacModel string
 
-// localRBACAuthorizer enforces RBAC rules loaded from a local file, e.g.
-// https://www.aserto.com/blog/building-rbac-in-go
-type localRBACAuthorizer struct {
-	enforcer *casbin.Enforcer
-}
-
-func newLocalRBACAuthorizer(csvRuleFilePath string) (iam.Authorizer, error) {
-	enforcer, err := casbin.NewEnforcerSafe(casbin.NewModel(rbacModel), fileadapter.NewAdapter(csvRuleFilePath))
+// New creates an authorizer which will use a local CSV file to configure role rules.
+func New() (iam.Authorizer, error) {
+	// Load config
+	config, err := LoadConfig()
 	if err != nil {
-		return nil, fmt.Errorf("failed to create local authorizer: %w", err)
+		return nil, fmt.Errorf("localrbac: failed to load config: %w", err)
+	}
+	if err := config.Validate(); err != nil {
+		return nil, fmt.Errorf("localrbac: failed to validate config: %w", err)
 	}
 
-	return &localRBACAuthorizer{
+	// Create enforcer
+	enforcer, err := casbin.NewEnforcerSafe(casbin.NewModel(rbacModel), fileadapter.NewAdapter(config.RuleFilePath))
+	if err != nil {
+		return nil, fmt.Errorf("localrbac: failed to create local rbac authorizer: %w", err)
+	}
+
+	// Return local RBAC Authorizer
+	return &localRBAC{
 		enforcer: enforcer,
 	}, nil
 }
 
-func (authorizer *localRBACAuthorizer) CanPerform(_ context.Context, user *iam.User, asset, action string) (bool, error) {
-	for _, role := range user.Roles {
+// localRBAC enforces RBAC rules loaded from a local file.
+//
+// Check examples at: https://www.aserto.com/blog/building-rbac-in-go
+type localRBAC struct {
+	enforcer *casbin.Enforcer
+}
+
+func (authorizer *localRBAC) CanPerform(_ context.Context, user *iam.User, asset, action string) (bool, error) {
+	for _, role := range user.GetRoles() {
 		allowed, err := authorizer.enforcer.EnforceSafe(role, asset, action)
 		if err != nil {
-			return false, fmt.Errorf("failed checking auth role: %w", err)
+			return false, fmt.Errorf("localrbac: failed checking auth role: %w", err)
 		}
 		if allowed {
 			return true, nil

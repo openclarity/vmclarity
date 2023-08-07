@@ -61,6 +61,26 @@ const (
 	InfoTypeUNKNOWN                     InfoType = "UNKNOWN"
 )
 
+// Defines values for IamAuthenticator.
+const (
+	AuthenticatorOIDC IamAuthenticator = "AuthenticatorOIDC"
+)
+
+// Defines values for IamAuthorizer.
+const (
+	AuthorizerLocalRBAC IamAuthorizer = "AuthorizerLocalRBAC"
+)
+
+// Defines values for IamInjector.
+const (
+	InjectorBearerToken IamInjector = "InjectorBearerToken"
+)
+
+// Defines values for IamRoleSyncer.
+const (
+	RoleSyncerJWT IamRoleSyncer = "RoleSyncerJWT"
+)
+
 // Defines values for MisconfigurationSeverity.
 const (
 	MisconfigurationHighSeverity   MisconfigurationSeverity = "MisconfigurationHighSeverity"

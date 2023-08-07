@@ -18,6 +18,7 @@ package rest
 import (
 	"context"
 	"fmt"
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam/provider"
 	"time"
 
@@ -26,11 +27,9 @@ import (
 	"github.com/deepmap/oapi-codegen/pkg/middleware"
 	"github.com/labstack/echo/v4"
 	echomiddleware "github.com/labstack/echo/v4/middleware"
-	"github.com/openclarity/vmclarity/pkg/apiserver/config"
-	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
-
 	"github.com/openclarity/vmclarity/api/server"
 	"github.com/openclarity/vmclarity/pkg/apiserver/common"
+	"github.com/openclarity/vmclarity/pkg/apiserver/config"
 	databaseTypes "github.com/openclarity/vmclarity/pkg/apiserver/database/types"
 	"github.com/openclarity/vmclarity/pkg/shared/log"
 )
@@ -77,7 +76,7 @@ func createEchoServer(config *config.Config, dbHandler databaseTypes.Database) (
 	// Use oapi-codegen validation middleware to validate the API group against the
 	// OpenAPI schema along with IAM provider if configured.
 	if config.IamEnabled {
-		iamProvider, err := provider.NewProvider(*config)
+		iamProvider, err := provider.New()
 		if err != nil {
 			return nil, fmt.Errorf("failed to create IAM provider: %v", err)
 		}
@@ -90,7 +89,7 @@ func createEchoServer(config *config.Config, dbHandler databaseTypes.Database) (
 	} else {
 		e.Use(middleware.OapiRequestValidator(swagger))
 	}
-	
+
 	// Register paths with the backend implementation
 	server.RegisterHandlers(e, &ServerImpl{
 		dbHandler: dbHandler,

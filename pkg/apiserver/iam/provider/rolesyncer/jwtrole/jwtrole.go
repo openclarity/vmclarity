@@ -13,44 +13,48 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package rolesyncer
+package jwtrole
 
 import (
 	"context"
 	"fmt"
-
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
 )
 
-var RoleSyncerTypeJwt iam.RoleSyncerType = "jwt"
+// New creates a role syncer which syncs User roles from JWT token claims.
+func New() (iam.RoleSyncer, error) {
+	// Load config
+	config, err := LoadConfig()
+	if err != nil {
+		return nil, fmt.Errorf("jwtrole: failed to load config: %w", err)
+	}
+	if err := config.Validate(); err != nil {
+		return nil, fmt.Errorf("jwtrole: failed to validate config: %w", err)
+	}
+
+	// Return JWT RoleSyncer
+	return &jwtRoleSyncer{
+		roleClaim: config.RoleClaim,
+	}, nil
+}
 
 type jwtRoleSyncer struct {
 	roleClaim string
 }
 
-func newJwtRoleSyncer(roleClaim string) iam.RoleSyncer {
-	return &jwtRoleSyncer{
-		roleClaim: roleClaim,
-	}
-}
-
-func (roleSyncer *jwtRoleSyncer) Type() iam.RoleSyncerType {
-	return RoleSyncerTypeJwt
-}
-
-func (roleSyncer *jwtRoleSyncer) Sync(ctx context.Context, user *iam.User) error {
+func (roleSyncer *jwtRoleSyncer) Sync(_ context.Context, user *iam.User) error {
 	// Check user
 	if user == nil {
-		return fmt.Errorf("no user provider")
+		return fmt.Errorf("jwtrole: no user provider")
 	}
 	if user.JwtClaims == nil {
-		return fmt.Errorf("no user jwt claims found")
+		return fmt.Errorf("jwtrole: no user jwt claims found")
 	}
 
 	// Get user roles from token
 	tokenRoles, ok := user.JwtClaims[roleSyncer.roleClaim]
 	if !ok {
-		return fmt.Errorf("cannot get user roles from token claim")
+		return fmt.Errorf("jwtrole: cannot get user roles %s from token claim", roleSyncer.roleClaim)
 	}
 
 	// Get user roles from token roles
@@ -66,10 +70,10 @@ func (roleSyncer *jwtRoleSyncer) Sync(ctx context.Context, user *iam.User) error
 	case []string:
 		userRoles = tokenRoles
 	default:
-		return fmt.Errorf("cannot extract roles from token roles type %T", tokenRoles)
+		return fmt.Errorf("jwtrole: cannot extract roles from token roles type %T", tokenRoles)
 	}
 
 	// Sync user roles
-	user.Roles = userRoles
+	user.SetRoles(userRoles)
 	return nil
 }

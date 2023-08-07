@@ -13,15 +13,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package rolesyncer
+package jwtrole
 
 import (
-	"github.com/openclarity/vmclarity/pkg/apiserver/config"
-	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
+	"fmt"
+	"github.com/spf13/viper"
 )
 
-// NewRoleSyncer creates a new iam.RoleSyncer from config.
-// TODO: Use Factory pattern when this supports multiple iam.RoleSyncer.
-func NewRoleSyncer(config config.AuthRoleSynchronization) (iam.RoleSyncer, error) {
-	return newJwtRoleSyncer(config.JWTRoleClaim), nil
+const roleSyncerJwtRoleClaimEnvVar = "ROLESYNCER_JWT_ROLE_CLAIM"
+
+type Config struct {
+	RoleClaim string `json:"role-claim"`
+}
+
+func LoadConfig() (*Config, error) {
+	return &Config{
+		RoleClaim: viper.GetString(roleSyncerJwtRoleClaimEnvVar),
+	}, nil
+}
+
+func (c *Config) Validate() error {
+	if c.RoleClaim == "" {
+		return fmt.Errorf("jwtrole: no role claim specified")
+	}
+	return nil
 }

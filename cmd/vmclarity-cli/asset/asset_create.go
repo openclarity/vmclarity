@@ -24,7 +24,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/openclarity/vmclarity/cmd/vmclarity-cli/logutil"
+	"github.com/openclarity/vmclarity/cmd/vmclarity-cli/util"
 	cliutils "github.com/openclarity/vmclarity/pkg/cli/utils"
 
 	"github.com/openclarity/vmclarity/api/models"
@@ -37,40 +37,40 @@ var AssetCreateCmd = &cobra.Command{
 	Short: "Create asset",
 	Long:  `It creates asset. It's useful in the CI/CD mode without VMClarity orchestration`,
 	Run: func(cmd *cobra.Command, args []string) {
-		logutil.Logger.Infof("Creating asset...")
+		util.Logger.Infof("Creating asset...")
 		filename, err := cmd.Flags().GetString("file")
 		if err != nil {
-			logutil.Logger.Fatalf("Unable to get asset json file name: %v", err)
+			util.Logger.Fatalf("Unable to get asset json file name: %v", err)
 		}
 		server, err := cmd.Flags().GetString("server")
 		if err != nil {
-			logutil.Logger.Fatalf("Unable to get VMClarity server address: %v", err)
+			util.Logger.Fatalf("Unable to get VMClarity server address: %v", err)
 		}
 		assetType, err := getAssetFromJSONFile(filename)
 		if err != nil {
-			logutil.Logger.Fatalf("Failed to get asset from json file: %v", err)
+			util.Logger.Fatalf("Failed to get asset from json file: %v", err)
 		}
 		updateIfExists, err := cmd.Flags().GetBool("update-if-exists")
 		if err != nil {
-			logutil.Logger.Fatalf("Unable to get update-if-exists flag vaule: %v", err)
+			util.Logger.Fatalf("Unable to get update-if-exists flag vaule: %v", err)
 		}
 		jsonPath, err := cmd.Flags().GetString("jsonpath")
 		if err != nil {
-			logutil.Logger.Fatalf("Unable to get jsonpath: %v", err)
+			util.Logger.Fatalf("Unable to get jsonpath: %v", err)
 		}
 
 		_, err = assetType.ValueByDiscriminator()
 		if err != nil {
-			logutil.Logger.Fatalf("Failed to determine asset type: %v", err)
+			util.Logger.Fatalf("Failed to determine asset type: %v", err)
 		}
 
 		asset, err := createAsset(context.TODO(), assetType, server, updateIfExists)
 		if err != nil {
-			logutil.Logger.Fatalf("Failed to create asset: %v", err)
+			util.Logger.Fatalf("Failed to create asset: %v", err)
 		}
 
 		if err := cliutils.PrintJSONData(asset, jsonPath); err != nil {
-			logutil.Logger.Fatalf("Failed to print jsonpath: %v", err)
+			util.Logger.Fatalf("Failed to print jsonpath: %v", err)
 		}
 	},
 }
@@ -80,11 +80,13 @@ func init() {
 	AssetCreateCmd.Flags().String("server", "", "VMClarity server to create asset to, for example: http://localhost:9999/api")
 	AssetCreateCmd.Flags().Bool("update-if-exists", false, "the asset will be updated the asset if it exists")
 	AssetCreateCmd.Flags().String("jsonpath", "", "print selected value of asset")
+	util.RegisterBearerTokenEnvVarFlag(AssetCreateCmd.Flags())
+
 	if err := AssetCreateCmd.MarkFlagRequired("file"); err != nil {
-		logutil.Logger.Fatalf("Failed to mark file flag as required: %v", err)
+		util.Logger.Fatalf("Failed to mark file flag as required: %v", err)
 	}
 	if err := AssetCreateCmd.MarkFlagRequired("server"); err != nil {
-		logutil.Logger.Fatalf("Failed to mark server flag as required: %v", err)
+		util.Logger.Fatalf("Failed to mark server flag as required: %v", err)
 	}
 }
 
@@ -117,7 +119,7 @@ func getAssetFromJSONFile(filename string) (*models.AssetType, error) {
 }
 
 func createAsset(ctx context.Context, assetType *models.AssetType, server string, updateIfExists bool) (*models.Asset, error) {
-	client, err := backendclient.Create(server)
+	client, err := backendclient.Create(server, backendclient.WithBearerTokenEnvVar(util.BearerTokenEnvVar))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create VMClarity API client: %w", err)
 	}

@@ -44,14 +44,16 @@ import (
 )
 
 const (
-	LogLevelFlag         = "log-level"
-	LogLevelDefaultValue = "warning"
-	ExecutableName       = "vmclarity-ui-backend"
+	bearerTokenEnvVarFlag = "bearer-token-env"
+	LogLevelFlag          = "log-level"
+	LogLevelDefaultValue  = "warning"
+	ExecutableName        = "vmclarity-ui-backend"
 )
 
 var (
-	logLevel = LogLevelDefaultValue
-	rootCmd  = &cobra.Command{
+	bearerTokenEnvVar = ""
+	logLevel          = LogLevelDefaultValue
+	rootCmd           = &cobra.Command{
 		Use:   ExecutableName,
 		Short: "VMClarity UI Backend",
 		Long:  "VMClarity UI Backend",
@@ -74,6 +76,11 @@ func init() {
 		LogLevelFlag,
 		LogLevelDefaultValue,
 		"Set log level [panic fatal error warning info debug trace]")
+
+	cmdRun.PersistentFlags().StringVar(&bearerTokenEnvVar,
+		bearerTokenEnvVarFlag,
+		"",
+		"Set API server authentication bearer token env variable to use for auth data request injection")
 
 	cmdVersion := cobra.Command{
 		Use:     "version",
@@ -109,7 +116,7 @@ func runCommand(cmd *cobra.Command, _ []string) {
 	healthServer.SetIsReady(false)
 
 	backendAddress := fmt.Sprintf("http://%s", net.JoinHostPort(config.APIServerHost, strconv.Itoa(config.APIServerPort)))
-	backendClient, err := backendclient.Create(backendAddress)
+	backendClient, err := backendclient.Create(backendAddress, backendclient.WithBearerTokenEnvVar(bearerTokenEnvVar))
 	if err != nil {
 		logger.Fatalf("Failed to create a backend client: %v", err)
 	}

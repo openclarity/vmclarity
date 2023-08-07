@@ -13,10 +13,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package logutil
+package authorizer
 
 import (
-	"github.com/sirupsen/logrus"
+	"fmt"
+	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam/provider/authorizer/localrbac"
 )
 
-var Logger *logrus.Entry
+// New creates a new iam.Authorizer.
+func New(kind models.IamAuthorizer) (iam.Authorizer, error) {
+	switch kind {
+	case models.AuthorizerLocalRBAC:
+		return localrbac.New()
+	default:
+		return nil, fmt.Errorf("authz: not implemented for %s", kind)
+	}
+}

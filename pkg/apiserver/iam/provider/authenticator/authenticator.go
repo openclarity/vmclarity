@@ -13,15 +13,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package authorizer
+package authenticator
 
 import (
-	"github.com/openclarity/vmclarity/pkg/apiserver/config"
+	"fmt"
+	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam/provider/authenticator/oidc"
 )
 
-// NewAuthorizer creates a new iam.Authorizer from config.
-// TODO: Use Factory pattern when this supports multiple iam.Authorizer.
-func NewAuthorizer(config config.Authorization) (iam.Authorizer, error) {
-	return newLocalRBACAuthorizer(config.RBACRuleFilePath)
+// New creates a new iam.Authenticator.
+func New(kind models.IamAuthenticator) (iam.Authenticator, error) {
+	switch kind {
+	case models.AuthenticatorOIDC:
+		return oidc.New()
+	default:
+		return nil, fmt.Errorf("auth: not implemented for %s", kind)
+	}
 }
