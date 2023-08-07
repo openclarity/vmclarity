@@ -28,6 +28,6 @@ func New(kind models.IamAuthorizer) (iam.Authorizer, error) {
 	case models.AuthorizerLocalRBAC:
 		return localrbac.New()
 	default:
-		return nil, fmt.Errorf("authz: not implemented for %s", kind)
+		return nil, fmt.Errorf("factory not implemented for Authorizer=%s", kind)
 	}
 }

@@ -49,20 +49,20 @@ func LoadConfig() (*Config, error) {
 func (c *Config) Validate() error {
 	// Validate params
 	if c.Issuer == "" {
-		return fmt.Errorf("oidc: must specify issuer")
+		return fmt.Errorf("must specify issuer for Authenticator=OIDC")
 	}
 	if c.ClientID == "" {
-		return fmt.Errorf("oidc: must specify client id")
+		return fmt.Errorf("must specify client id for Authenticator=OIDC")
 	}
 	if c.ClientSecret == "" {
-		return fmt.Errorf("oidc: must specify client secret")
+		return fmt.Errorf("must specify client secret for Authenticator=OIDC")
 	}
 
 	// Validate endpoints, it must specify either none or both endpoints
 	hasTokenUrl := c.TokenURL != ""
 	hasIntrospectUrl := c.IntrospectURL != ""
 	if hasTokenUrl != hasIntrospectUrl {
-		return fmt.Errorf("oidc: must specify both token and introspect endpoints")
+		return fmt.Errorf("must specify both token and introspect endpoints for Authenticator=OIDC")
 	}
 
 	return nil

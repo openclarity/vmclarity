@@ -28,6 +28,6 @@ func New(kind models.IamRoleSyncer) (iam.RoleSyncer, error) {
 	case models.RoleSyncerJWT:
 		return jwtrole.New()
 	default:
-		return nil, fmt.Errorf("rolesyncer: not implemented for %s", kind)
+		return nil, fmt.Errorf("factory not implemented for RoleSyncer=%s", kind)
 	}
 }

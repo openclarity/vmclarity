@@ -34,7 +34,7 @@ func LoadConfig() (*Config, error) {
 
 func (c *Config) Validate() error {
 	if c.RuleFilePath == "" {
-		return fmt.Errorf("localrbac: must specify issuer")
+		return fmt.Errorf("must specify issuer for Authorizer=localrbac")
 	}
 
 	return nil

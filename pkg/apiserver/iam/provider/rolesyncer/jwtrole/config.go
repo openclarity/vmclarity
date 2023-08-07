@@ -34,7 +34,7 @@ func LoadConfig() (*Config, error) {
 
 func (c *Config) Validate() error {
 	if c.RoleClaim == "" {
-		return fmt.Errorf("jwtrole: no role claim specified")
+		return fmt.Errorf("must specify role claim for RoleSyncer=jwtrole")
 	}
 	return nil
 }

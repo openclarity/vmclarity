@@ -41,13 +41,14 @@ AUTH_OIDC_CLIENT_ID=app_client_id
 AUTH_OIDC_CLIENT_SECRET=app_client_secret
 
 # RoleSynchronization config
-AUTH_ROLE_SYNC_JWT_ROLE_CLAIM=roles-claim-key
+ROLESYNCER_JWT_ROLE_CLAIM=roles-claim-key
 
 # Authorization config
-AUTHZ_RBAC_RULE_FILE_PATH=path-to/rbac_rule_policy_example.csv
+AUTHZ_LOCAL_RBAC_RULE_FILEPATH=path-to/rbac_rule_policy_example.csv
 
 # AuthInjection - Client service account
-ORCHESTRATOR_AUTH_BEARER_TOKEN=orchestrator-pam
+APISERVER_BEARER_TOKEN_ENV_VAR=APISERVER_BEARER_TOKEN
+APISERVER_BEARER_TOKEN=Service Account PAM
 ```
 
 ### TODO

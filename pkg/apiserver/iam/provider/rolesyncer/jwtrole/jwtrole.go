@@ -26,10 +26,10 @@ func New() (iam.RoleSyncer, error) {
 	// Load config
 	config, err := LoadConfig()
 	if err != nil {
-		return nil, fmt.Errorf("jwtrole: failed to load config: %w", err)
+		return nil, fmt.Errorf("failed to load config for RoleSyncer=jwtRole: %w", err)
 	}
 	if err := config.Validate(); err != nil {
-		return nil, fmt.Errorf("jwtrole: failed to validate config: %w", err)
+		return nil, fmt.Errorf("failed to validate config for RoleSyncer=jwtRole: %w", err)
 	}
 
 	// Return JWT RoleSyncer
@@ -45,16 +45,16 @@ type jwtRoleSyncer struct {
 func (roleSyncer *jwtRoleSyncer) Sync(_ context.Context, user *iam.User) error {
 	// Check user
 	if user == nil {
-		return fmt.Errorf("jwtrole: no user provider")
+		return fmt.Errorf("no user provider. RoleSyncer=jwtRole")
 	}
 	if user.JwtClaims == nil {
-		return fmt.Errorf("jwtrole: no user jwt claims found")
+		return fmt.Errorf("no user jwt claims found. RoleSyncer=jwtRole")
 	}
 
 	// Get user roles from token
 	tokenRoles, ok := user.JwtClaims[roleSyncer.roleClaim]
 	if !ok {
-		return fmt.Errorf("jwtrole: cannot get user roles %s from token claim", roleSyncer.roleClaim)
+		return fmt.Errorf("no user role data %s found in token claims. RoleSyncer=jwtRole", roleSyncer.roleClaim)
 	}
 
 	// Get user roles from token roles
@@ -70,7 +70,7 @@ func (roleSyncer *jwtRoleSyncer) Sync(_ context.Context, user *iam.User) error {
 	case []string:
 		userRoles = tokenRoles
 	default:
-		return fmt.Errorf("jwtrole: cannot extract roles from token roles type %T", tokenRoles)
+		return fmt.Errorf("cannot extract roles from token roles type %T. RoleSyncer=jwtRole", tokenRoles)
 	}
 
 	// Sync user roles

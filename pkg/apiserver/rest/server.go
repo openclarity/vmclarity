@@ -29,7 +29,6 @@ import (
 	echomiddleware "github.com/labstack/echo/v4/middleware"
 	"github.com/openclarity/vmclarity/api/server"
 	"github.com/openclarity/vmclarity/pkg/apiserver/common"
-	"github.com/openclarity/vmclarity/pkg/apiserver/config"
 	databaseTypes "github.com/openclarity/vmclarity/pkg/apiserver/database/types"
 	"github.com/openclarity/vmclarity/pkg/shared/log"
 )
@@ -47,18 +46,18 @@ type Server struct {
 	echoServer *echo.Echo
 }
 
-func CreateRESTServer(config *config.Config, dbHandler databaseTypes.Database) (*Server, error) {
-	e, err := createEchoServer(config, dbHandler)
+func CreateRESTServer(port int, iamEnabled bool, dbHandler databaseTypes.Database) (*Server, error) {
+	e, err := createEchoServer(iamEnabled, dbHandler)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create rest server: %w", err)
 	}
 	return &Server{
-		port:       config.BackendRestPort,
+		port:       port,
 		echoServer: e,
 	}, nil
 }
 
-func createEchoServer(config *config.Config, dbHandler databaseTypes.Database) (*echo.Echo, error) {
+func createEchoServer(iamEnabled bool, dbHandler databaseTypes.Database) (*echo.Echo, error) {
 	swagger, err := server.GetSwagger()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load swagger spec: %w", err)
@@ -75,7 +74,7 @@ func createEchoServer(config *config.Config, dbHandler databaseTypes.Database) (
 
 	// Use oapi-codegen validation middleware to validate the API group against the
 	// OpenAPI schema along with IAM provider if configured.
-	if config.IamEnabled {
+	if iamEnabled {
 		iamProvider, err := provider.New()
 		if err != nil {
 			return nil, fmt.Errorf("failed to create IAM provider: %v", err)

@@ -200,8 +200,8 @@ func LoadConfig() (*Config, error) {
 		APIServerPort:               apiServerPort,
 		HealthCheckAddress:     	 viper.GetString(HealthCheckAddress),
 		ApiServerAuthEnvBearerToken: apiServerAuthEnvBearerToken,
-		ProviderKind:                providerKind,
-		ControllerStartupDelay:      viper.GetDuration(ControllerStartupDelay),
+		ProviderKind:               providerKind,
+		ControllerStartupDelay:     viper.GetDuration(ControllerStartupDelay),
 		DiscoveryConfig: discovery.Config{
 			DiscoveryInterval: viper.GetDuration(DiscoveryInterval),
 		},

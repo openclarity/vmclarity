@@ -1,3 +1,18 @@
+// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package iam
 
 import (
@@ -38,13 +53,13 @@ func OapiFilterForProvider(provider Provider) openapi3filter.AuthenticationFunc 
 		// Authenticate
 		user, err := provider.Authenticator().Authenticate(ctx, input.RequestValidationInput.Request)
 		if err != nil {
-			return fmt.Errorf("iam: failed to authenticate user: %w", err)
+			return fmt.Errorf("failed to authenticate user: %w", err)
 		}
 
 		// Sync user roles
 		err = provider.RoleSyncer().Sync(ctx, user)
 		if err != nil {
-			return fmt.Errorf("iam: failed to sync user roles: %w", err)
+			return fmt.Errorf("failed to sync user roles: %w", err)
 		}
 
 		// Authorize
@@ -54,17 +69,17 @@ func OapiFilterForProvider(provider Provider) openapi3filter.AuthenticationFunc 
 			// Fetch authorization request data
 			reqScope := strings.Split(scope, ":")
 			if len(reqScope) != 2 {
-				return fmt.Errorf("iam: unknown asset:action found: %s", scope)
+				return fmt.Errorf("unknown api asset:action found, got %s", scope)
 			}
 			asset, action := reqScope[0], reqScope[1]
 
 			// Authorize request
 			authorized, err := provider.Authorizer().CanPerform(ctx, user, asset, action)
 			if err != nil {
-				return fmt.Errorf("iam: failed to check authorization: %w", err)
+				return fmt.Errorf("failed to check authorization: %w", err)
 			}
 			if !authorized {
-				return fmt.Errorf("iam: not allowed, missing required permissions")
+				return fmt.Errorf("not allowed, missing permission to perform %s:%s", asset, action)
 			}
 		}
 

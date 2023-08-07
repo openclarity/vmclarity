@@ -30,17 +30,17 @@ import (
 func New() (iam.Provider, error) {
 	auth, err := authenticator.New(models.AuthenticatorOIDC)
 	if err != nil {
-		return nil, fmt.Errorf("iam: failed creating authenticator: %w", err)
+		return nil, fmt.Errorf("failed creating authenticator: %w", err)
 	}
 
 	roleSyncer, err := rolesyncer.New(models.RoleSyncerJWT)
 	if err != nil {
-		return nil, fmt.Errorf("iam: failed creating role syncer: %w", err)
+		return nil, fmt.Errorf("failed creating rolesyncer: %w", err)
 	}
 
 	authz, err := authorizer.New(models.AuthorizerLocalRBAC)
 	if err != nil {
-		return nil, fmt.Errorf("iam: failed creating authorizer: %w", err)
+		return nil, fmt.Errorf("failed creating authorizer: %w", err)
 	}
 
 	return &provider{
@@ -53,13 +53,13 @@ func New() (iam.Provider, error) {
 // NewFromParams creates a new iam.Provider from params.
 func NewFromParams(authenticator iam.Authenticator, roleSyncer iam.RoleSyncer, authorizer iam.Authorizer) (iam.Provider, error) {
 	if authenticator == nil {
-		return nil, fmt.Errorf("iam: authenticator is nil")
+		return nil, fmt.Errorf("cannot create Provider with nil Authenticator")
 	}
 	if roleSyncer == nil {
-		return nil, fmt.Errorf("iam: role syncer is nil")
+		return nil, fmt.Errorf("cannot create Provider with nil RoleSyncer")
 	}
 	if authorizer == nil {
-		return nil, fmt.Errorf("iam: authorizer is nil")
+		return nil, fmt.Errorf("cannot create Provider with nil Authorizer")
 	}
 
 	return &provider{

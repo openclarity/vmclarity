@@ -26,7 +26,7 @@ import (
 // New creates an injector which adds Bearer token read from env variable to request.
 func New(tokenEnv string) (iam.Injector, error) {
 	if tokenEnv == "" {
-		return nil, fmt.Errorf("bearer: cannot use emtpy token env variable for injector")
+		return nil, fmt.Errorf("cannot use emtpy env variable for Injector=envbearer")
 	}
 
 	return &bearer{

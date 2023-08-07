@@ -28,6 +28,6 @@ func New(kind models.IamAuthenticator) (iam.Authenticator, error) {
 	case models.AuthenticatorOIDC:
 		return oidc.New()
 	default:
-		return nil, fmt.Errorf("auth: not implemented for %s", kind)
+		return nil, fmt.Errorf("factory not implemented for Authenticator=%s", kind)
 	}
 }

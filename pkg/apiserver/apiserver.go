@@ -70,7 +70,7 @@ func Run(ctx context.Context, config *Config) {
 	}
 
 	// nolint:contextcheck
-	restServer, err := rest.CreateRESTServer(config, dbHandler)
+	restServer, err := rest.CreateRESTServer(config.BackendRestPort, config.IamEnabled, dbHandler)
 	if err != nil {
 		logger.Fatalf("Failed to create REST server: %v", err)
 	}

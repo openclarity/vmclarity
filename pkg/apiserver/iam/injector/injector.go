@@ -35,6 +35,6 @@ func New(kind models.IamInjector, options Options) (iam.Injector, error) {
 	case models.InjectorBearerToken:
 		return envbearer.New(options.BearerTokenEnv)
 	default:
-		return nil, fmt.Errorf("injector: not implemented for %s", kind)
+		return nil, fmt.Errorf("factory not implemented for Injector=%s", kind)
 	}
 }

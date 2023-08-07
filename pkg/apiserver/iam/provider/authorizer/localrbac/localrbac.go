@@ -32,16 +32,16 @@ func New() (iam.Authorizer, error) {
 	// Load config
 	config, err := LoadConfig()
 	if err != nil {
-		return nil, fmt.Errorf("localrbac: failed to load config: %w", err)
+		return nil, fmt.Errorf("failed to load config for Authorizer=localrbac: %w", err)
 	}
 	if err := config.Validate(); err != nil {
-		return nil, fmt.Errorf("localrbac: failed to validate config: %w", err)
+		return nil, fmt.Errorf("failed to validate config for Authorizer=localrbac: %w", err)
 	}
 
 	// Create enforcer
 	enforcer, err := casbin.NewEnforcerSafe(casbin.NewModel(rbacModel), fileadapter.NewAdapter(config.RuleFilePath))
 	if err != nil {
-		return nil, fmt.Errorf("localrbac: failed to create local rbac authorizer: %w", err)
+		return nil, fmt.Errorf("failed to create rbac model for Authorizer=localrbac: %w", err)
 	}
 
 	// Return local RBAC Authorizer
@@ -61,7 +61,7 @@ func (authorizer *localRBAC) CanPerform(_ context.Context, user *iam.User, asset
 	for _, role := range user.GetRoles() {
 		allowed, err := authorizer.enforcer.EnforceSafe(role, asset, action)
 		if err != nil {
-			return false, fmt.Errorf("localrbac: failed checking auth role: %w", err)
+			return false, fmt.Errorf("failed checking auth role for Authorizer=localrbac: %w", err)
 		}
 		if allowed {
 			return true, nil

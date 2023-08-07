@@ -36,10 +36,10 @@ func New() (iam.Authenticator, error) {
 	// Load config
 	config, err := LoadConfig()
 	if err != nil {
-		return nil, fmt.Errorf("oidc: failed to load config: %w", err)
+		return nil, fmt.Errorf("failed to load config for Authenticator=OIDC: %w", err)
 	}
 	if err = config.Validate(); err != nil {
-		return nil, fmt.Errorf("oidc: failed to validate config: %w", err)
+		return nil, fmt.Errorf("failed to validate config for Authenticator=OIDC: %w", err)
 	}
 
 	// Add custom OIDC options
@@ -51,7 +51,7 @@ func New() (iam.Authenticator, error) {
 	// Create resource server which provides introspection functionality
 	resourceServer, err := rs.NewResourceServerClientCredentials(config.Issuer, config.ClientID, config.ClientSecret, options...)
 	if err != nil {
-		return nil, fmt.Errorf("oidc: could not create resource server: %w", err)
+		return nil, fmt.Errorf("could not create resource server for Authenticator=OIDC: %w", err)
 	}
 
 	// Return OIDC Authenticator
@@ -68,17 +68,17 @@ func (auth *oidcAuth) Authenticate(ctx context.Context, request *http.Request) (
 	// Validate authorization header
 	authHeader := request.Header.Get("Authorization")
 	if authHeader == "" {
-		return nil, fmt.Errorf("oidc: authorization header is missing")
+		return nil, fmt.Errorf("authorization header is missing. Authenticator=OIDC")
 	}
 	authParts := strings.Split(authHeader, oidc.PrefixBearer)
 	if len(authParts) != 2 {
-		return nil, fmt.Errorf("oidc: authorization header is malformed")
+		return nil, fmt.Errorf("authorization header is malformed. Authenticator=OIDC")
 	}
 
 	// Verify token against introspection endpoint
 	token, err := rs.Introspect(ctx, auth.resourceServer, authParts[1])
 	if err != nil || !token.IsActive() {
-		return nil, fmt.Errorf("oidc: authorization token is invalid")
+		return nil, fmt.Errorf("authorization token is invalid. Authenticator=OIDC")
 	}
 
 	// Return user
