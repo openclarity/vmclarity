@@ -17,6 +17,7 @@ package provider
 
 import (
 	"fmt"
+
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam/provider/authenticator"

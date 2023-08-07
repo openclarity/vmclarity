@@ -17,6 +17,7 @@ package rolesyncer
 
 import (
 	"fmt"
+
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam/provider/rolesyncer/jwtrole"
@@ -26,6 +27,7 @@ import (
 func New(kind models.IamRoleSyncer) (iam.RoleSyncer, error) {
 	switch kind {
 	case models.RoleSyncerJWT:
+		// nolint:wrapcheck
 		return jwtrole.New()
 	default:
 		return nil, fmt.Errorf("factory not implemented for RoleSyncer=%s", kind)

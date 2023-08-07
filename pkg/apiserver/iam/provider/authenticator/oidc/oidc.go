@@ -18,9 +18,10 @@ package oidc
 import (
 	"context"
 	"fmt"
-	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
 	"net/http"
 	"strings"
+
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
 
 	"github.com/zitadel/oidc/pkg/client/rs"
 	"github.com/zitadel/oidc/pkg/oidc"

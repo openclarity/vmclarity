@@ -19,8 +19,10 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+
 	"github.com/casbin/casbin"
 	fileadapter "github.com/casbin/casbin/persist/file-adapter"
+
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
 )
 

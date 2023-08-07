@@ -17,6 +17,7 @@ package authorizer
 
 import (
 	"fmt"
+
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam/provider/authorizer/localrbac"
@@ -26,6 +27,7 @@ import (
 func New(kind models.IamAuthorizer) (iam.Authorizer, error) {
 	switch kind {
 	case models.AuthorizerLocalRBAC:
+		// nolint:wrapcheck
 		return localrbac.New()
 	default:
 		return nil, fmt.Errorf("factory not implemented for Authorizer=%s", kind)

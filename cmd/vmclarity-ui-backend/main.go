@@ -44,7 +44,7 @@ import (
 )
 
 const (
-	bearerTokenEnvVarFlag = "bearer-token-env"
+	bearerTokenEnvVarFlag = "bearer-token-env" // #nosec G101
 	LogLevelFlag          = "log-level"
 	LogLevelDefaultValue  = "warning"
 	ExecutableName        = "vmclarity-ui-backend"

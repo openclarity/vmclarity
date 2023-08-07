@@ -96,7 +96,7 @@ func NewWithProvider(config *Config, p provider.Provider, b *backendclient.Backe
 func New(ctx context.Context, config *Config) (*Orchestrator, error) {
 	// Create backend client
 	backendAddress := fmt.Sprintf("http://%s", net.JoinHostPort(config.APIServerHost, strconv.Itoa(config.APIServerPort)))
-	backendClient, err := backendclient.Create(backendAddress, backendclient.WithBearerTokenEnvVar(config.ApiServerBearerTokenEnvVar))
+	backendClient, err := backendclient.Create(backendAddress, backendclient.WithBearerTokenEnvVar(config.APIServerBearerTokenEnvVar))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create a backend client: %w", err)
 	}

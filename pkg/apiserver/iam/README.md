@@ -3,17 +3,16 @@
 ### High level architecture
 ![alt text](testdata/architecture.png)
 
+
 #### Server-side stack
-- **Authenticate** - Interacts with IDP to authenticate request and obtain user identity data. 
-Part of API middleware.
-- **RoleSyncer** - Interacts with some kind of store (e.g. database or from JWT token claim) to fetch and sync user role data. 
-Part of API middleware.
-- **Authorizer** - Decides if a User can perform a given action on an asset based on provided rules. 
-Separate component that is used to check user-action permissions. 
+- **Authenticator** - Interacts with IDP to authenticate request and obtain user identity data. Part of API middleware.
+- **RoleSyncer** - Interacts with some kind of store (e.g. database or from JWT token claim) to fetch and sync user role data. Used in API middleware.
+- **Authorizer** - Decides if a User can perform a given action on an asset based on provided rules.
+Separate component that is used to check user-action permissions.
 Used in API middleware for API asset-action (e.g. `api:put`) authorization.
 
 #### Client-side stack
-- **AuthInjector** - Injects data into requests from different sources (e.g. from env).
+- **Injector** - Injects data into requests from different sources (e.g. from env).
 
 ### Test environment
 Requires Docker to run. This will create a Zitadel instance with bootstrapped data which you can use
@@ -21,7 +20,7 @@ out-of-the-box to enable IAM for VMClarity.
 
 ```bash
 # Create Zitadel
-cd pkg/backend/iam/testdata/zitadel
+cd pkg/apiserver/iam/testdata/zitadel
 chmod +x ./create-zitadel
 RECREATE=true ./create-zitadel
 
@@ -46,17 +45,17 @@ ROLESYNCER_JWT_ROLE_CLAIM=roles-claim-key
 # Authorization config
 AUTHZ_LOCAL_RBAC_RULE_FILEPATH=path-to/rbac_rule_policy_example.csv
 
-# AuthInjection - Client service account
+# Injection - Client service account
 APISERVER_BEARER_TOKEN_ENV_VAR=APISERVER_BEARER_TOKEN
 APISERVER_BEARER_TOKEN=Service Account PAM
 ```
 
-### TODO
+### TODO (next iterations)
 - [ ] Add support for different Identity Providers (IDPs) to avoid relying on Zitadel.
 - [ ] Add Authorizer that uses database as Role permission source. Also add bootstrapping for the role data.
 - [ ] Add support for Authenticator to load auth data from different parts of request (e.g. cookies).
-- [ ] Add AuthInjectors that enable injecting data into different parts of request (e.g. cookies)
-- [ ] Add AuthInjectors that enable injection from different sources (e.g. from file)
+- [ ] Add Injector that enable injecting data into different parts of request (e.g. cookies)
+- [ ] Add Injector that enable injection from different sources (e.g. from file)
 - [ ] Handle http response codes properly (currently only 403 is returned on Auth/Z failure)
 - [ ] Add tests
 

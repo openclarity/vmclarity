@@ -18,6 +18,7 @@ package jwtrole
 import (
 	"context"
 	"fmt"
+
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
 )
 

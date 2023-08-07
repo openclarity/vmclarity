@@ -42,7 +42,7 @@ func (user *User) SetRoles(roles []string) {
 
 // Injector implements client-side request authentication data injection. It is
 // intended to be used by clients to allow adding auth data from various sources
-// (e.g. from file, env variable, etc)
+// (e.g. from file, env variable, etc).
 type Injector interface {
 	// Inject fetches the authentication data from a source and injects them into
 	// request data (e.g. token from env var into Authorization header).

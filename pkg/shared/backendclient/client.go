@@ -19,8 +19,9 @@ package backendclient
 import (
 	"context"
 	"fmt"
-	"github.com/openclarity/vmclarity/pkg/apiserver/iam/injector"
 	"net/http"
+
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam/injector"
 
 	"github.com/openclarity/vmclarity/api/client"
 	"github.com/openclarity/vmclarity/api/models"

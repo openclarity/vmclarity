@@ -17,6 +17,7 @@ package injector
 
 import (
 	"fmt"
+
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam/injector/envbearer"
@@ -33,6 +34,7 @@ type Options struct {
 func New(kind models.IamInjector, options Options) (iam.Injector, error) {
 	switch kind {
 	case models.InjectorBearerToken:
+		// nolint:wrapcheck
 		return envbearer.New(options.BearerTokenEnv)
 	default:
 		return nil, fmt.Errorf("factory not implemented for Injector=%s", kind)

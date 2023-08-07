@@ -893,6 +893,9 @@ func (w *ServerInterfaceWrapper) GetOpenAPISpec(ctx echo.Context) error {
 	var err error
 
 	// Invoke the callback with all the unmarshaled arguments
+	ctx.Set(IamPolicyScopes, []string{"api:get"})
+
+	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.GetOpenAPISpec(ctx)
 	return err
 }

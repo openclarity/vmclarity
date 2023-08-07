@@ -17,6 +17,7 @@ package authenticator
 
 import (
 	"fmt"
+
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam/provider/authenticator/oidc"
@@ -26,6 +27,7 @@ import (
 func New(kind models.IamAuthenticator) (iam.Authenticator, error) {
 	switch kind {
 	case models.AuthenticatorOIDC:
+		// nolint:wrapcheck
 		return oidc.New()
 	default:
 		return nil, fmt.Errorf("factory not implemented for Authenticator=%s", kind)

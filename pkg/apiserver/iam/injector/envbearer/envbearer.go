@@ -18,15 +18,16 @@ package envbearer
 import (
 	"context"
 	"fmt"
-	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
 	"net/http"
 	"os"
+
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
 )
 
 // New creates an injector which adds Bearer token read from env variable to request.
 func New(tokenEnv string) (iam.Injector, error) {
 	if tokenEnv == "" {
-		return nil, fmt.Errorf("cannot use emtpy env variable for Injector=envbearer")
+		return nil, fmt.Errorf("cannot use empty env variable for Injector=envbearer")
 	}
 
 	return &bearer{

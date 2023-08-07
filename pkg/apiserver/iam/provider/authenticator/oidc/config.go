@@ -17,6 +17,7 @@ package oidc
 
 import (
 	"fmt"
+
 	"github.com/spf13/viper"
 )
 
@@ -59,9 +60,9 @@ func (c *Config) Validate() error {
 	}
 
 	// Validate endpoints, it must specify either none or both endpoints
-	hasTokenUrl := c.TokenURL != ""
-	hasIntrospectUrl := c.IntrospectURL != ""
-	if hasTokenUrl != hasIntrospectUrl {
+	hasTokenURL := c.TokenURL != ""
+	hasIntrospectURL := c.IntrospectURL != ""
+	if hasTokenURL != hasIntrospectURL {
 		return fmt.Errorf("must specify both token and introspect endpoints for Authenticator=OIDC")
 	}
 

@@ -18,15 +18,17 @@ package rest
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam/provider"
-	"time"
 
 	"github.com/getkin/kin-openapi/openapi3filter"
 
 	"github.com/deepmap/oapi-codegen/pkg/middleware"
 	"github.com/labstack/echo/v4"
 	echomiddleware "github.com/labstack/echo/v4/middleware"
+
 	"github.com/openclarity/vmclarity/api/server"
 	"github.com/openclarity/vmclarity/pkg/apiserver/common"
 	databaseTypes "github.com/openclarity/vmclarity/pkg/apiserver/database/types"

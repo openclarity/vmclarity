@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/openclarity/vmclarity/cmd/vmclarity-cli/util"
