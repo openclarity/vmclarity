@@ -1,3 +1,18 @@
+// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package integration_test
 
 import (
@@ -18,12 +33,13 @@ var _ = Describe("Detecting scan failures", func() {
 			apiScanConfig, err := client.PostScanConfig(
 				ctx,
 				helpers.GetCustomScanConfig(
+					&helpers.DefaultScanFamiliesConfig,
 					"contains(assetInfo.tags, '{\"key\":\"notexisting\",\"value\":\"label\"}')",
-					1200,
+					600,
 				))
 			Expect(err).NotTo(HaveOccurred())
 
-			By("updating a scan configuration to run now")
+			By("updating scan configuration to run now")
 			updateScanConfig := helpers.UpdateScanConfigToStartNow(apiScanConfig)
 			err = client.PatchScanConfig(ctx, *apiScanConfig.Id, updateScanConfig)
 			Expect(err).NotTo(HaveOccurred())
@@ -42,7 +58,7 @@ var _ = Describe("Detecting scan failures", func() {
 				scans, err = client.GetScans(ctx, params)
 				Expect(err).NotTo(HaveOccurred())
 				return len(*scans.Items) == 1
-			}, time.Second*60, time.Second).Should(BeTrue())
+			}, helpers.DefaultTimeout, time.Second).Should(BeTrue())
 		})
 	})
 
@@ -52,34 +68,19 @@ var _ = Describe("Detecting scan failures", func() {
 			apiScanConfig, err := client.PostScanConfig(
 				ctx,
 				helpers.GetCustomScanConfig(
-					"contains(assetInfo.labels, '{\"key\":\"scanconfig\",\"value\":\"test\"}')",
+					&helpers.DefaultScanFamiliesConfig,
+					helpers.DefaultScope,
 					2,
 				))
 			Expect(err).NotTo(HaveOccurred())
 
-			By("updating a scan configuration to run now")
+			By("updating scan configuration to run now")
 			updateScanConfig := helpers.UpdateScanConfigToStartNow(apiScanConfig)
 			err = client.PatchScanConfig(ctx, *apiScanConfig.Id, updateScanConfig)
 			Expect(err).NotTo(HaveOccurred())
 
-			By("waiting until scan starts")
-			params := models.GetScansParams{
-				Filter: utils.PointerTo(fmt.Sprintf(
-					"scanConfig/id eq '%s' and state ne '%s' and state ne '%s'",
-					*apiScanConfig.Id,
-					models.ScanStateDone,
-					models.ScanStateFailed,
-				)),
-			}
-			var scans *models.Scans
-			Eventually(func() bool {
-				scans, err = client.GetScans(ctx, params)
-				Expect(err).NotTo(HaveOccurred())
-				return len(*scans.Items) == 1
-			}, time.Second*60, time.Second).Should(BeTrue())
-
 			By("waiting until scan state changes to failed with timed out as state reason")
-			params = models.GetScansParams{
+			params := models.GetScansParams{
 				Filter: utils.PointerTo(fmt.Sprintf(
 					"scanConfig/id eq '%s' and state eq '%s' and stateReason eq '%s'",
 					*apiScanConfig.Id,
@@ -87,11 +88,12 @@ var _ = Describe("Detecting scan failures", func() {
 					models.ScanStateReasonTimedOut,
 				)),
 			}
+			var scans *models.Scans
 			Eventually(func() bool {
 				scans, err = client.GetScans(ctx, params)
 				Expect(err).NotTo(HaveOccurred())
 				return len(*scans.Items) == 1
-			}, time.Second*60, time.Second).Should(BeTrue())
+			}, helpers.DefaultTimeout, time.Second).Should(BeTrue())
 		})
 	})
 })
