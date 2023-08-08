@@ -51,6 +51,11 @@ func OapiFilterForProvider(provider Provider) openapi3filter.AuthenticationFunc 
 	return func(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
 		// TODO: Explore caching options to reduce checks against identity server
 
+		// Remove user from request context
+		if eCtx := middleware.GetEchoContext(ctx); eCtx != nil {
+			eCtx.Set(userCtxKey, nil)
+		}
+
 		// Authenticate
 		user, err := provider.Authenticator().Authenticate(ctx, input.RequestValidationInput.Request)
 		if err != nil {
@@ -84,11 +89,11 @@ func OapiFilterForProvider(provider Provider) openapi3filter.AuthenticationFunc 
 			}
 		}
 
-		// Success
 		// Update request context with user data
 		if eCtx := middleware.GetEchoContext(ctx); eCtx != nil {
 			eCtx.Set(userCtxKey, user)
 		}
+
 		return nil
 	}
 }
