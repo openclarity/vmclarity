@@ -1,3 +1,18 @@
+// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package integration_test
 
 import (
@@ -14,23 +29,31 @@ var _ = Describe("Running a basic scan (only SBOM)", func() {
 
 	Context("which scans a docker container", func() {
 		It("should finish successfully", func(ctx SpecContext) {
-
 			By("waiting until test asset is found")
 			assetsParams := models.GetAssetsParams{
-				Filter: utils.PointerTo("assetInfo.containerName eq '/alpine-test'"),
-				//TODO(paralta) Filter: utils.PointerTo("assetInfo/labels/any(l: l/Key eq 'scanconfig' and l/Value eq 'test')"),
+				Filter: utils.PointerTo(helpers.DefaultScope),
 			}
 			Eventually(func() bool {
 				assets, err := client.GetAssets(ctx, assetsParams)
 				Expect(err).NotTo(HaveOccurred())
 				return len(*assets.Items) == 1
-			}, time.Second*60, time.Second).Should(BeTrue())
+			}, helpers.DefaultTimeout, time.Second).Should(BeTrue())
 
 			By("applying a scan configuration")
-			apiScanConfig, err := client.PostScanConfig(ctx, helpers.GetSBOMScanConfig())
+			apiScanConfig, err := client.PostScanConfig(
+				ctx,
+				helpers.GetCustomScanConfig(
+					&models.ScanFamiliesConfig{
+						Sbom: &models.SBOMConfig{
+							Enabled: utils.PointerTo(true),
+						},
+					},
+					helpers.DefaultScope,
+					600,
+				))
 			Expect(err).NotTo(HaveOccurred())
 
-			By("updating a scan configuration to run now")
+			By("updating scan configuration to run now")
 			updateScanConfig := helpers.UpdateScanConfigToStartNow(apiScanConfig)
 			err = client.PatchScanConfig(ctx, *apiScanConfig.Id, updateScanConfig)
 			Expect(err).NotTo(HaveOccurred())
@@ -49,7 +72,7 @@ var _ = Describe("Running a basic scan (only SBOM)", func() {
 				scans, err = client.GetScans(ctx, scanParams)
 				Expect(err).NotTo(HaveOccurred())
 				return len(*scans.Items) == 1
-			}, time.Second*60, time.Second).Should(BeTrue())
+			}, helpers.DefaultTimeout, time.Second).Should(BeTrue())
 
 			By("waiting until scan state changes to done")
 			scanParams = models.GetScansParams{
