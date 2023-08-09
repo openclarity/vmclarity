@@ -13,14 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package integration_test
+package end_to_end_test
 
 import (
 	"fmt"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/integration_test/helpers"
+	"github.com/openclarity/vmclarity/end_to_end_test/helpers"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 	"time"
 )

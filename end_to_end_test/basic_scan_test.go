@@ -13,44 +13,45 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package integration_test
+package end_to_end_test
 
 import (
 	"fmt"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/integration_test/helpers"
+	"github.com/openclarity/vmclarity/end_to_end_test/helpers"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
-	"net/http"
 	"time"
 )
 
-var _ = Describe("Running a default scan (SBOM, vulnerabilities and exploits)", func() {
+var _ = Describe("Running a basic scan (only SBOM)", func() {
 
 	Context("which scans a docker container", func() {
 		It("should finish successfully", func(ctx SpecContext) {
+			By("waiting until test asset is found")
+			assetsParams := models.GetAssetsParams{
+				Filter: utils.PointerTo(helpers.DefaultScope),
+			}
+			Eventually(func() bool {
+				assets, err := client.GetAssets(ctx, assetsParams)
+				Expect(err).NotTo(HaveOccurred())
+				return len(*assets.Items) == 1
+			}, helpers.DefaultTimeout, time.Second).Should(BeTrue())
+
 			By("applying a scan configuration")
-			apiScanConfig, err := client.PostScanConfig(ctx, helpers.GetDefaultScanConfig())
+			apiScanConfig, err := client.PostScanConfig(
+				ctx,
+				helpers.GetCustomScanConfig(
+					&models.ScanFamiliesConfig{
+						Sbom: &models.SBOMConfig{
+							Enabled: utils.PointerTo(true),
+						},
+					},
+					helpers.DefaultScope,
+					600,
+				))
 			Expect(err).NotTo(HaveOccurred())
-
-			By("waiting until grype server is ready")
-			Eventually(func() bool {
-				_, err = http.Get("http://localhost:9991")
-				return err == nil
-			}, time.Second*600).Should(BeTrue())
-
-			By("waiting until trivy server is ready")
-			Eventually(func() bool {
-				_, err = http.Get("http://localhost:9992")
-				return err == nil
-			}, time.Second*600).Should(BeTrue())
-
-			By("waiting until exploit db server is ready")
-			Eventually(func() bool {
-				_, err = http.Get("http://localhost:1326")
-				return err == nil
-			}, time.Second*600).Should(BeTrue())
 
 			By("updating scan configuration to run now")
 			updateScanConfig := helpers.UpdateScanConfigToStartNow(apiScanConfig)

@@ -13,44 +13,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package integration_test
+package end_to_end_test
 
 import (
 	"fmt"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/integration_test/helpers"
+	"github.com/openclarity/vmclarity/end_to_end_test/helpers"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 	"time"
 )
 
-var _ = Describe("Running a basic scan (only SBOM)", func() {
+var _ = Describe("Aborting a scan", func() {
 
-	Context("which scans a docker container", func() {
-		It("should finish successfully", func(ctx SpecContext) {
-			By("waiting until test asset is found")
-			assetsParams := models.GetAssetsParams{
-				Filter: utils.PointerTo(helpers.DefaultScope),
-			}
-			Eventually(func() bool {
-				assets, err := client.GetAssets(ctx, assetsParams)
-				Expect(err).NotTo(HaveOccurred())
-				return len(*assets.Items) == 1
-			}, helpers.DefaultTimeout, time.Second).Should(BeTrue())
-
+	Context("which is running", func() {
+		It("should stop successfully", func(ctx SpecContext) {
 			By("applying a scan configuration")
-			apiScanConfig, err := client.PostScanConfig(
-				ctx,
-				helpers.GetCustomScanConfig(
-					&models.ScanFamiliesConfig{
-						Sbom: &models.SBOMConfig{
-							Enabled: utils.PointerTo(true),
-						},
-					},
-					helpers.DefaultScope,
-					600,
-				))
+			apiScanConfig, err := client.PostScanConfig(ctx, helpers.GetDefaultScanConfig())
 			Expect(err).NotTo(HaveOccurred())
 
 			By("updating scan configuration to run now")
@@ -59,7 +39,7 @@ var _ = Describe("Running a basic scan (only SBOM)", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			By("waiting until scan starts")
-			scanParams := models.GetScansParams{
+			params := models.GetScansParams{
 				Filter: utils.PointerTo(fmt.Sprintf(
 					"scanConfig/id eq '%s' and state ne '%s' and state ne '%s'",
 					*apiScanConfig.Id,
@@ -69,24 +49,30 @@ var _ = Describe("Running a basic scan (only SBOM)", func() {
 			}
 			var scans *models.Scans
 			Eventually(func() bool {
-				scans, err = client.GetScans(ctx, scanParams)
+				scans, err = client.GetScans(ctx, params)
 				Expect(err).NotTo(HaveOccurred())
 				return len(*scans.Items) == 1
 			}, helpers.DefaultTimeout, time.Second).Should(BeTrue())
 
-			By("waiting until scan state changes to done")
-			scanParams = models.GetScansParams{
+			By("aborting a scan")
+			err = client.PatchScan(ctx, *(*scans.Items)[0].Id, &models.Scan{
+				State: utils.PointerTo(models.ScanStateAborted),
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			By("waiting until scan state changes to aborted")
+			params = models.GetScansParams{
 				Filter: utils.PointerTo(fmt.Sprintf(
 					"scanConfig/id eq '%s' and state eq '%s'",
 					*apiScanConfig.Id,
-					models.ScanStateDone,
+					models.ScanStateAborted,
 				)),
 			}
 			Eventually(func() bool {
-				scans, err = client.GetScans(ctx, scanParams)
+				scans, err = client.GetScans(ctx, params)
 				Expect(err).NotTo(HaveOccurred())
 				return len(*scans.Items) == 1
-			}, time.Second*120, time.Second).Should(BeTrue())
+			}, helpers.DefaultTimeout, time.Second).Should(BeTrue())
 		})
 	})
 })
