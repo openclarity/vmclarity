@@ -94,7 +94,7 @@ func (e *Environment) Start(ctx context.Context) error {
 		Start: api.StartOptions{
 			Project:     e.project,
 			Wait:        true,
-			WaitTimeout: 2 * time.Minute,
+			WaitTimeout: 10 * time.Minute,
 			Services:    e.Services(),
 		},
 	}
