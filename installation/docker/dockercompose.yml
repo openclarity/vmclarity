@@ -19,6 +19,10 @@ services:
       - type: volume
         source: apiserver-db-data
         target: /data
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "8888"]
+      interval: 10s
+      retries: 60
 
   orchestrator:
     image: ${OrchestratorContainerImage:-ghcr.io/openclarity/vmclarity-orchestrator:latest}
@@ -83,6 +87,10 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "1326"]
+      interval: 10s
+      retries: 60
 
   trivy-server:
     image: ${TrivyServerContainerImage:-docker.io/aquasec/trivy:0.41.0}
@@ -96,6 +104,10 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "9992"]
+      interval: 10s
+      retries: 60
 
   grype-server-init:
     image: ${GrypeServerContainerImage:-ghcr.io/openclarity/grype-server:v0.4.0}
@@ -132,6 +144,10 @@ services:
       - type: volume
         source: grype-server-db
         target: /data
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "9991"]
+      interval: 10s
+      retries: 60
 
   freshclam-mirror:
     image: ${FreshclamMirrorContainerImage:-ghcr.io/openclarity/freshclam-mirror:v0.1.0}
