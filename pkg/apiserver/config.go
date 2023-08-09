@@ -18,8 +18,6 @@ package apiserver
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
-
 	databaseTypes "github.com/openclarity/vmclarity/pkg/apiserver/database/types"
 
 	log "github.com/sirupsen/logrus"
@@ -74,29 +72,6 @@ type Config struct {
 	LocalDBPath      string `json:"local-db-path,omitempty"`
 
 	LogLevel log.Level `json:"log-level,omitempty"`
-}
-
-type AuthenticationOIDC struct {
-	Issuer        string `json:"issuer"`
-	ClientID      string `json:"client-id"`
-	ClientSecret  string `json:"client-secret"`
-	ClientKeyPath string `json:"client-key-path"`
-	TokenURL      string `json:"token-url"`
-	IntrospectURL string `json:"introspect-url"`
-}
-
-type AuthInjectionJwt struct {
-	Issuer      string `json:"issuer"`
-	KeyPath     string `json:"key-path"`
-	ExtraScopes string `json:"extra-scopes"` // defines additional scopes to fetch defined as a comma-separated string
-}
-
-func (jwt *AuthInjectionJwt) GetExtraScopes() []string {
-	return strings.Split(jwt.ExtraScopes, ",")
-}
-
-type AuthorizationRBACLocal struct {
-	RuleFilePath string `json:"rule-file-path"`
 }
 
 func setConfigDefaults() {

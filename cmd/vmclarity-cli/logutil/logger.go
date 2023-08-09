@@ -13,33 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package envbearer
+package logutil
 
 import (
-	"context"
-	"fmt"
-	"net/http"
-	"os"
-
-	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
+	"github.com/sirupsen/logrus"
 )
 
-// New creates an injector which adds Bearer token read from env variable to request.
-func New(tokenEnv string) (iam.Injector, error) {
-	if tokenEnv == "" {
-		return nil, fmt.Errorf("cannot use empty env variable for Injector=envbearer")
-	}
-
-	return &bearer{
-		tokenEnv: tokenEnv,
-	}, nil
-}
-
-type bearer struct {
-	tokenEnv string
-}
-
-func (injector *bearer) Inject(_ context.Context, request *http.Request) error {
-	request.Header.Set("Authorization", "Bearer "+os.Getenv(injector.tokenEnv))
-	return nil
-}
+var Logger *logrus.Entry

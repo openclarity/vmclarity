@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	cliutils "github.com/openclarity/vmclarity/pkg/cli/utils"
 	"net"
 	"net/http"
 	"os"
@@ -35,7 +36,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
 	"github.com/openclarity/vmclarity/pkg/shared/log"
 	"github.com/openclarity/vmclarity/pkg/uibackend"
 	"github.com/openclarity/vmclarity/pkg/uibackend/api/server"
@@ -44,16 +44,14 @@ import (
 )
 
 const (
-	bearerTokenEnvVarFlag = "bearer-token-env" // #nosec G101
-	LogLevelFlag          = "log-level"
-	LogLevelDefaultValue  = "warning"
-	ExecutableName        = "vmclarity-ui-backend"
+	LogLevelFlag         = "log-level"
+	LogLevelDefaultValue = "warning"
+	ExecutableName       = "vmclarity-ui-backend"
 )
 
 var (
-	bearerTokenEnvVar = ""
-	logLevel          = LogLevelDefaultValue
-	rootCmd           = &cobra.Command{
+	logLevel = LogLevelDefaultValue
+	rootCmd  = &cobra.Command{
 		Use:   ExecutableName,
 		Short: "VMClarity UI Backend",
 		Long:  "VMClarity UI Backend",
@@ -76,11 +74,6 @@ func init() {
 		LogLevelFlag,
 		LogLevelDefaultValue,
 		"Set log level [panic fatal error warning info debug trace]")
-
-	cmdRun.PersistentFlags().StringVar(&bearerTokenEnvVar,
-		bearerTokenEnvVarFlag,
-		"",
-		"Set API server authentication bearer token env variable to use for auth data request injection")
 
 	cmdVersion := cobra.Command{
 		Use:     "version",
@@ -116,7 +109,7 @@ func runCommand(cmd *cobra.Command, _ []string) {
 	healthServer.SetIsReady(false)
 
 	backendAddress := fmt.Sprintf("http://%s", net.JoinHostPort(config.APIServerHost, strconv.Itoa(config.APIServerPort)))
-	backendClient, err := backendclient.Create(backendAddress, backendclient.WithBearerTokenEnvVar(bearerTokenEnvVar))
+	backendClient, err := cliutils.NewBackendClient(backendAddress)
 	if err != nil {
 		logger.Fatalf("Failed to create a backend client: %v", err)
 	}

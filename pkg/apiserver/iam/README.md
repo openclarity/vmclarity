@@ -11,9 +11,6 @@
 Separate component that is used to check user-action permissions.
 Used in API middleware for API asset-action (e.g. `api:put`) authorization.
 
-#### Client-side stack
-- **Injector** - Injects data into requests from different sources (e.g. from env).
-
 ### Test environment
 Requires Docker to run. This will create a Zitadel instance with bootstrapped data which you can use
 out-of-the-box to enable IAM for VMClarity.
@@ -29,35 +26,15 @@ RECREATE=true ./create-zitadel
 cat bootstrap/generated/vmclarity-data.env
 ```
 
-### Config parameters
-```
-# IAM global config
-IAM_ENABLED=true
-
-# Authentication config
-AUTH_OIDC_ISSUER=http://localhost:8080
-AUTH_OIDC_CLIENT_ID=app_client_id
-AUTH_OIDC_CLIENT_SECRET=app_client_secret
-
-# RoleSynchronization config
-ROLESYNCER_JWT_ROLE_CLAIM=roles-claim-key
-
-# Authorization config
-AUTHZ_LOCAL_RBAC_RULE_FILEPATH=path-to/rbac_rule_policy_example.csv
-
-# Injection - Client service account
-APISERVER_BEARER_TOKEN_ENV_VAR=APISERVER_BEARER_TOKEN
-APISERVER_BEARER_TOKEN=Service Account PAM
-```
-
 ### TODO (next iterations)
-- [ ] Add support for different Identity Providers (IDPs) to avoid relying on Zitadel.
-- [ ] Add Authorizer that uses database as Role permission source. Also add bootstrapping for the role data.
-- [ ] Add support for Authenticator to load auth data from different parts of request (e.g. cookies).
-- [ ] Add Injector that enable injecting data into different parts of request (e.g. cookies)
-- [ ] Add Injector that enable injection from different sources (e.g. from file)
-- [ ] Handle http response codes properly (currently only 403 is returned on Auth/Z failure)
-- [ ] Add tests
+- Add Zitadel component into VMClarity stack. Use Zitadel bootstrapping without using Terraform.
+- Add support for injecting auth data into different parts of request (e.g. cookies).
+- Handle http response codes properly (currently only 403 is returned on Auth/Z failure)
+- Add Authorizer that uses database as Role permission source. Also add bootstrapping for the Role and Rule data.
+- Add RoleSyncer that uses database as User Role source to avoid using non-intuitive JWT Claim Role Source.
+- Add support for different IAM components (Authenticator and RoleSyncer) to avoid relying only on Zitadel.
+- Add support to dynamically add/remove (CRUD) multiple Authenticators in IAM stack.
+- Add tests
 
 ### More resources
 - **Zitadel** - used to create OIDP app and auth roles via JWT token claims - https://zitadel.com/

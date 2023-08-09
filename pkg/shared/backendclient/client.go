@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/openclarity/vmclarity/pkg/apiserver/iam/injector"
+	"github.com/deepmap/oapi-codegen/pkg/securityprovider"
 
 	"github.com/openclarity/vmclarity/api/client"
 	"github.com/openclarity/vmclarity/api/models"
@@ -43,25 +43,23 @@ func Create(serverAddress string, options ...client.ClientOption) (*BackendClien
 	}, nil
 }
 
-func WithBearerTokenEnvVar(tokenEnvVar string) client.ClientOption {
-	// Empty variable passed (not-used)
-	if tokenEnvVar == "" {
+func WithTokenAuth(token string) client.ClientOption {
+	// Empty token passed
+	if token == "" {
 		return func(c *client.Client) error {
 			return nil
 		}
 	}
 
-	// Otherwise, use bearer env injector
-	authInjector, err := injector.New(models.InjectorBearerToken, injector.Options{
-		BearerTokenEnv: tokenEnvVar,
-	})
+	// Otherwise, use bearer token provider
+	tokenInterceptor, err := securityprovider.NewSecurityProviderBearerToken(token)
 	if err != nil {
 		return func(c *client.Client) error {
-			return fmt.Errorf("cannot use bearer token env injector: %w", err)
+			return fmt.Errorf("cannot bearer token interceptor: %w", err)
 		}
 	}
 
-	return client.WithRequestEditorFn(authInjector.Inject)
+	return client.WithRequestEditorFn(tokenInterceptor.Intercept)
 }
 
 func (b *BackendClient) GetAssetScan(ctx context.Context, assetScanID string, params models.GetAssetScansAssetScanIDParams) (models.AssetScan, error) {

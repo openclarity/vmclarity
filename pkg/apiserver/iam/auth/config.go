@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package oidc
+package auth
 
 import (
 	"fmt"
@@ -63,7 +63,7 @@ func (c *Config) Validate() error {
 	hasTokenURL := c.TokenURL != ""
 	hasIntrospectURL := c.IntrospectURL != ""
 	if hasTokenURL != hasIntrospectURL {
-		return fmt.Errorf("must specify both token and introspect endpoints for Authenticator=OIDC")
+		return fmt.Errorf("must specify either none or both token and introspect endpoints for Authenticator=OIDC")
 	}
 
 	return nil

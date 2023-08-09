@@ -41,6 +41,10 @@ paths:
                 $ref: '#/components/schemas/Assets'
         default:
           $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken:
+            - api:list:asset
+
     post:
       summary: Create asset
       operationId: PostAssets
@@ -50,9 +54,6 @@ paths:
             schema:
               $ref: '#/components/schemas/Asset'
         required: true
-      security:
-        - IamPolicy:
-            - api:post
       responses:
         201:
           description: A new asset was created.
@@ -75,6 +76,9 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
+      security:
+        - AuthToken:
+            - api:create:asset
 
   /assets/{assetID}:
     get:
@@ -99,6 +103,10 @@ paths:
                 $ref: '#/components/schemas/ApiResponse'
         default:
           $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken:
+            - api:get:asset
+
     put:
       summary: Update asset.
       operationId: PutAssetsAssetID
@@ -111,9 +119,6 @@ paths:
             schema:
               $ref: '#/components/schemas/Asset'
         required: true
-      security:
-        - IamPolicy:
-            - api:put
       responses:
         200:
           description: Updated asset successfully.
@@ -148,6 +153,10 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
+      security:
+        - AuthToken:
+            - api:update:asset
+
     patch:
       summary: Update asset.
       operationId: PatchAssetsAssetID
@@ -160,9 +169,6 @@ paths:
             schema:
               $ref: '#/components/schemas/Asset'
         required: true
-      security:
-        - IamPolicy:
-            - api:patch
       responses:
         200:
           description: Updated asset successfully.
@@ -191,14 +197,15 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
+      security:
+        - AuthToken:
+            - api:update:asset
+
     delete:
       summary: Delete asset.
       operationId: DeleteAssetsAssetID
       parameters:
         - $ref: '#/components/parameters/assetID'
-      security:
-        - IamPolicy:
-            - api:delete
       responses:
         200:
           $ref: '#/components/responses/Success'
@@ -216,6 +223,9 @@ paths:
                 $ref: '#/components/schemas/ApiResponse'
         default:
           $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken:
+            - api:delete:asset
 
   /assetScans:
     get:
@@ -236,9 +246,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AssetScans'
-
         default:
           $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken:
+            - api:list:assetScan
+
     post:
       summary: Create an asset scan for a specified asset
       operationId: PostAssetScans
@@ -270,6 +283,9 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
+      security:
+        - AuthToken:
+            - api:create:assetScan
 
   /assetScans/{assetScanID}:
     get:
@@ -294,6 +310,10 @@ paths:
                 $ref: '#/components/schemas/ApiResponse'
         default:
           $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken:
+            - api:get:assetScan
+
     put:
       summary: Update an asset scan.
       operationId: PutAssetScansAssetScanID
@@ -340,6 +360,10 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
+      security:
+        - AuthToken:
+            - api:update:assetScan
+
     patch:
       summary: Patch an asset scan
       operationId: PatchAssetScansAssetScanID
@@ -386,6 +410,9 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
+      security:
+        - AuthToken:
+            - api:update:assetScan
 
   /scans:
     get:
@@ -408,6 +435,10 @@ paths:
                 $ref: '#/components/schemas/Scans'
         default:
           $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken:
+            - api:list:scan
+
     post:
       summary: Create a multi-asset scheduled scan
       operationId: PostScans
@@ -439,6 +470,9 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
+      security:
+        - AuthToken:
+            - api:create:scan
 
   /scans/{scanID}:
     get:
@@ -463,6 +497,10 @@ paths:
                 $ref: '#/components/schemas/ApiResponse'
         default:
           $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken:
+            - api:get:scan
+
     put:
       summary: Update a scan.
       operationId: PutScansScanID
@@ -509,6 +547,10 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
+      security:
+        - AuthToken:
+            - api:update:scan
+
     patch:
       summary: Patch a scan.
       operationId: PatchScansScanID
@@ -555,6 +597,10 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
+      security:
+        - AuthToken:
+            - api:update:scan
+
     delete:
       summary: Delete a scan.
       operationId: DeleteScansScanID
@@ -571,6 +617,9 @@ paths:
                 $ref: '#/components/schemas/ApiResponse'
         default:
           $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken:
+            - api:delete:scan
 
   /scanConfigs:
     get:
@@ -591,9 +640,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ScanConfigs'
-
         default:
           $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken:
+            - api:list:scanConfig
+
     post:
       summary: Create a scan config
       operationId: PostScanConfigs
@@ -625,6 +677,9 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
+      security:
+        - AuthToken:
+            - api:update:scanConfig
 
   /scanConfigs/{scanConfigID}:
     get:
@@ -649,6 +704,10 @@ paths:
                 $ref: '#/components/schemas/ApiResponse'
         default:
           $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken:
+            - api:get:scanConfig
+
     put:
       summary: Update a scan config.
       operationId: PutScanConfigsScanConfigID
@@ -695,6 +754,10 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
+      security:
+        - AuthToken:
+            - api:update:scanConfig
+
     patch:
       summary: Patch a scan config.
       operationId: PatchScanConfigsScanConfigID
@@ -741,6 +804,10 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
+      security:
+        - AuthToken:
+            - api:update:scanConfig
+
     delete:
       summary: Delete a scan config.
       operationId: DeleteScanConfigsScanConfigID
@@ -757,6 +824,9 @@ paths:
                 $ref: '#/components/schemas/ApiResponse'
         default:
           $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken:
+            - api:delete:scanConfig
 
   /findings:
     get:
@@ -779,6 +849,10 @@ paths:
                 $ref: '#/components/schemas/Findings'
         default:
           $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken:
+            - api:list:finding
+
     post:
       summary: Create a finding
       operationId: PostFindings
@@ -810,6 +884,9 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
+      security:
+        - AuthToken:
+            - api:create:finding
 
   /findings/{findingID}:
     get:
@@ -834,6 +911,10 @@ paths:
                 $ref: '#/components/schemas/ApiResponse'
         default:
           $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken:
+            - api:get:finding
+
     put:
       summary: Update a finding.
       operationId: PutFindingsFindingID
@@ -867,6 +948,10 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
+      security:
+        - AuthToken:
+            - api:update:finding
+
     patch:
       summary: Patch a finding.
       operationId: PatchFindingsFindingID
@@ -900,6 +985,10 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
+      security:
+        - AuthToken:
+            - api:update:finding
+
     delete:
       summary: Delete a finding.
       operationId: DeleteFindingsFindingID
@@ -916,6 +1005,9 @@ paths:
                 $ref: '#/components/schemas/ApiResponse'
         default:
           $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken:
+            - api:delete:finding
 
   /scanEstimations:
     get:
@@ -2149,7 +2241,6 @@ components:
 
     AssetScanTemplate:
       type: object
-      x-go-type-name: "AssetScanTemplate"
       properties:
         scanFamiliesConfig:
           $ref: '#/components/schemas/ScanFamiliesConfig'
@@ -3269,12 +3360,8 @@ components:
         type: integer
 
   securitySchemes:
-    IamPolicy:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-
-# Specify global RBAC requirements, must be in form of asset:action, e.g. api:get
-security:
-  - IamPolicy:
-    - api:get
+    # token = IAM Service issued JWT token
+    AuthToken:
+      type: apiKey
+      in: header
+      name: X-Auth-Token

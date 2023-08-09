@@ -18,10 +18,8 @@ package rest
 import (
 	"context"
 	"fmt"
-	"time"
-
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
-	"github.com/openclarity/vmclarity/pkg/apiserver/iam/provider"
+	"time"
 
 	"github.com/getkin/kin-openapi/openapi3filter"
 
@@ -74,22 +72,24 @@ func createEchoServer(iamEnabled bool, dbHandler databaseTypes.Database) (*echo.
 	// Recover any panics into HTTP 500
 	e.Use(echomiddleware.Recover())
 
-	// Use oapi-codegen validation middleware to validate the API group against the
-	// OpenAPI schema along with IAM provider if configured.
-	if iamEnabled {
-		iamProvider, err := provider.New()
-		if err != nil {
-			return nil, fmt.Errorf("failed to create IAM provider: %v", err)
-		}
+	// Create authenticator function for given IAM config or use default passthrough auth
+	oapiAuthFunc := func(_ context.Context, _ *openapi3filter.AuthenticationInput) error { return nil }
+	//if iamEnabled {
+	//	iamProvider, err := iamprovider.New()
+	//	if err != nil {
+	//		return nil, fmt.Errorf("failed to create IAM provider: %v", err)
+	//	}
+	//	oapiAuthFunc = iam.OapiFilterForProvider(iamProvider)
+	//}
+	oapiAuthFunc = iam.OapiFilterForProvider(nil)
 
-		e.Use(middleware.OapiRequestValidatorWithOptions(swagger, &middleware.Options{
-			Options: openapi3filter.Options{
-				AuthenticationFunc: iam.OapiFilterForProvider(iamProvider),
-			},
-		}))
-	} else {
-		e.Use(middleware.OapiRequestValidator(swagger))
-	}
+	// Use oapi-codegen validation middleware to validate the API group against the OpenAPI schema.
+	// Authenticator function must be defined due to OAPI auth specs.
+	e.Use(middleware.OapiRequestValidatorWithOptions(swagger, &middleware.Options{
+		Options: openapi3filter.Options{
+			AuthenticationFunc: oapiAuthFunc,
+		},
+	}))
 
 	// Register paths with the backend implementation
 	server.RegisterHandlers(e, &ServerImpl{

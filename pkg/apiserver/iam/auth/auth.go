@@ -13,27 +13,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package oidc
+package auth
 
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"strings"
-
-	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam/types"
 
 	"github.com/zitadel/oidc/pkg/client/rs"
-	"github.com/zitadel/oidc/pkg/oidc"
+	"github.com/zitadel/zitadel-go/v2/pkg/client/management"
+	pb "github.com/zitadel/zitadel-go/v2/pkg/client/zitadel/management"
+	user "github.com/zitadel/zitadel-go/v2/pkg/client/zitadel/user"
 )
 
 // New creates an authenticator which intercepts requests and checks for a
 // correct Bearer token using OAuth2 introspection by sending the token to the
 // introspection endpoint. On success, returns an iam.User with configured
 // JwtClaims.
-//
-// TODO: Test against different OIDCs to check if this works. Tested against: Zitadel.
-func New() (iam.Authenticator, error) {
+func New() (types.Authenticator, error) {
 	// Load config
 	config, err := LoadConfig()
 	if err != nil {
@@ -56,35 +53,51 @@ func New() (iam.Authenticator, error) {
 	}
 
 	// Return OIDC Authenticator
-	return &oidcAuth{
+	return &authService{
 		resourceServer: resourceServer,
 	}, nil
 }
 
-type oidcAuth struct {
+type authService struct {
 	resourceServer rs.ResourceServer
+	mgmtClient     *management.Client
 }
 
-func (auth *oidcAuth) Authenticate(ctx context.Context, request *http.Request) (*iam.User, error) {
-	// Validate authorization header
-	authHeader := request.Header.Get("Authorization")
-	if authHeader == "" {
-		return nil, fmt.Errorf("authorization header is missing. Authenticator=OIDC")
-	}
-	authParts := strings.Split(authHeader, oidc.PrefixBearer)
-	if len(authParts) != 2 {
-		return nil, fmt.Errorf("authorization header is malformed. Authenticator=OIDC")
+func (auth *authService) Authenticate(ctx context.Context, token string) (*types.User, error) {
+	// Verify token against introspection endpoint
+	jwtToken, err := rs.Introspect(ctx, auth.resourceServer, token)
+	if err != nil || !jwtToken.IsActive() {
+		return nil, fmt.Errorf("payload token is invalid")
 	}
 
-	// Verify token against introspection endpoint
-	token, err := rs.Introspect(ctx, auth.resourceServer, authParts[1])
-	if err != nil || !token.IsActive() {
-		return nil, fmt.Errorf("authorization token is invalid. Authenticator=OIDC")
-	}
+	// Load roles for given user
+	roleData := jwtToken.GetClaim("roles")
+	roles, _ := roleData.([]string)
 
 	// Return user
-	return &iam.User{
-		ID:        token.GetSubject(),
-		JwtClaims: token.GetClaims(),
+	return &types.User{
+		ID:    jwtToken.GetSubject(),
+		Roles: roles,
 	}, nil
+}
+
+func (auth *authService) CreateSA(ctx context.Context, username string) (string, error) {
+	resp, err := auth.mgmtClient.AddMachineUser(ctx, &pb.AddMachineUserRequest{
+		UserName:        username,
+		Name:            username,
+		Description:     "Service Account",
+		AccessTokenType: user.AccessTokenType_ACCESS_TOKEN_TYPE_JWT,
+	})
+	return resp.UserId, err
+}
+
+func (auth *authService) DeleteSA(ctx context.Context, username string) error {
+	resp, err := auth.mgmtClient.GetUserByLoginNameGlobal(ctx, &pb.GetUserByLoginNameGlobalRequest{
+		LoginName: username,
+	})
+	if err != nil {
+		return err
+	}
+	_, err = auth.mgmtClient.RemoveUser(ctx, &pb.RemoveUserRequest{Id: resp.User.Id})
+	return err
 }

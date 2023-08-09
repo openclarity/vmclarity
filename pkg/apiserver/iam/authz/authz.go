@@ -13,24 +13,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package localrbac
+package authz
 
 import (
 	"context"
 	_ "embed"
 	"fmt"
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam/types"
 
 	"github.com/casbin/casbin"
 	fileadapter "github.com/casbin/casbin/persist/file-adapter"
-
-	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
 )
 
 //go:embed rbac_model.conf
 var rbacModel string
 
 // New creates an authorizer which will use a local CSV file to configure role rules.
-func New() (iam.Authorizer, error) {
+func New() (types.Authorizer, error) {
 	// Load config
 	config, err := LoadConfig()
 	if err != nil {
@@ -59,15 +58,15 @@ type localRBAC struct {
 	enforcer *casbin.Enforcer
 }
 
-func (authorizer *localRBAC) CanPerform(_ context.Context, user *iam.User, asset, action string) (bool, error) {
-	for _, role := range user.GetRoles() {
-		allowed, err := authorizer.enforcer.EnforceSafe(role, asset, action)
-		if err != nil {
-			return false, fmt.Errorf("failed checking auth role for Authorizer=localrbac: %w", err)
-		}
-		if allowed {
-			return true, nil
-		}
-	}
+func (authorizer *localRBAC) CanPerform(_ context.Context, user *types.User, asset, action string) (bool, error) {
+	//for _, role := range user.GetRoles() {
+	//	allowed, err := authorizer.enforcer.EnforceSafe(role, asset, action)
+	//	if err != nil {
+	//		return false, fmt.Errorf("failed checking auth role for Authorizer=localrbac: %w", err)
+	//	}
+	//	if allowed {
+	//		return true, nil
+	//	}
+	//}
 	return false, nil
 }

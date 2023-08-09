@@ -11,8 +11,7 @@ resource local_file file_vmclarity_data {
 
     AUTHZ_LOCAL_RBAC_RULE_FILEPATH=path-to-folder/rbac_rule_policy_example.csv
 
-    APISERVER_BEARER_TOKEN_ENV_VAR=APISERVER_BEARER_TOKEN
-    APISERVER_BEARER_TOKEN=${zitadel_personal_access_token.vmclarity_orchestrator_pat_key.token}
+    APISERVER_TOKEN=${zitadel_personal_access_token.vmclarity_orchestrator_pat_key.token}
   EOT
   filename = "generated/vmclarity-data.env"
 }

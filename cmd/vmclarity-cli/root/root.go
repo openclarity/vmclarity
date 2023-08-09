@@ -22,8 +22,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/openclarity/vmclarity/cmd/vmclarity-cli/asset"
+	"github.com/openclarity/vmclarity/cmd/vmclarity-cli/logutil"
 	"github.com/openclarity/vmclarity/cmd/vmclarity-cli/scan"
-	"github.com/openclarity/vmclarity/cmd/vmclarity-cli/util"
 	"github.com/openclarity/vmclarity/pkg/shared/log"
 	"github.com/openclarity/vmclarity/pkg/version"
 )
@@ -55,5 +55,5 @@ func init() {
 
 func initLogger() {
 	log.InitLogger(logrus.InfoLevel.String(), os.Stderr)
-	util.Logger = logrus.WithField("app", "vmclarity")
+	logutil.Logger = logrus.WithField("app", "vmclarity")
 }

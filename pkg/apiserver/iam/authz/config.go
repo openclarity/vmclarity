@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package jwtrole
+package authz
 
 import (
 	"fmt"
@@ -21,21 +21,22 @@ import (
 	"github.com/spf13/viper"
 )
 
-const roleSyncerJwtRoleClaimEnvVar = "ROLESYNCER_JWT_ROLE_CLAIM"
+const authzLocalRbacRuleFilePathEnvVar = "AUTHZ_LOCAL_RBAC_RULE_FILEPATH"
 
 type Config struct {
-	RoleClaim string `json:"role-claim"`
+	RuleFilePath string `json:"rule-filepath"`
 }
 
 func LoadConfig() (*Config, error) {
 	return &Config{
-		RoleClaim: viper.GetString(roleSyncerJwtRoleClaimEnvVar),
+		RuleFilePath: viper.GetString(authzLocalRbacRuleFilePathEnvVar),
 	}, nil
 }
 
 func (c *Config) Validate() error {
-	if c.RoleClaim == "" {
-		return fmt.Errorf("must specify role claim for RoleSyncer=jwtrole")
+	if c.RuleFilePath == "" {
+		return fmt.Errorf("must specify issuer for Authorizer=localrbac")
 	}
+
 	return nil
 }

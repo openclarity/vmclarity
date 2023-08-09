@@ -93,6 +93,6 @@ issues:
     - path: pkg/apiserver/iam/iam.go
       linters:
         - gomnd
-    - path: pkg/apiserver/iam/provider/authenticator/oidc/oidc.go
+    - path: pkg/apiserver/iam/iamprovider/authenticator/oidc/oidc.go
       linters:
         - gomnd

@@ -18,23 +18,23 @@ package iam
 import (
 	"context"
 	"fmt"
-	"strings"
-
 	"github.com/deepmap/oapi-codegen/pkg/middleware"
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/labstack/echo/v4"
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam/types"
+	"strings"
 )
 
 const userCtxKey = "user"
 
 // GetUserFromContext returns User from context.
-func GetUserFromContext(ctx echo.Context) *User {
+func GetUserFromContext(ctx echo.Context) *types.Claims {
 	ctxData := ctx.Get(userCtxKey)
 	if ctxData == nil {
 		return nil
 	}
 
-	user, _ := ctxData.(*User)
+	user, _ := ctxData.(*types.Claims)
 	return user
 }
 
@@ -46,15 +46,14 @@ func GetUserFromContext(ctx echo.Context) *User {
 //
 // Provider will first authenticate the client from request data, synchronize
 // user roles on success, and finally try to authorize the request. If
-// successful, User will be available for fetching in context.
-func OapiFilterForProvider(provider Provider) openapi3filter.AuthenticationFunc {
+// successful, User will be available in context.
+func OapiFilterForProvider(provider types.Provider) openapi3filter.AuthenticationFunc {
 	return func(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
 		// TODO: Explore caching options to reduce checks against identity server
 
 		// Remove user from request context
-		if eCtx := middleware.GetEchoContext(ctx); eCtx != nil {
-			eCtx.Set(userCtxKey, nil)
-		}
+		eCtx := middleware.GetEchoContext(ctx)
+		eCtx.Set(userCtxKey, nil)
 
 		// Authenticate
 		user, err := provider.Authenticator().Authenticate(ctx, input.RequestValidationInput.Request)
@@ -90,9 +89,7 @@ func OapiFilterForProvider(provider Provider) openapi3filter.AuthenticationFunc 
 		}
 
 		// Update request context with user data
-		if eCtx := middleware.GetEchoContext(ctx); eCtx != nil {
-			eCtx.Set(userCtxKey, user)
-		}
+		eCtx.Set(userCtxKey, user)
 
 		return nil
 	}

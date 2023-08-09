@@ -28,7 +28,7 @@ const (
 )
 
 const (
-	IamPolicyScopes = "IamPolicy.Scopes"
+	AuthTokenScopes = "AuthToken.Scopes"
 )
 
 // Defines values for AssetScanStateState.
