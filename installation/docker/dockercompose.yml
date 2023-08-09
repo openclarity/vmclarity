@@ -162,7 +162,7 @@ services:
     image: alpine:3.18.2
     command: ["sleep", "infinity"]
     profiles:
-      - integration-test
+      - end-to-end-test
     labels:
       scanconfig: test
 

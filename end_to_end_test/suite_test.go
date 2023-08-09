@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package integration_test
+package end_to_end_test
 
 import (
 	"context"
@@ -23,7 +23,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/integration_test/testenv"
+	"github.com/openclarity/vmclarity/end_to_end_test/testenv"
 	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
 	"os"
 	"strconv"
@@ -55,7 +55,7 @@ func beforeSuite(ctx context.Context) {
 		cli.WithName("vmclarity"),
 		cli.WithWorkingDirectory("../installation/docker"),
 		cli.WithResolvedPaths(true),
-		cli.WithProfiles([]string{"integration-test"}),
+		cli.WithProfiles([]string{"end-to-end-test"}),
 	)
 	Expect(err).NotTo(HaveOccurred())
 
