@@ -167,6 +167,8 @@ services:
   alpine:
     image: alpine:3.18.2
     command: ["sleep", "infinity"]
+    networks:
+      - asset
     profiles:
       - end-to-end-test
     labels:
@@ -185,3 +187,5 @@ volumes:
 networks:
   default:
     name: vmclarity
+  asset:
+    name: asset
