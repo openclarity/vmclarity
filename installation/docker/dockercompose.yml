@@ -9,6 +9,7 @@ services:
       - info
     ports:
       - "8888:8888"
+      - "8081:8081"
     env_file: ./apiserver.env
     deploy:
       mode: replicated

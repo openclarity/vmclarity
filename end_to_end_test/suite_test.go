@@ -22,9 +22,9 @@ import (
 	"github.com/go-logr/logr"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/end_to_end_test/testenv"
 	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
+	"net/http"
 	"os"
 	"strconv"
 	"testing"
@@ -86,11 +86,10 @@ func beforeSuite(ctx context.Context) {
 	client, err = backendclient.Create(fmt.Sprintf("%s://%s/%s", u.Scheme, u.Host, u.Path))
 	Expect(err).NotTo(HaveOccurred())
 
-	// todo(adam.tagscherer): create a proper readyz endpoint for the api
 	By("waiting until VMClarity API is ready")
 	Eventually(func() bool {
-		_, err = client.GetScanConfigs(ctx, models.GetScanConfigsParams{})
-		return err == nil
+		resp, err := http.Get("http://localhost:8081/healthz/ready")
+		return err == nil && resp.StatusCode == http.StatusOK
 	}, time.Second*5).Should(BeTrue())
 }
 
