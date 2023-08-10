@@ -31,7 +31,7 @@ var _ = Describe("Running a basic scan (only SBOM)", func() {
 		It("should finish successfully", func(ctx SpecContext) {
 			By("waiting until test asset is found")
 			assetsParams := models.GetAssetsParams{
-				Filter: utils.PointerTo(helpers.DefaultScope),
+				Filter: utils.PointerTo(fmt.Sprintf("terminatedOn eq null and %s", helpers.DefaultScope)),
 			}
 			Eventually(func() bool {
 				assets, err := client.GetAssets(ctx, assetsParams)
