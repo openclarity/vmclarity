@@ -124,9 +124,9 @@ push-docker-uibackend: docker-uibackend ## Build and Push UI Backend Docker imag
 test: ## Run Unit Tests
 	@go test ./...
 
-.PHONY: end-to-end-test
-end-to-end-test: ## Run go integration test against code
-	@cd end_to_end_test && \
+.PHONY: e2e
+e2e: ## Run go e2e test against code
+	@cd e2e && \
     go test -v -failfast -test.v -test.paniconexit0 -timeout 2h -ginkgo.v .
 
 .PHONY: clean-ui

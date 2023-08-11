@@ -13,38 +13,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package end_to_end_test
+package e2e
 
 import (
 	"fmt"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
+	"github.com/onsi/ginkgo/v2"
+	"github.com/onsi/gomega"
 	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/end_to_end_test/helpers"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 	"time"
 )
 
-var _ = Describe("Detecting scan failures", func() {
+var _ = ginkgo.Describe("Detecting scan failures", func() {
 
-	Context("when a scan stops without assets to scan", func() {
-		It("should detect failure reason successfully", func(ctx SpecContext) {
-			By("applying a scan configuration with not existing label")
+	ginkgo.Context("when a scan stops without assets to scan", func() {
+		ginkgo.It("should detect failure reason successfully", func(ctx ginkgo.SpecContext) {
+			ginkgo.By("applying a scan configuration with not existing label")
 			apiScanConfig, err := client.PostScanConfig(
 				ctx,
-				helpers.GetCustomScanConfig(
-					&helpers.DefaultScanFamiliesConfig,
+				GetCustomScanConfig(
+					&DefaultScanFamiliesConfig,
 					"contains(assetInfo.tags, '{\"key\":\"notexisting\",\"value\":\"label\"}')",
 					600,
 				))
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-			By("updating scan configuration to run now")
-			updateScanConfig := helpers.UpdateScanConfigToStartNow(apiScanConfig)
+			ginkgo.By("updating scan configuration to run now")
+			updateScanConfig := UpdateScanConfigToStartNow(apiScanConfig)
 			err = client.PatchScanConfig(ctx, *apiScanConfig.Id, updateScanConfig)
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-			By("waiting until scan state changes to failed with nothing to scan as state reason")
+			ginkgo.By("waiting until scan state changes to failed with nothing to scan as state reason")
 			params := models.GetScansParams{
 				Filter: utils.PointerTo(fmt.Sprintf(
 					"scanConfig/id eq '%s' and state eq '%s' and stateReason eq '%s'",
@@ -54,32 +53,32 @@ var _ = Describe("Detecting scan failures", func() {
 				)),
 			}
 			var scans *models.Scans
-			Eventually(func() bool {
+			gomega.Eventually(func() bool {
 				scans, err = client.GetScans(ctx, params)
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				return len(*scans.Items) == 1
-			}, helpers.DefaultTimeout, time.Second).Should(BeTrue())
+			}, DefaultTimeout, time.Second).Should(gomega.BeTrue())
 		})
 	})
 
-	Context("when a scan stops with timeout", func() {
-		It("should detect failure reason successfully", func(ctx SpecContext) {
-			By("applying a scan configuration with short timeout")
+	ginkgo.Context("when a scan stops with timeout", func() {
+		ginkgo.It("should detect failure reason successfully", func(ctx ginkgo.SpecContext) {
+			ginkgo.By("applying a scan configuration with short timeout")
 			apiScanConfig, err := client.PostScanConfig(
 				ctx,
-				helpers.GetCustomScanConfig(
-					&helpers.DefaultScanFamiliesConfig,
-					helpers.DefaultScope,
+				GetCustomScanConfig(
+					&DefaultScanFamiliesConfig,
+					DefaultScope,
 					2,
 				))
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-			By("updating scan configuration to run now")
-			updateScanConfig := helpers.UpdateScanConfigToStartNow(apiScanConfig)
+			ginkgo.By("updating scan configuration to run now")
+			updateScanConfig := UpdateScanConfigToStartNow(apiScanConfig)
 			err = client.PatchScanConfig(ctx, *apiScanConfig.Id, updateScanConfig)
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-			By("waiting until scan state changes to failed with timed out as state reason")
+			ginkgo.By("waiting until scan state changes to failed with timed out as state reason")
 			params := models.GetScansParams{
 				Filter: utils.PointerTo(fmt.Sprintf(
 					"scanConfig/id eq '%s' and state eq '%s' and stateReason eq '%s'",
@@ -89,11 +88,11 @@ var _ = Describe("Detecting scan failures", func() {
 				)),
 			}
 			var scans *models.Scans
-			Eventually(func() bool {
+			gomega.Eventually(func() bool {
 				scans, err = client.GetScans(ctx, params)
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				return len(*scans.Items) == 1
-			}, helpers.DefaultTimeout, time.Second).Should(BeTrue())
+			}, DefaultTimeout, time.Second).Should(gomega.BeTrue())
 		})
 	})
 })

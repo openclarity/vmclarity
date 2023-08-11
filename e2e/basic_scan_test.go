@@ -13,52 +13,51 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package end_to_end_test
+package e2e
 
 import (
 	"fmt"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
+	"github.com/onsi/ginkgo/v2"
+	"github.com/onsi/gomega"
 	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/end_to_end_test/helpers"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 	"time"
 )
 
-var _ = Describe("Running a basic scan (only SBOM)", func() {
+var _ = ginkgo.Describe("Running a basic scan (only SBOM)", func() {
 
-	Context("which scans a docker container", func() {
-		It("should finish successfully", func(ctx SpecContext) {
-			By("waiting until test asset is found")
+	ginkgo.Context("which scans a docker container", func() {
+		ginkgo.It("should finish successfully", func(ctx ginkgo.SpecContext) {
+			ginkgo.By("waiting until test asset is found")
 			assetsParams := models.GetAssetsParams{
-				Filter: utils.PointerTo(fmt.Sprintf("terminatedOn eq null and %s", helpers.DefaultScope)),
+				Filter: utils.PointerTo(fmt.Sprintf("terminatedOn eq null and %s", DefaultScope)),
 			}
-			Eventually(func() bool {
+			gomega.Eventually(func() bool {
 				assets, err := client.GetAssets(ctx, assetsParams)
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				return len(*assets.Items) == 1
-			}, helpers.DefaultTimeout, time.Second).Should(BeTrue())
+			}, DefaultTimeout, time.Second).Should(gomega.BeTrue())
 
-			By("applying a scan configuration")
+			ginkgo.By("applying a scan configuration")
 			apiScanConfig, err := client.PostScanConfig(
 				ctx,
-				helpers.GetCustomScanConfig(
+				GetCustomScanConfig(
 					&models.ScanFamiliesConfig{
 						Sbom: &models.SBOMConfig{
 							Enabled: utils.PointerTo(true),
 						},
 					},
-					helpers.DefaultScope,
+					DefaultScope,
 					600,
 				))
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-			By("updating scan configuration to run now")
-			updateScanConfig := helpers.UpdateScanConfigToStartNow(apiScanConfig)
+			ginkgo.By("updating scan configuration to run now")
+			updateScanConfig := UpdateScanConfigToStartNow(apiScanConfig)
 			err = client.PatchScanConfig(ctx, *apiScanConfig.Id, updateScanConfig)
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-			By("waiting until scan starts")
+			ginkgo.By("waiting until scan starts")
 			scanParams := models.GetScansParams{
 				Filter: utils.PointerTo(fmt.Sprintf(
 					"scanConfig/id eq '%s' and state ne '%s' and state ne '%s'",
@@ -68,13 +67,13 @@ var _ = Describe("Running a basic scan (only SBOM)", func() {
 				)),
 			}
 			var scans *models.Scans
-			Eventually(func() bool {
+			gomega.Eventually(func() bool {
 				scans, err = client.GetScans(ctx, scanParams)
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				return len(*scans.Items) == 1
-			}, helpers.DefaultTimeout, time.Second).Should(BeTrue())
+			}, DefaultTimeout, time.Second).Should(gomega.BeTrue())
 
-			By("waiting until scan state changes to done")
+			ginkgo.By("waiting until scan state changes to done")
 			scanParams = models.GetScansParams{
 				Filter: utils.PointerTo(fmt.Sprintf(
 					"scanConfig/id eq '%s' and state eq '%s'",
@@ -82,11 +81,11 @@ var _ = Describe("Running a basic scan (only SBOM)", func() {
 					models.ScanStateDone,
 				)),
 			}
-			Eventually(func() bool {
+			gomega.Eventually(func() bool {
 				scans, err = client.GetScans(ctx, scanParams)
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				return len(*scans.Items) == 1
-			}, time.Second*120, time.Second).Should(BeTrue())
+			}, time.Second*120, time.Second).Should(gomega.BeTrue())
 		})
 	})
 })

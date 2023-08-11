@@ -1,4 +1,4 @@
-module github.com/openclarity/vmclarity/end_to_end_test
+module github.com/openclarity/vmclarity/e2e
 
 go 1.19
 
