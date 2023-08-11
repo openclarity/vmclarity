@@ -35,7 +35,6 @@ linters-settings:
 linters:
   enable-all: true
   disable:
-    - wastedassign
     - musttag
     - revive
     - maligned
