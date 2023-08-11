@@ -13,17 +13,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package end_to_end_test
+package e2e
 
 import (
 	"context"
 	"fmt"
 	"github.com/compose-spec/compose-go/cli"
-	"github.com/go-logr/logr"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
-	"github.com/openclarity/vmclarity/end_to_end_test/testenv"
+	"github.com/onsi/ginkgo/v2"
+	"github.com/onsi/gomega"
+	"github.com/openclarity/vmclarity/e2e/testenv"
 	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
+	"github.com/openclarity/vmclarity/pkg/shared/log"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"os"
 	"strconv"
@@ -32,79 +33,72 @@ import (
 )
 
 var (
-	testEnv   *testenv.Environment
-	log       logr.Logger
-	logSyncFn func() error
-	client    *backendclient.BackendClient
+	testEnv *testenv.Environment
+	client  *backendclient.BackendClient
 )
 
 func TestIntegrationTest(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Run integration tests")
+	gomega.RegisterFailHandler(ginkgo.Fail)
+	ginkgo.RunSpecs(t, "Run integration tests")
 }
 
 func beforeSuite(ctx context.Context) {
 	var err error
 
-	By("creating test environment")
-	log, logSyncFn, err = testenv.NewLogger(GinkgoWriter)
-	ctx = logr.NewContext(ctx, log)
+	ginkgo.By("creating test environment")
+	log.InitLogger(logrus.DebugLevel.String(), os.Stderr)
+	logger := logrus.WithContext(ctx)
+	ctx = log.SetLoggerForContext(ctx, logger)
 
 	opts, err := cli.NewProjectOptions(
 		[]string{"../installation/docker/dockercompose.yml"},
 		cli.WithName("vmclarity"),
 		cli.WithWorkingDirectory("../installation/docker"),
 		cli.WithResolvedPaths(true),
-		cli.WithProfiles([]string{"end-to-end-test"}),
+		cli.WithProfiles([]string{"e2e"}),
 	)
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 	err = cli.WithOsEnv(opts)
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 	var reuseEnv bool
 	if reuseEnv, _ = strconv.ParseBool(os.Getenv("USE_EXISTING")); reuseEnv {
-		log.V(-1).Info("reusing existing environment...", "use_existing", reuseEnv)
+		logger.Info("reusing existing environment...", "use_existing", reuseEnv)
 	}
 
 	testEnv, err = testenv.New(opts, reuseEnv)
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-	By("starting test environment")
+	ginkgo.By("starting test environment")
 	err = testEnv.Start(ctx)
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-	Eventually(func() bool {
+	gomega.Eventually(func() bool {
 		ready, err := testEnv.ServicesReady(ctx)
-		Expect(err).NotTo(HaveOccurred())
+		gomega.Expect(err).NotTo(gomega.HaveOccurred())
 		return ready
-	}, time.Second*5).Should(BeTrue())
+	}, time.Second*5).Should(gomega.BeTrue())
 
 	u, err := testEnv.VMClarityURL()
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 	client, err = backendclient.Create(fmt.Sprintf("%s://%s/%s", u.Scheme, u.Host, u.Path))
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-	By("waiting until VMClarity API is ready")
-	Eventually(func() bool {
+	ginkgo.By("waiting until VMClarity API is ready")
+	gomega.Eventually(func() bool {
 		resp, err := http.Get("http://localhost:8081/healthz/ready")
 		return err == nil && resp.StatusCode == http.StatusOK
-	}, time.Second*5).Should(BeTrue())
+	}, time.Second*5).Should(gomega.BeTrue())
 }
 
-var _ = BeforeSuite(beforeSuite)
+var _ = ginkgo.BeforeSuite(beforeSuite)
 
 func afterSuite(ctx context.Context) {
-	By("tearing down test environment")
+	ginkgo.By("tearing down test environment")
 	err := testEnv.Stop(ctx)
-	Expect(err).NotTo(HaveOccurred())
-	defer func(fn func() error) {
-		err := fn()
-		if err != nil {
-			fmt.Printf("calling sync on logger failed: %v\n", err)
-		}
-	}(logSyncFn)
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 }
 
-var _ = AfterSuite(afterSuite)
+var _ = ginkgo.AfterSuite(afterSuite)

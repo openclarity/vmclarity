@@ -97,7 +97,7 @@ api` to regenerate the model, client and server code.
 
 ### Testing End to End
 
-`make end-to-end-test` can be used run all the integration tests in the repo.
+`make e2e` can be used run all the integration tests in the repo.
 
 For details on how to test VMClarity end to end please see the End to End
 testing guide [here](docs/test_e2e.md).

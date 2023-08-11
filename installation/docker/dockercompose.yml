@@ -187,7 +187,7 @@ services:
     networks:
       - asset
     profiles:
-      - end-to-end-test
+      - e2e
     labels:
       scanconfig: test
 

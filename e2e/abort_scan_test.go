@@ -13,32 +13,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package end_to_end_test
+package e2e
 
 import (
 	"fmt"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
+	"github.com/onsi/ginkgo/v2"
+	"github.com/onsi/gomega"
 	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/end_to_end_test/helpers"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 	"time"
 )
 
-var _ = Describe("Aborting a scan", func() {
+var _ = ginkgo.Describe("Aborting a scan", func() {
 
-	Context("which is running", func() {
-		It("should stop successfully", func(ctx SpecContext) {
-			By("applying a scan configuration")
-			apiScanConfig, err := client.PostScanConfig(ctx, helpers.GetDefaultScanConfig())
-			Expect(err).NotTo(HaveOccurred())
+	ginkgo.Context("which is running", func() {
+		ginkgo.It("should stop successfully", func(ctx ginkgo.SpecContext) {
+			ginkgo.By("applying a scan configuration")
+			apiScanConfig, err := client.PostScanConfig(ctx, GetDefaultScanConfig())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-			By("updating scan configuration to run now")
-			updateScanConfig := helpers.UpdateScanConfigToStartNow(apiScanConfig)
+			ginkgo.By("updating scan configuration to run now")
+			updateScanConfig := UpdateScanConfigToStartNow(apiScanConfig)
 			err = client.PatchScanConfig(ctx, *apiScanConfig.Id, updateScanConfig)
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-			By("waiting until scan starts")
+			ginkgo.By("waiting until scan starts")
 			params := models.GetScansParams{
 				Filter: utils.PointerTo(fmt.Sprintf(
 					"scanConfig/id eq '%s' and state ne '%s' and state ne '%s'",
@@ -48,19 +47,19 @@ var _ = Describe("Aborting a scan", func() {
 				)),
 			}
 			var scans *models.Scans
-			Eventually(func() bool {
+			gomega.Eventually(func() bool {
 				scans, err = client.GetScans(ctx, params)
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				return len(*scans.Items) == 1
-			}, helpers.DefaultTimeout, time.Second).Should(BeTrue())
+			}, DefaultTimeout, time.Second).Should(gomega.BeTrue())
 
-			By("aborting a scan")
+			ginkgo.By("aborting a scan")
 			err = client.PatchScan(ctx, *(*scans.Items)[0].Id, &models.Scan{
 				State: utils.PointerTo(models.ScanStateAborted),
 			})
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-			By("waiting until scan state changes to aborted")
+			ginkgo.By("waiting until scan state changes to aborted")
 			params = models.GetScansParams{
 				Filter: utils.PointerTo(fmt.Sprintf(
 					"scanConfig/id eq '%s' and state eq '%s'",
@@ -68,11 +67,11 @@ var _ = Describe("Aborting a scan", func() {
 					models.ScanStateAborted,
 				)),
 			}
-			Eventually(func() bool {
+			gomega.Eventually(func() bool {
 				scans, err = client.GetScans(ctx, params)
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				return len(*scans.Items) == 1
-			}, helpers.DefaultTimeout, time.Second).Should(BeTrue())
+			}, DefaultTimeout, time.Second).Should(gomega.BeTrue())
 		})
 	})
 })
