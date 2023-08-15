@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/pkg/orchestrator/assetscanestimationwatcher"
 	"github.com/openclarity/vmclarity/pkg/orchestrator/assetscanprocessor"
 	"github.com/openclarity/vmclarity/pkg/orchestrator/assetscanwatcher"
 	"github.com/openclarity/vmclarity/pkg/orchestrator/discovery"
@@ -33,6 +34,7 @@ import (
 	"github.com/openclarity/vmclarity/pkg/orchestrator/provider/external"
 	"github.com/openclarity/vmclarity/pkg/orchestrator/provider/gcp"
 	"github.com/openclarity/vmclarity/pkg/orchestrator/scanconfigwatcher"
+	"github.com/openclarity/vmclarity/pkg/orchestrator/scanestimationwatcher"
 	"github.com/openclarity/vmclarity/pkg/orchestrator/scanwatcher"
 	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
 	"github.com/openclarity/vmclarity/pkg/shared/log"
@@ -54,6 +56,8 @@ func NewWithProvider(config *Config, p provider.Provider, b *backendclient.Backe
 	scanWatcherConfig := config.ScanWatcherConfig.WithBackendClient(b).WithProviderClient(p)
 	assetScanWatcherConfig := config.AssetScanWatcherConfig.WithBackendClient(b).WithProviderClient(p)
 	assetScanProcessorConfig := config.AssetScanProcessorConfig.WithBackendClient(b)
+	assetScanEstimationWatcherConfig := config.AssetScanEstimationWatcherConfig.WithBackendClient(b).WithProviderClient(p)
+	scanEstimationWatcherConfig := config.ScanEstimationWatcherConfig.WithBackendClient(b).WithProviderClient(p)
 
 	return &Orchestrator{
 		controllers: []Controller{
@@ -62,6 +66,8 @@ func NewWithProvider(config *Config, p provider.Provider, b *backendclient.Backe
 			assetscanprocessor.New(assetScanProcessorConfig),
 			scanwatcher.New(scanWatcherConfig),
 			assetscanwatcher.New(assetScanWatcherConfig),
+			assetscanestimationwatcher.New(assetScanEstimationWatcherConfig),
+			scanestimationwatcher.New(scanEstimationWatcherConfig),
 		},
 		controllerStartupDelay: config.ControllerStartupDelay,
 	}, nil
