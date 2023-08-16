@@ -51,11 +51,9 @@ func beforeSuite(ctx context.Context) {
 	ctx = log.SetLoggerForContext(ctx, logger)
 
 	opts, err := cli.NewProjectOptions(
-		[]string{"../installation/docker/dockercompose.yml"},
+		[]string{"../installation/docker/docker-compose.yml", "docker-compose.override.yml"},
 		cli.WithName("vmclarity"),
-		cli.WithWorkingDirectory("../installation/docker"),
 		cli.WithResolvedPaths(true),
-		cli.WithProfiles([]string{"e2e"}),
 	)
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 

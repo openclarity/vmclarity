@@ -1,0 +1,22 @@
+services:
+  orchestrator:
+    # ...
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+      - type: bind
+        source: /tmp
+        target: /tmp
+
+  alpine:
+    image: alpine:3.18.2
+    command: ["sleep", "infinity"]
+    networks:
+      - asset
+    labels:
+      scanconfig: test
+
+networks:
+  asset:
+    name: asset
