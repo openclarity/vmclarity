@@ -17,29 +17,15 @@ package sshtopology
 
 import (
 	"reflect"
-	"strings"
 	"testing"
 
 	log "github.com/sirupsen/logrus"
-	"gotest.tools/v3/assert"
 
 	"github.com/openclarity/vmclarity/pkg/shared/families/infofinder/types"
 )
 
 var testScanner = &Scanner{
 	logger: log.NewEntry(log.StandardLogger()),
-}
-
-func TestScanner_executeSSHKeyGenCommand(t *testing.T) {
-	s := &Scanner{
-		logger: log.NewEntry(log.StandardLogger()),
-	}
-	got, err := s.executeSSHKeyGenCommand("sha256", "/Users/idanf/.ssh/known_hosts")
-	assert.NilError(t, err)
-	lines := strings.Split(string(got), "\n")
-	for i := range lines {
-		t.Logf("[%d]: %+v", i, lines[i])
-	}
 }
 
 func Test_getHomeUserDirs(t *testing.T) {
