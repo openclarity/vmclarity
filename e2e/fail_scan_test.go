@@ -33,7 +33,7 @@ var _ = ginkgo.Describe("Detecting scan failures", func() {
 				ctx,
 				GetCustomScanConfig(
 					&DefaultScanFamiliesConfig,
-					"contains(assetInfo.tags, '{\"key\":\"notexisting\",\"value\":\"label\"}')",
+					"assetInfo/labels/any(t: t/key eq 'notexisting' and t/value eq 'label')",
 					600,
 				))
 			gomega.Expect(err).NotTo(gomega.HaveOccurred())

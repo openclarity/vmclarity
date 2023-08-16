@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	DefaultScope   string        = "contains(assetInfo.labels, '{\"key\":\"scanconfig\",\"value\":\"test\"}')"
+	DefaultScope   string        = "assetInfo/labels/any(t: t/key eq 'scanconfig' and t/value eq 'test')"
 	DefaultTimeout time.Duration = 60 * time.Second
 )
 
