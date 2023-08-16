@@ -1,6 +1,6 @@
 module github.com/openclarity/vmclarity/e2e
 
-go 1.19
+go 1.20
 
 require (
 	github.com/compose-spec/compose-go v1.13.4
