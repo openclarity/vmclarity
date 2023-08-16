@@ -25,7 +25,6 @@ import (
 	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
 	"github.com/openclarity/vmclarity/pkg/shared/log"
 	"github.com/sirupsen/logrus"
-	"net/http"
 	"os"
 	"strconv"
 	"testing"
@@ -83,12 +82,6 @@ func beforeSuite(ctx context.Context) {
 
 	client, err = backendclient.Create(fmt.Sprintf("%s://%s/%s", u.Scheme, u.Host, u.Path))
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
-
-	ginkgo.By("waiting until VMClarity API is ready")
-	gomega.Eventually(func() bool {
-		resp, err := http.Get("http://localhost:8081/healthz/ready")
-		return err == nil && resp.StatusCode == http.StatusOK
-	}, time.Second*5).Should(gomega.BeTrue())
 }
 
 var _ = ginkgo.BeforeSuite(beforeSuite)

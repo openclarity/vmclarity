@@ -21,7 +21,7 @@ services:
         source: apiserver-db-data
         target: /data
     healthcheck:
-      test: ["CMD", "nc", "-z", "127.0.0.1", "8888"]
+      test: wget --no-verbose --tries=1 --spider http://127.0.0.1:8081/healthz/ready || exit 1
       interval: 10s
       retries: 60
 
