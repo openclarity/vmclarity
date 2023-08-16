@@ -29,6 +29,7 @@ FROM ${VMCLARITY_TOOLS_BASE}
 
 RUN apk upgrade
 RUN apk add util-linux
+RUN apk add openssh
 
 WORKDIR /app
 

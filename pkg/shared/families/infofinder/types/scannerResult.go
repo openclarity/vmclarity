@@ -1,4 +1,4 @@
-// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,17 +15,27 @@
 
 package types
 
-type FamilyType string
+type InfoType string
 
 const (
-	SBOM FamilyType = "sbom"
-
-	Vulnerabilities  FamilyType = "vulnerabilities"
-	Secrets          FamilyType = "secrets"
-	Rootkits         FamilyType = "rootkits"
-	Malware          FamilyType = "malware"
-	Misconfiguration FamilyType = "misconfiguration"
-	InfoFinder       FamilyType = "infofinder"
-
-	Exploits FamilyType = "exploits"
+	SSHKnownHosts     InfoType = "sshKnownHosts"
+	SSHAuthorizedKeys InfoType = "sshAuthorizedKeys"
+	SSHPrivateKeys    InfoType = "sshPrivateKeys"
+	SSHDaemonKeys     InfoType = "sshDaemonKeys"
 )
+
+type Info struct {
+	Type InfoType `json:"type"`
+	Path string   `json:"path"`
+	Data string   `json:"data"`
+}
+
+type ScannerResult struct {
+	ScannerName string
+	Infos       []Info
+	Error       error
+}
+
+func (sr ScannerResult) GetError() error {
+	return sr.Error
+}
