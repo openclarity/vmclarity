@@ -40,5 +40,4 @@ type ScannersConfig struct {
 
 func (ScannersConfig) IsConfig() {}
 
-type SSHTopologyConfig struct {
-}
+type SSHTopologyConfig struct{}

@@ -53,6 +53,7 @@ func New(c job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.
 	}
 }
 
+// nolint:cyclop,gocognit
 func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 	go func() {
 		s.logger.Debugf("Running with input=%v and source type=%v", userInput, sourceType)
@@ -80,7 +81,7 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 		// getSSHPrivateKeysFingerprints (for each user folder)
 		// getSSHAuthorizedKeysFingerprints (for each user folder)
 		// getSSHKnownHostsFingerprints (for each user folder)
-		jobsCount := 1 + 3*len(homeUserDirs)
+		jobsCount := 1 + 3*len(homeUserDirs) // nolint:gomnd
 		errs := make(chan error, jobsCount)
 		fingerprintsChan := make(chan []types.Info, jobsCount)
 
@@ -179,13 +180,13 @@ func getHomeUserDirs(rootDir string) ([]string, error) {
 func (s *Scanner) getSSHDaemonKeysFingerprints(rootPath string) ([]types.Info, error) {
 	paths, err := s.getPrivateKeysPaths(path.Join(rootPath, "/etc/ssh"), false)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get private keys paths: %v", err)
 	}
 	s.logger.Debugf("Found ssh daemon private keys paths %+v", paths)
 
 	fingerprints, err := s.getFingerprints(paths, types.SSHDaemonKeys)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get ssh daemon private keys fingerprints: %v", err)
 	}
 	s.logger.Debugf("Found ssh daemon private keys fingerprints %+v", fingerprints)
 
@@ -195,13 +196,13 @@ func (s *Scanner) getSSHDaemonKeysFingerprints(rootPath string) ([]types.Info, e
 func (s *Scanner) getSSHPrivateKeysFingerprints(homeUserDir string) ([]types.Info, error) {
 	paths, err := s.getPrivateKeysPaths(homeUserDir, true)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get private keys paths: %v", err)
 	}
 	s.logger.Debugf("Found ssh private keys paths %+v", paths)
 
 	infos, err := s.getFingerprints(paths, types.SSHPrivateKeys)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get ssh private keys fingerprints: %v", err)
 	}
 	s.logger.Debugf("Found ssh private keys fingerprints %+v", infos)
 
@@ -211,7 +212,7 @@ func (s *Scanner) getSSHPrivateKeysFingerprints(homeUserDir string) ([]types.Inf
 func (s *Scanner) getSSHAuthorizedKeysFingerprints(homeUserDir string) ([]types.Info, error) {
 	infos, err := s.getFingerprints([]string{path.Join(homeUserDir, ".ssh/authorized_keys")}, types.SSHAuthorizedKeys)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get ssh authorized keys fingerprints: %v", err)
 	}
 	s.logger.Debugf("Found ssh authorized keys fingerprints %+v", infos)
 
@@ -221,7 +222,7 @@ func (s *Scanner) getSSHAuthorizedKeysFingerprints(homeUserDir string) ([]types.
 func (s *Scanner) getSSHKnownHostsFingerprints(homeUserDir string) ([]types.Info, error) {
 	infos, err := s.getFingerprints([]string{path.Join(homeUserDir, ".ssh/known_hosts")}, types.SSHKnownHosts)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get ssh known hosts fingerprints: %v", err)
 	}
 	s.logger.Debugf("Found ssh known hosts fingerprints %+v", infos)
 
@@ -278,7 +279,7 @@ func (s *Scanner) getPrivateKeysPaths(rootPath string, recursive bool) ([]string
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to walks the file tree rooted at %v: %v", rootPath, err)
 	}
 
 	return paths, nil
@@ -307,8 +308,8 @@ func isPrivateKey(path string) (bool, error) {
 }
 
 func parseSSHKeyGenCommandOutput(output string, infoType types.InfoType, path string) []types.Info {
-	var infos []types.Info
 	lines := strings.Split(output, "\n")
+	infos := make([]types.Info, 0, len(lines))
 	for i := range lines {
 		if lines[i] == "" {
 			continue
@@ -332,7 +333,12 @@ func (s *Scanner) executeSSHKeyGenCommand(hashAlgo string, filePath string) ([]b
 	}
 	cmd := exec.Command("ssh-keygen", args...)
 	s.logger.Infof("Running command: %v", cmd.String())
-	return sharedUtils.RunCommand(cmd)
+	output, err := sharedUtils.RunCommand(cmd)
+	if err != nil {
+		return nil, fmt.Errorf("failed to run command: %v", err)
+	}
+
+	return output, nil
 }
 
 func (s *Scanner) isValidInputType(sourceType utils.SourceType) bool {
