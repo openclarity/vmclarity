@@ -17,15 +17,16 @@ package e2e
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
+
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
-	"time"
 )
 
 var _ = ginkgo.Describe("Aborting a scan", func() {
-
 	ginkgo.Context("which is running", func() {
 		ginkgo.It("should stop successfully", func(ctx ginkgo.SpecContext) {
 			ginkgo.By("applying a scan configuration")

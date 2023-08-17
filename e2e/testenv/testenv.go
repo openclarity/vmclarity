@@ -18,6 +18,10 @@ package testenv
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
+	"time"
+
 	"github.com/compose-spec/compose-go/cli"
 	"github.com/compose-spec/compose-go/types"
 	"github.com/docker/cli/cli/command"
@@ -25,9 +29,6 @@ import (
 	"github.com/docker/compose/v2/pkg/api"
 	"github.com/docker/compose/v2/pkg/compose"
 	"github.com/pkg/errors"
-	"net/url"
-	"strings"
-	"time"
 )
 
 const (
@@ -42,6 +43,7 @@ type Environment struct {
 	reuse    bool
 }
 
+// nolint:wrapcheck
 func New(o *cli.ProjectOptions, reuse bool) (*Environment, error) {
 	project, err := cli.ProjectFromOptions(o)
 	if err != nil {
@@ -77,6 +79,7 @@ func New(o *cli.ProjectOptions, reuse bool) (*Environment, error) {
 	}, nil
 }
 
+// nolint:wrapcheck
 func (e *Environment) Start(ctx context.Context) error {
 	if e.reuse {
 		return nil
@@ -94,13 +97,14 @@ func (e *Environment) Start(ctx context.Context) error {
 		Start: api.StartOptions{
 			Project:     e.project,
 			Wait:        true,
-			WaitTimeout: 10 * time.Minute,
+			WaitTimeout: 10 * time.Minute, // nolint:gomnd
 			Services:    e.Services(),
 		},
 	}
 	return e.composer.Up(ctx, e.project, opts)
 }
 
+// nolint:wrapcheck
 func (e *Environment) Stop(ctx context.Context) error {
 	if e.reuse {
 		return nil
@@ -116,6 +120,7 @@ func (e *Environment) Stop(ctx context.Context) error {
 	return e.composer.Down(ctx, e.project.Name, opts)
 }
 
+// nolint:wrapcheck
 func (e *Environment) ServicesReady(ctx context.Context) (bool, error) {
 	services := e.Services()
 
@@ -131,7 +136,7 @@ func (e *Environment) ServicesReady(ctx context.Context) (bool, error) {
 		return false, err
 	}
 
-	// TODO(paralta) remove when grype-server-init service is removed
+	// TODO(paralta) remove when grype-server-init service is removed.
 	initServices := e.InitServices()
 	if len(services)-len(initServices) != len(ps) {
 		return false, nil
@@ -154,7 +159,7 @@ func (e *Environment) Services() []string {
 	return services
 }
 
-// TODO(paralta) remove when grype-server-init service is removed
+// TODO(paralta) remove when grype-server-init service is removed.
 func (e *Environment) InitServices() []string {
 	services := make([]string, 0, len(e.project.Services))
 	for _, srv := range e.project.Services {

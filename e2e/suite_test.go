@@ -18,17 +18,19 @@ package e2e
 import (
 	"context"
 	"fmt"
-	"github.com/compose-spec/compose-go/cli"
-	"github.com/onsi/ginkgo/v2"
-	"github.com/onsi/gomega"
-	"github.com/openclarity/vmclarity/e2e/testenv"
-	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
-	"github.com/openclarity/vmclarity/pkg/shared/log"
-	"github.com/sirupsen/logrus"
 	"os"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/compose-spec/compose-go/cli"
+	"github.com/onsi/ginkgo/v2"
+	"github.com/onsi/gomega"
+	"github.com/sirupsen/logrus"
+
+	"github.com/openclarity/vmclarity/e2e/testenv"
+	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
+	"github.com/openclarity/vmclarity/pkg/shared/log"
 )
 
 var (

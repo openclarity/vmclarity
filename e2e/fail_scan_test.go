@@ -17,15 +17,16 @@ package e2e
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
+
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
-	"time"
 )
 
 var _ = ginkgo.Describe("Detecting scan failures", func() {
-
 	ginkgo.Context("when a scan stops without assets to scan", func() {
 		ginkgo.It("should detect failure reason successfully", func(ctx ginkgo.SpecContext) {
 			ginkgo.By("applying a scan configuration with not existing label")
