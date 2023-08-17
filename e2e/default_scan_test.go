@@ -17,15 +17,16 @@ package e2e
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
+
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
-	"time"
 )
 
 var _ = ginkgo.Describe("Running a default scan (SBOM, vulnerabilities and exploits)", func() {
-
 	ginkgo.Context("which scans a docker container", func() {
 		ginkgo.It("should finish successfully", func(ctx ginkgo.SpecContext) {
 			ginkgo.By("applying a scan configuration")

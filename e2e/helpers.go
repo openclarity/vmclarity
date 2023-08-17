@@ -16,10 +16,12 @@
 package e2e
 
 import (
+	"time"
+
 	"github.com/google/uuid"
+
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
-	"time"
 )
 
 const (
@@ -43,7 +45,7 @@ func GetDefaultScanConfig() models.ScanConfig {
 	return GetCustomScanConfig(
 		&DefaultScanFamiliesConfig,
 		DefaultScope,
-		600,
+		600, // nolint:gomnd
 	)
 }
 
