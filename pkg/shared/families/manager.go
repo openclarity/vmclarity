@@ -66,8 +66,8 @@ func New(config *Config) *Manager {
 	if config.Misconfiguration.Enabled {
 		manager.families = append(manager.families, misconfiguration.New(config.Misconfiguration))
 	}
-	if config.InfoFinders.Enabled {
-		manager.families = append(manager.families, infofinder.New(config.InfoFinders))
+	if config.InfoFinder.Enabled {
+		manager.families = append(manager.families, infofinder.New(config.InfoFinder))
 	}
 
 	// Enrichers.

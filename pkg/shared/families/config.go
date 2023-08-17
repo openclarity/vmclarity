@@ -40,7 +40,7 @@ type Config struct {
 	Rootkits         rootkits.Config              `json:"rootkits" yaml:"rootkits" mapstructure:"rootkits"`
 	Malware          malware.Config               `json:"malware" yaml:"malware" mapstructure:"malware"`
 	Misconfiguration misconfigurationTypes.Config `json:"misconfiguration" yaml:"misconfiguration" mapstructure:"misconfiguration"`
-	InfoFinders      infofinderTypes.Config       `json:"infofinders" yaml:"infofinders" mapstructure:"infofinders"`
+	InfoFinder       infofinderTypes.Config       `json:"infofinder" yaml:"infofinder" mapstructure:"infofinder"`
 
 	// Enrichers
 	Exploits exploits.Config `json:"exploits" yaml:"exploits" mapstructure:"exploits"`
@@ -114,9 +114,9 @@ func SetMountPointsForFamiliesInput(mountPoints []string, familiesConfig *Config
 			)
 		}
 
-		if familiesConfig.InfoFinders.Enabled {
-			familiesConfig.InfoFinders.Inputs = append(
-				familiesConfig.InfoFinders.Inputs,
+		if familiesConfig.InfoFinder.Enabled {
+			familiesConfig.InfoFinder.Inputs = append(
+				familiesConfig.InfoFinder.Inputs,
 				types.Input{
 					StripPathFromResult: utils.PointerTo(true),
 					Input:               mountDir,

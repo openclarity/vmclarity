@@ -86,7 +86,8 @@ misconfiguration:
       input_type: "rootfs"
   scanners_configs: {}
 
-infofinders:
+
+infofinder:
   enabled: true
   scanners_list:
     - "sshTopology"
