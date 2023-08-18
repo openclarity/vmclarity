@@ -60,12 +60,13 @@ var _ = ginkgo.Describe("Aborting a scan", func() {
 			})
 			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-			ginkgo.By("waiting until scan state changes to aborted")
+			ginkgo.By("waiting until scan state changes to failed with aborted as state reason")
 			params = models.GetScansParams{
 				Filter: utils.PointerTo(fmt.Sprintf(
-					"scanConfig/id eq '%s' and state eq '%s'",
+					"scanConfig/id eq '%s' and state eq '%s' and stateReason eq '%s'",
 					*apiScanConfig.Id,
-					models.ScanStateAborted,
+					models.ScanStateFailed,
+					models.ScanStateReasonAborted,
 				)),
 			}
 			gomega.Eventually(func() bool {

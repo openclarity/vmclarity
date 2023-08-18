@@ -386,6 +386,11 @@ func (c *Client) getNetworkIDFromName(ctx context.Context, networkName string) (
 		return "", fmt.Errorf("scan network not found: %w", err)
 	}
 	if len(networks) > 1 {
+		for _, n := range networks {
+			if n.Name == networkName {
+				return n.ID, nil
+			}
+		}
 		return "", fmt.Errorf("found more than one scan network: %w", err)
 	}
 	return networks[0].ID, nil
