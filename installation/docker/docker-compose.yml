@@ -180,4 +180,4 @@ volumes:
 
 networks:
   default:
-    name: vmclarity
+    name: ${COMPOSE_PROJECT_NAME}

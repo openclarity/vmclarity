@@ -53,7 +53,7 @@ func beforeSuite(ctx context.Context) {
 
 	opts, err := cli.NewProjectOptions(
 		[]string{"../installation/docker/docker-compose.yml", "docker-compose.override.yml"},
-		cli.WithName("vmclarity"),
+		cli.WithName("vmclarity-e2e"),
 		cli.WithResolvedPaths(true),
 	)
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())

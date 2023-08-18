@@ -19,4 +19,4 @@ services:
 
 networks:
   asset:
-    name: asset
+    name: ${COMPOSE_PROJECT_NAME}-asset
