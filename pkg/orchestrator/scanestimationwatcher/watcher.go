@@ -349,7 +349,7 @@ func (w *Watcher) newAssetScanEstimationFromScanEstimation(ctx context.Context, 
 		AssetScanTemplate: scanEstimation.ScanTemplate.AssetScanTemplate,
 		Estimation:        nil,
 		Id:                nil,
-		ScanEstimation: &models.ScanEstimationFakeRelationship{
+		ScanEstimation: &models.ScanEstimationRelationship{
 			Id: scanEstimation.Id,
 		},
 		State: &models.AssetScanEstimationState{

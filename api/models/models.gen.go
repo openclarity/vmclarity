@@ -236,13 +236,13 @@ type AssetScan struct {
 // AssetScanEstimation defines model for AssetScanEstimation.
 type AssetScanEstimation struct {
 	// Asset Describes an asset object.
-	Asset             *Asset                          `json:"asset,omitempty"`
-	AssetScanTemplate *AssetScanTemplate              `json:"assetScanTemplate,omitempty"`
-	Estimation        *Estimation                     `json:"estimation,omitempty"`
-	Id                *string                         `json:"id,omitempty"`
-	Revision          *int                            `json:"revision,omitempty"`
-	ScanEstimation    *ScanEstimationFakeRelationship `json:"scanEstimation,omitempty"`
-	State             *AssetScanEstimationState       `json:"state,omitempty"`
+	Asset             *Asset                      `json:"asset,omitempty"`
+	AssetScanTemplate *AssetScanTemplate          `json:"assetScanTemplate,omitempty"`
+	Estimation        *Estimation                 `json:"estimation,omitempty"`
+	Id                *string                     `json:"id,omitempty"`
+	Revision          *int                        `json:"revision,omitempty"`
+	ScanEstimation    *ScanEstimationRelationship `json:"scanEstimation,omitempty"`
+	State             *AssetScanEstimationState   `json:"state,omitempty"`
 }
 
 // AssetScanEstimationExists defines model for AssetScanEstimationExists.
@@ -446,7 +446,8 @@ type DirInfo struct {
 // Estimation defines model for Estimation.
 type Estimation struct {
 	// Cost Total cost of the scan ($)
-	Cost *float32 `json:"cost,omitempty"`
+	Cost   *float32           `json:"cost,omitempty"`
+	Recipe *[]RecipeComponent `json:"recipe,omitempty"`
 
 	// Size Total size of the scan (GB)
 	Size *int `json:"size,omitempty"`
@@ -626,6 +627,12 @@ type PodInfo struct {
 	Location   *string `json:"location,omitempty"`
 	ObjectType string  `json:"objectType"`
 	PodName    *string `json:"podName,omitempty"`
+}
+
+// RecipeComponent defines model for RecipeComponent.
+type RecipeComponent struct {
+	Cost      *float32 `json:"cost,omitempty"`
+	Operation *string  `json:"operation,omitempty"`
 }
 
 // ResourceCleanupState defines model for ResourceCleanupState.
@@ -815,8 +822,8 @@ type ScanEstimationExists struct {
 	ScanEstimation *ScanEstimation `json:"scanEstimation,omitempty"`
 }
 
-// ScanEstimationFakeRelationship defines model for ScanEstimationFakeRelationship.
-type ScanEstimationFakeRelationship struct {
+// ScanEstimationRelationship defines model for ScanEstimationRelationship.
+type ScanEstimationRelationship struct {
 	Id *string `json:"id,omitempty"`
 }
 
