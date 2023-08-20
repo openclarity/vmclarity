@@ -2866,6 +2866,19 @@ components:
           description: Total cost of the scan ($)
           type: number
           format: float
+        recipe:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeComponent'
+
+    RecipeComponent:
+      type: object
+      properties:
+        operation:
+          type: string
+        cost:
+          type: number
+          format: float
 
     AssetScanEstimations:
       type: object
@@ -2879,7 +2892,7 @@ components:
           items:
             $ref: '#/components/schemas/AssetScanEstimation'
 
-    ScanEstimationFakeRelationship:
+    ScanEstimationRelationship:
       type: object
       properties:
         id:
@@ -2894,7 +2907,7 @@ components:
           $ref: '#/components/schemas/Asset'
         # TODO (erezf) replace with ScanEstimationRelationship object (?)
         scanEstimation:
-          $ref: '#/components/schemas/ScanEstimationFakeRelationship'
+          $ref: '#/components/schemas/ScanEstimationRelationship'
         state:
           $ref: '#/components/schemas/AssetScanEstimationState'
         estimation:
