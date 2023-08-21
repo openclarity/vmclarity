@@ -125,8 +125,11 @@ test: ## Run Unit Tests
 	@go test ./...
 
 .PHONY: e2e
-e2e: ## Run go e2e test against code
+e2e: push-docker-apiserver push-docker-cli push-docker-orchestrator ## Run go e2e test against code
 	@cd e2e && \
+	export APIServerContainerImage=${DOCKER_REGISTRY}/vmclarity-apiserver:${DOCKER_TAG} && \
+	export OrchestratorContainerImage=${DOCKER_REGISTRY}/vmclarity-orchestrator:${DOCKER_TAG} && \
+	export ScannerContainerImage=${DOCKER_REGISTRY}/vmclarity-cli:${DOCKER_TAG} && \
     go test -v -failfast -test.v -test.paniconexit0 -timeout 2h -ginkgo.v .
 
 .PHONY: clean-ui
