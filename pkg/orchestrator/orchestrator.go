@@ -54,7 +54,7 @@ func Run(ctx context.Context, config *Config) error {
 
 	orchestrator, err := New(ctx, config)
 	if err != nil {
-		return fmt.Errorf("failed to initialize Orchestrator: %v", err)
+		return fmt.Errorf("failed to initialize Orchestrator: %w", err)
 	}
 
 	orchestrator.Start(ctx)
