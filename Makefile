@@ -125,7 +125,7 @@ test: ## Run Unit Tests
 	@go test ./...
 
 .PHONY: e2e
-e2e: push-docker-apiserver push-docker-cli push-docker-orchestrator ## Run go e2e test against code
+e2e: docker-apiserver docker-cli docker-orchestrator ## Run go e2e test against code
 	@cd e2e && \
 	export APIServerContainerImage=${DOCKER_REGISTRY}/vmclarity-apiserver:${DOCKER_TAG} && \
 	export OrchestratorContainerImage=${DOCKER_REGISTRY}/vmclarity-orchestrator:${DOCKER_TAG} && \
