@@ -18,10 +18,10 @@ package types
 type InfoType string
 
 const (
-	SSHKnownHosts     InfoType = "sshKnownHosts"
-	SSHAuthorizedKeys InfoType = "sshAuthorizedKeys"
-	SSHPrivateKeys    InfoType = "sshPrivateKeys"
-	SSHDaemonKeys     InfoType = "sshDaemonKeys"
+	SSHKnownHostFingerprint     InfoType = "sshKnownHostFingerprint"
+	SSHAuthorizedKeyFingerprint InfoType = "sshAuthorizedKeyFingerprint"
+	SSHPrivateKeyFingerprint    InfoType = "sshPrivateKeyFingerprint"
+	SSHDaemonKeyFingerprint     InfoType = "sshDaemonKeyFingerprint"
 )
 
 type Info struct {
