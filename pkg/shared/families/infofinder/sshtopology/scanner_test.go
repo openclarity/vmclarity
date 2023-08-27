@@ -209,12 +209,12 @@ func Test_parseSSHKeyGenCommandOutput(t *testing.T) {
 			name: "single line output",
 			args: args{
 				output:   "256 SHA256:gv6snCwAl5+6fY2g5VkmETWb9Mv0zLRkMz8aQyQWAVc ec2-3-64-214-52.eu-central-1.compute.amazonaws.com (ED25519)",
-				infoType: types.SSHKnownHosts,
+				infoType: types.SSHKnownHostFingerprint,
 				path:     "/home/user/.ssh/known_hosts",
 			},
 			want: []types.Info{
 				{
-					Type: types.SSHKnownHosts,
+					Type: types.SSHKnownHostFingerprint,
 					Path: "/home/user/.ssh/known_hosts",
 					Data: "256 SHA256:gv6snCwAl5+6fY2g5VkmETWb9Mv0zLRkMz8aQyQWAVc ec2-3-64-214-52.eu-central-1.compute.amazonaws.com (ED25519)",
 				},
@@ -224,12 +224,12 @@ func Test_parseSSHKeyGenCommandOutput(t *testing.T) {
 			name: "single line output with new line",
 			args: args{
 				output:   "256 SHA256:gv6snCwAl5+6fY2g5VkmETWb9Mv0zLRkMz8aQyQWAVc ec2-3-64-214-52.eu-central-1.compute.amazonaws.com (ED25519)\n",
-				infoType: types.SSHKnownHosts,
+				infoType: types.SSHKnownHostFingerprint,
 				path:     "/home/user/.ssh/known_hosts",
 			},
 			want: []types.Info{
 				{
-					Type: types.SSHKnownHosts,
+					Type: types.SSHKnownHostFingerprint,
 					Path: "/home/user/.ssh/known_hosts",
 					Data: "256 SHA256:gv6snCwAl5+6fY2g5VkmETWb9Mv0zLRkMz8aQyQWAVc ec2-3-64-214-52.eu-central-1.compute.amazonaws.com (ED25519)",
 				},
@@ -239,17 +239,17 @@ func Test_parseSSHKeyGenCommandOutput(t *testing.T) {
 			name: "multiple lines output",
 			args: args{
 				output:   "256 SHA256:gv6snCwAl5+6fY2g5VkmETWb9Mv0zLRkMz8aQyQWAVc ec2-3-64-214-52.eu-central-1.compute.amazonaws.com (ED25519)\n256 SHA256:cDmm4+e/BNwQpsk/Qhh39i2qiT6HcIs6qTLtIiMWzPg ec2-3-64-214-52.eu-central-1.compute.amazonaws.com (ECDSA)",
-				infoType: types.SSHKnownHosts,
+				infoType: types.SSHKnownHostFingerprint,
 				path:     "/home/user/.ssh/known_hosts",
 			},
 			want: []types.Info{
 				{
-					Type: types.SSHKnownHosts,
+					Type: types.SSHKnownHostFingerprint,
 					Path: "/home/user/.ssh/known_hosts",
 					Data: "256 SHA256:gv6snCwAl5+6fY2g5VkmETWb9Mv0zLRkMz8aQyQWAVc ec2-3-64-214-52.eu-central-1.compute.amazonaws.com (ED25519)",
 				},
 				{
-					Type: types.SSHKnownHosts,
+					Type: types.SSHKnownHostFingerprint,
 					Path: "/home/user/.ssh/known_hosts",
 					Data: "256 SHA256:cDmm4+e/BNwQpsk/Qhh39i2qiT6HcIs6qTLtIiMWzPg ec2-3-64-214-52.eu-central-1.compute.amazonaws.com (ECDSA)",
 				},
