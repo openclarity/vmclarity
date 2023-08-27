@@ -68,29 +68,35 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 			return
 		}
 
-		var retErr error
+		var errs []error
 		homeUserDirs, err := getHomeUserDirs(userInput)
 		if err != nil {
 			// Collect the error and continue.
-			retErr = errors.Join(retErr, fmt.Errorf("failed to get home user dirs: %v", err))
+			errs = append(errs, fmt.Errorf("failed to get home user dirs: %v", err))
 		}
 		s.logger.Debugf("Found home user dirs %+v", homeUserDirs)
 
-		// The jobs are:
-		// getSSHDaemonKeysFingerprints
-		// getSSHPrivateKeysFingerprints (for each user folder)
-		// getSSHAuthorizedKeysFingerprints (for each user folder)
-		// getSSHKnownHostsFingerprints (for each user folder)
-		jobsCount := 1 + 3*len(homeUserDirs) // nolint:gomnd
-		errs := make(chan error, jobsCount)
-		fingerprintsChan := make(chan []types.Info, jobsCount)
+		errorsChan := make(chan error)
+		fingerprintsChan := make(chan []types.Info)
+
+		go func() {
+			for fingerprints := range fingerprintsChan {
+				retResults.Infos = append(retResults.Infos, fingerprints...)
+			}
+		}()
+
+		go func() {
+			for e := range errorsChan {
+				errs = append(errs, e)
+			}
+		}()
 
 		var wg sync.WaitGroup
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			if sshDaemonKeysFingerprints, err := s.getSSHDaemonKeysFingerprints(userInput); err != nil {
-				errs <- fmt.Errorf("failed to get ssh daemon keys: %v", err)
+				errorsChan <- fmt.Errorf("failed to get ssh daemon keys: %v", err)
 			} else {
 				fingerprintsChan <- sshDaemonKeysFingerprints
 			}
@@ -103,7 +109,7 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 			go func() {
 				defer wg.Done()
 				if sshPrivateKeysFingerprints, err := s.getSSHPrivateKeysFingerprints(dir); err != nil {
-					errs <- fmt.Errorf("failed to get ssh private keys: %v", err)
+					errorsChan <- fmt.Errorf("failed to get ssh private keys: %v", err)
 				} else {
 					fingerprintsChan <- sshPrivateKeysFingerprints
 				}
@@ -113,7 +119,7 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 			go func() {
 				defer wg.Done()
 				if sshAuthorizedKeysFingerprints, err := s.getSSHAuthorizedKeysFingerprints(dir); err != nil {
-					errs <- fmt.Errorf("failed to get ssh authorized keys: %v", err)
+					errorsChan <- fmt.Errorf("failed to get ssh authorized keys: %v", err)
 				} else {
 					fingerprintsChan <- sshAuthorizedKeysFingerprints
 				}
@@ -123,7 +129,7 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 			go func() {
 				defer wg.Done()
 				if sshKnownHostsFingerprints, err := s.getSSHKnownHostsFingerprints(dir); err != nil {
-					errs <- fmt.Errorf("failed to get ssh known hosts: %v", err)
+					errorsChan <- fmt.Errorf("failed to get ssh known hosts: %v", err)
 				} else {
 					fingerprintsChan <- sshKnownHostsFingerprints
 				}
@@ -131,20 +137,12 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 		}
 
 		wg.Wait()
-		close(errs)
+		close(errorsChan)
 		close(fingerprintsChan)
 
-		for e := range errs {
-			if e != nil {
-				retErr = errors.Join(retErr, e)
-			}
-		}
+		retErr := errors.Join(errs...)
 		if retErr != nil {
 			retResults.Error = retErr
-		}
-
-		for fingerprints := range fingerprintsChan {
-			retResults.Infos = append(retResults.Infos, fingerprints...)
 		}
 
 		if len(retResults.Infos) > 0 && retResults.Error != nil {
@@ -184,7 +182,7 @@ func (s *Scanner) getSSHDaemonKeysFingerprints(rootPath string) ([]types.Info, e
 	}
 	s.logger.Debugf("Found ssh daemon private keys paths %+v", paths)
 
-	fingerprints, err := s.getFingerprints(paths, types.SSHDaemonKeys)
+	fingerprints, err := s.getFingerprints(paths, types.SSHDaemonKeyFingerprint)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get ssh daemon private keys fingerprints: %v", err)
 	}
@@ -200,7 +198,7 @@ func (s *Scanner) getSSHPrivateKeysFingerprints(homeUserDir string) ([]types.Inf
 	}
 	s.logger.Debugf("Found ssh private keys paths %+v", paths)
 
-	infos, err := s.getFingerprints(paths, types.SSHPrivateKeys)
+	infos, err := s.getFingerprints(paths, types.SSHPrivateKeyFingerprint)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get ssh private keys fingerprints: %v", err)
 	}
@@ -210,7 +208,7 @@ func (s *Scanner) getSSHPrivateKeysFingerprints(homeUserDir string) ([]types.Inf
 }
 
 func (s *Scanner) getSSHAuthorizedKeysFingerprints(homeUserDir string) ([]types.Info, error) {
-	infos, err := s.getFingerprints([]string{path.Join(homeUserDir, ".ssh/authorized_keys")}, types.SSHAuthorizedKeys)
+	infos, err := s.getFingerprints([]string{path.Join(homeUserDir, ".ssh/authorized_keys")}, types.SSHAuthorizedKeyFingerprint)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get ssh authorized keys fingerprints: %v", err)
 	}
@@ -220,7 +218,7 @@ func (s *Scanner) getSSHAuthorizedKeysFingerprints(homeUserDir string) ([]types.
 }
 
 func (s *Scanner) getSSHKnownHostsFingerprints(homeUserDir string) ([]types.Info, error) {
-	infos, err := s.getFingerprints([]string{path.Join(homeUserDir, ".ssh/known_hosts")}, types.SSHKnownHosts)
+	infos, err := s.getFingerprints([]string{path.Join(homeUserDir, ".ssh/known_hosts")}, types.SSHKnownHostFingerprint)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get ssh known hosts fingerprints: %v", err)
 	}
