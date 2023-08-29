@@ -975,6 +975,113 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 			},
 		},
 	},
+	scanEstimationSchemaName: {
+		Table: "scan_estimations",
+		Fields: odatasql.Schema{
+			"id":        odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"startTime": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"endTime":   odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"assetIDs": odatasql.FieldMeta{
+				FieldType: odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{
+					FieldType: odatasql.PrimitiveFieldType,
+				},
+			},
+			"state": odatasql.FieldMeta{
+				FieldType: odatasql.PrimitiveFieldType,
+			},
+			"stateMessage": odatasql.FieldMeta{
+				FieldType: odatasql.PrimitiveFieldType,
+			},
+			"stateReason": odatasql.FieldMeta{
+				FieldType: odatasql.PrimitiveFieldType,
+			},
+			"estimation": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"Estimation"},
+			},
+			"scanTemplate": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"ScanTemplate"},
+			},
+			"assetScanEstimations": odatasql.FieldMeta{
+				FieldType: odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{
+					FieldType:            odatasql.RelationshipFieldType,
+					RelationshipSchema:   assetScanEstimationsSchemaName,
+					RelationshipProperty: "id",
+				},
+			},
+			"summary": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"ScanEstimationSummary"},
+			},
+		},
+	},
+	"Estimation": {
+		Fields: odatasql.Schema{
+			"time": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"size": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"cost": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"recipe": odatasql.FieldMeta{
+				FieldType: odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{
+					FieldType:           odatasql.ComplexFieldType,
+					ComplexFieldSchemas: []string{"RecipeComponent"},
+				},
+			},
+		},
+	},
+	"RecipeComponent": {
+		Fields: odatasql.Schema{
+			"operation": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"cost":      odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+		},
+	},
+	"ScanEstimationSummary": {
+		Fields: odatasql.Schema{
+			"jobsLeftToRun": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"jobsCompleted": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+		},
+	},
+	assetScanEstimationsSchemaName: {
+		Table: "asset_scan_estimations",
+		Fields: odatasql.Schema{
+			"id": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"asset": odatasql.FieldMeta{
+				FieldType:            odatasql.RelationshipFieldType,
+				RelationshipSchema:   assetSchemaName,
+				RelationshipProperty: "id",
+			},
+			"scanEstimation": odatasql.FieldMeta{
+				FieldType:            odatasql.RelationshipFieldType,
+				RelationshipSchema:   scanEstimationSchemaName,
+				RelationshipProperty: "id",
+			},
+			"estimation": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"Estimation"},
+			},
+			"assetScanTemplate": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"AssetScanTemplate"},
+			},
+			"state": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"AssetScanEstimationState"},
+			},
+		},
+	},
+	"AssetScanEstimationState": {
+		Fields: odatasql.Schema{
+			"state":              odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"lastTransitionTime": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"errors": odatasql.FieldMeta{
+				FieldType:          odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			},
+		},
+	},
 }
 
 func ODataQuery(db *gorm.DB, schema string, filterString, selectString, expandString, orderby *string, top, skip *int, collection bool, result interface{}) error {
