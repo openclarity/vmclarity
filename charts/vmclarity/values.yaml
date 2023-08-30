@@ -62,3 +62,39 @@ postgresql:
   service:
     ports:
       postgresql: 5432
+
+exploitDBServer:
+  replicas: 1
+
+  image:
+    registry: ghcr.io
+    repository: openclarity/exploit-db-server
+    tag: v0.2.3
+    pullPolicy: IfNotPresent
+
+trivyServer:
+  replicas: 1
+
+  image:
+    registry: docker.io
+    repository: aquasec/trivy
+    tag: 0.41.0
+    pullPolicy: IfNotPresent
+
+grypeServer:
+  replicas: 1
+
+  image:
+    registry: ghcr.io
+    repository: openclarity/grype-server
+    tag: v0.4.0
+    pullPolicy: IfNotPresent
+
+freshclamMirror:
+  replicas: 1
+
+  image:
+    registry: ghcr.io
+    repository: openclarity/freshclam-mirror
+    tag: v0.1.0
+    pullPolicy: IfNotPresent

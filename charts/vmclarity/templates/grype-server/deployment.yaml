@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "vmclarity.grypeServer.name" . }}
+  labels: {{- include "vmclarity.grypeServer.labels.standard" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels: {{- include "vmclarity.grypeServer.labels.matchLabels" . | nindent 6 }}
+  replicas: {{ .Values.grypeServer.replicaCount }}
+  template:
+    metadata:
+      labels: {{- include "vmclarity.grypeServer.labels.standard" . | nindent 8 }}
+    spec:
+      containers:
+        - name: grype-server
+          image: {{ include "vmclarity.images.image" ( dict "imageRoot" .Values.grypeServer.image "global" .Values.global ) }}
+          imagePullPolicy: {{ .Values.grypeServer.image.pullPolicy | quote }}
+          args:
+            - run
+            - --log-level
+            - warning
+          env:
+            - name: DB_ROOT_DIR
+              value: /data
+          volumeMounts:
+            - mountPath: /data
+              name: db-data
+      volumes:
+        - name: db-data
+          emptyDir: {}
