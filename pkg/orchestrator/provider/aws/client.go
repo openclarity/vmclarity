@@ -315,7 +315,7 @@ func (c *Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfi
 
 	// Create scanner instance
 	numOfGoroutines := 2
-	errs := make(chan error, numOfGoroutines)
+	errs := make([]error, numOfGoroutines)
 	var scannnerInstance *Instance
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -327,23 +327,23 @@ func (c *Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfi
 		var err error
 		scannnerInstance, err = c.createInstance(ctx, c.config.ScannerRegion, config)
 		if err != nil {
-			errs <- WrapError(fmt.Errorf("failed to create scanner VM instance: %w", err))
+			errs = append(errs, WrapError(fmt.Errorf("failed to create scanner VM instance: %w", err)))
 			return
 		}
 
 		ready, err := scannnerInstance.IsReady(ctx)
 		if err != nil {
-			errs <- WrapError(fmt.Errorf("failed to get scanner VM instance state: %w", err))
+			errs = append(errs, WrapError(fmt.Errorf("failed to get scanner VM instance state: %w", err)))
 			return
 		}
 		logger.WithFields(logrus.Fields{
 			"ScannerInstanceID": scannnerInstance.ID,
 		}).Debugf("Scanner instance is ready: %t", ready)
 		if !ready {
-			errs <- RetryableError{
+			errs = append(errs, RetryableError{
 				Err:   errors.New("scanner instance is not ready"),
 				After: InstanceReadynessAfter,
-			}
+			})
 		}
 	}()
 
@@ -360,22 +360,22 @@ func (c *Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfi
 
 		assetVMLocation, err := NewLocation(vmInfo.Location)
 		if err != nil {
-			errs <- FatalError{
+			errs = append(errs, FatalError{
 				Err: fmt.Errorf("failed to parse Location for asset VM instance: %w", err),
-			}
+			})
 			return
 		}
 
 		var SrcEC2Instance *ec2types.Instance
 		SrcEC2Instance, err = c.getInstanceWithID(ctx, vmInfo.InstanceID, assetVMLocation.Region)
 		if err != nil {
-			errs <- WrapError(fmt.Errorf("failed to fetch asset VM instance: %w", err))
+			errs = append(errs, WrapError(fmt.Errorf("failed to fetch asset VM instance: %w", err)))
 			return
 		}
 		if SrcEC2Instance == nil {
-			errs <- FatalError{
+			errs = append(errs, FatalError{
 				Err: fmt.Errorf("failed to find asset VM instance. InstanceID=%s", vmInfo.InstanceID),
-			}
+			})
 			return
 		}
 
@@ -385,17 +385,17 @@ func (c *Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfi
 
 		srcVol := srcInstance.RootVolume()
 		if srcVol == nil {
-			errs <- FatalError{
+			errs = append(errs, FatalError{
 				Err: errors.New("failed to get root block device for asset VM instance"),
-			}
+			})
 			return
 		}
 
 		logger.WithField("AssetVolumeID", srcVol.ID).Debug("Creating asset volume snapshot for asset VM instance")
 		srcVolSnapshot, err := srcVol.CreateSnapshot(ctx)
 		if err != nil {
-			errs <- WrapError(fmt.Errorf("failed to create volume snapshot from asset volume. AssetVolumeID=%s: %w",
-				srcVol.ID, err))
+			errs = append(errs, WrapError(fmt.Errorf("failed to create volume snapshot from asset volume. AssetVolumeID=%s: %w",
+				srcVol.ID, err)))
 			return
 		}
 
@@ -403,7 +403,7 @@ func (c *Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfi
 		if err != nil {
 			err = fmt.Errorf("failed to get volume snapshot state. AssetVolumeSnapshotID=%s: %w",
 				srcVolSnapshot.ID, err)
-			errs <- WrapError(err)
+			errs = append(errs, WrapError(err))
 			return
 		}
 
@@ -412,10 +412,10 @@ func (c *Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfi
 			"AssetVolumeSnapshotID": srcVolSnapshot.ID,
 		}).Debugf("Asset volume snapshot is ready: %t", ready)
 		if !ready {
-			errs <- RetryableError{
+			errs = append(errs, RetryableError{
 				Err:   errors.New("asset volume snapshot is not ready"),
 				After: SnapshotReadynessAfter,
-			}
+			})
 			return
 		}
 
@@ -427,7 +427,7 @@ func (c *Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfi
 		if err != nil {
 			err = fmt.Errorf("failed to copy asset volume snapshot to location. AssetVolumeSnapshotID=%s Location=%s: %w",
 				srcVolSnapshot.ID, c.config.ScannerRegion, err)
-			errs <- WrapError(err)
+			errs = append(errs, WrapError(err))
 			return
 		}
 
@@ -435,7 +435,7 @@ func (c *Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfi
 		if err != nil {
 			err = fmt.Errorf("failed to get volume snapshot state. ScannerVolumeSnapshotID=%s: %w",
 				srcVolSnapshot.ID, err)
-			errs <- WrapError(err)
+			errs = append(errs, WrapError(err))
 			return
 		}
 
@@ -446,23 +446,17 @@ func (c *Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfi
 		}).Debugf("Scanner volume snapshot is ready: %t", ready)
 
 		if !ready {
-			errs <- RetryableError{
+			errs = append(errs, RetryableError{
 				Err:   errors.New("scanner volume snapshot is not ready"),
 				After: SnapshotReadynessAfter,
-			}
+			})
 			return
 		}
 	}()
 	wg.Wait()
-	close(errs)
 
-	// NOTE: make sure to drain results channel
-	for e := range errs {
-		if e != nil {
-			// nolint:typecheck
-			err = errors.Join(err, e)
-		}
-	}
+	errs = append(errs, err)
+	err = errors.Join(errs...)
 	if err != nil {
 		return err
 	}
@@ -673,7 +667,7 @@ func (c *Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobCo
 	ec2Filters := EC2FiltersFromEC2Tags(ec2Tags)
 
 	numOfGoroutines := 3
-	errs := make(chan error, numOfGoroutines)
+	errs := make([]error, numOfGoroutines)
 
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -684,15 +678,15 @@ func (c *Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobCo
 		logger.Debug("Deleting scanner VM Instance.")
 		done, err := c.deleteInstances(ctx, ec2Filters, c.config.ScannerRegion)
 		if err != nil {
-			errs <- WrapError(fmt.Errorf("failed to delete scanner VM instance: %w", err))
+			errs = append(errs, WrapError(fmt.Errorf("failed to delete scanner VM instance: %w", err)))
 			return
 		}
 		// Deleting scanner VM instance is in-progress, thus cannot proceed with deleting the scanner volume.
 		if !done {
-			errs <- RetryableError{
+			errs = append(errs, RetryableError{
 				Err:   errors.New("deleting Scanner VM instance is in-progress"),
 				After: InstanceReadynessAfter,
-			}
+			})
 			return
 		}
 
@@ -701,15 +695,15 @@ func (c *Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobCo
 		done, err = c.deleteVolumes(ctx, ec2Filters, c.config.ScannerRegion)
 
 		if err != nil {
-			errs <- WrapError(fmt.Errorf("failed to delete scanner volume: %w", err))
+			errs = append(errs, WrapError(fmt.Errorf("failed to delete scanner volume: %w", err)))
 			return
 		}
 
 		if !done {
-			errs <- RetryableError{
+			errs = append(errs, RetryableError{
 				Err:   errors.New("deleting Scanner volume is in-progress"),
 				After: VolumeReadynessAfter,
-			}
+			})
 			return
 		}
 	}()
@@ -722,14 +716,14 @@ func (c *Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobCo
 		logger.Debug("Deleting scanner volume snapshot.")
 		done, err := c.deleteVolumeSnapshots(ctx, ec2Filters, c.config.ScannerRegion)
 		if err != nil {
-			errs <- WrapError(fmt.Errorf("failed to delete scanner volume snapshot: %w", err))
+			errs = append(errs, WrapError(fmt.Errorf("failed to delete scanner volume snapshot: %w", err)))
 			return
 		}
 		if !done {
-			errs <- RetryableError{
+			errs = append(errs, RetryableError{
 				Err:   errors.New("deleting Scanner volume snapshot is in-progress"),
 				After: SnapshotReadynessAfter,
-			}
+			})
 			return
 		}
 	}()
@@ -741,9 +735,9 @@ func (c *Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobCo
 
 		location, err := NewLocation(vmInfo.Location)
 		if err != nil {
-			errs <- FatalError{
+			errs = append(errs, FatalError{
 				Err: fmt.Errorf("failed to parse Location string. Location=%s: %w", vmInfo.Location, err),
-			}
+			})
 			return
 		}
 
@@ -754,28 +748,22 @@ func (c *Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobCo
 		logger.WithField("AssetLocation", vmInfo.Location).Debug("Deleting asset volume snapshot.")
 		done, err := c.deleteVolumeSnapshots(ctx, ec2Filters, location.Region)
 		if err != nil {
-			errs <- fmt.Errorf("failed to delete asset volume snapshot: %w", err)
+			errs = append(errs, fmt.Errorf("failed to delete asset volume snapshot: %w", err))
 			return
 		}
 
 		if !done {
-			errs <- RetryableError{
+			errs = append(errs, RetryableError{
 				Err:   errors.New("deleting Asset volume snapshot is in-progress"),
 				After: SnapshotReadynessAfter,
-			}
+			})
 			return
 		}
 	}()
 	wg.Wait()
-	close(errs)
 
-	// NOTE: make sure to drain results channel
-	for e := range errs {
-		if e != nil {
-			// nolint:typecheck
-			err = errors.Join(err, e)
-		}
-	}
+	errs = append(errs, err)
+	err = errors.Join(errs...)
 
 	return err
 }
