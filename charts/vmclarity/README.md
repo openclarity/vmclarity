@@ -293,7 +293,7 @@ secrets.
 | uibackend.image.digest | string | `""` | UI Backend image digest. If set will override the tag. |
 | uibackend.image.pullPolicy | string | `"IfNotPresent"` | UI Backend image pull policy |
 | uibackend.image.registry | string | `"ghcr.io"` | UI Backend image registry |
-| uibackend.image.repository | string | `"openclarity/vmclarity-uibackend"` | UI Backend image repository |
+| uibackend.image.repository | string | `"openclarity/vmclarity-ui-backend"` | UI Backend image repository |
 | uibackend.image.tag | string | `"latest"` | UI Backend image tag |
 | uibackend.logLevel | string | `"info"` | Log level for the UI backend service |
 | uibackend.podSecurityContext.enabled | bool | `true` | Pod security context enabled |

@@ -38,6 +38,26 @@ spec:
             - run
             - --log-level
             - {{ .Values.orchestrator.logLevel }}
+          ports:
+            - name: health
+              containerPort: 8082
+          startupProbe:
+            tcpSocket:
+              port: health
+          livenessProbe:
+            httpGet:
+              path: /healthz/live
+              port: health
+            periodSeconds: 30
+            failureThreshold: 5
+            timeoutSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz/ready
+              port: health
+            periodSeconds: 30
+            failureThreshold: 5
+            timeoutSeconds: 10
           env:
             # Host for the VMClarity backend server
             - name: APISERVER_HOST

@@ -278,7 +278,7 @@ uibackend:
     # -- UI Backend image registry
     registry: ghcr.io
     # -- UI Backend image repository
-    repository: openclarity/vmclarity-uibackend
+    repository: openclarity/vmclarity-ui-backend
     # -- UI Backend image tag
     tag: latest
     # -- UI Backend image digest. If set will override the tag.
