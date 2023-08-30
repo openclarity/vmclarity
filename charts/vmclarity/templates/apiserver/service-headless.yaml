@@ -1,14 +1,14 @@
 {{/*
 Headless Service does not include a ClusterIP so that the DNS record includes
 all Pod addresses. This makes it possible for the API Gateway to load balance
-all replicas instead of relying on kube-proxy to do it.
+all replicas using the DNS record instead of relying on kube-proxy to do it.
 */}}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ printf "%s-apiserver-hl" (include "vmclarity.names.fullname" .) | trunc 63 | trimSuffix "-" }}
+  name: {{ include "vmclarity.apiserver.name" . }}-hl
   namespace: {{ .Release.Namespace | quote }}
-  labels: {{- include "vmclarity.labels.standard" . | nindent 4 }}
+  labels: {{- include "vmclarity.apiserver.labels.standard" . | nindent 4 }}
 spec:
   type: ClusterIP
   clusterIP: None
@@ -17,5 +17,4 @@ spec:
       protocol: TCP
       port: 8888
       targetPort: 8888
-  selector: {{- include "vmclarity.labels.matchLabels" . | nindent 4 }}
-    app.kubernetes.io/component: apiserver
+  selector: {{- include "vmclarity.apiserver.labels.matchLabels" . | nindent 4 }}

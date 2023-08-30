@@ -1,19 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ printf "%s-apiserver" (include "vmclarity.names.fullname" .) }}
+  name: {{ include "vmclarity.apiserver.name" . }}
   namespace: {{ .Release.Namespace | quote }}
-  labels: {{- include "vmclarity.labels.standard" . | nindent 4 }}
-    app.kubernetes.io/component: apiserver
+  labels: {{- include "vmclarity.apiserver.labels.standard" . | nindent 4 }}
 spec:
   selector:
-    matchLabels: {{- include "vmclarity.labels.matchLabels" . | nindent 6 }}
-      app.kubernetes.io/component: apiserver
+    matchLabels: {{- include "vmclarity.apiserver.labels.matchLabels" . | nindent 6 }}
   replicas: {{ .Values.apiserver.replicaCount }}
   template:
     metadata:
-      labels: {{- include "vmclarity.labels.standard" . | nindent 8 }}
-        app.kubernetes.io/component: apiserver
+      labels: {{- include "vmclarity.apiserver.labels.standard" . | nindent 8 }}
     spec:
       containers:
         - name: apiserver

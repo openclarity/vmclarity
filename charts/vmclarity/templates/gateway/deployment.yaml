@@ -1,18 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ printf "%s-gateway" (include "vmclarity.names.fullname" .) }}
-  labels: {{- include "vmclarity.labels.standard" . | nindent 4 }}
-    app.kubernetes.io/component: gateway
+  name: {{ include "vmclarity.gateway.name" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "vmclarity.gateway.labels.standard" . | nindent 4 }}
 spec:
   selector:
-    matchLabels: {{- include "vmclarity.labels.matchLabels" . | nindent 6 }}
-      app.kubernetes.io/component: gateway
+    matchLabels: {{- include "vmclarity.gateway.labels.matchLabels" . | nindent 6 }}
   replicas: {{ .Values.gateway.replicaCount }}
   template:
     metadata:
-      labels: {{- include "vmclarity.labels.standard" . | nindent 8 }}
-        app.kubernetes.io/component: gateway
+      labels: {{- include "vmclarity.gateway.labels.standard" . | nindent 8 }}
     spec:
       containers:
         - name: gateway
@@ -25,4 +23,4 @@ spec:
       volumes:
         - name: gateway-config
           configMap:
-            name: {{ printf "%s-gateway" (include "vmclarity.names.fullname" .) }}
+            name: {{ include "vmclarity.gateway.name" . }}

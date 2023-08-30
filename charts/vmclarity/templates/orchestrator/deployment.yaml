@@ -1,18 +1,15 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ printf "%s-orchestrator" (include "vmclarity.names.fullname" .) }}
-  labels: {{- include "vmclarity.labels.standard" . | nindent 4 }}
-    app.kubernetes.io/component: orchestrator
+  name: {{ include "vmclarity.orchestrator.name" . }}
+  labels: {{- include "vmclarity.orchestrator.labels.standard" . | nindent 4 }}
 spec:
   selector:
-    matchLabels: {{- include "vmclarity.labels.matchLabels" . | nindent 6 }}
-      app.kubernetes.io/component: orchestrator
+    matchLabels: {{- include "vmclarity.orchestrator.labels.matchLabels" . | nindent 6 }}
   replicas: {{ .Values.orchestrator.replicaCount }}
   template:
     metadata:
-      labels: {{- include "vmclarity.labels.standard" . | nindent 8 }}
-        app.kubernetes.io/component: orchestrator
+      labels: {{- include "vmclarity.orchestrator.labels.standard" . | nindent 8 }}
     spec:
       containers:
         - name: orchestrator
@@ -25,7 +22,7 @@ spec:
           env:
             # Host for the VMClarity backend server
             - name: APISERVER_HOST
-              value: {{ printf "%s-apiserver" (include "vmclarity.names.fullname" .) }}
+              value: {{ include "vmclarity.apiserver.name" . }}
             # Port number for the VMClarity backend server
             - name: APISERVER_PORT
               value: "8888"

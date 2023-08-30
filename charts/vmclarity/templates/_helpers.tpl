@@ -16,10 +16,12 @@ Create chart name and version as used by the chart label.
 Kubernetes standard labels
 */}}
 {{- define "vmclarity.labels.standard" -}}
-app.kubernetes.io/name: {{ include "vmclarity.names.name" . }}
-helm.sh/chart: {{ include "vmclarity.names.chart" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
+{{ include "vmclarity.labels.matchLabels" . }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
+helm.sh/chart: {{ include "vmclarity.names.chart" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
 {{- end -}}
 
 {{/*

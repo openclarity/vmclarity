@@ -6,9 +6,9 @@ all replicas instead of relying on kube-proxy to do it.
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ printf "%s-ui-hl" (include "common.names.fullname" .) | trunc 63 | trimSuffix "-" }}
+  name: {{ include "vmclarity.ui.name" . }}-hl
   namespace: {{ .Release.Namespace | quote }}
-  labels: {{- include "common.labels.standard" . | nindent 4 }}
+  labels: {{- include "vmclarity.ui.labels.standard" . | nindent 4 }}
 spec:
   type: ClusterIP
   clusterIP: None
@@ -17,5 +17,4 @@ spec:
       protocol: TCP
       port: 80
       targetPort: 80
-  selector: {{- include "common.labels.matchLabels" . | nindent 4 }}
-    app.kubernetes.io/component: ui
+  selector: {{- include "vmclarity.ui.labels.matchLabels" . | nindent 4 }}
