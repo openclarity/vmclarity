@@ -10,6 +10,15 @@ apiserver:
     tag: latest
     pullPolicy: IfNotPresent
 
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1001
+
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsNonRoot: true
+
   logLevel: info
 
 orchestrator:
@@ -20,6 +29,15 @@ orchestrator:
     repository: openclarity/vmclarity-orchestrator
     tag: latest
     pullPolicy: IfNotPresent
+
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1001
+
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsNonRoot: true
 
   logLevel: info
 
@@ -32,6 +50,15 @@ ui:
     tag: latest
     pullPolicy: IfNotPresent
 
+  podSecurityContext:
+    enabled: false
+    fsGroup: 1001
+
+  containerSecurityContext:
+    enabled: false
+    runAsUser: 1001
+    runAsNonRoot: true
+
 uibackend:
   replicas: 1
 
@@ -40,6 +67,15 @@ uibackend:
     repository: openclarity/vmclarity-uibackend
     tag: latest
     pullPolicy: IfNotPresent
+
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1001
+
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsNonRoot: true
 
   logLevel: info
 
@@ -51,6 +87,15 @@ gateway:
     repository: library/nginx
     tag: 1.25.1
     pullPolicy: IfNotPresent
+
+  podSecurityContext:
+    enabled: false
+    fsGroup: 1001
+
+  containerSecurityContext:
+    enabled: false
+    runAsUser: 1001
+    runAsNonRoot: true
 
 postgresql:
   image:
@@ -65,6 +110,15 @@ postgresql:
     password: password1
     database: vmclarity
 
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1001
+
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsNonRoot: true
+
   service:
     ports:
       postgresql: 5432
@@ -78,6 +132,15 @@ exploitDBServer:
     tag: v0.2.3
     pullPolicy: IfNotPresent
 
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1001
+
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsNonRoot: true
+
 trivyServer:
   replicas: 1
 
@@ -87,6 +150,15 @@ trivyServer:
     tag: 0.41.0
     pullPolicy: IfNotPresent
 
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1001
+
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsNonRoot: true
+
 grypeServer:
   replicas: 1
 
@@ -95,6 +167,15 @@ grypeServer:
     repository: openclarity/grype-server
     tag: v0.4.0
     pullPolicy: IfNotPresent
+
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1001
+
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsNonRoot: true
 
   logLevel: info
 
@@ -106,3 +187,12 @@ freshclamMirror:
     repository: openclarity/freshclam-mirror
     tag: v0.1.0
     pullPolicy: IfNotPresent
+
+  podSecurityContext:
+    enabled: false
+    fsGroup: 1001
+
+  containerSecurityContext:
+    enabled: false
+    runAsUser: 1001
+    runAsNonRoot: true

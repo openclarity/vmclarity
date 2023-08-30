@@ -11,10 +11,25 @@ spec:
     metadata:
       labels: {{- include "vmclarity.uibackend.labels.standard" . | nindent 8 }}
     spec:
+      {{- if .Values.uibackend.affinity }}
+      affinity: {{- .Values.uibackend.affinity | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.uibackend.nodeSelector }}
+      nodeSelector: {{- .Values.uibackend.nodeSelector | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.uibackend.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.uibackend.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.uibackend.tolerations }}
+      tolerations: {{- .Values.uibackend.tolerations | nindent 8 }}
+      {{- end }}
       containers:
         - name: uibackend
           image: {{ include "vmclarity.images.image" ( dict "imageRoot" .Values.uibackend.image "global" .Values.global ) }}
           imagePullPolicy: {{ .Values.uibackend.image.pullPolicy | quote }}
+          {{- if .Values.uibackend.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.uibackend.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
           args:
             - run
             - --log-level

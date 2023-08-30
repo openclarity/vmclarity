@@ -11,10 +11,25 @@ spec:
     metadata:
       labels: {{- include "vmclarity.orchestrator.labels.standard" . | nindent 8 }}
     spec:
+      {{- if .Values.orchestrator.affinity }}
+      affinity: {{- .Values.orchestrator.affinity | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.orchestrator.nodeSelector }}
+      nodeSelector: {{- .Values.orchestrator.nodeSelector | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.orchestrator.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.orchestrator.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.orchestrator.tolerations }}
+      tolerations: {{- .Values.orchestrator.tolerations | nindent 8 }}
+      {{- end }}
       containers:
         - name: orchestrator
           image: {{ include "vmclarity.images.image" ( dict "imageRoot" .Values.orchestrator.image "global" .Values.global ) }}
           imagePullPolicy: {{ .Values.orchestrator.image.pullPolicy | quote }}
+          {{- if .Values.orchestrator.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.orchestrator.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
           args:
             - run
             - --log-level

@@ -11,7 +11,22 @@ spec:
     metadata:
       labels: {{- include "vmclarity.freshclamMirror.labels.standard" . | nindent 8 }}
     spec:
+      {{- if .Values.freshclamMirror.affinity }}
+      affinity: {{- .Values.freshclamMirror.affinity | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.freshclamMirror.nodeSelector }}
+      nodeSelector: {{- .Values.freshclamMirror.nodeSelector | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.freshclamMirror.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.freshclamMirror.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.freshclamMirror.tolerations }}
+      tolerations: {{- .Values.freshclamMirror.tolerations | nindent 8 }}
+      {{- end }}
       containers:
         - name: freshclam-mirror
           image: {{ include "vmclarity.images.image" ( dict "imageRoot" .Values.freshclamMirror.image "global" .Values.global ) }}
           imagePullPolicy: {{ .Values.freshclamMirror.image.pullPolicy | quote }}
+          {{- if .Values.freshclamMirror.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.freshclamMirror.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}

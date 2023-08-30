@@ -11,7 +11,22 @@ spec:
     metadata:
       labels: {{- include "vmclarity.ui.labels.standard" . | nindent 8 }}
     spec:
+      {{- if .Values.ui.affinity }}
+      affinity: {{- .Values.ui.affinity | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.ui.nodeSelector }}
+      nodeSelector: {{- .Values.ui.nodeSelector | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.ui.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.ui.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.ui.tolerations }}
+      tolerations: {{- .Values.ui.tolerations | nindent 8 }}
+      {{- end }}
       containers:
         - name: ui
           image: {{ include "vmclarity.images.image" ( dict "imageRoot" .Values.ui.image "global" .Values.global ) }}
           imagePullPolicy: {{ .Values.ui.image.pullPolicy | quote }}
+          {{- if .Values.ui.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.ui.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}

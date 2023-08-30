@@ -11,7 +11,21 @@ spec:
   template:
     metadata:
       labels: {{- include "vmclarity.gateway.labels.standard" . | nindent 8 }}
+      annotations:
+        checksum/configmap: {{ include (print $.Template.BasePath "/gateway/configmap.yaml") . | sha256sum }}
     spec:
+      {{- if .Values.gateway.affinity }}
+      affinity: {{- .Values.gateway.affinity | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.gateway.nodeSelector }}
+      nodeSelector: {{- .Values.gateway.nodeSelector | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.gateway.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.gateway.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.gateway.tolerations }}
+      tolerations: {{- .Values.gateway.tolerations | nindent 8 }}
+      {{- end }}
       containers:
         - name: gateway
           image: {{ include "vmclarity.images.image" ( dict "imageRoot" .Values.gateway.image "global" .Values.global ) }}
@@ -20,6 +34,9 @@ spec:
             - name: gateway-config
               mountPath: /etc/nginx/nginx.conf
               subPath: nginx.conf
+          {{- if .Values.gateway.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.gateway.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
       volumes:
         - name: gateway-config
           configMap:
