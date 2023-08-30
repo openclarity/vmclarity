@@ -12,19 +12,24 @@ data:
     
     http {
         upstream ui {
-            server {{ printf "%s-ui-hl" (include "vmclarity.names.fullname" .) }}:80;
+            server {{ printf "%s" (include "vmclarity.ui.name" .) }}:80;
         }
     
         upstream uibackend {
-            server {{ printf "%s-uibackend-hl" (include "vmclarity.names.fullname" .) }}:8890;
+            server {{ printf "%s" (include "vmclarity.uibackend.name" .) }}:8890;
         }
     
         upstream apiserver {
-            server {{ printf "%s-apiserver-hl" (include "vmclarity.names.fullname" .) }}:8888;
+            server {{ printf "%s" (include "vmclarity.apiserver.name" .) }}:8888;
+        }
+
+        upstream swaggerui {
+          server {{ printf "%s" (include "vmclarity.swaggerUI.name" .) }}:8080;
         }
     
         server {
             listen 8080;
+            absolute_redirect off;
     
             location / {
                 proxy_pass http://ui/;
@@ -35,7 +40,14 @@ data:
             }
     
             location /api/ {
+                proxy_set_header X-Forwarded-Host $http_host;
+                proxy_set_header X-Forwarded-Prefix /api;
+                proxy_set_header X-Forwarded-Proto $scheme;
                 proxy_pass http://apiserver/;
+            }
+
+            location /apidocs/ {
+                proxy_pass http://swaggerui/;
             }
         }
     }

@@ -198,6 +198,24 @@ secrets.
 | postgresql.resources.limits | object | `{}` | The resources limits for the postgresql containers |
 | postgresql.resources.requests | object | `{}` | The requested resources for the postgresql containers |
 | postgresql.service.ports.postgresql | int | `5432` | PostgreSQL service port |
+| swaggerUI.containerSecurityContext.allowPrivilegeEscalation | bool | `false` | Force the child process to run as non-privileged |
+| swaggerUI.containerSecurityContext.capabilities.drop | list | `["ALL"]` | List of capabilities to be dropped |
+| swaggerUI.containerSecurityContext.enabled | bool | `false` | Container security context enabled |
+| swaggerUI.containerSecurityContext.privileged | bool | `false` | Whether the container should run in privileged mode |
+| swaggerUI.containerSecurityContext.readOnlyRootFilesystem | bool | `true` | Mounts the container file system as ReadOnly |
+| swaggerUI.containerSecurityContext.runAsGroup | int | `0` | Group ID which the containers should run as |
+| swaggerUI.containerSecurityContext.runAsNonRoot | bool | `false` | Whether the containers should run as a non-root user |
+| swaggerUI.containerSecurityContext.runAsUser | int | `0` | User ID which the containers should run as |
+| swaggerUI.image.digest | string | `""` | Swagger UI image digest. If set will override the tag. |
+| swaggerUI.image.pullPolicy | string | `"IfNotPresent"` | Swagger UI image pull policy |
+| swaggerUI.image.registry | string | `"docker.io"` | Swagger UI container registry |
+| swaggerUI.image.repository | string | `"swaggerapi/swagger-ui"` | Swagger UI container repository |
+| swaggerUI.image.tag | string | `"v5.3.1"` | Swagger UI container tag |
+| swaggerUI.podSecurityContext.enabled | bool | `false` | Pod security context enabled |
+| swaggerUI.podSecurityContext.fsGroup | int | `101` | Pod security context fsGroup |
+| swaggerUI.replicas | int | `1` | Number of replicas for the swagger-ui service |
+| swaggerUI.resources.limits | object | `{}` | The resources limits for the swagger ui containers |
+| swaggerUI.resources.requests | object | `{}` | The requested resources for the swagger ui containers |
 | trivyServer.containerSecurityContext.allowPrivilegeEscalation | bool | `false` | Force the child process to run as non-privileged |
 | trivyServer.containerSecurityContext.capabilities.drop | list | `["ALL"]` | List of capabilities to be dropped |
 | trivyServer.containerSecurityContext.enabled | bool | `true` | Container security context enabled |
