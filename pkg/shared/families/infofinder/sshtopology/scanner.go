@@ -160,6 +160,13 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 
 func getHomeUserDirs(rootDir string) ([]string, error) {
 	var dirs []string
+
+	// Set root home if exists.
+	rootHome := path.Join(rootDir, "root")
+	if _, err := os.Stat(rootHome); err == nil {
+		dirs = append(dirs, rootHome)
+	}
+
 	homeDirPath := path.Join(rootDir, "home")
 	files, err := os.ReadDir(homeDirPath)
 	if err != nil {

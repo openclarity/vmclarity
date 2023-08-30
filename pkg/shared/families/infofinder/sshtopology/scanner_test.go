@@ -47,6 +47,14 @@ func Test_getHomeUserDirs(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "root folder with root home folder",
+			args: args{
+				rootDir: "../testdata/rootfolderwithroothome",
+			},
+			want:    []string{"../testdata/rootfolderwithroothome/root", "../testdata/rootfolderwithroothome/home/dir1", "../testdata/rootfolderwithroothome/home/dir2"},
+			wantErr: false,
+		},
+		{
 			name: "missing dir",
 			args: args{
 				rootDir: "../testdata/missingrootfolder",
