@@ -49,7 +49,7 @@ gateway:
   image:
     registry: docker.io
     repository: library/nginx
-    tag: latest
+    tag: 1.25.1
     pullPolicy: IfNotPresent
 
 postgresql:
