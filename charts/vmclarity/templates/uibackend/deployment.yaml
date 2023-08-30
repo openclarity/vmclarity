@@ -30,6 +30,9 @@ spec:
           {{- if .Values.uibackend.containerSecurityContext.enabled }}
           securityContext: {{- omit .Values.uibackend.containerSecurityContext "enabled" | toYaml | nindent 12 }}
           {{- end }}
+          {{- if .Values.uibackend.resources }}
+          resources: {{- toYaml .Values.uibackend.resources | nindent 12 }}
+          {{- end }}
           args:
             - run
             - --log-level

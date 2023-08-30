@@ -37,6 +37,9 @@ spec:
           env:
             - name: DB_ROOT_DIR
               value: /data
+          {{- if .Values.grypeServer.resources }}
+          resources: {{- toYaml .Values.grypeServer.resources | nindent 12 }}
+          {{- end }}
           volumeMounts:
             - mountPath: /data
               name: db-data

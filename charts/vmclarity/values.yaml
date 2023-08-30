@@ -21,6 +21,12 @@ apiserver:
 
   logLevel: info
 
+  resources:
+    # -- The resources limits for the apiserver containers
+    limits: {}
+    # -- The requested resources for the apiserver containers
+    requests: {}
+
 orchestrator:
   replicas: 1
 
@@ -40,6 +46,12 @@ orchestrator:
     runAsNonRoot: true
 
   logLevel: info
+
+  resources:
+    # -- The resources limits for the orchestrator containers
+    limits: {}
+    # -- The requested resources for the orchestrator containers
+    requests: {}
 
   # Global policy used to determine when to clean up an AssetScan.
   # Possible options are:
@@ -133,6 +145,12 @@ ui:
     tag: latest
     pullPolicy: IfNotPresent
 
+  resources:
+    # -- The resources limits for the UI containers
+    limits: {}
+    # -- The requested resources for the UI containers
+    requests: {}
+
   podSecurityContext:
     enabled: false
     fsGroup: 1001
@@ -150,6 +168,12 @@ uibackend:
     repository: openclarity/vmclarity-uibackend
     tag: latest
     pullPolicy: IfNotPresent
+
+  resources:
+    # -- The resources limits for the UI backend containers
+    limits: {}
+    # -- The requested resources for the UI backend containers
+    requests: {}
 
   podSecurityContext:
     enabled: true
@@ -171,6 +195,12 @@ gateway:
     tag: 1.25.1
     pullPolicy: IfNotPresent
 
+  resources:
+    # -- The resources limits for the gateway containers
+    limits: {}
+    # -- The requested resources for the gateway containers
+    requests: {}
+
   podSecurityContext:
     enabled: false
     fsGroup: 1001
@@ -186,6 +216,12 @@ postgresql:
     repository: bitnami/postgresql
     tag: 14.6.0-debian-11-r31
     pullPolicy: IfNotPresent
+
+  resources:
+    # -- The resources limits for the postgresql containers
+    limits: {}
+    # -- The requested resources for the postgresql containers
+    requests: {}
 
   auth:
     # existingSecret: vmclarity-postgres-credentials
@@ -215,6 +251,12 @@ exploitDBServer:
     tag: v0.2.3
     pullPolicy: IfNotPresent
 
+  resources:
+    # -- The resources limits for the exploit-db-server containers
+    limits: {}
+    # -- The requested resources for the exploit-db-server containers
+    requests: {}
+
   podSecurityContext:
     enabled: true
     fsGroup: 1001
@@ -233,6 +275,12 @@ trivyServer:
     tag: 0.41.0
     pullPolicy: IfNotPresent
 
+  resources:
+    # -- The resources limits for the trivy server containers
+    limits: {}
+    # -- The requested resources for the trivy server containers
+    requests: {}
+
   podSecurityContext:
     enabled: true
     fsGroup: 1001
@@ -250,6 +298,12 @@ grypeServer:
     repository: openclarity/grype-server
     tag: v0.4.0
     pullPolicy: IfNotPresent
+
+  resources:
+    # -- The resources limits for the grype server containers
+    limits: {}
+    # -- The requested resources for the grype server containers
+    requests: {}
 
   podSecurityContext:
     enabled: true
@@ -270,6 +324,12 @@ freshclamMirror:
     repository: openclarity/freshclam-mirror
     tag: v0.1.0
     pullPolicy: IfNotPresent
+
+  resources:
+    # -- The resources limits for the freshclam mirror containers
+    limits: {}
+    # -- The requested resources for the freshclam mirror containers
+    requests: {}
 
   podSecurityContext:
     enabled: false

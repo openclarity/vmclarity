@@ -30,3 +30,6 @@ spec:
           {{- if .Values.ui.containerSecurityContext.enabled }}
           securityContext: {{- omit .Values.ui.containerSecurityContext "enabled" | toYaml | nindent 12 }}
           {{- end }}
+          {{- if .Values.ui.resources }}
+          resources: {{- toYaml .Values.ui.resources | nindent 12 }}
+          {{- end }}

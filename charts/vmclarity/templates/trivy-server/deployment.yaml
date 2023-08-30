@@ -30,6 +30,9 @@ spec:
           {{- if .Values.trivyServer.containerSecurityContext.enabled }}
           securityContext: {{- omit .Values.trivyServer.containerSecurityContext "enabled" | toYaml | nindent 12 }}
           {{- end }}
+          {{- if .Values.trivyServer.resources }}
+          resources: {{- toYaml .Values.trivyServer.resources | nindent 12 }}
+          {{- end }}
           args:
             - server
           env:
