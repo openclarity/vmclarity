@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ printf "%s-apiserver" (include "vmclarity.names.fullname" .) }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "vmclarity.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: apiserver
+spec:
+  selector:
+    matchLabels: {{- include "vmclarity.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: apiserver
+  replicas: {{ .Values.apiserver.replicaCount }}
+  template:
+    metadata:
+      labels: {{- include "vmclarity.labels.standard" . | nindent 8 }}
+        app.kubernetes.io/component: apiserver
+    spec:
+      containers:
+        - name: apiserver
+          image: {{ include "vmclarity.images.image" ( dict "imageRoot" .Values.apiserver.image "global" .Values.global ) }}
+          imagePullPolicy: {{ .Values.apiserver.image.pullPolicy | quote }}
+          args:
+            - run
+            - --log-level
+            - info
+          env:
+            - name: DATABASE_DRIVER
+              value: POSTGRES
+            - name: DB_HOST
+              value: {{ printf "%s-postgresql" (include "vmclarity.names.fullname" .) }}
+            - name: DB_PORT_NUMBER
+              value: "5432"
+            - name: DB_NAME
+              value: vmclarity
+            - name: DB_USER
+              value: {{ .Values.postgresql.auth.username }}
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "postgresql.secretName" .Subcharts.postgresql }}
+                  key: password

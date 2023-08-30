@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ printf "%s-gateway" (include "vmclarity.names.fullname" .) }}
+  labels: {{- include "vmclarity.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: gateway
+spec:
+  selector:
+    matchLabels: {{- include "vmclarity.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: gateway
+  replicas: {{ .Values.gateway.replicaCount }}
+  template:
+    metadata:
+      labels: {{- include "vmclarity.labels.standard" . | nindent 8 }}
+        app.kubernetes.io/component: gateway
+    spec:
+      containers:
+        - name: gateway
+          image: {{ include "vmclarity.images.image" ( dict "imageRoot" .Values.gateway.image "global" .Values.global ) }}
+          imagePullPolicy: {{ .Values.gateway.image.pullPolicy | quote }}
+          volumeMounts:
+            - name: gateway-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+      volumes:
+        - name: gateway-config
+          configMap:
+            name: {{ printf "%s-gateway" (include "vmclarity.names.fullname" .) }}

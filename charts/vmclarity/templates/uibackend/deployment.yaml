@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ printf "%s-uibackend" (include "vmclarity.names.fullname" .) }}
+  labels: {{- include "vmclarity.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: uibackend
+spec:
+  selector:
+    matchLabels: {{- include "vmclarity.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: uibackend
+  replicas: {{ .Values.uibackend.replicaCount }}
+  template:
+    metadata:
+      labels: {{- include "vmclarity.labels.standard" . | nindent 8 }}
+        app.kubernetes.io/component: uibackend
+    spec:
+      containers:
+        - name: uibackend
+          image: {{ include "vmclarity.images.image" ( dict "imageRoot" .Values.uibackend.image "global" .Values.global ) }}
+          imagePullPolicy: {{ .Values.uibackend.image.pullPolicy | quote }}
+          args:
+            - run
+            - --log-level
+            - info
+          env:
+            # Host for the VMClarity backend server
+            - name: APISERVER_HOST
+              value: {{ printf "%s-apiserver" (include "vmclarity.names.fullname" .) }}
+            # Port number for the VMClarity backend server
+            - name: APISERVER_PORT
+              value: "8888"

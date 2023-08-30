@@ -1,0 +1,64 @@
+global:
+  imageRegistry: ""
+
+apiserver:
+  replicas: 1
+
+  image:
+    registry: ghcr.io
+    repository: openclarity/vmclarity-apiserver
+    tag: latest
+    pullPolicy: IfNotPresent
+
+orchestrator:
+  replicas: 1
+
+  image:
+    registry: ghcr.io
+    repository: openclarity/vmclarity-orchestrator
+    tag: latest
+    pullPolicy: IfNotPresent
+
+ui:
+  replicas: 1
+
+  image:
+    registry: ghcr.io
+    repository: openclarity/vmclarity-ui
+    tag: latest
+    pullPolicy: IfNotPresent
+
+uibackend:
+  replicas: 1
+
+  image:
+    registry: ghcr.io
+    repository: openclarity/vmclarity-uibackend
+    tag: latest
+    pullPolicy: IfNotPresent
+
+gateway:
+  replicas: 1
+
+  image:
+    registry: docker.io
+    repository: library/nginx
+    tag: latest
+    pullPolicy: IfNotPresent
+
+postgresql:
+  image:
+    registry: docker.io
+    repository: bitnami/postgresql
+    tag: 14.6.0-debian-11-r31
+    pullPolicy: IfNotPresent
+
+  auth:
+    # existingSecret: vmclarity-postgres-credentials
+    username: vmclarity
+    password: password1
+    database: vmclarity
+
+  service:
+    ports:
+      postgresql: 5432

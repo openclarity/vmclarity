@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ printf "%s-orchestrator" (include "vmclarity.names.fullname" .) }}
+  labels: {{- include "vmclarity.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: orchestrator
+spec:
+  selector:
+    matchLabels: {{- include "vmclarity.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: orchestrator
+  replicas: {{ .Values.orchestrator.replicaCount }}
+  template:
+    metadata:
+      labels: {{- include "vmclarity.labels.standard" . | nindent 8 }}
+        app.kubernetes.io/component: orchestrator
+    spec:
+      containers:
+        - name: orchestrator
+          image: {{ include "vmclarity.images.image" ( dict "imageRoot" .Values.orchestrator.image "global" .Values.global ) }}
+          imagePullPolicy: {{ .Values.orchestrator.image.pullPolicy | quote }}
+          args:
+            - run
+            - --log-level
+            - info
+          env:
+            # Host for the VMClarity backend server
+            - name: APISERVER_HOST
+              value: {{ printf "%s-apiserver" (include "vmclarity.names.fullname" .) }}
+            # Port number for the VMClarity backend server
+            - name: APISERVER_PORT
+              value: "8888"
+
+            {{/* TODO(sambetts) Add provider configuration logic in here */}}

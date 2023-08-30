@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ printf "%s-ui" (include "vmclarity.names.fullname" .) }}
+  labels: {{- include "vmclarity.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: ui
+spec:
+  selector:
+    matchLabels: {{- include "vmclarity.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: ui
+  replicas: {{ .Values.ui.replicaCount }}
+  template:
+    metadata:
+      labels: {{- include "vmclarity.labels.standard" . | nindent 8 }}
+        app.kubernetes.io/component: ui
+    spec:
+      containers:
+        - name: ui
+          image: {{ include "vmclarity.images.image" ( dict "imageRoot" .Values.ui.image "global" .Values.global ) }}
+          imagePullPolicy: {{ .Values.ui.image.pullPolicy | quote }}

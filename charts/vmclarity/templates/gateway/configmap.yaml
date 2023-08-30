@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ printf "%s-gateway" (include "vmclarity.names.fullname" .) }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "vmclarity.labels.standard" . | nindent 4 }}
+data:
+  nginx.conf: |
+    events {
+        worker_connections 1024;
+    }
+    
+    http {
+        upstream ui {
+            server {{ printf "%s-ui-hl" (include "vmclarity.names.fullname" .) }}:80;
+        }
+    
+        upstream uibackend {
+            server {{ printf "%s-uibackend-hl" (include "vmclarity.names.fullname" .) }}:8890;
+        }
+    
+        upstream apiserver {
+            server {{ printf "%s-apiserver-hl" (include "vmclarity.names.fullname" .) }}:8888;
+        }
+    
+        server {
+            listen 80;
+    
+            location / {
+                proxy_pass http://ui/;
+            }
+    
+            location /ui/api/ {
+                proxy_pass http://uibackend/;
+            }
+    
+            location /api/ {
+                proxy_pass http://apiserver/;
+            }
+        }
+    }
