@@ -41,6 +41,89 @@ orchestrator:
 
   logLevel: info
 
+  # Global policy used to determine when to clean up an AssetScan.
+  # Possible options are:
+  # Always - All AssetScans are cleaned up
+  # OnSuccess - Only Successful AssetScans are cleaned up, Failed ones are left for debugging
+  # Never - No AssetScans are cleaned up
+  deleteJobPolicy: Always
+
+  scannerImage:
+    registry: ghcr.io
+    repository: openclarity/vmclarity-cli
+    tag: latest
+
+  # Address that scanners can use to reach back to the API server
+  scannerApiserverAddress: ""
+
+  # Address that scanners can use to reach trivy server
+  trivyServerAddress: ""
+
+  # Address that scanners can use to reach the grype server
+  grypeServerAddress: ""
+
+  # Address that scanenrs can use to reach the freshclam mirror
+  freshclamMirrorAddress: ""
+
+  # Which provider to enable
+  provider: "aws"
+
+  aws:
+    # Region where the control plane is running
+    region: ""
+    # Region where the scanners will be created
+    scannerRegion: ""
+    # Subnet where the scanners will be created
+    subnetId: ""
+    # Security Group to use for the scanner networking
+    securityGroupId: ""
+    # KeyPair to use for the scanner instance
+    keypairName: ""
+    # AMI to use for the scanner instance
+    scannerAmiId: ""
+    # InstanceType to use for the scanner instance
+    scannerInstanceType: ""
+
+  gcp:
+    # Project ID for discovery and scanning
+    projectId: ""
+    # Zone to where the scanner instances should run
+    scannerZone: ""
+    # Subnet where to run the scanner instances
+    scannerSubnet: ""
+    # Scanner Machine type
+    scannerMachineType: ""
+    # Scanner source image
+    scannerSourceImage: ""
+
+  azure:
+    # Subscription ID for discovery and scanning
+    subscriptionId: ""
+    # Location where the scanner instances will be run
+    scannerLocation: ""
+    # ResourceGroup where the scanner instances will be run
+    scannerResourceGroup: ""
+    # Subnet ID where the scanner instances will be run
+    scannerSubnetId: ""
+    # SSH RSA Public Key to configure the scanner instances with
+    scannerPublicKey: ""
+    # Scanner VM size
+    scannerVmSize: ""
+    # Scanner VM source image publisher
+    scannerImagePublisher: ""
+    # Scanner VM source image offer
+    scannerImageOffer: ""
+    # Scanner VM source image sku
+    scannerImageSku: ""
+    # Scanner VM source image version
+    scannerImageVersion: ""
+    # Scanner VM security group
+    scannerSecurityGroup: ""
+    # Storage account to use for transfering snapshots between regions
+    scannerStorageAccountName: ""
+    # Storage container to use for transfering snapshots between regions
+    scannerStorageContainerName: ""      
+
 ui:
   replicas: 1
 

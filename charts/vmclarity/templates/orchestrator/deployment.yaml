@@ -41,5 +41,86 @@ spec:
             # Port number for the VMClarity backend server
             - name: APISERVER_PORT
               value: "8888"
+            - name: DELETE_JOB_POLICY
+              value: {{ .Values.orchestrator.deleteJobPolicy }}
+            - name: SCANNER_CONTAINER_IMAGE
+              value: {{ include "vmclarity.images.image" ( dict "imageRoot" .Values.orchestrator.scannerImage "global" .Values.global ) }}
+            - name: SCANNER_VMCLARITY_APISERVER_ADDRESS
+              value: {{ .Values.orchestrator.scannerApiServerAddress }}
+            - name: TRIVY_SERVER_ADDRESS
+              value: {{ .Values.orchestrator.trivyServerAddress }}
+            - name: GRYPE_SERVER_ADDRESS
+              value: {{ .Values.orchestrator.grypeServerAddress }}
+            - name: ALTERNATIVE_FRESHCLAM_MIRROR_URL
+              value: {{ .Values.orchestrator.freshclamMirrorAddress }}
 
-            {{/* TODO(sambetts) Add provider configuration logic in here */}}
+            {{- if eq .Values.orchestrator.provider "aws" -}}
+            {{- with .Values.orchestrator.aws }}
+            - name: PROVIDER
+              value: "aws"
+            - name: AWS_REGION
+              value: {{ .region }}
+            - name: VMCLARITY_AWS_SCANNER_REGION
+              value: {{ .scannerRegion }}
+            - name: VMCLARITY_AWS_SUBNET_ID
+              value: {{ .subnetId }}
+            - name: VMCLARITY_AWS_SECURITY_GROUP_ID
+              value: {{ .securityGroupId }}
+            - name: VMCLARITY_AWS_KEYPAIR_NAME
+              value: {{ .keypairName }}
+            - name: VMCLARITY_AWS_SCANNER_AMI_ID
+              value: {{ .scannerAmiId }}
+            - name: VMCLARITY_AWS_SCANNER_INSTANCE_TYPE
+              value: {{ .scannerInstanceType }}
+            {{- end -}}
+            {{- end }}
+
+            {{- if eq .Values.orchestrator.provider "gcp" -}}
+            {{- with .Values.orchestrator.gcp }}
+            - name: PROVIDER
+              value: "gcp"
+            - name: VMCLARITY_GCP_PROJECT_ID
+              value: {{ .projectId }}
+            - name: VMCLARITY_GCP_SCANNER_ZONE
+              value: {{ .scannerZone }}
+            - name: VMCLARITY_GCP_SCANNER_SUBNETWORK
+              value: {{ .scannerSubnet }}
+            - name: VMCLARITY_GCP_SCANNER_MACHINE_TYPE
+              value: {{ .scannerMachineType }}
+            - name: VMCLARITY_GCP_SCANNER_SOURCE_IMAGE
+              value: {{ .scannerSourceImage }}
+            {{- end -}}
+            {{- end }}
+
+            {{- if eq .Values.orchestrator.provider "azure" -}}
+            {{- with .Values.orchestrator.azure }}
+            - name: PROVIDER
+              value: "azure"
+            - name: VMCLARITY_AZURE_SUBSCRIPTION_ID
+              value: .subscriptionId
+            - name: VMCLARITY_AZURE_SCANNER_LOCATION
+              value: .scannerLocation
+            - name: VMCLARITY_AZURE_SCANNER_RESOURCE_GROUP
+              value: .scannerResourceGroup
+            - name: VMCLARITY_AZURE_SCANNER_SUBNET_ID
+              value: .scannerSubnetId
+            - name: VMCLARITY_AZURE_SCANNER_PUBLIC_KEY
+              value: .scannerPublicKey
+            - name: VMCLARITY_AZURE_SCANNER_VM_SIZE
+              value: .scannerVmSize
+            - name: VMCLARITY_AZURE_SCANNER_IMAGE_PUBLISHER
+              value: .scannerImagePublisher
+            - name: VMCLARITY_AZURE_SCANNER_IMAGE_OFFER
+              value: .scannerImageOffer
+            - name: VMCLARITY_AZURE_SCANNER_IMAGE_SKU
+              value: .scannerImageSku
+            - name: VMCLARITY_AZURE_SCANNER_IMAGE_VERSION
+              value: .scannerImageVersion
+            - name: VMCLARITY_AZURE_SCANNER_SECURITY_GROUP
+              value: .scannerSecurityGroup
+            - name: VMCLARITY_AZURE_SCANNER_STORAGE_ACCOUNT_NAME
+              value: .scannerStorageAccountName
+            - name: VMCLARITY_AZURE_SCANNER_STORAGE_CONTAINER_NAME
+              value: .scannerStorageContainerName
+            {{- end -}}
+            {{- end }}
