@@ -146,7 +146,7 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 		}
 
 		if len(retResults.Infos) > 0 && retResults.Error != nil {
-			// Since we have findings we want to share what we've got and only prints the errors here.
+			// Since we have findings, we want to share what we've got and only print the errors here.
 			// Maybe we need to support to send both errors and findings in a higher level.
 			s.logger.Error(retResults.Error)
 			retResults.Error = nil
@@ -240,11 +240,11 @@ func (s *Scanner) getFingerprints(paths []string, infoType types.InfoType) ([]ty
 		}
 
 		var output []byte
-		if output, err = s.executeSSHKeyGenCommand("sha256", p); err != nil {
+		if output, err = s.executeSSHKeyGenFingerprintCommand("sha256", p); err != nil {
 			return nil, fmt.Errorf("failed to execute ssh-keygen command: %v", err)
 		}
 
-		infos = append(infos, parseSSHKeyGenCommandOutput(string(output), infoType, p)...)
+		infos = append(infos, parseSSHKeyGenFingerprintCommandOutput(string(output), infoType, p)...)
 	}
 
 	return infos, nil
@@ -294,7 +294,7 @@ func isPrivateKey(path string) (bool, error) {
 	scanner := bufio.NewScanner(f)
 
 	for scanner.Scan() {
-		// We only need to look at the first line
+		// We only need to look at the first line to find PEM private keys.
 		return strings.Contains(scanner.Text(), "PRIVATE KEY"), nil
 	}
 
@@ -305,7 +305,7 @@ func isPrivateKey(path string) (bool, error) {
 	return false, nil
 }
 
-func parseSSHKeyGenCommandOutput(output string, infoType types.InfoType, path string) []types.Info {
+func parseSSHKeyGenFingerprintCommandOutput(output string, infoType types.InfoType, path string) []types.Info {
 	lines := strings.Split(output, "\n")
 	infos := make([]types.Info, 0, len(lines))
 	for i := range lines {
@@ -321,7 +321,7 @@ func parseSSHKeyGenCommandOutput(output string, infoType types.InfoType, path st
 	return infos
 }
 
-func (s *Scanner) executeSSHKeyGenCommand(hashAlgo string, filePath string) ([]byte, error) {
+func (s *Scanner) executeSSHKeyGenFingerprintCommand(hashAlgo string, filePath string) ([]byte, error) {
 	args := []string{
 		"-E",
 		hashAlgo,
@@ -344,9 +344,9 @@ func (s *Scanner) isValidInputType(sourceType utils.SourceType) bool {
 	case utils.ROOTFS:
 		return true
 	case utils.DIR, utils.FILE, utils.IMAGE, utils.SBOM:
-		s.logger.Infof("source type %v is not supported for sshTopology, skipping.", sourceType)
+		s.logger.Infof("Source type %v is not supported for %s, skipping.", ScannerName, sourceType)
 	default:
-		s.logger.Infof("unknown source type %v, skipping.", sourceType)
+		s.logger.Infof("Unknown source type %v, skipping.", sourceType)
 	}
 	return false
 }
