@@ -18,7 +18,7 @@ spec:
           args:
             - run
             - --log-level
-            - warning
+            - {{ .Values.grypeServer.logLevel }}
           env:
             - name: DB_ROOT_DIR
               value: /data

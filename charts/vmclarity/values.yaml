@@ -10,6 +10,8 @@ apiserver:
     tag: latest
     pullPolicy: IfNotPresent
 
+  logLevel: info
+
 orchestrator:
   replicas: 1
 
@@ -18,6 +20,8 @@ orchestrator:
     repository: openclarity/vmclarity-orchestrator
     tag: latest
     pullPolicy: IfNotPresent
+
+  logLevel: info
 
 ui:
   replicas: 1
@@ -36,6 +40,8 @@ uibackend:
     repository: openclarity/vmclarity-uibackend
     tag: latest
     pullPolicy: IfNotPresent
+
+  logLevel: info
 
 gateway:
   replicas: 1
@@ -89,6 +95,8 @@ grypeServer:
     repository: openclarity/grype-server
     tag: v0.4.0
     pullPolicy: IfNotPresent
+
+  logLevel: info
 
 freshclamMirror:
   replicas: 1
