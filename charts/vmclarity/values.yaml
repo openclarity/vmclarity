@@ -52,6 +52,16 @@ apiserver:
     # -- The requested resources for the apiserver containers
     requests: {}
 
+  serviceAccount:
+    # -- Enable creation of ServiceAccount
+    create: true
+    # -- The name of the ServiceAccount to use.
+    # If not set and create is true, it will use the component's calculated name.
+    name: ""
+    # -- Allows auto mount of ServiceAccountToken on the serviceAccount created.
+    # Can be set to false if pods using this serviceAccount do not need to use K8s API.
+    automountServiceAccountToken: false
+
 orchestrator:
   # -- Number of replicas for the Orchestrator service
   # Currently 1 supported.
@@ -103,6 +113,16 @@ orchestrator:
     limits: {}
     # -- The requested resources for the orchestrator containers
     requests: {}
+
+  serviceAccount:
+    # -- Enable creation of ServiceAccount
+    create: true
+    # -- The name of the ServiceAccount to use.
+    # If not set and create is true, it will use the component's calculated name.
+    name: ""
+    # -- Allows auto mount of ServiceAccountToken on the serviceAccount created.
+    # Can be set to false if pods using this serviceAccount do not need to use K8s API.
+    automountServiceAccountToken: false
 
   # -- Global policy used to determine when to clean up an AssetScan.
   # Possible options are:
@@ -214,6 +234,16 @@ ui:
     # -- The requested resources for the UI containers
     requests: {}
 
+  serviceAccount:
+    # -- Enable creation of ServiceAccount
+    create: true
+    # -- The name of the ServiceAccount to use.
+    # If not set and create is true, it will use the component's calculated name.
+    name: ""
+    # -- Allows auto mount of ServiceAccountToken on the serviceAccount created.
+    # Can be set to false if pods using this serviceAccount do not need to use K8s API.
+    automountServiceAccountToken: false
+
   podSecurityContext:
     # -- Pod security context enabled
     enabled: false
@@ -261,6 +291,16 @@ uibackend:
     limits: {}
     # -- The requested resources for the UI backend containers
     requests: {}
+
+  serviceAccount:
+    # -- Enable creation of ServiceAccount
+    create: true
+    # -- The name of the ServiceAccount to use.
+    # If not set and create is true, it will use the component's calculated name.
+    name: ""
+    # -- Allows auto mount of ServiceAccountToken on the serviceAccount created.
+    # Can be set to false if pods using this serviceAccount do not need to use K8s API.
+    automountServiceAccountToken: false
 
   podSecurityContext:
     # -- Pod security context enabled
@@ -313,6 +353,16 @@ gateway:
     # -- The requested resources for the gateway containers
     requests: {}
 
+  serviceAccount:
+    # -- Enable creation of ServiceAccount
+    create: true
+    # -- The name of the ServiceAccount to use.
+    # If not set and create is true, it will use the component's calculated name.
+    name: ""
+    # -- Allows auto mount of ServiceAccountToken on the serviceAccount created.
+    # Can be set to false if pods using this serviceAccount do not need to use K8s API.
+    automountServiceAccountToken: false
+
   podSecurityContext:
     # -- Pod security context enabled
     enabled: true
@@ -357,6 +407,16 @@ postgresql:
     limits: {}
     # -- The requested resources for the postgresql containers
     requests: {}
+
+  serviceAccount:
+    # -- Enable creation of ServiceAccount
+    create: true
+    # -- The name of the ServiceAccount to use.
+    # If not set and create is true, it will use the component's calculated name.
+    name: ""
+    # -- Allows auto mount of ServiceAccountToken on the serviceAccount created.
+    # Can be set to false if pods using this serviceAccount do not need to use K8s API.
+    automountServiceAccountToken: false
 
   auth:
     # -- Name of existing secret to use for PostgreSQL credentials
@@ -421,6 +481,16 @@ exploitDBServer:
     # -- The requested resources for the exploit-db-server containers
     requests: {}
 
+  serviceAccount:
+    # -- Enable creation of ServiceAccount
+    create: true
+    # -- The name of the ServiceAccount to use.
+    # If not set and create is true, it will use the component's calculated name.
+    name: ""
+    # -- Allows auto mount of ServiceAccountToken on the serviceAccount created.
+    # Can be set to false if pods using this serviceAccount do not need to use K8s API.
+    automountServiceAccountToken: false
+
   podSecurityContext:
     # -- Pod security context enabled
     enabled: true
@@ -469,6 +539,16 @@ trivyServer:
     # -- The requested resources for the trivy server containers
     requests: {}
 
+  serviceAccount:
+    # -- Enable creation of ServiceAccount
+    create: true
+    # -- The name of the ServiceAccount to use.
+    # If not set and create is true, it will use the component's calculated name.
+    name: ""
+    # -- Allows auto mount of ServiceAccountToken on the serviceAccount created.
+    # Can be set to false if pods using this serviceAccount do not need to use K8s API.
+    automountServiceAccountToken: false
+
   podSecurityContext:
     # -- Pod security context enabled
     enabled: true
@@ -516,6 +596,16 @@ grypeServer:
     limits: {}
     # -- The requested resources for the grype server containers
     requests: {}
+
+  serviceAccount:
+    # -- Enable creation of ServiceAccount
+    create: true
+    # -- The name of the ServiceAccount to use.
+    # If not set and create is true, it will use the component's calculated name.
+    name: ""
+    # -- Allows auto mount of ServiceAccountToken on the serviceAccount created.
+    # Can be set to false if pods using this serviceAccount do not need to use K8s API.
+    automountServiceAccountToken: false
 
   podSecurityContext:
     # -- Pod security context enabled
@@ -568,6 +658,16 @@ freshclamMirror:
     # -- The requested resources for the freshclam mirror containers
     requests: {}
 
+  serviceAccount:
+    # -- Enable creation of ServiceAccount
+    create: true
+    # -- The name of the ServiceAccount to use.
+    # If not set and create is true, it will use the component's calculated name.
+    name: ""
+    # -- Allows auto mount of ServiceAccountToken on the serviceAccount created.
+    # Can be set to false if pods using this serviceAccount do not need to use K8s API.
+    automountServiceAccountToken: false
+
   podSecurityContext:
     # -- Pod security context enabled
     enabled: false
@@ -615,6 +715,16 @@ swaggerUI:
     limits: {}
     # -- The requested resources for the swagger ui containers
     requests: {}
+
+  serviceAccount:
+    # -- Enable creation of ServiceAccount
+    create: true
+    # -- The name of the ServiceAccount to use.
+    # If not set and create is true, it will use the component's calculated name.
+    name: ""
+    # -- Allows auto mount of ServiceAccountToken on the serviceAccount created.
+    # Can be set to false if pods using this serviceAccount do not need to use K8s API.
+    automountServiceAccountToken: false
 
   podSecurityContext:
     # -- Pod security context enabled

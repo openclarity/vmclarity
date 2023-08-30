@@ -54,3 +54,4 @@ spec:
         - name: swagger-ui-config
           configMap:
             name: {{ include "vmclarity.swaggerUI.name" . }}
+      serviceAccountName: {{ include "vmclarity.swaggerUI.serviceAccountName" . }}

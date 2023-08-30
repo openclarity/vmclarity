@@ -48,6 +48,9 @@ secrets.
 | apiserver.replicas | int | `1` | Number of replicas for the API Server |
 | apiserver.resources.limits | object | `{}` | The resources limits for the apiserver containers |
 | apiserver.resources.requests | object | `{}` | The requested resources for the apiserver containers |
+| apiserver.serviceAccount.automountServiceAccountToken | bool | `false` | Allows auto mount of ServiceAccountToken on the serviceAccount created. Can be set to false if pods using this serviceAccount do not need to use K8s API. |
+| apiserver.serviceAccount.create | bool | `true` | Enable creation of ServiceAccount |
+| apiserver.serviceAccount.name | string | `""` | The name of the ServiceAccount to use. If not set and create is true, it will use the component's calculated name. |
 | exploitDBServer.containerSecurityContext.allowPrivilegeEscalation | bool | `false` | Force the child process to run as non-privileged |
 | exploitDBServer.containerSecurityContext.capabilities.drop | list | `["ALL"]` | List of capabilities to be dropped |
 | exploitDBServer.containerSecurityContext.enabled | bool | `true` | Container security context enabled |
@@ -66,6 +69,9 @@ secrets.
 | exploitDBServer.replicas | int | `1` | Number of replicas for the exploit-db-server service |
 | exploitDBServer.resources.limits | object | `{}` | The resources limits for the exploit-db-server containers |
 | exploitDBServer.resources.requests | object | `{}` | The requested resources for the exploit-db-server containers |
+| exploitDBServer.serviceAccount.automountServiceAccountToken | bool | `false` | Allows auto mount of ServiceAccountToken on the serviceAccount created. Can be set to false if pods using this serviceAccount do not need to use K8s API. |
+| exploitDBServer.serviceAccount.create | bool | `true` | Enable creation of ServiceAccount |
+| exploitDBServer.serviceAccount.name | string | `""` | The name of the ServiceAccount to use. If not set and create is true, it will use the component's calculated name. |
 | freshclamMirror.containerSecurityContext.allowPrivilegeEscalation | bool | `false` | Force the child process to run as non-privileged |
 | freshclamMirror.containerSecurityContext.capabilities.drop | list | `["ALL"]` | List of capabilities to be dropped |
 | freshclamMirror.containerSecurityContext.enabled | bool | `false` | Container security context enabled |
@@ -84,6 +90,9 @@ secrets.
 | freshclamMirror.replicas | int | `1` | Number of replicas for the freshclam mirror service |
 | freshclamMirror.resources.limits | object | `{}` | The resources limits for the freshclam mirror containers |
 | freshclamMirror.resources.requests | object | `{}` | The requested resources for the freshclam mirror containers |
+| freshclamMirror.serviceAccount.automountServiceAccountToken | bool | `false` | Allows auto mount of ServiceAccountToken on the serviceAccount created. Can be set to false if pods using this serviceAccount do not need to use K8s API. |
+| freshclamMirror.serviceAccount.create | bool | `true` | Enable creation of ServiceAccount |
+| freshclamMirror.serviceAccount.name | string | `""` | The name of the ServiceAccount to use. If not set and create is true, it will use the component's calculated name. |
 | gateway.containerSecurityContext.allowPrivilegeEscalation | bool | `false` | Force the child process to run as non-privileged |
 | gateway.containerSecurityContext.capabilities.drop | list | `["ALL"]` | List of capabilities to be dropped |
 | gateway.containerSecurityContext.enabled | bool | `true` | Container security context enabled |
@@ -102,6 +111,9 @@ secrets.
 | gateway.replicas | int | `1` | Number of replicas for the gateway |
 | gateway.resources.limits | object | `{}` | The resources limits for the gateway containers |
 | gateway.resources.requests | object | `{}` | The requested resources for the gateway containers |
+| gateway.serviceAccount.automountServiceAccountToken | bool | `false` | Allows auto mount of ServiceAccountToken on the serviceAccount created. Can be set to false if pods using this serviceAccount do not need to use K8s API. |
+| gateway.serviceAccount.create | bool | `true` | Enable creation of ServiceAccount |
+| gateway.serviceAccount.name | string | `""` | The name of the ServiceAccount to use. If not set and create is true, it will use the component's calculated name. |
 | global.imageRegistry | string | `""` |  |
 | grypeServer.containerSecurityContext.allowPrivilegeEscalation | bool | `false` | Force the child process to run as non-privileged |
 | grypeServer.containerSecurityContext.capabilities.drop | list | `["ALL"]` | List of capabilities to be dropped |
@@ -122,6 +134,9 @@ secrets.
 | grypeServer.replicas | int | `1` | Number of replicas for the grype server service |
 | grypeServer.resources.limits | object | `{}` | The resources limits for the grype server containers |
 | grypeServer.resources.requests | object | `{}` | The requested resources for the grype server containers |
+| grypeServer.serviceAccount.automountServiceAccountToken | bool | `false` | Allows auto mount of ServiceAccountToken on the serviceAccount created. Can be set to false if pods using this serviceAccount do not need to use K8s API. |
+| grypeServer.serviceAccount.create | bool | `true` | Enable creation of ServiceAccount |
+| grypeServer.serviceAccount.name | string | `""` | The name of the ServiceAccount to use. If not set and create is true, it will use the component's calculated name. |
 | orchestrator.aws.keypairName | string | `""` | KeyPair to use for the scanner instance |
 | orchestrator.aws.region | string | `""` | Region where the control plane is running |
 | orchestrator.aws.scannerAmiId | string | `""` | AMI to use for the scanner instance |
@@ -175,6 +190,9 @@ secrets.
 | orchestrator.scannerImage.registry | string | `"ghcr.io"` | Scanner Container image registry |
 | orchestrator.scannerImage.repository | string | `"openclarity/vmclarity-cli"` | Scanner Container image repository |
 | orchestrator.scannerImage.tag | string | `"latest"` | Scanner Container image tag (immutable tags are recommended) |
+| orchestrator.serviceAccount.automountServiceAccountToken | bool | `false` | Allows auto mount of ServiceAccountToken on the serviceAccount created. Can be set to false if pods using this serviceAccount do not need to use K8s API. |
+| orchestrator.serviceAccount.create | bool | `true` | Enable creation of ServiceAccount |
+| orchestrator.serviceAccount.name | string | `""` | The name of the ServiceAccount to use. If not set and create is true, it will use the component's calculated name. |
 | orchestrator.trivyServerAddress | string | `""` | Address that scanners can use to reach trivy server |
 | postgresql.auth.database | string | `"vmclarity"` | Name for a custom database to create |
 | postgresql.auth.existingSecret | string | `""` | Name of existing secret to use for PostgreSQL credentials |
@@ -198,6 +216,9 @@ secrets.
 | postgresql.resources.limits | object | `{}` | The resources limits for the postgresql containers |
 | postgresql.resources.requests | object | `{}` | The requested resources for the postgresql containers |
 | postgresql.service.ports.postgresql | int | `5432` | PostgreSQL service port |
+| postgresql.serviceAccount.automountServiceAccountToken | bool | `false` | Allows auto mount of ServiceAccountToken on the serviceAccount created. Can be set to false if pods using this serviceAccount do not need to use K8s API. |
+| postgresql.serviceAccount.create | bool | `true` | Enable creation of ServiceAccount |
+| postgresql.serviceAccount.name | string | `""` | The name of the ServiceAccount to use. If not set and create is true, it will use the component's calculated name. |
 | swaggerUI.containerSecurityContext.allowPrivilegeEscalation | bool | `false` | Force the child process to run as non-privileged |
 | swaggerUI.containerSecurityContext.capabilities.drop | list | `["ALL"]` | List of capabilities to be dropped |
 | swaggerUI.containerSecurityContext.enabled | bool | `false` | Container security context enabled |
@@ -216,6 +237,9 @@ secrets.
 | swaggerUI.replicas | int | `1` | Number of replicas for the swagger-ui service |
 | swaggerUI.resources.limits | object | `{}` | The resources limits for the swagger ui containers |
 | swaggerUI.resources.requests | object | `{}` | The requested resources for the swagger ui containers |
+| swaggerUI.serviceAccount.automountServiceAccountToken | bool | `false` | Allows auto mount of ServiceAccountToken on the serviceAccount created. Can be set to false if pods using this serviceAccount do not need to use K8s API. |
+| swaggerUI.serviceAccount.create | bool | `true` | Enable creation of ServiceAccount |
+| swaggerUI.serviceAccount.name | string | `""` | The name of the ServiceAccount to use. If not set and create is true, it will use the component's calculated name. |
 | trivyServer.containerSecurityContext.allowPrivilegeEscalation | bool | `false` | Force the child process to run as non-privileged |
 | trivyServer.containerSecurityContext.capabilities.drop | list | `["ALL"]` | List of capabilities to be dropped |
 | trivyServer.containerSecurityContext.enabled | bool | `true` | Container security context enabled |
@@ -234,6 +258,9 @@ secrets.
 | trivyServer.replicas | int | `1` | Number of replicas for the trivy server service |
 | trivyServer.resources.limits | object | `{}` | The resources limits for the trivy server containers |
 | trivyServer.resources.requests | object | `{}` | The requested resources for the trivy server containers |
+| trivyServer.serviceAccount.automountServiceAccountToken | bool | `false` | Allows auto mount of ServiceAccountToken on the serviceAccount created. Can be set to false if pods using this serviceAccount do not need to use K8s API. |
+| trivyServer.serviceAccount.create | bool | `true` | Enable creation of ServiceAccount |
+| trivyServer.serviceAccount.name | string | `""` | The name of the ServiceAccount to use. If not set and create is true, it will use the component's calculated name. |
 | ui.containerSecurityContext.allowPrivilegeEscalation | bool | `false` | Force the child process to run as non-privileged |
 | ui.containerSecurityContext.capabilities.drop | list | `["ALL"]` | List of capabilities to be dropped |
 | ui.containerSecurityContext.enabled | bool | `false` | Container security context enabled |
@@ -252,6 +279,9 @@ secrets.
 | ui.replicas | int | `1` | Number of replicas for the UI service |
 | ui.resources.limits | object | `{}` | The resources limits for the UI containers |
 | ui.resources.requests | object | `{}` | The requested resources for the UI containers |
+| ui.serviceAccount.automountServiceAccountToken | bool | `false` | Allows auto mount of ServiceAccountToken on the serviceAccount created. Can be set to false if pods using this serviceAccount do not need to use K8s API. |
+| ui.serviceAccount.create | bool | `true` | Enable creation of ServiceAccount |
+| ui.serviceAccount.name | string | `""` | The name of the ServiceAccount to use. If not set and create is true, it will use the component's calculated name. |
 | uibackend.containerSecurityContext.allowPrivilegeEscalation | bool | `false` | Force the child process to run as non-privileged |
 | uibackend.containerSecurityContext.capabilities.drop | list | `["ALL"]` | List of capabilities to be dropped |
 | uibackend.containerSecurityContext.enabled | bool | `true` | Container security context enabled |
@@ -271,6 +301,9 @@ secrets.
 | uibackend.replicas | int | `1` | Number of replicas for the UI Backend service |
 | uibackend.resources.limits | object | `{}` | The resources limits for the UI backend containers |
 | uibackend.resources.requests | object | `{}` | The requested resources for the UI backend containers |
+| uibackend.serviceAccount.automountServiceAccountToken | bool | `false` | Allows auto mount of ServiceAccountToken on the serviceAccount created. Can be set to false if pods using this serviceAccount do not need to use K8s API. |
+| uibackend.serviceAccount.create | bool | `true` | Enable creation of ServiceAccount |
+| uibackend.serviceAccount.name | string | `""` | The name of the ServiceAccount to use. If not set and create is true, it will use the component's calculated name. |
 
 ----------------------------------------------
 Autogenerated from chart metadata using [helm-docs v1.11.0](https://github.com/norwoodj/helm-docs/releases/v1.11.0)

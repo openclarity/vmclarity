@@ -50,3 +50,4 @@ spec:
           emptyDir: {}
         - name: tmp
           emptyDir: {}
+      serviceAccountName: {{ include "vmclarity.grypeServer.serviceAccountName" . }}

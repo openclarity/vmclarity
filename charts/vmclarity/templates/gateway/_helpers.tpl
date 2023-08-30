@@ -20,3 +20,14 @@ Labels to use on deploy.spec.selector.matchLabels and svc.spec.selector
 {{ include "vmclarity.labels.matchLabels" . }}
 app.kubernetes.io/component: gateway
 {{- end -}}
+
+{{/*
+Create the name of the service account to use
+*/}}
+{{- define "vmclarity.gateway.serviceAccountName" -}}
+{{- if .Values.gateway.serviceAccount.create -}}
+    {{ default (include "vmclarity.gateway.name" .) .Values.gateway.serviceAccount.name }}
+{{- else -}}
+    {{ default "default" .Values.gateway.serviceAccount.name }}
+{{- end -}}
+{{- end -}}

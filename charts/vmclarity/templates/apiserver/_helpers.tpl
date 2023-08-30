@@ -20,3 +20,14 @@ Labels to use on deploy.spec.selector.matchLabels and svc.spec.selector
 {{ include "vmclarity.labels.matchLabels" . }}
 app.kubernetes.io/component: apiserver
 {{- end -}}
+
+{{/*
+Create the name of the service account to use
+*/}}
+{{- define "vmclarity.apiserver.serviceAccountName" -}}
+{{- if .Values.apiserver.serviceAccount.create -}}
+    {{ default (include "vmclarity.apiserver.name" .) .Values.apiserver.serviceAccount.name }}
+{{- else -}}
+    {{ default "default" .Values.apiserver.serviceAccount.name }}
+{{- end -}}
+{{- end -}}

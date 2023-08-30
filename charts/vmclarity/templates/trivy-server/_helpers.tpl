@@ -20,3 +20,14 @@ Labels to use on deploy.spec.selector.matchLabels and svc.spec.selector
 {{ include "vmclarity.labels.matchLabels" . }}
 app.kubernetes.io/component: trivy-server
 {{- end -}}
+
+{{/*
+Create the name of the service account to use
+*/}}
+{{- define "vmclarity.trivyServer.serviceAccountName" -}}
+{{- if .Values.trivyServer.serviceAccount.create -}}
+    {{ default (include "vmclarity.trivyServer.name" .) .Values.trivyServer.serviceAccount.name }}
+{{- else -}}
+    {{ default "default" .Values.trivyServer.serviceAccount.name }}
+{{- end -}}
+{{- end -}}

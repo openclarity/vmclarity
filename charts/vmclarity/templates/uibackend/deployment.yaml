@@ -44,3 +44,4 @@ spec:
             # Port number for the VMClarity backend server
             - name: APISERVER_PORT
               value: "8888"
+      serviceAccountName: {{ include "vmclarity.uibackend.serviceAccountName" . }}

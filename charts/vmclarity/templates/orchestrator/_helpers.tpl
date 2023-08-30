@@ -20,3 +20,14 @@ Labels to use on deploy.spec.selector.matchLabels and svc.spec.selector
 {{ include "vmclarity.labels.matchLabels" . }}
 app.kubernetes.io/component: orchestrator
 {{- end -}}
+
+{{/*
+Create the name of the service account to use
+*/}}
+{{- define "vmclarity.orchestrator.serviceAccountName" -}}
+{{- if .Values.orchestrator.serviceAccount.create -}}
+    {{ default (include "vmclarity.orchestrator.name" .) .Values.orchestrator.serviceAccount.name }}
+{{- else -}}
+    {{ default "default" .Values.orchestrator.serviceAccount.name }}
+{{- end -}}
+{{- end -}}

@@ -23,6 +23,7 @@ spec:
       {{- if .Values.orchestrator.tolerations }}
       tolerations: {{- .Values.orchestrator.tolerations | nindent 8 }}
       {{- end }}
+      serviceAccountName: {{ include "vmclarity.orchestrator.serviceAccountName" . }}
       containers:
         - name: orchestrator
           image: {{ include "vmclarity.images.image" ( dict "imageRoot" .Values.orchestrator.image "global" .Values.global ) }}

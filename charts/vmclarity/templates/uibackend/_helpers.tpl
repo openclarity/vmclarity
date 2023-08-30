@@ -20,3 +20,14 @@ Labels to use on deploy.spec.selector.matchLabels and svc.spec.selector
 {{ include "vmclarity.labels.matchLabels" . }}
 app.kubernetes.io/component: uibackend
 {{- end -}}
+
+{{/*
+Create the name of the service account to use
+*/}}
+{{- define "vmclarity.uibackend.serviceAccountName" -}}
+{{- if .Values.uibackend.serviceAccount.create -}}
+    {{ default (include "vmclarity.uibackend.name" .) .Values.uibackend.serviceAccount.name }}
+{{- else -}}
+    {{ default "default" .Values.uibackend.serviceAccount.name }}
+{{- end -}}
+{{- end -}}

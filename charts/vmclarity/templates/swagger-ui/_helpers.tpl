@@ -20,3 +20,14 @@ Labels to use on deploy.spec.selector.matchLabels and svc.spec.selector
 {{ include "vmclarity.labels.matchLabels" . }}
 app.kubernetes.io/component: swagger-ui
 {{- end -}}
+
+{{/*
+Create the name of the service account to use
+*/}}
+{{- define "vmclarity.swaggerUI.serviceAccountName" -}}
+{{- if .Values.swaggerUI.serviceAccount.create -}}
+    {{ default (include "vmclarity.swaggerUI.name" .) .Values.swaggerUI.serviceAccount.name }}
+{{- else -}}
+    {{ default "default" .Values.swaggerUI.serviceAccount.name }}
+{{- end -}}
+{{- end -}}

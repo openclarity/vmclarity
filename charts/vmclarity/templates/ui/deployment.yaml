@@ -43,3 +43,4 @@ spec:
           emptyDir: {}
         - name: tmpfs-2
           emptyDir: {}
+      serviceAccountName: {{ include "vmclarity.ui.serviceAccountName" . }}

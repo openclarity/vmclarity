@@ -24,6 +24,7 @@ spec:
       {{- if .Values.apiserver.tolerations }}
       tolerations: {{- .Values.apiserver.tolerations | nindent 8 }}
       {{- end }}
+      serviceAccountName: {{ include "vmclarity.apiserver.serviceAccountName" . }}
       containers:
         - name: apiserver
           image: {{ include "vmclarity.images.image" ( dict "imageRoot" .Values.apiserver.image "global" .Values.global ) }}

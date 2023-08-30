@@ -20,3 +20,14 @@ Labels to use on deploy.spec.selector.matchLabels and svc.spec.selector
 {{ include "vmclarity.labels.matchLabels" . }}
 app.kubernetes.io/component: freshclam-mirror
 {{- end -}}
+
+{{/*
+Create the name of the service account to use
+*/}}
+{{- define "vmclarity.freshclamMirror.serviceAccountName" -}}
+{{- if .Values.freshclamMirror.serviceAccount.create -}}
+    {{ default (include "vmclarity.freshclamMirror.name" .) .Values.freshclamMirror.serviceAccount.name }}
+{{- else -}}
+    {{ default "default" .Values.freshclamMirror.serviceAccount.name }}
+{{- end -}}
+{{- end -}}
