@@ -2,7 +2,7 @@
 Base name for the trivyServer components
 */}}
 {{- define "vmclarity.trivyServer.name" -}}
-{{ include  "vmclarity.names.fullname" . }}-trivy-server
+{{- printf "%s-trivy-server" (include  "vmclarity.names.fullname" .) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*

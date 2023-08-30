@@ -2,7 +2,7 @@
 Base name for the uibackend components
 */}}
 {{- define "vmclarity.uibackend.name" -}}
-{{ include  "vmclarity.names.fullname" . }}-uibackend
+{{- printf "%s-uibackend" (include  "vmclarity.names.fullname" .) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*

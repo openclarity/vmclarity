@@ -43,6 +43,10 @@ spec:
           volumeMounts:
             - mountPath: /data
               name: db-data
+            - mountPath: /tmp
+              name: tmp
       volumes:
         - name: db-data
+          emptyDir: {}
+        - name: tmp
           emptyDir: {}

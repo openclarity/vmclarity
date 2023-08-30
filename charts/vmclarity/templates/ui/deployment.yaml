@@ -33,3 +33,13 @@ spec:
           {{- if .Values.ui.resources }}
           resources: {{- toYaml .Values.ui.resources | nindent 12 }}
           {{- end }}
+          volumeMounts:
+            - mountPath: /var/run
+              name: tmpfs-1
+            - mountPath: /var/cache/nginx
+              name: tmpfs-2
+      volumes:
+        - name: tmpfs-1
+          emptyDir: {}
+        - name: tmpfs-2
+          emptyDir: {}

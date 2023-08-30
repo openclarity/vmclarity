@@ -2,7 +2,7 @@
 Base name for the gateway components
 */}}
 {{- define "vmclarity.gateway.name" -}}
-{{ include  "vmclarity.names.fullname" . }}-gateway
+{{- printf "%s-gateway" (include  "vmclarity.names.fullname" .) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*

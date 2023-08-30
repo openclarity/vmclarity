@@ -24,7 +24,7 @@ data:
         }
     
         server {
-            listen 80;
+            listen 8080;
     
             location / {
                 proxy_pass http://ui/;

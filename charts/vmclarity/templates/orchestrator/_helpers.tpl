@@ -2,7 +2,7 @@
 Base name for the orchestrator components
 */}}
 {{- define "vmclarity.orchestrator.name" -}}
-{{ include  "vmclarity.names.fullname" . }}-orchestrator
+{{- printf "%s-orchestrator" (include  "vmclarity.names.fullname" .) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*

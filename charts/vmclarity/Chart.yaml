@@ -8,7 +8,7 @@ description: |
 version: v0.0.0-latest
 appVersion: "latest"
 type: application
-home: openclarity.io
+home: https://openclarity.io
 sources:
   - https://github.com/openclarity/vmclarity
 maintainers:

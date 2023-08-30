@@ -2,7 +2,7 @@
 Base name for the ui components
 */}}
 {{- define "vmclarity.ui.name" -}}
-{{ include  "vmclarity.names.fullname" . }}-ui
+{{- printf "%s-ui" (include  "vmclarity.names.fullname" .) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*

@@ -43,6 +43,10 @@ spec:
           volumeMounts:
             - mountPath: /data
               name: cache
+            - mountPath: /tmp
+              name: tmp
       volumes:
         - name: cache
+          emptyDir: {}
+        - name: tmp
           emptyDir: {}

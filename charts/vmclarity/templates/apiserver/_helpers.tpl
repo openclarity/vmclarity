@@ -2,7 +2,7 @@
 Base name for the apiserver components
 */}}
 {{- define "vmclarity.apiserver.name" -}}
-{{ include  "vmclarity.names.fullname" . }}-apiserver
+{{- printf "%s-apiserver" (include  "vmclarity.names.fullname" .) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*

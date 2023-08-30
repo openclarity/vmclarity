@@ -34,6 +34,10 @@ spec:
             - name: gateway-config
               mountPath: /etc/nginx/nginx.conf
               subPath: nginx.conf
+            - mountPath: /var/run
+              name: tmpfs-1
+            - mountPath: /var/cache/nginx
+              name: tmpfs-2
           {{- if .Values.gateway.containerSecurityContext.enabled }}
           securityContext: {{- omit .Values.gateway.containerSecurityContext "enabled" | toYaml | nindent 12 }}
           {{- end }}
@@ -44,3 +48,7 @@ spec:
         - name: gateway-config
           configMap:
             name: {{ include "vmclarity.gateway.name" . }}
+        - name: tmpfs-1
+          emptyDir: {}
+        - name: tmpfs-2
+          emptyDir: {}

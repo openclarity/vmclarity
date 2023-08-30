@@ -2,7 +2,7 @@
 Base name for the freshclamMirror components
 */}}
 {{- define "vmclarity.freshclamMirror.name" -}}
-{{ include  "vmclarity.names.fullname" . }}-freshclam-mirror
+{{- printf "%s-freshclam-mirror" (include  "vmclarity.names.fullname" .) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*

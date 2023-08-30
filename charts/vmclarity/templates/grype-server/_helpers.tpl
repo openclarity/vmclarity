@@ -2,7 +2,7 @@
 Base name for the grypeServer components
 */}}
 {{- define "vmclarity.grypeServer.name" -}}
-{{ include  "vmclarity.names.fullname" . }}-grype-server
+{{- printf "%s-grype-server" (include  "vmclarity.names.fullname" .) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
