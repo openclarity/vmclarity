@@ -2,23 +2,34 @@ global:
   imageRegistry: ""
 
 apiserver:
+  # -- Number of replicas for the API Server
   replicas: 1
 
   image:
+    # -- API Server image registry
     registry: ghcr.io
+    # -- API Server image repositiory
     repository: openclarity/vmclarity-apiserver
+    # -- API Server image tag (immutable tags are recommended)
     tag: latest
+    # -- API Server image pull policy
     pullPolicy: IfNotPresent
 
   podSecurityContext:
+    # -- API Server pod's security context enabled
     enabled: true
+    # -- API Server pod's security context fsGroup
     fsGroup: 1001
 
   containerSecurityContext:
+    # -- API Server container security context enabled
     enabled: true
+    # -- User ID which the API Server container should run as
     runAsUser: 1001
+    # -- Whether the API Server containers should run as a non-root user
     runAsNonRoot: true
 
+  # -- API Server log level
   logLevel: info
 
   resources:
@@ -28,23 +39,35 @@ apiserver:
     requests: {}
 
 orchestrator:
+  # -- Number of replicas for the Orchestrator service
+  # Currently 1 supported.
   replicas: 1
 
   image:
+    # -- Orchestrator image registry
     registry: ghcr.io
+    # -- Orchestrator image repository
     repository: openclarity/vmclarity-orchestrator
+    # -- Orchestrator image tag (immutable tags are recommended)
     tag: latest
+    # -- Orchestrator image pull policy
     pullPolicy: IfNotPresent
 
   podSecurityContext:
+    # -- Whether Orchestrator pod security context is enabled
     enabled: true
+    # -- Orchestrator pod security context fsGroup
     fsGroup: 1001
 
   containerSecurityContext:
+    # -- Whether Orchestrator container secuirty context is enabled
     enabled: true
+    # -- User ID which the Orchestrator container should run as
     runAsUser: 1001
+    # -- Whether the Orchestrator containers should as a non-root user
     runAsNonRoot: true
 
+  # -- Orchestrator service log level
   logLevel: info
 
   resources:
@@ -53,7 +76,7 @@ orchestrator:
     # -- The requested resources for the orchestrator containers
     requests: {}
 
-  # Global policy used to determine when to clean up an AssetScan.
+  # -- Global policy used to determine when to clean up an AssetScan.
   # Possible options are:
   # Always - All AssetScans are cleaned up
   # OnSuccess - Only Successful AssetScans are cleaned up, Failed ones are left for debugging
@@ -61,79 +84,82 @@ orchestrator:
   deleteJobPolicy: Always
 
   scannerImage:
+    # -- Scanner Container image registry
     registry: ghcr.io
+    # -- Scanner Container image repository
     repository: openclarity/vmclarity-cli
+    # -- Scanner Container image tag (immutable tags are recommended)
     tag: latest
 
-  # Address that scanners can use to reach back to the API server
+  # -- Address that scanners can use to reach back to the API server
   scannerApiserverAddress: ""
 
-  # Address that scanners can use to reach trivy server
+  # -- Address that scanners can use to reach trivy server
   trivyServerAddress: ""
 
-  # Address that scanners can use to reach the grype server
+  # -- Address that scanners can use to reach the grype server
   grypeServerAddress: ""
 
-  # Address that scanenrs can use to reach the freshclam mirror
+  # -- Address that scanenrs can use to reach the freshclam mirror
   freshclamMirrorAddress: ""
 
-  # Which provider to enable
+  # -- Which provider to enable
   provider: "aws"
 
   aws:
-    # Region where the control plane is running
+    # -- Region where the control plane is running
     region: ""
-    # Region where the scanners will be created
+    # -- Region where the scanners will be created
     scannerRegion: ""
-    # Subnet where the scanners will be created
+    # -- Subnet where the scanners will be created
     subnetId: ""
-    # Security Group to use for the scanner networking
+    # -- Security Group to use for the scanner networking
     securityGroupId: ""
-    # KeyPair to use for the scanner instance
+    # -- KeyPair to use for the scanner instance
     keypairName: ""
-    # AMI to use for the scanner instance
+    # -- AMI to use for the scanner instance
     scannerAmiId: ""
-    # InstanceType to use for the scanner instance
+    # -- InstanceType to use for the scanner instance
     scannerInstanceType: ""
 
   gcp:
-    # Project ID for discovery and scanning
+    # -- Project ID for discovery and scanning
     projectId: ""
-    # Zone to where the scanner instances should run
+    # -- Zone to where the scanner instances should run
     scannerZone: ""
-    # Subnet where to run the scanner instances
+    # -- Subnet where to run the scanner instances
     scannerSubnet: ""
-    # Scanner Machine type
+    # -- Scanner Machine type
     scannerMachineType: ""
-    # Scanner source image
+    # -- Scanner source image
     scannerSourceImage: ""
 
   azure:
-    # Subscription ID for discovery and scanning
+    # -- Subscription ID for discovery and scanning
     subscriptionId: ""
-    # Location where the scanner instances will be run
+    # -- Location where the scanner instances will be run
     scannerLocation: ""
-    # ResourceGroup where the scanner instances will be run
+    # -- ResourceGroup where the scanner instances will be run
     scannerResourceGroup: ""
-    # Subnet ID where the scanner instances will be run
+    # -- Subnet ID where the scanner instances will be run
     scannerSubnetId: ""
-    # SSH RSA Public Key to configure the scanner instances with
+    # -- SSH RSA Public Key to configure the scanner instances with
     scannerPublicKey: ""
-    # Scanner VM size
+    # -- Scanner VM size
     scannerVmSize: ""
-    # Scanner VM source image publisher
+    # -- Scanner VM source image publisher
     scannerImagePublisher: ""
-    # Scanner VM source image offer
+    # -- Scanner VM source image offer
     scannerImageOffer: ""
-    # Scanner VM source image sku
+    # -- Scanner VM source image sku
     scannerImageSku: ""
-    # Scanner VM source image version
+    # -- Scanner VM source image version
     scannerImageVersion: ""
-    # Scanner VM security group
+    # -- Scanner VM security group
     scannerSecurityGroup: ""
-    # Storage account to use for transfering snapshots between regions
+    # -- Storage account to use for transfering snapshots between regions
     scannerStorageAccountName: ""
-    # Storage container to use for transfering snapshots between regions
+    # -- Storage container to use for transfering snapshots between regions
     scannerStorageContainerName: ""      
 
 ui:
