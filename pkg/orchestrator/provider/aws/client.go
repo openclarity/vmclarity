@@ -73,7 +73,7 @@ func (c Client) Kind() models.CloudProvider {
 	return models.AWS
 }
 
-func (c *Client) Estimate(ctx context.Context, stats models.AssetScanStats, asset *models.Asset, assetScanTemplate *models.AssetScanTemplate) (*models.Estimation, error) {
+func (c *Client) Estimate(ctx context.Context, assetScanStats models.AssetScanStats, asset *models.Asset, assetScanTemplate *models.AssetScanTemplate) (*models.Estimation, error) {
 	var err error
 
 	vminfo, err := asset.AssetInfo.AsVMInfo()
@@ -103,7 +103,7 @@ func (c *Client) Estimate(ctx context.Context, stats models.AssetScanStats, asse
 		ScannerInstanceType:     ec2types.InstanceType(scannerInstanceType),
 		JobCreationTimeSec:      int64(jobCreationTimeSec),
 		ScannerRootVolumeSizeGB: int64(scannerRootVolumeSizeGB),
-		Stats:                   stats,
+		Stats:                   assetScanStats,
 		Asset:                   asset,
 		AssetScanTemplate:       assetScanTemplate,
 	}

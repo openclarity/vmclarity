@@ -39,21 +39,12 @@ func (s *ScanEstimation) GetID() (string, bool) {
 	return id, ok
 }
 
-func (s *ScanEstimation) GetTimeoutSeconds() int {
-	return 60 // TODO do want to add this to the api?
-}
-
 func (s *ScanEstimation) IsTimedOut(defaultTimeout time.Duration) bool {
 	if s == nil || s.StartTime == nil {
 		return false
 	}
 	// Use the provided timeout to calculate the timeoutTime by default.
 	timeoutTime := s.StartTime.Add(defaultTimeout)
-	// Use TimeoutSeconds to calculate timeoutTime if it is set and its
-	// value is bigger than zero.
-	if timeoutSeconds := s.GetTimeoutSeconds(); timeoutSeconds > 0 {
-		timeoutTime = s.StartTime.Add(time.Duration(timeoutSeconds) * time.Second)
-	}
 
 	return time.Now().After(timeoutTime)
 }

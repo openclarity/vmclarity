@@ -18,6 +18,8 @@ package scanestimation
 import (
 	"context"
 	"fmt"
+	"math"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -67,23 +69,23 @@ const (
 type recipeResource string
 
 const (
-	SourceSnapshot      recipeResource = "SourceSnapshot"
-	DestinationSnapshot recipeResource = "DestinationSnapshot"
-	ScannerInstance     recipeResource = "ScannerInstance"
-	VolumeFromSnapshot  recipeResource = "VolumeFromSnapshot"
-	ScannerRootVolume   recipeResource = "ScannerRootVolume"
-	DataTransfer        recipeResource = "DataTransfer"
+	Snapshot           recipeResource = "Snapshot"
+	ScannerInstance    recipeResource = "ScannerInstance"
+	VolumeFromSnapshot recipeResource = "VolumeFromSnapshot"
+	ScannerRootVolume  recipeResource = "ScannerRootVolume"
+	DataTransfer       recipeResource = "DataTransfer"
 )
 
 // Static times from lab tests of family scan duration in seconds per GB.
-var familyScanDurationPerGBMap = map[familiestypes.FamilyType]float64{
-	familiestypes.SBOM:             4.5,
-	familiestypes.Vulnerabilities:  1, // TODO check time with no sbom scan
-	familiestypes.Secrets:          300,
+// The tests were made on a t2.large instance with a gp2 volume.
+var familyScanDurationPerGBMap = map[familiestypes.FamilyType]time.Duration{
+	familiestypes.SBOM:             time.Duration(4.5 * float64(time.Second)),
+	familiestypes.Vulnerabilities:  1 * time.Second, // TODO check time with no sbom scan
+	familiestypes.Secrets:          300 * time.Second,
 	familiestypes.Exploits:         0,
 	familiestypes.Rootkits:         0,
-	familiestypes.Misconfiguration: 1,
-	familiestypes.Malware:          360,
+	familiestypes.Misconfiguration: 1 * time.Second,
+	familiestypes.Malware:          360 * time.Second,
 }
 
 // Reserved Instances are not physical instances, but rather a billing discount that is applied to the running On-Demand Instances in your account.
@@ -127,15 +129,7 @@ func (s *ScanEstimator) EstimateAssetScan(ctx context.Context, params EstimateAs
 	scannerVolumeType := params.ScannerVolumeType
 
 	// Get relevant current prices from AWS price list API
-	if sourceRegion != destRegion {
-		// if the scanner is in a different region then the scanned asset, we have another snapshot created in the source region.
-		sourceSnapshotMonthlyCost, err = s.priceFetcher.GetSnapshotMonthlyCostPerGB(ctx, sourceRegion)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get source snapshot monthly cost: %v", err)
-		}
-	}
-
-	// Fetch the snapshot monthly cost.
+	// Fetch the dest snapshot monthly cost.
 	destSnapshotMonthlyCost, err := s.priceFetcher.GetSnapshotMonthlyCostPerGB(ctx, destRegion)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get dest snapshot monthly cost: %v", err)
@@ -153,22 +147,32 @@ func (s *ScanEstimator) EstimateAssetScan(ctx context.Context, params EstimateAs
 		return nil, fmt.Errorf("failed to get volume monthly cost per GB: %v", err)
 	}
 
-	// Fetch the data transfer cost per GB (if source and dest regions are the same, this will be 0).
-	dataTransferCostPerGB, err := s.priceFetcher.GetDataTransferCostPerGB(sourceRegion, destRegion)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get data transfer cost per GB: %v", err)
-	}
-
 	// Fetch the monthly cost of the volume that was created from the snapshot.
 	volumeFromSnapshotMonthlyCost, err := s.priceFetcher.GetVolumeMonthlyCostPerGB(ctx, destRegion, fromSnapshotVolumeType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get volume monthly cost per GB: %v", err)
 	}
 
-	// 0 in case of same region
-	dataTransferCost := dataTransferCostPerGB * scanSizeGB
-	// 0 in case of same region
-	sourceSnapshotCost := sourceSnapshotMonthlyCost * ((float64(jobCreationTimeSec + scanDurationSec)) / SecondsInAMonth) * scanSizeGB
+	dataTransferCost := 0.0
+	sourceSnapshotCost := 0.0
+	if sourceRegion != destRegion {
+		// if the scanner is in a different region then the scanned asset, we have another snapshot created in the
+		// source region.
+		sourceSnapshotMonthlyCost, err = s.priceFetcher.GetSnapshotMonthlyCostPerGB(ctx, sourceRegion)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get source snapshot monthly cost: %v", err)
+		}
+
+		sourceSnapshotCost = sourceSnapshotMonthlyCost * ((float64(jobCreationTimeSec + scanDurationSec)) / SecondsInAMonth) * scanSizeGB
+
+		// Fetch the data transfer cost per GB (if source and dest regions are the same, this will be 0).
+		dataTransferCostPerGB, err := s.priceFetcher.GetDataTransferCostPerGB(sourceRegion, destRegion)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get data transfer cost per GB: %v", err)
+		}
+
+		dataTransferCost = dataTransferCostPerGB * scanSizeGB
+	}
 
 	destSnapshotCost := destSnapshotMonthlyCost * ((float64(jobCreationTimeSec + scanDurationSec)) / SecondsInAMonth) * scanSizeGB
 	volumeFromSnapshotCost := volumeFromSnapshotMonthlyCost * ((float64(jobCreationTimeSec + scanDurationSec)) / SecondsInAMonth) * scanSizeGB
@@ -178,36 +182,42 @@ func (s *ScanEstimator) EstimateAssetScan(ctx context.Context, params EstimateAs
 	jobTotalCost := sourceSnapshotCost + volumeFromSnapshotCost + scannerCost + scannerRootVolumeCost + dataTransferCost + destSnapshotCost
 
 	// Create the Estimation object base on the calculated data.
-	estimation := models.Estimation{
-		Cost: utils.PointerTo(float32(jobTotalCost)),
-		CostBreakdown: &[]models.CostBreakdownComponent{
+	costBreakdown := []models.CostBreakdownComponent{
+		{
+			Cost:      float32(destSnapshotCost),
+			Operation: fmt.Sprintf("%v-%v", Snapshot, destRegion),
+		},
+		{
+			Cost:      float32(scannerCost),
+			Operation: string(ScannerInstance),
+		},
+		{
+			Cost:      float32(volumeFromSnapshotCost),
+			Operation: string(VolumeFromSnapshot),
+		},
+		{
+			Cost:      float32(scannerRootVolumeCost),
+			Operation: string(ScannerRootVolume),
+		},
+	}
+	if sourceRegion != destRegion {
+		costBreakdown = append(costBreakdown, []models.CostBreakdownComponent{
 			{
 				Cost:      float32(sourceSnapshotCost),
-				Operation: string(SourceSnapshot),
-			},
-			{
-				Cost:      float32(destSnapshotCost),
-				Operation: string(DestinationSnapshot),
-			},
-			{
-				Cost:      float32(scannerCost),
-				Operation: string(ScannerInstance),
-			},
-			{
-				Cost:      float32(volumeFromSnapshotCost),
-				Operation: string(VolumeFromSnapshot),
-			},
-			{
-				Cost:      float32(scannerRootVolumeCost),
-				Operation: string(ScannerRootVolume),
+				Operation: fmt.Sprintf("%v-%v", Snapshot, sourceRegion),
 			},
 			{
 				Cost:      float32(dataTransferCost),
 				Operation: string(DataTransfer),
 			},
-		},
-		Size: utils.PointerTo(int(scanSizeGB)),
-		Time: utils.PointerTo(int(scanDurationSec)),
+		}...)
+	}
+
+	estimation := models.Estimation{
+		Cost:          utils.PointerTo(float32(jobTotalCost)),
+		CostBreakdown: &costBreakdown,
+		Size:          utils.PointerTo(int(scanSizeGB)),
+		Duration:      utils.PointerTo(int(scanDurationSec)),
 	}
 
 	return &estimation, nil
@@ -291,6 +301,17 @@ func findMatchingStatsForInputTypeRootFS(stats *[]models.AssetScanInputScanStats
 	return models.AssetScanInputScanStats{}, false
 }
 
+const constantOfProportionality = 2.5
+
+func calculateStaticScanDuration(familyType familiestypes.FamilyType, scanSizeGB float64) int64 {
+	if scanSizeGB < 1 {
+		// The log of a value less than 1 is negative.
+		return int64(familyScanDurationPerGBMap[familyType].Seconds() * scanSizeGB)
+	}
+
+	return int64(familyScanDurationPerGBMap[familiestypes.SBOM].Seconds() * constantOfProportionality * math.Log(scanSizeGB))
+}
+
 func getScanDuration(stats models.AssetScanStats, familiesConfig *models.ScanFamiliesConfig, scanSizeMB int64) (duration int64, err error) {
 	var totalScanDuration int64
 
@@ -302,7 +323,7 @@ func getScanDuration(stats models.AssetScanStats, familiesConfig *models.ScanFam
 			totalScanDuration += scanDuration
 		} else {
 			// if we didn't find the duration from the stats, take it from our static scan duration map.
-			totalScanDuration += int64(familyScanDurationPerGBMap[familiestypes.SBOM] * scanSizeGB)
+			totalScanDuration += calculateStaticScanDuration(familiestypes.SBOM, scanSizeGB)
 		}
 	}
 
@@ -311,7 +332,7 @@ func getScanDuration(stats models.AssetScanStats, familiesConfig *models.ScanFam
 		if scanDuration != 0 {
 			totalScanDuration += scanDuration
 		} else {
-			totalScanDuration += int64(familyScanDurationPerGBMap[familiestypes.Vulnerabilities] * scanSizeGB)
+			totalScanDuration += calculateStaticScanDuration(familiestypes.Vulnerabilities, scanSizeGB)
 		}
 	}
 
@@ -320,7 +341,7 @@ func getScanDuration(stats models.AssetScanStats, familiesConfig *models.ScanFam
 		if scanDuration != 0 {
 			totalScanDuration += scanDuration
 		} else {
-			totalScanDuration += int64(familyScanDurationPerGBMap[familiestypes.Secrets] * scanSizeGB)
+			totalScanDuration += calculateStaticScanDuration(familiestypes.Secrets, scanSizeGB)
 		}
 	}
 
@@ -329,7 +350,7 @@ func getScanDuration(stats models.AssetScanStats, familiesConfig *models.ScanFam
 		if scanDuration != 0 {
 			totalScanDuration += scanDuration
 		} else {
-			totalScanDuration += int64(familyScanDurationPerGBMap[familiestypes.Exploits] * scanSizeGB)
+			totalScanDuration += calculateStaticScanDuration(familiestypes.Exploits, scanSizeGB)
 		}
 	}
 
@@ -338,7 +359,7 @@ func getScanDuration(stats models.AssetScanStats, familiesConfig *models.ScanFam
 		if scanDuration != 0 {
 			totalScanDuration += scanDuration
 		} else {
-			totalScanDuration += int64(familyScanDurationPerGBMap[familiestypes.Rootkits] * scanSizeGB)
+			totalScanDuration += calculateStaticScanDuration(familiestypes.Rootkits, scanSizeGB)
 		}
 	}
 
@@ -347,7 +368,7 @@ func getScanDuration(stats models.AssetScanStats, familiesConfig *models.ScanFam
 		if scanDuration != 0 {
 			totalScanDuration += scanDuration
 		} else {
-			totalScanDuration += int64(familyScanDurationPerGBMap[familiestypes.Misconfiguration] * scanSizeGB)
+			totalScanDuration += calculateStaticScanDuration(familiestypes.Misconfiguration, scanSizeGB)
 		}
 	}
 
@@ -356,14 +377,12 @@ func getScanDuration(stats models.AssetScanStats, familiesConfig *models.ScanFam
 		if scanDuration != 0 {
 			totalScanDuration += scanDuration
 		} else {
-			totalScanDuration += int64(familyScanDurationPerGBMap[familiestypes.Malware] * scanSizeGB)
+			totalScanDuration += calculateStaticScanDuration(familiestypes.Malware, scanSizeGB)
 		}
 	}
 
 	return totalScanDuration, nil
 }
-
-const MillisecondsInSecond = 1000 * 1000 * 1000
 
 func getScanDurationFromStats(stats *[]models.AssetScanInputScanStats) int64 {
 	stat, ok := findMatchingStatsForInputTypeRootFS(stats)
@@ -380,7 +399,5 @@ func getScanDurationFromStats(stats *[]models.AssetScanInputScanStats) int64 {
 
 	dur := stat.ScanTime.EndTime.Sub(*stat.ScanTime.StartTime)
 
-	durSec := dur / MillisecondsInSecond
-
-	return int64(durSec)
+	return int64(dur.Seconds())
 }

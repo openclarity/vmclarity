@@ -33,7 +33,6 @@ type Config struct {
 	Provider         provider.Provider
 	PollPeriod       time.Duration
 	ReconcileTimeout time.Duration
-	AbortTimeout     time.Duration
 }
 
 func (c Config) WithBackendClient(b *backendclient.BackendClient) Config {

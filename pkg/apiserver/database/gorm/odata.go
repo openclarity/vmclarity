@@ -988,13 +988,8 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 				},
 			},
 			"state": odatasql.FieldMeta{
-				FieldType: odatasql.PrimitiveFieldType,
-			},
-			"stateMessage": odatasql.FieldMeta{
-				FieldType: odatasql.PrimitiveFieldType,
-			},
-			"stateReason": odatasql.FieldMeta{
-				FieldType: odatasql.PrimitiveFieldType,
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"ScanEstimationState"},
 			},
 			"estimation": odatasql.FieldMeta{
 				FieldType:           odatasql.ComplexFieldType,
@@ -1020,19 +1015,19 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 	},
 	"Estimation": {
 		Fields: odatasql.Schema{
-			"time": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
-			"size": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
-			"cost": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
-			"recipe": odatasql.FieldMeta{
+			"duration": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"size":     odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"cost":     odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"costBreakdown": odatasql.FieldMeta{
 				FieldType: odatasql.CollectionFieldType,
 				CollectionItemMeta: &odatasql.FieldMeta{
 					FieldType:           odatasql.ComplexFieldType,
-					ComplexFieldSchemas: []string{"RecipeComponent"},
+					ComplexFieldSchemas: []string{"CostBreakdownComponent"},
 				},
 			},
 		},
 	},
-	"RecipeComponent": {
+	"CostBreakdownComponent": {
 		Fields: odatasql.Schema{
 			"operation": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"cost":      odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
@@ -1040,6 +1035,9 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 	},
 	"ScanEstimationSummary": {
 		Fields: odatasql.Schema{
+			"totalScanTime": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"totalScanSize": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"totalScanCost": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"jobsLeftToRun": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"jobsCompleted": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 		},
@@ -1070,15 +1068,31 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 				FieldType:           odatasql.ComplexFieldType,
 				ComplexFieldSchemas: []string{"AssetScanEstimationState"},
 			},
+			"revision":  odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"startTime": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"endTime":   odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 		},
 	},
 	"AssetScanEstimationState": {
 		Fields: odatasql.Schema{
 			"state":              odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"lastTransitionTime": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
-			"errors": odatasql.FieldMeta{
-				FieldType:          odatasql.CollectionFieldType,
-				CollectionItemMeta: &odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"stateMessage": odatasql.FieldMeta{
+				FieldType: odatasql.PrimitiveFieldType,
+			},
+			"stateReason": odatasql.FieldMeta{
+				FieldType: odatasql.PrimitiveFieldType,
+			},
+		},
+	},
+	"ScanEstimationState": {
+		Fields: odatasql.Schema{
+			"state": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"stateMessage": odatasql.FieldMeta{
+				FieldType: odatasql.PrimitiveFieldType,
+			},
+			"stateReason": odatasql.FieldMeta{
+				FieldType: odatasql.PrimitiveFieldType,
 			},
 		},
 	},

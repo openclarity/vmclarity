@@ -26,16 +26,6 @@ func (r *AssetScanEstimation) GetState() (AssetScanEstimationStateState, bool) {
 	return state, ok
 }
 
-func (r *AssetScanEstimation) GetGeneralErrors() []string {
-	var errs []string
-
-	if r.State != nil {
-		errs = r.State.GetGeneralErrors()
-	}
-
-	return errs
-}
-
 func (r *AssetScanEstimation) GetID() (string, bool) {
 	var id string
 	var ok bool
@@ -69,28 +59,6 @@ func (r *AssetScanEstimation) GetAssetID() (string, bool) {
 	return assetID, ok
 }
 
-func (r *AssetScanEstimation) IsDone() (bool, bool) {
-	var done bool
-	var ok bool
-	var state AssetScanEstimationStateState
-
-	if state, ok = r.GetState(); ok && state == AssetScanEstimationStateStateDone {
-		done = true
-	}
-
-	return done, ok
-}
-
-func (r *AssetScanEstimation) HasErrors() bool {
-	var has bool
-
-	if errs := r.GetGeneralErrors(); len(errs) > 0 {
-		has = true
-	}
-
-	return has
-}
-
 func (s *AssetScanEstimationState) GetState() (AssetScanEstimationStateState, bool) {
 	var state AssetScanEstimationStateState
 	var ok bool
@@ -100,14 +68,4 @@ func (s *AssetScanEstimationState) GetState() (AssetScanEstimationStateState, bo
 	}
 
 	return state, ok
-}
-
-func (s *AssetScanEstimationState) GetGeneralErrors() []string {
-	var errs []string
-
-	if s.Errors != nil {
-		errs = *s.Errors
-	}
-
-	return errs
 }

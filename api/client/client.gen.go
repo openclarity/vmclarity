@@ -4716,7 +4716,6 @@ type PostScanEstimationsResponse struct {
 	HTTPResponse *http.Response
 	JSON201      *ScanEstimation
 	JSON400      *ApiResponse
-	JSON409      *ScanEstimationExists
 	JSONDefault  *ApiResponse
 }
 
@@ -4790,7 +4789,6 @@ type PatchScanEstimationsScanEstimationIDResponse struct {
 	JSON200      *ScanEstimation
 	JSON400      *ApiResponse
 	JSON404      *ApiResponse
-	JSON409      *ScanEstimationExists
 	JSON412      *ApiResponse
 	JSONDefault  *ApiResponse
 }
@@ -4817,7 +4815,6 @@ type PutScanEstimationsScanEstimationIDResponse struct {
 	JSON200      *ScanEstimation
 	JSON400      *ApiResponse
 	JSON404      *ApiResponse
-	JSON409      *ScanEstimationExists
 	JSON412      *ApiResponse
 	JSONDefault  *ApiResponse
 }
@@ -6921,13 +6918,6 @@ func ParsePostScanEstimationsResponse(rsp *http.Response) (*PostScanEstimationsR
 		}
 		response.JSON400 = &dest
 
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
-		var dest ScanEstimationExists
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON409 = &dest
-
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest ApiResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -7055,13 +7045,6 @@ func ParsePatchScanEstimationsScanEstimationIDResponse(rsp *http.Response) (*Pat
 		}
 		response.JSON404 = &dest
 
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
-		var dest ScanEstimationExists
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON409 = &dest
-
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 412:
 		var dest ApiResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -7115,13 +7098,6 @@ func ParsePutScanEstimationsScanEstimationIDResponse(rsp *http.Response) (*PutSc
 			return nil, err
 		}
 		response.JSON404 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
-		var dest ScanEstimationExists
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 412:
 		var dest ApiResponse

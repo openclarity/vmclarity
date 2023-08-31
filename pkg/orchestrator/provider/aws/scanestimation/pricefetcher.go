@@ -42,18 +42,33 @@ type PriceFetcherImpl struct {
 	ec2Client     *ec2.Client
 }
 
+// https://docs.aws.amazon.com/AmazonS3/latest/userguide/aws-usage-report-understand.html
 var regionCodeToUsageTypeAbbreviation = map[string]string{
-	"us-east-1":    "",     // N. virginia
-	"us-east-2":    "USE2", // ohio
-	"us-west-1":    "USW1", // N. california
-	"us-west-2":    "USW2", // oregon
-	"eu-central-1": "EUC1", // Frankfurt
-	"eu-central-2": "EUC2", // Zurich
-	"eu-south-1":   "EUS1", // Milan
-	"eu-west-1":    "EUW1", // Ireland
-	"eu-west-2":    "EUW2", // London
-	"eu-west-3":    "EUW3", // Paris
-	// TODO add all regions
+	"us-east-1":      "",     // N. virginia
+	"us-east-2":      "USE2", // Ohio
+	"us-west-1":      "USW1", // N. california
+	"us-west-2":      "USW2", // Oregon
+	"eu-central-1":   "EUC1", // Frankfurt
+	"eu-central-2":   "EUC2", // Zurich
+	"eu-south-1":     "EUS1", // Milan
+	"eu-west-1":      "EUW1", // Ireland
+	"eu-west-2":      "EUW2", // London
+	"eu-west-3":      "EUW3", // Paris
+	"af-south-1":     "CPT",  // Cape Town
+	"ap-east-1":      "APE1", // Hong Kong
+	"ap-southeast-3": "APS4", // Jakarta
+	"ap-south-2":     "APS5", // Hyderabad
+	"ap-southeast-4": "APS6", // Melbourne
+	"ca-central-1":   "CAN1", // Canada (Central)
+	"eu-north-1":     "EUN1", // Stockholm
+	"eu-south-2":     "EUS2", // Spain
+	"me-central-1":   "MEC1", // Middle East (UAE)
+	"me-south-1":     "MES1", // Middle East (Bahrain)
+	"sa-east-1":      "SAE1", // São Paulo
+	"us-gov-west-1":  "UGW1", // AWS GovCloud (US-West)
+	"us-gov-east-1":  "UGE1", // AWS GovCloud (US-East)
+	//"il-central-1": "EUS2", // Tel-Aviv // TODO couldn't find the abbreviation code
+
 }
 
 const (
@@ -73,7 +88,13 @@ func (o *PriceFetcherImpl) GetSnapshotMonthlyCostPerGB(ctx context.Context, regi
 		usageType = fmt.Sprintf("%v-EBS:SnapshotUsage", abb)
 	}
 
-	return o.getPricePerUnit(ctx, usageType, "")
+	price, err := o.getPricePerUnit(ctx, usageType, "")
+	if err != nil {
+		// If we could not find the snapshot price from the api, use an estimated price based on the current pricing (5.9.23)
+		// https://aws.amazon.com/ebs/pricing/
+		return 0.05, nil
+	}
+	return price, nil
 }
 
 func (o *PriceFetcherImpl) GetVolumeMonthlyCostPerGB(ctx context.Context, regionCode string, volumeType ec2types.VolumeType) (float64, error) {
@@ -163,13 +184,14 @@ func (o *PriceFetcherImpl) getPricePerUnit(ctx context.Context, usageType, opera
 		Filters:       filters,
 		FormatVersion: utils.PointerTo("aws_v1"),
 	}, func(options *pricing.Options) {
+		// the Pricing API is only available on us-east-1 and ap-south-1. for now, we've chosen to use the us-east-1 endpoint.
 		options.Region = usEast1RegionCode
 	})
 	if err != nil {
 		return 0, fmt.Errorf("failed to get products. usageType=%v: %v", usageType, err)
 	}
 	if len(products.PriceList) != 1 {
-		return 0, fmt.Errorf("got more than one product")
+		return 0, fmt.Errorf("excpecting excatly one product in price list, got %v", len(products.PriceList))
 	}
 
 	priceStr, err := getPricePerUnitFromJsonPriceList(products.PriceList[0])

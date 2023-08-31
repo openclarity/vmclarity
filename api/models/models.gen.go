@@ -21,13 +21,10 @@ const (
 
 // Defines values for AssetScanEstimationStateStateReason.
 const (
-	AssetScanEstimationStateStateReasonAborted                        AssetScanEstimationStateStateReason = "Aborted"
-	AssetScanEstimationStateStateReasonDiscoveryFailed                AssetScanEstimationStateStateReason = "DiscoveryFailed"
-	AssetScanEstimationStateStateReasonNothingToEstimate              AssetScanEstimationStateStateReason = "NothingToEstimate"
-	AssetScanEstimationStateStateReasonOneOrMoreAssetFailedToEstimate AssetScanEstimationStateStateReason = "OneOrMoreAssetFailedToEstimate"
-	AssetScanEstimationStateStateReasonSuccess                        AssetScanEstimationStateStateReason = "Success"
-	AssetScanEstimationStateStateReasonTimedOut                       AssetScanEstimationStateStateReason = "TimedOut"
-	AssetScanEstimationStateStateReasonUnexpected                     AssetScanEstimationStateStateReason = "Unexpected"
+	AssetScanEstimationStateStateReasonAborted    AssetScanEstimationStateStateReason = "Aborted"
+	AssetScanEstimationStateStateReasonSuccess    AssetScanEstimationStateStateReason = "Success"
+	AssetScanEstimationStateStateReasonTimedOut   AssetScanEstimationStateStateReason = "TimedOut"
+	AssetScanEstimationStateStateReasonUnexpected AssetScanEstimationStateStateReason = "Unexpected"
 )
 
 // Defines values for AssetScanStateState.
@@ -285,7 +282,6 @@ type AssetScanEstimationRelationship struct {
 
 // AssetScanEstimationState defines model for AssetScanEstimationState.
 type AssetScanEstimationState struct {
-	Errors             *[]string                      `json:"errors"`
 	LastTransitionTime *time.Time                     `json:"lastTransitionTime,omitempty"`
 	State              *AssetScanEstimationStateState `json:"state,omitempty"`
 
@@ -494,15 +490,15 @@ type DirInfo struct {
 
 // Estimation defines model for Estimation.
 type Estimation struct {
-	// Cost Total cost of the scan ($)
+	// Cost The estimated scan cost ($)
 	Cost          *float32                  `json:"cost,omitempty"`
 	CostBreakdown *[]CostBreakdownComponent `json:"costBreakdown,omitempty"`
 
-	// Size Total size of the scan (GB)
-	Size *int `json:"size,omitempty"`
+	// Duration The estimated scan duration (seconds)
+	Duration *int `json:"duration,omitempty"`
 
-	// Time Total time the scan will take (seconds)
-	Time *int `json:"time,omitempty"`
+	// Size The estimated scan size (GB)
+	Size *int `json:"size,omitempty"`
 }
 
 // Exploit defines model for Exploit.
@@ -871,7 +867,7 @@ type ScanConfigs struct {
 // ScanEstimation defines model for ScanEstimation.
 type ScanEstimation struct {
 	// AssetIDs List of asset IDs to be estimated
-	AssetIDs *[]string `json:"assetIDs"`
+	AssetIDs *[]string `json:"assetIDs,omitempty"`
 
 	// AssetScanEstimations AssetScanEstimations which make up this ScanEstimation
 	AssetScanEstimations *[]AssetScanEstimationRelationship `json:"assetScanEstimations,omitempty"`
@@ -881,14 +877,9 @@ type ScanEstimation struct {
 	ScanTemplate         *ScanTemplate                      `json:"scanTemplate,omitempty"`
 	StartTime            *time.Time                         `json:"startTime,omitempty"`
 	State                *ScanEstimationState               `json:"state,omitempty"`
-	Summary              *ScanEstimationSummary             `json:"summary,omitempty"`
-}
 
-// ScanEstimationExists defines model for ScanEstimationExists.
-type ScanEstimationExists struct {
-	// Message Describes which unique constraint combination causes the conflict.
-	Message        *string         `json:"message,omitempty"`
-	ScanEstimation *ScanEstimation `json:"scanEstimation,omitempty"`
+	// Summary A summary of the AssetScanEstimations under this ScanEstimation
+	Summary *ScanEstimationSummary `json:"summary,omitempty"`
 }
 
 // ScanEstimationRelationship defines model for ScanEstimationRelationship.
@@ -914,10 +905,19 @@ type ScanEstimationStateState string
 // ScanEstimationStateStateReason Machine-readable, UpperCamelCase text indicating the reason for the condition's last transition.
 type ScanEstimationStateStateReason string
 
-// ScanEstimationSummary defines model for ScanEstimationSummary.
+// ScanEstimationSummary A summary of the AssetScanEstimations under this ScanEstimation
 type ScanEstimationSummary struct {
 	JobsCompleted *int `json:"jobsCompleted,omitempty"`
 	JobsLeftToRun *int `json:"jobsLeftToRun,omitempty"`
+
+	// TotalScanCost Total estimated cost of the scan ($)
+	TotalScanCost *float32 `json:"totalScanCost,omitempty"`
+
+	// TotalScanSize Total estimated size of the scan (GB)
+	TotalScanSize *int `json:"totalScanSize,omitempty"`
+
+	// TotalScanTime Total estimated time the scan will take (seconds)
+	TotalScanTime *int `json:"totalScanTime,omitempty"`
 }
 
 // ScanEstimations defines model for ScanEstimations.

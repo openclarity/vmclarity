@@ -30,15 +30,8 @@ func (s *ServerImpl) PostScanEstimations(ctx echo.Context) error {
 
 	createdScanEstimation, err := s.dbHandler.ScanEstimationsTable().CreateScanEstimation(scanEstimation)
 	if err != nil {
-		var conflictErr *common.ConflictError
 		var validationErr *common.BadRequestError
-		switch true {
-		case errors.As(err, &conflictErr):
-			existResponse := &models.ScanEstimationExists{
-				Message:        utils.PointerTo(conflictErr.Reason),
-				ScanEstimation: &createdScanEstimation,
-			}
-			return sendResponse(ctx, http.StatusConflict, existResponse)
+		switch {
 		case errors.As(err, &validationErr):
 			return sendError(ctx, http.StatusBadRequest, err.Error())
 		default:
@@ -89,17 +82,10 @@ func (s *ServerImpl) PatchScanEstimationsScanEstimationID(ctx echo.Context, scan
 	updatedScanEstimation, err := s.dbHandler.ScanEstimationsTable().UpdateScanEstimation(scanEstimation, params)
 	if err != nil {
 		var validationErr *common.BadRequestError
-		var conflictErr *common.BadRequestError
 		var preconditionFailedErr *databaseTypes.PreconditionFailedError
 		switch {
 		case errors.Is(err, databaseTypes.ErrNotFound):
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("ScanEstimation with ID %v not found", scanEstimationID))
-		case errors.As(err, &conflictErr):
-			existResponse := &models.ScanEstimationExists{
-				Message:        utils.PointerTo(conflictErr.Reason),
-				ScanEstimation: &updatedScanEstimation,
-			}
-			return sendResponse(ctx, http.StatusConflict, existResponse)
 		case errors.As(err, &validationErr):
 			return sendError(ctx, http.StatusBadRequest, err.Error())
 		case errors.As(err, &preconditionFailedErr):
@@ -128,17 +114,10 @@ func (s *ServerImpl) PutScanEstimationsScanEstimationID(ctx echo.Context, scanEs
 	updatedScanEstimation, err := s.dbHandler.ScanEstimationsTable().SaveScanEstimation(scanEstimation, params)
 	if err != nil {
 		var validationErr *common.BadRequestError
-		var conflictErr *common.ConflictError
 		var preconditionFailedErr *databaseTypes.PreconditionFailedError
-		switch true {
+		switch {
 		case errors.Is(err, databaseTypes.ErrNotFound):
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("ScanEstimation with ID %v not found", scanEstimationID))
-		case errors.As(err, &conflictErr):
-			existResponse := &models.ScanEstimationExists{
-				Message:        utils.PointerTo(conflictErr.Reason),
-				ScanEstimation: &updatedScanEstimation,
-			}
-			return sendResponse(ctx, http.StatusConflict, existResponse)
 		case errors.As(err, &validationErr):
 			return sendError(ctx, http.StatusBadRequest, err.Error())
 		case errors.As(err, &preconditionFailedErr):

@@ -71,6 +71,20 @@ func Int32PointerValOrEmpty(val *int32) int32 {
 	return *val
 }
 
+func Float32PointerValOrEmpty(val *float32) float32 {
+	if val == nil {
+		return 0
+	}
+	return *val
+}
+
+func IntPointerValOrEmpty(val *int) int {
+	if val == nil {
+		return 0
+	}
+	return *val
+}
+
 func BoolPointerValOrFalse(val *bool) bool {
 	if val == nil {
 		return false

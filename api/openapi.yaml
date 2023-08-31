@@ -907,7 +907,7 @@ paths:
 
   /scanEstimations:
     get:
-      summary: Get all scans. Each scan estimation contains details about a multi-asset scan estimation.
+      summary: Get all scan estimations. Each scan estimation contains details about a multi-asset scan estimation.
       operationId: GetScanEstimations
       parameters:
         - $ref: '#/components/parameters/odataFilter'
@@ -948,12 +948,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
-        409:
-          description: Scan estimation already exists.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ScanEstimationExists'
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
@@ -1012,12 +1006,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
-        409:
-          description: Scan estimation already exists.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ScanEstimationExists'
         412:
           description: Etag didn't match.
           content:
@@ -1058,12 +1046,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
-        409:
-          description: Scan estimation already exists.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ScanEstimationExists'
         412:
           description: Etag didn't match.
           content:
@@ -1146,7 +1128,7 @@ paths:
 
   /assetScanEstimations/{assetScanEstimationID}:
     get:
-      summary: Get an asset scan stimation.
+      summary: Get an asset scan estimation.
       operationId: GetAssetScanEstimationsAssetScanEstimationID
       parameters:
         - $ref: '#/components/parameters/assetScanEstimationID'
@@ -2347,19 +2329,11 @@ components:
           enum:
             - Aborted
             - TimedOut
-            - OneOrMoreAssetFailedToEstimate
-            - DiscoveryFailed
             - Unexpected
-            - NothingToEstimate
             - Success
         lastTransitionTime:
           type: string
           format: date-time
-        errors:
-          type: array
-          items:
-            type: string
-          nullable: true
 
     Package:
       type: object
@@ -2896,7 +2870,6 @@ components:
           type: array
           items:
             type: string
-          nullable: true
         state:
           $ref: '#/components/schemas/ScanEstimationState'
         startTime:
@@ -2905,7 +2878,6 @@ components:
         endTime:
           type: string
           format: date-time
-        ## TODO why do we need this?
         assetScanEstimations:
           description: AssetScanEstimations which make up this ScanEstimation
           type: array
@@ -2953,27 +2925,17 @@ components:
             - NothingToEstimate
             - Success
 
-    ScanEstimationExists:
-      type: object
-      properties:
-        message:
-          description: Describes which unique constraint combination causes the conflict.
-          type: string
-          readOnly: true
-        scanEstimation:
-          $ref: '#/components/schemas/ScanEstimation'
-
     Estimation:
       type: object
       properties:
-        time:
-          description: Total time the scan will take (seconds)
+        duration:
+          description: The estimated scan duration (seconds)
           type: integer
         size:
-          description: Total size of the scan (GB)
+          description: The estimated scan size (GB)
           type: integer
         cost:
-          description: Total cost of the scan ($)
+          description: The estimated scan cost ($)
           type: number
           format: float
         costBreakdown:
@@ -3010,7 +2972,6 @@ components:
           type: string
         asset:
           $ref: '#/components/schemas/AssetRelationship'
-        # TODO (erezf) replace with ScanEstimationRelationship object (?)
         scanEstimation:
           $ref: '#/components/schemas/ScanEstimationRelationship'
         state:
@@ -3047,11 +3008,22 @@ components:
 
     ScanEstimationSummary:
       type: object
+      description: A summary of the AssetScanEstimations under this ScanEstimation
       properties:
         jobsLeftToRun:
           type: integer
         jobsCompleted:
           type: integer
+        totalScanTime:
+          description: Total estimated time the scan will take (seconds)
+          type: integer
+        totalScanSize:
+          description: Total estimated size of the scan (GB)
+          type: integer
+        totalScanCost:
+          description: Total estimated cost of the scan ($)
+          type: number
+          format: float
 
   responses:
     Success:

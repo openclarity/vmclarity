@@ -240,7 +240,6 @@ func LoadConfig() (*Config, error) {
 		AssetScanEstimationWatcherConfig: assetscanestimationwatcher.Config{
 			PollPeriod:       viper.GetDuration(AssetScanEstimationPollingInterval),
 			ReconcileTimeout: viper.GetDuration(AssetScanEstimationReconcileTimeout),
-			AbortTimeout:     viper.GetDuration(AssetScanEstimationAbortTimeout),
 		},
 	}
 
