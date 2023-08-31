@@ -87,7 +87,7 @@ func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res families.
 		assetScan.Stats = &models.AssetScanStats{}
 	}
 
-	errs := []string{}
+	var errs []string
 
 	if res.Err != nil {
 		errs = append(errs, res.Err.Error())
@@ -135,7 +135,7 @@ func (v *VMClarityPresenter) ExportVulResult(ctx context.Context, res families.F
 		assetScan.Stats = &models.AssetScanStats{}
 	}
 
-	errs := []string{}
+	var errs []string
 
 	if res.Err != nil {
 		errs = append(errs, res.Err.Error())
@@ -182,7 +182,7 @@ func (v *VMClarityPresenter) ExportSecretsResult(ctx context.Context, res famili
 		assetScan.Stats = &models.AssetScanStats{}
 	}
 
-	errs := []string{}
+	var errs []string
 
 	if res.Err != nil {
 		errs = append(errs, res.Err.Error())
@@ -252,7 +252,7 @@ func (v *VMClarityPresenter) ExportMalwareResult(ctx context.Context, res famili
 		assetScan.Stats = &models.AssetScanStats{}
 	}
 
-	errs := []string{}
+	var errs []string
 
 	if res.Err != nil {
 		errs = append(errs, res.Err.Error())
@@ -299,7 +299,7 @@ func (v *VMClarityPresenter) ExportExploitsResult(ctx context.Context, res famil
 		assetScan.Stats = &models.AssetScanStats{}
 	}
 
-	errs := []string{}
+	var errs []string
 
 	if res.Err != nil {
 		errs = append(errs, res.Err.Error())
