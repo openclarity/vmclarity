@@ -155,9 +155,15 @@ bin/golangci-lint-$(GOLANGCI_VERSION): | $(BIN_DIR)
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | bash -s -- -b "$(BIN_DIR)" "v$(GOLANGCI_VERSION)"
 	@mv bin/golangci-lint $@
 
+GOMODULES := $(shell find $(ROOT_DIR) -name 'go.mod')
+LINTGOMODULES = $(addprefix lint-, $(GOMODULES))
+
+.PHONY: $(LINTGOMODULES)
+$(LINTGOMODULES):
+	cd $(dir $(@:lint-%=%)) && "$(GOLANGCI_BIN)" run -c "$(GOLANGCI_CONFIG)"
+
 .PHONY: lint-go
-lint-go: bin/golangci-lint
-	find . -name go.mod -execdir "$(GOLANGCI_BIN)" run --tests -c "$(GOLANGCI_CONFIG)" \;
+lint-go: bin/golangci-lint $(LINTGOMODULES)
 
 .PHONY: lint-cfn
 lint-cfn:
