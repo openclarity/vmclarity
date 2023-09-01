@@ -157,6 +157,7 @@ bin/golangci-lint-$(GOLANGCI_VERSION): | $(BIN_DIR)
 
 GOMODULES := $(shell find $(ROOT_DIR) -name 'go.mod')
 LINTGOMODULES = $(addprefix lint-, $(GOMODULES))
+FIXGOMODULES = $(addprefix fix-, $(GOMODULES))
 
 .PHONY: $(LINTGOMODULES)
 $(LINTGOMODULES):
@@ -174,9 +175,12 @@ lint-cfn:
 .PHONY: lint
 lint: lint-go lint-cfn ## Run linters
 
+.PHONY: $(FIXGOMODULES)
+$(FIXGOMODULES):
+	cd $(dir $(@:fix-%=%)) && "$(GOLANGCI_BIN)" run -c "$(GOLANGCI_CONFIG)" --fix
+
 .PHONY: fix
-fix: bin/golangci-lint ## Fix lint violations
-	./bin/golangci-lint run --fix
+fix: bin/golangci-lint $(FIXGOMODULES) ## Fix lint violations
 
 bin/licensei: bin/licensei-${LICENSEI_VERSION}
 	@ln -sf licensei-${LICENSEI_VERSION} bin/licensei
