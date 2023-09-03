@@ -75,7 +75,7 @@ func (asp *AssetScanProcessor) reconcileResultInfoFindersToFindings(ctx context.
 		return fmt.Errorf("failed to check existing InfoFinder findings: %w", err)
 	}
 
-	if assetScan.InfoFinder != nil && assetScan.InfoFinder.InfoFinders != nil {
+	if assetScan.InfoFinder != nil && assetScan.InfoFinder.Infos != nil {
 		// Create new or update existing findings all the infos found by the
 		// scan.
 		for _, item := range *assetScan.InfoFinder.Infos {
