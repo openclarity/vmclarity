@@ -33,10 +33,11 @@ const (
 
 // Defines values for InfoType.
 const (
-	SSHAuthorizedKeyFingerprint InfoType = "SSHAuthorizedKeyFingerprint"
-	SSHDaemonKeyFingerprint     InfoType = "SSHDaemonKeyFingerprint"
-	SSHKnownHostFingerprint     InfoType = "SSHKnownHostFingerprint"
-	SSHPrivateKeyFingerprint    InfoType = "SSHPrivateKeyFingerprint"
+	InfoTypeSSHAuthorizedKeyFingerprint InfoType = "SSHAuthorizedKeyFingerprint"
+	InfoTypeSSHDaemonKeyFingerprint     InfoType = "SSHDaemonKeyFingerprint"
+	InfoTypeSSHKnownHostFingerprint     InfoType = "SSHKnownHostFingerprint"
+	InfoTypeSSHPrivateKeyFingerprint    InfoType = "SSHPrivateKeyFingerprint"
+	InfoTypeUNKNOWN                     InfoType = "UNKNOWN"
 )
 
 // Defines values for MisconfigurationSeverity.
@@ -63,11 +64,11 @@ const (
 
 // Defines values for RootkitType.
 const (
-	APPLICATION RootkitType = "APPLICATION"
-	FIRMWARE    RootkitType = "FIRMWARE"
-	KERNEL      RootkitType = "KERNEL"
-	MEMORY      RootkitType = "MEMORY"
-	UNKNOWN     RootkitType = "UNKNOWN"
+	RootkitTypeAPPLICATION RootkitType = "APPLICATION"
+	RootkitTypeFIRMWARE    RootkitType = "FIRMWARE"
+	RootkitTypeKERNEL      RootkitType = "KERNEL"
+	RootkitTypeMEMORY      RootkitType = "MEMORY"
+	RootkitTypeUNKNOWN     RootkitType = "UNKNOWN"
 )
 
 // Defines values for ScanState.
@@ -115,6 +116,7 @@ const (
 // Defines values for ScanType.
 const (
 	EXPLOIT          ScanType = "EXPLOIT"
+	INFOFINDER       ScanType = "INFOFINDER"
 	MALWARE          ScanType = "MALWARE"
 	MISCONFIGURATION ScanType = "MISCONFIGURATION"
 	ROOTKIT          ScanType = "ROOTKIT"

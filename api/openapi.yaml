@@ -2296,6 +2296,7 @@ components:
         - SSHAuthorizedKeyFingerprint
         - SSHPrivateKeyFingerprint
         - SSHDaemonKeyFingerprint
+        - UNKNOWN
 
     ExploitScan:
       type: object
@@ -2328,6 +2329,7 @@ components:
         - MISCONFIGURATION
         - ROOTKIT
         - EXPLOIT
+        - INFOFINDER
 
     FindingExists:
       type: object
