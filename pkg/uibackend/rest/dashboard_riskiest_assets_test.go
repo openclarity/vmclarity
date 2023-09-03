@@ -198,6 +198,17 @@ func Test_getCount(t *testing.T) {
 			want:    utils.PointerTo(1),
 			wantErr: false,
 		},
+		{
+			name: "TotalInfoFinder",
+			args: args{
+				summary: &backendmodels.ScanFindingsSummary{
+					TotalInfoFinder: utils.PointerTo(1),
+				},
+				findingType: backendmodels.INFOFINDER,
+			},
+			want:    utils.PointerTo(1),
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
