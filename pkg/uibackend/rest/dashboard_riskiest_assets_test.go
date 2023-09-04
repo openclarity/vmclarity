@@ -199,15 +199,15 @@ func Test_getCount(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "TotalInfoFinder",
+			name: "TotalInfoFinder - unsupported",
 			args: args{
 				summary: &backendmodels.ScanFindingsSummary{
 					TotalInfoFinder: utils.PointerTo(1),
 				},
 				findingType: backendmodels.INFOFINDER,
 			},
-			want:    utils.PointerTo(1),
-			wantErr: false,
+			want:    nil,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
