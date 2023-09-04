@@ -190,7 +190,7 @@ func withMisconfigurationConfig(config *models.MisconfigurationsConfig, opts *Sc
 	}
 }
 
-func withInfoFinderConfig(config *models.InfoFinderConfig, opts *ScannerConfig) FamiliesConfigOption {
+func withInfoFinderConfig(config *models.InfoFinderConfig, _ *ScannerConfig) FamiliesConfigOption {
 	return func(c *families.Config) {
 		if !config.IsEnabled() {
 			return
