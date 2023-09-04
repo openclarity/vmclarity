@@ -1737,7 +1737,21 @@ components:
               $ref: '#/components/schemas/ScanRelationship'
             status:
               $ref: '#/components/schemas/AssetScanStatus'
-            scannerStatus:
+            sboms:
+              $ref: '#/components/schemas/SbomScan'
+            vulnerabilities:
+              $ref: '#/components/schemas/VulnerabilityScan'
+            malware:
+              $ref: '#/components/schemas/MalwareScan'
+            rootkits:
+              $ref: '#/components/schemas/RootkitScan'
+            secrets:
+              $ref: '#/components/schemas/SecretScan'
+            misconfigurations:
+              $ref: '#/components/schemas/MisconfigurationScan'
+            exploits:
+              $ref: '#/components/schemas/ExploitScan'
+            scannerStatuses:
               $ref: '#/components/schemas/AssetScannerStatusGroup'
             findingsProcessed:
               type: boolean
@@ -1851,6 +1865,9 @@ components:
             exploits:
               $ref: '#/components/schemas/ExploitScan'
               readOnly: true
+            scannerStatuses:
+              $ref: '#/components/schemas/AssetScannerStatusGroup'
+              readOnly: true
             findingsProcessed:
               type: boolean
               readOnly: true
@@ -1913,8 +1930,6 @@ components:
     AssetScannerStatusGroup:
       type: object
       properties:
-        general:
-          $ref: '#/components/schemas/AssetScannerStatus'
         sbom:
           $ref: '#/components/schemas/AssetScannerStatus'
         vulnerabilities:
