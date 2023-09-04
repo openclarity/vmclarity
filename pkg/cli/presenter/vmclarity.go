@@ -406,11 +406,11 @@ func (v *VMClarityPresenter) ExportInfoFinderResult(ctx context.Context, res fam
 	} else {
 		results, ok := res.Result.(*infofinder.Results)
 		if !ok {
-			errs = append(errs, fmt.Errorf("failed to convert to misconfiguration results").Error())
+			errs = append(errs, fmt.Errorf("failed to convert to info finder results").Error())
 		} else {
 			apiInfoFinder, err := cliutils.ConvertInfoFinderResultToAPIModel(results)
 			if err != nil {
-				errs = append(errs, fmt.Sprintf("failed to convert misconfiguration results from scan to API model: %v", err))
+				errs = append(errs, fmt.Sprintf("failed to convert info finder results from scan to API model: %v", err))
 			} else {
 				assetScan.InfoFinder = apiInfoFinder
 				assetScan.Summary.TotalInfoFinder = utils.PointerTo(len(results.Infos))
