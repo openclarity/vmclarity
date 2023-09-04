@@ -820,6 +820,7 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 			"malwareName": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"malwareType": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"path":        odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"ruleName":    odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 		},
 	},
 	"SecretFindingInfo": {

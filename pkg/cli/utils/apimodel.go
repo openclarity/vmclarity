@@ -180,6 +180,7 @@ func ConvertMalwareResultToAPIModel(malwareResults *malware.MergedResults) *mode
 			MalwareName: &mal.MalwareName,
 			MalwareType: &mal.MalwareType,
 			Path:        &mal.Path,
+			RuleName:    &mal.RuleName,
 		})
 	}
 
