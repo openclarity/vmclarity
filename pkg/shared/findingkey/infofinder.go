@@ -29,7 +29,7 @@ type InfoFinderKey struct {
 }
 
 func (k InfoFinderKey) String() string {
-	return fmt.Sprintf("%s.%s.%s", k.ScannerName, k.Type, k.Data)
+	return fmt.Sprintf("%s.%s.%s.%s", k.ScannerName, k.Type, k.Data, k.Path)
 }
 
 func GenerateInfoFinderKey(info models.InfoFinderFindingInfo) InfoFinderKey {
