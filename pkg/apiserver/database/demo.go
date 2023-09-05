@@ -654,7 +654,7 @@ func createScans(assets []models.Asset, scanConfigs []models.ScanConfig) []model
 	}
 }
 
-// nolint:gocognit,maintidx
+// nolint:gocognit,maintidx,cyclop
 func createAssetScans(scans []models.Scan) []models.AssetScan {
 	timeNow := time.Now()
 
