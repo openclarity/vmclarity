@@ -466,6 +466,7 @@ type InfoFinderConfig struct {
 
 // InfoFinderFindingInfo defines model for InfoFinderFindingInfo.
 type InfoFinderFindingInfo struct {
+	// Data The data found by the scanner in the specific path for a specific type. See example for SSHKnownHostFingerprint info type
 	Data       *string `json:"data,omitempty"`
 	ObjectType string  `json:"objectType"`
 
@@ -477,6 +478,7 @@ type InfoFinderFindingInfo struct {
 
 // InfoFinderInfo defines model for InfoFinderInfo.
 type InfoFinderInfo struct {
+	// Data The data found by the scanner in the specific path for a specific type. See example for SSHKnownHostFingerprint info type
 	Data *string `json:"data,omitempty"`
 
 	// Path File path containing the info

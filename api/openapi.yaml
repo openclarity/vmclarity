@@ -2288,6 +2288,8 @@ components:
           description: "File path containing the info"
         data:
           type: string
+          description: "The data found by the scanner in the specific path for a specific type. See example for SSHKnownHostFingerprint info type"
+          example: "2048 SHA256:YQuPOM8ld6FOA9HbKCgkCJWHuGt4aTRD7hstjJpRhxc xxxx (RSA)"
 
     InfoType:
       type: string
