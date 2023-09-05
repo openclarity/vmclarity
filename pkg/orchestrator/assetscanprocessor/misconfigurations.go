@@ -147,7 +147,7 @@ func (asp *AssetScanProcessor) reconcileResultMisconfigurationsToFindings(ctx co
 
 	totalMisconfigurations, err := asp.getActiveFindingsByType(ctx, "Misconfiguration", assetScan.Asset.Id)
 	if err != nil {
-		return fmt.Errorf("failed to list active critial vulnerabilities: %w", err)
+		return fmt.Errorf("failed to get active misconfiguration findings: %w", err)
 	}
 	asset.Summary.TotalMisconfigurations = &totalMisconfigurations
 

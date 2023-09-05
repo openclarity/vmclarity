@@ -143,7 +143,7 @@ func (asp *AssetScanProcessor) reconcileResultInfoFindersToFindings(ctx context.
 
 	totalInfoFinder, err := asp.getActiveFindingsByType(ctx, "InfoFinder", assetScan.Asset.Id)
 	if err != nil {
-		return fmt.Errorf("failed to list active critial vulnerabilities: %w", err)
+		return fmt.Errorf("failed to get active info finder findings: %w", err)
 	}
 	asset.Summary.TotalInfoFinder = &totalInfoFinder
 
