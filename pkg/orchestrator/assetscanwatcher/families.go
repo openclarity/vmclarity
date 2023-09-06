@@ -27,6 +27,7 @@ import (
 	"github.com/openclarity/vmclarity/pkg/shared/families/malware"
 	clamconfig "github.com/openclarity/vmclarity/pkg/shared/families/malware/clam/config"
 	malwarecommon "github.com/openclarity/vmclarity/pkg/shared/families/malware/common"
+	yaraconfig "github.com/openclarity/vmclarity/pkg/shared/families/malware/yara/config"
 	misconfiguration "github.com/openclarity/vmclarity/pkg/shared/families/misconfiguration/types"
 	"github.com/openclarity/vmclarity/pkg/shared/families/rootkits"
 	chkrootkitConfig "github.com/openclarity/vmclarity/pkg/shared/families/rootkits/chkrootkit/config"
@@ -163,6 +164,10 @@ func withMalwareConfig(config *models.MalwareConfig, opts *ScannerConfig) Famili
 					ClamScanBinaryPath:            opts.ClamBinaryPath,
 					FreshclamBinaryPath:           opts.FreshclamBinaryPath,
 					AlternativeFreshclamMirrorURL: opts.AlternativeFreshclamMirrorURL,
+				},
+				Yara: yaraconfig.Config{
+					YaraBinaryPath: opts.YaraBinaryPath,
+					YaraRuleURL:    opts.YaraRuleServerAddress,
 				},
 			},
 		}
