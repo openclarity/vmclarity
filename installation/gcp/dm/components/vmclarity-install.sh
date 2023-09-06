@@ -81,11 +81,27 @@ systemctl daemon-reload
 # Create directory for trivy server
 /usr/bin/mkdir -p /opt/trivy-server
 
+# Create directory for yara rule server
+/usr/bin/mkdir -p /opt/yara-rule-server
+
 # Enable and start/restart VMClarity backend
 systemctl enable vmclarity.service
 systemctl restart vmclarity.service
 EOF
 chmod 744 /etc/vmclarity/deploy.sh
+
+cat << 'EOF' > /etc/vmclarity/yara-rule-server.yaml
+enable_json_log: true
+rule_update_schedule: "0 0 * * *"
+rule_sources:
+  - name: "base"
+    url: "https://github.com/Yara-Rules/rules/archive/refs/heads/master.zip"
+    exclude_regex: ".*index.*.yar|.*/utils/.*|.*/deprecated/.*|.*index_.*|.*MALW_AZORULT.yar"
+  - name: "magic"
+    url: "https://github.com/securitymagic/yara/archive/refs/heads/main.zip"
+    exclude_regex: ".*index.*.yar"
+EOF
+chmod 644 /etc/vmclarity/yara-rule-server.yaml
 
 cat << 'EOF' > /etc/vmclarity/orchestrator.env
 PROVIDER=GCP
@@ -102,6 +118,7 @@ SCANNER_CONTAINER_IMAGE={ScannerContainerImage}
 SCANNER_VMCLARITY_APISERVER_ADDRESS=http://__CONTROLPLANE_HOST__:8888
 TRIVY_SERVER_ADDRESS=http://__CONTROLPLANE_HOST__:9992
 GRYPE_SERVER_ADDRESS=__CONTROLPLANE_HOST__:9991
+YARA_RULE_SERVER_ADDRESS=http://__CONTROLPLANE_HOST__:8080
 DELETE_JOB_POLICY={AssetScanDeletePolicy}
 ALTERNATIVE_FRESHCLAM_MIRROR_URL=http://__CONTROLPLANE_HOST__:1000/clamav
 EOF
@@ -246,6 +263,25 @@ services:
     image: {FreshclamMirrorContainerImage}
     ports:
       - "1000:80"
+    logging:
+      driver: journald
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  yara-rule-server:
+    image: ${YaraRuleServerContainerImage}
+    command:
+      - run
+    ports:
+      - "8080:8080"
+    volumes:
+      - type: bind
+        source: /opt/yara-rule-server
+        target: /var/lib/yara-rule-server
+      - /etc/vmclarity/yara-rule-server-conf.yaml:/etc/yara-rule-server/config.yaml
     logging:
       driver: journald
     deploy:
