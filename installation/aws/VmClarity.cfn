@@ -441,6 +441,7 @@ Resources:
                     ExploitDBServerContainerImage: !If [ExploitDBServerContainerImageOverridden, !Ref ExploitDBServerContainerImageOverride, "ghcr.io/openclarity/exploit-db-server:v0.2.3"]
                     TrivyServerContainerImage: !If [TrivyServerContainerImageOverridden, !Ref TrivyServerContainerImageOverride, "docker.io/aquasec/trivy:0.41.0"]
                     GrypeServerContainerImage: !If [GrypeServerContainerImageOverridden, !Ref GrypeServerContainerImageOverride, "ghcr.io/openclarity/grype-server:v0.5.0"]
+                    YaraRuleServerContainerImage: !If [YaraRuleServerContainerImageOverridden, !Ref YaraRuleServerContainerImageOverride, "ghcr.io/openclarity/yara-rule:v0.1.0"]
                     FreshclamMirrorContainerImage: !If [FreshclamMirrorContainerImageOverridden, !Ref FreshclamMirrorContainerImageOverride, "ghcr.io/openclarity/freshclam-mirror:v0.2.0"]
                     PostgresqlContainerImage: !If [PostgresqlContainerImageOverridden, !Ref PostgresqlContainerImageOverride, "bitnami/postgresql:12.14.0-debian-11-r28"]
 
@@ -715,7 +716,7 @@ Resources:
   # Allow the Scanner VMs in the VmClarityScannerSecurityGroup to access the
   # Yara Rule Server on port 8080 by adding an ingress rule to the
   # VmClarityServerSecurityGroup.
-  VmClarityServerSecurityGroupScannerIngressToGrypeServer:
+  VmClarityServerSecurityGroupScannerIngressToYaraRuleServer:
     Type: "AWS::EC2::SecurityGroupIngress"
     Properties:
       GroupId: !Ref VmClarityServerSecurityGroup
@@ -1205,6 +1206,7 @@ Metadata:
           - ScannerContainerImageOverride
           - TrivyServerContainerImageOverride
           - GrypeServerContainerImageOverride
+          - YaraRuleServerContainerImageOverride
           - ExploitDBServerContainerImageOverride
           - PostgresqlContainerImageOverride
           - FreshclamMirrorContainerImageOverride
@@ -1351,6 +1353,10 @@ Conditions:
   GrypeServerContainerImageOverridden: !Not
     - !Equals
       - !Ref GrypeServerContainerImageOverride
+      - ''
+  YaraRuleServerContainerImageOverridden: !Not
+    - !Equals
+      - !Ref YaraRuleServerContainerImageOverride
       - ''
   ExploitDBServerContainerImageOverridden: !Not
     - !Equals
