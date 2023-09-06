@@ -64,7 +64,8 @@ docker-cli: ## Build CLI Docker image
 		--build-arg BUILD_TIMESTAMP=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ") \
 		--build-arg COMMIT_HASH=$(shell git rev-parse HEAD) \
 		${VMCLARITY_TOOLS_CLI_DOCKER_ARG} \
-		-t ${DOCKER_IMAGE}-cli:${DOCKER_TAG}
+		-t ${DOCKER_IMAGE}-cli:${DOCKER_TAG} \
+		.
 
 .PHONY: push-docker-cli
 push-docker-cli: docker-cli ## Build and Push CLI Docker image
