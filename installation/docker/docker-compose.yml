@@ -159,7 +159,7 @@ services:
       restart_policy:
         condition: on-failure
     volumes:
-      - ${PWD}/yara-rule-server-conf.yaml:/etc/yara-rule-server/config.yaml
+      - ${PWD}/yara-rule-server.yaml:/etc/yara-rule-server/config.yaml
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://127.0.0.1:8082/healthz/ready || exit 1
       interval: 10s

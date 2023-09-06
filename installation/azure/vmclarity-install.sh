@@ -287,7 +287,7 @@ services:
       - type: bind
         source: /opt/yara-rule-server
         target: /var/lib/yara-rule-server
-      - /etc/vmclarity/yara-rule-server-conf.yaml:/etc/yara-rule-server/config.yaml
+      - /etc/vmclarity/yara-rule-server.yaml:/etc/yara-rule-server/config.yaml
     logging:
       driver: journald
     deploy:
