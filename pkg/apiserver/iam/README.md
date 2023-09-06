@@ -1,7 +1,7 @@
 ## IAM Service
 
 ### High level architecture
-![alt text](testdata/architecture.png)
+![alt text](zitadel/testdata/architecture.png)
 
 
 #### Server-side stack

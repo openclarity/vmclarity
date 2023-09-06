@@ -21,76 +21,93 @@ import (
 	"github.com/deepmap/oapi-codegen/pkg/middleware"
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/labstack/echo/v4"
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam/auth"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam/types"
-	"strings"
 )
 
 const userCtxKey = "user"
 
-// GetUserFromContext returns User from context.
-func GetUserFromContext(ctx echo.Context) *types.Claims {
+// GetUserFromContext returns types.User from context.
+func GetUserFromContext(ctx echo.Context) *types.User {
 	ctxData := ctx.Get(userCtxKey)
 	if ctxData == nil {
 		return nil
 	}
-
-	user, _ := ctxData.(*types.Claims)
+	user, _ := ctxData.(*types.User)
 	return user
 }
 
-// OapiFilterForProvider creates an OpenAPI middleware filter function which
-// handles request authentication and authorization using a specific Provider.
-// Logic flow:
+// NewMiddleware creates an OpenAPI middleware filter which handles request
+// authentication and authorization using a specific Provider. Logic flow:
 //
 // request -> |Authenticator.Authenticate| -> |RoleSyncer.Sync| -> |Authorizer.CanPerform| -> success
 //
 // Provider will first authenticate the client from request data, synchronize
 // user roles on success, and finally try to authorize the request. If
 // successful, User will be available in context.
-func OapiFilterForProvider(provider types.Provider) openapi3filter.AuthenticationFunc {
+func NewMiddleware(service types.IAMService) openapi3filter.AuthenticationFunc {
 	return func(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
-		// TODO: Explore caching options to reduce checks against identity server
+		if service == nil {
+			return nil
+		}
 
 		// Remove user from request context
 		eCtx := middleware.GetEchoContext(ctx)
 		eCtx.Set(userCtxKey, nil)
 
 		// Authenticate
-		user, err := provider.Authenticator().Authenticate(ctx, input.RequestValidationInput.Request)
+		user, err := service.Authenticator().Authenticate(ctx, input.RequestValidationInput.Request)
 		if err != nil {
-			return fmt.Errorf("failed to authenticate user: %w", err)
-		}
-
-		// Sync user roles
-		err = provider.RoleSyncer().Sync(ctx, user)
-		if err != nil {
-			return fmt.Errorf("failed to sync user roles: %w", err)
+			return fmt.Errorf("failed to authenticate request: %w", err)
 		}
 
 		// Authorize
 		// Route permissions are defined as "asset:action", so we extract
 		// the asset and action from the requested permission scope
-		for _, scope := range input.Scopes {
-			// Fetch authorization request data
-			reqScope := strings.Split(scope, ":")
-			if len(reqScope) != 2 {
-				return fmt.Errorf("unknown api asset:action found, got %s", scope)
-			}
-			asset, action := reqScope[0], reqScope[1]
-
-			// Authorize request
-			authorized, err := provider.Authorizer().CanPerform(ctx, user, asset, action)
-			if err != nil {
-				return fmt.Errorf("failed to check authorization: %w", err)
-			}
-			if !authorized {
-				return fmt.Errorf("not allowed, missing permission to perform %s:%s", asset, action)
-			}
-		}
+		//for _, scope := range input.Scopes {
+		//	// Fetch authorization request data
+		//	reqScope := strings.Split(scope, ":")
+		//	if len(reqScope) != 2 {
+		//		return fmt.Errorf("unknown api asset:action found, got %s", scope)
+		//	}
+		//	asset, action := reqScope[0], reqScope[1]
+		//
+		//	// Authorize request
+		//	authorized, err := service.Authorizer().CanPerform(ctx, user, asset, action)
+		//	if err != nil {
+		//		return fmt.Errorf("failed to check authorization: %w", err)
+		//	}
+		//	if !authorized {
+		//		return fmt.Errorf("not allowed, missing permission to perform %s:%s", asset, action)
+		//	}
+		//}
 
 		// Update request context with user data
 		eCtx.Set(userCtxKey, user)
 
 		return nil
 	}
+}
+
+func NewService(config types.AuthConfig) (types.IAMService, error) {
+	authenticator, err := auth.New(config)
+	if err != nil {
+		return nil, err
+	}
+	return &iamService{
+		auth: authenticator,
+	}, nil
+}
+
+type iamService struct {
+	auth  types.Authenticator
+	authz types.Authorizer
+}
+
+func (i iamService) Authenticator() types.Authenticator {
+	return i.auth
+}
+
+func (i iamService) Authorizer() types.Authorizer {
+	return i.authz
 }

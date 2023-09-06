@@ -17,7 +17,51 @@ package types
 
 import (
 	"context"
+	"github.com/spf13/viper"
+	"net/http"
 )
+
+const (
+	authOIDCIssuerEnvVar        = "AUTH_OIDC_ISSUER"
+	authOIDCClientIDEnvVar      = "AUTH_OIDC_CLIENT_ID"
+	authOIDCClientSecretEnvVar  = "AUTH_OIDC_CLIENT_SECRET" // #nosec G101
+	authOIDCTokenURLEnvVar      = "AUTH_OIDC_TOKEN_URL"     // #nosec G101
+	authOIDCIntrospectURLEnvVar = "AUTH_OIDC_INTROSPECT_URL"
+)
+
+type AuthConfig struct {
+	Issuer        string `json:"issuer,omitempty"`
+	ClientID      string `json:"client-id,omitempty"`
+	ClientSecret  string `json:"client-secret,omitempty"`
+	TokenURL      string `json:"token-url,omitempty"`
+	IntrospectURL string `json:"introspect-url,omitempty"`
+}
+
+func LoadConfig() AuthConfig {
+	return AuthConfig{
+		Issuer:        viper.GetString(authOIDCIssuerEnvVar),
+		ClientID:      viper.GetString(authOIDCClientIDEnvVar),
+		ClientSecret:  viper.GetString(authOIDCClientSecretEnvVar),
+		TokenURL:      viper.GetString(authOIDCTokenURLEnvVar),
+		IntrospectURL: viper.GetString(authOIDCIntrospectURLEnvVar),
+	}
+}
+
+type IAMService interface {
+	Authenticator() Authenticator
+	Authorizer() Authorizer
+}
+
+//type ScansTable interface {
+//	GetScans(params models.GetScansParams) (models.Scans, error)
+//	GetScan(scanID models.ScanID, params models.GetScansScanIDParams) (models.Scan, error)
+//
+//	CreateScan(scan models.Scan) (models.Scan, error)
+//	UpdateScan(scan models.Scan, params models.PatchScansScanIDParams) (models.Scan, error)
+//	SaveScan(scan models.Scan, params models.PutScansScanIDParams) (models.Scan, error)
+//
+//	DeleteScan(scanID models.ScanID) error
+//}
 
 // User defines an authenticated user.
 type User struct {
@@ -28,10 +72,7 @@ type User struct {
 // Authenticator defines authentication service.
 type Authenticator interface {
 	// Authenticate authenticates a request payload against authentication service.
-	Authenticate(ctx context.Context, token string) (*User, error)
-
-	CreateSA(ctx context.Context, username string) (string, error)
-	DeleteSA(ctx context.Context, username string) error
+	Authenticate(ctx context.Context, req *http.Request) (*User, error)
 }
 
 // Authorizer defines authorization service.

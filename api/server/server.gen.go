@@ -72,6 +72,9 @@ type ServerInterface interface {
 	// Update asset.
 	// (PUT /assets/{assetID})
 	PutAssetsAssetID(ctx echo.Context, assetID AssetID, params PutAssetsAssetIDParams) error
+	// Auth redxirect
+	// (GET /auth/redirect)
+	AuthRedirect(ctx echo.Context) error
 	// Get all findings.
 	// (GET /findings)
 	GetFindings(ctx echo.Context, params GetFindingsParams) error
@@ -724,6 +727,15 @@ func (w *ServerInterfaceWrapper) PutAssetsAssetID(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.PutAssetsAssetID(ctx, assetID, params)
+	return err
+}
+
+// AuthRedirect converts echo context to params.
+func (w *ServerInterfaceWrapper) AuthRedirect(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.AuthRedirect(ctx)
 	return err
 }
 
@@ -1536,6 +1548,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.GET(baseURL+"/assets/:assetID", wrapper.GetAssetsAssetID)
 	router.PATCH(baseURL+"/assets/:assetID", wrapper.PatchAssetsAssetID)
 	router.PUT(baseURL+"/assets/:assetID", wrapper.PutAssetsAssetID)
+	router.GET(baseURL+"/auth/redirect", wrapper.AuthRedirect)
 	router.GET(baseURL+"/findings", wrapper.GetFindings)
 	router.POST(baseURL+"/findings", wrapper.PostFindings)
 	router.DELETE(baseURL+"/findings/:findingID", wrapper.DeleteFindingsFindingID)

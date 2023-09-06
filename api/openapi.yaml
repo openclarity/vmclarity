@@ -5,6 +5,22 @@ info:
   version: 1.0.0
 
 paths:
+
+  /auth/redirect:
+    get:
+      summary: Auth redxirect
+      operationId: AuthRedirect
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: string
+                format: json
+        default:
+          $ref: '#/components/responses/UnknownError'
+
   /openapi.json:
     get:
       summary: Get this OpenAPI spec

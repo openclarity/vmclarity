@@ -159,6 +159,9 @@ type ClientInterface interface {
 
 	PutAssetsAssetID(ctx context.Context, assetID AssetID, params *PutAssetsAssetIDParams, body PutAssetsAssetIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// AuthRedirect request
+	AuthRedirect(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetFindings request
 	GetFindings(ctx context.Context, params *GetFindingsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -561,6 +564,18 @@ func (c *Client) PutAssetsAssetIDWithBody(ctx context.Context, assetID AssetID, 
 
 func (c *Client) PutAssetsAssetID(ctx context.Context, assetID AssetID, params *PutAssetsAssetIDParams, body PutAssetsAssetIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPutAssetsAssetIDRequest(c.Server, assetID, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) AuthRedirect(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAuthRedirectRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -2221,6 +2236,33 @@ func NewPutAssetsAssetIDRequestWithBody(server string, assetID AssetID, params *
 			req.Header.Set("If-Match", headerParam0)
 		}
 
+	}
+
+	return req, nil
+}
+
+// NewAuthRedirectRequest generates requests for AuthRedirect
+func NewAuthRedirectRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/auth/redirect")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
 	}
 
 	return req, nil
@@ -3995,6 +4037,9 @@ type ClientWithResponsesInterface interface {
 
 	PutAssetsAssetIDWithResponse(ctx context.Context, assetID AssetID, params *PutAssetsAssetIDParams, body PutAssetsAssetIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PutAssetsAssetIDResponse, error)
 
+	// AuthRedirectWithResponse request
+	AuthRedirectWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*AuthRedirectResponse, error)
+
 	// GetFindingsWithResponse request
 	GetFindingsWithResponse(ctx context.Context, params *GetFindingsParams, reqEditors ...RequestEditorFn) (*GetFindingsResponse, error)
 
@@ -4515,6 +4560,29 @@ func (r PutAssetsAssetIDResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r PutAssetsAssetIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type AuthRedirectResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *json.RawMessage
+	JSONDefault  *UnknownError
+}
+
+// Status returns HTTPResponse.Status
+func (r AuthRedirectResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AuthRedirectResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -5360,6 +5428,15 @@ func (c *ClientWithResponses) PutAssetsAssetIDWithResponse(ctx context.Context, 
 		return nil, err
 	}
 	return ParsePutAssetsAssetIDResponse(rsp)
+}
+
+// AuthRedirectWithResponse request returning *AuthRedirectResponse
+func (c *ClientWithResponses) AuthRedirectWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*AuthRedirectResponse, error) {
+	rsp, err := c.AuthRedirect(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAuthRedirectResponse(rsp)
 }
 
 // GetFindingsWithResponse request returning *GetFindingsResponse
@@ -6476,6 +6553,39 @@ func ParsePutAssetsAssetIDResponse(rsp *http.Response) (*PutAssetsAssetIDRespons
 			return nil, err
 		}
 		response.JSON412 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest UnknownError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAuthRedirectResponse parses an HTTP response from a AuthRedirectWithResponse call
+func ParseAuthRedirectResponse(rsp *http.Response) (*AuthRedirectResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AuthRedirectResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest json.RawMessage
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest UnknownError
