@@ -710,6 +710,17 @@ Resources:
       FromPort: 1000
       ToPort: 1000
       SourceSecurityGroupId: !Ref VmClarityScannerSecurityGroup
+  # Allow the Scanner VMs in the VmClarityScannerSecurityGroup to access the
+  # Yara Rule Server on port 8080 by adding an ingress rule to the
+  # VmClarityServerSecurityGroup.
+  VmClarityServerSecurityGroupScannerIngressToGrypeServer:
+    Type: "AWS::EC2::SecurityGroupIngress"
+    Properties:
+      GroupId: !Ref VmClarityServerSecurityGroup
+      IpProtocol: tcp
+      FromPort: 8080
+      ToPort: 8080
+      SourceSecurityGroupId: !Ref VmClarityScannerSecurityGroup
 
   # Create an Internet Gateway to allow VMClarityServer to talk to the internet
   # and the internet to talk to it for SSH/HTTP.
