@@ -152,7 +152,7 @@ services:
     command:
       - run
     ports:
-      - "8080:8080"
+      - "9993:8080"
     deploy:
       mode: replicated
       replicas: 1

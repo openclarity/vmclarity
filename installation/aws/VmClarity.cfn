@@ -391,7 +391,7 @@ Resources:
                         command:
                           - run
                         ports:
-                          - "8080:8080"
+                          - "9993:8080"
                         volumes:
                           - type: bind
                             source: /opt/yara-rule-server
@@ -488,7 +488,7 @@ Resources:
                     # FreshClam mirror URL
                     ALTERNATIVE_FRESHCLAM_MIRROR_URL=http://__CONTROLPLANE_HOST__:1000/clamav
                     # Yara rule server address
-                    YARA_RULE_SERVER_ADDRESS=http://__CONTROLPLANE_HOST__:8080
+                    YARA_RULE_SERVER_ADDRESS=http://__CONTROLPLANE_HOST__:9993
                     # Resource cleanup policy
                     DELETE_JOB_POLICY=${AssetScanDeletePolicy}
                     # Provider to use
@@ -714,15 +714,15 @@ Resources:
       ToPort: 1000
       SourceSecurityGroupId: !Ref VmClarityScannerSecurityGroup
   # Allow the Scanner VMs in the VmClarityScannerSecurityGroup to access the
-  # Yara Rule Server on port 8080 by adding an ingress rule to the
+  # Yara Rule Server on port 9993 by adding an ingress rule to the
   # VmClarityServerSecurityGroup.
   VmClarityServerSecurityGroupScannerIngressToYaraRuleServer:
     Type: "AWS::EC2::SecurityGroupIngress"
     Properties:
       GroupId: !Ref VmClarityServerSecurityGroup
       IpProtocol: tcp
-      FromPort: 8080
-      ToPort: 8080
+      FromPort: 9993
+      ToPort: 9993
       SourceSecurityGroupId: !Ref VmClarityScannerSecurityGroup
 
   # Create an Internet Gateway to allow VMClarityServer to talk to the internet
