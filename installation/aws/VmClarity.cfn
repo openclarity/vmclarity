@@ -486,6 +486,8 @@ Resources:
                     GRYPE_SERVER_ADDRESS=__CONTROLPLANE_HOST__:9991
                     # FreshClam mirror URL
                     ALTERNATIVE_FRESHCLAM_MIRROR_URL=http://__CONTROLPLANE_HOST__:1000/clamav
+                    # Yara rule server address
+                    YARA_RULE_SERVER_ADDRESS=http://__CONTROLPLANE_HOST__:8080
                     # Resource cleanup policy
                     DELETE_JOB_POLICY=${AssetScanDeletePolicy}
                     # Provider to use
@@ -1112,6 +1114,12 @@ Parameters:
       "ghcr.io/openclarity/grype-server:v0.5.0" will be used if not overridden.
     Type: String
     Default: ''
+  YaraRuleServerContainerImageOverride:
+    Description: >
+      Name of the container image used for the yara rule server.
+      "ghcr.io/openclarity/yara-rule-server:v0.1.0" will be used if not overridden.
+    Type: String
+    Default: ''
   ExploitDBServerContainerImageOverride:
     Description: >
       Name of the container image used for the exploit db server.
@@ -1220,6 +1228,8 @@ Metadata:
         default: Trivy Server Container Image Override
       GrypeServerContainerImageOverride:
         default: Grype Server Container Image Override
+      YaraRuleServerContainerImageOverride:
+        default: Yara Rule Server Container Image Override
       ExploitDBServerContainerImageOverride:
         default: Exploit DB Server Container Image Override
       FreshclamMirrorContainerImageOverride:
