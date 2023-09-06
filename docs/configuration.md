@@ -8,6 +8,7 @@
 | `SCANNER_CONTAINER_IMAGE`                 |           |         |                                              |
 | `GITLEAKS_BINARY_PATH`                    |           |         |                                              |
 | `CLAM_BINARY_PATHCLAM_BINARY_PATH`        |           |         |                                              |
+| `YARA_BINARY_PATH`                        |           |         |                                              |
 | `FRESHCLAM_BINARY_PATH`                   |           |         |                                              |
 | `ALTERNATIVE_FRESHCLAM_MIRROR_URL`        |           |         |                                              |
 | `LYNIS_INSTALL_PATH`                      |           |         |                                              |
