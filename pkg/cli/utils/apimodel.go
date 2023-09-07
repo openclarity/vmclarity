@@ -179,10 +179,10 @@ func ConvertMalwareResultToAPIModel(malwareResults *malware.MergedResults) *mode
 	for _, m := range malwareResults.DetectedMalware {
 		mal := m // Prevent loop variable pointer export
 		malwareList = append(malwareList, models.Malware{
-			MalwareName: pointerToStringOrNil(mal.MalwareName),
-			MalwareType: pointerToStringOrNil(mal.MalwareType),
-			Path:        pointerToStringOrNil(mal.Path),
-			RuleName:    pointerToStringOrNil(mal.RuleName),
+			MalwareName: utils.PointerToStringOrNil(mal.MalwareName),
+			MalwareType: utils.PointerToStringOrNil(mal.MalwareType),
+			Path:        utils.PointerToStringOrNil(mal.Path),
+			RuleName:    utils.PointerToStringOrNil(mal.RuleName),
 		})
 	}
 
@@ -395,12 +395,4 @@ func ConvertRootkitTypeToAPIModel(rootkitType rootkitsTypes.RootkitType) *models
 		log.Errorf("Can't convert rootkit type %q, treating as %v", rootkitType, models.RootkitTypeUNKNOWN)
 		return utils.PointerTo(models.RootkitTypeUNKNOWN)
 	}
-}
-
-func pointerToStringOrNil(s string) *string {
-	if s == "" {
-		return nil
-	}
-
-	return &s
 }

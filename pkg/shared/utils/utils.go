@@ -57,6 +57,14 @@ func PointerTo[T any](value T) *T {
 	return &value
 }
 
+func PointerToStringOrNil(s string) *string {
+	if s == "" {
+		return nil
+	}
+
+	return &s
+}
+
 func StringPointerValOrEmpty(val *string) string {
 	if val == nil {
 		return ""
