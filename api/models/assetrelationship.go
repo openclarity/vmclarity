@@ -27,12 +27,12 @@ func (a *AssetRelationship) ToAsset() (*Asset, error) {
 
 	B, err := json.Marshal(a)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to marshal: %v", err)
 	}
 
 	var asset Asset
 	if err := json.Unmarshal(B, &asset); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to unmarshal: %v", err)
 	}
 
 	return &asset, nil

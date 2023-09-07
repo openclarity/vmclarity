@@ -27,6 +27,7 @@ import (
 
 // getLatestAssetScanStats - for each family, find the latest AssetScan that has AssetScanStats of this family,
 // and add the family stats to the returned aggregated AssetScanStats.
+// nolint:cyclop
 func (w *Watcher) getLatestAssetScanStats(ctx context.Context, asset *models.Asset) models.AssetScanStats {
 	var stats models.AssetScanStats
 
@@ -41,7 +42,7 @@ func (w *Watcher) getLatestAssetScanStats(ctx context.Context, asset *models.Ass
 		}
 		res, err := w.backend.GetAssetScans(ctx, params)
 		if err != nil {
-			logrus.Errorf("Failed to get asset scans for %s. Ommiting stats: %v", family, err)
+			logrus.Errorf("Failed to get asset scans for %s. Omitting stats: %v", family, err)
 			continue
 		}
 

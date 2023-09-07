@@ -1077,23 +1077,16 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 		Fields: odatasql.Schema{
 			"state":              odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 			"lastTransitionTime": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
-			"stateMessage": odatasql.FieldMeta{
-				FieldType: odatasql.PrimitiveFieldType,
-			},
-			"stateReason": odatasql.FieldMeta{
-				FieldType: odatasql.PrimitiveFieldType,
-			},
+			"stateMessage":       odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"stateReason":        odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 		},
 	},
 	"ScanEstimationState": {
 		Fields: odatasql.Schema{
-			"state": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
-			"stateMessage": odatasql.FieldMeta{
-				FieldType: odatasql.PrimitiveFieldType,
-			},
-			"stateReason": odatasql.FieldMeta{
-				FieldType: odatasql.PrimitiveFieldType,
-			},
+			"state":              odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"lastTransitionTime": odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"stateMessage":       odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
+			"stateReason":        odatasql.FieldMeta{FieldType: odatasql.PrimitiveFieldType},
 		},
 	},
 }

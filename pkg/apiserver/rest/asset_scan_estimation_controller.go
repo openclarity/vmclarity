@@ -1,3 +1,18 @@
+// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package rest
 
 import (
@@ -57,6 +72,8 @@ func (s *ServerImpl) GetAssetScanEstimationsAssetScanEstimationID(ctx echo.Conte
 
 	return sendResponse(ctx, http.StatusOK, dbAssetScanEstimation)
 }
+
+// nolint:cyclop
 func (s *ServerImpl) PatchAssetScanEstimationsAssetScanEstimationID(ctx echo.Context, assetScanEstimationID models.AssetScanEstimationID, params models.PatchAssetScanEstimationsAssetScanEstimationIDParams) error {
 	var assetScanEstimation models.AssetScanEstimation
 	err := ctx.Bind(&assetScanEstimation)
@@ -103,6 +120,8 @@ func (s *ServerImpl) PatchAssetScanEstimationsAssetScanEstimationID(ctx echo.Con
 
 	return sendResponse(ctx, http.StatusOK, updatedAssetScanEstimation)
 }
+
+// nolint:cyclop
 func (s *ServerImpl) PutAssetScanEstimationsAssetScanEstimationID(ctx echo.Context, assetScanEstimationID models.AssetScanEstimationID, params models.PutAssetScanEstimationsAssetScanEstimationIDParams) error {
 	var assetScanEstimation models.AssetScanEstimation
 	err := ctx.Bind(&assetScanEstimation)

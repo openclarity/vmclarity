@@ -104,13 +104,13 @@ func Test_getPricePerUnitFromJsonPriceList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getPricePerUnitFromJsonPriceList(tt.args.jsonPriceList)
+			got, err := getPricePerUnitFromJSONPriceList(tt.args.jsonPriceList)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("getPricePerUnitFromJsonPriceList() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("getPricePerUnitFromJSONPriceList() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("getPricePerUnitFromJsonPriceList() got = %v, want %v", got, tt.want)
+				t.Errorf("getPricePerUnitFromJSONPriceList() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

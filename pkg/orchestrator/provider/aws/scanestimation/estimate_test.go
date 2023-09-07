@@ -17,7 +17,6 @@ package scanestimation
 
 import (
 	"context"
-	"encoding/json"
 	"reflect"
 	"testing"
 	"time"
@@ -157,7 +156,6 @@ func Test_getScanDuration(t *testing.T) {
 		name         string
 		args         args
 		wantDuration int64
-		wantErr      bool
 	}{
 		{
 			name: "Sbom and Secrets has stats, the other scan durations will be taken from the static map",
@@ -209,16 +207,11 @@ func Test_getScanDuration(t *testing.T) {
 			// 360 * const * log(2.5) for Malware from static table
 			// 1 * const * log(2.5) (static time * scan size) for  Vulnerabilities
 			wantDuration: 440,
-			wantErr:      false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotDuration, err := getScanDuration(tt.args.stats, tt.args.familiesConfig, tt.args.scanSizeMB)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("getScanDuration() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			gotDuration := getScanDuration(tt.args.stats, tt.args.familiesConfig, tt.args.scanSizeMB)
 			if gotDuration != tt.wantDuration {
 				t.Errorf("getScanDuration() gotDuration = %v, want %v", gotDuration, tt.wantDuration)
 			}
@@ -241,7 +234,6 @@ func TestScanEstimator_EstimateAssetScan(t *testing.T) {
 		priceFetcher PriceFetcher
 	}
 	type args struct {
-		ctx    context.Context
 		params EstimateAssetScanParams
 	}
 	tests := []struct {
@@ -257,7 +249,6 @@ func TestScanEstimator_EstimateAssetScan(t *testing.T) {
 				priceFetcher: &fakePriceFetcher,
 			},
 			args: args{
-				ctx: nil,
 				params: EstimateAssetScanParams{
 					SourceRegion:            "us-east-1",
 					DestRegion:              "us-east-1",
@@ -315,35 +306,27 @@ func TestScanEstimator_EstimateAssetScan(t *testing.T) {
 				},
 			},
 			want: &models.Estimation{
-				Cost: utils.PointerTo(float32(0.75656295)),
+				Cost: utils.PointerTo(float32(0.2819062)),
 				CostBreakdown: &[]models.CostBreakdownComponent{
 					{
-						Cost:      float32(0),
-						Operation: string(SourceSnapshot),
+						Cost:      float32(0.0010364198),
+						Operation: string(Snapshot + "-us-east-1"),
 					},
 					{
-						Cost:      float32(0.0027814815),
-						Operation: string(Snapshot),
-					},
-					{
-						Cost:      float32(0.751),
+						Cost:      float32(0.27983335),
 						Operation: string(ScannerInstance),
 					},
 					{
-						Cost:      float32(0.0013907407),
+						Cost:      float32(0.0005182099),
 						Operation: string(VolumeFromSnapshot),
 					},
 					{
-						Cost:      float32(0.0013907407),
+						Cost:      float32(0.0005182099),
 						Operation: string(ScannerRootVolume),
-					},
-					{
-						Cost:      float32(0),
-						Operation: string(DataTransfer),
 					},
 				},
 				Size:     utils.PointerTo(8),
-				Duration: utils.PointerTo(3306),
+				Duration: utils.PointerTo(479),
 			},
 			wantErr: false,
 		},
@@ -353,14 +336,12 @@ func TestScanEstimator_EstimateAssetScan(t *testing.T) {
 			s := &ScanEstimator{
 				priceFetcher: tt.fields.priceFetcher,
 			}
-			got, err := s.EstimateAssetScan(tt.args.ctx, tt.args.params)
+			got, err := s.EstimateAssetScan(context.TODO(), tt.args.params)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("EstimateAssetScan() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			B, err := json.Marshal(got)
 			assert.NilError(t, err)
-			t.Logf("got: %s", B)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("EstimateAssetScan() got = %v, want %v", got, tt.want)
 			}

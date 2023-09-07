@@ -64,6 +64,7 @@ func New(pricingClient *pricing.Client, ec2Client *ec2.Client) *ScanEstimator {
 const (
 	SecondsInAMonth = 86400 * 30
 	SecondsInAnHour = 60 * 60
+	MBInGB          = 1000
 )
 
 type recipeResource string
@@ -78,6 +79,7 @@ const (
 
 // Static times from lab tests of family scan duration in seconds per GB.
 // The tests were made on a t2.large instance with a gp2 volume.
+// nolint:gomnd
 var familyScanDurationPerGBMap = map[familiestypes.FamilyType]time.Duration{
 	familiestypes.SBOM:             time.Duration(4.5 * float64(time.Second)),
 	familiestypes.Vulnerabilities:  1 * time.Second, // TODO check time with no sbom scan
@@ -95,6 +97,7 @@ var familyScanDurationPerGBMap = map[familiestypes.FamilyType]time.Duration{
 // We are not taking into account Reserved Instances (RIs) or Saving Plans (SPs) since we don't know the exact OnDemand configuration in order to launch them.
 // In the future, we can let the user choose to use RI's or SP's as the scanner instances.
 
+// nolint:cyclop
 func (s *ScanEstimator) EstimateAssetScan(ctx context.Context, params EstimateAssetScanParams) (*models.Estimation, error) {
 	var sourceSnapshotMonthlyCost float64
 	var err error
@@ -109,11 +112,8 @@ func (s *ScanEstimator) EstimateAssetScan(ctx context.Context, params EstimateAs
 	if err != nil {
 		return nil, fmt.Errorf("failed to get scan size: %v", err)
 	}
-	scanSizeGB := float64(scanSizeMB) / 1000
-	scanDurationSec, err := getScanDuration(params.Stats, familiesConfig, scanSizeMB)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get scan duration: %v", err)
-	}
+	scanSizeGB := float64(scanSizeMB) / MBInGB
+	scanDurationSec := getScanDuration(params.Stats, familiesConfig, scanSizeMB)
 
 	marketOption := MarketOptionOnDemand
 	if params.AssetScanTemplate.UseSpotInstances() {
@@ -224,8 +224,10 @@ func (s *ScanEstimator) EstimateAssetScan(ctx context.Context, params EstimateAs
 }
 
 // Search in all the families stats and look for the first family (by random order) that has scan size stats for ROOTFS scan.
+// nolint:cyclop
 func getScanSize(stats models.AssetScanStats, asset *models.Asset) (int64, error) {
 	var scanSizeMB int64
+	const half = 2
 
 	sbomStats, ok := findMatchingStatsForInputTypeRootFS(stats.Sbom)
 	if ok {
@@ -281,13 +283,13 @@ func getScanSize(stats models.AssetScanStats, asset *models.Asset) (int64, error
 	if err != nil {
 		return 0, fmt.Errorf("failed to use asset info as vminfo: %v", err)
 	}
-	sourceVolumeSizeMB := int64(vminfo.RootVolume.SizeGB * 1000)
-	scanSizeMB = sourceVolumeSizeMB / 2 // Volumes are normally only about 50% full
+	sourceVolumeSizeMB := int64(vminfo.RootVolume.SizeGB * MBInGB)
+	scanSizeMB = sourceVolumeSizeMB / half // Volumes are normally only about 50% full
 
 	return scanSizeMB, nil
 }
 
-// findMatchingStatsForInputTypeRootFS will find the first stats for rootfs scan
+// findMatchingStatsForInputTypeRootFS will find the first stats for rootfs scan.
 func findMatchingStatsForInputTypeRootFS(stats *[]models.AssetScanInputScanStats) (models.AssetScanInputScanStats, bool) {
 	if stats == nil {
 		return models.AssetScanInputScanStats{}, false
@@ -312,10 +314,11 @@ func calculateStaticScanDuration(familyType familiestypes.FamilyType, scanSizeGB
 	return int64(familyScanDurationPerGBMap[familiestypes.SBOM].Seconds() * constantOfProportionality * math.Log(scanSizeGB))
 }
 
-func getScanDuration(stats models.AssetScanStats, familiesConfig *models.ScanFamiliesConfig, scanSizeMB int64) (duration int64, err error) {
+// nolint:cyclop
+func getScanDuration(stats models.AssetScanStats, familiesConfig *models.ScanFamiliesConfig, scanSizeMB int64) int64 {
 	var totalScanDuration int64
 
-	scanSizeGB := float64(scanSizeMB) / 1000
+	scanSizeGB := float64(scanSizeMB) / MBInGB
 
 	if familiesConfig.Sbom.IsEnabled() {
 		scanDuration := getScanDurationFromStats(stats.Sbom)
@@ -381,7 +384,7 @@ func getScanDuration(stats models.AssetScanStats, familiesConfig *models.ScanFam
 		}
 	}
 
-	return totalScanDuration, nil
+	return totalScanDuration
 }
 
 func getScanDurationFromStats(stats *[]models.AssetScanInputScanStats) int64 {

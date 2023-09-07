@@ -75,6 +75,7 @@ func (c Client) Kind() models.CloudProvider {
 
 func (c *Client) Estimate(ctx context.Context, assetScanStats models.AssetScanStats, asset *models.Asset, assetScanTemplate *models.AssetScanTemplate) (*models.Estimation, error) {
 	var err error
+	const jobCreationTimeConst = 2
 
 	vminfo, err := asset.AssetInfo.AsVMInfo()
 	if err != nil {
@@ -91,9 +92,9 @@ func (c *Client) Estimate(ctx context.Context, assetScanStats models.AssetScanSt
 	scannerInstanceType := c.config.ScannerInstanceType
 
 	scannerRootVolumeSizeGB := vminfo.RootVolume.SizeGB
-	scannerVolumeType := ec2types.VolumeTypeGp2       // TODO this should come from configuration once we support more than one volume type.
-	fromSnapshotVolumeType := ec2types.VolumeTypeGp2  // TODO this should come from configuration once we support more than one volume type.
-	jobCreationTimeSec := 2 * scannerRootVolumeSizeGB // TODO create a formula to calculate this per GB
+	scannerVolumeType := ec2types.VolumeTypeGp2                          // TODO this should come from configuration once we support more than one volume type.
+	fromSnapshotVolumeType := ec2types.VolumeTypeGp2                     // TODO this should come from configuration once we support more than one volume type.
+	jobCreationTimeSec := jobCreationTimeConst * scannerRootVolumeSizeGB // TODO create a formula to calculate this per GB
 
 	params := scanestimation.EstimateAssetScanParams{
 		SourceRegion:            sourceRegion,

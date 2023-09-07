@@ -274,7 +274,7 @@ func (s *AssetScanEstimationsTableHandler) checkUniqueness(assetScanEstimation m
 	// If ScanEstimation is set we need to check if there is another asset scan estimation with
 	// the same scanEstimation id and asset id.
 	var assetScanEstimations []AssetScanEstimation
-	filter := fmt.Sprintf("id ne '%s' and asset/id eq '%s' and scanEstimation/id eq '%s'", *assetScanEstimation.Id, assetScanEstimation.Asset.Id, assetScanEstimation.ScanEstimation.Id)
+	filter := fmt.Sprintf("id ne '%s' and asset/id eq '%s' and scanEstimation/id eq '%s'", *assetScanEstimation.Id, assetScanEstimation.Asset.Id, *assetScanEstimation.ScanEstimation.Id)
 	err := ODataQuery(s.DB, assetScanEstimationsSchemaName, &filter, nil, nil, nil, nil, nil, true, &assetScanEstimations)
 	if err != nil {
 		return models.AssetScanEstimation{}, err
@@ -286,7 +286,7 @@ func (s *AssetScanEstimationsTableHandler) checkUniqueness(assetScanEstimation m
 			return models.AssetScanEstimation{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 		}
 		return as, &common.ConflictError{
-			Reason: fmt.Sprintf("AssetScanEstimation exists with same asset id=%s and scanEstimation id=%s)", assetScanEstimation.Asset.Id, assetScanEstimation.ScanEstimation.Id),
+			Reason: fmt.Sprintf("AssetScanEstimation exists with same asset id=%s and scanEstimation id=%s)", assetScanEstimation.Asset.Id, *assetScanEstimation.ScanEstimation.Id),
 		}
 	}
 	return models.AssetScanEstimation{}, nil

@@ -1,3 +1,18 @@
+// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package rest
 
 import (
@@ -21,6 +36,7 @@ func (s *ServerImpl) GetScanEstimations(ctx echo.Context, params models.GetScanE
 
 	return sendResponse(ctx, http.StatusOK, scanEstimations)
 }
+
 func (s *ServerImpl) PostScanEstimations(ctx echo.Context) error {
 	var scanEstimation models.ScanEstimation
 	err := ctx.Bind(&scanEstimation)
@@ -41,6 +57,7 @@ func (s *ServerImpl) PostScanEstimations(ctx echo.Context) error {
 
 	return sendResponse(ctx, http.StatusCreated, createdScanEstimation)
 }
+
 func (s *ServerImpl) DeleteScanEstimationsScanEstimationID(ctx echo.Context, scanEstimationID models.ScanEstimationID) error {
 	success := models.Success{
 		Message: utils.PointerTo(fmt.Sprintf("scan estimation %v deleted", scanEstimationID)),
@@ -55,6 +72,7 @@ func (s *ServerImpl) DeleteScanEstimationsScanEstimationID(ctx echo.Context, sca
 
 	return sendResponse(ctx, http.StatusOK, &success)
 }
+
 func (s *ServerImpl) GetScanEstimationsScanEstimationID(ctx echo.Context, scanEstimationID models.ScanEstimationID, params models.GetScanEstimationsScanEstimationIDParams) error {
 	scanEstimation, err := s.dbHandler.ScanEstimationsTable().GetScanEstimation(scanEstimationID, params)
 	if err != nil {
@@ -65,6 +83,7 @@ func (s *ServerImpl) GetScanEstimationsScanEstimationID(ctx echo.Context, scanEs
 	}
 	return sendResponse(ctx, http.StatusOK, scanEstimation)
 }
+
 func (s *ServerImpl) PatchScanEstimationsScanEstimationID(ctx echo.Context, scanEstimationID models.ScanEstimationID, params models.PatchScanEstimationsScanEstimationIDParams) error {
 	var scanEstimation models.ScanEstimation
 	err := ctx.Bind(&scanEstimation)
@@ -97,6 +116,7 @@ func (s *ServerImpl) PatchScanEstimationsScanEstimationID(ctx echo.Context, scan
 
 	return sendResponse(ctx, http.StatusOK, updatedScanEstimation)
 }
+
 func (s *ServerImpl) PutScanEstimationsScanEstimationID(ctx echo.Context, scanEstimationID models.ScanEstimationID, params models.PutScanEstimationsScanEstimationIDParams) error {
 	var scanEstimation models.ScanEstimation
 	err := ctx.Bind(&scanEstimation)

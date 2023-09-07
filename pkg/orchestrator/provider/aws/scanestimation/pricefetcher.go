@@ -75,6 +75,11 @@ const (
 	usEast1RegionCode = "us-east-1"
 )
 
+const (
+	estimatedSnapshotCostInCaseOfError = 0.05
+	estimatedDataTransferCost          = 0.02
+)
+
 func (o *PriceFetcherImpl) GetSnapshotMonthlyCostPerGB(ctx context.Context, regionCode string) (float64, error) {
 	var usageType string
 	if regionCode == usEast1RegionCode {
@@ -92,7 +97,8 @@ func (o *PriceFetcherImpl) GetSnapshotMonthlyCostPerGB(ctx context.Context, regi
 	if err != nil {
 		// If we could not find the snapshot price from the api, use an estimated price based on the current pricing (5.9.23)
 		// https://aws.amazon.com/ebs/pricing/
-		return 0.05, nil
+		// nolint:nilerr
+		return estimatedSnapshotCostInCaseOfError, nil
 	}
 	return price, nil
 }
@@ -120,7 +126,7 @@ func (o *PriceFetcherImpl) GetDataTransferCostPerGB(sourceRegion, destRegion str
 	// TODO (erezf) currently I could not find a reliable way to get the data transfer cost from the offer file.
 	// 0.02 seems to be a unified price across regions according to https://aws.amazon.com/ec2/pricing/on-demand/
 	// This price will probably change in the future, so need to think of a way to keep it updated.
-	return 0.02, nil
+	return estimatedDataTransferCost, nil
 }
 
 func (o *PriceFetcherImpl) GetInstancePerHourCost(ctx context.Context, regionCode string, instanceType ec2types.InstanceType, marketOption MarketOption) (float64, error) {
@@ -191,15 +197,19 @@ func (o *PriceFetcherImpl) getPricePerUnit(ctx context.Context, usageType, opera
 		return 0, fmt.Errorf("failed to get products. usageType=%v: %v", usageType, err)
 	}
 	if len(products.PriceList) != 1 {
-		return 0, fmt.Errorf("excpecting excatly one product in price list, got %v", len(products.PriceList))
+		return 0, fmt.Errorf("excpecting exactly one product in price list, got %v", len(products.PriceList))
 	}
 
-	priceStr, err := getPricePerUnitFromJsonPriceList(products.PriceList[0])
+	priceStr, err := getPricePerUnitFromJSONPriceList(products.PriceList[0])
 	if err != nil {
 		return 0, fmt.Errorf("failed to get pricePerUnit from json price list: %v", err)
 	}
 
-	return strconv.ParseFloat(priceStr, 64)
+	price, err := strconv.ParseFloat(priceStr, 64)
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse float %v: %v", priceStr, err)
+	}
+	return price, nil
 }
 
 func createGetProductsFilters(usageType, serviceCode, operation string) []types.Filter {
@@ -276,7 +286,7 @@ func createGetProductsFilters(usageType, serviceCode, operation string) []types.
 }
 More details on: https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/procedures.html
 */
-func getPricePerUnitFromJsonPriceList(jsonPriceList string) (string, error) {
+func getPricePerUnitFromJSONPriceList(jsonPriceList string) (string, error) {
 	var productMap map[string]any
 	err := json.Unmarshal([]byte(jsonPriceList), &productMap)
 	if err != nil {

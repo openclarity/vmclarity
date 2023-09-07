@@ -159,6 +159,8 @@ func (w *Watcher) Reconcile(ctx context.Context, event AssetScanEstimationReconc
 		if err = w.reconcileAborted(ctx, &assetScanEstimation); err != nil {
 			return err
 		}
+	case models.AssetScanEstimationStateStateFailed, models.AssetScanEstimationStateStateDone:
+		fallthrough
 	default:
 	}
 
@@ -212,7 +214,7 @@ func (w *Watcher) reconcilePending(ctx context.Context, assetScanEstimation *mod
 	var retryableError provider.RetryableError
 	switch {
 	case errors.As(err, &fatalError):
-		logger.Errorf("Failed to estimate asset scan: %v", err)
+		logger.Errorf("Fatal error while estimating asset scan: %v", err)
 		assetScanEstimation.State.State = utils.PointerTo(models.AssetScanEstimationStateStateFailed)
 		assetScanEstimation.State.StateMessage = utils.PointerTo(fatalError.Error())
 		assetScanEstimation.State.StateReason = utils.PointerTo(models.AssetScanEstimationStateStateReasonUnexpected)
@@ -220,8 +222,7 @@ func (w *Watcher) reconcilePending(ctx context.Context, assetScanEstimation *mod
 		// nolint:wrapcheck
 		return common.NewRequeueAfterError(retryableError.RetryAfter(), retryableError.Error())
 	case err != nil:
-		logger.Errorf("Failed to estimate asset scan. Retrying after %v: %v", w.pollPeriod, err)
-		return common.NewRequeueAfterError(w.pollPeriod, err.Error())
+		return fmt.Errorf("failed to estimate asset scan: %v", err)
 	default:
 		logger.Infof("Asset scan estimation completed successfully. Estimation=%v", estimation)
 		assetScanEstimation.State.State = utils.PointerTo(models.AssetScanEstimationStateStateDone)
@@ -264,7 +265,7 @@ func (w *Watcher) reconcileAborted(ctx context.Context, assetScanEstimation *mod
 
 	assetScanEstimation.State.State = utils.PointerTo(models.AssetScanEstimationStateStateFailed)
 	assetScanEstimation.State.LastTransitionTime = utils.PointerTo(now)
-	assetScanEstimation.State.StateMessage = utils.PointerTo(fmt.Sprintf("asset scan estimation was aborted"))
+	assetScanEstimation.State.StateMessage = utils.PointerTo("asset scan estimation was aborted")
 	assetScanEstimation.State.StateReason = utils.PointerTo(models.AssetScanEstimationStateStateReasonAborted)
 
 	assetScanEstimationPatch := models.AssetScanEstimation{
@@ -275,7 +276,7 @@ func (w *Watcher) reconcileAborted(ctx context.Context, assetScanEstimation *mod
 		return fmt.Errorf("failed to update AssetScanEstimation. AssetScanEstimation=%s: %w", assetScanEstimationID, err)
 	}
 
-	logger.Infof("AssetScanEstimation succesfully aborted. AssetScanEstimationID=%v", assetScanEstimationID)
+	logger.Infof("AssetScanEstimation successfully aborted. AssetScanEstimationID=%v", assetScanEstimationID)
 
 	return nil
 }
