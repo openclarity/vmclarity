@@ -52,7 +52,7 @@ const (
 	GrypeServerAddress            = "GRYPE_SERVER_ADDRESS"
 	GrypeServerTimeout            = "GRYPE_SERVER_TIMEOUT"
 	ChkrootkitBinaryPath          = "CHKROOTKIT_BINARY_PATH"
-	YaraRuleServerAddress         = "YARA_RULE_SERVER_ADDRESS"
+	YaraRuleServerAddress         = "YARA_RULE_SERVER_ADDRESS" // nolint:gosec
 	YaraBinaryPath                = "YARA_BINARY_PATH"
 
 	ScanConfigPollingInterval  = "SCAN_CONFIG_POLLING_INTERVAL"
