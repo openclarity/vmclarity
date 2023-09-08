@@ -18,6 +18,7 @@ package scanestimation
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -164,11 +165,11 @@ func (o *PriceFetcherImpl) getSpotInstancePerHourCost(ctx context.Context, regio
 		options.Region = regionCode
 	})
 	if err != nil {
-		return 0, fmt.Errorf("failed to describe spot price history: %v", err)
+		return 0, fmt.Errorf("failed to describe spot price history: %w", err)
 	}
 
 	if len(ret.SpotPriceHistory) == 0 {
-		return 0, fmt.Errorf("failed to find spot instances history")
+		return 0, errors.New("failed to find spot instances history")
 	}
 
 	// take the latest price (most updated)
@@ -176,7 +177,7 @@ func (o *PriceFetcherImpl) getSpotInstancePerHourCost(ctx context.Context, regio
 
 	price, err := strconv.ParseFloat(*spotPrice, 64)
 	if err != nil {
-		return 0, fmt.Errorf("failed to parse float %v: %v", *spotPrice, err)
+		return 0, fmt.Errorf("failed to parse float %v: %w", *spotPrice, err)
 	}
 
 	return price, nil
@@ -194,20 +195,20 @@ func (o *PriceFetcherImpl) getPricePerUnit(ctx context.Context, usageType, opera
 		options.Region = usEast1RegionCode
 	})
 	if err != nil {
-		return 0, fmt.Errorf("failed to get products. usageType=%v: %v", usageType, err)
+		return 0, fmt.Errorf("failed to get products. usageType=%v: %w", usageType, err)
 	}
 	if len(products.PriceList) != 1 {
-		return 0, fmt.Errorf("excpecting exactly one product in price list, got %v", len(products.PriceList))
+		return 0, fmt.Errorf("expecting exactly one product in price list, got %v", len(products.PriceList))
 	}
 
 	priceStr, err := getPricePerUnitFromJSONPriceList(products.PriceList[0])
 	if err != nil {
-		return 0, fmt.Errorf("failed to get pricePerUnit from json price list: %v", err)
+		return 0, fmt.Errorf("failed to get pricePerUnit from json price list: %w", err)
 	}
 
 	price, err := strconv.ParseFloat(priceStr, 64)
 	if err != nil {
-		return 0, fmt.Errorf("failed to parse float %v: %v", priceStr, err)
+		return 0, fmt.Errorf("failed to parse float %v: %w", priceStr, err)
 	}
 	return price, nil
 }
@@ -290,7 +291,7 @@ func getPricePerUnitFromJSONPriceList(jsonPriceList string) (string, error) {
 	var productMap map[string]any
 	err := json.Unmarshal([]byte(jsonPriceList), &productMap)
 	if err != nil {
-		return "", fmt.Errorf("failed to unmarshal. jsonPriceList=%s:  %v", jsonPriceList, err)
+		return "", fmt.Errorf("failed to unmarshal. jsonPriceList=%s: %w", jsonPriceList, err)
 	}
 	termsMap, ok := productMap["terms"].(map[string]any)
 	if !ok {
@@ -339,5 +340,5 @@ func getFirstValueFromMap(m map[string]any) (map[string]any, error) {
 
 		return ret, nil
 	}
-	return nil, fmt.Errorf("map is empty")
+	return nil, errors.New("map is empty")
 }

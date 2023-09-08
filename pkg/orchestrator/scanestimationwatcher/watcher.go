@@ -417,9 +417,9 @@ func updateScanEstimationSummaryFromAssetScanEstimation(scanEstimation *models.S
 		if s.TotalScanCost == nil {
 			s.TotalScanCost = utils.PointerTo(float32(0))
 		}
-		*(s.TotalScanTime) += utils.IntPointerValOrEmpty(assetScanEstimation.Estimation.Duration)
-		*(s.TotalScanSize) += utils.IntPointerValOrEmpty(assetScanEstimation.Estimation.Size)
-		*(s.TotalScanCost) += utils.Float32PointerValOrEmpty(assetScanEstimation.Estimation.Cost)
+		*(s.TotalScanTime) += utils.ValueOrZero(assetScanEstimation.Estimation.Duration)
+		*(s.TotalScanSize) += utils.ValueOrZero(assetScanEstimation.Estimation.Size)
+		*(s.TotalScanCost) += utils.ValueOrZero(assetScanEstimation.Estimation.Cost)
 		fallthrough
 	case models.AssetScanEstimationStateStateAborted, models.AssetScanEstimationStateStateFailed:
 		s.JobsCompleted = utils.PointerTo(*s.JobsCompleted + 1)

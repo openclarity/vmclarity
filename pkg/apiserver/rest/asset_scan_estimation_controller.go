@@ -32,7 +32,7 @@ import (
 func (s *ServerImpl) GetAssetScanEstimations(ctx echo.Context, params models.GetAssetScanEstimationsParams) error {
 	dbAssetScanEstimations, err := s.dbHandler.AssetScanEstimationsTable().GetAssetScanEstimations(params)
 	if err != nil {
-		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get asset scan estimations results from db: %v", err))
+		return sendError(ctx, http.StatusInternalServerError, fmt.Errorf("failed to get asset scan estimations results from db: %w", err).Error())
 	}
 
 	return sendResponse(ctx, http.StatusOK, dbAssetScanEstimations)

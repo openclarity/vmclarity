@@ -79,12 +79,12 @@ func (c *Client) Estimate(ctx context.Context, assetScanStats models.AssetScanSt
 
 	vminfo, err := asset.AssetInfo.AsVMInfo()
 	if err != nil {
-		return nil, fmt.Errorf("failed to use asset info as vminfo: %v", err)
+		return nil, fmt.Errorf("failed to use asset info as vminfo: %w", err)
 	}
 
 	location, err := NewLocation(vminfo.Location)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse location %v: %v", vminfo.Location, err)
+		return nil, fmt.Errorf("failed to parse location %v: %w", vminfo.Location, err)
 	}
 
 	sourceRegion := location.Region
@@ -110,7 +110,7 @@ func (c *Client) Estimate(ctx context.Context, assetScanStats models.AssetScanSt
 	}
 	ret, err := c.scanEstimator.EstimateAssetScan(ctx, params)
 	if err != nil {
-		return nil, fmt.Errorf("failed to estimate asset scan: %v", err)
+		return nil, fmt.Errorf("failed to estimate asset scan: %w", err)
 	}
 
 	return ret, nil

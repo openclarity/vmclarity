@@ -203,7 +203,7 @@ func (w *Watcher) reconcilePending(ctx context.Context, assetScanEstimation *mod
 
 	asset, err := assetScanEstimation.Asset.ToAsset()
 	if err != nil {
-		return fmt.Errorf("failed to convert assetRelationship to asset: %v", err)
+		return fmt.Errorf("failed to convert assetRelationship to asset: %w", err)
 	}
 
 	stats := w.getLatestAssetScanStats(ctx, asset)
@@ -222,7 +222,7 @@ func (w *Watcher) reconcilePending(ctx context.Context, assetScanEstimation *mod
 		// nolint:wrapcheck
 		return common.NewRequeueAfterError(retryableError.RetryAfter(), retryableError.Error())
 	case err != nil:
-		return fmt.Errorf("failed to estimate asset scan: %v", err)
+		return fmt.Errorf("failed to estimate asset scan: %w", err)
 	default:
 		logger.Infof("Asset scan estimation completed successfully. Estimation=%v", estimation)
 		assetScanEstimation.State.State = utils.PointerTo(models.AssetScanEstimationStateStateDone)

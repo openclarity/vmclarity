@@ -17,6 +17,7 @@ package scanestimation
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"time"
@@ -103,14 +104,14 @@ func (s *ScanEstimator) EstimateAssetScan(ctx context.Context, params EstimateAs
 	var err error
 
 	if params.AssetScanTemplate == nil || params.AssetScanTemplate.ScanFamiliesConfig == nil {
-		return nil, fmt.Errorf("scan families config was not provided")
+		return nil, errors.New("scan families config was not provided")
 	}
 	familiesConfig := params.AssetScanTemplate.ScanFamiliesConfig
 
 	// Get scan size and scan duration using previous stats and asset info.
 	scanSizeMB, err := getScanSize(params.Stats, params.Asset)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get scan size: %v", err)
+		return nil, fmt.Errorf("failed to get scan size: %w", err)
 	}
 	scanSizeGB := float64(scanSizeMB) / MBInGB
 	scanDurationSec := getScanDuration(params.Stats, familiesConfig, scanSizeMB)
@@ -132,25 +133,25 @@ func (s *ScanEstimator) EstimateAssetScan(ctx context.Context, params EstimateAs
 	// Fetch the dest snapshot monthly cost.
 	destSnapshotMonthlyCost, err := s.priceFetcher.GetSnapshotMonthlyCostPerGB(ctx, destRegion)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get dest snapshot monthly cost: %v", err)
+		return nil, fmt.Errorf("failed to get monthly cost for destination snapshot: %w", err)
 	}
 
-	// Fetch the scanner job monthly cost.
+	// Fetch the scanner instance hourly cost.
 	scannerPerHourCost, err := s.priceFetcher.GetInstancePerHourCost(ctx, destRegion, scannerInstanceType, marketOption)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get scanner per hour cost: %v", err)
+		return nil, fmt.Errorf("failed to get scanner per hour cost: %w", err)
 	}
 
 	// Fetch the scanner job volume monthly cost.
 	scannerRootVolumeMonthlyCost, err := s.priceFetcher.GetVolumeMonthlyCostPerGB(ctx, destRegion, scannerVolumeType)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get volume monthly cost per GB: %v", err)
+		return nil, fmt.Errorf("failed to get volume monthly cost per GB: %w", err)
 	}
 
 	// Fetch the monthly cost of the volume that was created from the snapshot.
 	volumeFromSnapshotMonthlyCost, err := s.priceFetcher.GetVolumeMonthlyCostPerGB(ctx, destRegion, fromSnapshotVolumeType)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get volume monthly cost per GB: %v", err)
+		return nil, fmt.Errorf("failed to get volume monthly cost per GB: %w", err)
 	}
 
 	dataTransferCost := 0.0
@@ -160,7 +161,7 @@ func (s *ScanEstimator) EstimateAssetScan(ctx context.Context, params EstimateAs
 		// source region.
 		sourceSnapshotMonthlyCost, err = s.priceFetcher.GetSnapshotMonthlyCostPerGB(ctx, sourceRegion)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get source snapshot monthly cost: %v", err)
+			return nil, fmt.Errorf("failed to get source snapshot monthly cost: %w", err)
 		}
 
 		sourceSnapshotCost = sourceSnapshotMonthlyCost * ((float64(jobCreationTimeSec + scanDurationSec)) / SecondsInAMonth) * scanSizeGB
@@ -168,7 +169,7 @@ func (s *ScanEstimator) EstimateAssetScan(ctx context.Context, params EstimateAs
 		// Fetch the data transfer cost per GB (if source and dest regions are the same, this will be 0).
 		dataTransferCostPerGB, err := s.priceFetcher.GetDataTransferCostPerGB(sourceRegion, destRegion)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get data transfer cost per GB: %v", err)
+			return nil, fmt.Errorf("failed to get data transfer cost per GB: %w", err)
 		}
 
 		dataTransferCost = dataTransferCostPerGB * scanSizeGB
@@ -281,7 +282,7 @@ func getScanSize(stats models.AssetScanStats, asset *models.Asset) (int64, error
 	// if scan size was not found from the previous scan stats, estimate the scan size from the asset root volume size
 	vminfo, err := asset.AssetInfo.AsVMInfo()
 	if err != nil {
-		return 0, fmt.Errorf("failed to use asset info as vminfo: %v", err)
+		return 0, fmt.Errorf("failed to use asset info as vminfo: %w", err)
 	}
 	sourceVolumeSizeMB := int64(vminfo.RootVolume.SizeGB * MBInGB)
 	scanSizeMB = sourceVolumeSizeMB / half // Volumes are normally only about 50% full
