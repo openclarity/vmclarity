@@ -64,7 +64,7 @@ const (
 
 	AssetScanPollingInterval  = "ASSET_SCAN_POLLING_INTERVAL"
 	AssetScanReconcileTimeout = "ASSET_SCAN_RECONCILE_TIMEOUT"
-	AssetScanAbortTimeout     = "ASSET_SCAN_ABORT_TIMEOUT"
+	AssetScanAbortTimeout     = "ASSET_SCAN_ABORT_TIMEOUT" // nolint:gosec
 
 	AssetScanProcessorPollingInterval  = "ASSET_SCAN_PROCESSOR_POLLING_INTERVAL"
 	AssetScanProcessorReconcileTimeout = "ASSET_SCAN_PROCESSOR_RECONCILE_TIMEOUT"
@@ -151,6 +151,8 @@ func LoadConfig() (*Config, error) {
 		providerKind = models.Docker
 	case strings.ToLower(string(models.External)):
 		providerKind = models.External
+	case strings.ToLower(string(models.Kubernetes)):
+		providerKind = models.Kubernetes
 	case strings.ToLower(string(models.AWS)):
 		fallthrough
 	default:

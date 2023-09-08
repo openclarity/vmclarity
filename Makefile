@@ -127,12 +127,14 @@ test: ## Run Unit Tests
 	@go test ./...
 
 .PHONY: e2e
-e2e: docker-apiserver docker-cli docker-orchestrator ## Run go e2e test against code
+e2e: docker-apiserver docker-cli docker-orchestrator docker-ui docker-ui-backend ## Run go e2e test against code
 	@cd e2e && \
 	export APIServerContainerImage=${DOCKER_REGISTRY}/vmclarity-apiserver:${DOCKER_TAG} && \
 	export OrchestratorContainerImage=${DOCKER_REGISTRY}/vmclarity-orchestrator:${DOCKER_TAG} && \
 	export ScannerContainerImage=${DOCKER_REGISTRY}/vmclarity-cli:${DOCKER_TAG} && \
-    go test -v -failfast -test.v -test.paniconexit0 -timeout 2h -ginkgo.v .
+	export UIContainerImage=${DOCKER_REGISTRY}/vmclarity-ui:${DOCKER_TAG} && \
+	export UIBackendContainerImage=${DOCKER_REGISTRY}/vmclarity-ui-backend:${DOCKER_TAG} && \
+	go test -v -failfast -test.v -test.paniconexit0 -timeout 2h -ginkgo.v .
 
 .PHONY: clean-ui
 clean-ui:
@@ -146,7 +148,7 @@ $(BIN_DIR):
 
 GOLANGCI_BIN := $(BIN_DIR)/golangci-lint
 GOLANGCI_CONFIG := $(ROOT_DIR)/.golangci.yml
-GOLANGCI_VERSION := 1.52.2
+GOLANGCI_VERSION := 1.54.2
 
 bin/golangci-lint: bin/golangci-lint-$(GOLANGCI_VERSION)
 	@ln -sf golangci-lint-$(GOLANGCI_VERSION) bin/golangci-lint

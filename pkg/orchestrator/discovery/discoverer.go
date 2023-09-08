@@ -68,13 +68,11 @@ func (d *Discoverer) Start(ctx context.Context) {
 func (d *Discoverer) DiscoverAndCreateAssets(ctx context.Context) error {
 	discoveryTime := time.Now()
 
-	assetTypes, err := d.providerClient.DiscoverAssets(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to discover assets from provider: %w", err)
-	}
+	discoverer := d.providerClient.DiscoverAssets(ctx)
 
 	errs := []error{}
-	for _, assetType := range assetTypes {
+	failedPatchAssets := make(map[string]struct{})
+	for assetType := range discoverer.Chan() {
 		assetData := models.Asset{
 			AssetInfo: utils.PointerTo(assetType),
 			LastSeen:  &discoveryTime,
@@ -94,7 +92,7 @@ func (d *Discoverer) DiscoverAndCreateAssets(ctx context.Context) error {
 			// because discovering the assets is a heavy operation,
 			// so we want to give the best chance to create all the
 			// assets in the DB before failing.
-			errs = append(errs, fmt.Errorf("failed to post asset: %v", err))
+			errs = append(errs, fmt.Errorf("failed to post asset: %w", err))
 			continue
 		}
 
@@ -104,8 +102,13 @@ func (d *Discoverer) DiscoverAndCreateAssets(ctx context.Context) error {
 		assetData.FirstSeen = nil
 		err = d.backendClient.PatchAsset(ctx, assetData, *conflictError.ConflictingAsset.Id)
 		if err != nil {
-			errs = append(errs, fmt.Errorf("failed to patch asset: %v", err))
+			failedPatchAssets[*conflictError.ConflictingAsset.Id] = struct{}{}
+			errs = append(errs, fmt.Errorf("failed to patch asset: %w", err))
 		}
+	}
+
+	if err := discoverer.Err(); err != nil {
+		return fmt.Errorf("failed to discover assets: %v", err)
 	}
 
 	// Find all assets which are not already terminatedOn and were not
@@ -127,13 +130,18 @@ func (d *Discoverer) DiscoverAndCreateAssets(ctx context.Context) error {
 	// Patch all assets which were not found by this discovery as
 	// terminated by setting terminatedOn.
 	for _, asset := range *assetResp.Items {
+		// Skip mark terminated if asset found but patch failed.
+		if _, ok := failedPatchAssets[*asset.Id]; ok {
+			continue
+		}
+
 		assetData := models.Asset{
 			TerminatedOn: &discoveryTime,
 		}
 
 		err := d.backendClient.PatchAsset(ctx, assetData, *asset.Id)
 		if err != nil {
-			errs = append(errs, fmt.Errorf("failed to patch asset: %v", err))
+			errs = append(errs, fmt.Errorf("failed to patch asset: %w", err))
 		}
 	}
 
