@@ -1677,32 +1677,41 @@ components:
             $ref: '#/components/schemas/AssetScan'
           readOnly: true
 
-    ResourceCleanupState:
+    CommonStatus:
       type: object
       properties:
-        state:
-          type: string
-          enum:
-            - Pending
-            - Skipped
-            - Failed
-            - Done
-          description: |
-            Describes the state of resource cleanup.
-
-            | State   | Description                                                |
-            | ------- | ---------------------------------------------------------- |
-            | Pending | Initial state for cleaning up resources                    |
-            | Skipped | Resource cleanup has been skipped due to Delete Job Policy |
-            | Failed  | Cleaning up resources has been failed                      |
-            | Done    | Resources have been successfully cleaned up                |
         reason:
           type: string
+          description: Machine readable message.
         message:
           type: string
+          description: Human readable message.
         lastTransitionTime:
           type: string
           format: date-time
+          description: Last date time when the status has changed.
+
+    ResourceCleanupStatus:
+      allOf:
+        - $ref: '#/components/schemas/CommonStatus'
+        - type: object
+          properties:
+            state:
+              type: string
+              enum:
+                - Pending
+                - Skipped
+                - Failed
+                - Done
+              description: |
+                Describes the state of resource cleanup.
+    
+                | State   | Description                                                |
+                | ------- | ---------------------------------------------------------- |
+                | Pending | Initial state for cleaning up resources                    |
+                | Skipped | Resource cleanup has been skipped due to Delete Job Policy |
+                | Failed  | Cleaning up resources has been failed                      |
+                | Done    | Resources have been successfully cleaned up                |
 
     AssetScanTemplate:
       type: object
@@ -1756,7 +1765,7 @@ components:
             findingsProcessed:
               type: boolean
             resourceCleanup:
-              $ref: '#/components/schemas/ResourceCleanupState'
+              $ref: '#/components/schemas/ResourceCleanupStatus'
             stats:
               $ref: '#/components/schemas/AssetScanStats'
             summary:
@@ -1872,7 +1881,7 @@ components:
               type: boolean
               readOnly: true
             resourceCleanup:
-              $ref: '#/components/schemas/ResourceCleanupState'
+              $ref: '#/components/schemas/ResourceCleanupStatus'
               readOnly: true
             stats:
               $ref: '#/components/schemas/AssetScanStats'
@@ -1946,67 +1955,58 @@ components:
           $ref: '#/components/schemas/AssetScannerStatus'
 
     AssetScanStatus:
-      type: object
-      properties:
-        state:
-          type: string
-          enum:
-            - Pending
-            - Scheduled
-            - ReadyToScan
-            - InProgress
-            - Aborted
-            - Failed
-            - Done
-          description: |
-            Describes the state of ScanResult.
-            
-            | State       | Description                                                                                       |
-            | ----------- | ------------------------------------------------------------------------------------------------- |
-            | Pending     | Initial state for ScanResult waiting for being scheduled                                          |
-            | Scheduled   | ScanResult which has been scheduled on Provider                                                   |
-            | ReadyToScan | Provider acknowledged that scanner for ScanResult is ready to run                                 |
-            | InProgress  | Scanners are being run on the Target                                                              |
-            | Aborted     | ScanResult has been aborted and all running Scanners need to be cancelled and shutdown gracefully |
-            | Failed      | Running Scanners on Target has failed, check *reason* and *message* fields for the details        |
-            | Done        | Running Scanners on Target has finished with no errors                                            |
-        reason:
-          type: string
-        message:
-          type: string
-        lastTransitionTime:
-          type: string
-          format: date-time
+      allOf:
+        - $ref: "#/components/schemas/CommonStatus"
+        - type: object
+          properties:
+            state:
+              type: string
+              enum:
+                - Pending
+                - Scheduled
+                - ReadyToScan
+                - InProgress
+                - Aborted
+                - Failed
+                - Done
+              description: |
+                Describes the state of scan result.
+                
+                | State       | Description                                                                                       |
+                | ----------- | ------------------------------------------------------------------------------------------------- |
+                | Pending     | Initial state for ScanResult waiting for being scheduled                                          |
+                | Scheduled   | ScanResult which has been scheduled on Provider                                                   |
+                | ReadyToScan | Provider acknowledged that scanner for ScanResult is ready to run                                 |
+                | InProgress  | Scanners are being run on the Target                                                              |
+                | Aborted     | ScanResult has been aborted and all running Scanners need to be cancelled and shutdown gracefully |
+                | Failed      | Running Scanners on Target has failed, check *reason* and *message* fields for the details        |
+                | Done        | Running Scanners on Target has finished with no errors                                            |
 
     AssetScannerStatus:
-      type: object
-      properties:
-        state:
-          type: string
-          enum:
-            - Pending
-            - InProgress
-            - Aborted
-            - Skipped
-            - Failed
-            - Done
-          description: |
-            Describes the scanner state.
-            
-            | State       | Description                                                                           |
-            | ----------- | ------------------------------------------------------------------------------------- |
-            | Pending     | Scanner is scheduled and waiting for ScanResult state transition to ReadyToScan state |
-            | InProgress  | Scanning is being performed                                                           |
-            | Skipped     | Scanner is **not** scheduled                                                          |
-            | Failed      | Scanner has failed, check *reason* and *message* fields for the details               |
-            | Done        | Scanner has finished scanning with no errors                                          |
-        reason:
-          type: string
-        message:
-          type: string
-        lastTransitionTime:
-          type: string
-          format: date-time
+      allOf:
+        - $ref: "#/components/schemas/CommonStatus"
+        - type: object
+          properties:
+            state:
+              type: string
+              enum:
+                - Pending
+                - InProgress
+                - Aborted
+                - Skipped
+                - Failed
+                - Done
+              description: |
+                Describes the state of a scanner on the asset.
+                
+                | State       | Description                                                                           |
+                | ----------- | ------------------------------------------------------------------------------------- |
+                | Pending     | Scanner is scheduled and waiting for ScanResult state transition to ReadyToScan state |
+                | InProgress  | Scanning is being performed                                                           |
+                | Aborted     | Scanning is aborted, check *reason* and *message* fields for the details              |
+                | Skipped     | Scanner is **not** scheduled                                                          |
+                | Failed      | Scanner has failed, check *reason* and *message* fields for the details               |
+                | Done        | Scanner has finished scanning with no errors                                          |
 
     Package:
       type: object

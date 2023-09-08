@@ -15,6 +15,10 @@
 
 package models
 
+import (
+	"fmt"
+)
+
 func (r *AssetScan) GetGeneralState() (AssetScanStateState, bool) {
 	var state AssetScanStateState
 	var ok bool
@@ -89,4 +93,24 @@ func (r *AssetScan) HasErrors() bool {
 	}
 
 	return has
+}
+
+type StateMachine map[AssetScanStatusState][]AssetScanStatusState
+
+var validTransitions = StateMachine{
+	AssetScanStatusStatePending: {
+		AssetScanStatusStateScheduled,
+	},
+}
+
+func (s *AssetScanStatus) Update(to AssetScanStatusState) error {
+	transitions := validTransitions[*s.State]
+	for _, t := range transitions {
+		if t == to {
+			s.State = &to
+			return nil
+		}
+	}
+
+	return fmt.Errorf("invalid transition, from: %s to: %s", *s.State, to)
 }

@@ -83,12 +83,17 @@ func (s *ServerImpl) PatchAssetScansAssetScanID(ctx echo.Context, assetScanID mo
 	}
 
 	// check that an asset scan with that id exists.
-	_, err = s.dbHandler.AssetScansTable().GetAssetScan(assetScanID, models.GetAssetScansAssetScanIDParams{})
+	existingAssetScan, err := s.dbHandler.AssetScansTable().GetAssetScan(assetScanID, models.GetAssetScansAssetScanIDParams{})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("asset scan was not found. assetScanID=%v: %v", assetScanID, err))
 		}
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get asset scan. assetScanID=%v: %v", assetScanID, err))
+	}
+
+	err = existingAssetScan.Status.Update(*assetScan.Status.State)
+	if err != nil {
+		return sendError(ctx, http.StatusBadRequest, err.Error())
 	}
 
 	// PATCH request might not contain the ID in the body, so set it from
