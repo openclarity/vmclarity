@@ -88,6 +88,10 @@ func (c Client) Kind() models.CloudProvider {
 	return models.GCP
 }
 
+func (c *Client) Estimate(ctx context.Context, stats models.AssetScanStats, asset *models.Asset, assetScanTemplate *models.AssetScanTemplate) (*models.Estimation, error) {
+	return &models.Estimation{}, provider.FatalErrorf("Not Implemented")
+}
+
 // nolint:cyclop
 func (c *Client) RunAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
 	// convert AssetInfo to vmInfo
@@ -197,7 +201,7 @@ func (c *Client) DiscoverAssets(ctx context.Context) provider.AssetDiscoverer {
 
 		regions, err := c.listAllRegions(ctx)
 		if err != nil {
-			assetDiscoverer.Error = fmt.Errorf("failed to list all regions: %v", err)
+			assetDiscoverer.Error = fmt.Errorf("failed to list all regions: %w", err)
 			return
 		}
 

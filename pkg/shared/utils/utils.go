@@ -57,12 +57,23 @@ func PointerTo[T any](value T) *T {
 	return &value
 }
 
+<<<<<<< HEAD
 func PointerToStringOrNil(s string) *string {
 	if s == "" {
 		return nil
 	}
 
 	return &s
+=======
+// ValueOrZero returns the value that the pointer ptr pointers to. It returns
+// the zero value if ptr is nil.
+func ValueOrZero[T any](ptr *T) T {
+	var t T
+	if ptr != nil {
+		t = *ptr
+	}
+	return t
+>>>>>>> origin/main
 }
 
 func StringPointerValOrEmpty(val *string) string {
@@ -73,6 +84,13 @@ func StringPointerValOrEmpty(val *string) string {
 }
 
 func Int32PointerValOrEmpty(val *int32) int32 {
+	if val == nil {
+		return 0
+	}
+	return *val
+}
+
+func IntPointerValOrEmpty(val *int) int {
 	if val == nil {
 		return 0
 	}
