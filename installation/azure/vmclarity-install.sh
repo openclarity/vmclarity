@@ -319,6 +319,7 @@ services:
       - source: swagger_config
         target: /usr/share/nginx/html/swagger-config.json
 
+
 configs:
   gateway_config:
     file: ./gateway.conf
