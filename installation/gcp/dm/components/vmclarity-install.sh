@@ -277,11 +277,13 @@ services:
       - run
     ports:
       - "9993:8080"
+    configs:
+      - source: yara_rule_server_config
+        target: /etc/yara-rule-server/config.yaml
     volumes:
       - type: bind
         source: /opt/yara-rule-server
         target: /var/lib/yara-rule-server
-      - /etc/vmclarity/yara-rule-server.yaml:/etc/yara-rule-server/config.yaml
     logging:
       driver: journald
     deploy:
@@ -318,6 +320,8 @@ configs:
     file: ./gateway.conf
   swagger_config:
     file: ./swagger-config.json
+  yara_rule_server_config:
+    file: ./yara-rule-server.yaml
 EOF
 
 cat << 'EOF' > /etc/vmclarity/swagger-config.json
