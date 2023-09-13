@@ -112,6 +112,13 @@ func (s *AssetScansTableHandler) CreateAssetScan(assetScan models.AssetScan) (mo
 		}
 	}
 
+	// Check the user wants to create a resource cleanup with other status than pending
+	if *assetScan.ResourceCleanup.State != models.ResourceCleanupStatusStatePending {
+		return models.AssetScan{}, &common.BadRequestError{
+			Reason: "cleanup state can not be other than pending",
+		}
+	}
+
 	// Generate a new UUID
 	assetScan.Id = utils.PointerTo(uuid.New().String())
 

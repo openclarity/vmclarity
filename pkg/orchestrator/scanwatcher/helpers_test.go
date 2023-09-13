@@ -16,11 +16,11 @@
 package scanwatcher
 
 import (
-	"testing"
-
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
 	"k8s.io/apimachinery/pkg/util/uuid"
+	"testing"
+	"time"
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
@@ -29,6 +29,7 @@ import (
 func TestNewAssetScanFromScan(t *testing.T) {
 	scanID := string(uuid.NewUUID())
 	assetID := string(uuid.NewUUID())
+	transitionTime := time.Now()
 
 	tests := []struct {
 		Name    string
@@ -71,7 +72,12 @@ func TestNewAssetScanFromScan(t *testing.T) {
 			AssetID:              assetID,
 			ExpectedErrorMatcher: Not(HaveOccurred()),
 			ExpectedAssetScan: &models.AssetScan{
-				ResourceCleanup: utils.PointerTo(models.ResourceCleanupStatePending),
+				ResourceCleanup: &models.ResourceCleanupStatus{
+					LastTransitionTime: utils.PointerTo(transitionTime),
+					Message:            utils.PointerTo("New AssetScan created from Scan."),
+					Reason:             utils.PointerTo("New AssetScan created from Scan."),
+					State:              utils.PointerTo(models.ResourceCleanupStatusStatePending),
+				},
 				Scan: &models.ScanRelationship{
 					Id: scanID,
 				},
@@ -146,6 +152,7 @@ func TestNewAssetScanFromScan(t *testing.T) {
 			g := NewGomegaWithT(t)
 
 			result, err := newAssetScanFromScan(test.Scan, test.AssetID)
+			result.ResourceCleanup.LastTransitionTime = utils.PointerTo(transitionTime)
 
 			g.Expect(err).Should(test.ExpectedErrorMatcher)
 			g.Expect(result).Should(BeComparableTo(test.ExpectedAssetScan))

@@ -83,12 +83,18 @@ func (s *ServerImpl) PatchAssetScansAssetScanID(ctx echo.Context, assetScanID mo
 	}
 
 	// check that an asset scan with that id exists.
-	_, err = s.dbHandler.AssetScansTable().GetAssetScan(assetScanID, models.GetAssetScansAssetScanIDParams{})
+	existingAssetScan, err := s.dbHandler.AssetScansTable().GetAssetScan(assetScanID, models.GetAssetScansAssetScanIDParams{})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("asset scan was not found. assetScanID=%v: %v", assetScanID, err))
 		}
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get asset scan. assetScanID=%v: %v", assetScanID, err))
+	}
+
+	// check for valid resource cleanup state transition
+	err = existingAssetScan.ResourceCleanup.UpdateState(*assetScan.ResourceCleanup.State)
+	if err != nil {
+		return sendError(ctx, http.StatusBadRequest, err.Error())
 	}
 
 	// PATCH request might not contain the ID in the body, so set it from
@@ -132,12 +138,18 @@ func (s *ServerImpl) PutAssetScansAssetScanID(ctx echo.Context, assetScanID mode
 	}
 
 	// check that an asset scan with that id exists.
-	_, err = s.dbHandler.AssetScansTable().GetAssetScan(assetScanID, models.GetAssetScansAssetScanIDParams{})
+	existingAssetScan, err := s.dbHandler.AssetScansTable().GetAssetScan(assetScanID, models.GetAssetScansAssetScanIDParams{})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("asset scan was not found. assetScanID=%v: %v", assetScanID, err))
 		}
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get asset scan. assetScanID=%v: %v", assetScanID, err))
+	}
+
+	// check for valid resource cleanup state transition
+	err = existingAssetScan.ResourceCleanup.UpdateState(*assetScan.ResourceCleanup.State)
+	if err != nil {
+		return sendError(ctx, http.StatusBadRequest, err.Error())
 	}
 
 	// PUT request might not contain the ID in the body, so set it from

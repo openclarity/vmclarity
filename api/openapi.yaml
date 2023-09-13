@@ -2064,13 +2064,41 @@ components:
             $ref: '#/components/schemas/AssetScan'
           readOnly: true
 
-    ResourceCleanupState:
-      type: string
-      enum:
-        - Pending
-        - Skipped
-        - Failed
-        - Done
+    CommonStatus:
+      type: object
+      properties:
+        reason:
+          type: string
+          description: Machine readable message.
+        message:
+          type: string
+          description: Human readable message.
+        lastTransitionTime:
+          type: string
+          format: date-time
+          description: Last date time when the status has changed.
+
+    ResourceCleanupStatus:
+      allOf:
+        - $ref: '#/components/schemas/CommonStatus'
+        - type: object
+          properties:
+            state:
+              type: string
+              enum:
+                - Pending
+                - Skipped
+                - Failed
+                - Done
+              description: |
+                Describes the state of resource cleanup.
+                
+                | State   | Description                                                |
+                | ------- | ---------------------------------------------------------- |
+                | Pending | Initial state for cleaning up resources                    |
+                | Skipped | Resource cleanup has been skipped due to Delete Job Policy |
+                | Failed  | Cleaning up resources has been failed                      |
+                | Done    | Resources have been successfully cleaned up                |
 
     AssetScanTemplate:
       type: object
@@ -2123,7 +2151,7 @@ components:
             findingsProcessed:
               type: boolean
             resourceCleanup:
-              $ref: '#/components/schemas/ResourceCleanupState'
+              $ref: '#/components/schemas/ResourceCleanupStatus'
             stats:
               $ref: '#/components/schemas/AssetScanStats'
             summary:
@@ -2243,7 +2271,7 @@ components:
               type: boolean
               readOnly: true
             resourceCleanup:
-              $ref: '#/components/schemas/ResourceCleanupState'
+              $ref: '#/components/schemas/ResourceCleanupStatus'
               readOnly: true
             stats:
               $ref: '#/components/schemas/AssetScanStats'

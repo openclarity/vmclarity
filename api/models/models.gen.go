@@ -64,12 +64,12 @@ const (
 	MisconfigurationMediumSeverity MisconfigurationSeverity = "MisconfigurationMediumSeverity"
 )
 
-// Defines values for ResourceCleanupState.
+// Defines values for ResourceCleanupStatusState.
 const (
-	ResourceCleanupStateDone    ResourceCleanupState = "Done"
-	ResourceCleanupStateFailed  ResourceCleanupState = "Failed"
-	ResourceCleanupStatePending ResourceCleanupState = "Pending"
-	ResourceCleanupStateSkipped ResourceCleanupState = "Skipped"
+	ResourceCleanupStatusStateDone    ResourceCleanupStatusState = "Done"
+	ResourceCleanupStatusStateFailed  ResourceCleanupStatusState = "Failed"
+	ResourceCleanupStatusStatePending ResourceCleanupStatusState = "Pending"
+	ResourceCleanupStatusStateSkipped ResourceCleanupStatusState = "Skipped"
 )
 
 // Defines values for RootVolumeEncrypted.
@@ -230,17 +230,17 @@ type AssetRelationship struct {
 // AssetScan defines model for AssetScan.
 type AssetScan struct {
 	// Asset Describes a relationship to an asset which can be expanded.
-	Asset             *AssetRelationship    `json:"asset,omitempty"`
-	Exploits          *ExploitScan          `json:"exploits,omitempty"`
-	FindingsProcessed *bool                 `json:"findingsProcessed,omitempty"`
-	Id                *string               `json:"id,omitempty"`
-	InfoFinder        *InfoFinderScan       `json:"infoFinder,omitempty"`
-	Malware           *MalwareScan          `json:"malware,omitempty"`
-	Misconfigurations *MisconfigurationScan `json:"misconfigurations,omitempty"`
-	ResourceCleanup   *ResourceCleanupState `json:"resourceCleanup,omitempty"`
-	Revision          *int                  `json:"revision,omitempty"`
-	Rootkits          *RootkitScan          `json:"rootkits,omitempty"`
-	Sboms             *SbomScan             `json:"sboms,omitempty"`
+	Asset             *AssetRelationship     `json:"asset,omitempty"`
+	Exploits          *ExploitScan           `json:"exploits,omitempty"`
+	FindingsProcessed *bool                  `json:"findingsProcessed,omitempty"`
+	Id                *string                `json:"id,omitempty"`
+	InfoFinder        *InfoFinderScan        `json:"infoFinder,omitempty"`
+	Malware           *MalwareScan           `json:"malware,omitempty"`
+	Misconfigurations *MisconfigurationScan  `json:"misconfigurations,omitempty"`
+	ResourceCleanup   *ResourceCleanupStatus `json:"resourceCleanup,omitempty"`
+	Revision          *int                   `json:"revision,omitempty"`
+	Rootkits          *RootkitScan           `json:"rootkits,omitempty"`
+	Sboms             *SbomScan              `json:"sboms,omitempty"`
 
 	// Scan Describes an expandable relationship to Scan object
 	Scan *ScanRelationship `json:"scan,omitempty"`
@@ -348,17 +348,17 @@ type AssetScanInputScanStats struct {
 // AssetScanRelationship defines model for AssetScanRelationship.
 type AssetScanRelationship struct {
 	// Asset Describes a relationship to an asset which can be expanded.
-	Asset             *AssetRelationship    `json:"asset,omitempty"`
-	Exploits          *ExploitScan          `json:"exploits,omitempty"`
-	FindingsProcessed *bool                 `json:"findingsProcessed,omitempty"`
-	Id                string                `json:"id"`
-	InfoFinder        *InfoFinderScan       `json:"infoFinder,omitempty"`
-	Malware           *MalwareScan          `json:"malware,omitempty"`
-	Misconfigurations *MisconfigurationScan `json:"misconfigurations,omitempty"`
-	ResourceCleanup   *ResourceCleanupState `json:"resourceCleanup,omitempty"`
-	Revision          *int                  `json:"revision,omitempty"`
-	Rootkits          *RootkitScan          `json:"rootkits,omitempty"`
-	Sboms             *SbomScan             `json:"sboms,omitempty"`
+	Asset             *AssetRelationship     `json:"asset,omitempty"`
+	Exploits          *ExploitScan           `json:"exploits,omitempty"`
+	FindingsProcessed *bool                  `json:"findingsProcessed,omitempty"`
+	Id                string                 `json:"id"`
+	InfoFinder        *InfoFinderScan        `json:"infoFinder,omitempty"`
+	Malware           *MalwareScan           `json:"malware,omitempty"`
+	Misconfigurations *MisconfigurationScan  `json:"misconfigurations,omitempty"`
+	ResourceCleanup   *ResourceCleanupStatus `json:"resourceCleanup,omitempty"`
+	Revision          *int                   `json:"revision,omitempty"`
+	Rootkits          *RootkitScan           `json:"rootkits,omitempty"`
+	Sboms             *SbomScan              `json:"sboms,omitempty"`
 
 	// Scan Describes an expandable relationship to Scan object
 	Scan *ScanRelationship `json:"scan,omitempty"`
@@ -464,6 +464,18 @@ type Assets struct {
 
 // CloudProvider defines model for CloudProvider.
 type CloudProvider string
+
+// CommonStatus defines model for CommonStatus.
+type CommonStatus struct {
+	// LastTransitionTime Last date time when the status has changed.
+	LastTransitionTime *time.Time `json:"lastTransitionTime,omitempty"`
+
+	// Message Human readable message.
+	Message *string `json:"message,omitempty"`
+
+	// Reason Machine readable message.
+	Reason *string `json:"reason,omitempty"`
+}
 
 // ContainerImageInfo defines model for ContainerImageInfo.
 type ContainerImageInfo struct {
@@ -732,8 +744,37 @@ type PodInfo struct {
 	PodName    *string `json:"podName,omitempty"`
 }
 
-// ResourceCleanupState defines model for ResourceCleanupState.
-type ResourceCleanupState string
+// ResourceCleanupStatus defines model for ResourceCleanupStatus.
+type ResourceCleanupStatus struct {
+	// LastTransitionTime Last date time when the status has changed.
+	LastTransitionTime *time.Time `json:"lastTransitionTime,omitempty"`
+
+	// Message Human readable message.
+	Message *string `json:"message,omitempty"`
+
+	// Reason Machine readable message.
+	Reason *string `json:"reason,omitempty"`
+
+	// State Describes the state of resource cleanup.
+	//
+	// | State   | Description                                                |
+	// | ------- | ---------------------------------------------------------- |
+	// | Pending | Initial state for cleaning up resources                    |
+	// | Skipped | Resource cleanup has been skipped due to Delete Job Policy |
+	// | Failed  | Cleaning up resources has been failed                      |
+	// | Done    | Resources have been successfully cleaned up                |
+	State *ResourceCleanupStatusState `json:"state,omitempty"`
+}
+
+// ResourceCleanupStatusState Describes the state of resource cleanup.
+//
+// | State   | Description                                                |
+// | ------- | ---------------------------------------------------------- |
+// | Pending | Initial state for cleaning up resources                    |
+// | Skipped | Resource cleanup has been skipped due to Delete Job Policy |
+// | Failed  | Cleaning up resources has been failed                      |
+// | Done    | Resources have been successfully cleaned up                |
+type ResourceCleanupStatusState string
 
 // RootVolume Information about VM root volume
 type RootVolume struct {
