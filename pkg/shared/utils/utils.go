@@ -57,12 +57,12 @@ func PointerTo[T any](value T) *T {
 	return &value
 }
 
-func PointerToStringOrNil(s string) *string {
-	if s == "" {
+func OmitEmpty[T comparable](t T) *T {
+	var empty T
+	if t == empty {
 		return nil
 	}
-
-	return &s
+	return &t
 }
 
 // ValueOrZero returns the value that the pointer ptr pointers to. It returns
