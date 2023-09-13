@@ -16,11 +16,12 @@
 package scanwatcher
 
 import (
+	"testing"
+	"time"
+
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
 	"k8s.io/apimachinery/pkg/util/uuid"
-	"testing"
-	"time"
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
