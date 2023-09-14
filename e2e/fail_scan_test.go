@@ -27,6 +27,8 @@ import (
 )
 
 var _ = ginkgo.Describe("Detecting scan failures", func() {
+	var scanID string
+
 	ginkgo.Context("when a scan stops without assets to scan", func() {
 		ginkgo.It("should detect failure reason successfully", func(ctx ginkgo.SpecContext) {
 			ginkgo.By("applying a scan configuration with not existing label")
@@ -43,6 +45,23 @@ var _ = ginkgo.Describe("Detecting scan failures", func() {
 			updateScanConfig := UpdateScanConfigToStartNow(apiScanConfig)
 			err = client.PatchScanConfig(ctx, *apiScanConfig.Id, updateScanConfig)
 			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+
+			ginkgo.By("waiting until scan starts")
+			scanParams := models.GetScansParams{
+				Filter: utils.PointerTo(fmt.Sprintf(
+					"scanConfig/id eq '%s'",
+					*apiScanConfig.Id,
+				)),
+			}
+			gomega.Eventually(func() bool {
+				scans, err := client.GetScans(ctx, scanParams)
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				if len(*scans.Items) == 1 {
+					scanID = *(*scans.Items)[0].Id
+					return true
+				}
+				return false
+			}, DefaultTimeout, time.Second).Should(gomega.BeTrue())
 
 			ginkgo.By("waiting until scan state changes to failed with nothing to scan as state reason")
 			params := models.GetScansParams{
@@ -62,6 +81,8 @@ var _ = ginkgo.Describe("Detecting scan failures", func() {
 		})
 	})
 
+	scanID = ""
+
 	ginkgo.Context("when a scan stops with timeout", func() {
 		ginkgo.It("should detect failure reason successfully", func(ctx ginkgo.SpecContext) {
 			ginkgo.By("applying a scan configuration with short timeout")
@@ -79,6 +100,23 @@ var _ = ginkgo.Describe("Detecting scan failures", func() {
 			err = client.PatchScanConfig(ctx, *apiScanConfig.Id, updateScanConfig)
 			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
+			ginkgo.By("waiting until scan starts")
+			scanParams := models.GetScansParams{
+				Filter: utils.PointerTo(fmt.Sprintf(
+					"scanConfig/id eq '%s'",
+					*apiScanConfig.Id,
+				)),
+			}
+			gomega.Eventually(func() bool {
+				scans, err := client.GetScans(ctx, scanParams)
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				if len(*scans.Items) == 1 {
+					scanID = *(*scans.Items)[0].Id
+					return true
+				}
+				return false
+			}, DefaultTimeout, time.Second).Should(gomega.BeTrue())
+
 			ginkgo.By("waiting until scan state changes to failed with timed out as state reason")
 			params := models.GetScansParams{
 				Filter: utils.PointerTo(fmt.Sprintf(
@@ -95,5 +133,11 @@ var _ = ginkgo.Describe("Detecting scan failures", func() {
 				return len(*scans.Items) == 1
 			}, DefaultTimeout, time.Second).Should(gomega.BeTrue())
 		})
+	})
+
+	ginkgo.AfterEach(func(ctx ginkgo.SpecContext) {
+		if ginkgo.CurrentSpecReport().Failed() {
+			ReportAPIOutput(ctx, client, nil, nil, &scanID)
+		}
 	})
 })

@@ -16,7 +16,15 @@
 package e2e
 
 import (
+	"encoding/json"
+	"fmt"
 	"time"
+
+	"github.com/onsi/ginkgo/v2"
+	"github.com/onsi/ginkgo/v2/formatter"
+	"github.com/onsi/gomega"
+
+	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
 
 	"github.com/google/uuid"
 
@@ -84,4 +92,48 @@ func UpdateScanConfigToStartNow(config *models.ScanConfig) *models.ScanConfig {
 			OperationTime: utils.PointerTo(time.Now()),
 		},
 	}
+}
+
+func ReportAPIOutput(ctx ginkgo.SpecContext, client *backendclient.BackendClient, scope *string, scanConfigID *string, scanID *string) {
+	ginkgo.GinkgoWriter.Println("------------------------------")
+	ginkgo.GinkgoWriter.Println(formatter.F("{{red}}[FAILED] Report API Output:"))
+
+	if scope != nil {
+		assets, err := client.GetAssets(ctx, models.GetAssetsParams{
+			Filter: utils.PointerTo(*scope),
+		})
+		gomega.Expect(err).NotTo(gomega.HaveOccurred())
+
+		buf, err := json.Marshal(*assets.Items)
+		gomega.Expect(err).NotTo(gomega.HaveOccurred())
+		ginkgo.GinkgoWriter.Printf("Asset: %s\n", string(buf))
+	}
+
+	if scanConfigID != nil {
+		scanConfigs, err := client.GetScanConfigs(ctx, models.GetScanConfigsParams{
+			Filter: utils.PointerTo(fmt.Sprintf("id eq '%s'", *scanConfigID)),
+		})
+		gomega.Expect(err).NotTo(gomega.HaveOccurred())
+
+		if len(*scanConfigs.Items) == 1 {
+			buf, err := json.Marshal((*scanConfigs.Items)[0])
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			ginkgo.GinkgoWriter.Printf("Scan Config: %s\n", string(buf))
+		}
+	}
+
+	if scanID != nil {
+		scans, err := client.GetScans(ctx, models.GetScansParams{
+			Filter: utils.PointerTo(fmt.Sprintf("id eq '%s'", *scanID)),
+		})
+		gomega.Expect(err).NotTo(gomega.HaveOccurred())
+
+		if len(*scans.Items) == 1 {
+			buf, err := json.Marshal((*scans.Items)[0])
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			ginkgo.GinkgoWriter.Printf("Scan: %s\n", string(buf))
+		}
+	}
+
+	ginkgo.GinkgoWriter.Println(formatter.F("{{/}}------------------------------"))
 }

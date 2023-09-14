@@ -27,6 +27,8 @@ import (
 )
 
 var _ = ginkgo.Describe("Aborting a scan", func() {
+	var scanID string
+
 	ginkgo.Context("which is running", func() {
 		ginkgo.It("should stop successfully", func(ctx ginkgo.SpecContext) {
 			ginkgo.By("applying a scan configuration")
@@ -51,7 +53,11 @@ var _ = ginkgo.Describe("Aborting a scan", func() {
 			gomega.Eventually(func() bool {
 				scans, err = client.GetScans(ctx, params)
 				gomega.Expect(err).NotTo(gomega.HaveOccurred())
-				return len(*scans.Items) == 1
+				if len(*scans.Items) == 1 {
+					scanID = *(*scans.Items)[0].Id
+					return true
+				}
+				return false
 			}, DefaultTimeout, time.Second).Should(gomega.BeTrue())
 
 			ginkgo.By("aborting a scan")
@@ -75,5 +81,11 @@ var _ = ginkgo.Describe("Aborting a scan", func() {
 				return len(*scans.Items) == 1
 			}, DefaultTimeout, time.Second).Should(gomega.BeTrue())
 		})
+	})
+
+	ginkgo.AfterEach(func(ctx ginkgo.SpecContext) {
+		if ginkgo.CurrentSpecReport().Failed() {
+			ReportAPIOutput(ctx, client, nil, nil, &scanID)
+		}
 	})
 })
