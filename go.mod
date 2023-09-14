@@ -54,7 +54,7 @@ require (
 	gorm.io/driver/sqlite v1.5.1
 	gorm.io/gorm v1.25.2
 	gotest.tools/v3 v3.5.0
-	k8s.io/apimachinery v0.28.1
+	k8s.io/apimachinery v0.28.2
 	k8s.io/client-go v0.28.1
 
 )
