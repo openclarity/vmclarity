@@ -86,6 +86,7 @@ var _ = ginkgo.Describe("Aborting a scan", func() {
 	ginkgo.AfterEach(func(ctx ginkgo.SpecContext) {
 		if ginkgo.CurrentSpecReport().Failed() {
 			ReportAPIOutput(ctx, client, nil, nil, &scanID)
+			ReportServiceLogs(ctx, testEnv)
 		}
 	})
 })

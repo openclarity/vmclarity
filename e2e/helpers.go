@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/openclarity/vmclarity/e2e/testenv"
+
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/ginkgo/v2/formatter"
 	"github.com/onsi/gomega"
@@ -96,7 +98,7 @@ func UpdateScanConfigToStartNow(config *models.ScanConfig) *models.ScanConfig {
 
 func ReportAPIOutput(ctx ginkgo.SpecContext, client *backendclient.BackendClient, scope *string, scanConfigID *string, scanID *string) {
 	ginkgo.GinkgoWriter.Println("------------------------------")
-	ginkgo.GinkgoWriter.Println(formatter.F("{{red}}[FAILED] Report API Output:"))
+	ginkgo.GinkgoWriter.Println(formatter.F("{{red}}[FAILED] Report API Output:{{/}}"))
 
 	if scope != nil {
 		assets, err := client.GetAssets(ctx, models.GetAssetsParams{
@@ -135,5 +137,14 @@ func ReportAPIOutput(ctx ginkgo.SpecContext, client *backendclient.BackendClient
 		}
 	}
 
-	ginkgo.GinkgoWriter.Println(formatter.F("{{/}}------------------------------"))
+	ginkgo.GinkgoWriter.Println(formatter.F("------------------------------"))
+}
+
+func ReportServiceLogs(ctx ginkgo.SpecContext, testEnv *testenv.Environment) {
+	ginkgo.GinkgoWriter.Println(formatter.F("{{red}}[FAILED] Report Service Logs:{{/}}"))
+
+	err := testEnv.ServicesLogs(ctx, formatter.ColorableStdOut, formatter.ColorableStdErr)
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+
+	ginkgo.GinkgoWriter.Println(formatter.F("------------------------------"))
 }

@@ -79,6 +79,7 @@ var _ = ginkgo.Describe("Running a default scan (SBOM, vulnerabilities and explo
 	ginkgo.AfterEach(func(ctx ginkgo.SpecContext) {
 		if ginkgo.CurrentSpecReport().Failed() {
 			ReportAPIOutput(ctx, client, nil, nil, &scanID)
+			ReportServiceLogs(ctx, testEnv)
 		}
 	})
 })
