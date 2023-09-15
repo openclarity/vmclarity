@@ -17,6 +17,7 @@ package e2e
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/onsi/ginkgo/v2"
@@ -28,7 +29,8 @@ import (
 
 var _ = ginkgo.Describe("Running a default scan (SBOM, vulnerabilities and exploits)", func() {
 	reportFailedConfig := ReportFailedConfig{
-		allServices: true,
+		allServices:     true,
+		serviceLogsTail: strconv.Itoa(10),
 	}
 
 	ginkgo.Context("which scans a docker container", func() {
