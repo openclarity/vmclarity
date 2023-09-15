@@ -17,7 +17,6 @@ package e2e
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/openclarity/vmclarity/e2e/testenv"
@@ -96,64 +95,110 @@ func UpdateScanConfigToStartNow(config *models.ScanConfig) *models.ScanConfig {
 	}
 }
 
+type APIObject struct {
+	objectType string
+	filter     string
+}
+
+type ReportFailedConfig struct {
+	// if true, print logs for all services
+	allServices bool
+	// if not empty, print logs for services in slice
+	services []string
+	// if not empty, print the last n service logs. if empty, print all.
+	serviceLogsTail string
+	// if true, print all assets
+	allAPIAssets bool
+	// if true, print all scan configs
+	allAPIScanConfigs bool
+	// if true, print all scans
+	allAPIScans bool
+	// if not empty, print objects in slice
+	objects []APIObject
+}
+
 // ReportFailed gathers relevant API data and docker service logs for debugging purposes.
-func ReportFailed(ctx ginkgo.SpecContext, testEnv *testenv.Environment, client *backendclient.BackendClient, scope *string, scanConfigID *string, scanID *string) {
+func ReportFailed(ctx ginkgo.SpecContext, testEnv *testenv.Environment, client *backendclient.BackendClient, config *ReportFailedConfig) {
 	ginkgo.GinkgoWriter.Println("------------------------------")
 
-	ReportAPIData(ctx, client, scope, scanConfigID, scanID)
-	ReportServiceLogs(ctx, testEnv)
+	DumpAPIData(ctx, client, config)
+	DumpServiceLogs(ctx, testEnv, config)
 
 	ginkgo.GinkgoWriter.Println("------------------------------")
 }
 
-// ReportAPIData prints API objects filtered using test parameters (e.g. assets filtered by scope, scan configs filtered by id).
+// DumpAPIData prints API objects filtered using test parameters (e.g. assets filtered by scope, scan configs filtered by id).
 // If filter not provided, no objects are printed.
-// TODO(paralta): consider that it might be useful to print not filtered API data
-func ReportAPIData(ctx ginkgo.SpecContext, client *backendclient.BackendClient, scope *string, scanConfigID *string, scanID *string) {
+func DumpAPIData(ctx ginkgo.SpecContext, client *backendclient.BackendClient, config *ReportFailedConfig) {
 	ginkgo.GinkgoWriter.Println(formatter.F("{{red}}[FAILED] Report API Data:{{/}}"))
 
-	if scope != nil {
-		assets, err := client.GetAssets(ctx, models.GetAssetsParams{
-			Filter: utils.PointerTo(*scope),
-		})
-		gomega.Expect(err).NotTo(gomega.HaveOccurred())
-
-		buf, err := json.Marshal(*assets.Items)
-		gomega.Expect(err).NotTo(gomega.HaveOccurred())
-		ginkgo.GinkgoWriter.Printf("Asset: %s\n", string(buf))
+	if config.allAPIAssets {
+		config.objects = append(config.objects, APIObject{"asset", ""})
 	}
 
-	if scanConfigID != nil {
-		scanConfigs, err := client.GetScanConfigs(ctx, models.GetScanConfigsParams{
-			Filter: utils.PointerTo(fmt.Sprintf("id eq '%s'", *scanConfigID)),
-		})
-		gomega.Expect(err).NotTo(gomega.HaveOccurred())
-
-		if len(*scanConfigs.Items) == 1 {
-			buf, err := json.Marshal((*scanConfigs.Items)[0])
-			gomega.Expect(err).NotTo(gomega.HaveOccurred())
-			ginkgo.GinkgoWriter.Printf("Scan Config: %s\n", string(buf))
-		}
+	if config.allAPIScanConfigs {
+		config.objects = append(config.objects, APIObject{"scanConfigs", ""})
 	}
 
-	if scanID != nil {
-		scans, err := client.GetScans(ctx, models.GetScansParams{
-			Filter: utils.PointerTo(fmt.Sprintf("id eq '%s'", *scanID)),
-		})
-		gomega.Expect(err).NotTo(gomega.HaveOccurred())
+	if config.allAPIScans {
+		config.objects = append(config.objects, APIObject{"scans", ""})
+	}
 
-		if len(*scans.Items) == 1 {
-			buf, err := json.Marshal((*scans.Items)[0])
+	for _, object := range config.objects {
+		switch object.objectType {
+		case "asset":
+			assets, err := client.GetAssets(ctx, models.GetAssetsParams{
+				Filter: utils.PointerTo(object.filter),
+			})
 			gomega.Expect(err).NotTo(gomega.HaveOccurred())
-			ginkgo.GinkgoWriter.Printf("Scan: %s\n", string(buf))
+
+			buf, err := json.Marshal(*assets.Items)
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			ginkgo.GinkgoWriter.Printf("Asset: %s\n", string(buf))
+
+		case "scanConfig":
+			scanConfigs, err := client.GetScanConfigs(ctx, models.GetScanConfigsParams{
+				Filter: utils.PointerTo(object.filter),
+			})
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+
+			if len(*scanConfigs.Items) == 1 {
+				buf, err := json.Marshal((*scanConfigs.Items)[0])
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				ginkgo.GinkgoWriter.Printf("Scan Config: %s\n", string(buf))
+			}
+
+		case "scan":
+			scans, err := client.GetScans(ctx, models.GetScansParams{
+				Filter: utils.PointerTo(object.filter),
+			})
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+
+			if len(*scans.Items) == 1 {
+				buf, err := json.Marshal((*scans.Items)[0])
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				ginkgo.GinkgoWriter.Printf("Scan: %s\n", string(buf))
+			}
 		}
 	}
 }
 
-// ReportServiceLogs prints logs for all services.
-func ReportServiceLogs(ctx ginkgo.SpecContext, testEnv *testenv.Environment) {
+// DumpServiceLogs prints logs for all services.
+func DumpServiceLogs(ctx ginkgo.SpecContext, testEnv *testenv.Environment, config *ReportFailedConfig) {
 	ginkgo.GinkgoWriter.Println(formatter.F("{{red}}[FAILED] Report Service Logs:{{/}}"))
 
-	err := testEnv.ServicesLogs(ctx, formatter.ColorableStdOut, formatter.ColorableStdErr)
+	var services []string
+	if config.allServices {
+		services = testEnv.Services()
+	} else {
+		services = config.services
+	}
+
+	tail := config.serviceLogsTail
+	if len(tail) == 0 {
+		tail = "all"
+	}
+
+	err := testEnv.ServicesLogs(ctx, services, tail, formatter.ColorableStdOut, formatter.ColorableStdErr)
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 }

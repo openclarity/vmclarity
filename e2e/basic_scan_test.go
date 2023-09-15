@@ -27,16 +27,19 @@ import (
 )
 
 var _ = ginkgo.Describe("Running a basic scan (only SBOM)", func() {
-	var assetScope string
-	var scanConfigID string
-	var scanID string
+	reportFailedConfig := ReportFailedConfig{
+		allServices: true,
+	}
 
 	ginkgo.Context("which scans a docker container", func() {
 		ginkgo.It("should finish successfully", func(ctx ginkgo.SpecContext) {
 			ginkgo.By("waiting until test asset is found")
-			assetScope = DefaultScope
+			reportFailedConfig.objects = append(
+				reportFailedConfig.objects,
+				APIObject{"asset", DefaultScope},
+			)
 			assetsParams := models.GetAssetsParams{
-				Filter: utils.PointerTo(assetScope),
+				Filter: utils.PointerTo(DefaultScope),
 			}
 			gomega.Eventually(func() bool {
 				assets, err := client.GetAssets(ctx, assetsParams)
@@ -58,7 +61,10 @@ var _ = ginkgo.Describe("Running a basic scan (only SBOM)", func() {
 				))
 			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-			scanConfigID = *apiScanConfig.Id
+			reportFailedConfig.objects = append(
+				reportFailedConfig.objects,
+				APIObject{"scanConfig", fmt.Sprintf("id eq '%s'", *apiScanConfig.Id)},
+			)
 
 			ginkgo.By("updating scan configuration to run now")
 			updateScanConfig := UpdateScanConfigToStartNow(apiScanConfig)
@@ -79,7 +85,10 @@ var _ = ginkgo.Describe("Running a basic scan (only SBOM)", func() {
 				scans, err = client.GetScans(ctx, scanParams)
 				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				if len(*scans.Items) == 1 {
-					scanID = *(*scans.Items)[0].Id
+					reportFailedConfig.objects = append(
+						reportFailedConfig.objects,
+						APIObject{"scan", fmt.Sprintf("id eq '%s'", *(*scans.Items)[0].Id)},
+					)
 					return true
 				}
 				return false
@@ -103,7 +112,7 @@ var _ = ginkgo.Describe("Running a basic scan (only SBOM)", func() {
 
 	ginkgo.AfterEach(func(ctx ginkgo.SpecContext) {
 		if ginkgo.CurrentSpecReport().Failed() {
-			ReportFailed(ctx, testEnv, client, &assetScope, &scanConfigID, &scanID)
+			ReportFailed(ctx, testEnv, client, &reportFailedConfig)
 		}
 	})
 })

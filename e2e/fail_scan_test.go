@@ -27,7 +27,9 @@ import (
 )
 
 var _ = ginkgo.Describe("Detecting scan failures", func() {
-	var scanID string
+	reportFailedConfig := ReportFailedConfig{
+		allServices: true,
+	}
 
 	ginkgo.Context("when a scan stops without assets to scan", func() {
 		ginkgo.It("should detect failure reason successfully", func(ctx ginkgo.SpecContext) {
@@ -57,7 +59,10 @@ var _ = ginkgo.Describe("Detecting scan failures", func() {
 				scans, err := client.GetScans(ctx, scanParams)
 				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				if len(*scans.Items) == 1 {
-					scanID = *(*scans.Items)[0].Id
+					reportFailedConfig.objects = append(
+						reportFailedConfig.objects,
+						APIObject{"scan", fmt.Sprintf("id eq '%s'", *(*scans.Items)[0].Id)},
+					)
 					return true
 				}
 				return false
@@ -80,8 +85,6 @@ var _ = ginkgo.Describe("Detecting scan failures", func() {
 			}, DefaultTimeout, time.Second).Should(gomega.BeTrue())
 		})
 	})
-
-	scanID = ""
 
 	ginkgo.Context("when a scan stops with timeout", func() {
 		ginkgo.It("should detect failure reason successfully", func(ctx ginkgo.SpecContext) {
@@ -111,7 +114,10 @@ var _ = ginkgo.Describe("Detecting scan failures", func() {
 				scans, err := client.GetScans(ctx, scanParams)
 				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				if len(*scans.Items) == 1 {
-					scanID = *(*scans.Items)[0].Id
+					reportFailedConfig.objects = append(
+						reportFailedConfig.objects,
+						APIObject{"scan", fmt.Sprintf("id eq '%s'", *(*scans.Items)[0].Id)},
+					)
 					return true
 				}
 				return false
@@ -137,7 +143,7 @@ var _ = ginkgo.Describe("Detecting scan failures", func() {
 
 	ginkgo.AfterEach(func(ctx ginkgo.SpecContext) {
 		if ginkgo.CurrentSpecReport().Failed() {
-			ReportFailed(ctx, testEnv, client, nil, nil, &scanID)
+			ReportFailed(ctx, testEnv, client, &reportFailedConfig)
 		}
 	})
 })

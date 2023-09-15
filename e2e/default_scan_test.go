@@ -27,7 +27,9 @@ import (
 )
 
 var _ = ginkgo.Describe("Running a default scan (SBOM, vulnerabilities and exploits)", func() {
-	var scanID string
+	reportFailedConfig := ReportFailedConfig{
+		allServices: true,
+	}
 
 	ginkgo.Context("which scans a docker container", func() {
 		ginkgo.It("should finish successfully", func(ctx ginkgo.SpecContext) {
@@ -54,7 +56,10 @@ var _ = ginkgo.Describe("Running a default scan (SBOM, vulnerabilities and explo
 				scans, err = client.GetScans(ctx, scanParams)
 				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				if len(*scans.Items) == 1 {
-					scanID = *(*scans.Items)[0].Id
+					reportFailedConfig.objects = append(
+						reportFailedConfig.objects,
+						APIObject{"scan", fmt.Sprintf("id eq '%s'", *(*scans.Items)[0].Id)},
+					)
 					return true
 				}
 				return false
@@ -78,7 +83,7 @@ var _ = ginkgo.Describe("Running a default scan (SBOM, vulnerabilities and explo
 
 	ginkgo.AfterEach(func(ctx ginkgo.SpecContext) {
 		if ginkgo.CurrentSpecReport().Failed() {
-			ReportFailed(ctx, testEnv, client, nil, nil, &scanID)
+			ReportFailed(ctx, testEnv, client, &reportFailedConfig)
 		}
 	})
 })

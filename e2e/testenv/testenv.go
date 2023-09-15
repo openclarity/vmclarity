@@ -153,13 +153,12 @@ func (e *Environment) ServicesReady(ctx context.Context) (bool, error) {
 }
 
 // nolint:wrapcheck
-func (e *Environment) ServicesLogs(ctx context.Context, stdout, stderr io.Writer) error {
-	services := e.Services()
+func (e *Environment) ServicesLogs(ctx context.Context, services []string, tail string, stdout, stderr io.Writer) error {
 	consumer := formatter.NewLogConsumer(ctx, stdout, stderr, true, true, false)
 	return e.composer.Logs(ctx, e.project.Name, consumer, api.LogOptions{
 		Project:  e.project,
-		Services: services, // TODO(paralta): make list of services configurable (e.g. only include services in test scope)
-		Tail:     "10",     // TODO(paralta): make number of lines printed configurable (maybe per test?)
+		Services: services,
+		Tail:     tail,
 	})
 }
 
