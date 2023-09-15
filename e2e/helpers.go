@@ -96,9 +96,21 @@ func UpdateScanConfigToStartNow(config *models.ScanConfig) *models.ScanConfig {
 	}
 }
 
-func ReportAPIOutput(ctx ginkgo.SpecContext, client *backendclient.BackendClient, scope *string, scanConfigID *string, scanID *string) {
+// ReportFailed gathers relevant API data and docker service logs for debugging purposes.
+func ReportFailed(ctx ginkgo.SpecContext, testEnv *testenv.Environment, client *backendclient.BackendClient, scope *string, scanConfigID *string, scanID *string) {
 	ginkgo.GinkgoWriter.Println("------------------------------")
-	ginkgo.GinkgoWriter.Println(formatter.F("{{red}}[FAILED] Report API Output:{{/}}"))
+
+	ReportAPIData(ctx, client, scope, scanConfigID, scanID)
+	ReportServiceLogs(ctx, testEnv)
+
+	ginkgo.GinkgoWriter.Println("------------------------------")
+}
+
+// ReportAPIData prints API objects filtered using test parameters (e.g. assets filtered by scope, scan configs filtered by id).
+// If filter not provided, no objects are printed.
+// TODO(paralta): consider that it might be useful to print not filtered API data
+func ReportAPIData(ctx ginkgo.SpecContext, client *backendclient.BackendClient, scope *string, scanConfigID *string, scanID *string) {
+	ginkgo.GinkgoWriter.Println(formatter.F("{{red}}[FAILED] Report API Data:{{/}}"))
 
 	if scope != nil {
 		assets, err := client.GetAssets(ctx, models.GetAssetsParams{
@@ -136,15 +148,12 @@ func ReportAPIOutput(ctx ginkgo.SpecContext, client *backendclient.BackendClient
 			ginkgo.GinkgoWriter.Printf("Scan: %s\n", string(buf))
 		}
 	}
-
-	ginkgo.GinkgoWriter.Println(formatter.F("------------------------------"))
 }
 
+// ReportServiceLogs prints logs for all services.
 func ReportServiceLogs(ctx ginkgo.SpecContext, testEnv *testenv.Environment) {
 	ginkgo.GinkgoWriter.Println(formatter.F("{{red}}[FAILED] Report Service Logs:{{/}}"))
 
 	err := testEnv.ServicesLogs(ctx, formatter.ColorableStdOut, formatter.ColorableStdErr)
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
-
-	ginkgo.GinkgoWriter.Println(formatter.F("------------------------------"))
 }

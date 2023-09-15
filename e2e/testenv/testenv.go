@@ -158,8 +158,8 @@ func (e *Environment) ServicesLogs(ctx context.Context, stdout, stderr io.Writer
 	consumer := formatter.NewLogConsumer(ctx, stdout, stderr, true, true, false)
 	return e.composer.Logs(ctx, e.project.Name, consumer, api.LogOptions{
 		Project:  e.project,
-		Services: services,
-		Tail:     "10",
+		Services: services, // TODO(paralta): make list of services configurable (e.g. only include services in test scope)
+		Tail:     "10",     // TODO(paralta): make number of lines printed configurable (maybe per test?)
 	})
 }
 
