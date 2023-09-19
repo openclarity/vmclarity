@@ -48,6 +48,12 @@ const (
 	Kubernetes CloudProvider = "Kubernetes"
 )
 
+// Defines values for GrypeConfigMode.
+const (
+	LOCAL  GrypeConfigMode = "LOCAL"
+	REMOTE GrypeConfigMode = "REMOTE"
+)
+
 // Defines values for InfoType.
 const (
 	InfoTypeSSHAuthorizedKeyFingerprint InfoType = "SSHAuthorizedKeyFingerprint"
@@ -55,6 +61,13 @@ const (
 	InfoTypeSSHKnownHostFingerprint     InfoType = "SSHKnownHostFingerprint"
 	InfoTypeSSHPrivateKeyFingerprint    InfoType = "SSHPrivateKeyFingerprint"
 	InfoTypeUNKNOWN                     InfoType = "UNKNOWN"
+)
+
+// Defines values for LocalGrypeConfigScope.
+const (
+	AllLayers    LocalGrypeConfigScope = "AllLayers"
+	Squashed     LocalGrypeConfigScope = "Squashed"
+	UnknownScope LocalGrypeConfigScope = "UnknownScope"
 )
 
 // Defines values for MisconfigurationSeverity.
@@ -172,6 +185,37 @@ const (
 	NEGLIGIBLE VulnerabilitySeverity = "NEGLIGIBLE"
 )
 
+// Analyzer The analyzer configuration
+type Analyzer struct {
+	AnalyzerList *[]string `json:"analyzerList,omitempty"`
+	OutputFormat *string   `json:"outputFormat,omitempty"`
+	Scope        *string   `json:"scope,omitempty"`
+
+	// TrivyConfig Analyzer Trivy configuration
+	TrivyConfig *AnalyzerTrivyConfig `json:"trivyConfig,omitempty"`
+}
+
+// AnalyzerTrivyConfig Analyzer Trivy configuration
+type AnalyzerTrivyConfig struct {
+	CacheDir      *string `json:"cacheDir,omitempty"`
+	ServerAddress *string `json:"serverAddress,omitempty"`
+	ServerToken   *string `json:"serverToken,omitempty"`
+	Timeout       *int    `json:"timeout,omitempty"`
+}
+
+// AnalyzersAndScannersConfig The effective analyzer and scanner configuration
+type AnalyzersAndScannersConfig struct {
+	// Analyzer The analyzer configuration
+	Analyzer       *Analyzer `json:"analyzer,omitempty"`
+	LocalImageScan *bool     `json:"localImageScan,omitempty"`
+
+	// Registry The registry configuration
+	Registry *Registry `json:"registry,omitempty"`
+
+	// Scanner The scanner configuration
+	Scanner *Scanner `json:"scanner,omitempty"`
+}
+
 // ApiResponse An object that is returned in all cases of failures.
 type ApiResponse struct {
 	Message *string `json:"message,omitempty"`
@@ -224,17 +268,20 @@ type AssetRelationship struct {
 // AssetScan defines model for AssetScan.
 type AssetScan struct {
 	// Asset Describes a relationship to an asset which can be expanded.
-	Asset             *AssetRelationship    `json:"asset,omitempty"`
-	Exploits          *ExploitScan          `json:"exploits,omitempty"`
-	FindingsProcessed *bool                 `json:"findingsProcessed,omitempty"`
-	Id                *string               `json:"id,omitempty"`
-	InfoFinder        *InfoFinderScan       `json:"infoFinder,omitempty"`
-	Malware           *MalwareScan          `json:"malware,omitempty"`
-	Misconfigurations *MisconfigurationScan `json:"misconfigurations,omitempty"`
-	ResourceCleanup   *ResourceCleanupState `json:"resourceCleanup,omitempty"`
-	Revision          *int                  `json:"revision,omitempty"`
-	Rootkits          *RootkitScan          `json:"rootkits,omitempty"`
-	Sboms             *SbomScan             `json:"sboms,omitempty"`
+	Asset *AssetRelationship `json:"asset,omitempty"`
+
+	// EffectiveScanFamiliesConfig The effective scan families configuration
+	EffectiveScanFamiliesConfig *EffectiveScanFamiliesConfig `json:"effectiveScanFamiliesConfig,omitempty"`
+	Exploits                    *ExploitScan                 `json:"exploits,omitempty"`
+	FindingsProcessed           *bool                        `json:"findingsProcessed,omitempty"`
+	Id                          *string                      `json:"id,omitempty"`
+	InfoFinder                  *InfoFinderScan              `json:"infoFinder,omitempty"`
+	Malware                     *MalwareScan                 `json:"malware,omitempty"`
+	Misconfigurations           *MisconfigurationScan        `json:"misconfigurations,omitempty"`
+	ResourceCleanup             *ResourceCleanupState        `json:"resourceCleanup,omitempty"`
+	Revision                    *int                         `json:"revision,omitempty"`
+	Rootkits                    *RootkitScan                 `json:"rootkits,omitempty"`
+	Sboms                       *SbomScan                    `json:"sboms,omitempty"`
 
 	// Scan Describes an expandable relationship to Scan object
 	Scan *ScanRelationship `json:"scan,omitempty"`
@@ -450,6 +497,26 @@ type Assets struct {
 	Items *[]Asset `json:"items,omitempty"`
 }
 
+// Auth Registry auth
+type Auth struct {
+	Authority *string `json:"authority,omitempty"`
+	Password  *string `json:"password,omitempty"`
+	Token     *string `json:"token,omitempty"`
+	Username  *string `json:"username,omitempty"`
+}
+
+// ChkRootkitConfig ChkRootkit configuration
+type ChkRootkitConfig struct {
+	BinaryPath *string `json:"binaryPath,omitempty"`
+}
+
+// ClamConfig Clam scanner configuration
+type ClamConfig struct {
+	AlternativeFreshclamMirrorURL *string `json:"alternativeFreshclamMirrorURL,omitempty"`
+	ClamScanBinaryPath            *string `json:"clamScanBinaryPath,omitempty"`
+	FreshclamBinaryPath           *string `json:"freshclamBinaryPath,omitempty"`
+}
+
 // CloudProvider defines model for CloudProvider.
 type CloudProvider string
 
@@ -481,11 +548,158 @@ type CostBreakdownComponent struct {
 	Operation string  `json:"operation"`
 }
 
+// DependencyTrackConfig Dependency Track configuration
+type DependencyTrackConfig struct {
+	ApiKey                         *string `json:"apiKey,omitempty"`
+	DisableTLS                     *bool   `json:"disableTLS,omitempty"`
+	FetchVulnerabilitiesRetryCount *int    `json:"fetchVulnerabilitiesRetryCount,omitempty"`
+
+	// FetchVulnerabilitiesRetrySleep sleep time in seconds
+	FetchVulnerabilitiesRetrySleep *int    `json:"fetchVulnerabilitiesRetrySleep,omitempty"`
+	Host                           *string `json:"host,omitempty"`
+	InsecureSkipVerify             *bool   `json:"insecureSkipVerify,omitempty"`
+	ProjectName                    *string `json:"projectName,omitempty"`
+	ProjectVersion                 *string `json:"projectVersion,omitempty"`
+	ShouldDeleteProject            *bool   `json:"shouldDeleteProject,omitempty"`
+}
+
 // DirInfo defines model for DirInfo.
 type DirInfo struct {
 	DirName    *string `json:"dirName,omitempty"`
 	Location   *string `json:"location,omitempty"`
 	ObjectType string  `json:"objectType"`
+}
+
+// EffectiveAssetScanConfig Effective asset scan configuration
+type EffectiveAssetScanConfig struct {
+	// EffectiveScanFamiliesConfig The effective scan families configuration
+	EffectiveScanFamiliesConfig *EffectiveScanFamiliesConfig `json:"effectiveScanFamiliesConfig,omitempty"`
+}
+
+// EffectiveExploitsConfig defines model for EffectiveExploitsConfig.
+type EffectiveExploitsConfig struct {
+	Enabled       *bool             `json:"enabled,omitempty"`
+	InputFromVuln *bool             `json:"inputFromVuln,omitempty"`
+	Inputs        *[]EffectiveInput `json:"inputs,omitempty"`
+	ScannerList   *[]string         `json:"scannerList,omitempty"`
+
+	// ScannersConfig Exploit configuration
+	ScannersConfig *ExploitScannersConfig `json:"scannersConfig,omitempty"`
+}
+
+// EffectiveInfoFinderConfig defines model for EffectiveInfoFinderConfig.
+type EffectiveInfoFinderConfig struct {
+	Enabled         *bool             `json:"enabled,omitempty"`
+	Inputs          *[]EffectiveInput `json:"inputs,omitempty"`
+	ScannerList     *[]string         `json:"scannerList,omitempty"`
+	StripInputPaths *bool             `json:"stripInputPaths,omitempty"`
+}
+
+// EffectiveInput The scanner families input
+type EffectiveInput struct {
+	Input               *string `json:"input,omitempty"`
+	InputType           *string `json:"inputType,omitempty"`
+	StripPathFromResult *bool   `json:"stripPathFromResult,omitempty"`
+}
+
+// EffectiveMalwareConfig defines model for EffectiveMalwareConfig.
+type EffectiveMalwareConfig struct {
+	Enabled     *bool             `json:"enabled,omitempty"`
+	Inputs      *[]EffectiveInput `json:"inputs,omitempty"`
+	ScannerList *[]string         `json:"scannerList,omitempty"`
+
+	// ScannersConfig Malware scanners configuration
+	ScannersConfig  *MalwareScannersConfig `json:"scannersConfig,omitempty"`
+	StripInputPaths *bool                  `json:"stripInputPaths,omitempty"`
+}
+
+// EffectiveMisconfigurationsConfig defines model for EffectiveMisconfigurationsConfig.
+type EffectiveMisconfigurationsConfig struct {
+	Enabled     *bool             `json:"enabled,omitempty"`
+	Inputs      *[]EffectiveInput `json:"inputs,omitempty"`
+	ScannerList *[]string         `json:"scannerList,omitempty"`
+
+	// ScannersConfig Misconfiguration scanners configuration
+	ScannersConfig  *MisconfigurationScannersConfig `json:"scannersConfig,omitempty"`
+	StripInputPaths *bool                           `json:"stripInputPaths,omitempty"`
+}
+
+// EffectiveRootkitsConfig defines model for EffectiveRootkitsConfig.
+type EffectiveRootkitsConfig struct {
+	Enabled     *bool             `json:"enabled,omitempty"`
+	Inputs      *[]EffectiveInput `json:"inputs,omitempty"`
+	ScannerList *[]string         `json:"scannerList,omitempty"`
+
+	// ScannersConfig Rootkit scanners configuration
+	ScannersConfig  *RootkitScannersConfig `json:"scannersConfig,omitempty"`
+	StripInputPaths *bool                  `json:"stripInputPaths,omitempty"`
+}
+
+// EffectiveSBOMConfig The effective SBOM configuration
+type EffectiveSBOMConfig struct {
+	AnalyzerList *[]string `json:"analyzerList,omitempty"`
+
+	// AnalyzersConfig The effective analyzer and scanner configuration
+	AnalyzersConfig *AnalyzersAndScannersConfig `json:"analyzersConfig,omitempty"`
+	Enabled         *bool                       `json:"enabled,omitempty"`
+	Inputs          *[]EffectiveInput           `json:"inputs,omitempty"`
+	MergeWith       *[]MergeWith                `json:"mergeWith,omitempty"`
+}
+
+// EffectiveScanFamiliesConfig The effective scan families configuration
+type EffectiveScanFamiliesConfig struct {
+	// Exploits The effective exploits configuration
+	Exploits *EffectiveExploitsConfig `json:"exploits,omitempty"`
+
+	// InfoFinder The effective info finder configuration
+	InfoFinder *EffectiveInfoFinderConfig `json:"infoFinder,omitempty"`
+
+	// Malware The effective malware scanners configuration
+	Malware *EffectiveMalwareConfig `json:"malware,omitempty"`
+
+	// Misconfigurations The effective misconfiguration scanners configuration
+	Misconfigurations *EffectiveMisconfigurationsConfig `json:"misconfigurations,omitempty"`
+
+	// Rootkits The effective rootkit scanners configuration
+	Rootkits *EffectiveRootkitsConfig `json:"rootkits,omitempty"`
+
+	// Sbom The effective SBOM configuration
+	Sbom *EffectiveSBOMConfig `json:"sbom,omitempty"`
+
+	// Secrets The effective secrets scanners configuration
+	Secrets *EffectiveSecretsConfig `json:"secrets,omitempty"`
+
+	// Vulnerabilities The effective vulnerability scanners configuration
+	Vulnerabilities *EffectiveVulnerabilitiesConfig `json:"vulnerabilities,omitempty"`
+}
+
+// EffectiveScanFamiliesTemplate Common fields of scan families config
+type EffectiveScanFamiliesTemplate struct {
+	Enabled     *bool             `json:"enabled,omitempty"`
+	Inputs      *[]EffectiveInput `json:"inputs,omitempty"`
+	ScannerList *[]string         `json:"scannerList,omitempty"`
+}
+
+// EffectiveSecretsConfig defines model for EffectiveSecretsConfig.
+type EffectiveSecretsConfig struct {
+	Enabled     *bool             `json:"enabled,omitempty"`
+	Inputs      *[]EffectiveInput `json:"inputs,omitempty"`
+	ScannerList *[]string         `json:"scannerList,omitempty"`
+
+	// ScannersConfig Secret scanners configuration
+	ScannersConfig  *SecretScannersConfig `json:"scannersConfig,omitempty"`
+	StripInputPaths *bool                 `json:"stripInputPaths,omitempty"`
+}
+
+// EffectiveVulnerabilitiesConfig defines model for EffectiveVulnerabilitiesConfig.
+type EffectiveVulnerabilitiesConfig struct {
+	Enabled       *bool             `json:"enabled,omitempty"`
+	InputFromSBOM *bool             `json:"inputFromSBOM,omitempty"`
+	Inputs        *[]EffectiveInput `json:"inputs,omitempty"`
+	ScannerList   *[]string         `json:"scannerList,omitempty"`
+
+	// ScannersConfig The effective analyzer and scanner configuration
+	ScannersConfig *AnalyzersAndScannersConfig `json:"scannersConfig,omitempty"`
 }
 
 // Estimation defines model for Estimation.
@@ -511,6 +725,11 @@ type Exploit struct {
 	Urls        *[]string `json:"urls"`
 }
 
+// ExploitDBConfig Exploit DB configuration
+type ExploitDBConfig struct {
+	BaseURL *string `json:"baseURL,omitempty"`
+}
+
 // ExploitFindingInfo defines model for ExploitFindingInfo.
 type ExploitFindingInfo struct {
 	CveID       *string   `json:"cveID,omitempty"`
@@ -525,6 +744,12 @@ type ExploitFindingInfo struct {
 // ExploitScan defines model for ExploitScan.
 type ExploitScan struct {
 	Exploits *[]Exploit `json:"exploits"`
+}
+
+// ExploitScannersConfig Exploit configuration
+type ExploitScannersConfig struct {
+	// ExploitDB Exploit DB configuration
+	ExploitDB *ExploitDBConfig `json:"exploitDB,omitempty"`
 }
 
 // ExploitsConfig defines model for ExploitsConfig.
@@ -570,6 +795,24 @@ type Findings struct {
 	Items *[]Finding `json:"items,omitempty"`
 }
 
+// GitLeaksConfig GitLeaks configuration
+type GitLeaksConfig struct {
+	BinaryPath *string `json:"binaryPath,omitempty"`
+}
+
+// GrypeConfig Grype configuration
+type GrypeConfig struct {
+	// LocalGrypeConfig Local Grype configuration
+	LocalGrypeConfig *LocalGrypeConfig `json:"localGrypeConfig,omitempty"`
+	Mode             *GrypeConfigMode  `json:"mode,omitempty"`
+
+	// RemoteGrypeConfig Remote Grype configuration
+	RemoteGrypeConfig *RemoteGrypeConfig `json:"remoteGrypeConfig,omitempty"`
+}
+
+// GrypeConfigMode defines model for GrypeConfig.Mode.
+type GrypeConfigMode string
+
 // InfoFinderConfig defines model for InfoFinderConfig.
 type InfoFinderConfig struct {
 	Enabled  *bool     `json:"enabled,omitempty"`
@@ -608,6 +851,22 @@ type InfoFinderScan struct {
 // InfoType defines model for InfoType.
 type InfoType string
 
+// LocalGrypeConfig Local Grype configuration
+type LocalGrypeConfig struct {
+	DbRootDir  *string                `json:"dbRootDir,omitempty"`
+	ListingURL *string                `json:"listingURL,omitempty"`
+	Scope      *LocalGrypeConfigScope `json:"scope,omitempty"`
+	UpdateDB   *bool                  `json:"updateDB,omitempty"`
+}
+
+// LocalGrypeConfigScope defines model for LocalGrypeConfig.Scope.
+type LocalGrypeConfigScope string
+
+// LynisConfig Lynis configuration
+type LynisConfig struct {
+	InstallPath *string `json:"installPath,omitempty"`
+}
+
 // Malware defines model for Malware.
 type Malware struct {
 	MalwareName *string      `json:"malwareName,omitempty"`
@@ -641,8 +900,22 @@ type MalwareScan struct {
 	Metadata *[]ScannerMetadata `json:"metadata"`
 }
 
+// MalwareScannersConfig Malware scanners configuration
+type MalwareScannersConfig struct {
+	// Clam Clam scanner configuration
+	Clam *ClamConfig `json:"clam,omitempty"`
+
+	// Yara Yara scanner configuration
+	Yara *YaraConfig `json:"yara,omitempty"`
+}
+
 // MalwareType defines model for MalwareType.
 type MalwareType = string
+
+// MergeWith The SBOM that will be merged as input
+type MergeWith struct {
+	SbomPath *string `json:"sbomPath,omitempty"`
+}
 
 // Misconfiguration defines model for Misconfiguration.
 type Misconfiguration struct {
@@ -673,6 +946,12 @@ type MisconfigurationFindingInfo struct {
 type MisconfigurationScan struct {
 	Misconfigurations *[]Misconfiguration `json:"misconfigurations"`
 	Scanners          *[]string           `json:"scanners"`
+}
+
+// MisconfigurationScannersConfig Misconfiguration scanners configuration
+type MisconfigurationScannersConfig struct {
+	// Lynis Lynis configuration
+	Lynis *LynisConfig `json:"lynis,omitempty"`
 }
 
 // MisconfigurationSeverity defines model for MisconfigurationSeverity.
@@ -714,6 +993,21 @@ type PodInfo struct {
 	PodName    *string `json:"podName,omitempty"`
 }
 
+// Registry The registry configuration
+type Registry struct {
+	Auths         *[]Auth `json:"auths,omitempty"`
+	SkipVerifyTLS *bool   `json:"skipVerifyTLS,omitempty"`
+	UseHTTP       *bool   `json:"useHTTP,omitempty"`
+}
+
+// RemoteGrypeConfig Remote Grype configuration
+type RemoteGrypeConfig struct {
+	GrypeServerAddress *string `json:"grypeServerAddress,omitempty"`
+
+	// GrypeServerTimeout Grype server timeout in seconds
+	GrypeServerTimeout *int `json:"grypeServerTimeout,omitempty"`
+}
+
 // ResourceCleanupState defines model for ResourceCleanupState.
 type ResourceCleanupState string
 
@@ -744,6 +1038,12 @@ type RootkitFindingInfo struct {
 // RootkitScan defines model for RootkitScan.
 type RootkitScan struct {
 	Rootkits *[]Rootkit `json:"rootkits"`
+}
+
+// RootkitScannersConfig Rootkit scanners configuration
+type RootkitScannersConfig struct {
+	// Chkrootkit ChkRootkit configuration
+	Chkrootkit *ChkRootkitConfig `json:"chkrootkit,omitempty"`
 }
 
 // RootkitType defines model for RootkitType.
@@ -1070,6 +1370,19 @@ type ScanTemplateReadOnly struct {
 // ScanType defines model for ScanType.
 type ScanType string
 
+// Scanner The scanner configuration
+type Scanner struct {
+	// DependencyTrackConfig Dependency Track configuration
+	DependencyTrackConfig *DependencyTrackConfig `json:"dependencyTrackConfig,omitempty"`
+
+	// GrypeConfig Grype configuration
+	GrypeConfig *GrypeConfig `json:"grypeConfig,omitempty"`
+	ScannerList *[]string    `json:"scannerList,omitempty"`
+
+	// TrivyConfig Scanner Trivy configuration
+	TrivyConfig *ScannerTrivyConfig `json:"trivyConfig,omitempty"`
+}
+
 // ScannerInstanceCreationConfig Configuration of scanner instance
 type ScannerInstanceCreationConfig struct {
 	MaxPrice         *string `json:"maxPrice,omitempty"`
@@ -1094,6 +1407,12 @@ type ScannerSummary struct {
 	ScannedFiles       *int    `json:"ScannedFiles,omitempty"`
 	SuspectedFiles     *int    `json:"SuspectedFiles,omitempty"`
 	TimeTaken          *string `json:"TimeTaken,omitempty"`
+}
+
+// ScannerTrivyConfig Scanner Trivy configuration
+type ScannerTrivyConfig struct {
+	CacheDir *string `json:"cacheDir,omitempty"`
+	Timeout  *int    `json:"timeout,omitempty"`
 }
 
 // Scans defines model for Scans.
@@ -1139,6 +1458,12 @@ type SecretFindingInfo struct {
 // SecretScan defines model for SecretScan.
 type SecretScan struct {
 	Secrets *[]Secret `json:"secrets"`
+}
+
+// SecretScannersConfig Secret scanners configuration
+type SecretScannersConfig struct {
+	// GitLeaks GitLeaks configuration
+	GitLeaks *GitLeaksConfig `json:"gitLeaks,omitempty"`
 }
 
 // SecretsConfig defines model for SecretsConfig.
@@ -1267,6 +1592,12 @@ type VulnerabilityScanSummary struct {
 
 // VulnerabilitySeverity defines model for VulnerabilitySeverity.
 type VulnerabilitySeverity string
+
+// YaraConfig Yara scanner configuration
+type YaraConfig struct {
+	BinaryPath      *string `json:"binaryPath,omitempty"`
+	CompiledRuleURL *string `json:"compiledRuleURL,omitempty"`
+}
 
 // AssetID defines model for assetID.
 type AssetID = string

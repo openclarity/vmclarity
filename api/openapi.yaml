@@ -1558,6 +1558,404 @@ components:
         infoFinder:
           $ref: '#/components/schemas/InfoFinderConfig'
 
+    EffectiveAssetScanConfig:
+      type: object
+      description: Effective asset scan configuration
+      properties:
+        effectiveScanFamiliesConfig:
+          $ref: '#/components/schemas/EffectiveScanFamiliesConfig'
+
+    EffectiveScanFamiliesConfig:
+      type: object
+      description: The effective scan families configuration
+      properties:
+        sbom:
+          $ref: '#/components/schemas/EffectiveSBOMConfig'
+        vulnerabilities:
+          $ref: '#/components/schemas/EffectiveVulnerabilitiesConfig'
+        malware:
+          $ref: '#/components/schemas/EffectiveMalwareConfig'
+        rootkits:
+          $ref: '#/components/schemas/EffectiveRootkitsConfig'
+        secrets:
+          $ref: '#/components/schemas/EffectiveSecretsConfig'
+        misconfigurations:
+          $ref: '#/components/schemas/EffectiveMisconfigurationsConfig'
+        exploits:
+          $ref: '#/components/schemas/EffectiveExploitsConfig'
+        infoFinder:
+          $ref: '#/components/schemas/EffectiveInfoFinderConfig'
+
+    EffectiveScanFamiliesTemplate:
+      type: object
+      description: Common fields of scan families config
+      properties:
+        enabled:
+          type: boolean
+        scannerList:
+          type: array
+          items:
+            type: string
+        inputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/EffectiveInput'
+
+    EffectiveSBOMConfig:
+      type: object
+      description: The effective SBOM configuration
+      properties:
+        enabled:
+          type: boolean
+        analyzerList:
+          type: array
+          items:
+            type: string
+        inputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/EffectiveInput'
+        mergeWith:
+          type: array
+          items:
+            $ref: '#/components/schemas/MergeWith'
+        analyzersConfig:
+          $ref: '#/components/schemas/AnalyzersAndScannersConfig'
+
+    EffectiveVulnerabilitiesConfig:
+      description: The effective vulnerability scanners configuration
+      allOf:
+        - $ref: '#/components/schemas/EffectiveScanFamiliesTemplate'
+        - type: object
+          properties:
+            inputFromSBOM:
+              type: boolean
+            scannersConfig:
+              $ref: '#/components/schemas/AnalyzersAndScannersConfig'
+
+    EffectiveMalwareConfig:
+      description: The effective malware scanners configuration
+      allOf:
+        - $ref: '#/components/schemas/EffectiveScanFamiliesTemplate'
+        - type: object
+          properties:
+            stripInputPaths:
+              type: boolean
+            scannersConfig:
+              $ref: '#/components/schemas/MalwareScannersConfig'
+
+    EffectiveRootkitsConfig:
+      description: The effective rootkit scanners configuration
+      allOf:
+        - $ref: '#/components/schemas/EffectiveScanFamiliesTemplate'
+        - type: object
+          properties:
+            stripInputPaths:
+              type: boolean
+            scannersConfig:
+              $ref: '#/components/schemas/RootkitScannersConfig'
+
+    EffectiveSecretsConfig:
+      description: The effective secrets scanners configuration
+      allOf:
+        - $ref: '#/components/schemas/EffectiveScanFamiliesTemplate'
+        - type: object
+          properties:
+            stripInputPaths:
+              type: boolean
+            scannersConfig:
+              $ref: '#/components/schemas/SecretScannersConfig'
+
+    EffectiveMisconfigurationsConfig:
+      description: The effective misconfiguration scanners configuration
+      allOf:
+        - $ref: '#/components/schemas/EffectiveScanFamiliesTemplate'
+        - type: object
+          properties:
+            stripInputPaths:
+              type: boolean
+            scannersConfig:
+              $ref: '#/components/schemas/MisconfigurationScannersConfig'
+
+    EffectiveExploitsConfig:
+      description: The effective exploits configuration
+      allOf:
+        - $ref: '#/components/schemas/EffectiveScanFamiliesTemplate'
+        - type: object
+          properties:
+            inputFromVuln:
+              type: boolean
+            scannersConfig:
+              $ref: '#/components/schemas/ExploitScannersConfig'
+
+    EffectiveInfoFinderConfig:
+      description: The effective info finder configuration
+      allOf:
+        - $ref: '#/components/schemas/EffectiveScanFamiliesTemplate'
+        - type: object
+          properties:
+            stripInputPaths:
+              type: boolean
+
+    EffectiveInput:
+      type: object
+      description: The scanner families input
+      properties:
+        stripPathFromResult:
+          type: boolean
+        input:
+          type: string
+        inputType:
+          type: string
+
+    MergeWith:
+      type: object
+      description: The SBOM that will be merged as input
+      properties:
+        sbomPath:
+          type: string
+
+    AnalyzersAndScannersConfig:
+      type: object
+      description: The effective analyzer and scanner configuration
+      properties:
+        registry:
+          $ref: '#/components/schemas/Registry'
+        analyzer:
+          $ref: '#/components/schemas/Analyzer'
+        scanner:
+          $ref: '#/components/schemas/Scanner'
+        localImageScan:
+          type: boolean
+
+    Registry:
+      type: object
+      description: The registry configuration
+      properties:
+        skipVerifyTLS:
+          type: boolean
+        useHTTP:
+          type: boolean
+        auths:
+          type: array
+          items:
+            $ref: '#/components/schemas/Auth'
+
+    Analyzer:
+      type: object
+      description: The analyzer configuration
+      properties:
+        outputFormat:
+          type: string
+        analyzerList:
+          type: array
+          items:
+            type: string
+        scope:
+          type: string
+        trivyConfig:
+          $ref: '#/components/schemas/AnalyzerTrivyConfig'
+
+    Scanner:
+      type: object
+      description: The scanner configuration
+      properties:
+        scannerList:
+          type: array
+          items:
+            type: string
+        grypeConfig:
+          $ref: '#/components/schemas/GrypeConfig'
+        dependencyTrackConfig:
+          $ref: '#/components/schemas/DependencyTrackConfig'
+        trivyConfig:
+          $ref: '#/components/schemas/ScannerTrivyConfig'
+
+    GrypeConfig:
+      type: object
+      description: Grype configuration
+      properties:
+        localGrypeConfig:
+          $ref: '#/components/schemas/LocalGrypeConfig'
+        remoteGrypeConfig:
+          $ref: '#/components/schemas/RemoteGrypeConfig'
+        mode:
+          type: string
+          enum:
+            - LOCAL
+            - REMOTE
+
+    LocalGrypeConfig:
+      type: object
+      description: Local Grype configuration
+      properties:
+        updateDB:
+          type: boolean
+        dbRootDir:
+          type: string
+        listingURL:
+          type: string
+        scope:
+          type: string
+          enum:
+            - UnknownScope
+            - Squashed
+            - AllLayers
+
+    RemoteGrypeConfig:
+      type: object
+      description: Remote Grype configuration
+      properties:
+        grypeServerAddress:
+          type: string
+        grypeServerTimeout:
+          type: integer
+          description: Grype server timeout in seconds
+
+    DependencyTrackConfig:
+      type: object
+      description: Dependency Track configuration
+      properties:
+        apiKey:
+          type: string
+        host:
+          type: string
+        projectName:
+          type: string
+        projectVersion:
+          type: string
+        shouldDeleteProject:
+          type: boolean
+        disableTLS:
+          type: boolean
+        insecureSkipVerify:
+          type: boolean
+        fetchVulnerabilitiesRetryCount:
+          type: integer
+        fetchVulnerabilitiesRetrySleep:
+          type: integer
+          description: sleep time in seconds
+
+    AnalyzerTrivyConfig:
+      type: object
+      description: Analyzer Trivy configuration
+      properties:
+        timeout:
+          type: integer
+        serverAddress:
+          type: string
+        serverToken:
+          type: string
+        cacheDir:
+          type: string
+
+    ScannerTrivyConfig:
+      type: object
+      description: Scanner Trivy configuration
+      properties:
+        timeout:
+          type: integer
+        cacheDir:
+          type: string
+
+    SecretScannersConfig:
+      type: object
+      description: Secret scanners configuration
+      properties:
+        gitLeaks:
+          $ref: '#/components/schemas/GitLeaksConfig'
+
+    GitLeaksConfig:
+      type: object
+      description: GitLeaks configuration
+      properties:
+        binaryPath:
+          type: string
+
+    RootkitScannersConfig:
+      type: object
+      description: Rootkit scanners configuration
+      properties:
+        chkrootkit:
+          $ref: '#/components/schemas/ChkRootkitConfig'
+
+    ChkRootkitConfig:
+      type: object
+      description: ChkRootkit configuration
+      properties:
+        binaryPath:
+          type: string
+
+    MalwareScannersConfig:
+      type: object
+      description: Malware scanners configuration
+      properties:
+        clam:
+          $ref: '#/components/schemas/ClamConfig'
+        yara:
+          $ref: '#/components/schemas/YaraConfig'
+
+    ClamConfig:
+      type: object
+      description: Clam scanner configuration
+      properties:
+        clamScanBinaryPath:
+          type: string
+        freshclamBinaryPath:
+          type: string
+        alternativeFreshclamMirrorURL:
+          type: string
+
+    YaraConfig:
+      type: object
+      description: Yara scanner configuration
+      properties:
+        binaryPath:
+          type: string
+        compiledRuleURL:
+          type: string
+
+    MisconfigurationScannersConfig:
+      type: object
+      description: Misconfiguration scanners configuration
+      properties:
+        lynis:
+          $ref: '#/components/schemas/LynisConfig'
+
+    LynisConfig:
+      type: object
+      description: Lynis configuration
+      properties:
+        installPath:
+          type: string
+
+    ExploitScannersConfig:
+      type: object
+      description: Exploit configuration
+      properties:
+        exploitDB:
+          $ref: '#/components/schemas/ExploitDBConfig'
+
+    ExploitDBConfig:
+      type: object
+      description: Exploit DB configuration
+      properties:
+        baseURL:
+          type: string
+
+    Auth:
+      type: object
+      description: Registry auth
+      properties:
+        authority:
+          type: string
+        username:
+          type: string
+        password:
+          type: string
+        token:
+          type: string
+
     InfoFinderConfig:
       type: object
       properties:
@@ -2096,6 +2494,7 @@ components:
             summary:
               $ref: '#/components/schemas/ScanFindingsSummary'
         - $ref: '#/components/schemas/AssetScanTemplate'
+        - $ref: '#/components/schemas/EffectiveAssetScanConfig'
       # TODO(sambetts) Decide if we want the validation here by having
       # separate schemas for GET, POST and PATCH.
       #
