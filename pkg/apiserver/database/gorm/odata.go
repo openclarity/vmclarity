@@ -131,6 +131,10 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 			},
 			"findingsProcessed": odatasql.FieldMeta{FieldType: odatasql.NumberFieldType},
 			"resourceCleanup":   odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+			"effectiveScanFamiliesConfig": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"EffectiveScanFamiliesConfig"},
+			},
 		},
 	},
 	"AssetScanStats": {
@@ -1089,6 +1093,331 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 			"lastTransitionTime": odatasql.FieldMeta{FieldType: odatasql.DateTimeFieldType},
 			"stateMessage":       odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
 			"stateReason":        odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+		},
+	},
+	"EffectiveScanFamiliesConfig": {
+		Fields: odatasql.Schema{
+			"exploits": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"EffectiveExploitsConfig"},
+			},
+			"malware": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"EffectiveMalwareConfig"},
+			},
+			"misconfigurations": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"EffectiveMisconfigurationsConfig"},
+			},
+			"rootkits": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"EffectiveRootkitsConfig"},
+			},
+			"sbom": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"EffectiveSBOMConfig"},
+			},
+			"secrets": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"EffectiveSecretsConfig"},
+			},
+			"vulnerabilities": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"EffectiveVulnerabilitiesConfig"},
+			},
+			"infoFinder": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"EffectiveInfoFinderConfig"},
+			},
+		},
+	},
+	"EffectiveExploitsConfig": {
+		Fields: odatasql.Schema{
+			"enabled": odatasql.FieldMeta{FieldType: odatasql.BooleanFieldType},
+			"scannerList": odatasql.FieldMeta{
+				FieldType: odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{
+					FieldType: odatasql.StringFieldType,
+				},
+			},
+			"inputs": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"EffectiveInput"},
+			},
+			"inputFromVuln": odatasql.FieldMeta{FieldType: odatasql.BooleanFieldType},
+			"scannersConfig": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"ExploitScannersConfig"},
+			},
+		},
+	},
+	"EffectiveMalwareConfig": {
+		Fields: odatasql.Schema{
+			"enabled": odatasql.FieldMeta{FieldType: odatasql.BooleanFieldType},
+			"scannerList": odatasql.FieldMeta{
+				FieldType: odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{
+					FieldType: odatasql.StringFieldType,
+				},
+			},
+			"inputs": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"EffectiveInput"},
+			},
+			"stripInputPaths": odatasql.FieldMeta{FieldType: odatasql.BooleanFieldType},
+			"scannersConfig": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"MalwareScannersConfig"},
+			},
+		},
+	},
+	"EffectiveMisconfigurationsConfig": {
+		Fields: odatasql.Schema{
+			"enabled": odatasql.FieldMeta{FieldType: odatasql.BooleanFieldType},
+			"scannerList": odatasql.FieldMeta{
+				FieldType: odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{
+					FieldType: odatasql.StringFieldType,
+				},
+			},
+			"inputs": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"EffectiveInput"},
+			},
+			"stripInputPaths": odatasql.FieldMeta{FieldType: odatasql.BooleanFieldType},
+			"scannersConfig": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"MisconfigurationScannersConfig"},
+			},
+		},
+	},
+	"EffectiveRootkitsConfig": {
+		Fields: odatasql.Schema{
+			"enabled": odatasql.FieldMeta{FieldType: odatasql.BooleanFieldType},
+			"scannerList": odatasql.FieldMeta{
+				FieldType: odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{
+					FieldType: odatasql.StringFieldType,
+				},
+			},
+			"inputs": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"EffectiveInput"},
+			},
+			"stripInputPaths": odatasql.FieldMeta{FieldType: odatasql.BooleanFieldType},
+			"scannersConfig": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"RootkitScannersConfig"},
+			},
+		},
+	},
+	"EffectiveSecretsConfig": {
+		Fields: odatasql.Schema{
+			"enabled": odatasql.FieldMeta{FieldType: odatasql.BooleanFieldType},
+			"scannerList": odatasql.FieldMeta{
+				FieldType: odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{
+					FieldType: odatasql.StringFieldType,
+				},
+			},
+			"inputs": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"EffectiveInput"},
+			},
+			"stripInputPaths": odatasql.FieldMeta{FieldType: odatasql.BooleanFieldType},
+			"scannersConfig": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"SecretScannersConfig"},
+			},
+		},
+	},
+	"EffectiveSBOMConfig": {
+		Fields: odatasql.Schema{
+			"enabled": odatasql.FieldMeta{FieldType: odatasql.BooleanFieldType},
+			"analyzerList": odatasql.FieldMeta{
+				FieldType: odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{
+					FieldType: odatasql.StringFieldType,
+				},
+			},
+			"inputs": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"EffectiveInput"},
+			},
+			"mergeWith": odatasql.FieldMeta{
+				FieldType: odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{
+					FieldType:           odatasql.ComplexFieldType,
+					ComplexFieldSchemas: []string{"MergeWith"},
+				},
+			},
+			"analyzersConfig": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"AnalyzersAndScannersConfig"},
+			},
+		},
+	},
+	"EffectiveVulnerabilitiesConfig": {
+		Fields: odatasql.Schema{
+			"enabled": odatasql.FieldMeta{FieldType: odatasql.BooleanFieldType},
+			"scannerList": odatasql.FieldMeta{
+				FieldType: odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{
+					FieldType: odatasql.StringFieldType,
+				},
+			},
+			"inputs": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"EffectiveInput"},
+			},
+			"inputFromSBOM": odatasql.FieldMeta{FieldType: odatasql.BooleanFieldType},
+			"scannersConfig": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"AnalyzersAndScannersConfig"},
+			},
+		},
+	},
+	"EffectiveInfoFinderConfig": {
+		Fields: odatasql.Schema{
+			"enabled": odatasql.FieldMeta{FieldType: odatasql.BooleanFieldType},
+			"scannerList": odatasql.FieldMeta{
+				FieldType: odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{
+					FieldType: odatasql.StringFieldType,
+				},
+			},
+			"inputs": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"EffectiveInput"},
+			},
+			"stripInputPaths": odatasql.FieldMeta{FieldType: odatasql.BooleanFieldType},
+		},
+	},
+	"EffectiveInput": {
+		Fields: odatasql.Schema{
+			"stripPathFromResult": odatasql.FieldMeta{FieldType: odatasql.BooleanFieldType},
+			"input":               odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+			"inputType":           odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+		},
+	},
+	"ExploitScannersConfig": {
+		Fields: odatasql.Schema{
+			"exploitDB": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"ExploitDBConfig"},
+			},
+		},
+	},
+	"ExploitDBConfig": {
+		Fields: odatasql.Schema{
+			"baseURL": odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+		},
+	},
+	"MalwareScannersConfig": {
+		Fields: odatasql.Schema{
+			"clam": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"ClamConfig"},
+			},
+			"yara": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"YaraConfig"},
+			},
+		},
+	},
+	"ClamConfig": {
+		Fields: odatasql.Schema{
+			"clamScanBinaryPath":            odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+			"freshclamBinaryPath":           odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+			"alternativeFreshclamMirrorURL": odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+		},
+	},
+	"YaraConfig": {
+		Fields: odatasql.Schema{
+			"binaryPath":      odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+			"compiledRuleURL": odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+		},
+	},
+	"MisconfigurationScannersConfig": {
+		Fields: odatasql.Schema{
+			"lynis": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"LynisConfig"},
+			},
+		},
+	},
+	"LynisConfig": {
+		Fields: odatasql.Schema{
+			"installPath": odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+		},
+	},
+	"RootkitScannersConfig": {
+		Fields: odatasql.Schema{
+			"chkrootkit": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"ChkRootkitConfig"},
+			},
+		},
+	},
+	"ChkRootkitConfig": {
+		Fields: odatasql.Schema{
+			"installPath": odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+		},
+	},
+	"SecretScannersConfig": {
+		Fields: odatasql.Schema{
+			"gitLeaks": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"GitLeaksConfig"},
+			},
+		},
+	},
+	"GitLeaksConfig": {
+		Fields: odatasql.Schema{
+			"installPath": odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+		},
+	},
+	"MergeWith": {
+		Fields: odatasql.Schema{
+			"sbomPath": odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+		},
+	},
+	"AnalyzersAndScannersConfig": {
+		Fields: odatasql.Schema{
+			"registry": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"Registry"},
+			},
+			"analyzer": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"Analyzer"},
+			},
+			"scanner": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"Scanner"},
+			},
+			"localImageScan": odatasql.FieldMeta{FieldType: odatasql.BooleanFieldType},
+		},
+	},
+	"Registry": {
+		Fields: odatasql.Schema{
+			"skipVerifyTLS": odatasql.FieldMeta{FieldType: odatasql.BooleanFieldType},
+			"useHTTP":       odatasql.FieldMeta{FieldType: odatasql.BooleanFieldType},
+			"auths": odatasql.FieldMeta{
+				FieldType: odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{
+					FieldType:           odatasql.ComplexFieldType,
+					ComplexFieldSchemas: []string{"Auth"},
+				},
+			},
+		},
+	},
+	"Auth": {
+		Fields: odatasql.Schema{
+			"authority": odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+			"username":  odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+			"password":  odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+			"token":     odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
 		},
 	},
 }
