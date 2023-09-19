@@ -76,7 +76,7 @@ func DumpAPIData(ctx ginkgo.SpecContext, client *backendclient.BackendClient, co
 			assets, err := client.GetAssets(ctx, params)
 			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-			buf, err := json.Marshal(*assets.Items)
+			buf, err := json.MarshalIndent(*assets.Items, "", "\t")
 			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			ginkgo.GinkgoWriter.Printf("Asset: %s\n", string(buf))
 
@@ -90,7 +90,7 @@ func DumpAPIData(ctx ginkgo.SpecContext, client *backendclient.BackendClient, co
 			scanConfigs, err := client.GetScanConfigs(ctx, params)
 			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-			buf, err := json.Marshal(*scanConfigs.Items)
+			buf, err := json.MarshalIndent(*scanConfigs.Items, "", "\t")
 			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			ginkgo.GinkgoWriter.Printf("Scan Config: %s\n", string(buf))
 
@@ -104,7 +104,7 @@ func DumpAPIData(ctx ginkgo.SpecContext, client *backendclient.BackendClient, co
 			scans, err := client.GetScans(ctx, params)
 			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-			buf, err := json.Marshal(*scans.Items)
+			buf, err := json.MarshalIndent(*scans.Items, "", "\t")
 			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			ginkgo.GinkgoWriter.Printf("Scan: %s\n", string(buf))
 		}
