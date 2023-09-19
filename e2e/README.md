@@ -38,6 +38,7 @@ var _ = ginkgo.Describe("<add a brief test case description>", func() {
 	})
     ginkgo.AfterEach(func(ctx ginkgo.SpecContext) {
         if ginkgo.CurrentSpecReport().Failed() {
+            reportFailedConfig.startTime = ginkgo.CurrentSpecReport().StartTime
             ReportFailed(ctx, testEnv, client, &reportFailedConfig)
         }
     })

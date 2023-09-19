@@ -17,7 +17,6 @@ package e2e
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/onsi/ginkgo/v2"
@@ -28,9 +27,7 @@ import (
 )
 
 var _ = ginkgo.Describe("Aborting a scan", func() {
-	reportFailedConfig := ReportFailedConfig{
-		serviceLogsTail: strconv.Itoa(10),
-	}
+	reportFailedConfig := ReportFailedConfig{}
 
 	ginkgo.Context("which is running", func() {
 		ginkgo.It("should stop successfully", func(ctx ginkgo.SpecContext) {
@@ -91,6 +88,7 @@ var _ = ginkgo.Describe("Aborting a scan", func() {
 
 	ginkgo.AfterEach(func(ctx ginkgo.SpecContext) {
 		if ginkgo.CurrentSpecReport().Failed() {
+			reportFailedConfig.startTime = ginkgo.CurrentSpecReport().StartTime
 			ReportFailed(ctx, testEnv, client, &reportFailedConfig)
 		}
 	})

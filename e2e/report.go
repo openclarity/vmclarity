@@ -17,6 +17,7 @@ package e2e
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/ginkgo/v2/formatter"
@@ -34,10 +35,9 @@ type APIObject struct {
 }
 
 type ReportFailedConfig struct {
+	startTime time.Time
 	// if not empty, print logs for services in slice. if empty, print logs for all services.
 	services []string
-	// if not empty, print the last n service logs. if empty, print all.
-	serviceLogsTail string
 	// if true, print all API objects.
 	allAPIObjects bool
 	// if not empty, print objects in slice.
@@ -111,7 +111,7 @@ func DumpAPIData(ctx ginkgo.SpecContext, client *backendclient.BackendClient, co
 	}
 }
 
-// DumpServiceLogs prints logs for all services.
+// DumpServiceLogs prints service logs since the test started until it failed.
 func DumpServiceLogs(ctx ginkgo.SpecContext, testEnv *testenv.Environment, config *ReportFailedConfig) {
 	ginkgo.GinkgoWriter.Println(formatter.F("{{red}}[FAILED] Report Service Logs:{{/}}"))
 
@@ -119,11 +119,6 @@ func DumpServiceLogs(ctx ginkgo.SpecContext, testEnv *testenv.Environment, confi
 		config.services = testEnv.Services()
 	}
 
-	tail := config.serviceLogsTail
-	if len(tail) == 0 {
-		tail = "all"
-	}
-
-	err := testEnv.ServiceLogs(ctx, config.services, tail, formatter.ColorableStdOut, formatter.ColorableStdErr)
+	err := testEnv.ServiceLogs(ctx, config.services, config.startTime, formatter.ColorableStdOut, formatter.ColorableStdErr)
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 }

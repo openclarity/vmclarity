@@ -17,7 +17,6 @@ package e2e
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/onsi/ginkgo/v2"
@@ -28,9 +27,7 @@ import (
 )
 
 var _ = ginkgo.Describe("Detecting scan failures", func() {
-	reportFailedConfig := ReportFailedConfig{
-		serviceLogsTail: strconv.Itoa(10),
-	}
+	reportFailedConfig := ReportFailedConfig{}
 
 	ginkgo.Context("when a scan stops without assets to scan", func() {
 		ginkgo.It("should detect failure reason successfully", func(ctx ginkgo.SpecContext) {
@@ -144,6 +141,7 @@ var _ = ginkgo.Describe("Detecting scan failures", func() {
 
 	ginkgo.AfterEach(func(ctx ginkgo.SpecContext) {
 		if ginkgo.CurrentSpecReport().Failed() {
+			reportFailedConfig.startTime = ginkgo.CurrentSpecReport().StartTime
 			ReportFailed(ctx, testEnv, client, &reportFailedConfig)
 		}
 	})

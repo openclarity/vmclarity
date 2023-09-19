@@ -153,12 +153,12 @@ func (e *Environment) ServicesReady(ctx context.Context) (bool, error) {
 }
 
 // nolint:wrapcheck
-func (e *Environment) ServiceLogs(ctx context.Context, services []string, tail string, stdout, stderr io.Writer) error {
+func (e *Environment) ServiceLogs(ctx context.Context, services []string, startTime time.Time, stdout, stderr io.Writer) error {
 	consumer := formatter.NewLogConsumer(ctx, stdout, stderr, true, true, false)
 	return e.composer.Logs(ctx, e.project.Name, consumer, api.LogOptions{
 		Project:  e.project,
 		Services: services,
-		Tail:     tail,
+		Since:    startTime.Format(time.RFC3339Nano),
 	})
 }
 

@@ -17,7 +17,6 @@ package e2e
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/onsi/ginkgo/v2"
@@ -28,9 +27,7 @@ import (
 )
 
 var _ = ginkgo.Describe("Running a basic scan (only SBOM)", func() {
-	reportFailedConfig := ReportFailedConfig{
-		serviceLogsTail: strconv.Itoa(10),
-	}
+	reportFailedConfig := ReportFailedConfig{}
 
 	ginkgo.Context("which scans a docker container", func() {
 		ginkgo.It("should finish successfully", func(ctx ginkgo.SpecContext) {
@@ -113,6 +110,7 @@ var _ = ginkgo.Describe("Running a basic scan (only SBOM)", func() {
 
 	ginkgo.AfterEach(func(ctx ginkgo.SpecContext) {
 		if ginkgo.CurrentSpecReport().Failed() {
+			reportFailedConfig.startTime = ginkgo.CurrentSpecReport().StartTime
 			ReportFailed(ctx, testEnv, client, &reportFailedConfig)
 		}
 	})
