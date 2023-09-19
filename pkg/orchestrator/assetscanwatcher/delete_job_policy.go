@@ -15,7 +15,10 @@
 
 package assetscanwatcher
 
-import log "github.com/sirupsen/logrus"
+import (
+	"fmt"
+	"strings"
+)
 
 type DeleteJobPolicyType string
 
@@ -25,21 +28,28 @@ const (
 	DeleteJobPolicyOnSuccess DeleteJobPolicyType = "OnSuccess"
 )
 
-func (p DeleteJobPolicyType) IsValid() bool {
-	switch p {
-	case DeleteJobPolicyAlways, DeleteJobPolicyNever, DeleteJobPolicyOnSuccess:
-		return true
+func (p *DeleteJobPolicyType) UnmarshalText(text []byte) error {
+	var policy DeleteJobPolicyType
+
+	switch strings.ToLower(string(text)) {
+	case strings.ToLower(string(DeleteJobPolicyAlways)):
+		policy = DeleteJobPolicyAlways
+	case strings.ToLower(string(DeleteJobPolicyNever)):
+		policy = DeleteJobPolicyNever
+	case strings.ToLower(string(DeleteJobPolicyOnSuccess)):
+		policy = DeleteJobPolicyOnSuccess
 	default:
-		return false
+		return fmt.Errorf("failed to unmarshal text into Delete Policy: %s", text)
 	}
+
+	*p = policy
+
+	return nil
 }
 
-func GetDeleteJobPolicyType(policyType string) DeleteJobPolicyType {
-	deleteJobPolicy := DeleteJobPolicyType(policyType)
-	if !deleteJobPolicy.IsValid() {
-		log.Warnf("Invalid DeleteJobPolicy type %s. Falling back to default: %s", policyType, DeleteJobPolicyAlways)
-		deleteJobPolicy = DeleteJobPolicyAlways
-	}
+func DeleteJobPolicyOrDefault(p string) DeleteJobPolicyType {
+	policy := DeleteJobPolicyAlways
+	_ = policy.UnmarshalText([]byte(p))
 
-	return deleteJobPolicy
+	return policy
 }
