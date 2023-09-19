@@ -34,19 +34,13 @@ type APIObject struct {
 }
 
 type ReportFailedConfig struct {
-	// if true, print logs for all services
-	allServices bool
-	// if not empty, print logs for services in slice
+	// if not empty, print logs for services in slice. if empty, print logs for all services.
 	services []string
 	// if not empty, print the last n service logs. if empty, print all.
 	serviceLogsTail string
-	// if true, print all assets
-	allAPIAssets bool
-	// if true, print all scan configs
-	allAPIScanConfigs bool
-	// if true, print all scans
-	allAPIScans bool
-	// if not empty, print objects in slice
+	// if true, print all API objects.
+	allAPIObjects bool
+	// if not empty, print objects in slice.
 	objects []APIObject
 }
 
@@ -66,16 +60,8 @@ func ReportFailed(ctx ginkgo.SpecContext, testEnv *testenv.Environment, client *
 func DumpAPIData(ctx ginkgo.SpecContext, client *backendclient.BackendClient, config *ReportFailedConfig) {
 	ginkgo.GinkgoWriter.Println(formatter.F("{{red}}[FAILED] Report API Data:{{/}}"))
 
-	if config.allAPIAssets {
-		config.objects = append(config.objects, APIObject{"asset", ""})
-	}
-
-	if config.allAPIScanConfigs {
-		config.objects = append(config.objects, APIObject{"scanConfigs", ""})
-	}
-
-	if config.allAPIScans {
-		config.objects = append(config.objects, APIObject{"scans", ""})
+	if config.allAPIObjects {
+		config.objects = append(config.objects, APIObject{"asset", ""}, APIObject{"scanConfigs", ""}, APIObject{"scans", ""})
 	}
 
 	for _, object := range config.objects {
@@ -129,11 +115,8 @@ func DumpAPIData(ctx ginkgo.SpecContext, client *backendclient.BackendClient, co
 func DumpServiceLogs(ctx ginkgo.SpecContext, testEnv *testenv.Environment, config *ReportFailedConfig) {
 	ginkgo.GinkgoWriter.Println(formatter.F("{{red}}[FAILED] Report Service Logs:{{/}}"))
 
-	var services []string
-	if config.allServices {
-		services = testEnv.Services()
-	} else {
-		services = config.services
+	if len(config.services) == 0 {
+		config.services = testEnv.Services()
 	}
 
 	tail := config.serviceLogsTail
@@ -141,6 +124,6 @@ func DumpServiceLogs(ctx ginkgo.SpecContext, testEnv *testenv.Environment, confi
 		tail = "all"
 	}
 
-	err := testEnv.ServicesLogs(ctx, services, tail, formatter.ColorableStdOut, formatter.ColorableStdErr)
+	err := testEnv.ServiceLogs(ctx, config.services, tail, formatter.ColorableStdOut, formatter.ColorableStdErr)
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 }

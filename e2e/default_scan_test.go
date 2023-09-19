@@ -29,7 +29,6 @@ import (
 
 var _ = ginkgo.Describe("Running a default scan (SBOM, vulnerabilities and exploits)", func() {
 	reportFailedConfig := ReportFailedConfig{
-		allServices:     true,
 		serviceLogsTail: strconv.Itoa(10),
 	}
 

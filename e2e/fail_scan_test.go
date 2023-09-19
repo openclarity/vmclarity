@@ -29,7 +29,6 @@ import (
 
 var _ = ginkgo.Describe("Detecting scan failures", func() {
 	reportFailedConfig := ReportFailedConfig{
-		allServices:     true,
 		serviceLogsTail: strconv.Itoa(10),
 	}
 

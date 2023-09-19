@@ -29,7 +29,6 @@ import (
 
 var _ = ginkgo.Describe("Running a basic scan (only SBOM)", func() {
 	reportFailedConfig := ReportFailedConfig{
-		allServices:     true,
 		serviceLogsTail: strconv.Itoa(10),
 	}
 
