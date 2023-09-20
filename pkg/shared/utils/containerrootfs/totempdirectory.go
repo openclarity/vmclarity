@@ -162,7 +162,7 @@ func (cache *Cache) CleanupAll() error {
 	cache.mu.Lock()
 	defer cache.mu.Unlock()
 
-	errs := make([]error, len(cache.m), 0)
+	errs := make([]error, 0, len(cache.m))
 	for key, entry := range cache.m {
 		if entry.rootfs != nil {
 			errs = append(errs, entry.rootfs.Cleanup())
