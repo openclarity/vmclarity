@@ -2150,7 +2150,7 @@ components:
               $ref: '#/components/schemas/InfoFinderScan'
             findingsProcessed:
               type: boolean
-            resourceCleanup:
+            resourceCleanupStatus:
               $ref: '#/components/schemas/ResourceCleanupStatus'
             stats:
               $ref: '#/components/schemas/AssetScanStats'
@@ -2270,7 +2270,7 @@ components:
             findingsProcessed:
               type: boolean
               readOnly: true
-            resourceCleanup:
+            resourceCleanupStatus:
               $ref: '#/components/schemas/ResourceCleanupStatus'
               readOnly: true
             stats:

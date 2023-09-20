@@ -92,9 +92,9 @@ func (r *AssetScan) HasErrors() bool {
 }
 
 func (r *AssetScan) GetResourceCleanupStatus() (*ResourceCleanupStatus, bool) {
-	if r.ResourceCleanup == nil || r.ResourceCleanup.State == nil {
+	if r.ResourceCleanupStatus == nil || r.ResourceCleanupStatus.State == nil {
 		return nil, false
 	}
 
-	return r.ResourceCleanup, true
+	return r.ResourceCleanupStatus, true
 }

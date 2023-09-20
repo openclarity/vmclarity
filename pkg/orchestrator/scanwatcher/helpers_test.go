@@ -73,7 +73,7 @@ func TestNewAssetScanFromScan(t *testing.T) {
 			AssetID:              assetID,
 			ExpectedErrorMatcher: Not(HaveOccurred()),
 			ExpectedAssetScan: &models.AssetScan{
-				ResourceCleanup: models.NewResourceCleanupStatus(
+				ResourceCleanupStatus: models.NewResourceCleanupStatus(
 					transitionTime,
 					"New AssetScan created from Scan.",
 					"",
@@ -153,7 +153,7 @@ func TestNewAssetScanFromScan(t *testing.T) {
 			g := NewGomegaWithT(t)
 
 			result, err := newAssetScanFromScan(test.Scan, test.AssetID)
-			result.ResourceCleanup.LastTransitionTime = utils.PointerTo(transitionTime)
+			result.ResourceCleanupStatus.LastTransitionTime = utils.PointerTo(transitionTime)
 
 			g.Expect(err).Should(test.ExpectedErrorMatcher)
 			g.Expect(result).Should(BeComparableTo(test.ExpectedAssetScan))

@@ -82,7 +82,7 @@ func (w *Watcher) GetAssetScans(ctx context.Context) ([]AssetScanReconcileEvent,
 	logger := log.GetLoggerFromContextOrDiscard(ctx)
 	logger.Debugf("Fetching AssetScans which need to be reconciled")
 
-	filter := fmt.Sprintf("(status/general/state ne '%s' and status/general/state ne '%s') or resourceCleanup/state eq '%s'",
+	filter := fmt.Sprintf("(status/general/state ne '%s' and status/general/state ne '%s') or resourceCleanupStatus/state eq '%s'",
 		models.AssetScanStateStateDone, models.AssetScanStateStateNotScanned, models.ResourceCleanupStatusStatePending)
 	selector := "id,scan/id,asset/id"
 	params := models.GetAssetScansParams{
@@ -195,7 +195,7 @@ func (w *Watcher) reconcilePending(ctx context.Context, assetScan *models.AssetS
 	if assetScan.Scan != nil && assetScan.Scan.Id != "" && assetScan.Scan.MaxParallelScanners != nil {
 		// Check whether we have reached the maximum number of running scans
 		// TODO(chrisgacsal): the number of concurrent scans needs to be part of the provider config and handled there
-		filter := fmt.Sprintf("scan/id eq '%s' and status/general/state ne '%s' and status/general/state ne '%s' and resourceCleanup/state eq '%s'",
+		filter := fmt.Sprintf("scan/id eq '%s' and status/general/state ne '%s' and status/general/state ne '%s' and resourceCleanupStatus/state eq '%s'",
 			assetScan.Scan.Id, models.AssetScanStateStateDone, models.AssetScanStateStatePending, models.ResourceCleanupStatusStatePending)
 		assetScans, err := w.backend.GetAssetScans(ctx, models.GetAssetScansParams{
 			Filter: utils.PointerTo(filter),
@@ -299,11 +299,11 @@ func (w *Watcher) reconcileScheduled(ctx context.Context, assetScan *models.Asse
 }
 
 func (w *Watcher) reconcileDone(ctx context.Context, assetScan *models.AssetScan) error {
-	if assetScan.Scan == nil || assetScan.ResourceCleanup == nil {
-		return errors.New("invalid AssetScan: Scan and/or ResourceCleanup are nil")
+	if assetScan.Scan == nil || assetScan.ResourceCleanupStatus == nil {
+		return errors.New("invalid AssetScan: Scan and/or ResourceCleanupStatus are nil")
 	}
 
-	if *assetScan.ResourceCleanup.State != models.ResourceCleanupStatusStatePending {
+	if *assetScan.ResourceCleanupStatus.State != models.ResourceCleanupStatusStatePending {
 		return nil
 	}
 
@@ -330,7 +330,7 @@ func (w *Watcher) cleanupResources(ctx context.Context, assetScan *models.AssetS
 
 	switch w.scannerConfig.DeleteJobPolicy {
 	case DeleteJobPolicyNever:
-		assetScan.ResourceCleanup = models.NewResourceCleanupStatus(
+		assetScan.ResourceCleanupStatus = models.NewResourceCleanupStatus(
 			time.Now(),
 			"The delete job policy was set to never.",
 			"",
@@ -338,7 +338,7 @@ func (w *Watcher) cleanupResources(ctx context.Context, assetScan *models.AssetS
 		)
 	case DeleteJobPolicyOnSuccess:
 		if isDone && assetScan.HasErrors() {
-			assetScan.ResourceCleanup = models.NewResourceCleanupStatus(
+			assetScan.ResourceCleanupStatus = models.NewResourceCleanupStatus(
 				time.Now(),
 				"Asset scan didn't run successfully.",
 				"",
@@ -377,7 +377,7 @@ func (w *Watcher) cleanupResources(ctx context.Context, assetScan *models.AssetS
 		var retryableError provider.RetryableError
 		switch {
 		case errors.As(err, &fatalError):
-			assetScan.ResourceCleanup = models.NewResourceCleanupStatus(
+			assetScan.ResourceCleanupStatus = models.NewResourceCleanupStatus(
 				time.Now(),
 				"Resource cleanup failed.",
 				fatalError.Error(),
@@ -388,7 +388,7 @@ func (w *Watcher) cleanupResources(ctx context.Context, assetScan *models.AssetS
 			// nolint:wrapcheck
 			return common.NewRequeueAfterError(retryableError.RetryAfter(), retryableError.Error())
 		case err != nil:
-			assetScan.ResourceCleanup = models.NewResourceCleanupStatus(
+			assetScan.ResourceCleanupStatus = models.NewResourceCleanupStatus(
 				time.Now(),
 				"Resource cleanup failed.",
 				err.Error(),
@@ -396,7 +396,7 @@ func (w *Watcher) cleanupResources(ctx context.Context, assetScan *models.AssetS
 			)
 			logger.Errorf("resource cleanup failed: %v", err)
 		default:
-			assetScan.ResourceCleanup = models.NewResourceCleanupStatus(
+			assetScan.ResourceCleanupStatus = models.NewResourceCleanupStatus(
 				time.Now(),
 				"Resource cleaned up successfully.",
 				"nil",
@@ -406,7 +406,7 @@ func (w *Watcher) cleanupResources(ctx context.Context, assetScan *models.AssetS
 	}
 
 	assetScanPatch := models.AssetScan{
-		ResourceCleanup: assetScan.ResourceCleanup,
+		ResourceCleanupStatus: assetScan.ResourceCleanupStatus,
 	}
 	if err := w.backend.PatchAssetScan(ctx, assetScanPatch, assetScanID); err != nil {
 		return fmt.Errorf("failed to patch for AssetScan. AssetScanID=%s: %w", assetScanID, err)

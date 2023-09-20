@@ -47,9 +47,9 @@ func (s *ServerImpl) PostAssetScans(ctx echo.Context) error {
 
 	_, ok := assetScan.GetResourceCleanupStatus()
 	if !ok {
-		assetScan.ResourceCleanup.Default()
+		assetScan.ResourceCleanupStatus.Default()
 	}
-	if *assetScan.ResourceCleanup.State != models.ResourceCleanupStatusStatePending {
+	if *assetScan.ResourceCleanupStatus.State != models.ResourceCleanupStatusStatePending {
 		return sendError(ctx, http.StatusBadRequest, "invalid request: resource cleanup status is invalid")
 	}
 
@@ -102,7 +102,7 @@ func (s *ServerImpl) PatchAssetScansAssetScanID(ctx echo.Context, assetScanID mo
 	// check for valid resource cleanup state transition
 	_, ok := assetScan.GetResourceCleanupStatus()
 	if ok {
-		err = existingAssetScan.ResourceCleanup.UpdateState(*assetScan.ResourceCleanup.State)
+		err = existingAssetScan.ResourceCleanupStatus.UpdateState(*assetScan.ResourceCleanupStatus.State)
 		if err != nil {
 			return sendError(ctx, http.StatusBadRequest, err.Error())
 		}
@@ -160,7 +160,7 @@ func (s *ServerImpl) PutAssetScansAssetScanID(ctx echo.Context, assetScanID mode
 	// check for valid resource cleanup state transition
 	_, ok := assetScan.GetResourceCleanupStatus()
 	if ok {
-		err = existingAssetScan.ResourceCleanup.UpdateState(*assetScan.ResourceCleanup.State)
+		err = existingAssetScan.ResourceCleanupStatus.UpdateState(*assetScan.ResourceCleanupStatus.State)
 		if err != nil {
 			return sendError(ctx, http.StatusBadRequest, err.Error())
 		}

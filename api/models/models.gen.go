@@ -230,17 +230,17 @@ type AssetRelationship struct {
 // AssetScan defines model for AssetScan.
 type AssetScan struct {
 	// Asset Describes a relationship to an asset which can be expanded.
-	Asset             *AssetRelationship     `json:"asset,omitempty"`
-	Exploits          *ExploitScan           `json:"exploits,omitempty"`
-	FindingsProcessed *bool                  `json:"findingsProcessed,omitempty"`
-	Id                *string                `json:"id,omitempty"`
-	InfoFinder        *InfoFinderScan        `json:"infoFinder,omitempty"`
-	Malware           *MalwareScan           `json:"malware,omitempty"`
-	Misconfigurations *MisconfigurationScan  `json:"misconfigurations,omitempty"`
-	ResourceCleanup   *ResourceCleanupStatus `json:"resourceCleanup,omitempty"`
-	Revision          *int                   `json:"revision,omitempty"`
-	Rootkits          *RootkitScan           `json:"rootkits,omitempty"`
-	Sboms             *SbomScan              `json:"sboms,omitempty"`
+	Asset                 *AssetRelationship     `json:"asset,omitempty"`
+	Exploits              *ExploitScan           `json:"exploits,omitempty"`
+	FindingsProcessed     *bool                  `json:"findingsProcessed,omitempty"`
+	Id                    *string                `json:"id,omitempty"`
+	InfoFinder            *InfoFinderScan        `json:"infoFinder,omitempty"`
+	Malware               *MalwareScan           `json:"malware,omitempty"`
+	Misconfigurations     *MisconfigurationScan  `json:"misconfigurations,omitempty"`
+	ResourceCleanupStatus *ResourceCleanupStatus `json:"resourceCleanupStatus,omitempty"`
+	Revision              *int                   `json:"revision,omitempty"`
+	Rootkits              *RootkitScan           `json:"rootkits,omitempty"`
+	Sboms                 *SbomScan              `json:"sboms,omitempty"`
 
 	// Scan Describes an expandable relationship to Scan object
 	Scan *ScanRelationship `json:"scan,omitempty"`
@@ -348,17 +348,17 @@ type AssetScanInputScanStats struct {
 // AssetScanRelationship defines model for AssetScanRelationship.
 type AssetScanRelationship struct {
 	// Asset Describes a relationship to an asset which can be expanded.
-	Asset             *AssetRelationship     `json:"asset,omitempty"`
-	Exploits          *ExploitScan           `json:"exploits,omitempty"`
-	FindingsProcessed *bool                  `json:"findingsProcessed,omitempty"`
-	Id                string                 `json:"id"`
-	InfoFinder        *InfoFinderScan        `json:"infoFinder,omitempty"`
-	Malware           *MalwareScan           `json:"malware,omitempty"`
-	Misconfigurations *MisconfigurationScan  `json:"misconfigurations,omitempty"`
-	ResourceCleanup   *ResourceCleanupStatus `json:"resourceCleanup,omitempty"`
-	Revision          *int                   `json:"revision,omitempty"`
-	Rootkits          *RootkitScan           `json:"rootkits,omitempty"`
-	Sboms             *SbomScan              `json:"sboms,omitempty"`
+	Asset                 *AssetRelationship     `json:"asset,omitempty"`
+	Exploits              *ExploitScan           `json:"exploits,omitempty"`
+	FindingsProcessed     *bool                  `json:"findingsProcessed,omitempty"`
+	Id                    string                 `json:"id"`
+	InfoFinder            *InfoFinderScan        `json:"infoFinder,omitempty"`
+	Malware               *MalwareScan           `json:"malware,omitempty"`
+	Misconfigurations     *MisconfigurationScan  `json:"misconfigurations,omitempty"`
+	ResourceCleanupStatus *ResourceCleanupStatus `json:"resourceCleanupStatus,omitempty"`
+	Revision              *int                   `json:"revision,omitempty"`
+	Rootkits              *RootkitScan           `json:"rootkits,omitempty"`
+	Sboms                 *SbomScan              `json:"sboms,omitempty"`
 
 	// Scan Describes an expandable relationship to Scan object
 	Scan *ScanRelationship `json:"scan,omitempty"`

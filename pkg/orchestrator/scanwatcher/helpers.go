@@ -105,7 +105,7 @@ func newAssetScanFromScan(scan *models.Scan, assetID string) (*models.AssetScan,
 				State:  getInitStateFromFamilyConfig(familiesConfig.InfoFinder),
 			},
 		},
-		ResourceCleanup: models.NewResourceCleanupStatus(
+		ResourceCleanupStatus: models.NewResourceCleanupStatus(
 			time.Now(),
 			"New AssetScan created from Scan.",
 			"",
