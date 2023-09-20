@@ -105,12 +105,12 @@ func newAssetScanFromScan(scan *models.Scan, assetID string) (*models.AssetScan,
 				State:  getInitStateFromFamilyConfig(familiesConfig.InfoFinder),
 			},
 		},
-		ResourceCleanup: &models.ResourceCleanupStatus{
-			LastTransitionTime: utils.PointerTo(time.Now()),
-			Message:            utils.PointerTo("New AssetScan created from Scan."),
-			Reason:             utils.PointerTo("New AssetScan created from Scan."),
-			State:              utils.PointerTo(models.ResourceCleanupStatusStatePending),
-		},
+		ResourceCleanup: models.NewResourceCleanupStatus(
+			time.Now(),
+			"New AssetScan created from Scan.",
+			"",
+			models.ResourceCleanupStatusStatePending,
+		),
 	}, nil
 }
 

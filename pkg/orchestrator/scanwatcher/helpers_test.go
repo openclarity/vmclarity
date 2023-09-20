@@ -73,12 +73,12 @@ func TestNewAssetScanFromScan(t *testing.T) {
 			AssetID:              assetID,
 			ExpectedErrorMatcher: Not(HaveOccurred()),
 			ExpectedAssetScan: &models.AssetScan{
-				ResourceCleanup: &models.ResourceCleanupStatus{
-					LastTransitionTime: utils.PointerTo(transitionTime),
-					Message:            utils.PointerTo("New AssetScan created from Scan."),
-					Reason:             utils.PointerTo("New AssetScan created from Scan."),
-					State:              utils.PointerTo(models.ResourceCleanupStatusStatePending),
-				},
+				ResourceCleanup: models.NewResourceCleanupStatus(
+					transitionTime,
+					"New AssetScan created from Scan.",
+					"",
+					models.ResourceCleanupStatusStatePending,
+				),
 				Scan: &models.ScanRelationship{
 					Id: scanID,
 				},

@@ -330,18 +330,20 @@ func (w *Watcher) cleanupResources(ctx context.Context, assetScan *models.AssetS
 
 	switch w.scannerConfig.DeleteJobPolicy {
 	case DeleteJobPolicyNever:
-		assetScan.ResourceCleanup = &models.ResourceCleanupStatus{
-			LastTransitionTime: utils.PointerTo(time.Now()),
-			Message:            utils.PointerTo("The delete job policy was set to never."),
-			State:              utils.PointerTo(models.ResourceCleanupStatusStateSkipped),
-		}
+		assetScan.ResourceCleanup = models.NewResourceCleanupStatus(
+			time.Now(),
+			"The delete job policy was set to never.",
+			"",
+			models.ResourceCleanupStatusStateSkipped,
+		)
 	case DeleteJobPolicyOnSuccess:
 		if isDone && assetScan.HasErrors() {
-			assetScan.ResourceCleanup = &models.ResourceCleanupStatus{
-				LastTransitionTime: utils.PointerTo(time.Now()),
-				Message:            utils.PointerTo("Asset scan didn't run successfully."),
-				State:              utils.PointerTo(models.ResourceCleanupStatusStateSkipped),
-			}
+			assetScan.ResourceCleanup = models.NewResourceCleanupStatus(
+				time.Now(),
+				"Asset scan didn't run successfully.",
+				"",
+				models.ResourceCleanupStatusStateSkipped,
+			)
 			break
 		}
 		fallthrough
@@ -375,30 +377,31 @@ func (w *Watcher) cleanupResources(ctx context.Context, assetScan *models.AssetS
 		var retryableError provider.RetryableError
 		switch {
 		case errors.As(err, &fatalError):
-			assetScan.ResourceCleanup = &models.ResourceCleanupStatus{
-				LastTransitionTime: utils.PointerTo(time.Now()),
-				Message:            utils.PointerTo("Resource cleanup failed."),
-				Reason:             utils.PointerTo(fatalError.Error()),
-				State:              utils.PointerTo(models.ResourceCleanupStatusStateFailed),
-			}
+			assetScan.ResourceCleanup = models.NewResourceCleanupStatus(
+				time.Now(),
+				"Resource cleanup failed.",
+				fatalError.Error(),
+				models.ResourceCleanupStatusStateFailed,
+			)
 			logger.Errorf("resource cleanup failed: %v", fatalError)
 		case errors.As(err, &retryableError):
 			// nolint:wrapcheck
 			return common.NewRequeueAfterError(retryableError.RetryAfter(), retryableError.Error())
 		case err != nil:
-			assetScan.ResourceCleanup = &models.ResourceCleanupStatus{
-				LastTransitionTime: utils.PointerTo(time.Now()),
-				Message:            utils.PointerTo("Resource cleanup failed."),
-				Reason:             utils.PointerTo(err.Error()),
-				State:              utils.PointerTo(models.ResourceCleanupStatusStateFailed),
-			}
+			assetScan.ResourceCleanup = models.NewResourceCleanupStatus(
+				time.Now(),
+				"Resource cleanup failed.",
+				err.Error(),
+				models.ResourceCleanupStatusStateFailed,
+			)
 			logger.Errorf("resource cleanup failed: %v", err)
 		default:
-			assetScan.ResourceCleanup = &models.ResourceCleanupStatus{
-				LastTransitionTime: utils.PointerTo(time.Now()),
-				Message:            utils.PointerTo("Resource cleaned up successfully."),
-				State:              utils.PointerTo(models.ResourceCleanupStatusStateDone),
-			}
+			assetScan.ResourceCleanup = models.NewResourceCleanupStatus(
+				time.Now(),
+				"Resource cleaned up successfully.",
+				"nil",
+				models.ResourceCleanupStatusStateDone,
+			)
 		}
 	}
 

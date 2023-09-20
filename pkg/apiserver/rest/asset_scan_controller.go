@@ -45,6 +45,14 @@ func (s *ServerImpl) PostAssetScans(ctx echo.Context) error {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
 
+	_, ok := assetScan.GetResourceCleanupStatus()
+	if !ok {
+		assetScan.ResourceCleanup.Default()
+	}
+	if *assetScan.ResourceCleanup.State != models.ResourceCleanupStatusStatePending {
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprint("invalid request: resource cleanup status is invalid"))
+	}
+
 	createdAssetScan, err := s.dbHandler.AssetScansTable().CreateAssetScan(assetScan)
 	if err != nil {
 		var conflictErr *common.ConflictError
@@ -92,9 +100,12 @@ func (s *ServerImpl) PatchAssetScansAssetScanID(ctx echo.Context, assetScanID mo
 	}
 
 	// check for valid resource cleanup state transition
-	err = existingAssetScan.ResourceCleanup.UpdateState(*assetScan.ResourceCleanup.State)
-	if err != nil {
-		return sendError(ctx, http.StatusBadRequest, err.Error())
+	_, ok := assetScan.GetResourceCleanupStatus()
+	if ok {
+		err = existingAssetScan.ResourceCleanup.UpdateState(*assetScan.ResourceCleanup.State)
+		if err != nil {
+			return sendError(ctx, http.StatusBadRequest, err.Error())
+		}
 	}
 
 	// PATCH request might not contain the ID in the body, so set it from
@@ -147,9 +158,12 @@ func (s *ServerImpl) PutAssetScansAssetScanID(ctx echo.Context, assetScanID mode
 	}
 
 	// check for valid resource cleanup state transition
-	err = existingAssetScan.ResourceCleanup.UpdateState(*assetScan.ResourceCleanup.State)
-	if err != nil {
-		return sendError(ctx, http.StatusBadRequest, err.Error())
+	_, ok := assetScan.GetResourceCleanupStatus()
+	if ok {
+		err = existingAssetScan.ResourceCleanup.UpdateState(*assetScan.ResourceCleanup.State)
+		if err != nil {
+			return sendError(ctx, http.StatusBadRequest, err.Error())
+		}
 	}
 
 	// PUT request might not contain the ID in the body, so set it from
