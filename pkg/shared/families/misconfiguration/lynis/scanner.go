@@ -86,11 +86,11 @@ func (a *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 		reportPath := path.Join(reportDir, "lynis.dat")
 
 		fsPath, cleanup, err := familiesutils.ConvertInputToFilesystem(context.TODO(), sourceType, userInput)
-		defer cleanup()
 		if err != nil {
 			a.sendResults(retResults, fmt.Errorf("failed to convert input to filesystem: %w", err))
 			return
 		}
+		defer cleanup()
 
 		// Build command:
 		// <installPath>/lynis audit system \

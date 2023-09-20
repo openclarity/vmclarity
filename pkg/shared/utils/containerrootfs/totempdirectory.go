@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"os"
 	"sync"
+
+	"github.com/openclarity/vmclarity/pkg/shared/log"
 )
 
 type Rootfs interface {
@@ -57,19 +59,31 @@ func (tdrf *tempDirRootfs) Cleanup() error {
 }
 
 func toTempDirectory(ctx context.Context, src string) (Rootfs, error) {
+	successful := false
 	tdrf := &tempDirRootfs{}
+	defer func() {
+		// If we're successful then its the responsibility of the caller
+		// to defer the cleanup, if we error during this function then
+		// we need to handle it.
+		if !successful {
+			if err := tdrf.Cleanup(); err != nil {
+				log.GetLoggerFromContextOrDefault(ctx).WithError(err).Error("failed to clean up container rootfs")
+			}
+		}
+	}()
 
 	tmpdir, err := os.MkdirTemp("", "")
 	if err != nil {
-		return tdrf, fmt.Errorf("unable to create temp directory: %w", err)
+		return nil, fmt.Errorf("unable to create temp directory: %w", err)
 	}
 	tdrf.dir = tmpdir
 
 	err = ToDirectory(ctx, src, tmpdir)
 	if err != nil {
-		return tdrf, fmt.Errorf("unable to output squashed image to directory: %w", err)
+		return nil, fmt.Errorf("unable to output squashed image to directory: %w", err)
 	}
 
+	successful = true
 	return tdrf, nil
 }
 
@@ -87,8 +101,13 @@ func (crfs *cachedRootfs) Cleanup() error {
 	return nil
 }
 
-func (crfs *cachedRootfs) Wait() {
-	<-crfs.complete
+func (crfs *cachedRootfs) Wait(ctx context.Context) error {
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("wait aborted: %w", ctx.Err())
+	case <-crfs.complete:
+		return crfs.err
+	}
 }
 
 func (crfs *cachedRootfs) Done(rootfs Rootfs, err error) {
@@ -124,8 +143,8 @@ func (cache *Cache) ToTempDirectory(ctx context.Context, src string) (Rootfs, er
 	entry, ok := cache.m[src]
 	if ok {
 		cache.mu.Unlock()
-		entry.Wait()
-		return entry, entry.err
+		err := entry.Wait(ctx)
+		return entry, err
 	}
 	entry = newCachedRootfs()
 	cache.m[src] = entry
@@ -133,7 +152,7 @@ func (cache *Cache) ToTempDirectory(ctx context.Context, src string) (Rootfs, er
 
 	rootfs, err := toTempDirectory(ctx, src)
 	entry.Done(rootfs, err)
-	return entry, nil
+	return entry, entry.err
 }
 
 func (cache *Cache) CleanupAll() error {
@@ -145,10 +164,9 @@ func (cache *Cache) CleanupAll() error {
 
 	errs := make([]error, len(cache.m), 0)
 	for key, entry := range cache.m {
-		if entry.rootfs == nil {
-			continue
+		if entry.rootfs != nil {
+			errs = append(errs, entry.rootfs.Cleanup())
 		}
-		errs = append(errs, entry.rootfs.Cleanup())
 		delete(cache.m, key)
 	}
 	return errors.Join(errs...)

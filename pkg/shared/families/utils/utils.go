@@ -125,14 +125,14 @@ func ConvertInputToFilesystem(ctx context.Context, sourceType kubeclarityutils.S
 		// context all the way from the family manager.
 		ctx := containerrootfs.SetCacheForContext(ctx, ContainerRootfsCache)
 		rootfs, err := containerrootfs.ToTempDirectory(ctx, source)
+		if err != nil {
+			return "", func() {}, fmt.Errorf("failed to expand container to rootfs directory: %w", err)
+		}
 		cleanup := func() {
 			err = rootfs.Cleanup()
 			if err != nil {
 				log.GetLoggerFromContextOrDefault(ctx).WithError(err).Error("unable to clean up container rootfs")
 			}
-		}
-		if err != nil {
-			return "", cleanup, fmt.Errorf("failed to expand container to rootfs directory: %w", err)
 		}
 		return rootfs.Dir(), cleanup, nil
 	case kubeclarityutils.SBOM, kubeclarityutils.FILE:

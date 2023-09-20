@@ -66,6 +66,12 @@ func ToDirectory(ctx context.Context, src, dest string) error {
 			if err != nil {
 				return fmt.Errorf("unable to open file %s: %w", target, err)
 			}
+			defer func() {
+				err = output.Close()
+				if err != nil {
+					logger.WithError(err).Errorf("unable to close file %s", target)
+				}
+			}()
 
 			content, err := image.OpenReference(*f.Reference)
 			if err != nil {
@@ -78,11 +84,6 @@ func ToDirectory(ctx context.Context, src, dest string) error {
 			}
 			if err != nil {
 				return fmt.Errorf("unable to copy file: %w", err)
-			}
-
-			err = output.Close()
-			if err != nil {
-				logger.WithError(err).Errorf("unable to close file %s", target)
 			}
 		case file.TypeHardLink, file.TypeSymLink, file.TypeCharacterDevice, file.TypeBlockDevice, file.TypeFIFO, file.TypeSocket, file.TypeIrregular:
 			logger.Warnf("found unsupported file type %s in container image at %s", f.FileType, path)

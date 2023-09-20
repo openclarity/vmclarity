@@ -71,11 +71,11 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 		}
 
 		fsPath, cleanup, err := familiesutils.ConvertInputToFilesystem(context.TODO(), sourceType, userInput)
-		defer cleanup()
 		if err != nil {
 			s.sendResults(retResults, fmt.Errorf("failed to convert input to filesystem: %w", err))
 			return
 		}
+		defer cleanup()
 
 		var errs []error
 		homeUserDirs, err := getHomeUserDirs(fsPath)

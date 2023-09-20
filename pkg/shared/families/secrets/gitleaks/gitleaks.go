@@ -78,11 +78,11 @@ func (a *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 		reportPath := file.Name()
 
 		fsPath, cleanup, err := familiesutils.ConvertInputToFilesystem(context.TODO(), sourceType, userInput)
-		defer cleanup()
 		if err != nil {
 			a.sendResults(retResults, fmt.Errorf("failed to convert input to filesystem: %w", err))
 			return
 		}
+		defer cleanup()
 
 		// ./gitleaks detect --source=<source> --no-git -r <report-path> -f json --exit-code 0 --max-target-megabytes 50
 		// nolint:gosec
