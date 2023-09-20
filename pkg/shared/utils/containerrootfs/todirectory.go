@@ -32,7 +32,7 @@ import (
 
 const perFileReadLimit = 2 * file.GB
 
-// nolint:cyclop
+// nolint:cyclop, gocognit
 func ToDirectory(ctx context.Context, src, dest string) error {
 	logger := log.GetLoggerFromContextOrDefault(ctx)
 
@@ -85,7 +85,17 @@ func ToDirectory(ctx context.Context, src, dest string) error {
 			if err != nil {
 				return fmt.Errorf("unable to copy file: %w", err)
 			}
-		case file.TypeHardLink, file.TypeSymLink, file.TypeCharacterDevice, file.TypeBlockDevice, file.TypeFIFO, file.TypeSocket, file.TypeIrregular:
+		case file.TypeSymLink:
+			linkTarget := string(f.LinkPath)
+			if f.LinkPath.IsAbsolutePath() {
+				linkTarget = filepath.Join(dest, string(f.LinkPath))
+			}
+
+			err := os.Symlink(linkTarget, target)
+			if err != nil {
+				return fmt.Errorf("unable to create symlink: %w", err)
+			}
+		case file.TypeHardLink, file.TypeCharacterDevice, file.TypeBlockDevice, file.TypeFIFO, file.TypeSocket, file.TypeIrregular:
 			logger.Warnf("found unsupported file type %s in container image at %s", f.FileType, path)
 		}
 
