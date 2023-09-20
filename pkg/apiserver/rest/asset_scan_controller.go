@@ -50,7 +50,7 @@ func (s *ServerImpl) PostAssetScans(ctx echo.Context) error {
 		assetScan.ResourceCleanup.Default()
 	}
 	if *assetScan.ResourceCleanup.State != models.ResourceCleanupStatusStatePending {
-		return sendError(ctx, http.StatusBadRequest, fmt.Sprint("invalid request: resource cleanup status is invalid"))
+		return sendError(ctx, http.StatusBadRequest, "invalid request: resource cleanup status is invalid")
 	}
 
 	createdAssetScan, err := s.dbHandler.AssetScansTable().CreateAssetScan(assetScan)
