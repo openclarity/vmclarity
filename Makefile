@@ -205,9 +205,14 @@ license-cache: bin/licensei ## Generate license cache
 .PHONY: check
 check: lint test helm-lint ## Run tests and linters
 
+TIDYGOMODULES = $(addprefix tidy-, $(GOMODULES))
+
+.PHONY: $(TIDYGOMODULES)
+$(TIDYGOMODULES):
+	cd $(dir $(@:tidy-%=%)) && go mod tidy
+
 .PHONY: gomod-tidy
-gomod-tidy:
-	go mod tidy
+gomod-tidy: $(TIDYGOMODULES)
 
 .PHONY: gen-api
 gen-api: gen-apiserver-api gen-uibackend-api ## Generating API code
