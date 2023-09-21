@@ -12,7 +12,7 @@ ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 BIN_DIR := $(ROOT_DIR)/bin
 
 # Dependency versions
-LICENSEI_VERSION = 0.5.0
+LICENSEI_VERSION = 0.9.0
 
 # HELP
 # This will output the help for each task
