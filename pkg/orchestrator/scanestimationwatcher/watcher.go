@@ -204,7 +204,9 @@ func (w *Watcher) reconcileDone(ctx context.Context, scanEstimation *models.Scan
 		// if delete time has already pass, no need to patch the object, just delete it.
 		if !timeNow.After(*scanEstimation.DeleteAfter) {
 			scanEstimationPatch := models.ScanEstimation{
-				DeleteAfter: scanEstimation.DeleteAfter,
+				DeleteAfter:             scanEstimation.DeleteAfter,
+				EndTime:                 scanEstimation.EndTime,
+				TTLSecondsAfterFinished: scanEstimation.TTLSecondsAfterFinished,
 			}
 			err := w.backend.PatchScanEstimation(ctx, scanEstimationID, &scanEstimationPatch)
 			if err != nil {

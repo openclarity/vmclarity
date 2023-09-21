@@ -192,7 +192,9 @@ func (w *Watcher) reconcileDone(ctx context.Context, assetScanEstimation *models
 		// if delete time has already pass, no need to patch the object, just delete it.
 		if !timeNow.After(*assetScanEstimation.DeleteAfter) {
 			assetScanEstimationPatch := models.AssetScanEstimation{
-				DeleteAfter: assetScanEstimation.DeleteAfter,
+				DeleteAfter:             assetScanEstimation.DeleteAfter,
+				EndTime:                 assetScanEstimation.EndTime,
+				TTLSecondsAfterFinished: assetScanEstimation.TTLSecondsAfterFinished,
 			}
 			err := w.backend.PatchAssetScanEstimation(ctx, assetScanEstimationPatch, assetScanEstimationID)
 			if err != nil {
