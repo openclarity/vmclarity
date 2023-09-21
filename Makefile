@@ -140,8 +140,12 @@ e2e: docker-apiserver docker-cli docker-orchestrator docker-ui docker-ui-backend
 clean-ui:
 	@(rm -rf ui/build ; echo "UI cleanup done" )
 
+.PHONY: clean-go
+clean-go:
+	@(rm -rf bin ; echo "GO executables cleanup done" )
+
 .PHONY: clean
-clean: clean-ui clean-backend ## Clean all build artifacts
+clean: clean-ui clean-go ## Clean all build artifacts
 
 $(BIN_DIR):
 	@mkdir -p $(BIN_DIR)
