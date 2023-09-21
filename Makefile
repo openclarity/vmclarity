@@ -140,12 +140,20 @@ e2e: docker-apiserver docker-cli docker-orchestrator docker-ui docker-ui-backend
 clean-ui:
 	@(rm -rf ui/build ; echo "UI cleanup done" )
 
+.PHONY: clean-golangci-lint
+clean-golangci-lint:
+	@(rm -rf bin/golangci-lint* ; echo "Golangci lint cleanup done" )
+
+.PHONY: clean-licensei
+clean-licensei:
+	@(rm -rf bin/licensei* ; echo "Licensei cleanup done" )
+
 .PHONY: clean-go
 clean-go:
-	@(rm -rf bin ; echo "GO executables cleanup done" )
+	@(rm -rf bin/vmclarity* ; echo "GO executables cleanup done" )
 
 .PHONY: clean
-clean: clean-ui clean-go ## Clean all build artifacts
+clean: clean-ui clean-golangci-lint clean-licensei clean-go ## Clean all build artifacts
 
 $(BIN_DIR):
 	@mkdir -p $(BIN_DIR)
