@@ -18,6 +18,7 @@ package scanwatcher
 import (
 	"errors"
 	"fmt"
+
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
