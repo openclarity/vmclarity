@@ -331,18 +331,14 @@ func (w *Watcher) cleanupResources(ctx context.Context, assetScan *models.AssetS
 	switch w.scannerConfig.DeleteJobPolicy {
 	case DeleteJobPolicyNever:
 		assetScan.ResourceCleanupStatus = models.NewResourceCleanupStatus(
-			time.Now(),
-			"The delete job policy was set to never.",
-			"",
 			models.ResourceCleanupStatusStateSkipped,
+			"The delete job policy was set to never.",
 		)
 	case DeleteJobPolicyOnSuccess:
 		if isDone && assetScan.HasErrors() {
 			assetScan.ResourceCleanupStatus = models.NewResourceCleanupStatus(
-				time.Now(),
-				"Asset scan didn't run successfully.",
-				"",
 				models.ResourceCleanupStatusStateSkipped,
+				"Asset scan didn't run successfully.",
 			)
 			break
 		}
@@ -378,10 +374,9 @@ func (w *Watcher) cleanupResources(ctx context.Context, assetScan *models.AssetS
 		switch {
 		case errors.As(err, &fatalError):
 			assetScan.ResourceCleanupStatus = models.NewResourceCleanupStatus(
-				time.Now(),
+				models.ResourceCleanupStatusStateFailed,
 				"Resource cleanup failed.",
 				fatalError.Error(),
-				models.ResourceCleanupStatusStateFailed,
 			)
 			logger.Errorf("resource cleanup failed: %v", fatalError)
 		case errors.As(err, &retryableError):
@@ -389,18 +384,15 @@ func (w *Watcher) cleanupResources(ctx context.Context, assetScan *models.AssetS
 			return common.NewRequeueAfterError(retryableError.RetryAfter(), retryableError.Error())
 		case err != nil:
 			assetScan.ResourceCleanupStatus = models.NewResourceCleanupStatus(
-				time.Now(),
+				models.ResourceCleanupStatusStateFailed,
 				"Resource cleanup failed.",
 				err.Error(),
-				models.ResourceCleanupStatusStateFailed,
 			)
 			logger.Errorf("resource cleanup failed: %v", err)
 		default:
 			assetScan.ResourceCleanupStatus = models.NewResourceCleanupStatus(
-				time.Now(),
-				"Resource cleaned up successfully.",
-				"nil",
 				models.ResourceCleanupStatusStateDone,
+				"Resource cleaned up successfully.",
 			)
 		}
 	}

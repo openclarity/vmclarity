@@ -18,8 +18,6 @@ package scanwatcher
 import (
 	"errors"
 	"fmt"
-	"time"
-
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
@@ -106,10 +104,8 @@ func newAssetScanFromScan(scan *models.Scan, assetID string) (*models.AssetScan,
 			},
 		},
 		ResourceCleanupStatus: models.NewResourceCleanupStatus(
-			time.Now(),
-			"New AssetScan created from Scan.",
-			"",
 			models.ResourceCleanupStatusStatePending,
+			"New AssetScan created from Scan.",
 		),
 	}, nil
 }

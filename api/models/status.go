@@ -9,12 +9,18 @@ type Defaulter interface {
 	Default()
 }
 
-func NewResourceCleanupStatus(lastTransitionTime time.Time, message, reason string, state ResourceCleanupStatusState) *ResourceCleanupStatus {
+func NewResourceCleanupStatus(state ResourceCleanupStatusState, m string, s ...string) *ResourceCleanupStatus {
+	lastTransitionTime := time.Now()
+	var reason string
+	if len(s) == 1 {
+		reason = s[0]
+	}
+
 	return &ResourceCleanupStatus{
 		LastTransitionTime: &lastTransitionTime,
-		Message:            &message,
-		Reason:             &reason,
 		State:              &state,
+		Message:            &m,
+		Reason:             &reason,
 	}
 }
 
@@ -28,39 +34,34 @@ var ResourceCleanupStatusStateValidTransitions = ResourceCleanupStateMachine{
 	},
 }
 
-func (rcs *ResourceCleanupStatus) UpdateState(toState ResourceCleanupStatusState) error {
-	if *rcs.State == toState {
+func (r *ResourceCleanupStatus) UpdateState(toState ResourceCleanupStatusState) error {
+	if *r.State == toState {
 		return nil
 	}
 
-	transitions, ok := ResourceCleanupStatusStateValidTransitions[*rcs.State]
+	transitions, ok := ResourceCleanupStatusStateValidTransitions[*r.State]
 	if ok {
 		for _, transition := range transitions {
 			if transition == toState {
-				rcs.State = &toState
+				r.State = &toState
 				return nil
 			}
 		}
 	}
 
-	return fmt.Errorf("invalid transition: %s > %s", *rcs.State, toState)
+	return fmt.Errorf("invalid transition: %s > %s", *r.State, toState)
 }
 
-func (rcs *ResourceCleanupStatus) Default() {
+func (r *ResourceCleanupStatus) Default() {
 	now := time.Now()
 	state := ResourceCleanupStatusStatePending
 
-	if rcs == nil {
-		*rcs = ResourceCleanupStatus{
-			LastTransitionTime: &now,
-			Message:            nil,
-			Reason:             nil,
-			State:              &state,
-		}
+	if r == nil {
+		*r = *NewResourceCleanupStatus(state, "Default ResourceCleanupStatus created.")
 	}
 
-	if rcs.State == nil {
-		rcs.LastTransitionTime = &now
-		rcs.State = &state
+	if r.State == nil {
+		r.LastTransitionTime = &now
+		r.State = &state
 	}
 }
