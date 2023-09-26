@@ -498,6 +498,14 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 				FieldType:           odatasql.ComplexFieldType,
 				ComplexFieldSchemas: []string{"ScanFindingsSummary"},
 			},
+			"providers": odatasql.FieldMeta{
+				FieldType: odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{
+					FieldType:            odatasql.RelationshipFieldType,
+					RelationshipSchema:   providerSchemaName,
+					RelationshipProperty: "id",
+				},
+			},
 		},
 	},
 	"VMInfo": {

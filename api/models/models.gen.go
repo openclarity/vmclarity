@@ -212,7 +212,10 @@ type Asset struct {
 	FirstSeen *time.Time `json:"firstSeen,omitempty"`
 	Id        *string    `json:"id,omitempty"`
 	LastSeen  *time.Time `json:"lastSeen,omitempty"`
-	Revision  *int       `json:"revision,omitempty"`
+
+	// Providers List of providers which discover the asset.
+	Providers *[]ProviderRelationship `json:"providers,omitempty"`
+	Revision  *int                    `json:"revision,omitempty"`
 
 	// ScansCount Total number of scans that have ever run for this asset
 	ScansCount *int `json:"scansCount,omitempty"`
@@ -240,7 +243,10 @@ type AssetRelationship struct {
 	FirstSeen *time.Time `json:"firstSeen,omitempty"`
 	Id        string     `json:"id"`
 	LastSeen  *time.Time `json:"lastSeen,omitempty"`
-	Revision  *int       `json:"revision,omitempty"`
+
+	// Providers List of providers which discover the asset.
+	Providers *[]ProviderRelationship `json:"providers,omitempty"`
+	Revision  *int                    `json:"revision,omitempty"`
 
 	// ScansCount Total number of scans that have ever run for this asset
 	ScansCount *int `json:"scansCount,omitempty"`
