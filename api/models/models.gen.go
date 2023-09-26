@@ -1730,8 +1730,8 @@ type PatchFindingsFindingIDJSONRequestBody = Finding
 // PutFindingsFindingIDJSONRequestBody defines body for PutFindingsFindingID for application/json ContentType.
 type PutFindingsFindingIDJSONRequestBody = Finding
 
-// PostProviderJSONRequestBody defines body for PostProvider for application/json ContentType.
-type PostProviderJSONRequestBody = Provider
+// PostProvidersJSONRequestBody defines body for PostProviders for application/json ContentType.
+type PostProvidersJSONRequestBody = Provider
 
 // PatchProvidersProviderIDJSONRequestBody defines body for PatchProvidersProviderID for application/json ContentType.
 type PatchProvidersProviderIDJSONRequestBody = Provider

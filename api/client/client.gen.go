@@ -189,10 +189,10 @@ type ClientInterface interface {
 	// GetProviders request
 	GetProviders(ctx context.Context, params *GetProvidersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostProviderWithBody request with any body
-	PostProviderWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostProvidersWithBody request with any body
+	PostProvidersWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostProvider(ctx context.Context, body PostProviderJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostProviders(ctx context.Context, body PostProvidersJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteProvidersProviderID request
 	DeleteProvidersProviderID(ctx context.Context, providerID ProviderID, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -727,8 +727,8 @@ func (c *Client) GetProviders(ctx context.Context, params *GetProvidersParams, r
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostProviderWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostProviderRequestWithBody(c.Server, contentType, body)
+func (c *Client) PostProvidersWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostProvidersRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -739,8 +739,8 @@ func (c *Client) PostProviderWithBody(ctx context.Context, contentType string, b
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostProvider(ctx context.Context, body PostProviderJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostProviderRequest(c.Server, body)
+func (c *Client) PostProviders(ctx context.Context, body PostProvidersJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostProvidersRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2915,19 +2915,19 @@ func NewGetProvidersRequest(server string, params *GetProvidersParams) (*http.Re
 	return req, nil
 }
 
-// NewPostProviderRequest calls the generic PostProvider builder with application/json body
-func NewPostProviderRequest(server string, body PostProviderJSONRequestBody) (*http.Request, error) {
+// NewPostProvidersRequest calls the generic PostProviders builder with application/json body
+func NewPostProvidersRequest(server string, body PostProvidersJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostProviderRequestWithBody(server, "application/json", bodyReader)
+	return NewPostProvidersRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewPostProviderRequestWithBody generates requests for PostProvider with any type of body
-func NewPostProviderRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostProvidersRequestWithBody generates requests for PostProviders with any type of body
+func NewPostProvidersRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -4572,10 +4572,10 @@ type ClientWithResponsesInterface interface {
 	// GetProvidersWithResponse request
 	GetProvidersWithResponse(ctx context.Context, params *GetProvidersParams, reqEditors ...RequestEditorFn) (*GetProvidersResponse, error)
 
-	// PostProviderWithBodyWithResponse request with any body
-	PostProviderWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostProviderResponse, error)
+	// PostProvidersWithBodyWithResponse request with any body
+	PostProvidersWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostProvidersResponse, error)
 
-	PostProviderWithResponse(ctx context.Context, body PostProviderJSONRequestBody, reqEditors ...RequestEditorFn) (*PostProviderResponse, error)
+	PostProvidersWithResponse(ctx context.Context, body PostProvidersJSONRequestBody, reqEditors ...RequestEditorFn) (*PostProvidersResponse, error)
 
 	// DeleteProvidersProviderIDWithResponse request
 	DeleteProvidersProviderIDWithResponse(ctx context.Context, providerID ProviderID, reqEditors ...RequestEditorFn) (*DeleteProvidersProviderIDResponse, error)
@@ -5284,7 +5284,7 @@ func (r GetProvidersResponse) StatusCode() int {
 	return 0
 }
 
-type PostProviderResponse struct {
+type PostProvidersResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON201      *Provider
@@ -5294,7 +5294,7 @@ type PostProviderResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PostProviderResponse) Status() string {
+func (r PostProvidersResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -5302,7 +5302,7 @@ func (r PostProviderResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostProviderResponse) StatusCode() int {
+func (r PostProvidersResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -6180,21 +6180,21 @@ func (c *ClientWithResponses) GetProvidersWithResponse(ctx context.Context, para
 	return ParseGetProvidersResponse(rsp)
 }
 
-// PostProviderWithBodyWithResponse request with arbitrary body returning *PostProviderResponse
-func (c *ClientWithResponses) PostProviderWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostProviderResponse, error) {
-	rsp, err := c.PostProviderWithBody(ctx, contentType, body, reqEditors...)
+// PostProvidersWithBodyWithResponse request with arbitrary body returning *PostProvidersResponse
+func (c *ClientWithResponses) PostProvidersWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostProvidersResponse, error) {
+	rsp, err := c.PostProvidersWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostProviderResponse(rsp)
+	return ParsePostProvidersResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostProviderWithResponse(ctx context.Context, body PostProviderJSONRequestBody, reqEditors ...RequestEditorFn) (*PostProviderResponse, error) {
-	rsp, err := c.PostProvider(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PostProvidersWithResponse(ctx context.Context, body PostProvidersJSONRequestBody, reqEditors ...RequestEditorFn) (*PostProvidersResponse, error) {
+	rsp, err := c.PostProviders(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostProviderResponse(rsp)
+	return ParsePostProvidersResponse(rsp)
 }
 
 // DeleteProvidersProviderIDWithResponse request returning *DeleteProvidersProviderIDResponse
@@ -7609,15 +7609,15 @@ func ParseGetProvidersResponse(rsp *http.Response) (*GetProvidersResponse, error
 	return response, nil
 }
 
-// ParsePostProviderResponse parses an HTTP response from a PostProviderWithResponse call
-func ParsePostProviderResponse(rsp *http.Response) (*PostProviderResponse, error) {
+// ParsePostProvidersResponse parses an HTTP response from a PostProvidersWithResponse call
+func ParsePostProvidersResponse(rsp *http.Response) (*PostProvidersResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostProviderResponse{
+	response := &PostProvidersResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

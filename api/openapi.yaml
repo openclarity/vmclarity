@@ -1281,7 +1281,7 @@ paths:
           $ref: '#/components/responses/UnknownError'
     post:
       summary: Create provider
-      operationId: PostProvider
+      operationId: PostProviders
       requestBody:
         content:
           application/json:

@@ -98,7 +98,7 @@ type ServerInterface interface {
 	GetProviders(ctx echo.Context, params GetProvidersParams) error
 	// Create provider
 	// (POST /providers)
-	PostProvider(ctx echo.Context) error
+	PostProviders(ctx echo.Context) error
 	// Delete provider.
 	// (DELETE /providers/{providerID})
 	DeleteProvidersProviderID(ctx echo.Context, providerID ProviderID) error
@@ -941,12 +941,12 @@ func (w *ServerInterfaceWrapper) GetProviders(ctx echo.Context) error {
 	return err
 }
 
-// PostProvider converts echo context to params.
-func (w *ServerInterfaceWrapper) PostProvider(ctx echo.Context) error {
+// PostProviders converts echo context to params.
+func (w *ServerInterfaceWrapper) PostProviders(ctx echo.Context) error {
 	var err error
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PostProvider(ctx)
+	err = w.Handler.PostProviders(ctx)
 	return err
 }
 
@@ -1690,7 +1690,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.PUT(baseURL+"/findings/:findingID", wrapper.PutFindingsFindingID)
 	router.GET(baseURL+"/openapi.json", wrapper.GetOpenAPISpec)
 	router.GET(baseURL+"/providers", wrapper.GetProviders)
-	router.POST(baseURL+"/providers", wrapper.PostProvider)
+	router.POST(baseURL+"/providers", wrapper.PostProviders)
 	router.DELETE(baseURL+"/providers/:providerID", wrapper.DeleteProvidersProviderID)
 	router.GET(baseURL+"/providers/:providerID", wrapper.GetProvidersProviderID)
 	router.PATCH(baseURL+"/providers/:providerID", wrapper.PatchProvidersProviderID)
@@ -1841,18 +1841,18 @@ var swaggerSpec = []string{
 	"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",
-	"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",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
