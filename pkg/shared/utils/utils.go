@@ -16,9 +16,12 @@
 package utils
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"os/exec"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/api/models"
 )
@@ -29,6 +32,8 @@ type CmdRunError struct {
 	Stdout []byte
 	Stderr string
 }
+
+type parserFn func(string, *logrus.Entry) any
 
 func (r CmdRunError) Error() string {
 	return fmt.Sprintf(
@@ -51,6 +56,40 @@ func RunCommand(cmd *exec.Cmd) ([]byte, error) {
 	}
 
 	return outb.Bytes(), nil
+}
+
+func RunCommandAndParseOutputLineByLine(cmd *exec.Cmd, pfn parserFn, resChan chan any, doneChan chan struct{}, logger *logrus.Entry) error {
+	// Get a pipe to read from standard out
+	r, err := cmd.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("failed to get command pipe: %w", err)
+	}
+
+	scanner := bufio.NewScanner(r)
+	// Use the scanner to scan the output line by line and parse it
+	done := make(chan struct{})
+	go func() {
+		// Read line by line and process it
+		for scanner.Scan() {
+			line := scanner.Text()
+			resChan <- pfn(line, logger)
+		}
+		done <- struct{}{}
+	}()
+
+	// Start the command and check for errors
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("failed to start command: %w", err)
+	}
+
+	<-done
+
+	// Wait for the command to finish
+	if err := cmd.Wait(); err != nil {
+		return fmt.Errorf("command returns error: %w", err)
+	}
+	doneChan <- struct{}{}
+	return nil
 }
 
 func PointerTo[T any](value T) *T {
