@@ -129,15 +129,6 @@ func (t *ProvidersTableHandler) CreateProvider(provider models.Provider) (models
 	// record in the DB, and should be treated safely by the DB without
 	// locking the table.
 
-	existingProvider, err := t.checkUniqueness(provider)
-	if err != nil {
-		var conflictErr *common.ConflictError
-		if errors.As(err, &conflictErr) {
-			return *existingProvider, err
-		}
-		return models.Provider{}, fmt.Errorf("failed to check existing provider: %w", err)
-	}
-
 	marshaled, err := json.Marshal(provider)
 	if err != nil {
 		return models.Provider{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
@@ -183,15 +174,6 @@ func (t *ProvidersTableHandler) SaveProvider(provider models.Provider, params mo
 	}
 
 	provider.Revision = bumpRevision(dbProvider.Revision)
-
-	existingProvider, err := t.checkUniqueness(provider)
-	if err != nil {
-		var conflictErr *common.ConflictError
-		if errors.As(err, &conflictErr) {
-			return *existingProvider, err
-		}
-		return models.Provider{}, fmt.Errorf("failed to check existing provider: %w", err)
-	}
 
 	marshaled, err := json.Marshal(provider)
 	if err != nil {
@@ -248,15 +230,6 @@ func (t *ProvidersTableHandler) UpdateProvider(provider models.Provider, params 
 		return models.Provider{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
-	existingProvider, err := t.checkUniqueness(ret)
-	if err != nil {
-		var conflictErr *common.ConflictError
-		if errors.As(err, &conflictErr) {
-			return *existingProvider, err
-		}
-		return models.Provider{}, fmt.Errorf("failed to check existing provider: %w", err)
-	}
-
 	if err := t.DB.Save(&dbObj).Error; err != nil {
 		return models.Provider{}, fmt.Errorf("failed to save provider in db: %w", err)
 	}
@@ -270,26 +243,4 @@ func (t *ProvidersTableHandler) DeleteProvider(providerID models.ProviderID) err
 	}
 
 	return nil
-}
-
-func (t *ProvidersTableHandler) checkUniqueness(provider models.Provider) (*models.Provider, error) {
-	var providers []Provider
-	// In the case of creating or updating an provider, needs to be checked whether other provider exists with same properties.
-	// TODO(paralta) Confirm uniqueness criteria
-	filter := fmt.Sprintf("id ne '%s' and displayName eq '%s'", *provider.Id, *provider.DisplayName)
-	err := ODataQuery(t.DB, providerSchemaName, &filter, nil, nil, nil, nil, nil, true, &providers)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(providers) > 0 {
-		var apiProvider models.Provider
-		if err := json.Unmarshal(providers[0].Data, &apiProvider); err != nil {
-			return nil, fmt.Errorf("failed to convert DB model to API model: %w", err)
-		}
-		return &apiProvider, &common.ConflictError{
-			Reason: fmt.Sprintf("Provider exists with same id=%s)", *provider.Id),
-		}
-	}
-	return nil, nil // nolint:nilnil
 }
