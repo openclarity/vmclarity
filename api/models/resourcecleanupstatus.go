@@ -43,7 +43,43 @@ func NewResourceCleanupStatusWithDefaults() *ResourceCleanupStatus {
 }
 
 func (rs *ResourceCleanupStatus) Equals(r *ResourceCleanupStatus) bool {
+	if rs.Message == nil && r.Message != nil {
+		return false
+	}
+	if r.Message == nil && rs.Message != nil {
+		return false
+	}
+	if rs.Message == nil && r.Message == nil {
+		return rs.State == r.State && rs.Reason == r.Reason
+	}
+
 	return rs.State == r.State && rs.Reason == r.Reason && *rs.Message == *r.Message
+}
+
+func (rs *ResourceCleanupStatus) isValidStatusTransition(r *ResourceCleanupStatus) error {
+	transitions, ok := resourceCleanupStatusStateTransitions[rs.State]
+	if ok {
+		for _, transition := range transitions {
+			if transition == r.State {
+				return nil
+			}
+		}
+	}
+
+	return fmt.Errorf("invalid transition: from=%s to=%s", rs.State, r.State)
+}
+
+func (rs *ResourceCleanupStatus) isValidReasonTransition(r *ResourceCleanupStatus) error {
+	reasons, ok := resourceCleanupStatusReasonMapping[r.State]
+	if ok {
+		for _, reason := range reasons {
+			if reason == r.Reason {
+				return nil
+			}
+		}
+	}
+
+	return fmt.Errorf("invalid reason for state: state=%s reason=%s", r.State, r.Reason)
 }
 
 func (rs *ResourceCleanupStatus) IsValidTransition(r *ResourceCleanupStatus) error {
@@ -51,31 +87,11 @@ func (rs *ResourceCleanupStatus) IsValidTransition(r *ResourceCleanupStatus) err
 		return nil
 	}
 
-	transitions, ok := resourceCleanupStatusStateTransitions[rs.State]
-	var isValid bool
-	if ok {
-		for _, transition := range transitions {
-			if transition == r.State {
-				isValid = true
-				break
-			}
-		}
+	if err := rs.isValidStatusTransition(r); err != nil {
+		return err
 	}
-	if !ok || !isValid {
-		return fmt.Errorf("invalid transition: from=%s to=%s", rs.State, r.State)
-	}
-
-	reasons, ok := resourceCleanupStatusReasonMapping[r.State]
-	if ok {
-		for _, reason := range reasons {
-			if reason == r.Reason {
-				isValid = true
-				break
-			}
-		}
-	}
-	if !ok || !isValid {
-		return fmt.Errorf("invalid reason for state: state=%s reason=%s", r.State, r.Reason)
+	if err := rs.isValidReasonTransition(r); err != nil {
+		return err
 	}
 
 	return nil
