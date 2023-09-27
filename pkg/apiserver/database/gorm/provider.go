@@ -105,6 +105,12 @@ func (t *ProvidersTableHandler) CreateProvider(provider models.Provider) (models
 		}
 	}
 
+	if provider.Status.State == "" || provider.Status.Reason == "" || provider.Status.LastTransitionTime.IsZero() {
+		return models.Provider{}, &common.BadRequestError{
+			Reason: "status state, status reason and status last transition time are required to create provider",
+		}
+	}
+
 	// Generate a new UUID
 	provider.Id = utils.PointerTo(uuid.New().String())
 
@@ -147,10 +153,17 @@ func (t *ProvidersTableHandler) CreateProvider(provider models.Provider) (models
 	return provider, nil
 }
 
+// nolint:cyclop
 func (t *ProvidersTableHandler) SaveProvider(provider models.Provider, params models.PutProvidersProviderIDParams) (models.Provider, error) {
 	if provider.Id == nil || *provider.Id == "" {
 		return models.Provider{}, &common.BadRequestError{
 			Reason: "id is required to save provider",
+		}
+	}
+
+	if provider.Status.State == "" || provider.Status.Reason == "" || provider.Status.LastTransitionTime.IsZero() {
+		return models.Provider{}, &common.BadRequestError{
+			Reason: "status state, status reason and status last transition time are required to save provider",
 		}
 	}
 
@@ -198,6 +211,12 @@ func (t *ProvidersTableHandler) SaveProvider(provider models.Provider, params mo
 func (t *ProvidersTableHandler) UpdateProvider(provider models.Provider, params models.PatchProvidersProviderIDParams) (models.Provider, error) {
 	if provider.Id == nil || *provider.Id == "" {
 		return models.Provider{}, fmt.Errorf("ID is required to update provider in DB")
+	}
+
+	if provider.Status.State == "" || provider.Status.Reason == "" || provider.Status.LastTransitionTime.IsZero() {
+		return models.Provider{}, &common.BadRequestError{
+			Reason: "status state, status reason and status last transition time are required to save provider",
+		}
 	}
 
 	var dbObj Provider
