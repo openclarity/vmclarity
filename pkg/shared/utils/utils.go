@@ -18,10 +18,10 @@ package utils
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"fmt"
+	"io"
 	"os/exec"
-
-	"github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/api/models"
 )
@@ -33,7 +33,7 @@ type CmdRunError struct {
 	Stderr string
 }
 
-type parserFn func(string, *logrus.Entry) any
+type processFn func(context.Context, string)
 
 func (r CmdRunError) Error() string {
 	return fmt.Sprintf(
@@ -58,36 +58,36 @@ func RunCommand(cmd *exec.Cmd) ([]byte, error) {
 	return outb.Bytes(), nil
 }
 
-func RunCommandAndParseOutputLineByLine(cmd *exec.Cmd, pfn parserFn, resChan chan any, logger *logrus.Entry) error {
+func RunCommandAndParseOutputLineByLine(cmd *exec.Cmd, pfn processFn) error {
 	// Get a pipe to read from standard out
-	r, err := cmd.StdoutPipe()
+	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		return fmt.Errorf("failed to get command pipe: %w", err)
+		return fmt.Errorf("failed to get stdout pipe: %w", err)
 	}
-
-	scanner := bufio.NewScanner(r)
-	// Use the scanner to scan the output line by line and parse it
-	done := make(chan struct{})
-	go func() {
-		// Read line by line and process it
-		for scanner.Scan() {
-			line := scanner.Text()
-			resChan <- pfn(line, logger)
-		}
-		done <- struct{}{}
-	}()
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return fmt.Errorf("failed to get get stderr pipe: %w", err)
+	}
 
 	// Start the command and check for errors
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start command: %w", err)
 	}
 
-	<-done
+	// Merge stdout and stderr
+	merged := io.MultiReader(stderr, stdout)
+	scanner := bufio.NewScanner(merged)
+	// Use the scanner to scan the output line by line and parse it
+	for scanner.Scan() {
+		line := scanner.Text()
+		pfn(context.Background(), line)
+	}
 
 	// Wait for the command to finish
 	if err := cmd.Wait(); err != nil {
 		return fmt.Errorf("command returns error: %w", err)
 	}
+
 	return nil
 }
 
