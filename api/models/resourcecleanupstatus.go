@@ -11,6 +11,7 @@ var resourceCleanupStatusStateTransitions = map[ResourceCleanupStatusState][]Res
 		ResourceCleanupStatusStateFailed,
 		ResourceCleanupStatusStateDone,
 	},
+	ResourceCleanupStatusStateSkipped: {},
 }
 
 var resourceCleanupStatusReasonMapping = map[ResourceCleanupStatusState][]ResourceCleanupStatusReason{
@@ -19,6 +20,7 @@ var resourceCleanupStatusReasonMapping = map[ResourceCleanupStatusState][]Resour
 	},
 	ResourceCleanupStatusStateSkipped: {
 		ResourceCleanupStatusReasonDeletePolicy,
+		ResourceCleanupStatusReasonNotApplicable,
 	},
 	ResourceCleanupStatusStateFailed: {
 		ResourceCleanupStatusReasonProviderError,
@@ -36,10 +38,6 @@ func NewResourceCleanupStatus(s ResourceCleanupStatusState, r ResourceCleanupSta
 		Message:            m,
 		LastTransitionTime: time.Now(),
 	}
-}
-
-func NewResourceCleanupStatusWithDefaults() *ResourceCleanupStatus {
-	return NewResourceCleanupStatus(ResourceCleanupStatusStatePending, ResourceCleanupStatusReasonAssetScanCreated, nil)
 }
 
 func (rs *ResourceCleanupStatus) Equals(r *ResourceCleanupStatus) bool {
