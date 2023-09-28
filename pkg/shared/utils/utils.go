@@ -18,7 +18,6 @@ package utils
 import (
 	"bufio"
 	"bytes"
-	"context"
 	"fmt"
 	"io"
 	"os/exec"
@@ -33,7 +32,7 @@ type CmdRunError struct {
 	Stderr string
 }
 
-type processFn func(context.Context, string)
+type processFn func(string)
 
 func (r CmdRunError) Error() string {
 	return fmt.Sprintf(
@@ -80,7 +79,7 @@ func RunCommandAndParseOutputLineByLine(cmd *exec.Cmd, pfn processFn) error {
 	// Use the scanner to scan the output line by line and parse it
 	for scanner.Scan() {
 		line := scanner.Text()
-		pfn(context.Background(), line)
+		pfn(line)
 	}
 
 	// Wait for the command to finish
