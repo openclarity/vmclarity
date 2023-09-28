@@ -65,7 +65,7 @@ func RunCommandAndParseOutputLineByLine(cmd *exec.Cmd, pfn processFn) error {
 	}
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		return fmt.Errorf("failed to get get stderr pipe: %w", err)
+		return fmt.Errorf("failed to get stderr pipe: %w", err)
 	}
 
 	// Start the command and check for errors
