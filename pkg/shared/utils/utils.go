@@ -19,7 +19,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"io"
 	"os/exec"
 
 	"github.com/openclarity/vmclarity/api/models"
@@ -63,23 +62,20 @@ func RunCommandAndParseOutputLineByLine(cmd *exec.Cmd, pfn processFn) error {
 	if err != nil {
 		return fmt.Errorf("failed to get stdout pipe: %w", err)
 	}
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return fmt.Errorf("failed to get stderr pipe: %w", err)
-	}
 
 	// Start the command and check for errors
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start command: %w", err)
 	}
 
-	// Merge stdout and stderr
-	merged := io.MultiReader(stderr, stdout)
-	scanner := bufio.NewScanner(merged)
+	scanner := bufio.NewScanner(stdout)
 	// Use the scanner to scan the output line by line and parse it
 	for scanner.Scan() {
 		line := scanner.Text()
 		pfn(line)
+	}
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("scanner errors: %w", err)
 	}
 
 	// Wait for the command to finish
