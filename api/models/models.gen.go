@@ -69,6 +69,7 @@ const (
 	ResourceCleanupStatusReasonAssetScanCreated ResourceCleanupStatusReason = "AssetScanCreated"
 	ResourceCleanupStatusReasonDeletePolicy     ResourceCleanupStatusReason = "DeletePolicy"
 	ResourceCleanupStatusReasonInternalError    ResourceCleanupStatusReason = "InternalError"
+	ResourceCleanupStatusReasonNotApplicable    ResourceCleanupStatusReason = "NotApplicable"
 	ResourceCleanupStatusReasonProviderError    ResourceCleanupStatusReason = "ProviderError"
 	ResourceCleanupStatusReasonSuccess          ResourceCleanupStatusReason = "Success"
 )
@@ -751,13 +752,14 @@ type ResourceCleanupStatus struct {
 
 	// Reason Machine readable reason for state transition.
 	//
-	// | State   | Reason          | Description                                                |
-	// | ------- | --------------- | ---------------------------------------------------------- |
-	// | Pending | AssetScanCreate | AssetScan created                                          |
-	// | Skipped | DeletePolicy    | Resource cleanup has been skipped due to Delete Job Policy |
-	// | Failed  | ProviderError   | Failed due to Provider error                               |
-	// | Failed  | InternalError   | Failed due to internal error                               |
-	// | Done    | Success         | Successfully completed                                     |
+	// | State   | Reason          | Description                                                            |
+	// | ------- | --------------- | ---------------------------------------------------------------------- |
+	// | Pending | AssetScanCreate | AssetScan created                                                      |
+	// | Skipped | NotApplicable   | Resource cleanup is not required as it is managed outside of VMClarity |
+	// | Skipped | DeletePolicy    | Resource cleanup has been skipped due to Delete Job Policy             |
+	// | Failed  | ProviderError   | Failed due to Provider error                                           |
+	// | Failed  | InternalError   | Failed due to internal error                                           |
+	// | Done    | Success         | Successfully completed                                                 |
 	Reason ResourceCleanupStatusReason `json:"reason"`
 
 	// State Describes the state of resource cleanup.
@@ -773,13 +775,14 @@ type ResourceCleanupStatus struct {
 
 // ResourceCleanupStatusReason Machine readable reason for state transition.
 //
-// | State   | Reason          | Description                                                |
-// | ------- | --------------- | ---------------------------------------------------------- |
-// | Pending | AssetScanCreate | AssetScan created                                          |
-// | Skipped | DeletePolicy    | Resource cleanup has been skipped due to Delete Job Policy |
-// | Failed  | ProviderError   | Failed due to Provider error                               |
-// | Failed  | InternalError   | Failed due to internal error                               |
-// | Done    | Success         | Successfully completed                                     |
+// | State   | Reason          | Description                                                            |
+// | ------- | --------------- | ---------------------------------------------------------------------- |
+// | Pending | AssetScanCreate | AssetScan created                                                      |
+// | Skipped | NotApplicable   | Resource cleanup is not required as it is managed outside of VMClarity |
+// | Skipped | DeletePolicy    | Resource cleanup has been skipped due to Delete Job Policy             |
+// | Failed  | ProviderError   | Failed due to Provider error                                           |
+// | Failed  | InternalError   | Failed due to internal error                                           |
+// | Done    | Success         | Successfully completed                                                 |
 type ResourceCleanupStatusReason string
 
 // ResourceCleanupStatusState Describes the state of resource cleanup.

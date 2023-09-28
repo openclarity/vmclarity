@@ -45,12 +45,12 @@ func (s *ServerImpl) PostAssetScans(ctx echo.Context) error {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
 
-	_, ok := assetScan.GetResourceCleanupStatus()
-	if !ok {
-		assetScan.ResourceCleanupStatus = models.NewResourceCleanupStatusWithDefaults()
-	}
-	if assetScan.ResourceCleanupStatus.State != models.ResourceCleanupStatusStatePending {
-		return sendError(ctx, http.StatusBadRequest, "invalid request: resource cleanup status is invalid")
+	status, ok := assetScan.GetResourceCleanupStatus()
+	switch {
+	case !ok:
+		return sendError(ctx, http.StatusBadRequest, "invalid request: resource cleanup status is missing")
+	case status.State != models.ResourceCleanupStatusStatePending && status.State != models.ResourceCleanupStatusStateSkipped:
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("invalid request: initial state for resource cleanup status is invalid: %s", status.State))
 	}
 
 	createdAssetScan, err := s.dbHandler.AssetScansTable().CreateAssetScan(assetScan)
