@@ -85,7 +85,7 @@ func RunCommandAndParseOutputLineByLine(cmd *exec.Cmd, pfn, ecFn processFn) erro
 			ecFn(line)
 		}
 		if err := stderrScanner.Err(); err != nil {
-			return fmt.Errorf("scanner errors: %w", err)
+			return fmt.Errorf("stderr scanner error: %w", err)
 		}
 		return nil
 	})
@@ -97,7 +97,7 @@ func RunCommandAndParseOutputLineByLine(cmd *exec.Cmd, pfn, ecFn processFn) erro
 			pfn(line)
 		}
 		if err := stdoutScanner.Err(); err != nil {
-			return fmt.Errorf("scanner errors: %w", err)
+			return fmt.Errorf("stdout scanner error: %w", err)
 		}
 		return nil
 	})
