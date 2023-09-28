@@ -58,7 +58,7 @@ func RunCommand(cmd *exec.Cmd) ([]byte, error) {
 	return outb.Bytes(), nil
 }
 
-func RunCommandAndParseOutputLineByLine(cmd *exec.Cmd, pfn parserFn, resChan chan any, doneChan chan struct{}, logger *logrus.Entry) error {
+func RunCommandAndParseOutputLineByLine(cmd *exec.Cmd, pfn parserFn, resChan chan any, logger *logrus.Entry) error {
 	// Get a pipe to read from standard out
 	r, err := cmd.StdoutPipe()
 	if err != nil {
@@ -88,7 +88,6 @@ func RunCommandAndParseOutputLineByLine(cmd *exec.Cmd, pfn parserFn, resChan cha
 	if err := cmd.Wait(); err != nil {
 		return fmt.Errorf("command returns error: %w", err)
 	}
-	doneChan <- struct{}{}
 	return nil
 }
 
