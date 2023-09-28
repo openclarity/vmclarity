@@ -49,7 +49,11 @@ func (s *ServerImpl) PostAssetScans(ctx echo.Context) error {
 	switch {
 	case !ok:
 		return sendError(ctx, http.StatusBadRequest, "invalid request: resource cleanup status is missing")
-	case status.State != models.ResourceCleanupStatusStatePending && status.State != models.ResourceCleanupStatusStateSkipped:
+	case status.State == models.ResourceCleanupStatusStatePending:
+		fallthrough
+	case status.State == models.ResourceCleanupStatusStateSkipped:
+		break
+	default:
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("invalid request: initial state for resource cleanup status is invalid: %s", status.State))
 	}
 

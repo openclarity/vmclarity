@@ -69,7 +69,7 @@ func (rs *ResourceCleanupStatus) isValidStatusTransition(r *ResourceCleanupStatu
 	return fmt.Errorf("invalid transition: from=%s to=%s", rs.State, r.State)
 }
 
-func (rs *ResourceCleanupStatus) isValidReasonTransition(r *ResourceCleanupStatus) error {
+func (rs *ResourceCleanupStatus) isValidReason(r *ResourceCleanupStatus) error {
 	reasons, ok := resourceCleanupStatusReasonMapping[r.State]
 	if ok {
 		for _, reason := range reasons {
@@ -90,7 +90,7 @@ func (rs *ResourceCleanupStatus) IsValidTransition(r *ResourceCleanupStatus) err
 	if err := rs.isValidStatusTransition(r); err != nil {
 		return err
 	}
-	if err := rs.isValidReasonTransition(r); err != nil {
+	if err := rs.isValidReason(r); err != nil {
 		return err
 	}
 
