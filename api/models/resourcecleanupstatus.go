@@ -11,7 +11,6 @@ var resourceCleanupStatusStateTransitions = map[ResourceCleanupStatusState][]Res
 		ResourceCleanupStatusStateFailed,
 		ResourceCleanupStatusStateDone,
 	},
-	ResourceCleanupStatusStateSkipped: {},
 }
 
 var resourceCleanupStatusReasonMapping = map[ResourceCleanupStatusState][]ResourceCleanupStatusReason{
