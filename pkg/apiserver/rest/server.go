@@ -76,7 +76,7 @@ func createEchoServer(iamEnabled bool, dbHandler databaseTypes.Database) (*echo.
 	// Create authenticator function for given IAM config or use default passthrough auth
 	var iamService types.IAMService
 	if iamEnabled {
-		iamService, err = iam.NewService(types.LoadConfig())
+		iamService, err = iam.NewService()
 		if err != nil {
 			return nil, fmt.Errorf("failed to create IAM service: %v", err)
 		}

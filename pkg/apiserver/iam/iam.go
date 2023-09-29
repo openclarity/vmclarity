@@ -21,7 +21,7 @@ import (
 	"github.com/deepmap/oapi-codegen/pkg/middleware"
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/labstack/echo/v4"
-	"github.com/openclarity/vmclarity/pkg/apiserver/iam/auth"
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam/authn/oidc"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam/types"
 )
 
@@ -89,25 +89,21 @@ func NewMiddleware(service types.IAMService) openapi3filter.AuthenticationFunc {
 	}
 }
 
-func NewService(config types.AuthConfig) (types.IAMService, error) {
-	authenticator, err := auth.New(config)
+func NewService() (types.IAMService, error) {
+	authenticator, err := oidc.New()
 	if err != nil {
 		return nil, err
 	}
 	return &iamService{
-		auth: authenticator,
+		authn: authenticator,
 	}, nil
 }
 
 type iamService struct {
-	auth  types.Authenticator
+	authn types.Authenticator
 	authz types.Authorizer
 }
 
-func (i iamService) Authenticator() types.Authenticator {
-	return i.auth
-}
+func (i iamService) Authenticator() types.Authenticator { return i.authn }
 
-func (i iamService) Authorizer() types.Authorizer {
-	return i.authz
-}
+func (i iamService) Authorizer() types.Authorizer { return i.authz }

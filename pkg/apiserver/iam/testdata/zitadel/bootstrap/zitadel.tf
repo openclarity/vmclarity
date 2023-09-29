@@ -156,7 +156,7 @@ resource zitadel_human_user vmclarity_admin {
   user_name          = "vmclarity-admin"
   first_name         = "firstname"
   last_name          = "lastname"
-  email              = "admin@vmclarity.io"
+  email              = var.debug_initial_admin_username
   is_email_verified  = true
   initial_password   = var.debug_initial_admin_password
 }

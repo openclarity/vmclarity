@@ -26,3 +26,8 @@ variable "debug_initial_admin_password" {
   type    = string
   default = "Password1!"
 }
+
+variable "debug_initial_admin_username" {
+  type = string
+  default = "admin@vmclarity.io"
+}

@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package auth
+package oidc
 
 import (
 	"context"
@@ -24,14 +24,13 @@ import (
 	"strings"
 
 	"github.com/zitadel/oidc/pkg/client/rs"
-	"github.com/zitadel/zitadel-go/v2/pkg/client/management"
 )
 
-// New creates an authenticator which intercepts requests and checks for a
-// correct Bearer token using OAuth2 introspection by sending the token to the
-// introspection endpoint. On success, returns an iam.User with configured
-// JwtClaims.
-func New(config types.AuthConfig) (types.Authenticator, error) {
+// New creates an authenticator which intercepts requests and validates the
+// Bearer token via OIDC introspection.
+func New() (types.Authenticator, error) {
+	config := LoadConfig()
+
 	// Add custom OIDC options
 	var options []rs.Option
 	if config.TokenURL != "" && config.IntrospectURL != "" {
@@ -45,23 +44,16 @@ func New(config types.AuthConfig) (types.Authenticator, error) {
 	}
 
 	// Return OIDC Authenticator
-	return &authService{
+	return &oidcAuth{
 		resourceServer: resourceServer,
-		mgmtClient:     nil,
 	}, nil
 }
 
-type authService struct {
-	projectID      string
+type oidcAuth struct {
 	resourceServer rs.ResourceServer
-	mgmtClient     *management.Client
 }
 
-func (auth *authService) RevokeAccess(ctx context.Context, user types.User) error {
-	return nil
-}
-
-func (auth *authService) Authenticate(ctx context.Context, req *http.Request) (*types.User, error) {
+func (auth *oidcAuth) Authenticate(ctx context.Context, req *http.Request) (*types.AuthUser, error) {
 	// Extract token
 	token, err := extractToken(req)
 	if err != nil {
@@ -77,13 +69,12 @@ func (auth *authService) Authenticate(ctx context.Context, req *http.Request) (*
 		return nil, fmt.Errorf("token expired")
 	}
 
-	// Load roles for given user
-	roles, _ := jwtToken.GetClaim("roles").([]string)
-
-	// Return user
-	return &types.User{
-		ID:    jwtToken.GetSubject(),
-		Roles: roles,
+	// Return authenticated user
+	return &types.AuthUser{
+		ID: jwtToken.GetSubject(),
+		FromOIDC: &types.AuthFromOIDC{
+			Claims: jwtToken.GetClaims(),
+		},
 	}, nil
 }
 
