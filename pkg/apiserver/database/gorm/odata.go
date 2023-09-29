@@ -141,6 +141,11 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 					ComplexFieldSchemas: []string{"Annotation"},
 				},
 			},
+			"provider": odatasql.FieldMeta{
+				FieldType:            odatasql.RelationshipFieldType,
+				RelationshipSchema:   providerSchemaName,
+				RelationshipProperty: "id",
+			},
 		},
 	},
 	"AssetScanStats": {

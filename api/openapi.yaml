@@ -2373,6 +2373,9 @@ components:
               $ref: '#/components/schemas/AssetScanStats'
             summary:
               $ref: '#/components/schemas/ScanFindingsSummary'
+            provider:
+              $ref: "#/components/schemas/ProviderRelationship"
+              description: Provider responsible for picking up and running the asset scan.
         - $ref: '#/components/schemas/AssetScanTemplate'
       # TODO(sambetts) Decide if we want the validation here by having
       # separate schemas for GET, POST and PATCH.
