@@ -303,7 +303,7 @@ func (w *Watcher) reconcileDone(ctx context.Context, assetScan *models.AssetScan
 		return errors.New("invalid AssetScan: Scan and/or ResourceCleanupStatus are nil")
 	}
 
-	if *assetScan.ResourceCleanupStatus.State != models.ResourceCleanupStatusStatePending {
+	if assetScan.ResourceCleanupStatus.State != models.ResourceCleanupStatusStatePending {
 		return nil
 	}
 
@@ -332,13 +332,15 @@ func (w *Watcher) cleanupResources(ctx context.Context, assetScan *models.AssetS
 	case DeleteJobPolicyNever:
 		assetScan.ResourceCleanupStatus = models.NewResourceCleanupStatus(
 			models.ResourceCleanupStatusStateSkipped,
-			"The delete job policy was set to never.",
+			models.ResourceCleanupStatusReasonDeletePolicy,
+			nil,
 		)
 	case DeleteJobPolicyOnSuccess:
 		if isDone && assetScan.HasErrors() {
 			assetScan.ResourceCleanupStatus = models.NewResourceCleanupStatus(
 				models.ResourceCleanupStatusStateSkipped,
-				"Asset scan didn't run successfully.",
+				models.ResourceCleanupStatusReasonDeletePolicy,
+				nil,
 			)
 			break
 		}
@@ -375,8 +377,8 @@ func (w *Watcher) cleanupResources(ctx context.Context, assetScan *models.AssetS
 		case errors.As(err, &fatalError):
 			assetScan.ResourceCleanupStatus = models.NewResourceCleanupStatus(
 				models.ResourceCleanupStatusStateFailed,
-				"Resource cleanup failed.",
-				fatalError.Error(),
+				models.ResourceCleanupStatusReasonProviderError,
+				utils.PointerTo(fatalError.Error()),
 			)
 			logger.Errorf("resource cleanup failed: %v", fatalError)
 		case errors.As(err, &retryableError):
@@ -385,14 +387,15 @@ func (w *Watcher) cleanupResources(ctx context.Context, assetScan *models.AssetS
 		case err != nil:
 			assetScan.ResourceCleanupStatus = models.NewResourceCleanupStatus(
 				models.ResourceCleanupStatusStateFailed,
-				"Resource cleanup failed.",
-				err.Error(),
+				models.ResourceCleanupStatusReasonProviderError,
+				utils.PointerTo(err.Error()),
 			)
 			logger.Errorf("resource cleanup failed: %v", err)
 		default:
 			assetScan.ResourceCleanupStatus = models.NewResourceCleanupStatus(
 				models.ResourceCleanupStatusStateDone,
-				"Resource cleaned up successfully.",
+				models.ResourceCleanupStatusReasonSuccess,
+				nil,
 			)
 		}
 	}

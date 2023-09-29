@@ -33,9 +33,10 @@ func TestNewAssetScanFromScan(t *testing.T) {
 	transitionTime := time.Now()
 	resourceCleanupStatus := models.NewResourceCleanupStatus(
 		models.ResourceCleanupStatusStatePending,
-		"New AssetScan created from Scan.",
+		models.ResourceCleanupStatusReasonAssetScanCreated,
+		nil,
 	)
-	resourceCleanupStatus.LastTransitionTime = &transitionTime
+	resourceCleanupStatus.LastTransitionTime = transitionTime
 
 	tests := []struct {
 		Name    string
@@ -153,7 +154,7 @@ func TestNewAssetScanFromScan(t *testing.T) {
 			g := NewGomegaWithT(t)
 
 			result, err := newAssetScanFromScan(test.Scan, test.AssetID)
-			result.ResourceCleanupStatus.LastTransitionTime = utils.PointerTo(transitionTime)
+			result.ResourceCleanupStatus.LastTransitionTime = transitionTime
 
 			g.Expect(err).Should(test.ExpectedErrorMatcher)
 			g.Expect(result).Should(BeComparableTo(test.ExpectedAssetScan))

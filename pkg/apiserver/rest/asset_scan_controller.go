@@ -47,9 +47,9 @@ func (s *ServerImpl) PostAssetScans(ctx echo.Context) error {
 
 	_, ok := assetScan.GetResourceCleanupStatus()
 	if !ok {
-		assetScan.ResourceCleanupStatus.Default()
+		assetScan.ResourceCleanupStatus = models.NewResourceCleanupStatusWithDefaults()
 	}
-	if *assetScan.ResourceCleanupStatus.State != models.ResourceCleanupStatusStatePending {
+	if assetScan.ResourceCleanupStatus.State != models.ResourceCleanupStatusStatePending {
 		return sendError(ctx, http.StatusBadRequest, "invalid request: resource cleanup status is invalid")
 	}
 
@@ -100,9 +100,12 @@ func (s *ServerImpl) PatchAssetScansAssetScanID(ctx echo.Context, assetScanID mo
 	}
 
 	// check for valid resource cleanup state transition
-	_, ok := assetScan.GetResourceCleanupStatus()
-	if ok {
-		err = existingAssetScan.ResourceCleanupStatus.UpdateState(*assetScan.ResourceCleanupStatus.State)
+	if resourceCleanupStatus, ok := assetScan.GetResourceCleanupStatus(); ok {
+		existingResourceCleanupStatus, ok := existingAssetScan.GetResourceCleanupStatus()
+		if !ok {
+			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to retrieve ResourceCleanupStatus for existing asset scan. assetScanID=%v", existingAssetScan.Id))
+		}
+		err = existingResourceCleanupStatus.IsValidTransition(resourceCleanupStatus)
 		if err != nil {
 			return sendError(ctx, http.StatusBadRequest, err.Error())
 		}
@@ -158,9 +161,16 @@ func (s *ServerImpl) PutAssetScansAssetScanID(ctx echo.Context, assetScanID mode
 	}
 
 	// check for valid resource cleanup state transition
-	_, ok := assetScan.GetResourceCleanupStatus()
+	resourceCleanupStatus, ok := assetScan.GetResourceCleanupStatus()
+	if !ok {
+		return sendError(ctx, http.StatusBadRequest, err.Error())
+	}
 	if ok {
-		err = existingAssetScan.ResourceCleanupStatus.UpdateState(*assetScan.ResourceCleanupStatus.State)
+		existingResourceCleanupStatus, ok := existingAssetScan.GetResourceCleanupStatus()
+		if !ok {
+			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to retrieve ResourceCleanupStatus for existing asset scan. assetScanID=%v", existingAssetScan.Id))
+		}
+		err = existingResourceCleanupStatus.IsValidTransition(resourceCleanupStatus)
 		if err != nil {
 			return sendError(ctx, http.StatusBadRequest, err.Error())
 		}

@@ -64,6 +64,15 @@ const (
 	MisconfigurationMediumSeverity MisconfigurationSeverity = "MisconfigurationMediumSeverity"
 )
 
+// Defines values for ResourceCleanupStatusReason.
+const (
+	ResourceCleanupStatusReasonAssetScanCreated ResourceCleanupStatusReason = "AssetScanCreated"
+	ResourceCleanupStatusReasonDeletePolicy     ResourceCleanupStatusReason = "DeletePolicy"
+	ResourceCleanupStatusReasonInternalError    ResourceCleanupStatusReason = "InternalError"
+	ResourceCleanupStatusReasonProviderError    ResourceCleanupStatusReason = "ProviderError"
+	ResourceCleanupStatusReasonSuccess          ResourceCleanupStatusReason = "Success"
+)
+
 // Defines values for ResourceCleanupStatusState.
 const (
 	ResourceCleanupStatusStateDone    ResourceCleanupStatusState = "Done"
@@ -465,18 +474,6 @@ type Assets struct {
 // CloudProvider defines model for CloudProvider.
 type CloudProvider string
 
-// CommonStatus defines model for CommonStatus.
-type CommonStatus struct {
-	// LastTransitionTime Last date time when the status has changed.
-	LastTransitionTime *time.Time `json:"lastTransitionTime,omitempty"`
-
-	// Message Human readable message.
-	Message *string `json:"message,omitempty"`
-
-	// Reason Machine readable message.
-	Reason *string `json:"reason,omitempty"`
-}
-
 // ContainerImageInfo defines model for ContainerImageInfo.
 type ContainerImageInfo struct {
 	Architecture *string `json:"architecture,omitempty"`
@@ -747,13 +744,21 @@ type PodInfo struct {
 // ResourceCleanupStatus defines model for ResourceCleanupStatus.
 type ResourceCleanupStatus struct {
 	// LastTransitionTime Last date time when the status has changed.
-	LastTransitionTime *time.Time `json:"lastTransitionTime,omitempty"`
+	LastTransitionTime time.Time `json:"lastTransitionTime"`
 
 	// Message Human readable message.
 	Message *string `json:"message,omitempty"`
 
-	// Reason Machine readable message.
-	Reason *string `json:"reason,omitempty"`
+	// Reason Machine readable reason for state transition.
+	//
+	// | State   | Reason          | Description                                                |
+	// | ------- | --------------- | ---------------------------------------------------------- |
+	// | Pending | AssetScanCreate | AssetScan created                                          |
+	// | Skipped | DeletePolicy    | Resource cleanup has been skipped due to Delete Job Policy |
+	// | Failed  | ProviderError   | Failed due to Provider error                               |
+	// | Failed  | InternalError   | Failed due to internal error                               |
+	// | Done    | Success         | Successfully completed                                     |
+	Reason ResourceCleanupStatusReason `json:"reason"`
 
 	// State Describes the state of resource cleanup.
 	//
@@ -763,8 +768,19 @@ type ResourceCleanupStatus struct {
 	// | Skipped | Resource cleanup has been skipped due to Delete Job Policy |
 	// | Failed  | Cleaning up resources has been failed                      |
 	// | Done    | Resources have been successfully cleaned up                |
-	State *ResourceCleanupStatusState `json:"state,omitempty"`
+	State ResourceCleanupStatusState `json:"state"`
 }
+
+// ResourceCleanupStatusReason Machine readable reason for state transition.
+//
+// | State   | Reason          | Description                                                |
+// | ------- | --------------- | ---------------------------------------------------------- |
+// | Pending | AssetScanCreate | AssetScan created                                          |
+// | Skipped | DeletePolicy    | Resource cleanup has been skipped due to Delete Job Policy |
+// | Failed  | ProviderError   | Failed due to Provider error                               |
+// | Failed  | InternalError   | Failed due to internal error                               |
+// | Done    | Success         | Successfully completed                                     |
+type ResourceCleanupStatusReason string
 
 // ResourceCleanupStatusState Describes the state of resource cleanup.
 //

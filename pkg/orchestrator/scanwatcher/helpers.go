@@ -106,7 +106,8 @@ func newAssetScanFromScan(scan *models.Scan, assetID string) (*models.AssetScan,
 		},
 		ResourceCleanupStatus: models.NewResourceCleanupStatus(
 			models.ResourceCleanupStatusStatePending,
-			"New AssetScan created from Scan.",
+			models.ResourceCleanupStatusReasonAssetScanCreated,
+			nil,
 		),
 	}, nil
 }
