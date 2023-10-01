@@ -75,13 +75,8 @@ func (z *zitadelStore) GetUserFromInfo(info *types.UserInfo) (models.User, error
 		}
 		user = userResp.User
 	} else if info.FromGenericOIDC {
-		userResp, err := z.mgmt.GetUserByLoginNameGlobal(context.Background(), &management_pb.GetUserByLoginNameGlobalRequest{
-			LoginName: info.GetEmail(),
-		})
-		if err != nil {
-			return models.User{}, err
-		}
-		user = userResp.User
+		// TODO: Implement create from a generic store
+		return models.User{}, fmt.Errorf("not implemented current user fetcher for generic OIDC")
 	}
 	if err != nil {
 		return models.User{}, nil
