@@ -2,15 +2,15 @@
 # This can be given to the user.
 
 ## === Reader
-p, api:reader, api, get
-p, api:reader, api, list
+p, api:reader, api, get, *
+p, api:reader, api, list, *
 
 ## === Writer
-p, api:writer, api, create
-p, api:writer, api, update
+p, api:writer, api, create, *
+p, api:writer, api, update, *
 
 ## === Admin
-p, api:admin, api, delete
+p, api:admin, api, delete, *
 
 ## === Role Inheritance
 g, api:writer, api:reader

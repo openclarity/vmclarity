@@ -41,7 +41,7 @@ type Authenticator interface {
 // Authorizer defines authorization service.
 type Authorizer interface {
 	// CanPerform checks if user is allowed to perform an action on an asset based on specs.
-	CanPerform(user models.User, asset, action string) (bool, error)
+	CanPerform(user models.User, category, action, asset string) (bool, error)
 }
 
 // AuthStore defines a (db) store to interact with user and auth data.

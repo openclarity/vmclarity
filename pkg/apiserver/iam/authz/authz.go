@@ -52,9 +52,10 @@ type localRBAC struct {
 	enforcer *casbin.Enforcer
 }
 
-func (authorizer *localRBAC) CanPerform(user models.User, asset, action string) (bool, error) {
+func (authorizer *localRBAC) CanPerform(user models.User, category, action, asset string) (bool, error) {
+	// TODO: Use better matcher
 	for _, role := range *user.Roles {
-		allowed, err := authorizer.enforcer.EnforceSafe(role, asset, action)
+		allowed, err := authorizer.enforcer.EnforceSafe(role, category, action, asset)
 		if err != nil {
 			return false, fmt.Errorf("failed checking auth role for Authorizer=localrbac: %w", err)
 		}

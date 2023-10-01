@@ -76,7 +76,7 @@ func NewMiddleware(authn types.Authenticator, authz types.Authorizer, store type
 		for _, ruleDelim := range input.Scopes {
 			// For example: "api:update:asset"
 			ruleSlice := strings.SplitN(ruleDelim, ":", 3)
-			ok, err := authz.CanPerform(user, ruleSlice[0], ruleSlice[1])
+			ok, err := authz.CanPerform(user, ruleSlice[0], ruleSlice[1], ruleSlice[2])
 			if err != nil {
 				return err
 			}
