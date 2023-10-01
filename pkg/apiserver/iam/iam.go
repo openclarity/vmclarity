@@ -21,20 +21,28 @@ import (
 	"github.com/deepmap/oapi-codegen/pkg/middleware"
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/labstack/echo/v4"
-	"github.com/openclarity/vmclarity/pkg/apiserver/iam/authn/oidc"
+	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam/types"
+	"strings"
 )
 
 const userCtxKey = "user"
 
-// GetUserFromContext returns types.User from context.
-func GetUserFromContext(ctx echo.Context) *types.User {
+// GetUserFromContext returns models.User from context.
+func GetUserFromContext(ctx echo.Context) *models.User {
 	ctxData := ctx.Get(userCtxKey)
 	if ctxData == nil {
 		return nil
 	}
-	user, _ := ctxData.(*types.User)
+	user, _ := ctxData.(*models.User)
 	return user
+}
+
+func setUserToContext(eCtx echo.Context, user *models.User) {
+	if eCtx == nil {
+		return
+	}
+	eCtx.Set(userCtxKey, user)
 }
 
 // NewMiddleware creates an OpenAPI middleware filter which handles request
@@ -45,65 +53,38 @@ func GetUserFromContext(ctx echo.Context) *types.User {
 // Provider will first authenticate the client from request data, synchronize
 // user roles on success, and finally try to authorize the request. If
 // successful, User will be available in context.
-func NewMiddleware(service types.IAMService) openapi3filter.AuthenticationFunc {
+func NewMiddleware(authn types.Authenticator, authz types.Authorizer, store types.AuthStore) openapi3filter.AuthenticationFunc {
 	return func(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
-		if service == nil {
-			return nil
-		}
-
 		// Remove user from request context
 		eCtx := middleware.GetEchoContext(ctx)
-		eCtx.Set(userCtxKey, nil)
+		setUserToContext(eCtx, nil)
 
 		// Authenticate
-		user, err := service.Authenticator().Authenticate(ctx, input.RequestValidationInput.Request)
+		userInfo, err := authn.Introspect(ctx, input.RequestValidationInput.Request)
 		if err != nil {
 			return fmt.Errorf("failed to authenticate request: %w", err)
 		}
 
-		// Authorize
-		// Route permissions are defined as "asset:action", so we extract
-		// the asset and action from the requested permission scope
-		//for _, scope := range input.Scopes {
-		//	// Fetch authorization request data
-		//	reqScope := strings.Split(scope, ":")
-		//	if len(reqScope) != 2 {
-		//		return fmt.Errorf("unknown api asset:action found, got %s", scope)
-		//	}
-		//	asset, action := reqScope[0], reqScope[1]
-		//
-		//	// Authorize request
-		//	authorized, err := service.Authorizer().CanPerform(ctx, user, asset, action)
-		//	if err != nil {
-		//		return fmt.Errorf("failed to check authorization: %w", err)
-		//	}
-		//	if !authorized {
-		//		return fmt.Errorf("not allowed, missing permission to perform %s:%s", asset, action)
-		//	}
-		//}
+		// Add auth user to request context
+		user, err := store.GetUserFromInfo(userInfo)
+		if err != nil {
+			return err
+		}
+		setUserToContext(eCtx, &user)
 
-		// Update request context with user data
-		eCtx.Set(userCtxKey, user)
+		// TODO: Check RBAC
+		for _, ruleDelim := range input.Scopes {
+			// For example: "api:update:asset"
+			ruleSlice := strings.SplitN(ruleDelim, ":", 3)
+			ok, err := authz.CanPerform(user, ruleSlice[0], ruleSlice[1])
+			if err != nil {
+				return err
+			}
+			if !ok {
+				return fmt.Errorf("does not have permissions")
+			}
+		}
 
 		return nil
 	}
 }
-
-func NewService() (types.IAMService, error) {
-	authenticator, err := oidc.New()
-	if err != nil {
-		return nil, err
-	}
-	return &iamService{
-		authn: authenticator,
-	}, nil
-}
-
-type iamService struct {
-	authn types.Authenticator
-	authz types.Authorizer
-}
-
-func (i iamService) Authenticator() types.Authenticator { return i.authn }
-
-func (i iamService) Authorizer() types.Authorizer { return i.authz }

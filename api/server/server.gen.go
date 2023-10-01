@@ -93,6 +93,9 @@ type ServerInterface interface {
 	// Update a finding.
 	// (PUT /findings/{findingID})
 	PutFindingsFindingID(ctx echo.Context, findingID FindingID) error
+	// Get personal user data.
+	// (GET /me)
+	GetCurrentUser(ctx echo.Context) error
 	// Get this OpenAPI spec
 	// (GET /openapi.json)
 	GetOpenAPISpec(ctx echo.Context) error
@@ -150,6 +153,33 @@ type ServerInterface interface {
 	// Update a scan.
 	// (PUT /scans/{scanID})
 	PutScansScanID(ctx echo.Context, scanID ScanID, params PutScansScanIDParams) error
+	// Delete a user auth credentials.
+	// (DELETE /user-auth/{userID})
+	DeleteUserAuthUserID(ctx echo.Context, userID UserID) error
+	// Get user auth data.
+	// (GET /user-auth/{userID})
+	GetUserAuthUserID(ctx echo.Context, userID UserID) error
+	// Create user auth credentials.
+	// (POST /user-auth/{userID})
+	PostUserAuthUserID(ctx echo.Context, userID UserID, params PostUserAuthUserIDParams) error
+	// Delete a user.
+	// (DELETE /user/{userID})
+	DeleteUsersUserID(ctx echo.Context, userID UserID) error
+	// Get the details for a user.
+	// (GET /user/{userID})
+	GetUsersUserID(ctx echo.Context, userID UserID) error
+	// Patch a user.
+	// (PATCH /user/{userID})
+	PatchUsersUserID(ctx echo.Context, userID UserID) error
+	// Update a user.
+	// (PUT /user/{userID})
+	PutUsersUserID(ctx echo.Context, userID UserID) error
+	// Get all users.
+	// (GET /users)
+	GetUsers(ctx echo.Context, params GetUsersParams) error
+	// Create a user.
+	// (POST /users)
+	PostUser(ctx echo.Context) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -900,6 +930,17 @@ func (w *ServerInterfaceWrapper) PutFindingsFindingID(ctx echo.Context) error {
 	return err
 }
 
+// GetCurrentUser converts echo context to params.
+func (w *ServerInterfaceWrapper) GetCurrentUser(ctx echo.Context) error {
+	var err error
+
+	ctx.Set(AuthTokenScopes, []string{})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetCurrentUser(ctx)
+	return err
+}
+
 // GetOpenAPISpec converts echo context to params.
 func (w *ServerInterfaceWrapper) GetOpenAPISpec(ctx echo.Context) error {
 	var err error
@@ -1503,6 +1544,186 @@ func (w *ServerInterfaceWrapper) PutScansScanID(ctx echo.Context) error {
 	return err
 }
 
+// DeleteUserAuthUserID converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteUserAuthUserID(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "userID" -------------
+	var userID UserID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "userID", runtime.ParamLocationPath, ctx.Param("userID"), &userID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter userID: %s", err))
+	}
+
+	ctx.Set(AuthTokenScopes, []string{"api:delete:user-auth"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteUserAuthUserID(ctx, userID)
+	return err
+}
+
+// GetUserAuthUserID converts echo context to params.
+func (w *ServerInterfaceWrapper) GetUserAuthUserID(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "userID" -------------
+	var userID UserID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "userID", runtime.ParamLocationPath, ctx.Param("userID"), &userID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter userID: %s", err))
+	}
+
+	ctx.Set(AuthTokenScopes, []string{"api:list:user-auth"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetUserAuthUserID(ctx, userID)
+	return err
+}
+
+// PostUserAuthUserID converts echo context to params.
+func (w *ServerInterfaceWrapper) PostUserAuthUserID(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "userID" -------------
+	var userID UserID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "userID", runtime.ParamLocationPath, ctx.Param("userID"), &userID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter userID: %s", err))
+	}
+
+	ctx.Set(AuthTokenScopes, []string{"api:create:user-auth"})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PostUserAuthUserIDParams
+	// ------------- Required query parameter "authType" -------------
+
+	err = runtime.BindQueryParameter("form", true, true, "authType", ctx.QueryParams(), &params.AuthType)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter authType: %s", err))
+	}
+
+	// ------------- Optional query parameter "expiryTime" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "expiryTime", ctx.QueryParams(), &params.ExpiryTime)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter expiryTime: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PostUserAuthUserID(ctx, userID, params)
+	return err
+}
+
+// DeleteUsersUserID converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteUsersUserID(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "userID" -------------
+	var userID UserID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "userID", runtime.ParamLocationPath, ctx.Param("userID"), &userID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter userID: %s", err))
+	}
+
+	ctx.Set(AuthTokenScopes, []string{"api:delete:user"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteUsersUserID(ctx, userID)
+	return err
+}
+
+// GetUsersUserID converts echo context to params.
+func (w *ServerInterfaceWrapper) GetUsersUserID(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "userID" -------------
+	var userID UserID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "userID", runtime.ParamLocationPath, ctx.Param("userID"), &userID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter userID: %s", err))
+	}
+
+	ctx.Set(AuthTokenScopes, []string{"api:get:user"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetUsersUserID(ctx, userID)
+	return err
+}
+
+// PatchUsersUserID converts echo context to params.
+func (w *ServerInterfaceWrapper) PatchUsersUserID(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "userID" -------------
+	var userID UserID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "userID", runtime.ParamLocationPath, ctx.Param("userID"), &userID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter userID: %s", err))
+	}
+
+	ctx.Set(AuthTokenScopes, []string{"api:update:user"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PatchUsersUserID(ctx, userID)
+	return err
+}
+
+// PutUsersUserID converts echo context to params.
+func (w *ServerInterfaceWrapper) PutUsersUserID(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "userID" -------------
+	var userID UserID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "userID", runtime.ParamLocationPath, ctx.Param("userID"), &userID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter userID: %s", err))
+	}
+
+	ctx.Set(AuthTokenScopes, []string{"api:update:user"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PutUsersUserID(ctx, userID)
+	return err
+}
+
+// GetUsers converts echo context to params.
+func (w *ServerInterfaceWrapper) GetUsers(ctx echo.Context) error {
+	var err error
+
+	ctx.Set(AuthTokenScopes, []string{"api:list:user"})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetUsersParams
+	// ------------- Optional query parameter "$skip" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "$skip", ctx.QueryParams(), &params.Skip)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter $skip: %s", err))
+	}
+
+	// ------------- Optional query parameter "$top" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "$top", ctx.QueryParams(), &params.Top)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter $top: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetUsers(ctx, params)
+	return err
+}
+
+// PostUser converts echo context to params.
+func (w *ServerInterfaceWrapper) PostUser(ctx echo.Context) error {
+	var err error
+
+	ctx.Set(AuthTokenScopes, []string{"api:create:user"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PostUser(ctx)
+	return err
+}
+
 // This is a simple interface which specifies echo.Route addition functions which
 // are present on both echo.Echo and echo.Group, since we want to allow using
 // either of them for path registration
@@ -1555,6 +1776,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.GET(baseURL+"/findings/:findingID", wrapper.GetFindingsFindingID)
 	router.PATCH(baseURL+"/findings/:findingID", wrapper.PatchFindingsFindingID)
 	router.PUT(baseURL+"/findings/:findingID", wrapper.PutFindingsFindingID)
+	router.GET(baseURL+"/me", wrapper.GetCurrentUser)
 	router.GET(baseURL+"/openapi.json", wrapper.GetOpenAPISpec)
 	router.GET(baseURL+"/scanConfigs", wrapper.GetScanConfigs)
 	router.POST(baseURL+"/scanConfigs", wrapper.PostScanConfigs)
@@ -1574,6 +1796,15 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.GET(baseURL+"/scans/:scanID", wrapper.GetScansScanID)
 	router.PATCH(baseURL+"/scans/:scanID", wrapper.PatchScansScanID)
 	router.PUT(baseURL+"/scans/:scanID", wrapper.PutScansScanID)
+	router.DELETE(baseURL+"/user-auth/:userID", wrapper.DeleteUserAuthUserID)
+	router.GET(baseURL+"/user-auth/:userID", wrapper.GetUserAuthUserID)
+	router.POST(baseURL+"/user-auth/:userID", wrapper.PostUserAuthUserID)
+	router.DELETE(baseURL+"/user/:userID", wrapper.DeleteUsersUserID)
+	router.GET(baseURL+"/user/:userID", wrapper.GetUsersUserID)
+	router.PATCH(baseURL+"/user/:userID", wrapper.PatchUsersUserID)
+	router.PUT(baseURL+"/user/:userID", wrapper.PutUsersUserID)
+	router.GET(baseURL+"/users", wrapper.GetUsers)
+	router.POST(baseURL+"/users", wrapper.PostUser)
 
 }
 

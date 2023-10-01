@@ -16,9 +16,9 @@
 package authz
 
 import (
-	"context"
 	_ "embed"
 	"fmt"
+	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam/types"
 
 	"github.com/casbin/casbin"
@@ -31,13 +31,7 @@ var rbacModel string
 // New creates an authorizer which will use a local CSV file to configure role rules.
 func New() (types.Authorizer, error) {
 	// Load config
-	config, err := LoadConfig()
-	if err != nil {
-		return nil, fmt.Errorf("failed to load config for Authorizer=localrbac: %w", err)
-	}
-	if err := config.Validate(); err != nil {
-		return nil, fmt.Errorf("failed to validate config for Authorizer=localrbac: %w", err)
-	}
+	config := LoadConfig()
 
 	// Create enforcer
 	enforcer, err := casbin.NewEnforcerSafe(casbin.NewModel(rbacModel), fileadapter.NewAdapter(config.RuleFilePath))
@@ -58,15 +52,15 @@ type localRBAC struct {
 	enforcer *casbin.Enforcer
 }
 
-func (authorizer *localRBAC) CanPerform(_ context.Context, user *types.User, asset, action string) (bool, error) {
-	//for _, role := range user.GetRoles() {
-	//	allowed, err := authorizer.enforcer.EnforceSafe(role, asset, action)
-	//	if err != nil {
-	//		return false, fmt.Errorf("failed checking auth role for Authorizer=localrbac: %w", err)
-	//	}
-	//	if allowed {
-	//		return true, nil
-	//	}
-	//}
+func (authorizer *localRBAC) CanPerform(user models.User, asset, action string) (bool, error) {
+	for _, role := range *user.Roles {
+		allowed, err := authorizer.enforcer.EnforceSafe(role, asset, action)
+		if err != nil {
+			return false, fmt.Errorf("failed checking auth role for Authorizer=localrbac: %w", err)
+		}
+		if allowed {
+			return true, nil
+		}
+	}
 	return false, nil
 }

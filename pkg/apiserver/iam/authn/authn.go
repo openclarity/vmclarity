@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package oidc
+package authn
 
 import (
 	"context"
@@ -25,6 +25,11 @@ import (
 
 	"github.com/zitadel/oidc/pkg/client/rs"
 )
+
+type oidcAuth struct {
+	resourceServer rs.ResourceServer
+	isZitadel      bool
+}
 
 // New creates an authenticator which intercepts requests and validates the
 // Bearer token via OIDC introspection.
@@ -46,14 +51,11 @@ func New() (types.Authenticator, error) {
 	// Return OIDC Authenticator
 	return &oidcAuth{
 		resourceServer: resourceServer,
+		isZitadel:      config.UseZitadel,
 	}, nil
 }
 
-type oidcAuth struct {
-	resourceServer rs.ResourceServer
-}
-
-func (auth *oidcAuth) Authenticate(ctx context.Context, req *http.Request) (*types.AuthUser, error) {
+func (auth *oidcAuth) Introspect(ctx context.Context, req *http.Request) (*types.UserInfo, error) {
 	// Extract token
 	token, err := extractToken(req)
 	if err != nil {
@@ -69,12 +71,11 @@ func (auth *oidcAuth) Authenticate(ctx context.Context, req *http.Request) (*typ
 		return nil, fmt.Errorf("token expired")
 	}
 
-	// Return authenticated user
-	return &types.AuthUser{
-		ID: jwtToken.GetSubject(),
-		FromOIDC: &types.AuthFromOIDC{
-			Claims: jwtToken.GetClaims(),
-		},
+	// Return authenticated user info
+	return &types.UserInfo{
+		UserInfo:        jwtToken,
+		FromGenericOIDC: !auth.isZitadel,
+		FromZitadelOIDC: auth.isZitadel,
 	}, nil
 }
 

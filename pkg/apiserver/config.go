@@ -25,8 +25,6 @@ import (
 )
 
 const (
-	IAMEnabledEnvVar = "IAM_ENABLED"
-
 	BackendRestHost       = "BACKEND_REST_HOST"
 	BackendRestDisableTLS = "BACKEND_REST_DISABLE_TLS" // nolint:gosec
 	BackendRestPort       = "BACKEND_REST_PORT"
@@ -49,9 +47,6 @@ const (
 )
 
 type Config struct {
-	// IAM config
-	IamEnabled bool `json:"iam-enabled"`
-
 	// Backend
 	BackendRestHost    string `json:"backend-rest-host,omitempty"`
 	BackendRestPort    int    `json:"backend-rest-port,omitempty"`
@@ -87,9 +82,6 @@ func LoadConfig() (*Config, error) {
 	setConfigDefaults()
 
 	config := &Config{}
-
-	// IAM
-	config.IamEnabled = viper.GetBool(IAMEnabledEnvVar)
 
 	// Backend
 	config.BackendRestHost = viper.GetString(BackendRestHost)

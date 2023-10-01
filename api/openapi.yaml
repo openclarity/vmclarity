@@ -1378,7 +1378,6 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
 
-
 components:
   schemas:
     ApiResponse:
@@ -1423,26 +1422,6 @@ components:
         - Docker
         - External
         - Kubernetes
-
-    IamAuthenticator:
-      type: string
-      enum:
-        - AuthenticatorOIDC
-
-    IamRoleSyncer:
-      type: string
-      enum:
-        - RoleSyncerJWT
-
-    IamAuthorizer:
-      type: string
-      enum:
-        - AuthorizerLocalRBAC
-
-    IamInjector:
-      type: string
-      enum:
-        - InjectorBearerToken
 
     Scans:
       type: object
@@ -3260,6 +3239,106 @@ components:
           description: Total estimated cost of the scan ($)
           type: number
           format: float
+
+    User:
+      type: object
+      description: Describes a user account.
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        banned:
+          type: boolean
+        userType:
+          $ref: '#/components/schemas/UserType'
+        roles:
+          type: array
+          description: Roles associated with the user.
+          items:
+            type: string
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    UserType:
+      type: string
+      enum:
+        - REGULAR_USER
+        - MACHINE_USER
+
+    Users:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total user count according to the given filters
+          readOnly: true
+        items:
+          type: array
+          description: List of users according to the given filters and page.
+            List length must be lower or equal to pageSize.
+          items:
+            $ref: '#/components/schemas/User'
+          readOnly: true
+
+    UserExists:
+      type: object
+      properties:
+        message:
+          description: Describes which unique constraint combination causes the conflict.
+          type: string
+          readOnly: true
+
+    UserAuth:
+      type: object
+      description: Describes user auth details.
+      properties:
+        userID:
+          type: string
+        userAuthID:
+          type: string
+        authType:
+          $ref: '#/components/schemas/AuthType'
+        createdAt:
+          type: string
+          format: date-time
+
+    AuthType:
+      type: string
+      enum:
+        - ACCESS_TOKEN
+        - SERVICE_ACCOUNT
+
+    UserAuths:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total user auth count according to the given filters
+          readOnly: true
+        items:
+          type: array
+          description: List of users auth according to the given filters and page.
+            List length must be lower or equal to pageSize.
+          items:
+            $ref: '#/components/schemas/UserAuth'
+          readOnly: true
+
+    UserCred:
+      type: object
+      description: Describes user credentials data.
+      properties:
+        userAuth:
+          $ref: '#/components/schemas/UserAuth'
+        credentials:
+          type: object
 
   responses:
     Success:

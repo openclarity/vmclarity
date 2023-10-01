@@ -17,66 +17,44 @@ package types
 
 import (
 	"context"
+	"github.com/openclarity/vmclarity/api/models"
+	"github.com/zitadel/oidc/pkg/oidc"
 	"net/http"
+	"time"
 )
 
-type IAMService interface {
-	Authenticator() Authenticator
-	Authorizer() Authorizer
+// UserInfo defines an authenticated (OIDC) user.
+type UserInfo struct {
+	oidc.UserInfo
+
+	// Data to indicate auth source
+	FromGenericOIDC bool
+	FromZitadelOIDC bool
 }
 
-//	type ScansTable interface {
-//		GetScans(params models.GetScansParams) (models.Scans, error)
-//		GetScan(scanID models.ScanID, params models.GetScansScanIDParams) (models.Scan, error)
-//
-//		CreateScan(scan models.Scan) (models.Scan, error)
-//		UpdateScan(scan models.Scan, params models.PatchScansScanIDParams) (models.Scan, error)
-//		SaveScan(scan models.Scan, params models.PutScansScanIDParams) (models.Scan, error)
-//
-//		DeleteScan(scanID models.ScanID) error
-//	}
-
-// AuthUser defines an authenticated user.
-type AuthUser struct {
-	ID string
-
-	// Data from auth providers
-	FromOIDC *AuthFromOIDC
-}
-
-// AuthFromOIDC defines data from OIDC Authenticator
-type AuthFromOIDC struct {
-	Claims map[string]interface{}
-}
-
-// Authenticator defines authentication service.
+// Authenticator defines (OIDC) authentication service.
 type Authenticator interface {
-	// Authenticate authenticates a request payload against authentication service.
-	Authenticate(ctx context.Context, req *http.Request) (*AuthUser, error)
-}
-
-type User struct {
-	ID      string
-	Name    string
-	Email   string
-	Roles   []string
-	Banned  bool
-	Machine bool
-}
-
-type UserStore interface {
-	CurrentUser(ctx context.Context) (*User, error)
-
-	CreateUser(ctx context.Context, user *User) error
-	DeleteUser(ctx context.Context, user *User) error
-
-	CreateCredentials(ctx context.Context, user *User) error
-	RevokeCredentials(ctx context.Context, user *User, token string) error
+	// Introspect fetches UserInfo data from OIDC IDP using introspect API. Consider caching.
+	Introspect(ctx context.Context, req *http.Request) (*UserInfo, error)
 }
 
 // Authorizer defines authorization service.
 type Authorizer interface {
-	// CanPerform checks if User is allowed to perform an action on an asset based on
-	// some predefined rules.
-	CanPerform(ctx context.Context, user interface{}, asset, action string) (bool, error)
+	// CanPerform checks if user is allowed to perform an action on an asset based on specs.
+	CanPerform(user models.User, asset, action string) (bool, error)
+}
+
+// AuthStore defines a (db) store to interact with user and auth data.
+type AuthStore interface {
+	GetUserFromInfo(info *UserInfo) (models.User, error)
+
+	GetUsers(params models.GetUsersParams) (models.Users, error)
+	GetUser(userID models.UserID) (models.User, error)
+	CreateUser(user models.User) (models.User, error)
+	UpdateUser(user models.User) (models.User, error)
+	DeleteUser(userID models.UserID) error
+
+	GetUserAuth(userID models.UserID) (models.UserAuths, error)
+	CreateUserAuth(userID models.UserID, authType models.AuthType, expiryDate *time.Time) (models.UserCred, error)
+	RevokeUserAuth(userID models.UserID, userAuth models.UserAuth) error
 }

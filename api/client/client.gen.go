@@ -186,6 +186,9 @@ type ClientInterface interface {
 
 	PutFindingsFindingID(ctx context.Context, findingID FindingID, body PutFindingsFindingIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetCurrentUser request
+	GetCurrentUser(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetOpenAPISpec request
 	GetOpenAPISpec(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -260,6 +263,43 @@ type ClientInterface interface {
 	PutScansScanIDWithBody(ctx context.Context, scanID ScanID, params *PutScansScanIDParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PutScansScanID(ctx context.Context, scanID ScanID, params *PutScansScanIDParams, body PutScansScanIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteUserAuthUserIDWithBody request with any body
+	DeleteUserAuthUserIDWithBody(ctx context.Context, userID UserID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	DeleteUserAuthUserID(ctx context.Context, userID UserID, body DeleteUserAuthUserIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetUserAuthUserID request
+	GetUserAuthUserID(ctx context.Context, userID UserID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostUserAuthUserIDWithBody request with any body
+	PostUserAuthUserIDWithBody(ctx context.Context, userID UserID, params *PostUserAuthUserIDParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostUserAuthUserID(ctx context.Context, userID UserID, params *PostUserAuthUserIDParams, body PostUserAuthUserIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteUsersUserID request
+	DeleteUsersUserID(ctx context.Context, userID UserID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetUsersUserID request
+	GetUsersUserID(ctx context.Context, userID UserID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PatchUsersUserIDWithBody request with any body
+	PatchUsersUserIDWithBody(ctx context.Context, userID UserID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PatchUsersUserID(ctx context.Context, userID UserID, body PatchUsersUserIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutUsersUserIDWithBody request with any body
+	PutUsersUserIDWithBody(ctx context.Context, userID UserID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PutUsersUserID(ctx context.Context, userID UserID, body PutUsersUserIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetUsers request
+	GetUsers(ctx context.Context, params *GetUsersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostUserWithBody request with any body
+	PostUserWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostUser(ctx context.Context, body PostUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) GetAssetScanEstimations(ctx context.Context, params *GetAssetScanEstimationsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -684,6 +724,18 @@ func (c *Client) PutFindingsFindingIDWithBody(ctx context.Context, findingID Fin
 
 func (c *Client) PutFindingsFindingID(ctx context.Context, findingID FindingID, body PutFindingsFindingIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPutFindingsFindingIDRequest(c.Server, findingID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetCurrentUser(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetCurrentUserRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -2653,6 +2705,33 @@ func NewPutFindingsFindingIDRequestWithBody(server string, findingID FindingID, 
 	return req, nil
 }
 
+// NewGetCurrentUserRequest generates requests for GetCurrentUser
+func NewGetCurrentUserRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/me")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetOpenAPISpecRequest generates requests for GetOpenAPISpec
 func NewGetOpenAPISpecRequest(server string) (*http.Request, error) {
 	var err error
@@ -3925,6 +4004,435 @@ func NewPutScansScanIDRequestWithBody(server string, scanID ScanID, params *PutS
 	return req, nil
 }
 
+// NewDeleteUserAuthUserIDRequest calls the generic DeleteUserAuthUserID builder with application/json body
+func NewDeleteUserAuthUserIDRequest(server string, userID UserID, body DeleteUserAuthUserIDJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewDeleteUserAuthUserIDRequestWithBody(server, userID, "application/json", bodyReader)
+}
+
+// NewDeleteUserAuthUserIDRequestWithBody generates requests for DeleteUserAuthUserID with any type of body
+func NewDeleteUserAuthUserIDRequestWithBody(server string, userID UserID, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "userID", runtime.ParamLocationPath, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/user-auth/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetUserAuthUserIDRequest generates requests for GetUserAuthUserID
+func NewGetUserAuthUserIDRequest(server string, userID UserID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "userID", runtime.ParamLocationPath, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/user-auth/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostUserAuthUserIDRequest calls the generic PostUserAuthUserID builder with application/json body
+func NewPostUserAuthUserIDRequest(server string, userID UserID, params *PostUserAuthUserIDParams, body PostUserAuthUserIDJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostUserAuthUserIDRequestWithBody(server, userID, params, "application/json", bodyReader)
+}
+
+// NewPostUserAuthUserIDRequestWithBody generates requests for PostUserAuthUserID with any type of body
+func NewPostUserAuthUserIDRequestWithBody(server string, userID UserID, params *PostUserAuthUserIDParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "userID", runtime.ParamLocationPath, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/user-auth/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "authType", runtime.ParamLocationQuery, params.AuthType); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		if params.ExpiryTime != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "expiryTime", runtime.ParamLocationQuery, *params.ExpiryTime); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteUsersUserIDRequest generates requests for DeleteUsersUserID
+func NewDeleteUsersUserIDRequest(server string, userID UserID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "userID", runtime.ParamLocationPath, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/user/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetUsersUserIDRequest generates requests for GetUsersUserID
+func NewGetUsersUserIDRequest(server string, userID UserID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "userID", runtime.ParamLocationPath, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/user/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPatchUsersUserIDRequest calls the generic PatchUsersUserID builder with application/json body
+func NewPatchUsersUserIDRequest(server string, userID UserID, body PatchUsersUserIDJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPatchUsersUserIDRequestWithBody(server, userID, "application/json", bodyReader)
+}
+
+// NewPatchUsersUserIDRequestWithBody generates requests for PatchUsersUserID with any type of body
+func NewPatchUsersUserIDRequestWithBody(server string, userID UserID, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "userID", runtime.ParamLocationPath, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/user/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPutUsersUserIDRequest calls the generic PutUsersUserID builder with application/json body
+func NewPutUsersUserIDRequest(server string, userID UserID, body PutUsersUserIDJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutUsersUserIDRequestWithBody(server, userID, "application/json", bodyReader)
+}
+
+// NewPutUsersUserIDRequestWithBody generates requests for PutUsersUserID with any type of body
+func NewPutUsersUserIDRequestWithBody(server string, userID UserID, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "userID", runtime.ParamLocationPath, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/user/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetUsersRequest generates requests for GetUsers
+func NewGetUsersRequest(server string, params *GetUsersParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/users")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Skip != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$skip", runtime.ParamLocationQuery, *params.Skip); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Top != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "$top", runtime.ParamLocationQuery, *params.Top); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostUserRequest calls the generic PostUser builder with application/json body
+func NewPostUserRequest(server string, body PostUserJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostUserRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostUserRequestWithBody generates requests for PostUser with any type of body
+func NewPostUserRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/users")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -4064,6 +4572,9 @@ type ClientWithResponsesInterface interface {
 
 	PutFindingsFindingIDWithResponse(ctx context.Context, findingID FindingID, body PutFindingsFindingIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PutFindingsFindingIDResponse, error)
 
+	// GetCurrentUserWithResponse request
+	GetCurrentUserWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetCurrentUserResponse, error)
+
 	// GetOpenAPISpecWithResponse request
 	GetOpenAPISpecWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetOpenAPISpecResponse, error)
 
@@ -4138,6 +4649,43 @@ type ClientWithResponsesInterface interface {
 	PutScansScanIDWithBodyWithResponse(ctx context.Context, scanID ScanID, params *PutScansScanIDParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutScansScanIDResponse, error)
 
 	PutScansScanIDWithResponse(ctx context.Context, scanID ScanID, params *PutScansScanIDParams, body PutScansScanIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PutScansScanIDResponse, error)
+
+	// DeleteUserAuthUserIDWithBodyWithResponse request with any body
+	DeleteUserAuthUserIDWithBodyWithResponse(ctx context.Context, userID UserID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteUserAuthUserIDResponse, error)
+
+	DeleteUserAuthUserIDWithResponse(ctx context.Context, userID UserID, body DeleteUserAuthUserIDJSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteUserAuthUserIDResponse, error)
+
+	// GetUserAuthUserIDWithResponse request
+	GetUserAuthUserIDWithResponse(ctx context.Context, userID UserID, reqEditors ...RequestEditorFn) (*GetUserAuthUserIDResponse, error)
+
+	// PostUserAuthUserIDWithBodyWithResponse request with any body
+	PostUserAuthUserIDWithBodyWithResponse(ctx context.Context, userID UserID, params *PostUserAuthUserIDParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostUserAuthUserIDResponse, error)
+
+	PostUserAuthUserIDWithResponse(ctx context.Context, userID UserID, params *PostUserAuthUserIDParams, body PostUserAuthUserIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PostUserAuthUserIDResponse, error)
+
+	// DeleteUsersUserIDWithResponse request
+	DeleteUsersUserIDWithResponse(ctx context.Context, userID UserID, reqEditors ...RequestEditorFn) (*DeleteUsersUserIDResponse, error)
+
+	// GetUsersUserIDWithResponse request
+	GetUsersUserIDWithResponse(ctx context.Context, userID UserID, reqEditors ...RequestEditorFn) (*GetUsersUserIDResponse, error)
+
+	// PatchUsersUserIDWithBodyWithResponse request with any body
+	PatchUsersUserIDWithBodyWithResponse(ctx context.Context, userID UserID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchUsersUserIDResponse, error)
+
+	PatchUsersUserIDWithResponse(ctx context.Context, userID UserID, body PatchUsersUserIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchUsersUserIDResponse, error)
+
+	// PutUsersUserIDWithBodyWithResponse request with any body
+	PutUsersUserIDWithBodyWithResponse(ctx context.Context, userID UserID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutUsersUserIDResponse, error)
+
+	PutUsersUserIDWithResponse(ctx context.Context, userID UserID, body PutUsersUserIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PutUsersUserIDResponse, error)
+
+	// GetUsersWithResponse request
+	GetUsersWithResponse(ctx context.Context, params *GetUsersParams, reqEditors ...RequestEditorFn) (*GetUsersResponse, error)
+
+	// PostUserWithBodyWithResponse request with any body
+	PostUserWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostUserResponse, error)
+
+	PostUserWithResponse(ctx context.Context, body PostUserJSONRequestBody, reqEditors ...RequestEditorFn) (*PostUserResponse, error)
 }
 
 type GetAssetScanEstimationsResponse struct {
@@ -4729,6 +5277,29 @@ func (r PutFindingsFindingIDResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r PutFindingsFindingIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetCurrentUserResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *User
+	JSONDefault  *UnknownError
+}
+
+// Status returns HTTPResponse.Status
+func (r GetCurrentUserResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetCurrentUserResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -5515,6 +6086,15 @@ func (c *ClientWithResponses) PutFindingsFindingIDWithResponse(ctx context.Conte
 		return nil, err
 	}
 	return ParsePutFindingsFindingIDResponse(rsp)
+}
+
+// GetCurrentUserWithResponse request returning *GetCurrentUserResponse
+func (c *ClientWithResponses) GetCurrentUserWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetCurrentUserResponse, error) {
+	rsp, err := c.GetCurrentUser(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetCurrentUserResponse(rsp)
 }
 
 // GetOpenAPISpecWithResponse request returning *GetOpenAPISpecResponse
@@ -6853,6 +7433,39 @@ func ParsePutFindingsFindingIDResponse(rsp *http.Response) (*PutFindingsFindingI
 	return response, nil
 }
 
+// ParseGetCurrentUserResponse parses an HTTP response from a GetCurrentUserWithResponse call
+func ParseGetCurrentUserResponse(rsp *http.Response) (*GetCurrentUserResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetCurrentUserResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest User
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest UnknownError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetOpenAPISpecResponse parses an HTTP response from a GetOpenAPISpecWithResponse call
 func ParseGetOpenAPISpecResponse(rsp *http.Response) (*GetOpenAPISpecResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -7698,6 +8311,394 @@ func ParsePutScansScanIDResponse(rsp *http.Response) (*PutScansScanIDResponse, e
 			return nil, err
 		}
 		response.JSON412 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest UnknownError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteUserAuthUserIDResponse parses an HTTP response from a DeleteUserAuthUserIDWithResponse call
+func ParseDeleteUserAuthUserIDResponse(rsp *http.Response) (*DeleteUserAuthUserIDResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteUserAuthUserIDResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Success
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest UnknownError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetUserAuthUserIDResponse parses an HTTP response from a GetUserAuthUserIDWithResponse call
+func ParseGetUserAuthUserIDResponse(rsp *http.Response) (*GetUserAuthUserIDResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetUserAuthUserIDResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UserAuths
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest UnknownError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostUserAuthUserIDResponse parses an HTTP response from a PostUserAuthUserIDWithResponse call
+func ParsePostUserAuthUserIDResponse(rsp *http.Response) (*PostUserAuthUserIDResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostUserAuthUserIDResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest UserCred
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest UnknownError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteUsersUserIDResponse parses an HTTP response from a DeleteUsersUserIDWithResponse call
+func ParseDeleteUsersUserIDResponse(rsp *http.Response) (*DeleteUsersUserIDResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteUsersUserIDResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Success
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest UnknownError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetUsersUserIDResponse parses an HTTP response from a GetUsersUserIDWithResponse call
+func ParseGetUsersUserIDResponse(rsp *http.Response) (*GetUsersUserIDResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetUsersUserIDResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest User
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest UnknownError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePatchUsersUserIDResponse parses an HTTP response from a PatchUsersUserIDWithResponse call
+func ParsePatchUsersUserIDResponse(rsp *http.Response) (*PatchUsersUserIDResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PatchUsersUserIDResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest User
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest UnknownError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutUsersUserIDResponse parses an HTTP response from a PutUsersUserIDWithResponse call
+func ParsePutUsersUserIDResponse(rsp *http.Response) (*PutUsersUserIDResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutUsersUserIDResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest User
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest UnknownError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetUsersResponse parses an HTTP response from a GetUsersWithResponse call
+func ParseGetUsersResponse(rsp *http.Response) (*GetUsersResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetUsersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Users
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest UnknownError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostUserResponse parses an HTTP response from a PostUserWithResponse call
+func ParsePostUserResponse(rsp *http.Response) (*PostUserResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostUserResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest User
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest UserExists
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest UnknownError

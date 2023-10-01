@@ -30,7 +30,7 @@ import (
 )
 
 func NewDatabase(config types.DBConfig) (types.Database, error) {
-	db, err := initDataBase(config)
+	var db, err = initDataBase(config)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create new GORM database: %w", err)
 	}

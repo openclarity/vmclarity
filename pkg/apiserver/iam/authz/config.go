@@ -16,27 +16,22 @@
 package authz
 
 import (
-	"fmt"
-
 	"github.com/spf13/viper"
 )
 
-const authzLocalRbacRuleFilePathEnvVar = "AUTHZ_LOCAL_RBAC_RULE_FILEPATH"
+const (
+	authzRuleFilePathEnvVar = "AUTHZ_LOCAL_RBAC_RULE_FILEPATH"
+)
 
 type Config struct {
 	RuleFilePath string `json:"rule-filepath"`
 }
 
-func LoadConfig() (*Config, error) {
-	return &Config{
-		RuleFilePath: viper.GetString(authzLocalRbacRuleFilePathEnvVar),
-	}, nil
-}
+func LoadConfig() Config {
+	v := viper.New()
+	v.AutomaticEnv()
 
-func (c *Config) Validate() error {
-	if c.RuleFilePath == "" {
-		return fmt.Errorf("must specify issuer for Authorizer=localrbac")
+	return Config{
+		RuleFilePath: v.GetString(authzRuleFilePathEnvVar),
 	}
-
-	return nil
 }

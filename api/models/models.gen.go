@@ -42,6 +42,12 @@ const (
 	AssetScanStateStateScheduled   AssetScanStateState = "Scheduled"
 )
 
+// Defines values for AuthType.
+const (
+	AuthTypeACCESSTOKEN    AuthType = "ACCESS_TOKEN"
+	AuthTypeSERVICEACCOUNT AuthType = "SERVICE_ACCOUNT"
+)
+
 // Defines values for CloudProvider.
 const (
 	AWS        CloudProvider = "AWS"
@@ -59,26 +65,6 @@ const (
 	InfoTypeSSHKnownHostFingerprint     InfoType = "SSHKnownHostFingerprint"
 	InfoTypeSSHPrivateKeyFingerprint    InfoType = "SSHPrivateKeyFingerprint"
 	InfoTypeUNKNOWN                     InfoType = "UNKNOWN"
-)
-
-// Defines values for IamAuthenticator.
-const (
-	AuthenticatorOIDC IamAuthenticator = "AuthenticatorOIDC"
-)
-
-// Defines values for IamAuthorizer.
-const (
-	AuthorizerLocalRBAC IamAuthorizer = "AuthorizerLocalRBAC"
-)
-
-// Defines values for IamInjector.
-const (
-	InjectorBearerToken IamInjector = "InjectorBearerToken"
-)
-
-// Defines values for IamRoleSyncer.
-const (
-	RoleSyncerJWT IamRoleSyncer = "RoleSyncerJWT"
 )
 
 // Defines values for MisconfigurationSeverity.
@@ -195,6 +181,12 @@ const (
 	SBOM             ScanType = "SBOM"
 	SECRET           ScanType = "SECRET"
 	VULNERABILITY    ScanType = "VULNERABILITY"
+)
+
+// Defines values for UserType.
+const (
+	MACHINEUSER UserType = "MACHINE_USER"
+	REGULARUSER UserType = "REGULAR_USER"
 )
 
 // Defines values for VulnerabilitySeverity.
@@ -498,6 +490,9 @@ type Assets struct {
 	// Items List of assets in the given filters and page. List length must be lower or equal to pageSize.
 	Items *[]Asset `json:"items,omitempty"`
 }
+
+// AuthType defines model for AuthType.
+type AuthType string
 
 // CloudProvider defines model for CloudProvider.
 type CloudProvider string
@@ -1274,6 +1269,63 @@ type Tag struct {
 	Value string `json:"value"`
 }
 
+// User Describes a user account.
+type User struct {
+	Banned    *bool      `json:"banned,omitempty"`
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
+	Email     *string    `json:"email,omitempty"`
+	Id        *string    `json:"id,omitempty"`
+	Name      *string    `json:"name,omitempty"`
+
+	// Roles Roles associated with the user.
+	Roles     *[]string  `json:"roles,omitempty"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
+	UserType  *UserType  `json:"userType,omitempty"`
+}
+
+// UserAuth Describes user auth details.
+type UserAuth struct {
+	AuthType   *AuthType  `json:"authType,omitempty"`
+	CreatedAt  *time.Time `json:"createdAt,omitempty"`
+	UserAuthID *string    `json:"userAuthID,omitempty"`
+	UserID     *string    `json:"userID,omitempty"`
+}
+
+// UserAuths defines model for UserAuths.
+type UserAuths struct {
+	// Count Total user auth count according to the given filters
+	Count *int `json:"count,omitempty"`
+
+	// Items List of users auth according to the given filters and page. List length must be lower or equal to pageSize.
+	Items *[]UserAuth `json:"items,omitempty"`
+}
+
+// UserCred Describes user credentials data.
+type UserCred struct {
+	Credentials *map[string]interface{} `json:"credentials,omitempty"`
+
+	// UserAuth Describes user auth details.
+	UserAuth *UserAuth `json:"userAuth,omitempty"`
+}
+
+// UserExists defines model for UserExists.
+type UserExists struct {
+	// Message Describes which unique constraint combination causes the conflict.
+	Message *string `json:"message,omitempty"`
+}
+
+// UserType defines model for UserType.
+type UserType string
+
+// Users defines model for Users.
+type Users struct {
+	// Count Total user count according to the given filters
+	Count *int `json:"count,omitempty"`
+
+	// Items List of users according to the given filters and page. List length must be lower or equal to pageSize.
+	Items *[]User `json:"items,omitempty"`
+}
+
 // VMInfo defines model for VMInfo.
 type VMInfo struct {
 	Image            string         `json:"image"`
@@ -1388,6 +1440,9 @@ type AssetScanEstimationID = string
 // AssetScanID defines model for assetScanID.
 type AssetScanID = string
 
+// ExpiryTime defines model for expiryTime.
+type ExpiryTime = time.Time
+
 // FindingID defines model for findingID.
 type FindingID = string
 
@@ -1423,6 +1478,12 @@ type ScanEstimationID = string
 
 // ScanID defines model for scanID.
 type ScanID = string
+
+// UserAuthID defines model for userAuthID.
+type UserAuthID = string
+
+// UserID defines model for userID.
+type UserID = string
 
 // Success An object that is returned in cases of success that returns nothing.
 type Success = SuccessResponse
@@ -1671,6 +1732,21 @@ type PatchScansScanIDJSONRequestBody = Scan
 
 // PutScansScanIDJSONRequestBody defines body for PutScansScanID for application/json ContentType.
 type PutScansScanIDJSONRequestBody = Scan
+
+// DeleteUserAuthUserIDJSONRequestBody defines body for DeleteUserAuthUserID for application/json ContentType.
+type DeleteUserAuthUserIDJSONRequestBody = UserAuth
+
+// PostUserAuthUserIDJSONRequestBody defines body for PostUserAuthUserID for application/json ContentType.
+type PostUserAuthUserIDJSONRequestBody = UserAuth
+
+// PatchUsersUserIDJSONRequestBody defines body for PatchUsersUserID for application/json ContentType.
+type PatchUsersUserIDJSONRequestBody = User
+
+// PutUsersUserIDJSONRequestBody defines body for PutUsersUserID for application/json ContentType.
+type PutUsersUserIDJSONRequestBody = User
+
+// PostUserJSONRequestBody defines body for PostUser for application/json ContentType.
+type PostUserJSONRequestBody = User
 
 // AsVMInfo returns the union data inside the AssetType as a VMInfo
 func (t AssetType) AsVMInfo() (VMInfo, error) {

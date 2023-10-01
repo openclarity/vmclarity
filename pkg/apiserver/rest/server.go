@@ -18,13 +18,16 @@ package rest
 import (
 	"context"
 	"fmt"
+	"github.com/deepmap/oapi-codegen/pkg/middleware"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
-	"github.com/openclarity/vmclarity/pkg/apiserver/iam/types"
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam/authn"
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam/authstore"
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam/authz"
+	iamTypes "github.com/openclarity/vmclarity/pkg/apiserver/iam/types"
 	"time"
 
 	"github.com/getkin/kin-openapi/openapi3filter"
 
-	"github.com/deepmap/oapi-codegen/pkg/middleware"
 	"github.com/labstack/echo/v4"
 	echomiddleware "github.com/labstack/echo/v4/middleware"
 
@@ -40,6 +43,7 @@ const (
 
 type ServerImpl struct {
 	dbHandler databaseTypes.Database
+	authStore iamTypes.AuthStore
 }
 
 type Server struct {
@@ -47,8 +51,8 @@ type Server struct {
 	echoServer *echo.Echo
 }
 
-func CreateRESTServer(port int, iamEnabled bool, dbHandler databaseTypes.Database) (*Server, error) {
-	e, err := createEchoServer(iamEnabled, dbHandler)
+func CreateRESTServer(port int, dbHandler databaseTypes.Database) (*Server, error) {
+	e, err := createEchoServer(dbHandler)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create rest server: %w", err)
 	}
@@ -58,7 +62,7 @@ func CreateRESTServer(port int, iamEnabled bool, dbHandler databaseTypes.Databas
 	}, nil
 }
 
-func createEchoServer(iamEnabled bool, dbHandler databaseTypes.Database) (*echo.Echo, error) {
+func createEchoServer(dbHandler databaseTypes.Database) (*echo.Echo, error) {
 	swagger, err := server.GetSwagger()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load swagger spec: %w", err)
@@ -73,26 +77,32 @@ func createEchoServer(iamEnabled bool, dbHandler databaseTypes.Database) (*echo.
 	// Recover any panics into HTTP 500
 	e.Use(echomiddleware.Recover())
 
-	// Create authenticator function for given IAM config or use default passthrough auth
-	var iamService types.IAMService
-	if iamEnabled {
-		iamService, err = iam.NewService()
-		if err != nil {
-			return nil, fmt.Errorf("failed to create IAM service: %v", err)
-		}
+	// Create IAM service data
+	authenticator, err := authn.New()
+	if err != nil {
+		return nil, err
+	}
+	authorizer, err := authz.New()
+	if err != nil {
+		return nil, err
+	}
+	authStore, err := authstore.New()
+	if err != nil {
+		return nil, err
 	}
 
 	// Use oapi-codegen validation middleware to validate the API group against the OpenAPI schema.
 	// Authenticator function must be defined due to OAPI auth specs.
 	e.Use(middleware.OapiRequestValidatorWithOptions(swagger, &middleware.Options{
 		Options: openapi3filter.Options{
-			AuthenticationFunc: iam.NewMiddleware(iamService),
+			AuthenticationFunc: iam.NewMiddleware(authenticator, authorizer, authStore),
 		},
 	}))
 
 	// Register paths with the backend implementation
 	server.RegisterHandlers(e, &ServerImpl{
 		dbHandler: dbHandler,
+		authStore: authStore,
 	})
 
 	return e, nil
