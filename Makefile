@@ -188,7 +188,7 @@ lint-cfn:
 	cfn-lint installation/aws/VmClarity.cfn
 
 .PHONY: lint
-lint: lint-go lint-cfn ## Run linters
+lint: lint-go lint-cfn lint-ci ## Run linters
 
 .PHONY: $(FIXGOMODULES)
 $(FIXGOMODULES):
@@ -243,3 +243,21 @@ helm-docs:
 .PHONY: helm-lint
 helm-lint:
 	docker run --rm --workdir /workdir --volume "$(shell pwd):/workdir" quay.io/helmpack/chart-testing:v3.8.0 ct lint --all
+
+ACTIONLINT_BIN := $(BIN_DIR)/actionlint
+ACTIONLINT_VERSION := 1.6.26
+
+bin/actionlint: bin/actionlint-$(ACTIONLINT_VERSION)
+	@ln -sf actionlint-$(ACTIONLINT_VERSION) bin/actionlint
+
+bin/actionlint-$(ACTIONLINT_VERSION): | $(BIN_DIR)
+	curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash \
+	| bash -s -- "$(ACTIONLINT_VERSION)" "$(BIN_DIR)"
+	@mv bin/actionlint $@
+
+.PHONY: actionlint-lint
+actionlint-lint: bin/actionlint
+	@$(ACTIONLINT_BIN) -color
+
+.PHONY: lint-ci
+lint-ci: actionlint-lint
