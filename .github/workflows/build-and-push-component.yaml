@@ -58,7 +58,7 @@ jobs:
       - name: Set build output env var
         if: inputs.upload
         run: |
-          echo "OUTPUTS=type=docker,dest=/tmp/${{ inputs.image_name }}.tar" >> $GITHUB_ENV
+          echo "OUTPUTS=type=docker,dest=/tmp/${{ inputs.image_name }}.tar" >> "$GITHUB_ENV"
 
       - name: Build
         uses: docker/build-push-action@v5
