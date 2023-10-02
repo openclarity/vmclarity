@@ -26,7 +26,7 @@ jobs:
     steps:
       - name: Get current timestamp
         id: timestamp
-        run: echo "::set-output name=timestamp::$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+        run: echo "timestamp=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_OUTPUT"
 
   vmclarity-apiserver:
     needs: timestamp
