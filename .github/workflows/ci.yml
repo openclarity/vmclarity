@@ -87,7 +87,6 @@ jobs:
     with:
       image_tag: ${{ github.sha }}
       push: false
-      upload: false
 
   success:
     needs:

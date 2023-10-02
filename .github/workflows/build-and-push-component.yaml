@@ -20,11 +20,6 @@ on:
         type: boolean
         description: 'If set to true, push the image.'
         default: false
-      upload:
-        required: false
-        type: boolean
-        description: 'If set to true, upload the image.'
-        default: false
       timestamp:
         required: true
         type: string
@@ -55,11 +50,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set build output env var
-        if: inputs.upload
-        run: |
-          echo "OUTPUTS=type=docker,dest=/tmp/${{ inputs.image_name }}.tar" >> "$GITHUB_ENV"
-
       - name: Build
         uses: docker/build-push-action@v5
         with:
@@ -75,10 +65,3 @@ jobs:
             VERSION=${{ inputs.image_tag }}
             BUILD_TIMESTAMP=${{ inputs.timestamp }}
             COMMIT_HASH=${{ github.sha }}
-
-      - name: Upload artifact
-        if: inputs.upload
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ inputs.image_name }}
-          path: /tmp/${{ inputs.image_name }}.tar
