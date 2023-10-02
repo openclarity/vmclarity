@@ -37,6 +37,7 @@ jobs:
       image_tag: ${{ inputs.image_tag }}
       push: ${{ inputs.push }}
       upload: ${{ inputs.upload }}
+      timestamp: ${{ needs.timestamp.outputs.timestamp }}
 
   vmclarity-orchestrator:
     needs: timestamp
@@ -47,6 +48,7 @@ jobs:
       image_tag: ${{ inputs.image_tag }}
       push: ${{ inputs.push }}
       upload: ${{ inputs.upload }}
+      timestamp: ${{ needs.timestamp.outputs.timestamp }}
 
   vmclarity-ui-backend:
     needs: timestamp
@@ -57,6 +59,7 @@ jobs:
       image_tag: ${{ inputs.image_tag }}
       push: ${{ inputs.push }}
       upload: ${{ inputs.upload }}
+      timestamp: ${{ needs.timestamp.outputs.timestamp }}
 
   vmclarity-ui:
     needs: timestamp
@@ -67,6 +70,7 @@ jobs:
       image_tag: ${{ inputs.image_tag }}
       push: ${{ inputs.push }}
       upload: ${{ inputs.upload }}
+      timestamp: ${{ needs.timestamp.outputs.timestamp }}
 
   vmclarity-cli:
     needs: timestamp
@@ -77,3 +81,4 @@ jobs:
       image_tag: ${{ inputs.image_tag }}
       push: ${{ inputs.push }}
       upload: ${{ inputs.upload }}
+      timestamp: ${{ needs.timestamp.outputs.timestamp }}

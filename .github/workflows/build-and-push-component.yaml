@@ -25,6 +25,10 @@ on:
         type: string
         description: 'If set to true, upload the image.'
         default: false
+      timestamp:
+        required: true
+        type: string
+        description: 'The build timestamp to be used for binaries.'
 
 jobs:
   build-and-push:
@@ -69,7 +73,7 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache
           build-args: |
             VERSION=${{ inputs.image_tag }}
-            BUILD_TIMESTAMP=${{ needs.timestamp.outputs.timestamp }}
+            BUILD_TIMESTAMP=${{ inputs.timestamp }}
             COMMIT_HASH=${{ github.sha }}
 
       - name: Upload artifact
