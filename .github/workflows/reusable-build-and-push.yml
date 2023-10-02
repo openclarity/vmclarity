@@ -9,12 +9,12 @@ on:
         description: 'Image tag to build and push.'
       push:
         required: false
-        type: string
+        type: boolean
         description: 'If set to true, push the image.'
         default: false
       upload:
         required: false
-        type: string
+        type: boolean
         description: 'If set to true, upload the image.'
         default: false
 
