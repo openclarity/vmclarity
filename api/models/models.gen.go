@@ -64,12 +64,22 @@ const (
 	MisconfigurationMediumSeverity MisconfigurationSeverity = "MisconfigurationMediumSeverity"
 )
 
-// Defines values for ResourceCleanupState.
+// Defines values for ResourceCleanupStatusReason.
 const (
-	ResourceCleanupStateDone    ResourceCleanupState = "Done"
-	ResourceCleanupStateFailed  ResourceCleanupState = "Failed"
-	ResourceCleanupStatePending ResourceCleanupState = "Pending"
-	ResourceCleanupStateSkipped ResourceCleanupState = "Skipped"
+	ResourceCleanupStatusReasonAssetScanCreated ResourceCleanupStatusReason = "AssetScanCreated"
+	ResourceCleanupStatusReasonDeletePolicy     ResourceCleanupStatusReason = "DeletePolicy"
+	ResourceCleanupStatusReasonInternalError    ResourceCleanupStatusReason = "InternalError"
+	ResourceCleanupStatusReasonNotApplicable    ResourceCleanupStatusReason = "NotApplicable"
+	ResourceCleanupStatusReasonProviderError    ResourceCleanupStatusReason = "ProviderError"
+	ResourceCleanupStatusReasonSuccess          ResourceCleanupStatusReason = "Success"
+)
+
+// Defines values for ResourceCleanupStatusState.
+const (
+	ResourceCleanupStatusStateDone    ResourceCleanupStatusState = "Done"
+	ResourceCleanupStatusStateFailed  ResourceCleanupStatusState = "Failed"
+	ResourceCleanupStatusStatePending ResourceCleanupStatusState = "Pending"
+	ResourceCleanupStatusStateSkipped ResourceCleanupStatusState = "Skipped"
 )
 
 // Defines values for RootVolumeEncrypted.
@@ -172,6 +182,12 @@ const (
 	NEGLIGIBLE VulnerabilitySeverity = "NEGLIGIBLE"
 )
 
+// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+type Annotations = []struct {
+	Key   *string `json:"key,omitempty"`
+	Value *string `json:"value,omitempty"`
+}
+
 // ApiResponse An object that is returned in all cases of failures.
 type ApiResponse struct {
 	Message *string `json:"message,omitempty"`
@@ -224,17 +240,17 @@ type AssetRelationship struct {
 // AssetScan defines model for AssetScan.
 type AssetScan struct {
 	// Asset Describes a relationship to an asset which can be expanded.
-	Asset             *AssetRelationship    `json:"asset,omitempty"`
-	Exploits          *ExploitScan          `json:"exploits,omitempty"`
-	FindingsProcessed *bool                 `json:"findingsProcessed,omitempty"`
-	Id                *string               `json:"id,omitempty"`
-	InfoFinder        *InfoFinderScan       `json:"infoFinder,omitempty"`
-	Malware           *MalwareScan          `json:"malware,omitempty"`
-	Misconfigurations *MisconfigurationScan `json:"misconfigurations,omitempty"`
-	ResourceCleanup   *ResourceCleanupState `json:"resourceCleanup,omitempty"`
-	Revision          *int                  `json:"revision,omitempty"`
-	Rootkits          *RootkitScan          `json:"rootkits,omitempty"`
-	Sboms             *SbomScan             `json:"sboms,omitempty"`
+	Asset                 *AssetRelationship     `json:"asset,omitempty"`
+	Exploits              *ExploitScan           `json:"exploits,omitempty"`
+	FindingsProcessed     *bool                  `json:"findingsProcessed,omitempty"`
+	Id                    *string                `json:"id,omitempty"`
+	InfoFinder            *InfoFinderScan        `json:"infoFinder,omitempty"`
+	Malware               *MalwareScan           `json:"malware,omitempty"`
+	Misconfigurations     *MisconfigurationScan  `json:"misconfigurations,omitempty"`
+	ResourceCleanupStatus *ResourceCleanupStatus `json:"resourceCleanupStatus,omitempty"`
+	Revision              *int                   `json:"revision,omitempty"`
+	Rootkits              *RootkitScan           `json:"rootkits,omitempty"`
+	Sboms                 *SbomScan              `json:"sboms,omitempty"`
 
 	// Scan Describes an expandable relationship to Scan object
 	Scan *ScanRelationship `json:"scan,omitempty"`
@@ -342,17 +358,17 @@ type AssetScanInputScanStats struct {
 // AssetScanRelationship defines model for AssetScanRelationship.
 type AssetScanRelationship struct {
 	// Asset Describes a relationship to an asset which can be expanded.
-	Asset             *AssetRelationship    `json:"asset,omitempty"`
-	Exploits          *ExploitScan          `json:"exploits,omitempty"`
-	FindingsProcessed *bool                 `json:"findingsProcessed,omitempty"`
-	Id                string                `json:"id"`
-	InfoFinder        *InfoFinderScan       `json:"infoFinder,omitempty"`
-	Malware           *MalwareScan          `json:"malware,omitempty"`
-	Misconfigurations *MisconfigurationScan `json:"misconfigurations,omitempty"`
-	ResourceCleanup   *ResourceCleanupState `json:"resourceCleanup,omitempty"`
-	Revision          *int                  `json:"revision,omitempty"`
-	Rootkits          *RootkitScan          `json:"rootkits,omitempty"`
-	Sboms             *SbomScan             `json:"sboms,omitempty"`
+	Asset                 *AssetRelationship     `json:"asset,omitempty"`
+	Exploits              *ExploitScan           `json:"exploits,omitempty"`
+	FindingsProcessed     *bool                  `json:"findingsProcessed,omitempty"`
+	Id                    string                 `json:"id"`
+	InfoFinder            *InfoFinderScan        `json:"infoFinder,omitempty"`
+	Malware               *MalwareScan           `json:"malware,omitempty"`
+	Misconfigurations     *MisconfigurationScan  `json:"misconfigurations,omitempty"`
+	ResourceCleanupStatus *ResourceCleanupStatus `json:"resourceCleanupStatus,omitempty"`
+	Revision              *int                   `json:"revision,omitempty"`
+	Rootkits              *RootkitScan           `json:"rootkits,omitempty"`
+	Sboms                 *SbomScan              `json:"sboms,omitempty"`
 
 	// Scan Describes an expandable relationship to Scan object
 	Scan *ScanRelationship `json:"scan,omitempty"`
@@ -650,6 +666,12 @@ type MalwareScan struct {
 // MalwareType defines model for MalwareType.
 type MalwareType = string
 
+// Metadata defines model for Metadata.
+type Metadata struct {
+	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+	Annotations *Annotations `json:"annotations,omitempty"`
+}
+
 // Misconfiguration defines model for Misconfiguration.
 type Misconfiguration struct {
 	Message         *string                   `json:"message,omitempty"`
@@ -720,8 +742,58 @@ type PodInfo struct {
 	PodName    *string `json:"podName,omitempty"`
 }
 
-// ResourceCleanupState defines model for ResourceCleanupState.
-type ResourceCleanupState string
+// ResourceCleanupStatus defines model for ResourceCleanupStatus.
+type ResourceCleanupStatus struct {
+	// LastTransitionTime Last date time when the status has changed.
+	LastTransitionTime time.Time `json:"lastTransitionTime"`
+
+	// Message Human readable message.
+	Message *string `json:"message,omitempty"`
+
+	// Reason Machine readable reason for state transition.
+	//
+	// | State   | Reason          | Description                                                            |
+	// | ------- | --------------- | ---------------------------------------------------------------------- |
+	// | Pending | AssetScanCreate | AssetScan created                                                      |
+	// | Skipped | NotApplicable   | Resource cleanup is not required as it is managed outside of VMClarity |
+	// | Skipped | DeletePolicy    | Resource cleanup has been skipped due to Delete Job Policy             |
+	// | Failed  | ProviderError   | Failed due to Provider error                                           |
+	// | Failed  | InternalError   | Failed due to internal error                                           |
+	// | Done    | Success         | Successfully completed                                                 |
+	Reason ResourceCleanupStatusReason `json:"reason"`
+
+	// State Describes the state of resource cleanup.
+	//
+	// | State   | Description                                                |
+	// | ------- | ---------------------------------------------------------- |
+	// | Pending | Initial state for cleaning up resources                    |
+	// | Skipped | Resource cleanup has been skipped due to Delete Job Policy |
+	// | Failed  | Cleaning up resources has been failed                      |
+	// | Done    | Resources have been successfully cleaned up                |
+	State ResourceCleanupStatusState `json:"state"`
+}
+
+// ResourceCleanupStatusReason Machine readable reason for state transition.
+//
+// | State   | Reason          | Description                                                            |
+// | ------- | --------------- | ---------------------------------------------------------------------- |
+// | Pending | AssetScanCreate | AssetScan created                                                      |
+// | Skipped | NotApplicable   | Resource cleanup is not required as it is managed outside of VMClarity |
+// | Skipped | DeletePolicy    | Resource cleanup has been skipped due to Delete Job Policy             |
+// | Failed  | ProviderError   | Failed due to Provider error                                           |
+// | Failed  | InternalError   | Failed due to internal error                                           |
+// | Done    | Success         | Successfully completed                                                 |
+type ResourceCleanupStatusReason string
+
+// ResourceCleanupStatusState Describes the state of resource cleanup.
+//
+// | State   | Description                                                |
+// | ------- | ---------------------------------------------------------- |
+// | Pending | Initial state for cleaning up resources                    |
+// | Skipped | Resource cleanup has been skipped due to Delete Job Policy |
+// | Failed  | Cleaning up resources has been failed                      |
+// | Done    | Resources have been successfully cleaned up                |
+type ResourceCleanupStatusState string
 
 // RootVolume Information about VM root volume
 type RootVolume struct {
