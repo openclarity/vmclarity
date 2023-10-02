@@ -2690,22 +2690,32 @@ components:
         - lastTransitionTime
       properties:
         state:
-          description: Describes the health state of the provider.
+          description: |
+            Describes the health state of the provider.
+
+            | State     | Description                                    |
+            | --------- | ---------------------------------------------- |
+            | Healthy   | Provider is healthy.                           |
+            | Unhealthy | Heartbeat received, but Provider is unhealthy. |
+            | Unknown   | No heartbeat received from Provider.           |
           type: string
           enum:
             - Healthy
             - Unhealthy
             - Unknown
         reason:
-          type: string
           description: Machine-readable, UpperCamelCase text indicating the reason for the condition's last transition.
-        message:
           type: string
+          enum:
+            - HeartbeatReceived
+            - NoHeartbeatReceived
+        message:
           description: Human-readable message indicating details about the last state transition.
+          type: string
         lastTransitionTime:
+          description: Last date-time when the status has changed.
           type: string
           format: date-time
-          description: Last date-time when the status has changed.
 
     Package:
       type: object

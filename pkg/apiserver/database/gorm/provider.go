@@ -105,7 +105,7 @@ func (t *ProvidersTableHandler) CreateProvider(provider models.Provider) (models
 		}
 	}
 
-	if provider.Status.State == "" || provider.Status.Reason == "" || provider.Status.LastTransitionTime.IsZero() {
+	if provider.Status != nil && (provider.Status.State == "" || provider.Status.Reason == "" || provider.Status.LastTransitionTime.IsZero()) {
 		return models.Provider{}, &common.BadRequestError{
 			Reason: "status state, status reason and status last transition time are required to create provider",
 		}

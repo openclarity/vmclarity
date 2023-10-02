@@ -1120,13 +1120,16 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 		},
 	},
 	providerSchemaName: {
-		Table: "assets",
+		Table: "providers",
 		Fields: odatasql.Schema{
-			"id":                     odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
-			"revision":               odatasql.FieldMeta{FieldType: odatasql.NumberFieldType},
-			"displayName":            odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
-			"lastHeartbeatTime":      odatasql.FieldMeta{FieldType: odatasql.DateTimeFieldType},
-			"status":                 odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+			"id":                odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+			"revision":          odatasql.FieldMeta{FieldType: odatasql.NumberFieldType},
+			"displayName":       odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+			"lastHeartbeatTime": odatasql.FieldMeta{FieldType: odatasql.DateTimeFieldType},
+			"providerStatus": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"ProviderStatus"},
+			},
 			"providerRuntimeVersion": odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
 			"annotations": odatasql.FieldMeta{
 				FieldType: odatasql.CollectionFieldType,
@@ -1135,6 +1138,14 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 					ComplexFieldSchemas: []string{"Annotation"},
 				},
 			},
+		},
+	},
+	"ProviderStatus": {
+		Fields: odatasql.Schema{
+			"state":              odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+			"reason":             odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+			"message":            odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+			"lastTransitionTime": odatasql.FieldMeta{FieldType: odatasql.DateTimeFieldType},
 		},
 	},
 }

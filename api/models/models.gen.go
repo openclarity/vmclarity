@@ -64,6 +64,12 @@ const (
 	MisconfigurationMediumSeverity MisconfigurationSeverity = "MisconfigurationMediumSeverity"
 )
 
+// Defines values for ProviderStatusReason.
+const (
+	HeartbeatReceived   ProviderStatusReason = "HeartbeatReceived"
+	NoHeartbeatReceived ProviderStatusReason = "NoHeartbeatReceived"
+)
+
 // Defines values for ProviderStatusState.
 const (
 	ProviderStatusStateHealthy   ProviderStatusState = "Healthy"
@@ -806,13 +812,28 @@ type ProviderStatus struct {
 	Message *string `json:"message,omitempty"`
 
 	// Reason Machine-readable, UpperCamelCase text indicating the reason for the condition's last transition.
-	Reason string `json:"reason"`
+	Reason ProviderStatusReason `json:"reason"`
 
 	// State Describes the health state of the provider.
+	//
+	// | State     | Description                                    |
+	// | --------- | ---------------------------------------------- |
+	// | Healthy   | Provider is healthy.                           |
+	// | Unhealthy | Heartbeat received, but Provider is unhealthy. |
+	// | Unknown   | No heartbeat received from Provider.           |
 	State ProviderStatusState `json:"state"`
 }
 
+// ProviderStatusReason Machine-readable, UpperCamelCase text indicating the reason for the condition's last transition.
+type ProviderStatusReason string
+
 // ProviderStatusState Describes the health state of the provider.
+//
+// | State     | Description                                    |
+// | --------- | ---------------------------------------------- |
+// | Healthy   | Provider is healthy.                           |
+// | Unhealthy | Heartbeat received, but Provider is unhealthy. |
+// | Unknown   | No heartbeat received from Provider.           |
 type ProviderStatusState string
 
 // Providers defines model for Providers.
