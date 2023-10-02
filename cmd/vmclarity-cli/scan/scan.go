@@ -19,9 +19,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	cliutils "github.com/openclarity/vmclarity/pkg/cli/utils"
 	"os"
 	"time"
+
+	cliutils "github.com/openclarity/vmclarity/pkg/cli/utils"
 
 	"github.com/ghodss/yaml"
 	"github.com/sirupsen/logrus"

@@ -18,10 +18,12 @@ package authn
 import (
 	"context"
 	"fmt"
-	"github.com/openclarity/vmclarity/pkg/apiserver/iam/types"
-	"github.com/zitadel/oidc/pkg/oidc"
 	"net/http"
 	"strings"
+
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam/types"
+
+	"github.com/zitadel/oidc/pkg/oidc"
 
 	"github.com/zitadel/oidc/pkg/client/rs"
 )
@@ -77,6 +79,9 @@ func (auth *oidcAuth) Introspect(ctx context.Context, req *http.Request) (*types
 		FromGenericOIDC: !auth.isZitadel,
 		FromZitadelOIDC: auth.isZitadel,
 	}, nil
+}
+
+func (auth *oidcAuth) ForwardLogin() {
 }
 
 func extractToken(r *http.Request) (string, error) {

@@ -5,22 +5,6 @@ info:
   version: 1.0.0
 
 paths:
-
-  /auth/redirect:
-    get:
-      summary: Auth redxirect
-      operationId: AuthRedirect
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: string
-                format: json
-        default:
-          $ref: '#/components/responses/UnknownError'
-
   /openapi.json:
     get:
       summary: Get this OpenAPI spec
@@ -1046,6 +1030,10 @@ paths:
                 $ref: '#/components/schemas/ScanEstimations'
         default:
           $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken:
+            - api:list:scanEstimation
+
     post:
       summary: Create a multi-asset scan estimation
       operationId: PostScanEstimations
@@ -1071,6 +1059,9 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
+      security:
+        - AuthToken:
+            - api:create:scanEstimation
 
   /scanEstimations/{scanEstimationID}:
     get:
@@ -1095,6 +1086,10 @@ paths:
                 $ref: '#/components/schemas/ApiResponse'
         default:
           $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken:
+            - api:get:scanEstimation
+
     put:
       summary: Update a scan estimation.
       operationId: PutScanEstimationsScanEstimationID
@@ -1135,6 +1130,10 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
+      security:
+        - AuthToken:
+            - api:update:scanEstimation
+
     patch:
       summary: Patch a scan estimation.
       operationId: PatchScanEstimationsScanEstimationID
@@ -1175,6 +1174,10 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
+      security:
+        - AuthToken:
+            - api:update:scanEstimation
+
     delete:
       summary: Delete a scan estimation.
       operationId: DeleteScanEstimationsScanEstimationID
@@ -1191,6 +1194,10 @@ paths:
                 $ref: '#/components/schemas/ApiResponse'
         default:
           $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken:
+            - api:delete:scanEstimation
+
 
   /assetScanEstimations:
     get:
@@ -1214,6 +1221,10 @@ paths:
 
         default:
           $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken:
+            - api:list:assetScanEstimation
+
     post:
       summary: Create an asset scan estimation for a specified asset
       operationId: PostAssetScanEstimations
@@ -1245,6 +1256,9 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
+      security:
+        - AuthToken:
+            - api:create:assetScanEstimation
 
   /assetScanEstimations/{assetScanEstimationID}:
     get:
@@ -1269,6 +1283,10 @@ paths:
                 $ref: '#/components/schemas/ApiResponse'
         default:
           $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken:
+            - api:get:assetScanEstimation
+
     put:
       summary: Update an asset scan estimation.
       operationId: PutAssetScanEstimationsAssetScanEstimationID
@@ -1315,6 +1333,10 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
+      security:
+        - AuthToken:
+            - api:update:assetScanEstimation
+
     patch:
       summary: Patch an asset scan estimation
       operationId: PatchAssetScanEstimationsAssetScanEstimationID
@@ -1361,6 +1383,10 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
+      security:
+        - AuthToken:
+            - api:update:assetScanEstimation
+
     delete:
       summary: Delete an asset scan estimation.
       operationId: DeleteAssetScanEstimationsAssetScanEstimationID
@@ -1377,6 +1403,300 @@ paths:
                 $ref: '#/components/schemas/ApiResponse'
         default:
           $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken:
+            - api:delete:assetScanEstimation
+
+  /users:
+    get:
+      summary: Get all users.
+      operationId: GetUsers
+      parameters:
+        - $ref: '#/components/parameters/odataSkip'
+        - $ref: '#/components/parameters/odataTop'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Users'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken:
+            - api:list:user
+
+    post:
+      summary: Create a user.
+      operationId: PostUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      responses:
+        201:
+          description: A new user was created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        400:
+          description: Invalid user supplied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        409:
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      x-codegen-request-body-name: body
+      security:
+        - AuthToken:
+            - api:create:user
+
+  /me:
+    get:
+      summary: Get personal user data.
+      operationId: GetCurrentUser
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        401:
+          description: User not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken: []
+
+  /user/{userID}:
+    get:
+      summary: Get the details for a user.
+      operationId: GetUsersUserID
+      parameters:
+        - $ref: '#/components/parameters/userID'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        404:
+          description: User ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken:
+            - api:get:user
+
+    put:
+      summary: Update a user.
+      operationId: PutUsersUserID
+      parameters:
+        - $ref: '#/components/parameters/userID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      responses:
+        200:
+          description: Updated user successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        201:
+          description: Created user successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        400:
+          description: Invalid user supplied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        404:
+          description: User ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      x-codegen-request-body-name: body
+      security:
+        - AuthToken:
+            - api:update:user
+
+    patch:
+      summary: Patch a user.
+      operationId: PatchUsersUserID
+      parameters:
+        - $ref: '#/components/parameters/userID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      responses:
+        200:
+          description: Updated user successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        400:
+          description: Invalid user supplied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        404:
+          description: User ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      x-codegen-request-body-name: body
+      security:
+        - AuthToken:
+            - api:update:user
+
+    delete:
+      summary: Delete a user.
+      operationId: DeleteUsersUserID
+      parameters:
+        - $ref: '#/components/parameters/userID'
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        404:
+          description: User ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken:
+            - api:delete:user
+
+  /user-auth/{userID}:
+    get:
+      summary: Get user auth data.
+      operationId: GetUserAuthUserID
+      parameters:
+        - $ref: '#/components/parameters/userID'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAuths'
+        404:
+          description: User ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken:
+            - api:list:userAuth
+
+    post:
+      summary: Create user auth credentials.
+      operationId: PostUserAuthUserID
+      parameters:
+        - $ref: '#/components/parameters/userID'
+        - $ref: '#/components/parameters/credentialType'
+        - $ref: '#/components/parameters/credentialExpiry'
+      responses:
+        201:
+          description: Created user credentials successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserCred'
+        400:
+          description: Invalid user auth supplied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        404:
+          description: User ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      x-codegen-request-body-name: body
+      security:
+        - AuthToken:
+            - api:create:userAuth
+
+    delete:
+      summary: Delete a user auth credentials.
+      operationId: DeleteUserAuthUserID
+      parameters:
+        - $ref: '#/components/parameters/userID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserAuth'
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        400:
+          description: Invalid user auth supplied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        404:
+          description: User ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken:
+            - api:delete:userAuth
 
 components:
   schemas:
@@ -3240,6 +3560,12 @@ components:
           type: number
           format: float
 
+    UserType:
+      type: string
+      enum:
+        - REGULAR_USER
+        - MACHINE_USER
+
     User:
       type: object
       description: Describes a user account.
@@ -3267,12 +3593,6 @@ components:
           type: string
           format: date-time
 
-    UserType:
-      type: string
-      enum:
-        - REGULAR_USER
-        - MACHINE_USER
-
     Users:
       type: object
       properties:
@@ -3288,13 +3608,11 @@ components:
             $ref: '#/components/schemas/User'
           readOnly: true
 
-    UserExists:
-      type: object
-      properties:
-        message:
-          description: Describes which unique constraint combination causes the conflict.
-          type: string
-          readOnly: true
+    CredType:
+      type: string
+      enum:
+        - TOKEN
+        - FILE
 
     UserAuth:
       type: object
@@ -3302,19 +3620,13 @@ components:
       properties:
         userID:
           type: string
-        userAuthID:
+        credID:
           type: string
-        authType:
-          $ref: '#/components/schemas/AuthType'
+        credType:
+          $ref: '#/components/schemas/CredType'
         createdAt:
           type: string
           format: date-time
-
-    AuthType:
-      type: string
-      enum:
-        - ACCESS_TOKEN
-        - SERVICE_ACCOUNT
 
     UserAuths:
       type: object
@@ -3333,12 +3645,12 @@ components:
 
     UserCred:
       type: object
-      description: Describes user credentials data.
+      description: Describes user auth secret credentials data returned by create API.
       properties:
         userAuth:
           $ref: '#/components/schemas/UserAuth'
         credentials:
-          type: object
+          type: string
 
   responses:
     Success:
@@ -3447,6 +3759,30 @@ components:
       required: true
       schema:
         type: string
+
+    userID:
+      name: userID
+      in: path
+      required: true
+      schema:
+        type: string
+
+    credentialType:
+      name: credentialType
+      in: query
+      required: true
+      schema:
+        type: string
+        enum:
+          - TOKEN
+          - FILE
+
+    credentialExpiry:
+      name: credentialExpiry
+      in: query
+      schema:
+        type: string
+        format: date-time
 
     ifmatch:
       name: If-Match

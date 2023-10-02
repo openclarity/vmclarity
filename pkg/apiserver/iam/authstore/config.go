@@ -19,7 +19,7 @@ import "github.com/spf13/viper"
 
 const (
 	zitadelIssuerEnvVar        = "ZITADEL_ISSUER"
-	zitadelApiEnvVar           = "ZITADEL_API"
+	zitadelAPIEnvVar           = "ZITADEL_API"
 	zitadelInsecureEnvVar      = "ZITADEL_INSECURE"
 	zitadelProjectIDEnvVar     = "ZITADEL_PROJECT_ID"
 	zitadelOrgIDEnvVar         = "ZITADEL_ORG_ID"
@@ -41,7 +41,7 @@ func LoadConfig() Config {
 
 	return Config{
 		Issuer:      v.GetString(zitadelIssuerEnvVar),
-		API:         v.GetString(zitadelApiEnvVar),
+		API:         v.GetString(zitadelAPIEnvVar),
 		Insecure:    v.GetBool(zitadelInsecureEnvVar),
 		ProjectID:   v.GetString(zitadelProjectIDEnvVar),
 		OrgID:       v.GetString(zitadelOrgIDEnvVar),

@@ -2,10 +2,12 @@ package apiserver
 
 import (
 	"context"
-	"github.com/openclarity/vmclarity/pkg/shared/log"
-	"github.com/sirupsen/logrus"
 	"os"
 	"testing"
+
+	"github.com/openclarity/vmclarity/pkg/shared/log"
+
+	"github.com/sirupsen/logrus"
 )
 
 func TestAPI(t *testing.T) {

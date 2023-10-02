@@ -23,6 +23,8 @@ const (
 	authzRuleFilePathEnvVar = "AUTHZ_LOCAL_RBAC_RULE_FILEPATH"
 )
 
+// TODO: Move data to SQL
+
 type Config struct {
 	RuleFilePath string `json:"rule-filepath"`
 }

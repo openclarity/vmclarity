@@ -18,6 +18,7 @@ package authz
 import (
 	_ "embed"
 	"fmt"
+
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam/types"
 

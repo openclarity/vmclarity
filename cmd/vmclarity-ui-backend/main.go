@@ -19,7 +19,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	cliutils "github.com/openclarity/vmclarity/pkg/cli/utils"
 	"net"
 	"net/http"
 	"os"
@@ -27,6 +26,8 @@ import (
 	"strconv"
 	"syscall"
 	"time"
+
+	cliutils "github.com/openclarity/vmclarity/pkg/cli/utils"
 
 	"github.com/Portshift/go-utils/healthz"
 

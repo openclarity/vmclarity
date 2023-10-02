@@ -11,6 +11,10 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
+const (
+	AuthTokenScopes = "AuthToken.Scopes"
+)
+
 // Defines values for AssetScanEstimationStateState.
 const (
 	AssetScanEstimationStateStateAborted AssetScanEstimationStateState = "Aborted"
@@ -27,10 +31,6 @@ const (
 	AssetScanEstimationStateStateReasonUnexpected AssetScanEstimationStateStateReason = "Unexpected"
 )
 
-const (
-	AuthTokenScopes = "AuthToken.Scopes"
-)
-
 // Defines values for AssetScanStateState.
 const (
 	AssetScanStateStateAborted     AssetScanStateState = "Aborted"
@@ -42,12 +42,6 @@ const (
 	AssetScanStateStateScheduled   AssetScanStateState = "Scheduled"
 )
 
-// Defines values for AuthType.
-const (
-	AuthTypeACCESSTOKEN    AuthType = "ACCESS_TOKEN"
-	AuthTypeSERVICEACCOUNT AuthType = "SERVICE_ACCOUNT"
-)
-
 // Defines values for CloudProvider.
 const (
 	AWS        CloudProvider = "AWS"
@@ -56,6 +50,12 @@ const (
 	External   CloudProvider = "External"
 	GCP        CloudProvider = "GCP"
 	Kubernetes CloudProvider = "Kubernetes"
+)
+
+// Defines values for CredType.
+const (
+	CredTypeFILE  CredType = "FILE"
+	CredTypeTOKEN CredType = "TOKEN"
 )
 
 // Defines values for InfoType.
@@ -196,6 +196,18 @@ const (
 	LOW        VulnerabilitySeverity = "LOW"
 	MEDIUM     VulnerabilitySeverity = "MEDIUM"
 	NEGLIGIBLE VulnerabilitySeverity = "NEGLIGIBLE"
+)
+
+// Defines values for CredentialType.
+const (
+	CredentialTypeFILE  CredentialType = "FILE"
+	CredentialTypeTOKEN CredentialType = "TOKEN"
+)
+
+// Defines values for PostUserAuthUserIDParamsCredentialType.
+const (
+	FILE  PostUserAuthUserIDParamsCredentialType = "FILE"
+	TOKEN PostUserAuthUserIDParamsCredentialType = "TOKEN"
 )
 
 // Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
@@ -491,9 +503,6 @@ type Assets struct {
 	Items *[]Asset `json:"items,omitempty"`
 }
 
-// AuthType defines model for AuthType.
-type AuthType string
-
 // CloudProvider defines model for CloudProvider.
 type CloudProvider string
 
@@ -524,6 +533,9 @@ type CostBreakdownComponent struct {
 	Cost      float32 `json:"cost"`
 	Operation string  `json:"operation"`
 }
+
+// CredType defines model for CredType.
+type CredType string
 
 // DirInfo defines model for DirInfo.
 type DirInfo struct {
@@ -1285,10 +1297,10 @@ type User struct {
 
 // UserAuth Describes user auth details.
 type UserAuth struct {
-	AuthType   *AuthType  `json:"authType,omitempty"`
-	CreatedAt  *time.Time `json:"createdAt,omitempty"`
-	UserAuthID *string    `json:"userAuthID,omitempty"`
-	UserID     *string    `json:"userID,omitempty"`
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
+	CredID    *string    `json:"credID,omitempty"`
+	CredType  *CredType  `json:"credType,omitempty"`
+	UserID    *string    `json:"userID,omitempty"`
 }
 
 // UserAuths defines model for UserAuths.
@@ -1300,18 +1312,12 @@ type UserAuths struct {
 	Items *[]UserAuth `json:"items,omitempty"`
 }
 
-// UserCred Describes user credentials data.
+// UserCred Describes user auth secret credentials data returned by create API.
 type UserCred struct {
-	Credentials *map[string]interface{} `json:"credentials,omitempty"`
+	Credentials *string `json:"credentials,omitempty"`
 
 	// UserAuth Describes user auth details.
 	UserAuth *UserAuth `json:"userAuth,omitempty"`
-}
-
-// UserExists defines model for UserExists.
-type UserExists struct {
-	// Message Describes which unique constraint combination causes the conflict.
-	Message *string `json:"message,omitempty"`
 }
 
 // UserType defines model for UserType.
@@ -1440,8 +1446,11 @@ type AssetScanEstimationID = string
 // AssetScanID defines model for assetScanID.
 type AssetScanID = string
 
-// ExpiryTime defines model for expiryTime.
-type ExpiryTime = time.Time
+// CredentialExpiry defines model for credentialExpiry.
+type CredentialExpiry = time.Time
+
+// CredentialType defines model for credentialType.
+type CredentialType string
 
 // FindingID defines model for findingID.
 type FindingID = string
@@ -1478,9 +1487,6 @@ type ScanEstimationID = string
 
 // ScanID defines model for scanID.
 type ScanID = string
-
-// UserAuthID defines model for userAuthID.
-type UserAuthID = string
 
 // UserID defines model for userID.
 type UserID = string
@@ -1670,6 +1676,21 @@ type PutScansScanIDParams struct {
 	IfMatch *Ifmatch `json:"If-Match,omitempty"`
 }
 
+// PostUserAuthUserIDParams defines parameters for PostUserAuthUserID.
+type PostUserAuthUserIDParams struct {
+	CredentialType   PostUserAuthUserIDParamsCredentialType `form:"credentialType" json:"credentialType"`
+	CredentialExpiry *CredentialExpiry                      `form:"credentialExpiry,omitempty" json:"credentialExpiry,omitempty"`
+}
+
+// PostUserAuthUserIDParamsCredentialType defines parameters for PostUserAuthUserID.
+type PostUserAuthUserIDParamsCredentialType string
+
+// GetUsersParams defines parameters for GetUsers.
+type GetUsersParams struct {
+	Skip *OdataSkip `form:"$skip,omitempty" json:"$skip,omitempty"`
+	Top  *OdataTop  `form:"$top,omitempty" json:"$top,omitempty"`
+}
+
 // PostAssetScanEstimationsJSONRequestBody defines body for PostAssetScanEstimations for application/json ContentType.
 type PostAssetScanEstimationsJSONRequestBody = AssetScanEstimation
 
@@ -1735,9 +1756,6 @@ type PutScansScanIDJSONRequestBody = Scan
 
 // DeleteUserAuthUserIDJSONRequestBody defines body for DeleteUserAuthUserID for application/json ContentType.
 type DeleteUserAuthUserIDJSONRequestBody = UserAuth
-
-// PostUserAuthUserIDJSONRequestBody defines body for PostUserAuthUserID for application/json ContentType.
-type PostUserAuthUserIDJSONRequestBody = UserAuth
 
 // PatchUsersUserIDJSONRequestBody defines body for PatchUsersUserID for application/json ContentType.
 type PatchUsersUserIDJSONRequestBody = User

@@ -20,9 +20,9 @@ import "github.com/spf13/viper"
 const (
 	oidcIssuerEnvVar        = "AUTH_OIDC_ISSUER"
 	oidcClientIDEnvVar      = "AUTH_OIDC_CLIENT_ID"
-	oidcClientSecretEnvVar  = "AUTH_OIDC_CLIENT_SECRET" // #nosec G101
-	oidcTokenURLEnvVar      = "AUTH_OIDC_TOKEN_URL"     // #nosec G101
-	oidcIntrospectURLEnvVar = "AUTH_OIDC_INTROSPECT_URL"
+	oidcClientSecretEnvVar  = "AUTH_OIDC_CLIENT_SECRET"  // #nosec G101
+	oidcTokenURLEnvVar      = "AUTH_OIDC_TOKEN_URL"      // #nosec G101
+	oidcIntrospectURLEnvVar = "AUTH_OIDC_INTROSPECT_URL" // #nosec G101
 	oidcUseZitadel          = "AUTH_USE_ZITADEL"
 )
 

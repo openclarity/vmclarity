@@ -18,13 +18,15 @@ package rest
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/deepmap/oapi-codegen/pkg/middleware"
+
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam/authn"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam/authstore"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam/authz"
 	iamTypes "github.com/openclarity/vmclarity/pkg/apiserver/iam/types"
-	"time"
 
 	"github.com/getkin/kin-openapi/openapi3filter"
 
@@ -80,15 +82,15 @@ func createEchoServer(dbHandler databaseTypes.Database) (*echo.Echo, error) {
 	// Create IAM service data
 	authenticator, err := authn.New()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create authenticator: %w", err)
 	}
 	authorizer, err := authz.New()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create authorizer: %w", err)
 	}
 	authStore, err := authstore.New()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create authstore: %w", err)
 	}
 
 	// Use oapi-codegen validation middleware to validate the API group against the OpenAPI schema.

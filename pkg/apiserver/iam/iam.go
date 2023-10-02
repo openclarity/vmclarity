@@ -18,12 +18,14 @@ package iam
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/deepmap/oapi-codegen/pkg/middleware"
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/labstack/echo/v4"
+
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam/types"
-	"strings"
 )
 
 const userCtxKey = "user"
@@ -68,7 +70,7 @@ func NewMiddleware(authn types.Authenticator, authz types.Authorizer, store type
 		// Add auth user to request context
 		user, err := store.GetUserFromInfo(userInfo)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get current user: %w", err)
 		}
 		setUserToContext(eCtx, &user)
 
@@ -78,7 +80,7 @@ func NewMiddleware(authn types.Authenticator, authz types.Authorizer, store type
 			ruleSlice := strings.SplitN(ruleDelim, ":", 3)
 			ok, err := authz.CanPerform(user, ruleSlice[0], ruleSlice[1], ruleSlice[2])
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to perform authz check: %w", err)
 			}
 			if !ok {
 				return fmt.Errorf("does not have permissions")

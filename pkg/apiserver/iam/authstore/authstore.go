@@ -18,8 +18,12 @@ package authstore
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/pkg/apiserver/common"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam/types"
+
 	"github.com/zitadel/oidc/pkg/oidc"
 	"github.com/zitadel/zitadel-go/v2/pkg/client/management"
 	"github.com/zitadel/zitadel-go/v2/pkg/client/middleware"
@@ -28,8 +32,9 @@ import (
 	management_pb "github.com/zitadel/zitadel-go/v2/pkg/client/zitadel/management"
 	object_pb "github.com/zitadel/zitadel-go/v2/pkg/client/zitadel/object"
 	user_pb "github.com/zitadel/zitadel-go/v2/pkg/client/zitadel/user"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"time"
 )
 
 var _ types.AuthStore = &zitadelStore{}
@@ -53,7 +58,7 @@ func New() (types.AuthStore, error) {
 		zitadel.WithJWTProfileTokenSource(middleware.JWTProfileFromPath(config.AuthKeyPath)),
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create Zitadel management client: %w", err)
 	}
 
 	return &zitadelStore{
@@ -63,36 +68,26 @@ func New() (types.AuthStore, error) {
 }
 
 func (z *zitadelStore) GetUserFromInfo(info *types.UserInfo) (models.User, error) {
-	// Get user from email
-	var err error
-	var user *user_pb.User
+	// For Zitadel OIDC, token subject is the user ID
 	if info.FromZitadelOIDC {
-		userResp, err := z.mgmt.GetUserByID(context.Background(), &management_pb.GetUserByIDRequest{
-			Id: info.GetSubject(),
-		})
-		if err != nil {
-			return models.User{}, err
-		}
-		user = userResp.User
-	} else if info.FromGenericOIDC {
-		// TODO: Implement create from a generic store
-		return models.User{}, fmt.Errorf("not implemented current user fetcher for generic OIDC")
-	}
-	if err != nil {
-		return models.User{}, nil
+		return z.GetUser(info.GetSubject())
 	}
 
-	// Get user roles
-	return z.getUserData(user)
+	// For Generic OIDC, user must be synced to DB first
+	// TODO: Implement fetch/create for a generic OIDC
+	return models.User{}, fmt.Errorf("not implemented current user fetcher for generic OIDC")
 }
 
 func (z *zitadelStore) GetUser(userID models.UserID) (models.User, error) {
-	// Get user
+	// Get user from API
 	userResp, err := z.mgmt.GetUserByID(context.Background(), &management_pb.GetUserByIDRequest{
 		Id: userID,
 	})
 	if err != nil {
-		return models.User{}, err
+		if isRPCCode(err, codes.NotFound) { // NotFound error
+			return models.User{}, types.ErrNotFound
+		}
+		return models.User{}, fmt.Errorf("failed to get user from API: %w", err) // Generic error
 	}
 
 	// Get user roles
@@ -100,27 +95,7 @@ func (z *zitadelStore) GetUser(userID models.UserID) (models.User, error) {
 }
 
 func (z *zitadelStore) GetUsers(params models.GetUsersParams) (models.Users, error) {
-	paramSkip := 0
-	if params.Skip != nil {
-		paramSkip = *params.Skip
-	}
-	paramTop := 100
-	if params.Top != nil {
-		paramTop = *params.Top
-	}
-
-	// Get users
-	userResp, err := z.mgmt.ListUsers(context.Background(), &management_pb.ListUsersRequest{
-		Query: &object_pb.ListQuery{
-			Offset: uint64(paramSkip),
-			Limit:  uint32(paramTop),
-		},
-	})
-	if err != nil {
-		return models.Users{}, err
-	}
-
-	// Get roles
+	// Get grants from API
 	grantResp, err := z.mgmt.ListUserGrants(context.Background(), &management_pb.ListUserGrantRequest{
 		Query: &object_pb.ListQuery{
 			Offset: 0,
@@ -138,25 +113,46 @@ func (z *zitadelStore) GetUsers(params models.GetUsersParams) (models.Users, err
 		},
 	})
 	if err != nil {
-		return models.Users{}, err
-	}
-	userRoleMap := make(map[string][]string)
-	for _, grant := range grantResp.Result {
-		currRoles, _ := userRoleMap[grant.UserId]
-		userRoleMap[grant.UserId] = append(currRoles, grant.RoleKeys...)
+		return models.Users{}, fmt.Errorf("failed to list grants from API: %w", err) // Generic error
 	}
 
-	// Generate user data
-	var users []models.User
-	for _, user := range userResp.Result {
+	// Extract user roles from grants
+	userRolesStore := make(map[string][]string)
+	for _, grant := range grantResp.Result {
+		currRoles := userRolesStore[grant.UserId]
+		userRolesStore[grant.UserId] = append(currRoles, grant.RoleKeys...)
+	}
+
+	// Get users from API
+	paramSkip := 0
+	if params.Skip != nil {
+		paramSkip = *params.Skip
+	}
+	paramTop := 100
+	if params.Top != nil {
+		paramTop = *params.Top
+	}
+	userResp, err := z.mgmt.ListUsers(context.Background(), &management_pb.ListUsersRequest{
+		Query: &object_pb.ListQuery{
+			Offset: uint64(paramSkip),
+			Limit:  uint32(paramTop),
+		},
+	})
+	if err != nil {
+		return models.Users{}, fmt.Errorf("failed to list users from API: %w", err) // Generic error
+	}
+
+	// Transform user response into DB objects
+	users := make([]models.User, len(userResp.Result))
+	for i, user := range userResp.Result {
 		// Get user data
-		userRoles, _ := userRoleMap[user.Id]
+		userRoles := userRolesStore[user.Id]
 		userType := models.REGULARUSER
 		if user.GetMachine() != nil {
 			userType = models.MACHINEUSER
 		}
 
-		users = append(users, models.User{
+		users[i] = models.User{
 			Banned:    toPointer(user.State == user_pb.UserState_USER_STATE_LOCKED),
 			CreatedAt: toPointer(user.Details.CreationDate.AsTime()),
 			Email:     toPointer(user.UserName),
@@ -165,7 +161,7 @@ func (z *zitadelStore) GetUsers(params models.GetUsersParams) (models.Users, err
 			Roles:     toPointer(userRoles),
 			UpdatedAt: toPointer(user.Details.ChangeDate.AsTime()),
 			UserType:  toPointer(userType),
-		})
+		}
 	}
 
 	return models.Users{
@@ -174,30 +170,33 @@ func (z *zitadelStore) GetUsers(params models.GetUsersParams) (models.Users, err
 	}, nil
 }
 
+// nolint:cyclop,gocognit
 func (z *zitadelStore) CreateUser(user models.User) (models.User, error) {
 	// Validate
 	if user.Name == nil {
-		return models.User{}, fmt.Errorf("cannot create for empty Name")
+		return models.User{}, &common.BadRequestError{Reason: "cannot create for empty Name"}
 	}
 	if user.Email == nil {
-		return models.User{}, fmt.Errorf("cannot create for empty Email")
+		return models.User{}, &common.BadRequestError{Reason: "cannot create for empty Email"}
 	}
 	if user.Roles == nil {
-		return models.User{}, fmt.Errorf("cannot create for empty Roles")
+		return models.User{}, &common.BadRequestError{Reason: "cannot create for empty Roles"}
 	}
 	if user.UserType == nil {
-		return models.User{}, fmt.Errorf("cannot create for empty UserType")
+		return models.User{}, &common.BadRequestError{Reason: "cannot create for empty UserType"}
 	}
-	if user.Banned != nil && !*user.Banned {
-		return models.User{}, fmt.Errorf("cannot create for Banned")
+	if user.Id != nil {
+		return models.User{}, &common.BadRequestError{Reason: "cannot create with Id"}
+	}
+	if user.Banned != nil && *user.Banned {
+		return models.User{}, &common.BadRequestError{Reason: "cannot create with Banned"}
 	}
 
 	// Create user
-	var userId string
-	userType := *user.UserType
-	switch userType {
+	var userID string
+	switch userType := *user.UserType; userType {
 	case models.REGULARUSER:
-		// Create human user
+		// Create human user to API
 		resp, err := z.mgmt.ImportHumanUser(context.Background(), &management_pb.ImportHumanUserRequest{
 			UserName: *user.Email,
 			Profile: &management_pb.ImportHumanUserRequest_Profile{
@@ -213,12 +212,15 @@ func (z *zitadelStore) CreateUser(user models.User) (models.User, error) {
 			Idps:                            nil,
 		})
 		if err != nil {
-			return models.User{}, err
+			if isRPCCode(err, codes.AlreadyExists) { // AlreadyExists error
+				return models.User{}, types.ErrAlreadyExists
+			}
+			return models.User{}, fmt.Errorf("failed to create user from API: %w", err) // Generic error
 		}
-		userId = resp.UserId
+		userID = resp.UserId
 
 	case models.MACHINEUSER:
-		// Create machine user
+		// Create machine user to API
 		resp, err := z.mgmt.AddMachineUser(context.Background(), &management_pb.AddMachineUserRequest{
 			UserName:        *user.Email,
 			Name:            *user.Name,
@@ -226,34 +228,61 @@ func (z *zitadelStore) CreateUser(user models.User) (models.User, error) {
 			AccessTokenType: user_pb.AccessTokenType_ACCESS_TOKEN_TYPE_JWT,
 		})
 		if err != nil {
-			return models.User{}, err
+			if isRPCCode(err, codes.AlreadyExists) { // AlreadyExists error
+				return models.User{}, types.ErrAlreadyExists
+			}
+			return models.User{}, fmt.Errorf("failed to create user from API: %w", err) // Generic error
 		}
-		userId = resp.UserId
+		userID = resp.UserId
+
+	default:
+		return models.User{}, &common.BadRequestError{
+			Reason: fmt.Sprintf("invalid UserType=%s requested", userType),
+		}
 	}
 
 	// Set user roles
-	err := z.setUserRoles(userId, *user.Roles)
+	err := z.setUserRoles(userID, *user.Roles)
 	if err != nil {
 		return models.User{}, err
 	}
 
 	// Fetch user from id
-	return z.GetUser(userId)
+	return z.GetUser(userID)
 }
 
+// nolint:cyclop,gocognit
 func (z *zitadelStore) UpdateUser(user models.User) (models.User, error) {
 	// Validate
 	if user.Id == nil {
-		return models.User{}, fmt.Errorf("cannot create for empty Id")
+		return models.User{}, &common.BadRequestError{Reason: "cannot update for empty Id"}
 	}
 	if user.UserType == nil {
-		return models.User{}, fmt.Errorf("cannot create for empty UserType")
+		return models.User{}, &common.BadRequestError{Reason: "cannot update for empty UserType"}
 	}
 
 	// Create user
-	userType := *user.UserType
-	switch userType {
+	switch userType := *user.UserType; userType {
 	case models.REGULARUSER:
+		// Ban
+		if user.Banned != nil && *user.Banned {
+			_, err := z.mgmt.LockUser(context.Background(), &management_pb.LockUserRequest{
+				Id: *user.Id,
+			})
+			if err != nil {
+				if isRPCCode(err, codes.NotFound) { // NotFound error
+					return models.User{}, types.ErrNotFound
+				}
+				return models.User{}, fmt.Errorf("failed to lock user from API: %w", err) // Generic Error
+			}
+		}
+		// Update roles
+		if user.Roles != nil {
+			err := z.setUserRoles(*user.Id, *user.Roles)
+			if err != nil {
+				return models.User{}, err
+			}
+		}
 		// Update name
 		if user.Name != nil {
 			_, err := z.mgmt.UpdateHumanProfile(context.Background(), &management_pb.UpdateHumanProfileRequest{
@@ -262,7 +291,10 @@ func (z *zitadelStore) UpdateUser(user models.User) (models.User, error) {
 				DisplayName: *user.Name,
 			})
 			if err != nil {
-				return models.User{}, err
+				if isRPCCode(err, codes.NotFound) { // NotFound error
+					return models.User{}, types.ErrNotFound
+				}
+				return models.User{}, fmt.Errorf("failed to udate user profile from API: %w", err) // Generic Error
 			}
 		}
 		// Update email
@@ -273,28 +305,22 @@ func (z *zitadelStore) UpdateUser(user models.User) (models.User, error) {
 				IsEmailVerified: true,
 			})
 			if err != nil {
-				return models.User{}, err
-			}
-		}
-		// Update roles
-		if user.Roles != nil {
-			err := z.setUserRoles(*user.Id, *user.Roles)
-			if err != nil {
-				return models.User{}, err
-			}
-		}
-		// Ban
-		if user.Banned != nil {
-			_, err := z.mgmt.LockUser(context.Background(), &management_pb.LockUserRequest{
-				Id: *user.Id,
-			})
-			if err != nil {
-				return models.User{}, err
+				if isRPCCode(err, codes.NotFound) { // NotFound error
+					return models.User{}, types.ErrNotFound
+				}
+				return models.User{}, fmt.Errorf("failed to update user email from API: %w", err) // Generic Error
 			}
 		}
 
 	case models.MACHINEUSER:
-		return models.User{}, fmt.Errorf("machine user cannot be updated")
+		return models.User{}, &common.BadRequestError{
+			Reason: fmt.Sprintf("invalid UserType=%s requested", userType),
+		}
+
+	default:
+		return models.User{}, &common.BadRequestError{
+			Reason: fmt.Sprintf("invalid UserType=%s requested", userType),
+		}
 	}
 
 	// Fetch user from id
@@ -305,7 +331,13 @@ func (z *zitadelStore) DeleteUser(userID models.UserID) error {
 	_, err := z.mgmt.RemoveUser(context.Background(), &management_pb.RemoveUserRequest{
 		Id: userID,
 	})
-	return err
+	if err != nil {
+		if isRPCCode(err, codes.NotFound) { // NotFound error
+			return types.ErrNotFound
+		}
+		return fmt.Errorf("failed to delete user from API: %w", err) // Generic error
+	}
+	return nil
 }
 
 func (z *zitadelStore) GetUserAuth(userID models.UserID) (models.UserAuths, error) {
@@ -314,22 +346,21 @@ func (z *zitadelStore) GetUserAuth(userID models.UserID) (models.UserAuths, erro
 	// List access tokens
 	tokenResp, err := z.mgmt.ListPersonalAccessTokens(context.Background(), &management_pb.ListPersonalAccessTokensRequest{
 		UserId: userID,
-		Query: &object_pb.ListQuery{
-			Offset: 0,
-			Limit:  0,
-			Asc:    false,
-		},
+		Query:  &object_pb.ListQuery{},
 	})
 	if err != nil {
-		return models.UserAuths{}, err
-	}
-	for _, token := range tokenResp.Result {
-		auths = append(auths, models.UserAuth{
-			AuthType:   toPointer(models.AuthTypeACCESSTOKEN),
-			CreatedAt:  toPointer(token.Details.CreationDate.AsTime()),
-			UserAuthID: toPointer(token.Id),
-			UserID:     toPointer(userID),
-		})
+		if !isRPCCode(err, codes.NotFound) { // Only pass for NotFound errors
+			return models.UserAuths{}, fmt.Errorf("failed to list access tokens from API: %w", err)
+		}
+	} else {
+		for _, token := range tokenResp.Result {
+			auths = append(auths, models.UserAuth{
+				CredType:  toPointer(models.CredTypeTOKEN),
+				CreatedAt: toPointer(token.Details.CreationDate.AsTime()),
+				CredID:    toPointer(token.Id),
+				UserID:    toPointer(userID),
+			})
+		}
 	}
 
 	// List keys
@@ -342,15 +373,18 @@ func (z *zitadelStore) GetUserAuth(userID models.UserID) (models.UserAuths, erro
 		},
 	})
 	if err != nil {
-		return models.UserAuths{}, err
-	}
-	for _, key := range keyResp.Result {
-		auths = append(auths, models.UserAuth{
-			AuthType:   toPointer(models.AuthTypeSERVICEACCOUNT),
-			CreatedAt:  toPointer(key.Details.CreationDate.AsTime()),
-			UserAuthID: toPointer(key.Id),
-			UserID:     toPointer(userID),
-		})
+		if !isRPCCode(err, codes.NotFound) { // Only pass for NotFound errors
+			return models.UserAuths{}, fmt.Errorf("failed to list machine keys from API: %w", err) // Generic error
+		}
+	} else {
+		for _, key := range keyResp.Result {
+			auths = append(auths, models.UserAuth{
+				CredType:  toPointer(models.CredTypeFILE),
+				CreatedAt: toPointer(key.Details.CreationDate.AsTime()),
+				CredID:    toPointer(key.Id),
+				UserID:    toPointer(userID),
+			})
+		}
 	}
 
 	return models.UserAuths{
@@ -359,35 +393,40 @@ func (z *zitadelStore) GetUserAuth(userID models.UserID) (models.UserAuths, erro
 	}, nil
 }
 
-func (z *zitadelStore) CreateUserAuth(userID models.UserID, authType models.AuthType, expiryDate *time.Time) (models.UserCred, error) {
+func (z *zitadelStore) CreateUserAuth(userID models.UserID, credType models.CredentialType, credExpiry *models.CredentialExpiry) (models.UserCred, error) {
+	// Validate
 	var expiryTimestamp *timestamppb.Timestamp
-	if expiryDate != nil {
-		expiryTimestamp = timestamppb.New(*expiryDate)
+	if credExpiry != nil {
+		if credExpiry.Before(time.Now().Add(1 * time.Minute)) {
+			return models.UserCred{}, &common.BadRequestError{Reason: "cannot create with expiry in the past"}
+		}
+		expiryTimestamp = timestamppb.New(*credExpiry)
 	}
 
-	switch authType {
-	case models.AuthTypeACCESSTOKEN:
+	switch credType {
+	case models.CredentialTypeTOKEN:
 		// If access token requested, create access token
 		resp, err := z.mgmt.AddPersonalAccessToken(context.Background(), &management_pb.AddPersonalAccessTokenRequest{
 			UserId:         userID,
 			ExpirationDate: expiryTimestamp,
 		})
 		if err != nil {
-			return models.UserCred{}, err
+			if isRPCCode(err, codes.NotFound) { // NotFound error
+				return models.UserCred{}, types.ErrNotFound
+			}
+			return models.UserCred{}, fmt.Errorf("failed to create user access token from API: %w", err) // Generic error
 		}
 		return models.UserCred{
-			Credentials: toPointer(map[string]interface{}{
-				"token": resp.Token,
-			}),
+			Credentials: toPointer(resp.Token),
 			UserAuth: &models.UserAuth{
-				AuthType:   toPointer(authType),
-				CreatedAt:  toPointer(resp.Details.CreationDate.AsTime()),
-				UserAuthID: toPointer(resp.TokenId),
-				UserID:     toPointer(userID),
+				CredType:  toPointer(models.CredTypeTOKEN),
+				CreatedAt: toPointer(resp.Details.CreationDate.AsTime()),
+				CredID:    toPointer(resp.TokenId),
+				UserID:    toPointer(userID),
 			},
 		}, nil
 
-	case models.AuthTypeSERVICEACCOUNT:
+	case models.CredentialTypeFILE:
 		// If service account requested, create key
 		resp, err := z.mgmt.AddMachineKey(context.Background(), &management_pb.AddMachineKeyRequest{
 			UserId:         userID,
@@ -395,52 +434,66 @@ func (z *zitadelStore) CreateUserAuth(userID models.UserID, authType models.Auth
 			ExpirationDate: expiryTimestamp,
 		})
 		if err != nil {
-			return models.UserCred{}, err
+			if isRPCCode(err, codes.NotFound) { // NotFound error
+				return models.UserCred{}, types.ErrNotFound
+			}
+			return models.UserCred{}, fmt.Errorf("failed to create user service account from API: %w", err) // Generic error
 		}
 		return models.UserCred{
-			Credentials: toPointer(map[string]interface{}{
-				"key": string(resp.KeyDetails),
-			}),
+			Credentials: toPointer(string(resp.KeyDetails)),
 			UserAuth: &models.UserAuth{
-				AuthType:   toPointer(authType),
-				CreatedAt:  toPointer(resp.Details.CreationDate.AsTime()),
-				UserAuthID: toPointer(resp.KeyId),
-				UserID:     toPointer(userID),
+				CredType:  toPointer(models.CredTypeFILE),
+				CreatedAt: toPointer(resp.Details.CreationDate.AsTime()),
+				CredID:    toPointer(resp.KeyId),
+				UserID:    toPointer(userID),
 			},
 		}, nil
 
 	default:
-		// Otherwise, unknown type requested
-		return models.UserCred{}, fmt.Errorf("invalid AuthType=%s requested", authType)
+		return models.UserCred{}, &common.BadRequestError{
+			Reason: fmt.Sprintf("invalid CredType=%s requested", credType),
+		}
 	}
 }
 
 func (z *zitadelStore) RevokeUserAuth(userID models.UserID, userAuth models.UserAuth) error {
-	if userAuth.AuthType == nil {
-		return fmt.Errorf("cannot create for empty AuthType")
+	if userAuth.CredType == nil {
+		return &common.BadRequestError{Reason: "cannot create for empty CredType"}
 	}
 
-	authType := *userAuth.AuthType
-	switch authType {
-	case models.AuthTypeACCESSTOKEN:
+	switch credType := *userAuth.CredType; credType {
+	case models.CredTypeTOKEN:
 		// If access token requested, create access token
 		_, err := z.mgmt.RemovePersonalAccessToken(context.Background(), &management_pb.RemovePersonalAccessTokenRequest{
 			UserId:  userID,
-			TokenId: *userAuth.UserAuthID,
+			TokenId: *userAuth.CredID,
 		})
-		return err
+		if err != nil {
+			if isRPCCode(err, codes.NotFound) { // NotFound error
+				return types.ErrNotFound
+			}
+			return fmt.Errorf("failed to delete user access token from API: %w", err) // Generic error
+		}
+		return nil
 
-	case models.AuthTypeSERVICEACCOUNT:
+	case models.CredTypeFILE:
 		// If service account requested, create key
 		_, err := z.mgmt.RemoveMachineKey(context.Background(), &management_pb.RemoveMachineKeyRequest{
 			UserId: userID,
-			KeyId:  *userAuth.UserAuthID,
+			KeyId:  *userAuth.CredID,
 		})
-		return err
+		if err != nil {
+			if isRPCCode(err, codes.NotFound) { // NotFound error
+				return types.ErrNotFound
+			}
+			return fmt.Errorf("failed to delete user service account from API: %w", err) // Generic error
+		}
+		return nil
 
 	default:
-		// Otherwise, unknown type requested
-		return fmt.Errorf("invalid AuthType=%s requested", authType)
+		return &common.BadRequestError{
+			Reason: fmt.Sprintf("invalid CredType=%s requested", credType),
+		}
 	}
 }
 
@@ -469,14 +522,10 @@ func (z *zitadelStore) getUserData(userResp *user_pb.User) (models.User, error) 
 	}, nil
 }
 
-func (z *zitadelStore) getUserRoles(userId models.UserID) ([]string, error) {
-	// Get user roles
-	userRoleResp, err := z.mgmt.ListUserGrants(context.Background(), &management_pb.ListUserGrantRequest{
-		Query: &object_pb.ListQuery{
-			Offset: 0,
-			Limit:  0,
-			Asc:    false,
-		},
+func (z *zitadelStore) getUserRoles(userID models.UserID) ([]string, error) {
+	// Get user roles from grants
+	grantResp, err := z.mgmt.ListUserGrants(context.Background(), &management_pb.ListUserGrantRequest{
+		Query: &object_pb.ListQuery{},
 		Queries: []*user_pb.UserGrantQuery{
 			{
 				Query: &user_pb.UserGrantQuery_ProjectIdQuery{
@@ -488,30 +537,31 @@ func (z *zitadelStore) getUserRoles(userId models.UserID) ([]string, error) {
 			{
 				Query: &user_pb.UserGrantQuery_UserIdQuery{
 					UserIdQuery: &user_pb.UserGrantUserIDQuery{
-						UserId: userId,
+						UserId: userID,
 					},
 				},
 			},
 		},
 	})
 	if err != nil {
-		return nil, err
+		if isRPCCode(err, codes.NotFound) { // Return empty for NotFound error
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to list user grants from API: %w", err) // Generic error
 	}
+
+	// Extract user roles from grants
 	userRoles := make([]string, 0)
-	for _, roleResp := range userRoleResp.Result {
+	for _, roleResp := range grantResp.Result {
 		userRoles = append(userRoles, roleResp.RoleKeys...)
 	}
 	return userRoles, nil
 }
 
-func (z *zitadelStore) setUserRoles(userId models.UserID, roles []string) error {
-	// Fetch all role grants
-	userRolesResp, err := z.mgmt.ListUserGrants(context.Background(), &management_pb.ListUserGrantRequest{
-		Query: &object_pb.ListQuery{
-			Offset: 0,
-			Limit:  0,
-			Asc:    false,
-		},
+func (z *zitadelStore) setUserRoles(userID models.UserID, roles []string) error {
+	// Get user roles from grants
+	grantResp, err := z.mgmt.ListUserGrants(context.Background(), &management_pb.ListUserGrantRequest{
+		Query: &object_pb.ListQuery{},
 		Queries: []*user_pb.UserGrantQuery{
 			{
 				Query: &user_pb.UserGrantQuery_ProjectIdQuery{
@@ -523,37 +573,55 @@ func (z *zitadelStore) setUserRoles(userId models.UserID, roles []string) error 
 			{
 				Query: &user_pb.UserGrantQuery_UserIdQuery{
 					UserIdQuery: &user_pb.UserGrantUserIDQuery{
-						UserId: userId,
+						UserId: userID,
 					},
 				},
 			},
 		},
 	})
-	if err != nil {
-		return err
-	}
-	grantId := make([]string, 0)
-	for _, userRole := range userRolesResp.Result {
-		grantId = append(grantId, userRole.ProjectGrantId)
+	// Extract grant ids from grants
+	grantID := make([]string, 0)
+	if err == nil { // no error, extract grants
+		for _, userRole := range grantResp.Result {
+			grantID = append(grantID, userRole.ProjectGrantId)
+		}
+	} else if !isRPCCode(err, codes.NotFound) { // only pass for NotFound error
+		return fmt.Errorf("failed to list user grants from API: %w", err)
 	}
 
-	// Delete all role grants
-	_, err = z.mgmt.BulkRemoveUserGrant(context.Background(), &management_pb.BulkRemoveUserGrantRequest{
-		GrantId: grantId,
-	})
-	if err != nil {
-		return err
+	// Delete all role grants if possible
+	if len(grantID) > 0 {
+		_, err = z.mgmt.BulkRemoveUserGrant(context.Background(), &management_pb.BulkRemoveUserGrantRequest{
+			GrantId: grantID,
+		})
+		if err != nil {
+			if !isRPCCode(err, codes.NotFound) { // only pass for NotFound error
+				return fmt.Errorf("failed to remove user grants from API: %w", err)
+			}
+		}
 	}
 
 	// Create only one user grant with requested roles
 	_, err = z.mgmt.AddUserGrant(context.Background(), &management_pb.AddUserGrantRequest{
-		UserId:    userId,
+		UserId:    userID,
 		ProjectId: z.projectID,
 		RoleKeys:  roles,
 	})
-	return err
+	if err != nil {
+		if isRPCCode(err, codes.NotFound) { // NotFound error for user
+			return types.ErrNotFound
+		}
+		return fmt.Errorf("failed to add user grants: %w", err) // Generic error
+	}
+
+	return nil
 }
 
 func toPointer[T any](obj T) *T {
 	return &obj
+}
+
+func isRPCCode(err error, code codes.Code) bool {
+	rpcErrCode := status.Code(err)
+	return code == rpcErrCode
 }

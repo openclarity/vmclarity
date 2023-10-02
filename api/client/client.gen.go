@@ -159,9 +159,6 @@ type ClientInterface interface {
 
 	PutAssetsAssetID(ctx context.Context, assetID AssetID, params *PutAssetsAssetIDParams, body PutAssetsAssetIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// AuthRedirect request
-	AuthRedirect(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// GetFindings request
 	GetFindings(ctx context.Context, params *GetFindingsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -272,10 +269,8 @@ type ClientInterface interface {
 	// GetUserAuthUserID request
 	GetUserAuthUserID(ctx context.Context, userID UserID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostUserAuthUserIDWithBody request with any body
-	PostUserAuthUserIDWithBody(ctx context.Context, userID UserID, params *PostUserAuthUserIDParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PostUserAuthUserID(ctx context.Context, userID UserID, params *PostUserAuthUserIDParams, body PostUserAuthUserIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostUserAuthUserID request
+	PostUserAuthUserID(ctx context.Context, userID UserID, params *PostUserAuthUserIDParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteUsersUserID request
 	DeleteUsersUserID(ctx context.Context, userID UserID, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -604,18 +599,6 @@ func (c *Client) PutAssetsAssetIDWithBody(ctx context.Context, assetID AssetID, 
 
 func (c *Client) PutAssetsAssetID(ctx context.Context, assetID AssetID, params *PutAssetsAssetIDParams, body PutAssetsAssetIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPutAssetsAssetIDRequest(c.Server, assetID, params, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) AuthRedirect(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewAuthRedirectRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -1072,6 +1055,162 @@ func (c *Client) PutScansScanIDWithBody(ctx context.Context, scanID ScanID, para
 
 func (c *Client) PutScansScanID(ctx context.Context, scanID ScanID, params *PutScansScanIDParams, body PutScansScanIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPutScansScanIDRequest(c.Server, scanID, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteUserAuthUserIDWithBody(ctx context.Context, userID UserID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteUserAuthUserIDRequestWithBody(c.Server, userID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteUserAuthUserID(ctx context.Context, userID UserID, body DeleteUserAuthUserIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteUserAuthUserIDRequest(c.Server, userID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetUserAuthUserID(ctx context.Context, userID UserID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetUserAuthUserIDRequest(c.Server, userID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostUserAuthUserID(ctx context.Context, userID UserID, params *PostUserAuthUserIDParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostUserAuthUserIDRequest(c.Server, userID, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteUsersUserID(ctx context.Context, userID UserID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteUsersUserIDRequest(c.Server, userID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetUsersUserID(ctx context.Context, userID UserID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetUsersUserIDRequest(c.Server, userID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchUsersUserIDWithBody(ctx context.Context, userID UserID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchUsersUserIDRequestWithBody(c.Server, userID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchUsersUserID(ctx context.Context, userID UserID, body PatchUsersUserIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchUsersUserIDRequest(c.Server, userID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutUsersUserIDWithBody(ctx context.Context, userID UserID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutUsersUserIDRequestWithBody(c.Server, userID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutUsersUserID(ctx context.Context, userID UserID, body PutUsersUserIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutUsersUserIDRequest(c.Server, userID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetUsers(ctx context.Context, params *GetUsersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetUsersRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostUserWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostUserRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostUser(ctx context.Context, body PostUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostUserRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2288,33 +2427,6 @@ func NewPutAssetsAssetIDRequestWithBody(server string, assetID AssetID, params *
 			req.Header.Set("If-Match", headerParam0)
 		}
 
-	}
-
-	return req, nil
-}
-
-// NewAuthRedirectRequest generates requests for AuthRedirect
-func NewAuthRedirectRequest(server string) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/auth/redirect")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
 	}
 
 	return req, nil
@@ -4085,19 +4197,8 @@ func NewGetUserAuthUserIDRequest(server string, userID UserID) (*http.Request, e
 	return req, nil
 }
 
-// NewPostUserAuthUserIDRequest calls the generic PostUserAuthUserID builder with application/json body
-func NewPostUserAuthUserIDRequest(server string, userID UserID, params *PostUserAuthUserIDParams, body PostUserAuthUserIDJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostUserAuthUserIDRequestWithBody(server, userID, params, "application/json", bodyReader)
-}
-
-// NewPostUserAuthUserIDRequestWithBody generates requests for PostUserAuthUserID with any type of body
-func NewPostUserAuthUserIDRequestWithBody(server string, userID UserID, params *PostUserAuthUserIDParams, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostUserAuthUserIDRequest generates requests for PostUserAuthUserID
+func NewPostUserAuthUserIDRequest(server string, userID UserID, params *PostUserAuthUserIDParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -4125,7 +4226,7 @@ func NewPostUserAuthUserIDRequestWithBody(server string, userID UserID, params *
 	if params != nil {
 		queryValues := queryURL.Query()
 
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "authType", runtime.ParamLocationQuery, params.AuthType); err != nil {
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "credentialType", runtime.ParamLocationQuery, params.CredentialType); err != nil {
 			return nil, err
 		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 			return nil, err
@@ -4137,9 +4238,9 @@ func NewPostUserAuthUserIDRequestWithBody(server string, userID UserID, params *
 			}
 		}
 
-		if params.ExpiryTime != nil {
+		if params.CredentialExpiry != nil {
 
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "expiryTime", runtime.ParamLocationQuery, *params.ExpiryTime); err != nil {
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "credentialExpiry", runtime.ParamLocationQuery, *params.CredentialExpiry); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -4156,12 +4257,10 @@ func NewPostUserAuthUserIDRequestWithBody(server string, userID UserID, params *
 		queryURL.RawQuery = queryValues.Encode()
 	}
 
-	req, err := http.NewRequest("POST", queryURL.String(), body)
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-
-	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -4545,9 +4644,6 @@ type ClientWithResponsesInterface interface {
 
 	PutAssetsAssetIDWithResponse(ctx context.Context, assetID AssetID, params *PutAssetsAssetIDParams, body PutAssetsAssetIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PutAssetsAssetIDResponse, error)
 
-	// AuthRedirectWithResponse request
-	AuthRedirectWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*AuthRedirectResponse, error)
-
 	// GetFindingsWithResponse request
 	GetFindingsWithResponse(ctx context.Context, params *GetFindingsParams, reqEditors ...RequestEditorFn) (*GetFindingsResponse, error)
 
@@ -4658,10 +4754,8 @@ type ClientWithResponsesInterface interface {
 	// GetUserAuthUserIDWithResponse request
 	GetUserAuthUserIDWithResponse(ctx context.Context, userID UserID, reqEditors ...RequestEditorFn) (*GetUserAuthUserIDResponse, error)
 
-	// PostUserAuthUserIDWithBodyWithResponse request with any body
-	PostUserAuthUserIDWithBodyWithResponse(ctx context.Context, userID UserID, params *PostUserAuthUserIDParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostUserAuthUserIDResponse, error)
-
-	PostUserAuthUserIDWithResponse(ctx context.Context, userID UserID, params *PostUserAuthUserIDParams, body PostUserAuthUserIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PostUserAuthUserIDResponse, error)
+	// PostUserAuthUserIDWithResponse request
+	PostUserAuthUserIDWithResponse(ctx context.Context, userID UserID, params *PostUserAuthUserIDParams, reqEditors ...RequestEditorFn) (*PostUserAuthUserIDResponse, error)
 
 	// DeleteUsersUserIDWithResponse request
 	DeleteUsersUserIDWithResponse(ctx context.Context, userID UserID, reqEditors ...RequestEditorFn) (*DeleteUsersUserIDResponse, error)
@@ -5114,29 +5208,6 @@ func (r PutAssetsAssetIDResponse) StatusCode() int {
 	return 0
 }
 
-type AuthRedirectResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *json.RawMessage
-	JSONDefault  *UnknownError
-}
-
-// Status returns HTTPResponse.Status
-func (r AuthRedirectResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r AuthRedirectResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 type GetFindingsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -5287,6 +5358,7 @@ type GetCurrentUserResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *User
+	JSON401      *ApiResponse
 	JSONDefault  *UnknownError
 }
 
@@ -5776,6 +5848,227 @@ func (r PutScansScanIDResponse) StatusCode() int {
 	return 0
 }
 
+type DeleteUserAuthUserIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Success
+	JSON400      *ApiResponse
+	JSON404      *ApiResponse
+	JSONDefault  *UnknownError
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteUserAuthUserIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteUserAuthUserIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetUserAuthUserIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *UserAuths
+	JSON404      *ApiResponse
+	JSONDefault  *UnknownError
+}
+
+// Status returns HTTPResponse.Status
+func (r GetUserAuthUserIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetUserAuthUserIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostUserAuthUserIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *UserCred
+	JSON400      *ApiResponse
+	JSON404      *ApiResponse
+	JSONDefault  *UnknownError
+}
+
+// Status returns HTTPResponse.Status
+func (r PostUserAuthUserIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostUserAuthUserIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteUsersUserIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Success
+	JSON404      *ApiResponse
+	JSONDefault  *UnknownError
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteUsersUserIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteUsersUserIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetUsersUserIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *User
+	JSON404      *ApiResponse
+	JSONDefault  *UnknownError
+}
+
+// Status returns HTTPResponse.Status
+func (r GetUsersUserIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetUsersUserIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PatchUsersUserIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *User
+	JSON400      *ApiResponse
+	JSON404      *ApiResponse
+	JSONDefault  *UnknownError
+}
+
+// Status returns HTTPResponse.Status
+func (r PatchUsersUserIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PatchUsersUserIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PutUsersUserIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *User
+	JSON201      *User
+	JSON400      *ApiResponse
+	JSON404      *ApiResponse
+	JSONDefault  *UnknownError
+}
+
+// Status returns HTTPResponse.Status
+func (r PutUsersUserIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutUsersUserIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetUsersResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Users
+	JSONDefault  *UnknownError
+}
+
+// Status returns HTTPResponse.Status
+func (r GetUsersResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetUsersResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostUserResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *User
+	JSON400      *ApiResponse
+	JSON409      *ApiResponse
+	JSONDefault  *UnknownError
+}
+
+// Status returns HTTPResponse.Status
+func (r PostUserResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostUserResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 // GetAssetScanEstimationsWithResponse request returning *GetAssetScanEstimationsResponse
 func (c *ClientWithResponses) GetAssetScanEstimationsWithResponse(ctx context.Context, params *GetAssetScanEstimationsParams, reqEditors ...RequestEditorFn) (*GetAssetScanEstimationsResponse, error) {
 	rsp, err := c.GetAssetScanEstimations(ctx, params, reqEditors...)
@@ -5999,15 +6292,6 @@ func (c *ClientWithResponses) PutAssetsAssetIDWithResponse(ctx context.Context, 
 		return nil, err
 	}
 	return ParsePutAssetsAssetIDResponse(rsp)
-}
-
-// AuthRedirectWithResponse request returning *AuthRedirectResponse
-func (c *ClientWithResponses) AuthRedirectWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*AuthRedirectResponse, error) {
-	rsp, err := c.AuthRedirect(ctx, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseAuthRedirectResponse(rsp)
 }
 
 // GetFindingsWithResponse request returning *GetFindingsResponse
@@ -6338,6 +6622,119 @@ func (c *ClientWithResponses) PutScansScanIDWithResponse(ctx context.Context, sc
 		return nil, err
 	}
 	return ParsePutScansScanIDResponse(rsp)
+}
+
+// DeleteUserAuthUserIDWithBodyWithResponse request with arbitrary body returning *DeleteUserAuthUserIDResponse
+func (c *ClientWithResponses) DeleteUserAuthUserIDWithBodyWithResponse(ctx context.Context, userID UserID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteUserAuthUserIDResponse, error) {
+	rsp, err := c.DeleteUserAuthUserIDWithBody(ctx, userID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteUserAuthUserIDResponse(rsp)
+}
+
+func (c *ClientWithResponses) DeleteUserAuthUserIDWithResponse(ctx context.Context, userID UserID, body DeleteUserAuthUserIDJSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteUserAuthUserIDResponse, error) {
+	rsp, err := c.DeleteUserAuthUserID(ctx, userID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteUserAuthUserIDResponse(rsp)
+}
+
+// GetUserAuthUserIDWithResponse request returning *GetUserAuthUserIDResponse
+func (c *ClientWithResponses) GetUserAuthUserIDWithResponse(ctx context.Context, userID UserID, reqEditors ...RequestEditorFn) (*GetUserAuthUserIDResponse, error) {
+	rsp, err := c.GetUserAuthUserID(ctx, userID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetUserAuthUserIDResponse(rsp)
+}
+
+// PostUserAuthUserIDWithResponse request returning *PostUserAuthUserIDResponse
+func (c *ClientWithResponses) PostUserAuthUserIDWithResponse(ctx context.Context, userID UserID, params *PostUserAuthUserIDParams, reqEditors ...RequestEditorFn) (*PostUserAuthUserIDResponse, error) {
+	rsp, err := c.PostUserAuthUserID(ctx, userID, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostUserAuthUserIDResponse(rsp)
+}
+
+// DeleteUsersUserIDWithResponse request returning *DeleteUsersUserIDResponse
+func (c *ClientWithResponses) DeleteUsersUserIDWithResponse(ctx context.Context, userID UserID, reqEditors ...RequestEditorFn) (*DeleteUsersUserIDResponse, error) {
+	rsp, err := c.DeleteUsersUserID(ctx, userID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteUsersUserIDResponse(rsp)
+}
+
+// GetUsersUserIDWithResponse request returning *GetUsersUserIDResponse
+func (c *ClientWithResponses) GetUsersUserIDWithResponse(ctx context.Context, userID UserID, reqEditors ...RequestEditorFn) (*GetUsersUserIDResponse, error) {
+	rsp, err := c.GetUsersUserID(ctx, userID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetUsersUserIDResponse(rsp)
+}
+
+// PatchUsersUserIDWithBodyWithResponse request with arbitrary body returning *PatchUsersUserIDResponse
+func (c *ClientWithResponses) PatchUsersUserIDWithBodyWithResponse(ctx context.Context, userID UserID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchUsersUserIDResponse, error) {
+	rsp, err := c.PatchUsersUserIDWithBody(ctx, userID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchUsersUserIDResponse(rsp)
+}
+
+func (c *ClientWithResponses) PatchUsersUserIDWithResponse(ctx context.Context, userID UserID, body PatchUsersUserIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchUsersUserIDResponse, error) {
+	rsp, err := c.PatchUsersUserID(ctx, userID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchUsersUserIDResponse(rsp)
+}
+
+// PutUsersUserIDWithBodyWithResponse request with arbitrary body returning *PutUsersUserIDResponse
+func (c *ClientWithResponses) PutUsersUserIDWithBodyWithResponse(ctx context.Context, userID UserID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutUsersUserIDResponse, error) {
+	rsp, err := c.PutUsersUserIDWithBody(ctx, userID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutUsersUserIDResponse(rsp)
+}
+
+func (c *ClientWithResponses) PutUsersUserIDWithResponse(ctx context.Context, userID UserID, body PutUsersUserIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PutUsersUserIDResponse, error) {
+	rsp, err := c.PutUsersUserID(ctx, userID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutUsersUserIDResponse(rsp)
+}
+
+// GetUsersWithResponse request returning *GetUsersResponse
+func (c *ClientWithResponses) GetUsersWithResponse(ctx context.Context, params *GetUsersParams, reqEditors ...RequestEditorFn) (*GetUsersResponse, error) {
+	rsp, err := c.GetUsers(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetUsersResponse(rsp)
+}
+
+// PostUserWithBodyWithResponse request with arbitrary body returning *PostUserResponse
+func (c *ClientWithResponses) PostUserWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostUserResponse, error) {
+	rsp, err := c.PostUserWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostUserResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostUserWithResponse(ctx context.Context, body PostUserJSONRequestBody, reqEditors ...RequestEditorFn) (*PostUserResponse, error) {
+	rsp, err := c.PostUser(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostUserResponse(rsp)
 }
 
 // ParseGetAssetScanEstimationsResponse parses an HTTP response from a GetAssetScanEstimationsWithResponse call
@@ -7146,39 +7543,6 @@ func ParsePutAssetsAssetIDResponse(rsp *http.Response) (*PutAssetsAssetIDRespons
 	return response, nil
 }
 
-// ParseAuthRedirectResponse parses an HTTP response from a AuthRedirectWithResponse call
-func ParseAuthRedirectResponse(rsp *http.Response) (*AuthRedirectResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &AuthRedirectResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest json.RawMessage
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest UnknownError
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
 // ParseGetFindingsResponse parses an HTTP response from a GetFindingsWithResponse call
 func ParseGetFindingsResponse(rsp *http.Response) (*GetFindingsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -7453,6 +7817,13 @@ func ParseGetCurrentUserResponse(rsp *http.Response) (*GetCurrentUserResponse, e
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest UnknownError
@@ -8606,6 +8977,13 @@ func ParsePutUsersUserIDResponse(rsp *http.Response) (*PutUsersUserIDResponse, e
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest User
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ApiResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -8694,7 +9072,7 @@ func ParsePostUserResponse(rsp *http.Response) (*PostUserResponse, error) {
 		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
-		var dest UserExists
+		var dest ApiResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

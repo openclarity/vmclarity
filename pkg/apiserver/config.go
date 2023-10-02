@@ -18,6 +18,7 @@ package apiserver
 import (
 	"encoding/json"
 	"fmt"
+
 	databaseTypes "github.com/openclarity/vmclarity/pkg/apiserver/database/types"
 
 	log "github.com/sirupsen/logrus"
@@ -47,15 +48,13 @@ const (
 )
 
 type Config struct {
-	// Backend
 	BackendRestHost    string `json:"backend-rest-host,omitempty"`
 	BackendRestPort    int    `json:"backend-rest-port,omitempty"`
 	HealthCheckAddress string `json:"health-check-address,omitempty"`
 
-	// Orchestrator
 	DisableOrchestrator bool `json:"disable_orchestrator"`
 
-	// Database config
+	// database config
 	DatabaseDriver   string `json:"database-driver,omitempty"`
 	DBName           string `json:"db-name,omitempty"`
 	DBUser           string `json:"db-user,omitempty"`
@@ -64,9 +63,9 @@ type Config struct {
 	DBPort           string `json:"db-port,omitempty"`
 	EnableDBInfoLogs bool   `json:"enable-db-info-logs"`
 	EnableFakeData   bool   `json:"enable-fake-data"`
-	LocalDBPath      string `json:"local-db-path,omitempty"`
 
-	LogLevel log.Level `json:"log-level,omitempty"`
+	LocalDBPath string    `json:"local-db-path,omitempty"`
+	LogLevel    log.Level `json:"log-level,omitempty"`
 }
 
 func setConfigDefaults() {
@@ -83,14 +82,12 @@ func LoadConfig() (*Config, error) {
 
 	config := &Config{}
 
-	// Backend
 	config.BackendRestHost = viper.GetString(BackendRestHost)
 	config.BackendRestPort = viper.GetInt(BackendRestPort)
 	config.HealthCheckAddress = viper.GetString(HealthCheckAddress)
 
 	config.DisableOrchestrator = viper.GetBool(DisableOrchestrator)
 
-	// Database
 	config.DatabaseDriver = viper.GetString(DatabaseDriver)
 	config.DBPassword = viper.GetString(DBPasswordEnvVar)
 	config.DBUser = viper.GetString(DBUserEnvVar)
@@ -99,9 +96,9 @@ func LoadConfig() (*Config, error) {
 	config.DBName = viper.GetString(DBNameEnvVar)
 	config.EnableDBInfoLogs = viper.GetBool(EnableDBInfoLogs)
 	config.EnableFakeData = viper.GetBool(FakeDataEnvVar)
+
 	config.LocalDBPath = viper.GetString(LocalDBPath)
 
-	// Common
 	logLevel, err := log.ParseLevel(viper.GetString(LogLevel))
 	if err != nil {
 		logLevel = log.WarnLevel

@@ -17,10 +17,17 @@ package types
 
 import (
 	"context"
-	"github.com/openclarity/vmclarity/api/models"
-	"github.com/zitadel/oidc/pkg/oidc"
+	"fmt"
 	"net/http"
-	"time"
+
+	"github.com/openclarity/vmclarity/api/models"
+
+	"github.com/zitadel/oidc/pkg/oidc"
+)
+
+var (
+	ErrNotFound      = fmt.Errorf("not found")
+	ErrAlreadyExists = fmt.Errorf("already exists")
 )
 
 // UserInfo defines an authenticated (OIDC) user.
@@ -55,6 +62,6 @@ type AuthStore interface {
 	DeleteUser(userID models.UserID) error
 
 	GetUserAuth(userID models.UserID) (models.UserAuths, error)
-	CreateUserAuth(userID models.UserID, authType models.AuthType, expiryDate *time.Time) (models.UserCred, error)
+	CreateUserAuth(userID models.UserID, credType models.CredentialType, credExpiry *models.CredentialExpiry) (models.UserCred, error)
 	RevokeUserAuth(userID models.UserID, userAuth models.UserAuth) error
 }
