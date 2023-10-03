@@ -188,7 +188,7 @@ lint-cfn:
 	cfn-lint installation/aws/VmClarity.cfn
 
 .PHONY: lint
-lint: lint-go lint-cfn lint-ci ## Run linters
+lint: lint-go lint-cfn ## Run linters
 
 .PHONY: $(FIXGOMODULES)
 $(FIXGOMODULES):
@@ -258,6 +258,3 @@ bin/actionlint-$(ACTIONLINT_VERSION): | $(BIN_DIR)
 .PHONY: actionlint-lint
 actionlint-lint: bin/actionlint
 	@$(ACTIONLINT_BIN) -color
-
-.PHONY: lint-ci
-lint-ci: actionlint-lint

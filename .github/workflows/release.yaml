@@ -32,9 +32,14 @@ jobs:
       - name: Setup Cloud Formation Linter with Latest Version
         uses: scottbrenner/cfn-lint-action@v2
 
+      - name: Run actionlint
+        run: |
+          echo "::add-matcher::${GITHUB_ACTION_PATH}/github/actionlint-matcher.json"
+          make actionlint-lint
+          echo "::remove-matcher owner=actionlint::"
+
       - name: Run verification
         run: |
-          echo "::add-matcher::.github/actionlint-matcher.json"
           make check
 
   build_and_push:
