@@ -34,7 +34,7 @@ jobs:
 
       - name: Run actionlint
         run: |
-          echo "::add-matcher::${GITHUB_ACTION_PATH}/github/actionlint-matcher.json"
+          echo "::add-matcher::.github/actionlint-matcher.json"
           make actionlint-lint
           echo "::remove-matcher owner=actionlint::"
 
