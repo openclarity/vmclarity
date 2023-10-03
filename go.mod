@@ -38,7 +38,7 @@ require (
 	github.com/openclarity/kubeclarity/cli v0.0.0-00010101000000-000000000000
 	github.com/openclarity/kubeclarity/shared v0.0.0
 	github.com/openclarity/vmclarity/api v0.0.0
-	github.com/openclarity/yara-rule-server v0.1.1-0.20231002161836-1c3f65a235e4
+	github.com/openclarity/yara-rule-server v0.1.1-0.20231003081737-acb3afa89a18
 	github.com/parnurzeal/gorequest v0.2.16
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0

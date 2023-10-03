@@ -1620,6 +1620,8 @@ github.com/openclarity/kubeclarity/shared v0.0.0-20230919093336-30e3c0ea31f4 h1:
 github.com/openclarity/kubeclarity/shared v0.0.0-20230919093336-30e3c0ea31f4/go.mod h1:JYu6NKnOy7zsc0zMGIVJ3SMRr1jBAvrEdQ28/pjJYww=
 github.com/openclarity/yara-rule-server v0.1.1-0.20231002161836-1c3f65a235e4 h1:YlU9IyEjiDJkfOZB7TX/P6ZSJ3iG8e09p5fX3oQJq7g=
 github.com/openclarity/yara-rule-server v0.1.1-0.20231002161836-1c3f65a235e4/go.mod h1:Alaeavi6F8+FiozkbbyhkZzMwF4Y3zXV8Z7eJ5Ae8SY=
+github.com/openclarity/yara-rule-server v0.1.1-0.20231003081737-acb3afa89a18 h1:6QLamnu2eActO71OydRQu+MEp9SEeHzgrZBa7EXYMnY=
+github.com/openclarity/yara-rule-server v0.1.1-0.20231003081737-acb3afa89a18/go.mod h1:Alaeavi6F8+FiozkbbyhkZzMwF4Y3zXV8Z7eJ5Ae8SY=
 github.com/opencontainers/go-digest v0.0.0-20170106003457-a6d0ee40d420/go.mod h1:cMLVZDEM3+U2I4VmLI6N8jQYUd2OVphdqWwCJHrFt2s=
 github.com/opencontainers/go-digest v0.0.0-20180430190053-c9281466c8b2/go.mod h1:cMLVZDEM3+U2I4VmLI6N8jQYUd2OVphdqWwCJHrFt2s=
 github.com/opencontainers/go-digest v1.0.0-rc1/go.mod h1:cMLVZDEM3+U2I4VmLI6N8jQYUd2OVphdqWwCJHrFt2s=
