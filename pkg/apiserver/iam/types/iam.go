@@ -13,16 +13,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// TODO: Implement via https://auth0.com/docs/quickstart/webapp/golang/interactive
+
 package types
 
 import (
 	"context"
 	"fmt"
+	"github.com/openclarity/vmclarity/api/models"
 	"net/http"
 
-	"github.com/openclarity/vmclarity/api/models"
-
-	"github.com/zitadel/oidc/pkg/oidc"
+	"github.com/coreos/go-oidc/v3/oidc"
+	"golang.org/x/oauth2"
 )
 
 var (
@@ -33,7 +35,7 @@ var (
 // UserInfo defines an authenticated (OIDC) user.
 type UserInfo struct {
 	oidc.UserInfo
-
+	oidc.Provider
 	// Data to indicate auth source
 	FromGenericOIDC bool
 	FromZitadelOIDC bool
@@ -41,6 +43,13 @@ type UserInfo struct {
 
 // Authenticator defines (OIDC) authentication service.
 type Authenticator interface {
+	// AuthCodeURL returns a URL to OAuth 2.0 provider's consent page that asks for
+	// permissions for the required scopes explicitly.
+	AuthCodeURL(state string, opts ...oauth2.AuthCodeOption) string
+	// Exchange converts an authorization code into a token.
+	Exchange(ctx context.Context, code string, opts ...oauth2.AuthCodeOption) (*oauth2.Token, error)
+	// Verify verifies that an *oauth2.Token is a valid *oidc.IDToken.
+	Verify(ctx context.Context, token *oauth2.Token) (*oidc.IDToken, error)
 	// Introspect fetches UserInfo data from OIDC IDP using introspect API. Consider caching.
 	Introspect(ctx context.Context, req *http.Request) (*UserInfo, error)
 }

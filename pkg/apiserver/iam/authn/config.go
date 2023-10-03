@@ -18,21 +18,19 @@ package authn
 import "github.com/spf13/viper"
 
 const (
-	oidcIssuerEnvVar        = "AUTH_OIDC_ISSUER"
-	oidcClientIDEnvVar      = "AUTH_OIDC_CLIENT_ID"
-	oidcClientSecretEnvVar  = "AUTH_OIDC_CLIENT_SECRET"  // #nosec G101
-	oidcTokenURLEnvVar      = "AUTH_OIDC_TOKEN_URL"      // #nosec G101
-	oidcIntrospectURLEnvVar = "AUTH_OIDC_INTROSPECT_URL" // #nosec G101
-	oidcUseZitadel          = "AUTH_USE_ZITADEL"
+	oidcIssuerEnvVar       = "AUTH_OIDC_ISSUER"
+	oidcClientIDEnvVar     = "AUTH_OIDC_CLIENT_ID"
+	oidcClientSecretEnvVar = "AUTH_OIDC_CLIENT_SECRET" // #nosec G101
+	oidcRedirectURLEnvVar  = "AUTH_OIDC_REDIRECT_URL"
+	oidcUseZitadel         = "AUTH_USE_ZITADEL"
 )
 
 type Config struct {
-	Issuer        string `json:"issuer,omitempty"`
-	ClientID      string `json:"client-id,omitempty"`
-	ClientSecret  string `json:"client-secret,omitempty"`
-	TokenURL      string `json:"token-url,omitempty"`
-	IntrospectURL string `json:"introspect-url,omitempty"`
-	UseZitadel    bool   `json:"use-zitadel,omitempty"`
+	Issuer       string `json:"issuer,omitempty"`
+	ClientID     string `json:"client-id,omitempty"`
+	ClientSecret string `json:"client-secret,omitempty"`
+	RedirectURL  string `json:"redirect-url,omitempty"`
+	UseZitadel   bool   `json:"use-zitadel,omitempty"`
 }
 
 func LoadConfig() Config {
@@ -40,11 +38,10 @@ func LoadConfig() Config {
 	v.AutomaticEnv()
 
 	return Config{
-		Issuer:        v.GetString(oidcIssuerEnvVar),
-		ClientID:      v.GetString(oidcClientIDEnvVar),
-		ClientSecret:  v.GetString(oidcClientSecretEnvVar),
-		TokenURL:      v.GetString(oidcTokenURLEnvVar),
-		IntrospectURL: v.GetString(oidcIntrospectURLEnvVar),
-		UseZitadel:    v.GetBool(oidcUseZitadel),
+		Issuer:       v.GetString(oidcIssuerEnvVar),
+		ClientID:     v.GetString(oidcClientIDEnvVar),
+		ClientSecret: v.GetString(oidcClientSecretEnvVar),
+		RedirectURL:  v.GetString(oidcRedirectURLEnvVar),
+		UseZitadel:   v.GetBool(oidcUseZitadel),
 	}
 }

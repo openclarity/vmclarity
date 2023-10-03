@@ -18,6 +18,8 @@ package rest
 import (
 	"context"
 	"fmt"
+	"github.com/gorilla/sessions"
+	"github.com/labstack/echo-contrib/session"
 	"time"
 
 	"github.com/deepmap/oapi-codegen/pkg/middleware"
@@ -46,6 +48,7 @@ const (
 type ServerImpl struct {
 	dbHandler databaseTypes.Database
 	authStore iamTypes.AuthStore
+	authn     iamTypes.Authenticator
 }
 
 type Server struct {
@@ -72,6 +75,9 @@ func createEchoServer(dbHandler databaseTypes.Database) (*echo.Echo, error) {
 
 	// Create server
 	e := echo.New()
+
+	// Use store
+	e.Use(session.Middleware(sessions.NewCookieStore([]byte("secret"))))
 
 	// Log all requests
 	e.Use(echomiddleware.Logger())
@@ -105,6 +111,7 @@ func createEchoServer(dbHandler databaseTypes.Database) (*echo.Echo, error) {
 	server.RegisterHandlers(e, &ServerImpl{
 		dbHandler: dbHandler,
 		authStore: authStore,
+		authn:     authenticator,
 	})
 
 	return e, nil

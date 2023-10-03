@@ -1757,14 +1757,14 @@ type PutScansScanIDJSONRequestBody = Scan
 // DeleteUserAuthUserIDJSONRequestBody defines body for DeleteUserAuthUserID for application/json ContentType.
 type DeleteUserAuthUserIDJSONRequestBody = UserAuth
 
+// PostUserJSONRequestBody defines body for PostUser for application/json ContentType.
+type PostUserJSONRequestBody = User
+
 // PatchUsersUserIDJSONRequestBody defines body for PatchUsersUserID for application/json ContentType.
 type PatchUsersUserIDJSONRequestBody = User
 
 // PutUsersUserIDJSONRequestBody defines body for PutUsersUserID for application/json ContentType.
 type PutUsersUserIDJSONRequestBody = User
-
-// PostUserJSONRequestBody defines body for PostUser for application/json ContentType.
-type PostUserJSONRequestBody = User
 
 // AsVMInfo returns the union data inside the AssetType as a VMInfo
 func (t AssetType) AsVMInfo() (VMInfo, error) {

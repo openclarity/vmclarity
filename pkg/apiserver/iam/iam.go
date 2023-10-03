@@ -17,12 +17,11 @@ package iam
 
 import (
 	"context"
-	"fmt"
-	"strings"
-
 	"github.com/deepmap/oapi-codegen/pkg/middleware"
 	"github.com/getkin/kin-openapi/openapi3filter"
+	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
+	"net/http"
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam/types"
@@ -59,33 +58,32 @@ func NewMiddleware(authn types.Authenticator, authz types.Authorizer, store type
 	return func(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
 		// Remove user from request context
 		eCtx := middleware.GetEchoContext(ctx)
-		setUserToContext(eCtx, nil)
+		//setUserToContext(eCtx, nil)
 
-		// Authenticate
-		userInfo, err := authn.Introspect(ctx, input.RequestValidationInput.Request)
-		if err != nil {
-			return fmt.Errorf("failed to authenticate request: %w", err)
+		sess, _ := session.Get("authenticate-sessions", eCtx)
+		if auth, ok := sess.Values["authenticated"].(bool); !ok || !auth {
+			return echo.NewHTTPError(http.StatusUnauthorized, "Please provide valid credentials")
 		}
 
-		// Add auth user to request context
-		user, err := store.GetUserFromInfo(userInfo)
-		if err != nil {
-			return fmt.Errorf("failed to get current user: %w", err)
-		}
-		setUserToContext(eCtx, &user)
-
-		// TODO: Check RBAC
-		for _, ruleDelim := range input.Scopes {
-			// For example: "api:update:asset"
-			ruleSlice := strings.SplitN(ruleDelim, ":", 3)
-			ok, err := authz.CanPerform(user, ruleSlice[0], ruleSlice[1], ruleSlice[2])
-			if err != nil {
-				return fmt.Errorf("failed to perform authz check: %w", err)
-			}
-			if !ok {
-				return fmt.Errorf("does not have permissions")
-			}
-		}
+		//// Add auth user to request context
+		//user, err := store.GetUserFromInfo(userInfo)
+		//if err != nil {
+		//	return fmt.Errorf("failed to get current user: %w", err)
+		//}
+		//setUserToContext(eCtx, &user)
+		//
+		//// TODO: Check RBAC
+		//for _, ruleDelim := range input.Scopes {
+		//	// For example: "api:update:asset"
+		//	ruleSlice := strings.SplitN(ruleDelim, ":", 3)
+		//	ok, err := authz.CanPerform(user, ruleSlice[0], ruleSlice[1], ruleSlice[2])
+		//	if err != nil {
+		//		return fmt.Errorf("failed to perform authz check: %w", err)
+		//	}
+		//	if !ok {
+		//		return fmt.Errorf("does not have permissions")
+		//	}
+		//}
 
 		return nil
 	}

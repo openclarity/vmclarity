@@ -1,25 +1,104 @@
 package rest
 
 import (
-	"errors"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/hex"
 	"fmt"
-	"net/http"
-
+	"github.com/gorilla/sessions"
+	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
-
-	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/pkg/apiserver/common"
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam"
-	"github.com/openclarity/vmclarity/pkg/apiserver/iam/types"
+	"github.com/openclarity/vmclarity/pkg/apiserver/iam/authn"
+	"golang.org/x/oauth2"
+	"io"
+	"net/http"
+	"net/url"
 )
 
-// TODO: done.
-func (s *ServerImpl) GetUsersUserID(ctx echo.Context, userID models.UserID) error {
-	result, err := s.authStore.GetUser(userID)
-	if err != nil {
-		return handleStoreErr(ctx, err, "get user")
+func (s *ServerImpl) Login(ctx echo.Context) error {
+	codeVerifier, verifierErr := randomBytesInHex(32) // 64 character string here
+	if verifierErr != nil {
+		return ctx.String(http.StatusInternalServerError, verifierErr.Error())
 	}
-	return sendResponse(ctx, http.StatusOK, result)
+	sha2 := sha256.New()
+	_, _ = io.WriteString(sha2, codeVerifier)
+	codeChallenge := base64.RawURLEncoding.EncodeToString(sha2.Sum(nil))
+
+	state, stateErr := randomBytesInHex(24)
+	if stateErr != nil {
+		return ctx.String(http.StatusInternalServerError, stateErr.Error())
+	}
+
+	redirectUrl := s.authn.AuthCodeURL(
+		state,
+		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
+		oauth2.SetAuthURLParam("code_challenge", codeChallenge),
+	)
+	return ctx.Redirect(http.StatusTemporaryRedirect, redirectUrl)
+}
+
+func (s *ServerImpl) Callback(ctx echo.Context) error {
+	sess, _ := session.Get("authenticate-sessions", ctx)
+	sess.Options = &sessions.Options{
+		Path:     "/secret",
+		MaxAge:   5 * 60, // 5min
+		HttpOnly: true,
+	}
+
+	// Exchange an authorization code for a token.
+	code := ctx.QueryParam("code")
+	token, err := s.authn.Exchange(ctx.Request().Context(),
+		code,
+		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
+		oauth2.SetAuthURLParam("code_challenge", codeChallenge),
+	)
+	if err != nil {
+		return ctx.String(http.StatusUnauthorized, "Failed to exchange an authorization code for a token.")
+	}
+
+	_, err = s.authn.Verify(ctx.Request().Context(), token)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, "Failed to verify ID Token.")
+	}
+
+	// Redirect to logged in page.
+	// Set user as authenticated
+	sess.Values["authenticated"] = true
+	err = sess.Save(ctx.Request(), ctx.Response())
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, "Failed to save session.")
+	}
+
+	return ctx.Redirect(http.StatusTemporaryRedirect, "/user")
+}
+
+func (s *ServerImpl) Logout(ctx echo.Context) error {
+	logoutUrl, err := url.Parse(authn.LoadConfig().Issuer + "/v2/logout")
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	scheme := "http"
+	if ctx.Request().TLS != nil {
+		scheme = "https"
+	}
+
+	returnTo, err := url.Parse(scheme + "://" + ctx.Request().Host)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	parameters := url.Values{}
+	parameters.Add("returnTo", returnTo.String())
+	logoutUrl.RawQuery = parameters.Encode()
+
+	// Revoke users authentication
+	sess, _ := session.Get("authenticate-sessions", ctx)
+	sess.Values["authenticated"] = false
+
+	return ctx.Redirect(http.StatusTemporaryRedirect, logoutUrl.String())
 }
 
 // TODO: done.
@@ -31,118 +110,12 @@ func (s *ServerImpl) GetCurrentUser(ctx echo.Context) error {
 	return sendResponse(ctx, http.StatusOK, user)
 }
 
-// TODO: done.
-func (s *ServerImpl) DeleteUsersUserID(ctx echo.Context, userID models.UserID) error {
-	err := s.authStore.DeleteUser(userID)
+func randomBytesInHex(count int) (string, error) {
+	buf := make([]byte, count)
+	_, err := io.ReadFull(rand.Reader, buf)
 	if err != nil {
-		return handleStoreErr(ctx, err, "delete user")
-	}
-	return sendResponse(ctx, http.StatusOK, "deleted successfully")
-}
-
-// TODO: done.
-func (s *ServerImpl) PatchUsersUserID(ctx echo.Context, userID models.UserID) error {
-	var user models.User
-	err := ctx.Bind(&user)
-	if err != nil {
-		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
+		return "", fmt.Errorf("Could not generate %d random bytes: %v", count, err)
 	}
 
-	result, err := s.authStore.UpdateUser(user)
-	if err != nil {
-		return handleStoreErr(ctx, err, "update user")
-	}
-	return sendResponse(ctx, http.StatusOK, result)
-}
-
-// TODO: done.
-func (s *ServerImpl) PutUsersUserID(ctx echo.Context, userID models.UserID) error {
-	updateErr := s.PatchUsersUserID(ctx, userID)
-	if updateErr == nil {
-		// Successfully updated
-		return nil
-	}
-	if errors.Is(updateErr, types.ErrNotFound) {
-		// Resource is not found, create instead
-		return s.PostUser(ctx)
-	}
-	return updateErr
-}
-
-// TODO: done.
-func (s *ServerImpl) DeleteUserAuthUserID(ctx echo.Context, userID models.UserID) error {
-	var userAuth models.UserAuth
-	err := ctx.Bind(&userAuth)
-	if err != nil {
-		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
-	}
-
-	err = s.authStore.RevokeUserAuth(userID, userAuth)
-	if err != nil {
-		return handleStoreErr(ctx, err, "revoke user auth")
-	}
-	return sendResponse(ctx, http.StatusOK, "successfully revoked")
-}
-
-// TODO: done.
-func (s *ServerImpl) GetUserAuthUserID(ctx echo.Context, userID models.UserID) error {
-	result, err := s.authStore.GetUserAuth(userID)
-	if err != nil {
-		return handleStoreErr(ctx, err, "get user auth")
-	}
-	return sendResponse(ctx, http.StatusOK, result)
-}
-
-// TODO: done.
-func (s *ServerImpl) PostUserAuthUserID(ctx echo.Context, userID models.UserID, params models.PostUserAuthUserIDParams) error {
-	result, err := s.authStore.CreateUserAuth(userID, models.CredentialType(params.CredentialType), params.CredentialExpiry)
-	if err != nil {
-		return handleStoreErr(ctx, err, "create user auth")
-	}
-	return sendResponse(ctx, http.StatusCreated, result)
-}
-
-// TODO: done.
-func (s *ServerImpl) GetUsers(ctx echo.Context, params models.GetUsersParams) error {
-	result, err := s.authStore.GetUsers(params)
-	if err != nil {
-		return handleStoreErr(ctx, err, "get users")
-	}
-	return sendResponse(ctx, http.StatusOK, result)
-}
-
-// TODO: done.
-func (s *ServerImpl) PostUser(ctx echo.Context) error {
-	// Get data from request
-	var user models.User
-	err := ctx.Bind(&user)
-	if err != nil {
-		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
-	}
-
-	// Create user
-	result, err := s.authStore.CreateUser(user)
-	if err != nil {
-		return handleStoreErr(ctx, err, "create user")
-	}
-	return sendResponse(ctx, http.StatusCreated, result)
-}
-
-func handleStoreErr(ctx echo.Context, err error, opMsg string) error {
-	if err == nil {
-		return nil
-	}
-	if errors.Is(err, types.ErrNotFound) {
-		return sendResponse(ctx, http.StatusNotFound, err.Error())
-	}
-	if errors.Is(err, types.ErrAlreadyExists) {
-		return sendResponse(ctx, http.StatusConflict, err.Error())
-	}
-	if badRequestErr := (*common.BadRequestError)(nil); errors.As(err, &badRequestErr) {
-		return sendResponse(ctx, http.StatusBadRequest, badRequestErr.Reason)
-	}
-	if conflictErr := (*common.ConflictError)(nil); errors.As(err, &conflictErr) {
-		return sendResponse(ctx, http.StatusConflict, conflictErr.Reason)
-	}
-	return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to %s: %v", opMsg, err))
+	return hex.EncodeToString(buf), nil
 }

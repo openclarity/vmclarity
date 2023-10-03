@@ -70,7 +70,7 @@ func New() (types.AuthStore, error) {
 func (z *zitadelStore) GetUserFromInfo(info *types.UserInfo) (models.User, error) {
 	// For Zitadel OIDC, token subject is the user ID
 	if info.FromZitadelOIDC {
-		return z.GetUser(info.GetSubject())
+		return z.GetUser(info.Subject)
 	}
 
 	// For Generic OIDC, user must be synced to DB first

@@ -18,17 +18,20 @@ package authn
 import (
 	"context"
 	"fmt"
+	"golang.org/x/oauth2"
 	"net/http"
 	"strings"
 
 	"github.com/openclarity/vmclarity/pkg/apiserver/iam/types"
 
-	"github.com/zitadel/oidc/pkg/oidc"
+	"github.com/coreos/go-oidc/v3/oidc"
 
 	"github.com/zitadel/oidc/pkg/client/rs"
 )
 
 type oidcAuth struct {
+	config         *oauth2.Config
+	provider       *oidc.Provider
 	resourceServer rs.ResourceServer
 	isZitadel      bool
 }
@@ -38,23 +41,50 @@ type oidcAuth struct {
 func New() (types.Authenticator, error) {
 	config := LoadConfig()
 
-	// Add custom OIDC options
-	var options []rs.Option
-	if config.TokenURL != "" && config.IntrospectURL != "" {
-		options = append(options, rs.WithStaticEndpoints(config.TokenURL, config.IntrospectURL))
-	}
-
 	// Create resource server which provides introspection functionality
-	resourceServer, err := rs.NewResourceServerClientCredentials(config.Issuer, config.ClientID, config.ClientSecret, options...)
+	resourceServer, err := rs.NewResourceServerClientCredentials(config.Issuer, config.ClientID, config.ClientSecret)
 	if err != nil {
 		return nil, fmt.Errorf("could not create resource server for Authenticator=OIDC: %w", err)
 	}
 
+	// Create provider
+	provider, err := oidc.NewProvider(context.Background(), config.Issuer)
+	if err != nil {
+		return nil, err
+	}
+
 	// Return OIDC Authenticator
 	return &oidcAuth{
+		config: &oauth2.Config{
+			ClientID:     config.ClientID,
+			ClientSecret: config.ClientSecret,
+			Endpoint:     provider.Endpoint(),
+			RedirectURL:  config.RedirectURL,
+			Scopes:       []string{oidc.ScopeOpenID, "profile"},
+		},
+		provider:       provider,
 		resourceServer: resourceServer,
 		isZitadel:      config.UseZitadel,
 	}, nil
+}
+
+func (auth *oidcAuth) AuthCodeURL(state string, opts ...oauth2.AuthCodeOption) string {
+	return auth.config.AuthCodeURL(state, opts...)
+}
+
+func (auth *oidcAuth) Exchange(ctx context.Context, code string, opts ...oauth2.AuthCodeOption) (*oauth2.Token, error) {
+	return auth.config.Exchange(ctx, code, opts...)
+}
+
+func (auth *oidcAuth) Verify(ctx context.Context, token *oauth2.Token) (*oidc.IDToken, error) {
+	rawIDToken, ok := token.Extra("id_token").(string)
+	if !ok {
+		return nil, fmt.Errorf("no id_token field in oauth2 token")
+	}
+
+	return auth.provider.Verifier(&oidc.Config{
+		ClientID: auth.config.ClientID,
+	}).Verify(ctx, rawIDToken)
 }
 
 func (auth *oidcAuth) Introspect(ctx context.Context, req *http.Request) (*types.UserInfo, error) {
@@ -63,7 +93,6 @@ func (auth *oidcAuth) Introspect(ctx context.Context, req *http.Request) (*types
 	if err != nil {
 		return nil, err
 	}
-
 	// Verify token against introspection endpoint
 	jwtToken, err := rs.Introspect(ctx, auth.resourceServer, token)
 	if err != nil {
@@ -72,16 +101,17 @@ func (auth *oidcAuth) Introspect(ctx context.Context, req *http.Request) (*types
 	if !jwtToken.IsActive() {
 		return nil, fmt.Errorf("token expired")
 	}
-
 	// Return authenticated user info
 	return &types.UserInfo{
-		UserInfo:        jwtToken,
+		UserInfo: oidc.UserInfo{
+			Subject:       jwtToken.GetSubject(),
+			Profile:       jwtToken.GetProfile(),
+			Email:         jwtToken.GetEmail(),
+			EmailVerified: jwtToken.IsEmailVerified(),
+		},
 		FromGenericOIDC: !auth.isZitadel,
 		FromZitadelOIDC: auth.isZitadel,
 	}, nil
-}
-
-func (auth *oidcAuth) ForwardLogin() {
 }
 
 func extractToken(r *http.Request) (string, error) {
@@ -90,9 +120,9 @@ func extractToken(r *http.Request) (string, error) {
 		// http.StatusUnauthorized
 		return "", fmt.Errorf("auth header missing")
 	}
-	if !strings.HasPrefix(auth, oidc.PrefixBearer) {
+	if !strings.HasPrefix(auth, "Bearer ") {
 		// http.StatusUnauthorized
 		return "", fmt.Errorf("invalid auth header")
 	}
-	return strings.TrimPrefix(auth, oidc.PrefixBearer), nil
+	return strings.TrimPrefix(auth, "Bearer "), nil
 }

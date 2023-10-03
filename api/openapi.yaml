@@ -1462,29 +1462,7 @@ paths:
         - AuthToken:
             - api:create:user
 
-  /me:
-    get:
-      summary: Get personal user data.
-      operationId: GetCurrentUser
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        401:
-          description: User not authenticated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-        default:
-          $ref: '#/components/responses/UnknownError'
-      security:
-        - AuthToken: []
-
-  /user/{userID}:
+  /users/{userID}:
     get:
       summary: Get the details for a user.
       operationId: GetUsersUserID
@@ -1697,6 +1675,73 @@ paths:
       security:
         - AuthToken:
             - api:delete:userAuth
+
+  /profile:
+    get:
+      summary: Get personal user data.
+      operationId: GetCurrentUser
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        401:
+          description: User not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken: []
+
+  /login:
+    get:
+      summary: Login user.
+      operationId: Login
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+
+  /callback:
+    get:
+      summary: Auth callback.
+      operationId: Callback
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+
+  /logout:
+    get:
+      summary: Logout user.
+      operationId: Logout
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      security:
+        - AuthToken: []
+
 
 components:
   schemas:
