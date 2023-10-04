@@ -24,6 +24,7 @@ import (
 type Provider interface {
 	// Kind returns models.CloudProvider
 	Kind() models.CloudProvider
+	Object() *models.Provider
 
 	Discoverer
 	Estimator

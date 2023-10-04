@@ -45,9 +45,10 @@ var mountPointPath = "/mnt/snapshot"
 type Client struct {
 	dockerClient *client.Client
 	config       *Config
+	provider     *models.Provider
 }
 
-func New(_ context.Context) (*Client, error) {
+func New(_ context.Context, provider *models.Provider) (*Client, error) {
 	config, err := NewConfig()
 	if err != nil {
 		return nil, fmt.Errorf("invalid configuration. Provider=%s: %w", models.Docker, err)
@@ -61,11 +62,16 @@ func New(_ context.Context) (*Client, error) {
 	return &Client{
 		dockerClient: dockerClient,
 		config:       config,
+		provider:     provider,
 	}, nil
 }
 
 func (c *Client) Kind() models.CloudProvider {
 	return models.Docker
+}
+
+func (c Client) Object() *models.Provider {
+	return c.provider
 }
 
 func (c *Client) Estimate(ctx context.Context, stats models.AssetScanStats, asset *models.Asset, assetScanTemplate *models.AssetScanTemplate) (*models.Estimation, error) {

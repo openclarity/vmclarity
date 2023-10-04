@@ -40,9 +40,10 @@ type Client struct {
 	regionsClient   *compute.RegionsClient
 
 	gcpConfig Config
+	provider  *models.Provider
 }
 
-func New(ctx context.Context) (*Client, error) {
+func New(ctx context.Context, provider *models.Provider) (*Client, error) {
 	config, err := NewConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load configuration: %w", err)
@@ -55,6 +56,7 @@ func New(ctx context.Context) (*Client, error) {
 
 	client := Client{
 		gcpConfig: config,
+		provider:  provider,
 	}
 
 	regionsClient, err := compute.NewRegionsRESTClient(ctx)
@@ -86,6 +88,10 @@ func New(ctx context.Context) (*Client, error) {
 
 func (c Client) Kind() models.CloudProvider {
 	return models.GCP
+}
+
+func (c Client) Object() *models.Provider {
+	return c.provider
 }
 
 func (c *Client) Estimate(ctx context.Context, stats models.AssetScanStats, asset *models.Asset, assetScanTemplate *models.AssetScanTemplate) (*models.Estimation, error) {

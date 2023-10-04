@@ -105,7 +105,7 @@ func New(ctx context.Context, config *Config) (*Orchestrator, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to post provider: %w", err)
 	}
-	p, err := NewProvider(ctx, *apiProvider)
+	p, err := NewProvider(ctx, apiProvider)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize provider. Provider=%s: %w", *apiProvider.DisplayName, err)
 	}
@@ -137,21 +137,21 @@ func (o *Orchestrator) Stop(ctx context.Context) {
 
 // nolint:wrapcheck
 // NewProvider returns an initialized provider.Provider based on the kind models.CloudProvider.
-func NewProvider(ctx context.Context, provider models.Provider) (provider.Provider, error) {
-	switch *provider.DisplayName {
+func NewProvider(ctx context.Context, p *models.Provider) (provider.Provider, error) {
+	switch *p.DisplayName {
 	case string(models.Azure):
-		return azure.New(ctx)
+		return azure.New(ctx, p)
 	case string(models.Docker):
-		return docker.New(ctx)
+		return docker.New(ctx, p)
 	case string(models.AWS):
-		return aws.New(ctx)
+		return aws.New(ctx, p)
 	case string(models.GCP):
-		return gcp.New(ctx)
+		return gcp.New(ctx, p)
 	case string(models.External):
-		return external.New(ctx)
+		return external.New(ctx, p)
 	case string(models.Kubernetes):
 		return kubernetes.New(ctx)
 	default:
-		return nil, fmt.Errorf("unsupported provider: %s", *provider.DisplayName)
+		return nil, fmt.Errorf("unsupported provider: %s", *p.DisplayName)
 	}
 }

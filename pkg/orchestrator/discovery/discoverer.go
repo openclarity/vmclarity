@@ -77,6 +77,7 @@ func (d *Discoverer) DiscoverAndCreateAssets(ctx context.Context) error {
 			AssetInfo: utils.PointerTo(assetType),
 			LastSeen:  &discoveryTime,
 			FirstSeen: &discoveryTime,
+			Providers: &[]models.ProviderRelationship{{Id: (*d.providerClient).Object().Id}},
 		}
 		_, err := d.backendClient.PostAsset(ctx, assetData)
 		if err == nil {
@@ -100,6 +101,10 @@ func (d *Discoverer) DiscoverAndCreateAssets(ctx context.Context) error {
 		// which matches the unique properties of this asset, in this
 		// case we'll patch the just AssetInfo and FirstSeen instead.
 		assetData.FirstSeen = nil
+		assetData.Providers = AppendProviderIfMissing(
+			conflictError.ConflictingAsset.Providers,
+			models.ProviderRelationship{Id: (*d.providerClient).Object().Id},
+		)
 		err = d.backendClient.PatchAsset(ctx, assetData, *conflictError.ConflictingAsset.Id)
 		if err != nil {
 			failedPatchAssets[*conflictError.ConflictingAsset.Id] = struct{}{}
@@ -146,4 +151,14 @@ func (d *Discoverer) DiscoverAndCreateAssets(ctx context.Context) error {
 	}
 
 	return errors.Join(errs...)
+}
+
+func AppendProviderIfMissing(oldProviders *[]models.ProviderRelationship, provider models.ProviderRelationship) *[]models.ProviderRelationship {
+	for _, p := range *oldProviders {
+		if p == provider {
+			return oldProviders
+		}
+	}
+	providers := append(*oldProviders, provider)
+	return &providers
 }

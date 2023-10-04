@@ -32,9 +32,10 @@ type Client struct {
 	providerClient provider_service.ProviderClient
 	config         *Config
 	conn           *grpc.ClientConn
+	provider       *models.Provider
 }
 
-func New(_ context.Context) (*Client, error) {
+func New(_ context.Context, provider *models.Provider) (*Client, error) {
 	config, err := NewConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load configuration: %w", err)
@@ -46,7 +47,8 @@ func New(_ context.Context) (*Client, error) {
 	}
 
 	client := Client{
-		config: config,
+		config:   config,
+		provider: provider,
 	}
 
 	var opts []grpc.DialOption
@@ -65,6 +67,10 @@ func New(_ context.Context) (*Client, error) {
 
 func (c Client) Kind() models.CloudProvider {
 	return models.External
+}
+
+func (c Client) Object() *models.Provider {
+	return c.provider
 }
 
 func (c *Client) Estimate(ctx context.Context, stats models.AssetScanStats, asset *models.Asset, assetScanTemplate *models.AssetScanTemplate) (*models.Estimation, error) {

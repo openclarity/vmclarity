@@ -41,9 +41,10 @@ type Client struct {
 	ec2Client     *ec2.Client
 	scanEstimator *scanestimation.ScanEstimator
 	config        *Config
+	provider      *models.Provider
 }
 
-func New(ctx context.Context) (*Client, error) {
+func New(ctx context.Context, provider *models.Provider) (*Client, error) {
 	config, err := NewConfig()
 	if err != nil {
 		return nil, fmt.Errorf("invalid configuration. Provider=AWS: %w", err)
@@ -54,7 +55,8 @@ func New(ctx context.Context) (*Client, error) {
 	}
 
 	awsClient := Client{
-		config: config,
+		config:   config,
+		provider: provider,
 	}
 
 	cfg, err := awsconfig.LoadDefaultConfig(ctx)
@@ -71,6 +73,10 @@ func New(ctx context.Context) (*Client, error) {
 
 func (c Client) Kind() models.CloudProvider {
 	return models.AWS
+}
+
+func (c Client) Object() *models.Provider {
+	return c.provider
 }
 
 func (c *Client) Estimate(ctx context.Context, assetScanStats models.AssetScanStats, asset *models.Asset, assetScanTemplate *models.AssetScanTemplate) (*models.Estimation, error) {
