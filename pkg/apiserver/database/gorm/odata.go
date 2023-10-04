@@ -491,7 +491,7 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 			"scansCount":   odatasql.FieldMeta{FieldType: odatasql.NumberFieldType},
 			"assetInfo": odatasql.FieldMeta{
 				FieldType:             odatasql.ComplexFieldType,
-				ComplexFieldSchemas:   []string{"VMInfo", "ContainerInfo", "ContainerImageInfo"},
+				ComplexFieldSchemas:   []string{"VMInfo", "DirInfo", "ContainerInfo", "ContainerImageInfo"},
 				DiscriminatorProperty: "objectType",
 			},
 			"summary": odatasql.FieldMeta{
