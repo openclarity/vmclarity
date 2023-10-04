@@ -101,9 +101,13 @@ func New(ctx context.Context, config *Config) (*Orchestrator, error) {
 	}
 
 	// TODO(paralta) Provider initialization needs to be removed from here once Providers are split from Orchestrator (Issue #643).
-	p, err := NewProvider(ctx, config.Provider)
+	apiProvider, err := backendClient.PostProvider(ctx, config.Provider)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize provider. Provider=%s: %w", *config.Provider.DisplayName, err)
+		return nil, fmt.Errorf("failed to post provider: %w", err)
+	}
+	p, err := NewProvider(ctx, *apiProvider)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize provider. Provider=%s: %w", *apiProvider.DisplayName, err)
 	}
 
 	return NewWithProvider(config, p, backendClient)
