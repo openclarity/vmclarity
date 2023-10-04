@@ -69,7 +69,7 @@ func Run(ctx context.Context, config *Config) error {
 // NewWithProvider returns an Orchestrator initialized using the p provider.Provider.
 // Use this method when Orchestrator needs to rely on custom provider.Provider implementation.
 // E.g. End-to-End testing.
-func NewWithProvider(config *Config, p provider.Provider, b *backendclient.BackendClient) (*Orchestrator, error) {
+func NewWithProvider(config *Config, p *provider.Provider, b *backendclient.BackendClient) (*Orchestrator, error) {
 	scanConfigWatcherConfig := config.ScanConfigWatcherConfig.WithBackendClient(b)
 	discoveryConfig := config.DiscoveryConfig.WithBackendClient(b).WithProviderClient(p)
 	scanWatcherConfig := config.ScanWatcherConfig.WithBackendClient(b).WithProviderClient(p)
@@ -110,7 +110,7 @@ func New(ctx context.Context, config *Config) (*Orchestrator, error) {
 		return nil, fmt.Errorf("failed to initialize provider. Provider=%s: %w", *apiProvider.DisplayName, err)
 	}
 
-	return NewWithProvider(config, p, backendClient)
+	return NewWithProvider(config, &p, backendClient)
 }
 
 // Start makes the Orchestrator to start all Controller(s).

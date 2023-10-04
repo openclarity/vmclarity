@@ -35,7 +35,7 @@ const (
 
 type Discoverer struct {
 	backendClient  *backendclient.BackendClient
-	providerClient provider.Provider
+	providerClient *provider.Provider
 }
 
 func New(config Config) *Discoverer {
@@ -68,7 +68,7 @@ func (d *Discoverer) Start(ctx context.Context) {
 func (d *Discoverer) DiscoverAndCreateAssets(ctx context.Context) error {
 	discoveryTime := time.Now()
 
-	discoverer := d.providerClient.DiscoverAssets(ctx)
+	discoverer := (*d.providerClient).DiscoverAssets(ctx)
 
 	errs := []error{}
 	failedPatchAssets := make(map[string]struct{})

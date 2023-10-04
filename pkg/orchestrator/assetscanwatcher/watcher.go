@@ -49,7 +49,7 @@ func New(c Config) *Watcher {
 
 type Watcher struct {
 	backend          *backendclient.BackendClient
-	provider         provider.Provider
+	provider         *provider.Provider
 	scannerConfig    ScannerConfig
 	pollPeriod       time.Duration
 	reconcileTimeout time.Duration
@@ -266,7 +266,7 @@ func (w *Watcher) reconcileScheduled(ctx context.Context, assetScan *models.Asse
 		return fmt.Errorf("failed to create ScanJobConfig for AssetScan. AssetScan=%s: %w", assetScanID, err)
 	}
 
-	err = w.provider.RunAssetScan(ctx, jobConfig)
+	err = (*w.provider).RunAssetScan(ctx, jobConfig)
 
 	var fatalError provider.FatalError
 	var retryableError provider.RetryableError
@@ -369,7 +369,7 @@ func (w *Watcher) cleanupResources(ctx context.Context, assetScan *models.AssetS
 			return fmt.Errorf("failed to create ScanJobConfig for AssetScan. AssetScanID=%s: %w", assetScanID, err)
 		}
 
-		err = w.provider.RemoveAssetScan(ctx, jobConfig)
+		err = (*w.provider).RemoveAssetScan(ctx, jobConfig)
 
 		var fatalError provider.FatalError
 		var retryableError provider.RetryableError

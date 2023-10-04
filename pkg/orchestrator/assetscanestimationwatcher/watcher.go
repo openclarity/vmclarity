@@ -47,7 +47,7 @@ func New(c Config) *Watcher {
 
 type Watcher struct {
 	backend          *backendclient.BackendClient
-	provider         provider.Provider
+	provider         *provider.Provider
 	pollPeriod       time.Duration
 	reconcileTimeout time.Duration
 
@@ -256,7 +256,7 @@ func (w *Watcher) reconcilePending(ctx context.Context, assetScanEstimation *mod
 	stats := w.getLatestAssetScanStats(ctx, asset)
 	startTime := time.Now()
 
-	estimation, err := w.provider.Estimate(ctx, stats, asset, assetScanEstimation.AssetScanTemplate)
+	estimation, err := (*w.provider).Estimate(ctx, stats, asset, assetScanEstimation.AssetScanTemplate)
 
 	endTime := time.Now()
 

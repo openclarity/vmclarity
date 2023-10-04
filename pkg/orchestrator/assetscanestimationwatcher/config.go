@@ -31,7 +31,7 @@ const (
 
 type Config struct {
 	Backend          *backendclient.BackendClient
-	Provider         provider.Provider
+	Provider         *provider.Provider
 	PollPeriod       time.Duration
 	ReconcileTimeout time.Duration
 }
@@ -41,7 +41,7 @@ func (c Config) WithBackendClient(b *backendclient.BackendClient) Config {
 	return c
 }
 
-func (c Config) WithProviderClient(p provider.Provider) Config {
+func (c Config) WithProviderClient(p *provider.Provider) Config {
 	c.Provider = p
 	return c
 }
