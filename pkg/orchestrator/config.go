@@ -32,6 +32,7 @@ import (
 	"github.com/openclarity/vmclarity/pkg/orchestrator/scanconfigwatcher"
 	"github.com/openclarity/vmclarity/pkg/orchestrator/scanestimationwatcher"
 	"github.com/openclarity/vmclarity/pkg/orchestrator/scanwatcher"
+	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
 const (
@@ -99,7 +100,7 @@ const (
 )
 
 type Config struct {
-	ProviderKind models.CloudProvider
+	Provider models.Provider
 
 	APIServerHost      string `json:"apiserver-host,omitempty"`
 	APIServerPort      int    `json:"apiserver-port,omitempty"`
@@ -161,6 +162,8 @@ func setConfigDefaults() {
 func LoadConfig() (*Config, error) {
 	setConfigDefaults()
 
+	// TODO(paralta) Needs to change to loop once multiple Providers are supported.
+	// Currently a name string is provided in the config, in the future the Orchestrator will receive a list of Provider IDs.
 	var providerKind models.CloudProvider
 	switch strings.ToLower(viper.GetString(ProviderKind)) {
 	case strings.ToLower(string(models.Azure)):
@@ -177,6 +180,14 @@ func LoadConfig() (*Config, error) {
 		fallthrough
 	default:
 		providerKind = models.AWS
+	}
+	provider := models.Provider{
+		DisplayName: utils.PointerTo(string(providerKind)),
+		Status: &models.ProviderStatus{
+			State:              models.ProviderStatusStateUnknown,
+			Reason:             models.NoHeartbeatReceived,
+			LastTransitionTime: time.Now(),
+		},
 	}
 
 	apiServerHost := viper.GetString(APIServerHost)
@@ -196,7 +207,7 @@ func LoadConfig() (*Config, error) {
 		APIServerHost:          apiServerHost,
 		APIServerPort:          apiServerPort,
 		HealthCheckAddress:     viper.GetString(HealthCheckAddress),
-		ProviderKind:           providerKind,
+		Provider:               provider,
 		ControllerStartupDelay: viper.GetDuration(ControllerStartupDelay),
 		DiscoveryConfig: discovery.Config{
 			DiscoveryInterval: viper.GetDuration(DiscoveryInterval),

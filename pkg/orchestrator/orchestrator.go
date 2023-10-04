@@ -100,9 +100,10 @@ func New(ctx context.Context, config *Config) (*Orchestrator, error) {
 		return nil, fmt.Errorf("failed to create a backend client: %w", err)
 	}
 
-	p, err := NewProvider(ctx, config.ProviderKind)
+	// TODO(paralta) Provider initialization needs to be removed from here once Providers are split from Orchestrator (Issue #643).
+	p, err := NewProvider(ctx, config.Provider)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize provider. Provider=%s: %w", config.ProviderKind, err)
+		return nil, fmt.Errorf("failed to initialize provider. Provider=%s: %w", *config.Provider.DisplayName, err)
 	}
 
 	return NewWithProvider(config, p, backendClient)
@@ -132,21 +133,21 @@ func (o *Orchestrator) Stop(ctx context.Context) {
 
 // nolint:wrapcheck
 // NewProvider returns an initialized provider.Provider based on the kind models.CloudProvider.
-func NewProvider(ctx context.Context, kind models.CloudProvider) (provider.Provider, error) {
-	switch kind {
-	case models.Azure:
+func NewProvider(ctx context.Context, provider models.Provider) (provider.Provider, error) {
+	switch *provider.DisplayName {
+	case string(models.Azure):
 		return azure.New(ctx)
-	case models.Docker:
+	case string(models.Docker):
 		return docker.New(ctx)
-	case models.AWS:
+	case string(models.AWS):
 		return aws.New(ctx)
-	case models.GCP:
+	case string(models.GCP):
 		return gcp.New(ctx)
-	case models.External:
+	case string(models.External):
 		return external.New(ctx)
-	case models.Kubernetes:
+	case string(models.Kubernetes):
 		return kubernetes.New(ctx)
 	default:
-		return nil, fmt.Errorf("unsupported provider: %s", kind)
+		return nil, fmt.Errorf("unsupported provider: %s", *provider.DisplayName)
 	}
 }
