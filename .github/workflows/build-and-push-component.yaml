@@ -47,7 +47,7 @@ jobs:
           ## Set digests cache name
           ##
 
-          echo "digests-cache-name=digests-$${{ github.run_id }}-${image_name}" >> "$GITHUB_OUTPUT"
+          echo "digests-cache-name=digests-${{ github.run_id }}-${image_name}" >> "$GITHUB_OUTPUT"
 
   build-and-push:
     runs-on: ubuntu-latest
