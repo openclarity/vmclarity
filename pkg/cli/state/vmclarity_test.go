@@ -151,18 +151,18 @@ func Test_appendEffectiveScanConfigAnnotation(t *testing.T) {
 			}
 
 			for _, w := range *tt.want {
-				if *w.Key != effectiveScanConfigAnnotationKey {
-					g.Expect(*got).To(ContainElement(gstruct.MatchAllFields(gstruct.Fields{
-						"Key":   Equal(w.Key),
-						"Value": Equal(w.Value),
-					})))
-				} else {
+				if *w.Key == effectiveScanConfigAnnotationKey {
 					// In the case of effective scan config annotation the value won't
-					// match because it is formatted JSON.
+					// match because it is a formatted JSON.
 					// We cannot use MatchJSON here because it doesn't work on pointers,
 					// and the models.Annotations value is a pointer to string.
 					g.Expect(*got).To(ContainElement(gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
 						"Key": Equal(w.Key),
+					})))
+				} else {
+					g.Expect(*got).To(ContainElement(gstruct.MatchAllFields(gstruct.Fields{
+						"Key":   Equal(w.Key),
+						"Value": Equal(w.Value),
 					})))
 				}
 			}
