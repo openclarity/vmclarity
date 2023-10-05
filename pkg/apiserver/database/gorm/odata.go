@@ -141,6 +141,11 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 					ComplexFieldSchemas: []string{"Annotation"},
 				},
 			},
+			"provider": odatasql.FieldMeta{
+				FieldType:            odatasql.RelationshipFieldType,
+				RelationshipSchema:   providerSchemaName,
+				RelationshipProperty: "id",
+			},
 		},
 	},
 	"AssetScanStats": {
@@ -491,12 +496,20 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 			"scansCount":   odatasql.FieldMeta{FieldType: odatasql.NumberFieldType},
 			"assetInfo": odatasql.FieldMeta{
 				FieldType:             odatasql.ComplexFieldType,
-				ComplexFieldSchemas:   []string{"VMInfo", "DirInfo", "ContainerInfo", "ContainerImageInfo"},
+				ComplexFieldSchemas:   []string{"VMInfo", "ContainerInfo", "ContainerImageInfo", "DirInfo", "PodInfo"},
 				DiscriminatorProperty: "objectType",
 			},
 			"summary": odatasql.FieldMeta{
 				FieldType:           odatasql.ComplexFieldType,
 				ComplexFieldSchemas: []string{"ScanFindingsSummary"},
+			},
+			"providers": odatasql.FieldMeta{
+				FieldType: odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{
+					FieldType:            odatasql.RelationshipFieldType,
+					RelationshipSchema:   providerSchemaName,
+					RelationshipProperty: "id",
+				},
 			},
 		},
 	},
@@ -571,6 +584,20 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 					ComplexFieldSchemas: []string{"Tag"},
 				},
 			},
+			"objectType": odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+		},
+	},
+	"DirInfo": {
+		Fields: odatasql.Schema{
+			"dirName":    odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+			"location":   odatasql.FieldMeta{FieldType: odatasql.DateTimeFieldType},
+			"objectType": odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+		},
+	},
+	"PodInfo": {
+		Fields: odatasql.Schema{
+			"podName":    odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+			"location":   odatasql.FieldMeta{FieldType: odatasql.DateTimeFieldType},
 			"objectType": odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
 		},
 	},
