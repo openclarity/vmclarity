@@ -17,9 +17,10 @@ package state
 
 import (
 	_ "embed"
-	"reflect"
 	"testing"
 
+	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gstruct"
 	"github.com/openclarity/kubeclarity/shared/pkg/config"
 
 	"github.com/openclarity/vmclarity/api/models"
@@ -142,18 +143,37 @@ func Test_appendEffectiveScanConfigAnnotation(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			g := NewGomegaWithT(t)
 			got, err := appendEffectiveScanConfigAnnotation(tt.args.annotations, tt.args.config)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("appendEffectiveScanConfigAnnotation() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Error("appendEffectiveScanConfigAnnotation() test failed")
-				for _, g := range *got {
-					t.Errorf("got key = %s, value = %s", *g.Key, *g.Value)
+
+			for _, w := range *tt.want {
+				if *w.Key != effectiveScanConfigAnnotationKey {
+					g.Expect(*got).To(ContainElement(gstruct.MatchAllFields(gstruct.Fields{
+						"Key":   Equal(w.Key),
+						"Value": Equal(w.Value),
+					})))
+				} else {
+					// In the case of effective scan config annotation the value won't
+					// match because it is formatted JSON.
+					// We cannot use MatchJSON here because it doesn't work on pointers,
+					// and the models.Annotations value is a pointer to string.
+					g.Expect(*got).To(ContainElement(gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
+						"Key": Equal(w.Key),
+					})))
 				}
-				for _, w := range *tt.want {
-					t.Errorf("want key = %s, value = %s", *w.Key, *w.Value)
+			}
+
+			// Check the effective scan config JSON content
+			for _, actual := range *got {
+				g.Expect(actual).Should(HaveExistingField("Key"))
+				g.Expect(actual).Should(HaveExistingField("Value"))
+				// In the case of effective scan config annotation we check the JSON content of the value
+				if *actual.Key == effectiveScanConfigAnnotationKey {
+					g.Expect(*actual.Value).Should(MatchJSON(effectiveScanConfigJSON))
 				}
 			}
 		})
