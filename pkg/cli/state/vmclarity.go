@@ -427,11 +427,17 @@ func appendEffectiveScanConfigAnnotation(annotations *models.Annotations, config
 			Value: utils.PointerTo(string(configJSON)),
 		},
 	}
-
 	if annotations == nil {
 		return &effectiveScanConfigAnnotations, nil
 	}
-	newAnnotations := *annotations
+	var newAnnotations models.Annotations
+	for _, annotation := range *annotations {
+		// If effective scan config annotation exists we will overwrite it.
+		if *annotation.Key == effectiveScanConfigAnnotationKey {
+			continue
+		}
+		newAnnotations = append(newAnnotations, annotation)
+	}
 	newAnnotations = append(newAnnotations, effectiveScanConfigAnnotations...)
 
 	return &newAnnotations, nil

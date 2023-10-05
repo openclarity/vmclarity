@@ -140,6 +140,40 @@ func Test_appendEffectiveScanConfigAnnotation(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "annotations is not empty and contains effective scan config, overwrite it",
+			args: args{
+				annotations: &models.Annotations{
+					{
+						Key:   utils.PointerTo(effectiveScanConfigAnnotationKey),
+						Value: utils.PointerTo("test"),
+					},
+				},
+				config: &families.Config{
+					SBOM: sbom.Config{
+						Enabled:       true,
+						AnalyzersList: []string{"syft"},
+						Inputs: []types.Input{
+							{
+								Input:     "test",
+								InputType: "dir",
+							},
+						},
+						AnalyzersConfig: &config.Config{
+							Analyzer: &config.Analyzer{
+								AnalyzerList: []string{"syft"},
+							},
+						},
+					},
+				},
+			},
+			want: &models.Annotations{
+				{
+					Key:   utils.PointerTo(effectiveScanConfigAnnotationKey),
+					Value: utils.PointerTo(effectiveScanConfigJSON),
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
