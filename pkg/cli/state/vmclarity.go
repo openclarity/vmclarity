@@ -417,28 +417,27 @@ func NewVMClarityState(client *backendclient.BackendClient, id AssetScanID) (*VM
 }
 
 func appendEffectiveScanConfigAnnotation(annotations *models.Annotations, config *families.Config) (*models.Annotations, error) {
+	var newAnnotations models.Annotations
+	if annotations != nil {
+		// Add all annotations expect the effective scan config one.
+		for _, annotation := range *annotations {
+			if *annotation.Key == effectiveScanConfigAnnotationKey {
+				continue
+			}
+			newAnnotations = append(newAnnotations, annotation)
+		}
+	}
+	// Add the new effective scan config annotation
 	configJSON, err := json.Marshal(config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal effective families config: %w", err)
 	}
-	effectiveScanConfigAnnotations := models.Annotations{
+	newAnnotations = append(newAnnotations, models.Annotations{
 		{
 			Key:   utils.PointerTo(effectiveScanConfigAnnotationKey),
 			Value: utils.PointerTo(string(configJSON)),
 		},
-	}
-	if annotations == nil {
-		return &effectiveScanConfigAnnotations, nil
-	}
-	var newAnnotations models.Annotations
-	for _, annotation := range *annotations {
-		// If effective scan config annotation exists we will overwrite it.
-		if *annotation.Key == effectiveScanConfigAnnotationKey {
-			continue
-		}
-		newAnnotations = append(newAnnotations, annotation)
-	}
-	newAnnotations = append(newAnnotations, effectiveScanConfigAnnotations...)
+	}...)
 
 	return &newAnnotations, nil
 }
