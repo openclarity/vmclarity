@@ -1,0 +1,46 @@
+name: Container image cleanup
+
+on:
+  pull_request:
+    types:
+      - closed
+  schedule:
+    # At 06:00 on every day-of-week from Monday through Friday.
+    # https://crontab.guru/#0_6_*_*_1-5
+    - cron: '0 6 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  remove-images-for-pr:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    name: Cleanup container images for Pull Request
+    steps:
+      - name: Remove images for PR#${{ github.event.pull_request.number }}
+        uses: snok/container-retention-policy@v2
+        with:
+          image-names: vmclarity-apiserver,vmclarity-cli,vmclarity-ui-backend,vmclarity-ui
+          cut-off: One minute ago UTC
+          timestamp-to-use: created_at
+          account-type: org
+          org-name: openclarity
+          token: ${{ secrets.GITHUB_TOKEN }}
+          filter-tags: ${{ format( 'pr{0}-*', github.event.pull_request.number) }}
+          dry-run: true
+
+  scheduled-image-cleanup:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    name: Cleanup stale container images
+    steps:
+      - name: Remove stale images
+        uses: snok/container-retention-policy@v2
+        with:
+          image-names: vmclarity-apiserver,vmclarity-cli,vmclarity-ui-backend,vmclarity-ui
+          cut-off: 14 days ago UTC
+          timestamp-to-use: created_at
+          account-type: org
+          org-name: openclarity
+          token: ${{ secrets.GITHUB_TOKEN }}
+          filter-include-untagged: true
+          dry-run: true
