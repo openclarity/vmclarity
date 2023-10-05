@@ -12,17 +12,17 @@ on:
         type: boolean
         description: 'If set to true, push the image.'
         default: false
-      stable_release:
+      use_release_repository:
         required: false
         type: boolean
-        description: 'If set to true the image is pushed to the stable repository otherwise pushed to the development.'
+        description: 'If set to true the image is pushed to the release repository otherwise it is pushed to the development.'
         default: false
       post_images:
         required: false
         type: boolean
         description: |
           If set to true the image tags pushed to the repository are posted as comment for the Pull Request.
-          Only works if the `stable_release` is set to false.
+          Only works if the `use_release_repository` is set to false and the event type is `pull_request`.
 
 jobs:
   build-vars:
@@ -51,7 +51,7 @@ jobs:
           registry=ghcr.io/openclarity/
           suffix=-dev
           
-          if [ "${{ inputs.stable_release }}" == "true" ]; then
+          if [ "${{ inputs.use_release_repository }}" == "true" ]; then
             suffix=
           fi
           

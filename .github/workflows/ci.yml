@@ -91,7 +91,7 @@ jobs:
     with:
       image_tag: ${{ format('pr{0}-{1}', github.event.pull_request.number, github.sha) }}
       push: true
-      stable_release: false
+      use_release_repository: false
       post_images: true
 
   success:

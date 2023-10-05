@@ -13,4 +13,4 @@ jobs:
     with:
       image_tag: latest
       push: true
-      stable_release: true
+      use_release_repository: true
