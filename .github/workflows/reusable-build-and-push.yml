@@ -17,12 +17,12 @@ on:
         type: boolean
         description: 'If set to true the image is pushed to the release repository otherwise it is pushed to the development.'
         default: false
-      post_images:
+      post_image_tags:
         required: false
         type: boolean
         description: |
           If set to true the image tags pushed to the repository are posted as comment for the Pull Request.
-          Only works if the `use_release_repository` is set to false and the event type is `pull_request`.
+          Only works if the event type is `pull_request`.
 
 jobs:
   build-vars:
@@ -114,7 +114,7 @@ jobs:
       timestamp: ${{ needs.build-vars.outputs.timestamp }}
 
   post-images:
-    if: inputs.post_images
+    if: github.event_name == 'pull_request' && inputs.post_image_tags
     runs-on: ubuntu-latest
     needs:
       - build-vars
