@@ -36,8 +36,8 @@ jobs:
         env:
           APIServerContainerImage:  ${{ format('{0}:{1}', needs.images.outputs.apiserver-image, inputs.image_tag) }}
           OrchestratorContainerImage: ${{ format('{0}:{1}', needs.images.outputs.orchestrator-image, inputs.image_tag) }}
-          UIContainerImage: ${{ format('{0}:{1}', needs.images.outputs.ui-backend-image, inputs.image_tag) }}
-          UIBackendContainerImage: ${{ format('{0}:{1}', needs.images.outputs.ui-image, inputs.image_tag) }}
+          UIContainerImage: ${{ format('{0}:{1}', needs.images.outputs.ui-image, inputs.image_tag) }}
+          UIBackendContainerImage: ${{ format('{0}:{1}', needs.images.outputs.ui-backend-image, inputs.image_tag) }}
           ScannerContainerImage: ${{ format('{0}:{1}', needs.images.outputs.cli-image, inputs.image_tag) }}
         run: |
           cd e2e \
