@@ -259,6 +259,6 @@ bin/actionlint-$(ACTIONLINT_VERSION): | $(BIN_DIR)
 	| bash -s -- "$(ACTIONLINT_VERSION)" "$(BIN_DIR)"
 	@mv bin/actionlint $@
 
-.PHONY: actionlint-lint
+.PHONY: lint-actions
 lint-actions: bin/actionlint
 	@$(ACTIONLINT_BIN) -color
