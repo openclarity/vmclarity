@@ -88,7 +88,7 @@ For a detailed installation guide, please see [AWS](installation/aws/README.md).
 
    * On AWS, Azure or GCP, open an SSH tunnel to VMClarity VM server
      ```
-     ssh -N -L 8080:localhost:80 -i  "<Path to the SSH key specified during install>" ubuntu@<VmClarity SSH Address copied during install>
+     ssh -N -L 8080:localhost:8888 -i  "<Path to the SSH key specified during install>" ubuntu@<VmClarity SSH Address copied during install>
      ```
 
    * On Kubernetes port-forward vmclarity-gateway service:
