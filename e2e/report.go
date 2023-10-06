@@ -61,7 +61,13 @@ func DumpAPIData(ctx ginkgo.SpecContext, client *backendclient.BackendClient, co
 	ginkgo.GinkgoWriter.Println(formatter.F("{{red}}[FAILED] Report API Data:{{/}}"))
 
 	if config.allAPIObjects {
-		config.objects = append(config.objects, APIObject{"asset", ""}, APIObject{"scanConfigs", ""}, APIObject{"scans", ""})
+		config.objects = append(
+			config.objects,
+			APIObject{"asset", ""},
+			APIObject{"scanConfigs", ""},
+			APIObject{"scans", ""},
+			APIObject{"provider", ""},
+		)
 	}
 
 	for _, object := range config.objects {
@@ -107,6 +113,20 @@ func DumpAPIData(ctx ginkgo.SpecContext, client *backendclient.BackendClient, co
 			buf, err := json.MarshalIndent(*scans.Items, "", "\t")
 			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			ginkgo.GinkgoWriter.Printf("Scan: %s\n", string(buf))
+
+		case "provider":
+			var params models.GetProvidersParams
+			if object.filter == "" {
+				params = models.GetProvidersParams{}
+			} else {
+				params = models.GetProvidersParams{Filter: utils.PointerTo(object.filter)}
+			}
+			providers, err := client.GetProviders(ctx, params)
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+
+			buf, err := json.MarshalIndent(*providers.Items, "", "\t")
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			ginkgo.GinkgoWriter.Printf("Provider: %s\n", string(buf))
 		}
 	}
 }

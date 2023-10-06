@@ -59,6 +59,42 @@ var _ = ginkgo.Describe("Posting and getting a provider", func() {
 				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				return len(*providers.Items) == 1
 			}, DefaultTimeout, time.Second).Should(gomega.BeTrue())
+
+			ginkgo.By("waiting until provider created by orchestrator is found")
+			var dockerProvider models.Provider
+			gomega.Eventually(func() bool {
+				providers, err := client.GetProviders(
+					ctx,
+					models.GetProvidersParams{
+						Filter: utils.PointerTo("displayName eq 'Docker'"),
+					})
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				if len(*providers.Items) == 1 {
+					dockerProvider = (*providers.Items)[0]
+					return true
+				}
+				return false
+			}, DefaultTimeout, time.Second).Should(gomega.BeTrue())
+
+			// TODO(paralta) Fix filter
+			ginkgo.By("waiting until test asset discovered by current provider is found")
+			reportFailedConfig.objects = append(
+				reportFailedConfig.objects,
+				APIObject{"asset", DefaultScope},
+			)
+			filter := DefaultScope + " and " + fmt.Sprintf("providers/any(o:o/id eq '%s')", *dockerProvider.Id)
+			reportFailedConfig.objects = append(
+				reportFailedConfig.objects,
+				APIObject{"asset", filter},
+			)
+			assetsParams := models.GetAssetsParams{
+				Filter: utils.PointerTo(filter),
+			}
+			gomega.Eventually(func() bool {
+				assets, err := client.GetAssets(ctx, assetsParams)
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				return len(*assets.Items) == 1
+			}, DefaultTimeout, time.Second).Should(gomega.BeTrue())
 		})
 	})
 
