@@ -19,7 +19,7 @@ jobs:
       - name: Remove images for PR#${{ github.event.pull_request.number }}
         uses: snok/container-retention-policy@v2
         with:
-          image-names: vmclarity-apiserver,vmclarity-cli,vmclarity-ui-backend,vmclarity-ui
+          image-names: vmclarity-apiserver-dev,vmclarity-cli-dev,vmclarity-ui-backend-dev,vmclarity-ui-dev
           cut-off: One minute ago UTC
           timestamp-to-use: created_at
           account-type: org
@@ -36,7 +36,7 @@ jobs:
       - name: Remove stale images
         uses: snok/container-retention-policy@v2
         with:
-          image-names: vmclarity-apiserver,vmclarity-cli,vmclarity-ui-backend,vmclarity-ui
+          image-names: vmclarity-apiserver-dev,vmclarity-cli-dev,vmclarity-ui-backend-dev,vmclarity-ui-dev
           cut-off: 14 days ago UTC
           timestamp-to-use: created_at
           account-type: org
