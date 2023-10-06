@@ -419,7 +419,7 @@ func NewVMClarityState(client *backendclient.BackendClient, id AssetScanID) (*VM
 func appendEffectiveScanConfigAnnotation(annotations *models.Annotations, config *families.Config) (*models.Annotations, error) {
 	var newAnnotations models.Annotations
 	if annotations != nil {
-		// Add all annotations expect the effective scan config one.
+		// Add all annotations except the effective scan config one.
 		for _, annotation := range *annotations {
 			if *annotation.Key == effectiveScanConfigAnnotationKey {
 				continue
