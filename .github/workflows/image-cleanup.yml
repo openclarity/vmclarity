@@ -20,7 +20,7 @@ jobs:
         uses: snok/container-retention-policy@v2
         with:
           image-names: vmclarity-apiserver-dev,vmclarity-cli-dev,vmclarity-ui-backend-dev,vmclarity-ui-dev
-          cut-off: One minute ago UTC
+          cut-off: 1 second ago UTC
           timestamp-to-use: created_at
           account-type: org
           org-name: openclarity
