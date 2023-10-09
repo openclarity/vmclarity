@@ -29,6 +29,7 @@ import (
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/orchestrator/provider"
+	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
 	"github.com/openclarity/vmclarity/pkg/shared/log"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
@@ -47,10 +48,11 @@ type Client struct {
 	disksClient      *armcompute.DisksClient
 	interfacesClient *armnetwork.InterfacesClient
 
-	azureConfig *Config
+	azureConfig   *Config
+	backendClient *backendclient.BackendClient
 }
 
-func New(_ context.Context) (*Client, error) {
+func New(_ context.Context, b *backendclient.BackendClient) (*Client, error) {
 	config, err := NewConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load configuration: %w", err)
@@ -62,7 +64,8 @@ func New(_ context.Context) (*Client, error) {
 	}
 
 	client := Client{
-		azureConfig: config,
+		azureConfig:   config,
+		backendClient: b,
 	}
 
 	cred, err := azidentity.NewManagedIdentityCredential(nil)

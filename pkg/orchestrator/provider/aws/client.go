@@ -33,6 +33,7 @@ import (
 	"github.com/openclarity/vmclarity/pkg/orchestrator/provider"
 	"github.com/openclarity/vmclarity/pkg/orchestrator/provider/aws/scanestimation"
 	"github.com/openclarity/vmclarity/pkg/orchestrator/provider/cloudinit"
+	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
 	"github.com/openclarity/vmclarity/pkg/shared/log"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
@@ -41,9 +42,10 @@ type Client struct {
 	ec2Client     *ec2.Client
 	scanEstimator *scanestimation.ScanEstimator
 	config        *Config
+	backendClient *backendclient.BackendClient
 }
 
-func New(ctx context.Context) (*Client, error) {
+func New(ctx context.Context, b *backendclient.BackendClient) (*Client, error) {
 	config, err := NewConfig()
 	if err != nil {
 		return nil, fmt.Errorf("invalid configuration. Provider=AWS: %w", err)
@@ -54,7 +56,8 @@ func New(ctx context.Context) (*Client, error) {
 	}
 
 	awsClient := Client{
-		config: config,
+		config:        config,
+		backendClient: b,
 	}
 
 	cfg, err := awsconfig.LoadDefaultConfig(ctx)

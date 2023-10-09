@@ -100,7 +100,7 @@ func New(ctx context.Context, config *Config) (*Orchestrator, error) {
 		return nil, fmt.Errorf("failed to create a backend client: %w", err)
 	}
 
-	p, err := NewProvider(ctx, config.ProviderKind)
+	p, err := NewProvider(ctx, config.ProviderKind, backendClient)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize provider. Provider=%s: %w", config.ProviderKind, err)
 	}
@@ -132,20 +132,20 @@ func (o *Orchestrator) Stop(ctx context.Context) {
 
 // nolint:wrapcheck
 // NewProvider returns an initialized provider.Provider based on the kind models.CloudProvider.
-func NewProvider(ctx context.Context, kind models.CloudProvider) (provider.Provider, error) {
+func NewProvider(ctx context.Context, kind models.CloudProvider, b *backendclient.BackendClient) (provider.Provider, error) {
 	switch kind {
 	case models.Azure:
-		return azure.New(ctx)
+		return azure.New(ctx, b)
 	case models.Docker:
-		return docker.New(ctx)
+		return docker.New(ctx, b)
 	case models.AWS:
-		return aws.New(ctx)
+		return aws.New(ctx, b)
 	case models.GCP:
-		return gcp.New(ctx)
+		return gcp.New(ctx, b)
 	case models.External:
-		return external.New(ctx)
+		return external.New(ctx, b)
 	case models.Kubernetes:
-		return kubernetes.New(ctx)
+		return kubernetes.New(ctx, b)
 	default:
 		return nil, fmt.Errorf("unsupported provider: %s", kind)
 	}

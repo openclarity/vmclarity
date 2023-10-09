@@ -29,6 +29,7 @@ import (
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/orchestrator/provider"
+	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
 	"github.com/openclarity/vmclarity/pkg/shared/log"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
@@ -39,10 +40,11 @@ type Client struct {
 	instancesClient *compute.InstancesClient
 	regionsClient   *compute.RegionsClient
 
-	gcpConfig *Config
+	gcpConfig     *Config
+	backendClient *backendclient.BackendClient
 }
 
-func New(ctx context.Context) (*Client, error) {
+func New(ctx context.Context, b *backendclient.BackendClient) (*Client, error) {
 	config, err := NewConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load configuration: %w", err)
@@ -54,7 +56,8 @@ func New(ctx context.Context) (*Client, error) {
 	}
 
 	client := Client{
-		gcpConfig: config,
+		gcpConfig:     config,
+		backendClient: b,
 	}
 
 	regionsClient, err := compute.NewRegionsRESTClient(ctx)

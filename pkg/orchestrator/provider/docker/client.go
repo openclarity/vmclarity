@@ -35,6 +35,7 @@ import (
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/orchestrator/provider"
+	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
 	"github.com/openclarity/vmclarity/pkg/shared/families"
 	"github.com/openclarity/vmclarity/pkg/shared/log"
 )
@@ -43,11 +44,12 @@ import (
 var mountPointPath = "/mnt/snapshot"
 
 type Client struct {
-	dockerClient *client.Client
-	config       *Config
+	dockerClient  *client.Client
+	config        *Config
+	backendClient *backendclient.BackendClient
 }
 
-func New(_ context.Context) (*Client, error) {
+func New(_ context.Context, b *backendclient.BackendClient) (*Client, error) {
 	config, err := NewConfig()
 	if err != nil {
 		return nil, fmt.Errorf("invalid configuration. Provider=%s: %w", models.Docker, err)
@@ -59,8 +61,9 @@ func New(_ context.Context) (*Client, error) {
 	}
 
 	return &Client{
-		dockerClient: dockerClient,
-		config:       config,
+		dockerClient:  dockerClient,
+		config:        config,
+		backendClient: b,
 	}, nil
 }
 

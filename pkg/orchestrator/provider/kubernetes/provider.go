@@ -25,16 +25,18 @@ import (
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/orchestrator/provider"
+	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
 )
 
 type Provider struct {
-	clientset kubernetes.Interface
-	config    *Config
+	clientset     kubernetes.Interface
+	config        *Config
+	backendClient *backendclient.BackendClient
 }
 
 var _ provider.Provider = &Provider{}
 
-func New(ctx context.Context) (provider.Provider, error) {
+func New(ctx context.Context, b *backendclient.BackendClient) (provider.Provider, error) {
 	config, err := NewConfig()
 	if err != nil {
 		return nil, fmt.Errorf("invalid configuration: %w", err)
@@ -65,8 +67,9 @@ func New(ctx context.Context) (provider.Provider, error) {
 	}
 
 	return &Provider{
-		clientset: clientset,
-		config:    config,
+		clientset:     clientset,
+		config:        config,
+		backendClient: b,
 	}, nil
 }
 

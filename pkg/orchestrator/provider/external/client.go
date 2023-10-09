@@ -26,15 +26,17 @@ import (
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/orchestrator/provider"
 	provider_service "github.com/openclarity/vmclarity/pkg/orchestrator/provider/external/proto"
+	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
 )
 
 type Client struct {
 	providerClient provider_service.ProviderClient
 	config         *Config
 	conn           *grpc.ClientConn
+	backendClient  *backendclient.BackendClient
 }
 
-func New(_ context.Context) (*Client, error) {
+func New(_ context.Context, b *backendclient.BackendClient) (*Client, error) {
 	config, err := NewConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load configuration: %w", err)
@@ -46,7 +48,8 @@ func New(_ context.Context) (*Client, error) {
 	}
 
 	client := Client{
-		config: config,
+		config:        config,
+		backendClient: b,
 	}
 
 	var opts []grpc.DialOption
