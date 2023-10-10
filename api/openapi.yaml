@@ -3207,51 +3207,54 @@ components:
 
     Finding:
       type: object
-      properties:
-        id:
-          type: string
-          # TODO(sambetts) Decide if we want the validation here by having
-          # separate schemas for GET, POST and PATCH
-          #
-          # We can't make anything readOnly or required here if we want to
-          # use the same schema for PATCH otherwise it will require you
-          # always send the required fields and remove the readOnly fields
-          # on the client side.
-          #
-          # readOnly: true
-        asset:
-          $ref: '#/components/schemas/AssetRelationship'
-        foundBy:
-          $ref: '#/components/schemas/AssetScanRelationship'
-        foundOn:
-          description: When this finding was discovered by a scan
-          type: string
-          format: date-time
-        invalidatedOn:
-          description: When this finding was invalidated by a newer scan
-          type: string
-          format: date-time
-        findingInfo:
-          anyOf:
-            - $ref: '#/components/schemas/PackageFindingInfo'
-            - $ref: '#/components/schemas/VulnerabilityFindingInfo'
-            - $ref: '#/components/schemas/MalwareFindingInfo'
-            - $ref: '#/components/schemas/SecretFindingInfo'
-            - $ref: '#/components/schemas/MisconfigurationFindingInfo'
-            - $ref: '#/components/schemas/RootkitFindingInfo'
-            - $ref: '#/components/schemas/ExploitFindingInfo'
-            - $ref: '#/components/schemas/InfoFinderFindingInfo'
-          discriminator:
-            propertyName: objectType
-            mapping:
-              Package: '#/components/schemas/PackageFindingInfo'
-              Vulnerability: '#/components/schemas/VulnerabilityFindingInfo'
-              Malware: '#/components/schemas/MalwareFindingInfo'
-              Secret: '#/components/schemas/SecretFindingInfo'
-              Misconfiguration: '#/components/schemas/MisconfigurationFindingInfo'
-              Rootkit: '#/components/schemas/RootkitFindingInfo'
-              Exploit: '#/components/schemas/ExploitFindingInfo'
-              InfoFinder: '#/components/schemas/InfoFinderFindingInfo'
+      allOf:
+        - $ref: '#/components/schemas/Metadata'
+        - type: object
+          properties:
+            id:
+              type: string
+              # TODO(sambetts) Decide if we want the validation here by having
+              # separate schemas for GET, POST and PATCH
+              #
+              # We can't make anything readOnly or required here if we want to
+              # use the same schema for PATCH otherwise it will require you
+              # always send the required fields and remove the readOnly fields
+              # on the client side.
+              #
+              # readOnly: true
+            asset:
+              $ref: '#/components/schemas/AssetRelationship'
+            foundBy:
+              $ref: '#/components/schemas/AssetScanRelationship'
+            foundOn:
+              description: When this finding was discovered by a scan
+              type: string
+              format: date-time
+            invalidatedOn:
+              description: When this finding was invalidated by a newer scan
+              type: string
+              format: date-time
+            findingInfo:
+              anyOf:
+                - $ref: '#/components/schemas/PackageFindingInfo'
+                - $ref: '#/components/schemas/VulnerabilityFindingInfo'
+                - $ref: '#/components/schemas/MalwareFindingInfo'
+                - $ref: '#/components/schemas/SecretFindingInfo'
+                - $ref: '#/components/schemas/MisconfigurationFindingInfo'
+                - $ref: '#/components/schemas/RootkitFindingInfo'
+                - $ref: '#/components/schemas/ExploitFindingInfo'
+                - $ref: '#/components/schemas/InfoFinderFindingInfo'
+              discriminator:
+                propertyName: objectType
+                mapping:
+                  Package: '#/components/schemas/PackageFindingInfo'
+                  Vulnerability: '#/components/schemas/VulnerabilityFindingInfo'
+                  Malware: '#/components/schemas/MalwareFindingInfo'
+                  Secret: '#/components/schemas/SecretFindingInfo'
+                  Misconfiguration: '#/components/schemas/MisconfigurationFindingInfo'
+                  Rootkit: '#/components/schemas/RootkitFindingInfo'
+                  Exploit: '#/components/schemas/ExploitFindingInfo'
+                  InfoFinder: '#/components/schemas/InfoFinderFindingInfo'
 
     ScanEstimations:
       type: object

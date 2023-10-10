@@ -584,6 +584,9 @@ type ExploitsConfig struct {
 
 // Finding defines model for Finding.
 type Finding struct {
+	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+	Annotations *Annotations `json:"annotations,omitempty"`
+
 	// Asset Describes a relationship to an asset which can be expanded.
 	Asset       *AssetRelationship     `json:"asset,omitempty"`
 	FindingInfo *Finding_FindingInfo   `json:"findingInfo,omitempty"`
