@@ -1149,6 +1149,13 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 			"endTime":                 odatasql.FieldMeta{FieldType: odatasql.DateTimeFieldType},
 			"deleteAfter":             odatasql.FieldMeta{FieldType: odatasql.DateTimeFieldType},
 			"ttlSecondsAfterFinished": odatasql.FieldMeta{FieldType: odatasql.NumberFieldType},
+			"annotations": odatasql.FieldMeta{
+				FieldType: odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{
+					FieldType:           odatasql.ComplexFieldType,
+					ComplexFieldSchemas: []string{"Annotation"},
+				},
+			},
 		},
 	},
 	"AssetScanEstimationState": {
