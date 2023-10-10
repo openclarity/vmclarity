@@ -1471,7 +1471,14 @@ components:
       type: object
       properties:
         annotations:
-              $ref: '#/components/schemas/Annotations'
+          $ref: '#/components/schemas/Annotations'
+
+    MetadataReadOnly:
+      type: object
+      properties:
+        annotations:
+          $ref: '#/components/schemas/Annotations'
+          readOnly: true
 
     Annotations:
       type: array
@@ -1513,6 +1520,7 @@ components:
       type: object
       description: Describes an expandable relationship to Scan object
       allOf:
+        - $ref: '#/components/schemas/MetadataReadOnly'
         - type: object
           properties:
             id:
@@ -1894,26 +1902,29 @@ components:
     ScanConfigRelationship:
       type: object
       description: Describes a relationship to a scan config which can be expanded.
-      properties:
-        id:
-          type: string
-        revision:
-          type: integer
-          readOnly: true
-        name:
-          type: string
-          readOnly: true
-        scanTemplate:
-          $ref: '#/components/schemas/ScanTemplate'
-          readOnly: true
-        scheduled:
-          $ref: '#/components/schemas/RuntimeScheduleScanConfig'
-          readOnly: true
-        disabled:
-          description: 'if true, the scan config is disabled and no scan should run from it'
-          type: boolean
-          readOnly: true
-      required: ['id']
+      allOf:
+        - $ref: '#/components/schemas/MetadataReadOnly'
+        - type: object
+          properties:
+            id:
+              type: string
+            revision:
+              type: integer
+              readOnly: true
+            name:
+              type: string
+              readOnly: true
+            scanTemplate:
+              $ref: '#/components/schemas/ScanTemplate'
+              readOnly: true
+            scheduled:
+              $ref: '#/components/schemas/RuntimeScheduleScanConfig'
+              readOnly: true
+            disabled:
+              description: 'if true, the scan config is disabled and no scan should run from it'
+              type: boolean
+              readOnly: true
+          required: ['id']
 
     # NOTE(sambetts) Any changes made to ScanConfig must be reflected in
     # ScanConfigRelationship to ensure correct operation of the API when $expanding
@@ -2082,40 +2093,43 @@ components:
     AssetRelationship:
       type: object
       description: Describes a relationship to an asset which can be expanded.
-      properties:
-        id:
-          type: string
-        revision:
-          type: integer
-          readOnly: true
-        assetInfo:
-          $ref: '#/components/schemas/AssetType'
-          readOnly: true
-        scansCount:
-          description: Total number of scans that have ever run for this asset
-          type: integer
-          readOnly: true
-        firstSeen:
-          type: string
-          format: date-time
-        terminatedOn:
-          type: string
-          format: date-time
-          readOnly: true
-        lastSeen:
-          type: string
-          format: date-time
-          readOnly: true
-        summary:
-          $ref: '#/components/schemas/ScanFindingsSummary'
-          readOnly: true
-        providers:
-          type: array
-          description: List of providers which discover the asset.
-          items:
-            $ref: '#/components/schemas/ProviderRelationship'
-          readOnly: true
-      required: ['id']
+      allOf:
+        - $ref: '#/components/schemas/MetadataReadOnly'
+        - type: object
+          properties:
+            id:
+              type: string
+            revision:
+              type: integer
+              readOnly: true
+            assetInfo:
+              $ref: '#/components/schemas/AssetType'
+              readOnly: true
+            scansCount:
+              description: Total number of scans that have ever run for this asset
+              type: integer
+              readOnly: true
+            firstSeen:
+              type: string
+              format: date-time
+            terminatedOn:
+              type: string
+              format: date-time
+              readOnly: true
+            lastSeen:
+              type: string
+              format: date-time
+              readOnly: true
+            summary:
+              $ref: '#/components/schemas/ScanFindingsSummary'
+              readOnly: true
+            providers:
+              type: array
+              description: List of providers which discover the asset.
+              items:
+                $ref: '#/components/schemas/ProviderRelationship'
+              readOnly: true
+          required: ['id']
 
     AssetExists:
       type: object
@@ -2445,6 +2459,7 @@ components:
     AssetScanRelationship:
       type: object
       allOf:
+        - $ref: '#/components/schemas/MetadataReadOnly'
         - type: object
           properties:
             id:
@@ -2667,8 +2682,7 @@ components:
       type: object
       description: Describes a relationship to a provider which can be expanded.
       allOf:
-        - $ref: '#/components/schemas/Metadata'
-          readOnly: true
+        - $ref: '#/components/schemas/MetadataReadOnly'
         - type: object
           properties:
             id:

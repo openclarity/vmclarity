@@ -239,12 +239,14 @@ type AssetExists struct {
 	Message *string `json:"message,omitempty"`
 }
 
-// AssetRelationship Describes a relationship to an asset which can be expanded.
+// AssetRelationship defines model for AssetRelationship.
 type AssetRelationship struct {
-	AssetInfo *AssetType `json:"assetInfo,omitempty"`
-	FirstSeen *time.Time `json:"firstSeen,omitempty"`
-	Id        string     `json:"id"`
-	LastSeen  *time.Time `json:"lastSeen,omitempty"`
+	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+	Annotations *Annotations `json:"annotations,omitempty"`
+	AssetInfo   *AssetType   `json:"assetInfo,omitempty"`
+	FirstSeen   *time.Time   `json:"firstSeen,omitempty"`
+	Id          string       `json:"id"`
+	LastSeen    *time.Time   `json:"lastSeen,omitempty"`
 
 	// Providers List of providers which discover the asset.
 	Providers *[]ProviderRelationship `json:"providers,omitempty"`
@@ -387,6 +389,9 @@ type AssetScanInputScanStats struct {
 
 // AssetScanRelationship defines model for AssetScanRelationship.
 type AssetScanRelationship struct {
+	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+	Annotations *Annotations `json:"annotations,omitempty"`
+
 	// Asset Describes a relationship to an asset which can be expanded.
 	Asset                 *AssetRelationship     `json:"asset,omitempty"`
 	Exploits              *ExploitScan           `json:"exploits,omitempty"`
@@ -701,6 +706,12 @@ type MalwareType = string
 
 // Metadata defines model for Metadata.
 type Metadata struct {
+	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+	Annotations *Annotations `json:"annotations,omitempty"`
+}
+
+// MetadataReadOnly defines model for MetadataReadOnly.
+type MetadataReadOnly struct {
 	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
 	Annotations *Annotations `json:"annotations,omitempty"`
 }
@@ -1048,8 +1059,11 @@ type ScanConfigExists struct {
 	ScanConfig *ScanConfig `json:"scanConfig,omitempty"`
 }
 
-// ScanConfigRelationship Describes a relationship to a scan config which can be expanded.
+// ScanConfigRelationship defines model for ScanConfigRelationship.
 type ScanConfigRelationship struct {
+	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+	Annotations *Annotations `json:"annotations,omitempty"`
+
 	// Disabled if true, the scan config is disabled and no scan should run from it
 	Disabled     *bool         `json:"disabled,omitempty"`
 	Id           string        `json:"id"`
@@ -1181,6 +1195,9 @@ type ScanFindingsSummary struct {
 
 // ScanRelationship defines model for ScanRelationship.
 type ScanRelationship struct {
+	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+	Annotations *Annotations `json:"annotations,omitempty"`
+
 	// AssetIDs List of asset IDs to be scanned
 	AssetIDs          *[]string          `json:"assetIDs"`
 	AssetScanTemplate *AssetScanTemplate `json:"assetScanTemplate,omitempty"`
