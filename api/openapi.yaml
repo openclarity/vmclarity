@@ -3270,42 +3270,45 @@ components:
 
     ScanEstimation:
       type: object
-      properties:
-        id:
-          type: string
-        assetIDs:
-          description: List of asset IDs to be estimated
-          type: array
-          items:
-            type: string
-        state:
-          $ref: '#/components/schemas/ScanEstimationState'
-        startTime:
-          type: string
-          format: date-time
-        endTime:
-          type: string
-          format: date-time
-        assetScanEstimations:
-          description: AssetScanEstimations which make up this ScanEstimation
-          type: array
-          items:
-            $ref: '#/components/schemas/AssetScanEstimationRelationship'
-        scanTemplate:
-          $ref: '#/components/schemas/ScanTemplate'
-        summary:
-          $ref: '#/components/schemas/ScanEstimationSummary'
-        revision:
-          type: integer
-        ttlSecondsAfterFinished:
-          description: The duration in seconds this resource should last until it is deleted.
-          x-go-name: TTLSecondsAfterFinished
-          type: integer
-        deleteAfter:
-          description: The time this resource should be deleted. This value is calculated by endTime + ttlSecondsAfterFinished.
-            This should not be set by the user, but use ttlSecondsAfterFinished instead.
-          type: string
-          format: date-time
+      allOf:
+        - $ref: '#/components/schemas/Metadata'
+        - type: object
+          properties:
+            id:
+              type: string
+            assetIDs:
+              description: List of asset IDs to be estimated
+              type: array
+              items:
+                type: string
+            state:
+              $ref: '#/components/schemas/ScanEstimationState'
+            startTime:
+              type: string
+              format: date-time
+            endTime:
+              type: string
+              format: date-time
+            assetScanEstimations:
+              description: AssetScanEstimations which make up this ScanEstimation
+              type: array
+              items:
+                $ref: '#/components/schemas/AssetScanEstimationRelationship'
+            scanTemplate:
+              $ref: '#/components/schemas/ScanTemplate'
+            summary:
+              $ref: '#/components/schemas/ScanEstimationSummary'
+            revision:
+              type: integer
+            ttlSecondsAfterFinished:
+              description: The duration in seconds this resource should last until it is deleted.
+              x-go-name: TTLSecondsAfterFinished
+              type: integer
+            deleteAfter:
+              description: The time this resource should be deleted. This value is calculated by endTime + ttlSecondsAfterFinished.
+                This should not be set by the user, but use ttlSecondsAfterFinished instead.
+              type: string
+              format: date-time
 
     ## TODO fill out the rest of the fields for the ScanEstimationRelationship.
     ScanEstimationRelationship:

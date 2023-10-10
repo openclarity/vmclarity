@@ -1069,6 +1069,9 @@ type ScanConfigs struct {
 
 // ScanEstimation defines model for ScanEstimation.
 type ScanEstimation struct {
+	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+	Annotations *Annotations `json:"annotations,omitempty"`
+
 	// AssetIDs List of asset IDs to be estimated
 	AssetIDs *[]string `json:"assetIDs,omitempty"`
 
