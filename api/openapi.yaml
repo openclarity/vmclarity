@@ -2027,50 +2027,53 @@ components:
     Asset:
       type: object
       description: Describes an asset object.
-      properties:
-        id:
-          type: string
-          # TODO(sambetts) Decide if we want the validation here by having
-          # separate schemas for GET, POST and PATCH.
-          #
-          # We can't make anything readOnly or required here if we want to
-          # use the same schema for PATCH otherwise it will require you
-          # always send the required fields and remove the readOnly fields
-          # on the client side.
-          #
-          # readOnly: true
-        revision:
-          type: integer
-          # TODO(sambetts) Decide if we want the validation here by having
-          # separate schemas for GET, POST and PATCH.
-          #
-          # We can't make anything readOnly or required here if we want to
-          # use the same schema for PATCH otherwise it will require you
-          # always send the required fields and remove the readOnly fields
-          # on the client side.
-          #
-          # readOnly: true
-        assetInfo:
-          $ref: '#/components/schemas/AssetType'
-        firstSeen:
-          type: string
-          format: date-time
-        terminatedOn:
-          type: string
-          format: date-time
-        lastSeen:
-          type: string
-          format: date-time
-        scansCount:
-          description: Total number of scans that have ever run for this asset
-          type: integer
-        summary:
-          $ref: '#/components/schemas/ScanFindingsSummary'
-        providers:
-          type: array
-          description: List of providers which discover the asset.
-          items:
-            $ref: '#/components/schemas/ProviderRelationship'
+      allOf:
+        - $ref: '#/components/schemas/Metadata'
+        - type: object
+          properties:
+            id:
+              type: string
+              # TODO(sambetts) Decide if we want the validation here by having
+              # separate schemas for GET, POST and PATCH.
+              #
+              # We can't make anything readOnly or required here if we want to
+              # use the same schema for PATCH otherwise it will require you
+              # always send the required fields and remove the readOnly fields
+              # on the client side.
+              #
+              # readOnly: true
+            revision:
+              type: integer
+              # TODO(sambetts) Decide if we want the validation here by having
+              # separate schemas for GET, POST and PATCH.
+              #
+              # We can't make anything readOnly or required here if we want to
+              # use the same schema for PATCH otherwise it will require you
+              # always send the required fields and remove the readOnly fields
+              # on the client side.
+              #
+              # readOnly: true
+            assetInfo:
+              $ref: '#/components/schemas/AssetType'
+            firstSeen:
+              type: string
+              format: date-time
+            terminatedOn:
+              type: string
+              format: date-time
+            lastSeen:
+              type: string
+              format: date-time
+            scansCount:
+              description: Total number of scans that have ever run for this asset
+              type: integer
+            summary:
+              $ref: '#/components/schemas/ScanFindingsSummary'
+            providers:
+              type: array
+              description: List of providers which discover the asset.
+              items:
+                $ref: '#/components/schemas/ProviderRelationship'
 
     AssetRelationship:
       type: object

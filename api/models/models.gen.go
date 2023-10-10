@@ -206,12 +206,14 @@ type ApiResponse struct {
 	Message *string `json:"message,omitempty"`
 }
 
-// Asset Describes an asset object.
+// Asset defines model for Asset.
 type Asset struct {
-	AssetInfo *AssetType `json:"assetInfo,omitempty"`
-	FirstSeen *time.Time `json:"firstSeen,omitempty"`
-	Id        *string    `json:"id,omitempty"`
-	LastSeen  *time.Time `json:"lastSeen,omitempty"`
+	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+	Annotations *Annotations `json:"annotations,omitempty"`
+	AssetInfo   *AssetType   `json:"assetInfo,omitempty"`
+	FirstSeen   *time.Time   `json:"firstSeen,omitempty"`
+	Id          *string      `json:"id,omitempty"`
+	LastSeen    *time.Time   `json:"lastSeen,omitempty"`
 
 	// Providers List of providers which discover the asset.
 	Providers *[]ProviderRelationship `json:"providers,omitempty"`

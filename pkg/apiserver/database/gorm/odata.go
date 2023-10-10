@@ -511,6 +511,13 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 					RelationshipProperty: "id",
 				},
 			},
+			"annotations": odatasql.FieldMeta{
+				FieldType: odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{
+					FieldType:           odatasql.ComplexFieldType,
+					ComplexFieldSchemas: []string{"Annotation"},
+				},
+			},
 		},
 	},
 	"VMInfo": {
