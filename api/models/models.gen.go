@@ -1017,8 +1017,11 @@ type ScanState string
 // ScanStateReason Machine-readable, UpperCamelCase text indicating the reason for the condition's last transition.
 type ScanStateReason string
 
-// ScanConfig Describes a multi-asset scheduled scan config.
+// ScanConfig defines model for ScanConfig.
 type ScanConfig struct {
+	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+	Annotations *Annotations `json:"annotations,omitempty"`
+
 	// Disabled if true, the scan config is disabled and no scan should run from it
 	Disabled     *bool         `json:"disabled,omitempty"`
 	Id           *string       `json:"id,omitempty"`

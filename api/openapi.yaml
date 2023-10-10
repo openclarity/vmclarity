@@ -1920,20 +1920,23 @@ components:
     ScanConfig:
       type: object
       description: Describes a multi-asset scheduled scan config.
-      properties:
-        id:
-          type: string
-        revision:
-          type: integer
-        name:
-          type: string
-        scanTemplate:
-          $ref: '#/components/schemas/ScanTemplate'
-        scheduled:
-          $ref: '#/components/schemas/RuntimeScheduleScanConfig'
-        disabled:
-          description: 'if true, the scan config is disabled and no scan should run from it'
-          type: boolean
+      allOf:
+        - $ref: '#/components/schemas/Metadata'
+        - type: object
+          properties:
+            id:
+              type: string
+            revision:
+              type: integer
+            name:
+              type: string
+            scanTemplate:
+              $ref: '#/components/schemas/ScanTemplate'
+            scheduled:
+              $ref: '#/components/schemas/RuntimeScheduleScanConfig'
+            disabled:
+              description: 'if true, the scan config is disabled and no scan should run from it'
+              type: boolean
 
     ScanConfigExists:
       type: object
