@@ -1645,6 +1645,7 @@ components:
       type: object
       description: Describes a multi-asset scheduled scan.
       allOf:
+        - $ref: '#/components/schemas/Metadata'
         - type: object
           properties:
             id:

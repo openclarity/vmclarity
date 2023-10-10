@@ -969,6 +969,9 @@ type SbomScan struct {
 
 // Scan defines model for Scan.
 type Scan struct {
+	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+	Annotations *Annotations `json:"annotations,omitempty"`
+
 	// AssetIDs List of asset IDs to be scanned
 	AssetIDs          *[]string          `json:"assetIDs"`
 	AssetScanTemplate *AssetScanTemplate `json:"assetScanTemplate,omitempty"`
