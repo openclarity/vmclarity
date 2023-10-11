@@ -18,6 +18,7 @@ package docker
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -108,8 +109,10 @@ func (c *Client) getContainerInfo(ctx context.Context, containerID string) (mode
 		return models.ContainerInfo{}, err
 	}
 
+	containerName := strings.Trim(info.Name, "/")
+
 	return models.ContainerInfo{
-		ContainerName: utils.PointerTo(info.Name),
+		ContainerName: &containerName,
 		CreatedAt:     utils.PointerTo(createdAt),
 		Id:            containerID,
 		Image:         utils.PointerTo(imageInfo),
