@@ -231,8 +231,15 @@ func containerInfoToAssetInfo(info backendmodels.ContainerInfo) (*models.AssetIn
 }
 
 func containerImageInfoToAssetInfo(info backendmodels.ContainerImageInfo) (*models.AssetInfo, error) {
-	repo, name := path.Split(*info.Name)
-	repo = strings.TrimSuffix(repo, "/")
+	var repo, name string
+
+	tag, ok := info.GetRepoTag()
+	if ok {
+		repo, name = path.Split(tag)
+	} else {
+		name = info.Id
+	}
+
 	return &models.AssetInfo{
 		Name:     &name,
 		Location: &repo,

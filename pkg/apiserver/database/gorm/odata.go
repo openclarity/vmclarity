@@ -579,7 +579,14 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 					ComplexFieldSchemas: []string{"Tag"},
 				},
 			},
-			"name":       odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+			"repoTags": odatasql.FieldMeta{
+				FieldType:          odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+			},
+			"repoDigests": odatasql.FieldMeta{
+				FieldType:          odatasql.CollectionFieldType,
+				CollectionItemMeta: &odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+			},
 			"objectType": odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
 			"os":         odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
 			"size":       odatasql.FieldMeta{FieldType: odatasql.NumberFieldType},

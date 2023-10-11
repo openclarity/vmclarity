@@ -272,7 +272,7 @@ func Test_getAssetInfo(t *testing.T) {
 				asset: createContainerImageInfo(t),
 			},
 			want: &models.AssetInfo{
-				Location: utils.PointerTo("ghcr.io/openclarity"),
+				Location: utils.PointerTo("ghcr.io/openclarity/"),
 				Name:     utils.PointerTo("vmclarity-orchestrator"),
 				Type:     utils.PointerTo(models.ContainerImage),
 			},
@@ -321,7 +321,7 @@ func createContainerImageInfo(t *testing.T) *backendmodels.AssetType {
 	t.Helper()
 	info := backendmodels.AssetType{}
 	err := info.FromContainerImageInfo(backendmodels.ContainerImageInfo{
-		Name: utils.PointerTo("ghcr.io/openclarity/vmclarity-orchestrator"),
+		RepoTags: utils.PointerTo([]string{"ghcr.io/openclarity/vmclarity-orchestrator"}),
 	})
 	assert.NilError(t, err)
 	return &info

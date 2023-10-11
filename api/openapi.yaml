@@ -2244,8 +2244,14 @@ components:
           type: string
         id:
           type: string
-        name:
-          type: string
+        repoTags:
+          type: array
+          items:
+            type: string
+        repoDigests:
+          type: array
+          items:
+            type: string
         labels:
           type: array
           items:
