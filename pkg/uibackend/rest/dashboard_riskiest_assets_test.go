@@ -309,7 +309,7 @@ func createContainerInfo(t *testing.T) *backendmodels.AssetType {
 	t.Helper()
 	info := backendmodels.AssetType{}
 	err := info.FromContainerInfo(backendmodels.ContainerInfo{
-		Id:            utils.PointerTo("d66da925d976b8caf60ea59c5ec75b1950f87d506144942cdbf10061052a8088"),
+		Id:            "d66da925d976b8caf60ea59c5ec75b1950f87d506144942cdbf10061052a8088",
 		ContainerName: utils.PointerTo("hungry_mcclintock"),
 		Location:      utils.PointerTo("gke-sambetts-dev-clu-sambetts-dev-nod-449204c7-gqx5"),
 	})

@@ -2235,6 +2235,7 @@ components:
           nullable: true
       required:
         - objectType
+        - id
 
     ContainerImageInfo:
       type: object
@@ -2257,7 +2258,8 @@ components:
         size:
           type: integer
       required:
-        - objectType 
+        - objectType
+        - id
 
     DirInfo:
       type: object

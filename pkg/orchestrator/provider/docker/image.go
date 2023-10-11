@@ -97,7 +97,7 @@ func (c *Client) getContainerImageInfo(ctx context.Context, imageID string) (mod
 
 	return models.ContainerImageInfo{
 		Architecture: utils.PointerTo(image.Architecture),
-		Id:           utils.PointerTo(image.ID),
+		Id:           image.ID,
 		Labels:       convertTags(image.Config.Labels),
 		Name:         utils.PointerTo(image.Config.Image),
 		ObjectType:   "ContainerImageInfo",
