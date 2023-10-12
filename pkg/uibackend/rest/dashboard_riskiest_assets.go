@@ -237,7 +237,7 @@ func containerImageInfoToAssetInfo(info backendmodels.ContainerImageInfo) (*mode
 	if ok {
 		repo, name = path.Split(tag)
 	} else {
-		name = info.Id
+		name = info.ImageID
 	}
 
 	return &models.AssetInfo{

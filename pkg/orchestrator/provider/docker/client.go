@@ -434,7 +434,7 @@ func (c *Client) exportAsset(ctx context.Context, config *provider.ScanJobConfig
 
 	switch value := objectType.(type) {
 	case models.ContainerInfo:
-		contents, err := c.dockerClient.ContainerExport(ctx, value.Id)
+		contents, err := c.dockerClient.ContainerExport(ctx, value.ContainerID)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to export container: %w", err)
 		}
@@ -444,7 +444,7 @@ func (c *Client) exportAsset(ctx context.Context, config *provider.ScanJobConfig
 		// Create an ephemeral container to export asset
 		containerResp, err := c.dockerClient.ContainerCreate(
 			ctx,
-			&container.Config{Image: value.Id},
+			&container.Config{Image: value.ImageID},
 			nil,
 			nil,
 			nil,

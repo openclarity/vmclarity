@@ -114,7 +114,7 @@ func (c *Client) getContainerInfo(ctx context.Context, containerID string) (mode
 	return models.ContainerInfo{
 		ContainerName: &containerName,
 		CreatedAt:     utils.PointerTo(createdAt),
-		Id:            containerID,
+		ContainerID:   containerID,
 		Image:         utils.PointerTo(imageInfo),
 		Labels:        convertTags(info.Config.Labels),
 		ObjectType:    "ContainerInfo",
