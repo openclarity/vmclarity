@@ -33,9 +33,9 @@ import (
 )
 
 var (
-	testEnv  types.Environment
-	client   *backendclient.BackendClient
-	reuseEnv bool
+	testEnv types.Environment
+	client  *backendclient.BackendClient
+	config  *types.Config
 )
 
 func TestEndToEnd(t *testing.T) {
@@ -51,15 +51,13 @@ func beforeSuite(ctx context.Context) {
 	logger := logrus.WithContext(ctx)
 	ctx = log.SetLoggerForContext(ctx, logger)
 
-	config, err := testenv.NewConfig()
+	config, err = testenv.NewConfig()
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
-
-	reuseEnv = config.Reuse
 
 	testEnv, err = testenv.New(config)
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-	if !reuseEnv {
+	if !config.ReuseEnv {
 		ginkgo.By("setup test environment")
 		err = testEnv.SetUp(ctx)
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
@@ -67,6 +65,8 @@ func beforeSuite(ctx context.Context) {
 		ginkgo.By("starting test environment")
 		err = testEnv.Start(ctx)
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
+	} else {
+		ginkgo.By("re-using test environment")
 	}
 
 	ginkgo.By("waiting for services to become ready")
@@ -86,7 +86,7 @@ func beforeSuite(ctx context.Context) {
 var _ = ginkgo.BeforeSuite(beforeSuite)
 
 func afterSuite(ctx context.Context) {
-	if !reuseEnv {
+	if !config.ReuseEnv {
 		ginkgo.By("stopping test environment")
 		err := testEnv.Stop(ctx)
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())

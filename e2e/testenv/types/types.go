@@ -62,6 +62,8 @@ const (
 )
 
 type Config struct {
+	// Platform defines the platform to be used for running end-to-end test suite.
 	Platform Platform `mapstructure:"platform"`
-	Reuse    bool     `mapstructure:"use_existing"`
+	// ReuseEnv determines if the test environment needs to be set-up/started or not before running the test suite.
+	ReuseEnv bool `mapstructure:"use_existing"`
 }

@@ -43,7 +43,7 @@ func TestConfig(t *testing.T) {
 			ExpectedNewErrorMatcher: Not(HaveOccurred()),
 			ExpectedConfig: &envtypes.Config{
 				Platform: envtypes.Kubernetes,
-				Reuse:    true,
+				ReuseEnv: true,
 			},
 			ExpectedValidateErrorMatcher: Not(HaveOccurred()),
 		},
@@ -53,7 +53,7 @@ func TestConfig(t *testing.T) {
 			ExpectedNewErrorMatcher: Not(HaveOccurred()),
 			ExpectedConfig: &envtypes.Config{
 				Platform: envtypes.Docker,
-				Reuse:    false,
+				ReuseEnv: false,
 			},
 			ExpectedValidateErrorMatcher: Not(HaveOccurred()),
 		},
