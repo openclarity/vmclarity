@@ -15,24 +15,24 @@
 
 package models
 
-// GetRepoTag returns the first repo tag if it exists. Otherwise, returns false.
-func (c *ContainerImageInfo) GetRepoTag() (string, bool) {
+// GetFirstRepoTag returns the first repo tag if it exists. Otherwise, returns false.
+func (c *ContainerImageInfo) GetFirstRepoTag() (string, bool) {
 	var tag string
 	var ok bool
 
-	if len(*c.RepoTags) > 0 {
+	if c.RepoTags != nil && len(*c.RepoTags) > 0 {
 		tag, ok = (*c.RepoTags)[0], true
 	}
 
 	return tag, ok
 }
 
-// GetRepoDigest returns the first repo digest if it exists. Otherwise, returns false.
-func (c *ContainerImageInfo) GetRepoDigest() (string, bool) {
+// GetFirstRepoDigest returns the first repo digest if it exists. Otherwise, returns false.
+func (c *ContainerImageInfo) GetFirstRepoDigest() (string, bool) {
 	var digest string
 	var ok bool
 
-	if len(*c.RepoDigests) > 0 {
+	if c.RepoDigests != nil && len(*c.RepoDigests) > 0 {
 		digest, ok = (*c.RepoDigests)[0], true
 	}
 
