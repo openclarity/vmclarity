@@ -35,14 +35,27 @@ func TestConfig(t *testing.T) {
 		ExpectedValidateErrorMatcher types.GomegaMatcher
 	}{
 		{
-			Name: "Valid config",
+			Name: "kubernetes external config",
 			EnvVars: map[string]string{
-				"VMCLARITY_E2E_PLATFORM":     "kubernetes",
+				"VMCLARITY_E2E_PLATFORM":     "kubernetes-external",
 				"VMCLARITY_E2E_USE_EXISTING": "true",
 			},
 			ExpectedNewErrorMatcher: Not(HaveOccurred()),
 			ExpectedConfig: &envtypes.Config{
 				Platform: envtypes.Kubernetes,
+				ReuseEnv: true,
+			},
+			ExpectedValidateErrorMatcher: Not(HaveOccurred()),
+		},
+		{
+			Name: "kubernetes kind config",
+			EnvVars: map[string]string{
+				"VMCLARITY_E2E_PLATFORM":     "kubernetes-kind",
+				"VMCLARITY_E2E_USE_EXISTING": "true",
+			},
+			ExpectedNewErrorMatcher: Not(HaveOccurred()),
+			ExpectedConfig: &envtypes.Config{
+				Platform: envtypes.Kind,
 				ReuseEnv: true,
 			},
 			ExpectedValidateErrorMatcher: Not(HaveOccurred()),

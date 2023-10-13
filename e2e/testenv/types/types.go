@@ -55,7 +55,8 @@ type Platform string
 
 const (
 	Docker     Platform = "docker"
-	Kubernetes Platform = "kubernetes"
+	Kind       Platform = "kubernetes-kind"
+	Kubernetes Platform = "kubernetes-external"
 	AWS        Platform = "aws"
 	GCP        Platform = "gpc"
 	Azure      Platform = "azure"
