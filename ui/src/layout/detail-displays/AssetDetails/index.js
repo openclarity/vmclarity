@@ -53,7 +53,7 @@ const AssetDetails = ({assetData, withAssetLink=false, withAssetScansLink=false}
     const navigate = useNavigate();
 
     const {id, assetInfo, firstSeen, lastSeen, terminatedOn} = assetData;
-    const {objectType, location, tags, image, instanceType, platform, launchTime, rootVolume, repoDigests, createdAt} = assetInfo || {};
+    const {objectType, location, tags, labels, image, instanceType, platform, launchTime, rootVolume, repoDigests, createdAt} = assetInfo || {};
     const {sizeGB, encrypted} = rootVolume || {};
 
     const platformFormatted = useMemo(() => {
@@ -87,7 +87,7 @@ const AssetDetails = ({assetData, withAssetLink=false, withAssetScansLink=false}
                         <TitleValueDisplay title="Terminated On">{formatDate(terminatedOn)}</TitleValueDisplay>
                     </TitleValueDisplayRow>
                     <TitleValueDisplayRow>
-                        <TitleValueDisplay title="Labels"><TagsList items={formatTagsToStringsList(tags)} /></TitleValueDisplay>
+                        <TitleValueDisplay title="Labels"><TagsList items={formatTagsToStringsList(tags ?? labels)} /></TitleValueDisplay>
                     </TitleValueDisplayRow>
                     <TitleValueDisplayRow>
                         <TitleValueDisplay title="Image">{imageFormatted}</TitleValueDisplay>
