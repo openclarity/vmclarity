@@ -105,6 +105,11 @@ func New(ctx context.Context, config *Config) (*Orchestrator, error) {
 		return nil, fmt.Errorf("failed to initialize provider. Provider=%s: %w", config.ProviderKind, err)
 	}
 
+	err = p.Register(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to register provider. Provider=%s: %w", config.ProviderKind, err)
+	}
+
 	return NewWithProvider(config, p, backendClient)
 }
 

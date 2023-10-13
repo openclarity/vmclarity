@@ -151,3 +151,7 @@ func (c *Client) RemoveAssetScan(ctx context.Context, config *provider.ScanJobCo
 	}
 	return nil
 }
+
+func (c *Client) Register(ctx context.Context) error {
+	return fmt.Errorf("not implemented")
+}

@@ -25,9 +25,15 @@ type Provider interface {
 	// Kind returns models.CloudProvider
 	Kind() models.CloudProvider
 
+	Registerer
 	Discoverer
 	Estimator
 	Scanner
+}
+
+type Registerer interface {
+	// Register registers the provider to the backend API server by posting with a registration ID.
+	Register(context.Context) error
 }
 
 type Discoverer interface {

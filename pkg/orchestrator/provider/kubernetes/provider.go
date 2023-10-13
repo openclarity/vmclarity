@@ -95,3 +95,7 @@ func (p *Provider) RunAssetScan(context.Context, *provider.ScanJobConfig) error 
 func (p *Provider) RemoveAssetScan(context.Context, *provider.ScanJobConfig) error {
 	return fmt.Errorf("not implemented")
 }
+
+func (p *Provider) Register(ctx context.Context) error {
+	return fmt.Errorf("not implemented")
+}

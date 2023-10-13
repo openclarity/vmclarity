@@ -389,3 +389,7 @@ func getKeyValue(str string) (string, string) {
 	}
 	return str, ""
 }
+
+func (c *Client) Register(ctx context.Context) error {
+	return fmt.Errorf("not implemented")
+}

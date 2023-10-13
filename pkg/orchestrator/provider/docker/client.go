@@ -490,3 +490,7 @@ func convertTags(tags map[string]string) *[]models.Tag {
 	}
 	return &ret
 }
+
+func (c *Client) Register(ctx context.Context) error {
+	return fmt.Errorf("not implemented")
+}

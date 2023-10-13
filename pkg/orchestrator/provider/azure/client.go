@@ -324,3 +324,7 @@ func createImageURN(reference *armcompute.ImageReference) string {
 	}
 	return *reference.Publisher + "/" + *reference.Offer + "/" + *reference.SKU + "/" + *reference.Version
 }
+
+func (c *Client) Register(ctx context.Context) error {
+	return fmt.Errorf("not implemented")
+}

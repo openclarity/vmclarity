@@ -943,3 +943,7 @@ func (c *Client) ListAllRegions(ctx context.Context) ([]Region, error) {
 
 	return ret, nil
 }
+
+func (c *Client) Register(ctx context.Context) error {
+	return fmt.Errorf("not implemented")
+}
