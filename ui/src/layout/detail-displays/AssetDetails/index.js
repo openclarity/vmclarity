@@ -53,7 +53,7 @@ const AssetDetails = ({assetData, withAssetLink=false, withAssetScansLink=false}
     const navigate = useNavigate();
 
     const {id, assetInfo, firstSeen, lastSeen, terminatedOn} = assetData;
-    const {objectType, location, tags, image, instanceType, platform, architecture, os, launchTime, rootVolume} = assetInfo || {};
+    const {objectType, location, tags, image, instanceType, platform, architecture, os, launchTime, rootVolume, repoDigests} = assetInfo || {};
     const {sizeGB, encrypted} = rootVolume || {};
 
     const platformFormatted = useMemo(() => {
@@ -78,7 +78,7 @@ const AssetDetails = ({assetData, withAssetLink=false, withAssetScansLink=false}
                     <TitleValueDisplayRow>
                         <TitleValueDisplay title="Name">{getAssetName(assetInfo)}</TitleValueDisplay>
                         <TitleValueDisplay title="Type">{objectType}</TitleValueDisplay>
-                        <TitleValueDisplay title="Location">{location}</TitleValueDisplay>
+                        <TitleValueDisplay title="Location">{location || repoDigests?.[0] || image?.repoDigests?.[0]}</TitleValueDisplay>
                     </TitleValueDisplayRow>
                     <TitleValueDisplayRow>
                         <TitleValueDisplay title="First Seen">{formatDate(firstSeen)}</TitleValueDisplay>
