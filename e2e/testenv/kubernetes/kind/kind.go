@@ -46,7 +46,7 @@ const (
 	KindClusterName            = "vmclarity-e2e"
 	KindConfigFilePath         = "testenv/kubernetes/kind/kind-config.yaml"
 	KindClusterCreationTimeout = 2 * time.Minute
-	KindAPIServerPort          = 30000
+	KindAPIServerPort          = "30000"
 )
 
 // nolint:wrapcheck

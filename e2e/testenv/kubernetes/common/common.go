@@ -133,7 +133,8 @@ func (c *ChartHelper) DeployHelmChart() error {
 		"--set", "gateway.service.type=NodePort",
 		"--set", "gateway.service.nodePort=30000",
 	}
-	args = append(args, cmdArgs...)
+	// TODO kind image load not work so commented out now
+	// args = append(args, cmdArgs...)
 
 	cmd := exec.Command("helm", args...)
 
