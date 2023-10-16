@@ -59,6 +59,7 @@ func New(_ *envtypes.Config) (*KindEnv, error) {
 
 // nolint:wrapcheck
 func (e *KindEnv) Start(ctx context.Context) error {
+	// TODO deploy a test pod
 	return common.DeployHelmChart(e.kubeConfigPath)
 }
 
@@ -93,6 +94,7 @@ func (e *KindEnv) TearDown(_ context.Context) error {
 
 // nolint:wrapcheck
 func (e *KindEnv) ServicesReady(ctx context.Context) (bool, error) {
+	// TODO check if services are ready
 	return true, nil
 }
 
@@ -106,6 +108,7 @@ func (e *KindEnv) Services() []string {
 }
 
 func (e *KindEnv) VMClarityAPIURL() (*url.URL, error) {
+	// TODO get APIserver URL
 	return nil, nil
 }
 
@@ -119,13 +122,7 @@ func (e *KindEnv) loadContainerImagesToCluster() error {
 		return fmt.Errorf("failed to list nodes: %w", err)
 	}
 
-	images := map[string]string{
-		"APIServerContainerImage":    os.Getenv("APIServerContainerImage"),
-		"OrchestratorContainerImage": os.Getenv("OrchestratorContainerImage"),
-		"ScannerContainerImage":      os.Getenv("ScannerContainerImage"),
-		"UIContainerImage":           os.Getenv("UIContainerImage"),
-		"UIBackendContainerImage":    os.Getenv("UIBackendContainerImage"),
-	}
+	images := common.GetImageList()
 
 	for k, image := range images {
 		imageTarName, err := save(k, image)
