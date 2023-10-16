@@ -156,7 +156,7 @@ func (e *KindEnv) loadContainerImagesToCluster() error {
 func loadContainerImageToCluster(nodeList []nodes.Node, imageTarName string) error {
 	f, err := os.Open(imageTarName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to open image tar file: %w", err)
 	}
 	defer f.Close()
 	for _, node := range nodeList {
