@@ -5,10 +5,13 @@ metadata:
   namespace: {{ .Release.Namespace | quote }}
   labels: {{- include "vmclarity.gateway.labels.standard" . | nindent 4 }}
 spec:
-  type: ClusterIP
+  type: {{ default "ClusterIP" .Values.gateway.service.type }}
   ports:
     - name: http
       protocol: TCP
       port: 80
       targetPort: 8080
+      {{- if .Values.gateway.service.nodePort }}
+      nodePort: {{ .Values.gateway.service.nodePort }}
+      {{- end }}
   selector: {{- include "vmclarity.gateway.labels.matchLabels" . | nindent 4 }}

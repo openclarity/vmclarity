@@ -2,12 +2,12 @@ package common
 
 import (
 	"fmt"
-	"math/rand"
 	"net/url"
 	"os"
 	"os/exec"
 
 	"github.com/docker/distribution/reference"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -30,16 +30,6 @@ type ChartHelper struct {
 	Namespace      string
 	KubeConfigPath string
 	ReleaseName    string
-}
-
-func RandomName(prefix string, length int) string {
-	chars := "0123456789"
-	result := make([]byte, length)
-	for i := 0; i < length; i++ {
-		result[i] = chars[rand.Intn(len(chars))]
-	}
-
-	return prefix + "-" + string(result)
 }
 
 func NewChartHelper(kubeConfigPath string) (*ChartHelper, error) {
@@ -98,15 +88,56 @@ func (c *ChartHelper) DeployHelmChart() error {
 	//}
 
 	// TODO (pebalogh) remove this after the issue above is solved
-	cmd := exec.Command("helm", "install", c.ReleaseName,
+	parsedImageList := make(map[string]map[string]string)
+	var err error
+	for k, v := range GetImageList() {
+		logrus.Infof("---- PRINT image %s", v)
+		parsedImageList[k], err = getImageRegistryRepositoryTag(v)
+		if err != nil {
+			return fmt.Errorf("failed to parse %s image: %s", k, v)
+		}
+	}
+	var cmdArgs []string
+	cmdArgs = append(cmdArgs,
+		"--set", fmt.Sprintf("apiserver.image.registry=%s", parsedImageList[APIServerContainerImage]["registry"]),
+		"--set", fmt.Sprintf("apiserver.image.repository=%s", parsedImageList[APIServerContainerImage]["repository"]),
+		"--set", fmt.Sprintf("apiserver.image.tag=%s", parsedImageList[APIServerContainerImage]["tag"]),
+	)
+	cmdArgs = append(cmdArgs,
+		"--set", fmt.Sprintf("orchestrator.image.registry=%s", parsedImageList[OrchestratorContainerImage]["registry"]),
+		"--set", fmt.Sprintf("orchestrator.image.repository=%s", parsedImageList[OrchestratorContainerImage]["repository"]),
+		"--set", fmt.Sprintf("orchestrator.image.tag=%s", parsedImageList[OrchestratorContainerImage]["tag"]),
+	)
+	cmdArgs = append(cmdArgs,
+		"--set", fmt.Sprintf("ui.image.registry=%s", parsedImageList[UIContainerImage]["registry"]),
+		"--set", fmt.Sprintf("ui.image.repository=%s", parsedImageList[UIBackendContainerImage]["repository"]),
+		"--set", fmt.Sprintf("ui.image.tag=%s", parsedImageList[UIContainerImage]["tag"]),
+	)
+	cmdArgs = append(cmdArgs,
+		"--set", fmt.Sprintf("uibackend.image.registry=%s", parsedImageList[UIBackendContainerImage]["registry"]),
+		"--set", fmt.Sprintf("uibackend.image.repository=%s", parsedImageList[UIBackendContainerImage]["repository"]),
+		"--set", fmt.Sprintf("uibackend.image.tag=%s", parsedImageList[UIBackendContainerImage]["tag"]),
+	)
+	cmdArgs = append(cmdArgs,
+		"--set", fmt.Sprintf("orchestrator.scannerImage.registry=%s", parsedImageList[ScannerContainerImage]["registry"]),
+		"--set", fmt.Sprintf("orchestrator.scannerImage.repository=%s", parsedImageList[ScannerContainerImage]["repository"]),
+		"--set", fmt.Sprintf("orchestrator.scannerImage.tag=%s", parsedImageList[ScannerContainerImage]["tag"]),
+	)
+
+	args := []string{"install", c.ReleaseName,
 		VMClarityChartPath,
 		"--namespace", VMClarityNamespace,
 		"--create-namespace",
 		"--kubeconfig", c.KubeConfigPath,
+		"--wait",
 		"--set", "orchestrator.provider=kubernetes",
 		"--set", "orchestrator.serviceAccount.automountServiceAccountToken=true",
-		"--wait",
-	)
+		"--set", "gateway.service.type=NodePort",
+		"--set", "gateway.service.nodePort=30000",
+	}
+	args = append(args, cmdArgs...)
+
+	cmd := exec.Command("helm", args...)
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -140,7 +171,7 @@ func (c *ChartHelper) DeleteHelmChart() error {
 }
 
 func createValues(imageList map[string]string) (map[string]interface{}, error) {
-	var parsedImageList map[string]map[string]string
+	parsedImageList := make(map[string]map[string]string)
 	var err error
 	for k, v := range imageList {
 		parsedImageList[k], err = getImageRegistryRepositoryTag(v)
@@ -201,14 +232,14 @@ func getImageRegistryRepositoryTag(image string) (map[string]string, error) {
 	}, nil
 }
 
-func GetVMClarityAPIURL() *url.URL {
-	vmclarityAPIServerServiceFullname := fmt.Sprintf("%s-%s.%s.svc.cluster.local",
+func GetVMClarityInternalAPIURL() *url.URL {
+	vmclarityAPIServerService := fmt.Sprintf("%s-%s.%s.svc.cluster.local",
 		VMClarityReleaseName,
 		VMClarityAPIServerServiceName,
 		VMClarityNamespace,
 	)
 	return &url.URL{
 		Scheme: "http",
-		Host:   fmt.Sprintf("%s:%s", vmclarityAPIServerServiceFullname, VMClarityAPIServerPort),
+		Host:   fmt.Sprintf("%s:%s", vmclarityAPIServerService, VMClarityAPIServerPort),
 	}
 }

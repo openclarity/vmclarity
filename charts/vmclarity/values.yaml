@@ -393,6 +393,8 @@ gateway:
       drop:
         - ALL
 
+  service: {}
+
 postgresql:
   image:
     # -- Postgresql container registry

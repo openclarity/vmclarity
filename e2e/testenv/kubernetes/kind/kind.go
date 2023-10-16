@@ -26,6 +26,7 @@ import (
 
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/docker/client"
+	"github.com/sirupsen/logrus"
 	"sigs.k8s.io/kind/pkg/cluster"
 	"sigs.k8s.io/kind/pkg/cluster/nodes"
 	"sigs.k8s.io/kind/pkg/cluster/nodeutils"
@@ -43,18 +44,18 @@ type KindEnv struct {
 }
 
 const (
-	KindClusterPrefix          = "vmclarity-e2e"
+	KindClusterName            = "vmclarity-e2e"
 	KindConfigFilePath         = "testenv/kubernetes/kind/kind-config.yaml"
 	KindClusterCreationTimeout = 2 * time.Minute
+	KindAPIServerPort          = 30000
 )
 
 // nolint:wrapcheck
 func New(_ *envtypes.Config) (*KindEnv, error) {
-	kindClusterName := common.RandomName(KindClusterPrefix, 8)
 	return &KindEnv{
-		name:           kindClusterName,
+		name:           KindClusterName,
 		kindConfigPath: KindConfigFilePath,
-		kubeConfigPath: path.Join(os.TempDir(), kindClusterName),
+		kubeConfigPath: path.Join(os.TempDir(), KindClusterName),
 	}, nil
 }
 
@@ -122,9 +123,10 @@ func (e *KindEnv) Services() []string {
 }
 
 func (e *KindEnv) VMClarityAPIURL() (*url.URL, error) {
-
-	return common.GetVMClarityAPIURL(), nil
-	return nil, nil
+	return &url.URL{
+		Scheme: "http",
+		Host:   fmt.Sprintf("localhost:%s", KindAPIServerPort),
+	}, nil
 }
 
 func (e *KindEnv) Context(ctx context.Context) context.Context {
@@ -147,6 +149,7 @@ func (e *KindEnv) loadContainerImagesToCluster() error {
 		if err := loadContainerImageToCluster(nodeList, imageTarName); err != nil {
 			return err
 		}
+		logrus.Infof("---- load image: %s to nodes: %v", imageTarName, nodeList)
 	}
 
 	return nil
