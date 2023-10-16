@@ -150,11 +150,9 @@ func (c *ChartHelper) DeployHelmChart() error {
 		"--set", "gateway.service.type=NodePort",
 		"--set", "gateway.service.nodePort=30000",
 	}
-	// TODO kind image load not work so commented out now
 	args = append(args, cmdArgs...)
 
 	cmd := exec.Command("helm", args...)
-
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("failed to install VMClarity helm chart: %w, %s", err, string(output))
