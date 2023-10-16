@@ -40,7 +40,6 @@ func (e *KubernetesEnv) Start(ctx context.Context) error {
 
 // nolint:wrapcheck
 func (e *KubernetesEnv) Stop(ctx context.Context) error {
-	//	envfuncs.DestroyCluster(e.name)
 	return nil
 }
 

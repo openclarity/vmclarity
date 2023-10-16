@@ -7,6 +7,7 @@ import (
 	"os/exec"
 
 	"github.com/docker/distribution/reference"
+	"helm.sh/helm/v3/pkg/action"
 )
 
 const (
@@ -22,6 +23,13 @@ const (
 	UIBackendContainerImage    = "UIBackendContainerImage"
 )
 
+type ChartHelper struct {
+	ActionConfig   *action.Configuration
+	Namespace      string
+	KubeConfigPath string
+	ReleaseName    string
+}
+
 func RandomName(prefix string, length int) string {
 	chars := "0123456789"
 	result := make([]byte, length)
@@ -32,15 +40,10 @@ func RandomName(prefix string, length int) string {
 	return prefix + "-" + string(result)
 }
 
-func DeployHelmChart(kubeConfigPath string) error {
+func NewChartHelper(kubeConfigPath string) (*ChartHelper, error) {
 	// Commented out because of the https://github.com/helm/helm/issues/12357
 	// before finding the proper solution we are using command to deploy helm chart
 
-	//chart, err := loader.LoadDir(VMClarityChartPath)
-	//if err != nil {
-	//	return fmt.Errorf("failed to load VMClarity helm chart: %w", err)
-	//}
-	//
 	//actionConfig := new(action.Configuration)
 	//namespace := VMClarityNamespace
 	//restClientGetter := genericclioptions.NewConfigFlags(true)
@@ -52,13 +55,36 @@ func DeployHelmChart(kubeConfigPath string) error {
 	//	os.Getenv(HelmDriverEnvVar),
 	//	logrus.Printf,
 	//); err != nil {
-	//	return fmt.Errorf("failed to init action configuration: %w", err)
+	//	return nil, fmt.Errorf("failed to init action configuration: %w", err)
 	//}
 	//
-	//client := action.NewInstall(actionConfig)
-	//client.ReleaseName = VMClarityReleaseName
-	//client.Namespace = namespace
+	//return &ChartHelper{
+	//	ActionConfig:   actionConfig,
+	//	Namespace:      namespace,
+	//	KubeConfigPath: kubeConfigPath,
+	//	ReleaseName:    VMClarityReleaseName,
+	//}, nil
+
+	// TODO (pebalogh) remove after issue above is solved
+	return &ChartHelper{
+		Namespace:      VMClarityNamespace,
+		KubeConfigPath: kubeConfigPath,
+		ReleaseName:    VMClarityReleaseName,
+	}, nil
+}
+
+func (c *ChartHelper) DeployHelmChart() error {
+	// Commented out because of the https://github.com/helm/helm/issues/12357
+	// before finding the proper solution we are using command to deploy helm chart
+
+	//chart, err := loader.LoadDir(VMClarityChartPath)
+	//if err != nil {
+	//	return fmt.Errorf("failed to load VMClarity helm chart: %w", err)
+	//}
 	//
+	//client := action.NewInstall(c.ActionConfig)
+	//client.ReleaseName = c.ReleaseName
+	//client.Namespace = c.Namespace
 	//
 	//values, err := createValues(GetImageList())
 	//if err != nil {
@@ -70,11 +96,11 @@ func DeployHelmChart(kubeConfigPath string) error {
 	//}
 
 	// TODO (pebalogh) remove this after the issue above is solved
-	cmd := exec.Command("helm", "install", VMClarityReleaseName,
+	cmd := exec.Command("helm", "install", c.ReleaseName,
 		VMClarityChartPath,
 		"--namespace", VMClarityNamespace,
 		"--create-namespace",
-		"--kubeconfig", kubeConfigPath,
+		"--kubeconfig", c.KubeConfigPath,
 		"--set", "orchestrator.provider=kubernetes",
 		"--set", "orchestrator.serviceAccount.automountServiceAccountToken=true",
 		"--wait",
@@ -84,6 +110,28 @@ func DeployHelmChart(kubeConfigPath string) error {
 	if err != nil {
 
 		return fmt.Errorf("failed to install VMClarity helm chart: %w, %s", err, string(output))
+	}
+
+	return nil
+}
+
+func (c *ChartHelper) DeleteHelmChart() error {
+	// Commented out because of the https://github.com/helm/helm/issues/12357
+	// before finding the proper solution we are using command to deploy helm chart
+
+	//uninstall := action.NewUninstall(c.ActionConfig)
+	//if _, err := uninstall.Run(c.ReleaseName); err != nil {
+	//	return fmt.Errorf("failed to delete VMClarity helm chart: %w", err)
+	//}
+
+	// TODO (pebalogh) remove this after the issue above is solved
+	cmd := exec.Command("helm", "delete", c.ReleaseName,
+		"--namespace", VMClarityNamespace,
+	)
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to delete VMClarity helm chart: %w, %s", err, string(output))
 	}
 
 	return nil

@@ -39,6 +39,7 @@ type KindEnv struct {
 	provider       *cluster.Provider
 	kindConfigPath string
 	kubeConfigPath string
+	ChartHelper    *common.ChartHelper
 }
 
 const (
@@ -59,12 +60,25 @@ func New(_ *envtypes.Config) (*KindEnv, error) {
 
 // nolint:wrapcheck
 func (e *KindEnv) Start(ctx context.Context) error {
-	// TODO deploy a test pod
-	return common.DeployHelmChart(e.kubeConfigPath)
+	chartHelper, err := common.NewChartHelper(e.kubeConfigPath)
+	if err != nil {
+		return fmt.Errorf("failed to create chart helper: %w", err)
+	}
+	e.ChartHelper = chartHelper
+	if err := e.ChartHelper.DeployHelmChart(); err != nil {
+		return fmt.Errorf("failed to deploy VMClarity helm chart: %w", err)
+	}
+	// TODO (pebalogh) deploy a test pod/deployment/etc
+	return nil
 }
 
 // nolint:wrapcheck
 func (e *KindEnv) Stop(ctx context.Context) error {
+	// TODO (pebalogh) remove test pod/deployment/etc
+	if err := e.ChartHelper.DeleteHelmChart(); err != nil {
+		// TODO (pebalogh) just log
+		return fmt.Errorf("failed to delete VMclarity helm chart: %w", err)
+	}
 	return nil
 }
 
@@ -109,6 +123,7 @@ func (e *KindEnv) Services() []string {
 
 func (e *KindEnv) VMClarityAPIURL() (*url.URL, error) {
 	// TODO get APIserver URL
+
 	return nil, nil
 }
 
