@@ -20,9 +20,15 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"os"
+	"path"
 	"time"
 
+	"github.com/docker/cli/cli/command"
+	"github.com/docker/docker/client"
 	"sigs.k8s.io/kind/pkg/cluster"
+	"sigs.k8s.io/kind/pkg/cluster/nodes"
+	"sigs.k8s.io/kind/pkg/cluster/nodeutils"
 
 	"github.com/openclarity/vmclarity/e2e/testenv/kubernetes/common"
 	envtypes "github.com/openclarity/vmclarity/e2e/testenv/types"
@@ -43,9 +49,11 @@ const (
 
 // nolint:wrapcheck
 func New(_ *envtypes.Config) (*KindEnv, error) {
+	kindClusterName := common.RandomName(KindClusterPrefix, 8)
 	return &KindEnv{
-		name:           common.RandomName(KindClusterPrefix, 8),
+		name:           kindClusterName,
 		kindConfigPath: KindConfigFilePath,
+		kubeConfigPath: path.Join(os.TempDir(), kindClusterName),
 	}, nil
 }
 
@@ -72,13 +80,11 @@ func (e *KindEnv) SetUp(_ context.Context) error {
 		return fmt.Errorf("failed to create kind cluster: %w", err)
 	}
 	e.provider = provider
-	kubeConfigPath, err := provider.KubeConfig(e.name, false)
-	if err != nil {
-		return fmt.Errorf("failed to get kube config cluster: %w", err)
+	if err := provider.ExportKubeConfig(e.name, e.kubeConfigPath, false); err != nil {
+		return fmt.Errorf("failed to get kubeconfig for kind cluster: %w", err)
 	}
-	e.kindConfigPath = kubeConfigPath
 
-	return nil
+	return e.loadContainerImagesToCluster()
 }
 
 func (e *KindEnv) TearDown(_ context.Context) error {
@@ -107,10 +113,67 @@ func (e *KindEnv) Context(ctx context.Context) context.Context {
 	return context.WithValue(ctx, "", "")
 }
 
-func loadContainerImagesToCluster(cluster string) error {
+func (e *KindEnv) loadContainerImagesToCluster() error {
+	nodeList, err := e.provider.ListNodes(e.name)
+	if err != nil {
+		return fmt.Errorf("failed to list nodes: %w", err)
+	}
+
+	images := map[string]string{
+		"APIServerContainerImage":    os.Getenv("APIServerContainerImage"),
+		"OrchestratorContainerImage": os.Getenv("OrchestratorContainerImage"),
+		"ScannerContainerImage":      os.Getenv("ScannerContainerImage"),
+		"UIContainerImage":           os.Getenv("UIContainerImage"),
+		"UIBackendContainerImage":    os.Getenv("UIBackendContainerImage"),
+	}
+
+	for k, image := range images {
+		imageTarName, err := save(k, image)
+		if err != nil {
+			return fmt.Errorf("failed to save docker image: %w", err)
+		}
+		if err := loadContainerImageToCluster(nodeList, imageTarName); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
-func loadContainerImageToCluster(cluster, image string) error {
+func loadContainerImageToCluster(nodeList []nodes.Node, imageTarName string) error {
+	f, err := os.Open(imageTarName)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	for _, node := range nodeList {
+		return nodeutils.LoadImageArchive(node, f)
+	}
+
 	return nil
+}
+
+func save(pattern, image string) (string, error) {
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		return "", err
+	}
+
+	responseBody, err := cli.ImageSave(context.Background(), []string{image})
+	if err != nil {
+		return "", err
+	}
+	defer responseBody.Close()
+
+	file, err := os.CreateTemp("", pattern)
+	if err != nil {
+		return "", fmt.Errorf("failed to create temp file for image archive: %w", err)
+	}
+	defer file.Close()
+
+	if err := command.CopyToFile(file.Name(), responseBody); err != nil {
+		return "", err
+	}
+
+	return file.Name(), nil
 }
