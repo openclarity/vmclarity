@@ -178,14 +178,14 @@ func (e *KindEnv) loadContainerImagesToCluster() error {
 	for _, selectedNode := range nodeList {
 		selectedNode := selectedNode // capture loop variable
 		fns = append(fns, func() error {
-			return loadContainerImageToCluster(selectedNode, imagesTarPath)
+			return loadContainerImageToNode(selectedNode, imagesTarPath)
 		})
 	}
 
 	return errors.UntilErrorConcurrent(fns)
 }
 
-func loadContainerImageToCluster(node nodes.Node, imagesTarPath string) error {
+func loadContainerImageToNode(node nodes.Node, imagesTarPath string) error {
 	f, err := os.Open(imagesTarPath)
 	if err != nil {
 		return fmt.Errorf("failed to open image tar file: %w", err)
