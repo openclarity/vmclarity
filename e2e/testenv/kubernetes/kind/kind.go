@@ -27,6 +27,7 @@ import (
 
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/docker/client"
+	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/kind/pkg/cluster"
 	"sigs.k8s.io/kind/pkg/cluster/nodes"
 	"sigs.k8s.io/kind/pkg/cluster/nodeutils"
@@ -43,6 +44,7 @@ type KindEnv struct {
 	kindConfigPath string
 	kubeConfigPath string
 	ChartHelper    *common.ChartHelper
+	k8sClientSet   kubernetes.Interface
 }
 
 const (
@@ -72,17 +74,27 @@ func (e *KindEnv) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to deploy VMClarity helm chart: %w", err)
 	}
 
+	k8sClientSet, err := common.CreateK8sClient(e.kubeConfigPath)
+	if err != nil {
+		return fmt.Errorf("failed to create k8s clientset: %w", err)
+	}
+	e.k8sClientSet = k8sClientSet
+
 	// TODO (pebalogh) deploy a test pod/deployment/etc
-	return common.CreateTestDeployment(e.kubeConfigPath)
+	return common.CreateTestDeployment(e.k8sClientSet)
 }
 
 // nolint:wrapcheck
 func (e *KindEnv) Stop(ctx context.Context) error {
-	// TODO (pebalogh) remove test pod/deployment/etc
+	if err := common.DeleteTestDeployment(e.k8sClientSet); err != nil {
+		// TODO (pebalogh) maybe just log ???
+		return fmt.Errorf("failed to delete test deployment: %w", err)
+	}
 	if err := e.ChartHelper.DeleteHelmChart(); err != nil {
-		// TODO (pebalogh) just log
+		// TODO (pebalogh) maybe just log ???
 		return fmt.Errorf("failed to delete VMclarity helm chart: %w", err)
 	}
+
 	return nil
 }
 

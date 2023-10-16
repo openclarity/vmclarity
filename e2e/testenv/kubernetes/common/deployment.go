@@ -23,26 +23,21 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
-func CreateTestDeployment(kubeConfig string) error {
-	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
-	if err != nil {
-		return fmt.Errorf("failed to create k8s config: %w", err)
-	}
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return fmt.Errorf("failed to create k8s client: %w", err)
-	}
+const (
+	TestDeploymentName = "test-deployment"
+	TestNamespace      = apiv1.NamespaceDefault
+)
 
-	deploymentsClient := clientset.AppsV1().Deployments(apiv1.NamespaceDefault)
+func CreateTestDeployment(clientSet kubernetes.Interface) error {
+	deploymentsClient := clientSet.AppsV1().Deployments(TestNamespace)
 
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "demo-deployment",
+			Name: TestDeploymentName,
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: utils.PointerTo(int32(2)),
@@ -60,15 +55,8 @@ func CreateTestDeployment(kubeConfig string) error {
 				Spec: apiv1.PodSpec{
 					Containers: []apiv1.Container{
 						{
-							Name:  "alpine",
-							Image: "alpine:3.18.2",
-							Ports: []apiv1.ContainerPort{
-								{
-									Name:          "http",
-									Protocol:      apiv1.ProtocolTCP,
-									ContainerPort: 80,
-								},
-							},
+							Name:    "alpine",
+							Image:   "alpine:3.18.2",
 							Command: []string{"sleep", "infinity"},
 						},
 					},
@@ -77,7 +65,17 @@ func CreateTestDeployment(kubeConfig string) error {
 		},
 	}
 
-	_, err = deploymentsClient.Create(context.TODO(), deployment, metav1.CreateOptions{})
+	_, err := deploymentsClient.Create(context.TODO(), deployment, metav1.CreateOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to create test deployment: %w", err)
+	}
+
+	return nil
+}
+
+func DeleteTestDeployment(clientSet kubernetes.Interface) error {
+	deploymentsClient := clientSet.AppsV1().Deployments(TestNamespace)
+	err := deploymentsClient.Delete(context.TODO(), TestDeploymentName, metav1.DeleteOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to create test deployment: %w", err)
 	}

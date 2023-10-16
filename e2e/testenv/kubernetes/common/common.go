@@ -22,6 +22,8 @@ import (
 	"os/exec"
 
 	"github.com/docker/distribution/reference"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 const (
@@ -255,4 +257,16 @@ func GetVMClarityInternalAPIURL() *url.URL {
 		Scheme: "http",
 		Host:   fmt.Sprintf("%s:%s", vmclarityAPIServerService, VMClarityAPIServerPort),
 	}
+}
+
+func CreateK8sClient(kubeConfig string) (kubernetes.Interface, error) {
+	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create k8s config: %w", err)
+	}
+	clientSet, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create k8s client: %w", err)
+	}
+	return clientSet, nil
 }
