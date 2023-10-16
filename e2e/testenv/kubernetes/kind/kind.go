@@ -26,7 +26,6 @@ import (
 
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/docker/client"
-	"github.com/sirupsen/logrus"
 	"sigs.k8s.io/kind/pkg/cluster"
 	"sigs.k8s.io/kind/pkg/cluster/nodes"
 	"sigs.k8s.io/kind/pkg/cluster/nodeutils"
@@ -149,7 +148,6 @@ func (e *KindEnv) loadContainerImagesToCluster() error {
 		if err := loadContainerImageToCluster(nodeList, imageTarName); err != nil {
 			return err
 		}
-		logrus.Infof("---- load image: %s to nodes: %v", imageTarName, nodeList)
 	}
 
 	return nil

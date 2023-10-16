@@ -7,7 +7,6 @@ import (
 	"os/exec"
 
 	"github.com/docker/distribution/reference"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -91,7 +90,6 @@ func (c *ChartHelper) DeployHelmChart() error {
 	parsedImageList := make(map[string]map[string]string)
 	var err error
 	for k, v := range GetImageList() {
-		logrus.Infof("---- PRINT image %s", v)
 		parsedImageList[k], err = getImageRegistryRepositoryTag(v)
 		if err != nil {
 			return fmt.Errorf("failed to parse %s image: %s", k, v)
