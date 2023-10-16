@@ -3,28 +3,30 @@ package common
 import (
 	"fmt"
 	"math/rand"
+	"net/url"
 	"os"
 	"os/exec"
 
 	"github.com/docker/distribution/reference"
-	"helm.sh/helm/v3/pkg/action"
 )
 
 const (
-	VMClarityChartPath         = "../charts/vmclarity"
-	HelmDriverEnvVar           = "HELM_DRIVER"
-	VMClarityNamespace         = "vmclarity"
-	VMClarityReleaseName       = "vmclarity-e2e"
-	KubernetesProvider         = "kubernetes"
-	APIServerContainerImage    = "APIServerContainerImage"
-	OrchestratorContainerImage = "OrchestratorContainerImage"
-	ScannerContainerImage      = "ScannerContainerImage"
-	UIContainerImage           = "UIContainerImage"
-	UIBackendContainerImage    = "UIBackendContainerImage"
+	VMClarityChartPath            = "../charts/vmclarity"
+	HelmDriverEnvVar              = "HELM_DRIVER"
+	VMClarityNamespace            = "vmclarity"
+	VMClarityReleaseName          = "vmclarity-e2e"
+	KubernetesProvider            = "kubernetes"
+	APIServerContainerImage       = "APIServerContainerImage"
+	OrchestratorContainerImage    = "OrchestratorContainerImage"
+	ScannerContainerImage         = "ScannerContainerImage"
+	UIContainerImage              = "UIContainerImage"
+	UIBackendContainerImage       = "UIBackendContainerImage"
+	VMClarityAPIServerPort        = "8888"
+	VMClarityAPIServerServiceName = "apiserver"
 )
 
 type ChartHelper struct {
-	ActionConfig   *action.Configuration
+	//	ActionConfig   *action.Configuration
 	Namespace      string
 	KubeConfigPath string
 	ReleaseName    string
@@ -197,4 +199,16 @@ func getImageRegistryRepositoryTag(image string) (map[string]string, error) {
 		"repository": repository,
 		"tag":        tag,
 	}, nil
+}
+
+func GetVMClarityAPIURL() *url.URL {
+	vmclarityAPIServerServiceFullname := fmt.Sprintf("%s-%s.%s.svc.cluster.local",
+		VMClarityReleaseName,
+		VMClarityAPIServerServiceName,
+		VMClarityNamespace,
+	)
+	return &url.URL{
+		Scheme: "http",
+		Host:   fmt.Sprintf("%s:%s", vmclarityAPIServerServiceFullname, VMClarityAPIServerPort),
+	}
 }

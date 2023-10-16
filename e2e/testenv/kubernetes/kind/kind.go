@@ -122,8 +122,8 @@ func (e *KindEnv) Services() []string {
 }
 
 func (e *KindEnv) VMClarityAPIURL() (*url.URL, error) {
-	// TODO get APIserver URL
 
+	return common.GetVMClarityAPIURL(), nil
 	return nil, nil
 }
 
