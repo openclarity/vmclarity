@@ -123,7 +123,7 @@ func (c *ChartHelper) DeployHelmChart() error {
 	)
 	cmdArgs = append(cmdArgs,
 		"--set", fmt.Sprintf("ui.image.registry=%s", parsedImageList[UIContainerImage]["registry"]),
-		"--set", fmt.Sprintf("ui.image.repository=%s", parsedImageList[UIBackendContainerImage]["repository"]),
+		"--set", fmt.Sprintf("ui.image.repository=%s", parsedImageList[UIContainerImage]["repository"]),
 		"--set", fmt.Sprintf("ui.image.tag=%s", parsedImageList[UIContainerImage]["tag"]),
 	)
 	cmdArgs = append(cmdArgs,
