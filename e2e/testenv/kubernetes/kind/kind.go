@@ -124,7 +124,7 @@ func (e *KindEnv) Services() []string {
 func (e *KindEnv) VMClarityAPIURL() (*url.URL, error) {
 	return &url.URL{
 		Scheme: "http",
-		Host:   fmt.Sprintf("localhost:%s", KindAPIServerPort),
+		Host:   fmt.Sprintf("localhost:%s/api", KindAPIServerPort),
 	}, nil
 }
 
