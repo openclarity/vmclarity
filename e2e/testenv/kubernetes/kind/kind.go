@@ -22,6 +22,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"time"
 
 	"github.com/docker/cli/cli/command"
@@ -29,6 +30,8 @@ import (
 	"sigs.k8s.io/kind/pkg/cluster"
 	"sigs.k8s.io/kind/pkg/cluster/nodes"
 	"sigs.k8s.io/kind/pkg/cluster/nodeutils"
+	"sigs.k8s.io/kind/pkg/errors"
+	"sigs.k8s.io/kind/pkg/fs"
 
 	"github.com/openclarity/vmclarity/e2e/testenv/kubernetes/common"
 	envtypes "github.com/openclarity/vmclarity/e2e/testenv/types"
@@ -68,8 +71,9 @@ func (e *KindEnv) Start(ctx context.Context) error {
 	if err := e.ChartHelper.DeployHelmChart(); err != nil {
 		return fmt.Errorf("failed to deploy VMClarity helm chart: %w", err)
 	}
+
 	// TODO (pebalogh) deploy a test pod/deployment/etc
-	return nil
+	return common.CreateTestDeployment(e.kubeConfigPath)
 }
 
 // nolint:wrapcheck
@@ -138,55 +142,62 @@ func (e *KindEnv) loadContainerImagesToCluster() error {
 		return fmt.Errorf("failed to list nodes: %w", err)
 	}
 
-	images := common.GetImageList()
-
-	for k, image := range images {
-		imageTarName, err := save(k, image)
-		if err != nil {
-			return fmt.Errorf("failed to save docker image: %w", err)
-		}
-		if err := loadContainerImageToCluster(nodeList, imageTarName); err != nil {
-			return err
-		}
+	imagesMap := common.GetImageList()
+	var images []string
+	for _, image := range imagesMap {
+		images = append(images, image)
 	}
 
-	return nil
+	// Setup the tar path where the images will be saved
+	dir, err := fs.TempDir("", "images-tar")
+	if err != nil {
+		return fmt.Errorf("failed to create tempdir: %w", err)
+	}
+	defer os.RemoveAll(dir)
+	imagesTarPath := filepath.Join(dir, "images.tar")
+	// Save the images into a tar
+	err = save(images, imagesTarPath)
+	if err != nil {
+		return fmt.Errorf("failed to save images to tar archive: %w", err)
+	}
+
+	// Load the images on the selected nodes
+	fns := []func() error{}
+	for _, selectedNode := range nodeList {
+		selectedNode := selectedNode // capture loop variable
+		fns = append(fns, func() error {
+			return loadContainerImageToCluster(selectedNode, imagesTarPath)
+		})
+	}
+
+	return errors.UntilErrorConcurrent(fns)
 }
 
-func loadContainerImageToCluster(nodeList []nodes.Node, imageTarName string) error {
-	f, err := os.Open(imageTarName)
+func loadContainerImageToCluster(node nodes.Node, imagesTarPath string) error {
+	f, err := os.Open(imagesTarPath)
 	if err != nil {
 		return fmt.Errorf("failed to open image tar file: %w", err)
 	}
 	defer f.Close()
-	for _, node := range nodeList {
-		return nodeutils.LoadImageArchive(node, f)
-	}
 
-	return nil
+	return nodeutils.LoadImageArchive(node, f)
 }
 
-func save(pattern, image string) (string, error) {
+func save(images []string, tarName string) error {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		return "", err
+		return fmt.Errorf("failed to create docker client: %w", err)
 	}
 
-	responseBody, err := cli.ImageSave(context.Background(), []string{image})
+	responseBody, err := cli.ImageSave(context.Background(), images)
 	if err != nil {
-		return "", err
+		return fmt.Errorf("failed to save image: %w", err)
 	}
 	defer responseBody.Close()
 
-	file, err := os.CreateTemp("", pattern)
-	if err != nil {
-		return "", fmt.Errorf("failed to create temp file for image archive: %w", err)
-	}
-	defer file.Close()
-
-	if err := command.CopyToFile(file.Name(), responseBody); err != nil {
-		return "", err
+	if err := command.CopyToFile(tarName, responseBody); err != nil {
+		return fmt.Errorf("failed to copy image to tar file: %w", err)
 	}
 
-	return file.Name(), nil
+	return nil
 }
