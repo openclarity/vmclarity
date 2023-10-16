@@ -88,10 +88,6 @@ func TestNewAssetScanFromScan(t *testing.T) {
 						Errors: nil,
 						State:  utils.PointerTo(models.AssetScanStateStatePending),
 					},
-					General: &models.AssetScanState{
-						Errors: nil,
-						State:  utils.PointerTo(models.AssetScanStateStatePending),
-					},
 					Malware: &models.AssetScanState{
 						Errors: nil,
 						State:  utils.PointerTo(models.AssetScanStateStatePending),
@@ -120,6 +116,11 @@ func TestNewAssetScanFromScan(t *testing.T) {
 						State: utils.PointerTo(models.AssetScanStateStatePending),
 					},
 				},
+				GeneralStatus: models.NewGeneralStatus(
+					models.AssetScanGeneralStatusStatePending,
+					models.AssetScanCreate,
+					nil,
+				),
 				Summary: newAssetScanSummary(),
 				Asset: &models.AssetRelationship{
 					Id: assetID,

@@ -145,8 +145,8 @@ func (e AssetScanReconcileEvent) Hash() string {
 }
 
 func (asp *AssetScanProcessor) GetItems(ctx context.Context) ([]AssetScanReconcileEvent, error) {
-	filter := fmt.Sprintf("status/general/state eq '%s' and (findingsProcessed eq false or findingsProcessed eq null)",
-		models.AssetScanStateStateDone)
+	filter := fmt.Sprintf("generalStatus/state eq '%s' and (findingsProcessed eq false or findingsProcessed eq null)",
+		models.AssetScanGeneralStatusStateDone)
 	assetScans, err := asp.client.GetAssetScans(ctx, models.GetAssetScansParams{
 		Filter: utils.PointerTo(filter),
 		Select: utils.PointerTo("id"),

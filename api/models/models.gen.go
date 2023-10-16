@@ -27,15 +27,37 @@ const (
 	AssetScanEstimationStateStateReasonUnexpected AssetScanEstimationStateStateReason = "Unexpected"
 )
 
+// Defines values for AssetScanGeneralStatusReason.
+const (
+	AbortTimedOut   AssetScanGeneralStatusReason = "AbortTimedOut"
+	AssetScanCreate AssetScanGeneralStatusReason = "AssetScanCreate"
+	OutOfVMClarity  AssetScanGeneralStatusReason = "OutOfVMClarity"
+	ScanAborted     AssetScanGeneralStatusReason = "ScanAborted"
+	ScanDone        AssetScanGeneralStatusReason = "ScanDone"
+	ScanFailed      AssetScanGeneralStatusReason = "ScanFailed"
+	ScanInProgress  AssetScanGeneralStatusReason = "ScanInProgress"
+	ScanReadyToScan AssetScanGeneralStatusReason = "ScanReadyToScan"
+	ScanScheduled   AssetScanGeneralStatusReason = "ScanScheduled"
+)
+
+// Defines values for AssetScanGeneralStatusState.
+const (
+	AssetScanGeneralStatusStateAborted     AssetScanGeneralStatusState = "Aborted"
+	AssetScanGeneralStatusStateDone        AssetScanGeneralStatusState = "Done"
+	AssetScanGeneralStatusStateFailed      AssetScanGeneralStatusState = "Failed"
+	AssetScanGeneralStatusStateInProgress  AssetScanGeneralStatusState = "InProgress"
+	AssetScanGeneralStatusStatePending     AssetScanGeneralStatusState = "Pending"
+	AssetScanGeneralStatusStateReadyToScan AssetScanGeneralStatusState = "ReadyToScan"
+	AssetScanGeneralStatusStateScheduled   AssetScanGeneralStatusState = "Scheduled"
+)
+
 // Defines values for AssetScanStateState.
 const (
-	AssetScanStateStateAborted     AssetScanStateState = "Aborted"
-	AssetScanStateStateDone        AssetScanStateState = "Done"
-	AssetScanStateStateInProgress  AssetScanStateState = "InProgress"
-	AssetScanStateStateNotScanned  AssetScanStateState = "NotScanned"
-	AssetScanStateStatePending     AssetScanStateState = "Pending"
-	AssetScanStateStateReadyToScan AssetScanStateState = "ReadyToScan"
-	AssetScanStateStateScheduled   AssetScanStateState = "Scheduled"
+	AssetScanStateStateAborted    AssetScanStateState = "Aborted"
+	AssetScanStateStateDone       AssetScanStateState = "Done"
+	AssetScanStateStateInProgress AssetScanStateState = "InProgress"
+	AssetScanStateStateNotScanned AssetScanStateState = "NotScanned"
+	AssetScanStateStatePending    AssetScanStateState = "Pending"
 )
 
 // Defines values for CloudProvider.
@@ -262,13 +284,14 @@ type AssetScan struct {
 	Annotations *Annotations `json:"annotations,omitempty"`
 
 	// Asset Describes a relationship to an asset which can be expanded.
-	Asset             *AssetRelationship    `json:"asset,omitempty"`
-	Exploits          *ExploitScan          `json:"exploits,omitempty"`
-	FindingsProcessed *bool                 `json:"findingsProcessed,omitempty"`
-	Id                *string               `json:"id,omitempty"`
-	InfoFinder        *InfoFinderScan       `json:"infoFinder,omitempty"`
-	Malware           *MalwareScan          `json:"malware,omitempty"`
-	Misconfigurations *MisconfigurationScan `json:"misconfigurations,omitempty"`
+	Asset             *AssetRelationship      `json:"asset,omitempty"`
+	Exploits          *ExploitScan            `json:"exploits,omitempty"`
+	FindingsProcessed *bool                   `json:"findingsProcessed,omitempty"`
+	GeneralStatus     *AssetScanGeneralStatus `json:"generalStatus,omitempty"`
+	Id                *string                 `json:"id,omitempty"`
+	InfoFinder        *InfoFinderScan         `json:"infoFinder,omitempty"`
+	Malware           *MalwareScan            `json:"malware,omitempty"`
+	Misconfigurations *MisconfigurationScan   `json:"misconfigurations,omitempty"`
 
 	// Provider Describes a relationship to a provider which can be expanded.
 	Provider              *ProviderRelationship  `json:"provider,omitempty"`
@@ -367,6 +390,71 @@ type AssetScanGeneralStats struct {
 	ScanTime *AssetScanScanTime `json:"scanTime,omitempty"`
 }
 
+// AssetScanGeneralStatus defines model for AssetScanGeneralStatus.
+type AssetScanGeneralStatus struct {
+	// LastTransitionTime Last date time when the status has changed.
+	LastTransitionTime time.Time `json:"lastTransitionTime"`
+
+	// Message Human readable message.
+	Message *string `json:"message,omitempty"`
+
+	// Reason Machine readable reason for state transition.
+	//
+	// | State       | Reason          | Description                                   |
+	// | ----------- | --------------- | --------------------------------------------- |
+	// | Pending     | AssetScanCreate | AssetScan created                             |
+	// | Scheduled   | ScanScheduled   | Moved to scheduled state                      |
+	// | ReadyToScan | OutOfVMClarity  | Scan started without VMClarity orchestration  |
+	// | ReadyToScan | ScanReadyToScan | Scan is ready to be scanned                   |
+	// | InProgress  | ScanInProgress  | Scan has been started on the target           |
+	// | Aborted     | ScanAborted     | Scan has been aborted                         |
+	// | Failed      | ScanFailed      | Scan failed on target asset                   |
+	// | Failed      | AbortTimedOut   | AssetScan was in Aborted state for too long   |
+	// | Done        | ScanDone        | Scan finished successfully                    |
+	Reason AssetScanGeneralStatusReason `json:"reason"`
+
+	// State Describes the state of scan result.
+	//
+	// | State       | Description                                                                                       |
+	// | ----------- | ------------------------------------------------------------------------------------------------- |
+	// | Pending     | Initial state for ScanResult waiting for being scheduled                                          |
+	// | Scheduled   | ScanResult which has been scheduled on Provider                                                   |
+	// | ReadyToScan | Provider acknowledged that scanner for ScanResult is ready to run                                 |
+	// | InProgress  | Scanners are being run on the Target                                                              |
+	// | Aborted     | ScanResult has been aborted and all running Scanners need to be cancelled and shutdown gracefully |
+	// | Failed      | Running Scanners on Target has failed, check *reason* and *message* fields for the details        |
+	// | Done        | Running Scanners on Target has finished with no errors                                            |
+	State AssetScanGeneralStatusState `json:"state"`
+}
+
+// AssetScanGeneralStatusReason Machine readable reason for state transition.
+//
+// | State       | Reason          | Description                                   |
+// | ----------- | --------------- | --------------------------------------------- |
+// | Pending     | AssetScanCreate | AssetScan created                             |
+// | Scheduled   | ScanScheduled   | Moved to scheduled state                      |
+// | ReadyToScan | OutOfVMClarity  | Scan started without VMClarity orchestration  |
+// | ReadyToScan | ScanReadyToScan | Scan is ready to be scanned                   |
+// | InProgress  | ScanInProgress  | Scan has been started on the target           |
+// | Aborted     | ScanAborted     | Scan has been aborted                         |
+// | Failed      | ScanFailed      | Scan failed on target asset                   |
+// | Failed      | AbortTimedOut   | AssetScan was in Aborted state for too long   |
+// | Done        | ScanDone        | Scan finished successfully                    |
+type AssetScanGeneralStatusReason string
+
+// AssetScanGeneralStatusState Describes the state of scan result.
+//
+// | State       | Description                                                                                       |
+// | ----------- | ------------------------------------------------------------------------------------------------- |
+// | Pending     | Initial state for ScanResult waiting for being scheduled                                          |
+// | Scheduled   | ScanResult which has been scheduled on Provider                                                   |
+// | ReadyToScan | Provider acknowledged that scanner for ScanResult is ready to run                                 |
+// | InProgress  | Scanners are being run on the Target                                                              |
+// | Aborted     | ScanResult has been aborted and all running Scanners need to be cancelled and shutdown gracefully |
+// | Failed      | Running Scanners on Target has failed, check *reason* and *message* fields for the details        |
+// | Done        | Running Scanners on Target has finished with no errors                                            |
+type AssetScanGeneralStatusState string
+
 // AssetScanInputScanStats Statistics per asset scan input.
 type AssetScanInputScanStats struct {
 	// Path The input path (/mnt/snapshot for ex.)
@@ -383,17 +471,18 @@ type AssetScanInputScanStats struct {
 // AssetScanRelationship defines model for AssetScanRelationship.
 type AssetScanRelationship struct {
 	// Asset Describes a relationship to an asset which can be expanded.
-	Asset                 *AssetRelationship     `json:"asset,omitempty"`
-	Exploits              *ExploitScan           `json:"exploits,omitempty"`
-	FindingsProcessed     *bool                  `json:"findingsProcessed,omitempty"`
-	Id                    string                 `json:"id"`
-	InfoFinder            *InfoFinderScan        `json:"infoFinder,omitempty"`
-	Malware               *MalwareScan           `json:"malware,omitempty"`
-	Misconfigurations     *MisconfigurationScan  `json:"misconfigurations,omitempty"`
-	ResourceCleanupStatus *ResourceCleanupStatus `json:"resourceCleanupStatus,omitempty"`
-	Revision              *int                   `json:"revision,omitempty"`
-	Rootkits              *RootkitScan           `json:"rootkits,omitempty"`
-	Sboms                 *SbomScan              `json:"sboms,omitempty"`
+	Asset                 *AssetRelationship      `json:"asset,omitempty"`
+	Exploits              *ExploitScan            `json:"exploits,omitempty"`
+	FindingsProcessed     *bool                   `json:"findingsProcessed,omitempty"`
+	GeneralStatus         *AssetScanGeneralStatus `json:"generalStatus,omitempty"`
+	Id                    string                  `json:"id"`
+	InfoFinder            *InfoFinderScan         `json:"infoFinder,omitempty"`
+	Malware               *MalwareScan            `json:"malware,omitempty"`
+	Misconfigurations     *MisconfigurationScan   `json:"misconfigurations,omitempty"`
+	ResourceCleanupStatus *ResourceCleanupStatus  `json:"resourceCleanupStatus,omitempty"`
+	Revision              *int                    `json:"revision,omitempty"`
+	Rootkits              *RootkitScan            `json:"rootkits,omitempty"`
+	Sboms                 *SbomScan               `json:"sboms,omitempty"`
 
 	// Scan Describes an expandable relationship to Scan object
 	Scan *ScanRelationship `json:"scan,omitempty"`
@@ -446,7 +535,6 @@ type AssetScanStats struct {
 // AssetScanStatus defines model for AssetScanStatus.
 type AssetScanStatus struct {
 	Exploits          *AssetScanState `json:"exploits,omitempty"`
-	General           *AssetScanState `json:"general,omitempty"`
 	InfoFinder        *AssetScanState `json:"infoFinder,omitempty"`
 	Malware           *AssetScanState `json:"malware,omitempty"`
 	Misconfigurations *AssetScanState `json:"misconfigurations,omitempty"`

@@ -15,25 +15,12 @@
 
 package models
 
-func (r *AssetScan) GetGeneralState() (AssetScanStateState, bool) {
-	var state AssetScanStateState
-	var ok bool
-
-	if r.Status != nil {
-		state, ok = r.Status.GetGeneralState()
+func (r *AssetScan) GetGeneralStatus() (*AssetScanGeneralStatus, bool) {
+	if r.GeneralStatus == nil {
+		return nil, false
 	}
 
-	return state, ok
-}
-
-func (r *AssetScan) GetGeneralErrors() []string {
-	var errs []string
-
-	if r.Status != nil {
-		errs = r.Status.GetGeneralErrors()
-	}
-
-	return errs
+	return r.GeneralStatus, true
 }
 
 func (r *AssetScan) GetID() (string, bool) {
@@ -70,25 +57,11 @@ func (r *AssetScan) GetAssetID() (string, bool) {
 }
 
 func (r *AssetScan) IsDone() (bool, bool) {
-	var done bool
-	var ok bool
-	var state AssetScanStateState
-
-	if state, ok = r.GetGeneralState(); ok && state == AssetScanStateStateDone {
-		done = true
+	status, ok := r.GetGeneralStatus()
+	if !ok {
+		return false, false
 	}
-
-	return done, ok
-}
-
-func (r *AssetScan) HasErrors() bool {
-	var has bool
-
-	if errs := r.GetGeneralErrors(); len(errs) > 0 {
-		has = true
-	}
-
-	return has
+	return status.State == AssetScanGeneralStatusStateDone, true
 }
 
 func (r *AssetScan) GetResourceCleanupStatus() (*ResourceCleanupStatus, bool) {

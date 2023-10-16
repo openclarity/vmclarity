@@ -59,13 +59,14 @@ func (l *LocalState) MarkFamilyScanInProgress(ctx context.Context, familyType ty
 	return nil
 }
 
-func (l *LocalState) MarkDone(ctx context.Context, errs []error) error {
+func (l *LocalState) MarkFailed(ctx context.Context, errs []error) error {
 	logger := log.GetLoggerFromContextOrDiscard(ctx)
+	logger.Errorf("scan has been completed with errors: %v", errs)
+	return nil
+}
 
-	if len(errs) > 0 {
-		logger.Errorf("scan has been completed with errors: %v", errs)
-		return nil
-	}
+func (l *LocalState) MarkDone(ctx context.Context) error {
+	logger := log.GetLoggerFromContextOrDiscard(ctx)
 	logger.Info("Scan has been completed")
 	return nil
 }

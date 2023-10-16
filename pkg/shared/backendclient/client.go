@@ -251,15 +251,15 @@ func (b *BackendClient) GetAssetScanSummary(ctx context.Context, assetScanID str
 	return assetScan.Summary, nil
 }
 
-func (b *BackendClient) GetAssetScanStatus(ctx context.Context, assetScanID string) (*models.AssetScanStatus, error) {
+func (b *BackendClient) GetAssetScanStatus(ctx context.Context, assetScanID string) (*models.AssetScanGeneralStatus, error) {
 	params := models.GetAssetScansAssetScanIDParams{
-		Select: utils.PointerTo("status"),
+		Select: utils.PointerTo("generalStatus"),
 	}
 	assetScan, err := b.GetAssetScan(ctx, assetScanID, params)
 	if err != nil {
 		return nil, err
 	}
-	return assetScan.Status, nil
+	return assetScan.GeneralStatus, nil
 }
 
 func (b *BackendClient) PatchAssetScanStatus(ctx context.Context, assetScanID string, status *models.AssetScanStatus) error {

@@ -71,10 +71,6 @@ func newAssetScanFromScan(scan *models.Scan, assetID string) (*models.AssetScan,
 				Errors: nil,
 				State:  getInitStateFromFamilyConfig(familiesConfig.Exploits),
 			},
-			General: &models.AssetScanState{
-				Errors: nil,
-				State:  utils.PointerTo(models.AssetScanStateStatePending),
-			},
 			Malware: &models.AssetScanState{
 				Errors: nil,
 				State:  getInitStateFromFamilyConfig(familiesConfig.Malware),
@@ -104,6 +100,11 @@ func newAssetScanFromScan(scan *models.Scan, assetID string) (*models.AssetScan,
 				State:  getInitStateFromFamilyConfig(familiesConfig.InfoFinder),
 			},
 		},
+		GeneralStatus: models.NewGeneralStatus(
+			models.AssetScanGeneralStatusStatePending,
+			models.AssetScanCreate,
+			nil,
+		),
 		ResourceCleanupStatus: models.NewResourceCleanupStatus(
 			models.ResourceCleanupStatusStatePending,
 			models.ResourceCleanupStatusReasonAssetScanCreated,
@@ -150,20 +151,19 @@ func updateScanSummaryFromAssetScan(scan *models.Scan, result models.AssetScan) 
 		scan.Summary = newScanSummary()
 	}
 
-	state, ok := result.GetGeneralState()
+	status, ok := result.GetGeneralStatus()
 	if !ok {
 		return fmt.Errorf("general state must not be nil for AssetScan. AssetScanID=%s", *result.Id)
 	}
 
 	s, r := scan.Summary, result.Summary
 
-	switch state {
-	case models.AssetScanStateStateNotScanned:
-	case models.AssetScanStateStatePending, models.AssetScanStateStateScheduled, models.AssetScanStateStateReadyToScan:
+	switch status.State {
+	case models.AssetScanGeneralStatusStatePending, models.AssetScanGeneralStatusStateScheduled, models.AssetScanGeneralStatusStateReadyToScan:
 		fallthrough
-	case models.AssetScanStateStateInProgress, models.AssetScanStateStateAborted:
+	case models.AssetScanGeneralStatusStateInProgress, models.AssetScanGeneralStatusStateAborted:
 		s.JobsLeftToRun = utils.PointerTo(*s.JobsLeftToRun + 1)
-	case models.AssetScanStateStateDone:
+	case models.AssetScanGeneralStatusStateDone, models.AssetScanGeneralStatusStateFailed:
 		s.JobsCompleted = utils.PointerTo(*s.JobsCompleted + 1)
 		s.TotalExploits = utils.PointerTo(*s.TotalExploits + *r.TotalExploits)
 		s.TotalInfoFinder = utils.PointerTo(*s.TotalInfoFinder + *r.TotalInfoFinder)

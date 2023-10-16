@@ -356,7 +356,7 @@ func (w *Watcher) reconcileInProgress(ctx context.Context, scan *models.Scan) er
 
 	// FIXME(chrisgacsal):a add pagination to API queries in poller/reconciler logic by using Top/Skip
 	filter := fmt.Sprintf("scan/id eq '%s'", scanID)
-	selector := "id,status/general,summary"
+	selector := "id,generalStatus,summary"
 	assetScans, err := w.backend.GetAssetScans(ctx, models.GetAssetScansParams{
 		Filter: &filter,
 		Select: &selector,
@@ -385,8 +385,7 @@ func (w *Watcher) reconcileInProgress(ctx context.Context, scan *models.Scan) er
 				scanID, assetScanID, err)
 		}
 
-		errs := assetScan.GetGeneralErrors()
-		if len(errs) > 0 {
+		if assetScan.GeneralStatus.State == models.AssetScanGeneralStatusStateFailed {
 			assetScansWithErr++
 		}
 	}
@@ -435,8 +434,8 @@ func (w *Watcher) reconcileAborted(ctx context.Context, scan *models.Scan) error
 		return errors.New("invalid Scan: ID is nil")
 	}
 
-	filter := fmt.Sprintf("scan/id eq '%s' and status/general/state ne '%s' and status/general/state ne '%s'",
-		scanID, models.AssetScanStateStateAborted, models.AssetScanStateStateDone)
+	filter := fmt.Sprintf("scan/id eq '%s' and generalStatus/state ne '%s' and generalStatus/state ne '%s'",
+		scanID, models.AssetScanGeneralStatusStateAborted, models.AssetScanGeneralStatusStateDone)
 	selector := "id,status"
 	params := models.GetAssetScansParams{
 		Filter: &filter,
@@ -462,11 +461,11 @@ func (w *Watcher) reconcileAborted(ctx context.Context, scan *models.Scan) error
 			go func() {
 				defer wg.Done()
 				as := models.AssetScan{
-					Status: &models.AssetScanStatus{
-						General: &models.AssetScanState{
-							State: utils.PointerTo(models.AssetScanStateStateAborted),
-						},
-					},
+					GeneralStatus: models.NewGeneralStatus(
+						models.AssetScanGeneralStatusStateAborted,
+						models.ScanAborted,
+						nil,
+					),
 				}
 
 				err = w.backend.PatchAssetScan(ctx, as, assetScanID)
