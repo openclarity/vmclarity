@@ -80,13 +80,12 @@ func (e *KindEnv) Start(ctx context.Context) error {
 	}
 	e.k8sClientSet = k8sClientSet
 
-	// TODO (pebalogh) deploy a test pod/deployment/etc
-	return common.CreateTestDeployment(e.k8sClientSet)
+	return common.CreateTestDeployment(e.Context(ctx))
 }
 
 // nolint:wrapcheck
 func (e *KindEnv) Stop(ctx context.Context) error {
-	if err := common.DeleteTestDeployment(e.k8sClientSet); err != nil {
+	if err := common.DeleteTestDeployment(e.Context(ctx)); err != nil {
 		// TODO (pebalogh) maybe just log ???
 		return fmt.Errorf("failed to delete test deployment: %w", err)
 	}
@@ -98,7 +97,8 @@ func (e *KindEnv) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (e *KindEnv) SetUp(_ context.Context) error {
+// nolint:wrapcheck
+func (e *KindEnv) SetUp(ctx context.Context) error {
 	providerOpts, err := cluster.DetectNodeProvider()
 	if err != nil {
 		return fmt.Errorf("failed to detect provider: %w", err)
@@ -115,9 +115,10 @@ func (e *KindEnv) SetUp(_ context.Context) error {
 		return fmt.Errorf("failed to get kubeconfig for kind cluster: %w", err)
 	}
 
-	return e.loadContainerImagesToCluster()
+	return e.loadContainerImagesToCluster(ctx)
 }
 
+// nolint:wrapcheck
 func (e *KindEnv) TearDown(_ context.Context) error {
 	return e.provider.Delete(e.name, e.kubeConfigPath)
 }
@@ -130,13 +131,17 @@ func (e *KindEnv) ServicesReady(ctx context.Context) (bool, error) {
 
 // nolint:wrapcheck
 func (e *KindEnv) ServiceLogs(ctx context.Context, services []string, startTime time.Time, stdout, stderr io.Writer) error {
+	// TODO (pebalogh) get vmclarity pod logs
 	return nil
 }
 
+// nolint:wrapcheck
 func (e *KindEnv) Services() []string {
+	// TODO (pebalogh) list pods in vmclarity namespace
 	return nil
 }
 
+// nolint:wrapcheck
 func (e *KindEnv) VMClarityAPIURL() (*url.URL, error) {
 	return &url.URL{
 		Scheme: "http",
@@ -144,18 +149,20 @@ func (e *KindEnv) VMClarityAPIURL() (*url.URL, error) {
 	}, nil
 }
 
+// nolint:wrapcheck
 func (e *KindEnv) Context(ctx context.Context) context.Context {
-	return context.WithValue(ctx, "", "")
+	return context.WithValue(ctx, envtypes.KubernetesContextKey, e.k8sClientSet)
 }
 
-func (e *KindEnv) loadContainerImagesToCluster() error {
+// nolint:wrapcheck
+func (e *KindEnv) loadContainerImagesToCluster(ctx context.Context) error {
 	nodeList, err := e.provider.ListNodes(e.name)
 	if err != nil {
 		return fmt.Errorf("failed to list nodes: %w", err)
 	}
 
 	imagesMap := common.GetImageList()
-	var images []string
+	images := make([]string, 0)
 	for _, image := range imagesMap {
 		images = append(images, image)
 	}
@@ -168,7 +175,7 @@ func (e *KindEnv) loadContainerImagesToCluster() error {
 	defer os.RemoveAll(dir)
 	imagesTarPath := filepath.Join(dir, "images.tar")
 	// Save the images into a tar
-	err = save(images, imagesTarPath)
+	err = save(ctx, images, imagesTarPath)
 	if err != nil {
 		return fmt.Errorf("failed to save images to tar archive: %w", err)
 	}
@@ -185,6 +192,7 @@ func (e *KindEnv) loadContainerImagesToCluster() error {
 	return errors.UntilErrorConcurrent(fns)
 }
 
+// nolint:wrapcheck
 func loadContainerImageToNode(node nodes.Node, imagesTarPath string) error {
 	f, err := os.Open(imagesTarPath)
 	if err != nil {
@@ -195,13 +203,13 @@ func loadContainerImageToNode(node nodes.Node, imagesTarPath string) error {
 	return nodeutils.LoadImageArchive(node, f)
 }
 
-func save(images []string, tarName string) error {
+func save(ctx context.Context, images []string, tarName string) error {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return fmt.Errorf("failed to create docker client: %w", err)
 	}
 
-	responseBody, err := cli.ImageSave(context.Background(), images)
+	responseBody, err := cli.ImageSave(ctx, images)
 	if err != nil {
 		return fmt.Errorf("failed to save image: %w", err)
 	}

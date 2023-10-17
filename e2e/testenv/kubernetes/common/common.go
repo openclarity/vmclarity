@@ -140,7 +140,9 @@ func (c *ChartHelper) DeployHelmChart() error {
 		"--set", fmt.Sprintf("orchestrator.scannerImage.tag=%s", parsedImageList[ScannerContainerImage]["tag"]),
 	)
 
-	args := []string{"install", c.ReleaseName,
+	args := []string{
+		"install",
+		c.ReleaseName,
 		VMClarityChartPath,
 		"--namespace", VMClarityNamespace,
 		"--create-namespace",
@@ -172,9 +174,7 @@ func (c *ChartHelper) DeleteHelmChart() error {
 	//}
 
 	// TODO (pebalogh) remove this after the issue above is solved
-	cmd := exec.Command("helm", "delete", c.ReleaseName,
-		"--namespace", VMClarityNamespace,
-	)
+	cmd := exec.Command("helm", "delete", c.ReleaseName, "--namespace", VMClarityNamespace) // nolint: gosec
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -184,6 +184,7 @@ func (c *ChartHelper) DeleteHelmChart() error {
 	return nil
 }
 
+// nolint: unused
 func createValues(imageList map[string]string) (map[string]interface{}, error) {
 	parsedImageList := make(map[string]map[string]string)
 	var err error

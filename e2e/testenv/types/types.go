@@ -22,6 +22,13 @@ import (
 	"time"
 )
 
+type ContextKeyType string
+
+const (
+	DockerComposeContextKey ContextKeyType = "DockerCompose"
+	KubernetesContextKey    ContextKeyType = "Kubernetes"
+)
+
 type Environment interface {
 	// Start the test environment by ensuring that all the services are running.
 	// Returns error if it fails to start services.

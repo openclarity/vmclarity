@@ -42,10 +42,6 @@ const (
 	dockerHealthStateHealthy            = "healthy"
 )
 
-type ContextKeyType string
-
-const DockerComposeContextKey ContextKeyType = "DockerCompose"
-
 var dockerComposeFiles = []string{
 	"../installation/docker/docker-compose.yml",
 	"testenv/docker/docker-compose.override.yml",
@@ -228,5 +224,5 @@ func (e *DockerEnv) VMClarityAPIURL() (*url.URL, error) {
 }
 
 func (e *DockerEnv) Context(ctx context.Context) context.Context {
-	return context.WithValue(ctx, DockerComposeContextKey, e.composer)
+	return context.WithValue(ctx, envtypes.DockerComposeContextKey, e.composer)
 }
