@@ -111,6 +111,7 @@ secrets.
 | gateway.replicas | int | `1` | Number of replicas for the gateway |
 | gateway.resources.limits | object | `{}` | The resources limits for the gateway containers |
 | gateway.resources.requests | object | `{}` | The requested resources for the gateway containers |
+| gateway.service | object | `{}` |  |
 | gateway.serviceAccount.automountServiceAccountToken | bool | `false` | Allows auto mount of ServiceAccountToken on the serviceAccount created. Can be set to false if pods using this serviceAccount do not need to use K8s API. |
 | gateway.serviceAccount.create | bool | `true` | Enable creation of ServiceAccount |
 | gateway.serviceAccount.name | string | `""` | The name of the ServiceAccount to use. If not set and create is true, it will use the component's calculated name. |
