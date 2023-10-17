@@ -124,8 +124,6 @@ func setConfigDefaults() {
 	viper.SetDefault(DeleteJobPolicy, string(assetscanwatcher.DeleteJobPolicyAlways))
 	// https://github.com/openclarity/vmclarity-tools-base/blob/main/Dockerfile#L33
 	viper.SetDefault(GitleaksBinaryPath, "/artifacts/gitleaks")
-	// https://github.com/openclarity/vmclarity-tools-base/blob/main/Dockerfile
-	viper.SetDefault(ChkrootkitBinaryPath, "/artifacts/chkrootkit")
 	viper.SetDefault(TrivyServerTimeout, DefaultTrivyServerTimeout)
 	viper.SetDefault(GrypeServerTimeout, DefaultGrypeServerTimeout)
 	viper.SetDefault(ScanConfigPollingInterval, scanconfigwatcher.DefaultPollInterval.String())
