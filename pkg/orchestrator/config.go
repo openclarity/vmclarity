@@ -46,7 +46,7 @@ const (
 	ClamBinaryPath                = "CLAM_BINARY_PATH"
 	FreshclamBinaryPath           = "FRESHCLAM_BINARY_PATH"
 	AlternativeFreshclamMirrorURL = "ALTERNATIVE_FRESHCLAM_MIRROR_URL"
-	LynisInstallPath              = "LYNIS_INSTALL_PATH"
+	LynisBinaryPath               = "LYNIS_BINARY_PATH"
 	ScannerAPIServerAddress       = "SCANNER_VMCLARITY_APISERVER_ADDRESS"
 	ExploitDBAddress              = "EXPLOIT_DB_ADDRESS"
 	TrivyServerAddress            = "TRIVY_SERVER_ADDRESS"
@@ -124,8 +124,6 @@ func setConfigDefaults() {
 	viper.SetDefault(DeleteJobPolicy, string(assetscanwatcher.DeleteJobPolicyAlways))
 	// https://github.com/openclarity/vmclarity-tools-base/blob/main/Dockerfile#L33
 	viper.SetDefault(GitleaksBinaryPath, "/artifacts/gitleaks")
-	// https://github.com/openclarity/vmclarity-tools-base/blob/main/Dockerfile#L35
-	viper.SetDefault(LynisInstallPath, "/artifacts/lynis")
 	// https://github.com/openclarity/vmclarity-tools-base/blob/main/Dockerfile
 	viper.SetDefault(ChkrootkitBinaryPath, "/artifacts/chkrootkit")
 	viper.SetDefault(TrivyServerTimeout, DefaultTrivyServerTimeout)
@@ -219,7 +217,7 @@ func LoadConfig() (*Config, error) {
 				ScannerImage:                  viper.GetString(ScannerContainerImage),
 				ScannerBackendAddress:         scannerAPIServerAddress,
 				GitleaksBinaryPath:            viper.GetString(GitleaksBinaryPath),
-				LynisInstallPath:              viper.GetString(LynisInstallPath),
+				LynisBinaryPath:               viper.GetString(LynisBinaryPath),
 				ExploitsDBAddress:             exploitDBAddress,
 				ClamBinaryPath:                viper.GetString(ClamBinaryPath),
 				FreshclamBinaryPath:           viper.GetString(FreshclamBinaryPath),

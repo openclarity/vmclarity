@@ -188,7 +188,7 @@ func withMisconfigurationConfig(config *models.MisconfigurationsConfig, opts *Sc
 			ScannersConfig: misconfiguration.ScannersConfig{
 				// TODO(sambetts) Add scanner configurations here as we add them like Lynis
 				Lynis: misconfiguration.LynisConfig{
-					InstallPath: opts.LynisInstallPath,
+					BinaryPath: opts.LynisBinaryPath,
 				},
 			},
 		}
