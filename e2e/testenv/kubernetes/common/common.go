@@ -93,6 +93,7 @@ func (c *ChartHelper) DeployHelmChart() error {
 	//client := action.NewInstall(c.ActionConfig)
 	//client.ReleaseName = c.ReleaseName
 	//client.Namespace = c.Namespace
+	//client.Wait = true
 	//
 	//values, err := createValues(GetImageList())
 	//if err != nil {
