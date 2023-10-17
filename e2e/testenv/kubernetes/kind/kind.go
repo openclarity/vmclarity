@@ -124,7 +124,7 @@ func (e *KindEnv) TearDown(_ context.Context) error {
 
 // nolint:wrapcheck
 func (e *KindEnv) ServicesReady(ctx context.Context) (bool, error) {
-	// TODO check if services are ready
+	// TODO check if services are ready isn't necessary because of the `helm install --wait`
 	return true, nil
 }
 
