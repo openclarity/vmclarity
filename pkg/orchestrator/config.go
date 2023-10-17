@@ -128,9 +128,6 @@ func setConfigDefaults() {
 	viper.SetDefault(LynisInstallPath, "/artifacts/lynis")
 	// https://github.com/openclarity/vmclarity-tools-base/blob/main/Dockerfile
 	viper.SetDefault(ChkrootkitBinaryPath, "/artifacts/chkrootkit")
-	viper.SetDefault(ClamBinaryPath, "clamscan")
-	viper.SetDefault(FreshclamBinaryPath, "freshclam")
-	viper.SetDefault(YaraBinaryPath, "yara")
 	viper.SetDefault(TrivyServerTimeout, DefaultTrivyServerTimeout)
 	viper.SetDefault(GrypeServerTimeout, DefaultGrypeServerTimeout)
 	viper.SetDefault(ScanConfigPollingInterval, scanconfigwatcher.DefaultPollInterval.String())
