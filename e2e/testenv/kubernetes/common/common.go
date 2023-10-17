@@ -211,6 +211,12 @@ func createValues(imageList map[string]string) (map[string]interface{}, error) {
 		"uibackend": map[string]interface{}{
 			"image": parsedImageList[UIBackendContainerImage],
 		},
+		"gateway": map[string]interface{}{
+			"service": map[string]interface{}{
+				"type":     "NodePort",
+				"nodePort": "30000",
+			},
+		},
 	}, nil
 }
 

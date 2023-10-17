@@ -40,7 +40,7 @@ if [ "{DatabaseToUse}" == "Postgresql" ]; then
   echo "DB_NAME=vmclarity" >> /etc/vmclarity/apiserver.env
   echo "DB_USER=vmclarity" >> /etc/vmclarity/apiserver.env
   echo "DB_PASS={PostgresDBPassword}" >> /etc/vmclarity/apiserver.env
-  echo "DB_HOST=postgres.service" >> /etc/vmclarity/apiserver.env
+  echo "DB_HOST=postgresql" >> /etc/vmclarity/apiserver.env
   echo "DB_PORT_NUMBER=5432" >> /etc/vmclarity/apiserver.env
 elif [ "{DatabaseToUse}" == "External Postgresql" ]; then
   # Configure the VMClarity backend to use the postgres
@@ -116,6 +116,7 @@ APISERVER_HOST=apiserver
 APISERVER_PORT=8888
 SCANNER_CONTAINER_IMAGE={ScannerContainerImage}
 SCANNER_VMCLARITY_APISERVER_ADDRESS=http://__CONTROLPLANE_HOST__:8888
+EXPLOIT_DB_ADDRESS=http://__CONTROLPLANE_HOST__:1326
 TRIVY_SERVER_ADDRESS=http://__CONTROLPLANE_HOST__:9992
 GRYPE_SERVER_ADDRESS=__CONTROLPLANE_HOST__:9991
 YARA_RULE_SERVER_ADDRESS=http://__CONTROLPLANE_HOST__:9993
