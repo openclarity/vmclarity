@@ -120,7 +120,7 @@ func GetKubernetesClientFromContext(ctx context.Context) (kubernetes.Interface, 
 	clientSet, ok := ctx.Value(envtypes.KubernetesContextKey).(kubernetes.Interface)
 	if !ok {
 		return nil, fmt.Errorf(
-			"context key doesn't exist: %w",
+			"context key doesn't exist: %s",
 			ctx.Value(envtypes.KubernetesContextKey),
 		)
 	}
