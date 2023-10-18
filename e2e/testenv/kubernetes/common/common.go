@@ -16,14 +16,19 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"os"
 	"os/exec"
 
 	"github.com/docker/distribution/reference"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+
+	envtypes "github.com/openclarity/vmclarity/e2e/testenv/types"
 )
 
 const (
@@ -277,4 +282,20 @@ func CreateK8sClient(kubeConfig string) (kubernetes.Interface, error) {
 		return nil, fmt.Errorf("failed to create k8s client: %w", err)
 	}
 	return clientSet, nil
+}
+
+func ListVMClarityPods(ctx context.Context) (*corev1.PodList, error) {
+	clientSet, ok := ctx.Value(envtypes.KubernetesContextKey).(kubernetes.Interface)
+	if !ok {
+		return nil, fmt.Errorf(
+			"failed to get kubernetes clientset from context: %v",
+			ctx.Value(envtypes.KubernetesContextKey),
+		)
+	}
+	pods, err := clientSet.CoreV1().Pods(VMClarityNamespace).List(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("error getting pods: %w", err)
+	}
+
+	return pods, nil
 }

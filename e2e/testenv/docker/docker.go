@@ -104,19 +104,23 @@ func New(_ *envtypes.Config) (*DockerEnv, error) {
 // nolint:wrapcheck
 func (e *DockerEnv) Start(ctx context.Context) error {
 	timeout := 1 * time.Minute
+	services, err := e.Services(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get services: %w", err)
+	}
 	opts := api.UpOptions{
 		Create: api.CreateOptions{
 			RemoveOrphans: true,
 			QuietPull:     true,
 			Timeout:       &timeout,
-			Services:      e.Services(),
+			Services:      services,
 			Inherit:       false,
 		},
 		Start: api.StartOptions{
 			Project:     e.project,
 			Wait:        true,
 			WaitTimeout: 10 * time.Minute, // nolint:gomnd
-			Services:    e.Services(),
+			Services:    services,
 		},
 	}
 	return e.composer.Up(ctx, e.project, opts)
@@ -146,7 +150,10 @@ func (e *DockerEnv) TearDown(_ context.Context) error {
 
 // nolint:wrapcheck
 func (e *DockerEnv) ServicesReady(ctx context.Context) (bool, error) {
-	services := e.Services()
+	services, err := e.Services(ctx)
+	if err != nil {
+		return false, fmt.Errorf("failed to get services: %w", err)
+	}
 
 	ps, err := e.composer.Ps(
 		ctx,
@@ -183,12 +190,13 @@ func (e *DockerEnv) ServiceLogs(ctx context.Context, services []string, startTim
 	})
 }
 
-func (e *DockerEnv) Services() []string {
+func (e *DockerEnv) Services(_ context.Context) ([]string, error) {
 	services := make([]string, len(e.project.Services))
 	for i, srv := range e.project.Services {
 		services[i] = srv.Name
 	}
-	return services
+
+	return services, nil
 }
 
 func (e *DockerEnv) VMClarityAPIURL() (*url.URL, error) {

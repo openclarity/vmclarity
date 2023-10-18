@@ -49,7 +49,7 @@ type Environment interface {
 	// Returns error if it cannot retrieve logs.
 	ServiceLogs(ctx context.Context, services []string, startTime time.Time, stdout, stderr io.Writer) error
 	// Services returns a list of services for the environment.
-	Services() []string
+	Services(ctx context.Context) ([]string, error)
 	// VMClarityAPIURL returns the URL for communicating with VMClarity API.
 	// Returns error if it fails to determine the URL.
 	VMClarityAPIURL() (*url.URL, error)

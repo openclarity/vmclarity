@@ -125,7 +125,7 @@ func (e *KindEnv) TearDown(_ context.Context) error {
 
 // nolint:wrapcheck
 func (e *KindEnv) ServicesReady(ctx context.Context) (bool, error) {
-	// TODO check if services are ready isn't necessary because of the `helm install --wait`
+	// Note (pebalogh) checking services isn't necessary because of the `helm install --wait`
 	return true, nil
 }
 
@@ -136,9 +136,18 @@ func (e *KindEnv) ServiceLogs(ctx context.Context, services []string, startTime 
 }
 
 // nolint:wrapcheck
-func (e *KindEnv) Services() []string {
-	// TODO (pebalogh) list pods in vmclarity namespace
-	return nil
+func (e *KindEnv) Services(ctx context.Context) ([]string, error) {
+	podList, err := common.ListVMClarityPods(e.Context(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("failed to list VMClarity pods: %w", err)
+	}
+
+	podNames := make([]string, 0)
+	for _, pod := range podList.Items {
+		podNames = append(podNames, pod.GetName())
+	}
+
+	return podNames, nil
 }
 
 // nolint:wrapcheck
