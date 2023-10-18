@@ -43,12 +43,12 @@ import (
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
-func Test_ConvertSBOMResultToAPIModel(t *testing.T) {
+func Test_ConvertSBOMResultToPackages(t *testing.T) {
 	type args struct {
 		result *sbom.Results
 	}
 	type returns struct {
-		sbomScan *models.SbomScan
+		packages *[]models.Package
 	}
 	tests := []struct {
 		name string
@@ -106,26 +106,24 @@ func Test_ConvertSBOMResultToAPIModel(t *testing.T) {
 				},
 			},
 			want: returns{
-				sbomScan: &models.SbomScan{
-					Packages: &[]models.Package{
-						{
-							Cpes:     utils.PointerTo([]string{"cpe1"}),
-							Language: utils.PointerTo("python"),
-							Licenses: utils.PointerTo([]string{"lic1", "lic2"}),
-							Name:     utils.PointerTo("testcomponent1"),
-							Purl:     utils.PointerTo("pkg:pypi/testcomponent1@v10.0.0-foo"),
-							Type:     utils.PointerTo(string(cdx.ComponentTypeLibrary)),
-							Version:  utils.PointerTo("v10.0.0-foo1"),
-						},
-						{
-							Cpes:     utils.PointerTo([]string{"cpe2"}),
-							Language: utils.PointerTo("python"),
-							Licenses: utils.PointerTo([]string{"lic3", "lic4"}),
-							Name:     utils.PointerTo("testcomponent2"),
-							Purl:     utils.PointerTo("pkg:pypi/testcomponent2@v10.0.0-foo"),
-							Type:     utils.PointerTo(string(cdx.ComponentTypeLibrary)),
-							Version:  utils.PointerTo("v10.0.0-foo2"),
-						},
+				packages: &[]models.Package{
+					{
+						Cpes:     utils.PointerTo([]string{"cpe1"}),
+						Language: utils.PointerTo("python"),
+						Licenses: utils.PointerTo([]string{"lic1", "lic2"}),
+						Name:     utils.PointerTo("testcomponent1"),
+						Purl:     utils.PointerTo("pkg:pypi/testcomponent1@v10.0.0-foo"),
+						Type:     utils.PointerTo(string(cdx.ComponentTypeLibrary)),
+						Version:  utils.PointerTo("v10.0.0-foo1"),
+					},
+					{
+						Cpes:     utils.PointerTo([]string{"cpe2"}),
+						Language: utils.PointerTo("python"),
+						Licenses: utils.PointerTo([]string{"lic3", "lic4"}),
+						Name:     utils.PointerTo("testcomponent2"),
+						Purl:     utils.PointerTo("pkg:pypi/testcomponent2@v10.0.0-foo"),
+						Type:     utils.PointerTo(string(cdx.ComponentTypeLibrary)),
+						Version:  utils.PointerTo("v10.0.0-foo2"),
 					},
 				},
 			},
@@ -140,9 +138,7 @@ func Test_ConvertSBOMResultToAPIModel(t *testing.T) {
 				},
 			},
 			want: returns{
-				sbomScan: &models.SbomScan{
-					Packages: &[]models.Package{},
-				},
+				packages: &[]models.Package{},
 			},
 		},
 	}
@@ -150,7 +146,7 @@ func Test_ConvertSBOMResultToAPIModel(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := ConvertSBOMResultToPackages(tt.args.result)
-			if diff := cmp.Diff(tt.want.sbomScan, got, cmpopts.SortSlices(func(a, b models.Package) bool { return *a.Purl < *b.Purl })); diff != "" {
+			if diff := cmp.Diff(tt.want.packages, got, cmpopts.SortSlices(func(a, b models.Package) bool { return *a.Purl < *b.Purl })); diff != "" {
 				t.Errorf("convertSBOMResultToAPIModel() mismatch (-want +got):\n%s", diff)
 			}
 		})
