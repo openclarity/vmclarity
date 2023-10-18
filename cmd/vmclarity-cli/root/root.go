@@ -30,7 +30,7 @@ import (
 
 // RootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
-	Use:          "vmclarity",
+	Use:          "vmclarity-cli",
 	Short:        "VMClarity",
 	Long:         `VMClarity`,
 	Version:      version.String(),
