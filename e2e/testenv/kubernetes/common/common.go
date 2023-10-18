@@ -213,6 +213,8 @@ func createValues(imageList map[string]string) (map[string]interface{}, error) {
 		"uibackend": map[string]interface{}{
 			"image": parsedImageList[UIBackendContainerImage],
 		},
+		// Note (pebalogh) this is for only kind at the moment.
+		// If we implement external K8S we will need to set different values.
 		"gateway": map[string]interface{}{
 			"service": map[string]interface{}{
 				"type":     "NodePort",
