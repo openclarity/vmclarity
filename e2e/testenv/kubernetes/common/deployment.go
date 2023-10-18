@@ -36,7 +36,7 @@ const (
 func CreateTestDeployment(ctx context.Context) error {
 	clientSet, err := utils.GetKubernetesClientFromContext(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get kuberntes clientset ftom context: %w", err)
+		return fmt.Errorf("failed to get kuberntes clientset from context: %w", err)
 	}
 	deploymentsClient := clientSet.AppsV1().Deployments(TestNamespace)
 	testReplicas := TestReplicaNumber
@@ -81,7 +81,7 @@ func CreateTestDeployment(ctx context.Context) error {
 func DeleteTestDeployment(ctx context.Context) error {
 	clientSet, err := utils.GetKubernetesClientFromContext(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get kuberntes clientset ftom context: %w", err)
+		return fmt.Errorf("failed to get kuberntes clientset from context: %w", err)
 	}
 	deploymentsClient := clientSet.AppsV1().Deployments(TestNamespace)
 	err = deploymentsClient.Delete(ctx, TestDeploymentName, metav1.DeleteOptions{})

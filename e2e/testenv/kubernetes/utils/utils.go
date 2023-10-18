@@ -67,7 +67,7 @@ func CreateK8sClient(kubeConfig string) (kubernetes.Interface, error) {
 func ListVMClarityPods(ctx context.Context, namespace string) (*corev1.PodList, error) {
 	clientSet, err := GetKubernetesClientFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get kuberntes clientset ftom context: %w", err)
+		return nil, fmt.Errorf("failed to get kuberntes clientset from context: %w", err)
 	}
 	pods, err := clientSet.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
@@ -80,7 +80,7 @@ func ListVMClarityPods(ctx context.Context, namespace string) (*corev1.PodList, 
 func GetVMClarityPodByName(ctx context.Context, podName, namespace string) (*corev1.Pod, error) {
 	clientSet, err := GetKubernetesClientFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get kuberntes clientset ftom context: %w", err)
+		return nil, fmt.Errorf("failed to get kuberntes clientset from context: %w", err)
 	}
 	pod, err := clientSet.CoreV1().Pods(namespace).Get(ctx, podName, metav1.GetOptions{})
 	if err != nil {
@@ -98,7 +98,7 @@ func GetPodLogs(ctx context.Context, pod *corev1.Pod, startTime time.Time) ([]by
 	}
 	clientSet, err := GetKubernetesClientFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get kuberntes clientset ftom context: %w", err)
+		return nil, fmt.Errorf("failed to get kuberntes clientset from context: %w", err)
 	}
 	req := clientSet.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOpts)
 	podLogs, err := req.Stream(ctx)
