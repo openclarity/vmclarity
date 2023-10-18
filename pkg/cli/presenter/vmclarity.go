@@ -78,9 +78,6 @@ func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res families.
 	if assetScan.Status == nil {
 		assetScan.Status = &models.AssetScanStatus{}
 	}
-	if assetScan.Status.Sbom == nil {
-		assetScan.Status.Sbom = &models.AssetScanState{}
-	}
 	if assetScan.Summary == nil {
 		assetScan.Summary = &models.ScanFindingsSummary{}
 	}
@@ -88,26 +85,34 @@ func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res families.
 		assetScan.Stats = &models.AssetScanStats{}
 	}
 
-	errs := []string{}
-
 	if res.Err != nil {
-		errs = append(errs, res.Err.Error())
+		assetScan.Sboms = models.NewSbomScan(
+			nil,
+			models.SbomScanStateFailed,
+			models.SbomScanReasonScannerFailed,
+			utils.PointerTo(res.Err.Error()),
+		)
 	} else {
 		sbomResults, ok := res.Result.(*sbom.Results)
 		if !ok {
-			errs = append(errs, fmt.Errorf("failed to convert to sbom results").Error())
+			assetScan.Sboms = models.NewSbomScan(
+				nil,
+				models.SbomScanStateFailed,
+				models.SbomScanReasonScannerFailed,
+				utils.PointerTo(fmt.Errorf("failed to convert to sbom results").Error()),
+			)
 		} else {
-			assetScan.Sboms = cliutils.ConvertSBOMResultToAPIModel(sbomResults)
-			if assetScan.Sboms.Packages != nil {
-				assetScan.Summary.TotalPackages = utils.PointerTo(len(*assetScan.Sboms.Packages))
-			}
+			packages := cliutils.ConvertSBOMResultToPackages(sbomResults)
+			assetScan.Summary.TotalPackages = utils.PointerTo(len(*packages))
 			assetScan.Stats.Sbom = getInputScanStats(sbomResults.Metadata.InputScans)
+			assetScan.Sboms = models.NewSbomScan(
+				packages,
+				models.SbomScanStateDone,
+				models.SbomScanReasonScannerDone,
+				nil,
+			)
 		}
 	}
-
-	state := models.AssetScanStateStateDone
-	assetScan.Status.Sbom.State = &state
-	assetScan.Status.Sbom.Errors = &errs
 
 	err = v.client.PatchAssetScan(ctx, assetScan, v.assetScanID)
 	if err != nil {

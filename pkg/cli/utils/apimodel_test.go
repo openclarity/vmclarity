@@ -149,7 +149,7 @@ func Test_ConvertSBOMResultToAPIModel(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ConvertSBOMResultToAPIModel(tt.args.result)
+			got := ConvertSBOMResultToPackages(tt.args.result)
 			if diff := cmp.Diff(tt.want.sbomScan, got, cmpopts.SortSlices(func(a, b models.Package) bool { return *a.Purl < *b.Purl })); diff != "" {
 				t.Errorf("convertSBOMResultToAPIModel() mismatch (-want +got):\n%s", diff)
 			}

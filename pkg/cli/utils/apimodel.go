@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"strings"
 
-	cdx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/openclarity/kubeclarity/shared/pkg/scanner"
 	"github.com/openclarity/kubeclarity/shared/pkg/utils/cyclonedx_helper"
 	"github.com/openclarity/kubeclarity/shared/pkg/utils/vulnerability"
@@ -40,30 +39,27 @@ import (
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
-func ConvertSBOMResultToAPIModel(sbomResults *sbom.Results) *models.SbomScan {
+func ConvertSBOMResultToPackages(sbomResults *sbom.Results) *[]models.Package {
 	packages := []models.Package{}
 
 	if sbomResults.SBOM.Components != nil {
 		for _, component := range *sbomResults.SBOM.Components {
-			packages = append(packages, *ConvertPackageInfoToAPIModel(component))
+			packages = append(
+				packages,
+				models.Package{
+					Cpes:     utils.PointerTo([]string{component.CPE}),
+					Language: utils.PointerTo(cyclonedx_helper.GetComponentLanguage(component)),
+					Licenses: utils.PointerTo(cyclonedx_helper.GetComponentLicenses(component)),
+					Name:     utils.PointerTo(component.Name),
+					Purl:     utils.PointerTo(component.PackageURL),
+					Type:     utils.PointerTo(string(component.Type)),
+					Version:  utils.PointerTo(component.Version),
+				},
+			)
 		}
 	}
 
-	return &models.SbomScan{
-		Packages: &packages,
-	}
-}
-
-func ConvertPackageInfoToAPIModel(component cdx.Component) *models.Package {
-	return &models.Package{
-		Cpes:     utils.PointerTo([]string{component.CPE}),
-		Language: utils.PointerTo(cyclonedx_helper.GetComponentLanguage(component)),
-		Licenses: utils.PointerTo(cyclonedx_helper.GetComponentLicenses(component)),
-		Name:     utils.PointerTo(component.Name),
-		Purl:     utils.PointerTo(component.PackageURL),
-		Type:     utils.PointerTo(string(component.Type)),
-		Version:  utils.PointerTo(component.Version),
-	}
+	return &packages
 }
 
 func ConvertVulnResultToAPIModel(vulnerabilitiesResults *vulnerabilities.Results) *models.VulnerabilityScan {

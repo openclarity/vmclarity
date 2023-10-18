@@ -104,10 +104,6 @@ func TestNewAssetScanFromScan(t *testing.T) {
 						Errors: nil,
 						State:  utils.PointerTo(models.AssetScanStateStateNotScanned),
 					},
-					Sbom: &models.AssetScanState{
-						Errors: nil,
-						State:  utils.PointerTo(models.AssetScanStateStatePending),
-					},
 					Secrets: &models.AssetScanState{
 						Errors: nil,
 						State:  utils.PointerTo(models.AssetScanStateStateNotScanned),
@@ -120,6 +116,12 @@ func TestNewAssetScanFromScan(t *testing.T) {
 						State: utils.PointerTo(models.AssetScanStateStatePending),
 					},
 				},
+				Sboms: models.NewSbomScan(
+					nil,
+					models.SbomScanStatePending,
+					models.SbomScanReasonScannerPending,
+					nil,
+				),
 				Summary: newAssetScanSummary(),
 				Asset: &models.AssetRelationship{
 					Id: assetID,

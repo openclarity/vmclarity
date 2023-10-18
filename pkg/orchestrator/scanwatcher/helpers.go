@@ -56,6 +56,14 @@ func newAssetScanFromScan(scan *models.Scan, assetID string) (*models.AssetScan,
 	}
 	familiesConfig := scan.AssetScanTemplate.ScanFamiliesConfig
 
+	sbomState := models.SbomScanStateSkipped
+	sbomReason := models.SbomScanReasonScannerSkipped
+	if scan.AssetScanTemplate.ScanFamiliesConfig.Sbom.IsEnabled() {
+		sbomState = models.SbomScanStatePending
+		sbomReason = models.SbomScanReasonScannerPending
+	}
+	sboms := models.NewSbomScan(nil, sbomState, sbomReason, nil)
+
 	return &models.AssetScan{
 		Summary: newAssetScanSummary(),
 		Scan: &models.ScanRelationship{
@@ -87,10 +95,6 @@ func newAssetScanFromScan(scan *models.Scan, assetID string) (*models.AssetScan,
 				Errors: nil,
 				State:  getInitStateFromFamilyConfig(familiesConfig.Rootkits),
 			},
-			Sbom: &models.AssetScanState{
-				Errors: nil,
-				State:  getInitStateFromFamilyConfig(familiesConfig.Sbom),
-			},
 			Secrets: &models.AssetScanState{
 				Errors: nil,
 				State:  getInitStateFromFamilyConfig(familiesConfig.Secrets),
@@ -109,6 +113,7 @@ func newAssetScanFromScan(scan *models.Scan, assetID string) (*models.AssetScan,
 			models.ResourceCleanupStatusReasonAssetScanCreated,
 			nil,
 		),
+		Sboms: sboms,
 	}, nil
 }
 

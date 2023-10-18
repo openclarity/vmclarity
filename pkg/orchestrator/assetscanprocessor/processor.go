@@ -74,7 +74,7 @@ func (asp *AssetScanProcessor) Reconcile(ctx context.Context, event AssetScanRec
 		}
 	}
 
-	if statusCompletedWithNoErrors(assetScan.Status.Sbom) {
+	if assetScan.Sboms.State == models.SbomScanStateDone {
 		if err := asp.reconcileResultPackagesToFindings(ctx, assetScan); err != nil {
 			return newFailedToReconcileTypeError(err, "sbom")
 		}

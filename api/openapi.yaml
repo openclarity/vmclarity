@@ -2418,6 +2418,59 @@ components:
       #  - asset
       #  - scan
 
+    ScannerStatus:
+      type: object
+      required:
+        - state
+        - reason
+        - lastTransitionTime
+      properties:
+        state:
+          description: |
+            Describes the state of a scanner on the asset.
+            
+            | State       | Description                                                              |
+            | ----------- | ------------------------------------------------------------------------ |
+            | Pending     | Scanner is pending and waits for state transition to InProgress state    |
+            | InProgress  | Scanning is being performed                                              |
+            | Aborted     | Scanning is aborted, check *reason* and *message* fields for the details |
+            | Skipped     | Scanner is **not** scheduled                                             |
+            | Failed      | Scanner has failed, check *reason* and *message* fields for the details  |
+            | Done        | Scanner has finished scanning with no errors                             |
+          type: string
+          enum:
+            - Pending
+            - InProgress
+            - Aborted
+            - Skipped
+            - Failed
+            - Done
+        reason:
+          description: |
+            Machine readable reason for state transition.
+
+            | State      | Reason            | Description                                 |
+            | ---------- | ----------------- | ------------------------------------------- |
+            | Pending    | ScannerPending    | Scanner has been enabled in ScanConfig      |
+            | InProgress | ScannerInProgress | Scanner is currently running                |
+            | Skipped    | ScannerSkipped    | Scanner hasn't been enabled in ScanConfig   |
+            | Failed     | ScannerFailed     | Scanner finished with an error              |
+            | Done       | ScannerDone       | Scanner finished successfully               |
+          type: string
+          enum:
+            - ScannerPending
+            - ScannerInProgress
+            - ScannerSkipped
+            - ScannerFailed
+            - ScannerDone
+        message:
+          description: Human readable message.
+          type: string
+        lastTransitionTime:
+          description: Last date time when the status has changed.
+          type: string
+          format: date-time
+
     AssetScanStats:
       type: object
       properties:
@@ -2580,8 +2633,6 @@ components:
       type: object
       properties:
         general:
-          $ref: '#/components/schemas/AssetScanState'
-        sbom:
           $ref: '#/components/schemas/AssetScanState'
         vulnerabilities:
           $ref: '#/components/schemas/AssetScanState'
@@ -2991,13 +3042,15 @@ components:
           nullable: true
 
     SbomScan:
-      type: object
-      properties:
-        packages:
-          type: array
-          items:
-            $ref: '#/components/schemas/Package'
-          nullable: true
+      allOf:
+        - $ref: "#/components/schemas/ScannerStatus"
+        - type: object
+          properties:
+            packages:
+              type: array
+              items:
+                $ref: '#/components/schemas/Package'
+              nullable: true
 
     VulnerabilityScan:
       type: object
