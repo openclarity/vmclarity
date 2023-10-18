@@ -19,6 +19,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -41,6 +42,7 @@ const (
 )
 
 type Client struct {
+	uuid             string
 	cred             azcore.TokenCredential
 	rgClient         *armresources.ResourceGroupsClient
 	vmClient         *armcompute.VirtualMachinesClient
@@ -326,5 +328,22 @@ func createImageURN(reference *armcompute.ImageReference) string {
 }
 
 func (c *Client) Register(ctx context.Context) error {
-	return fmt.Errorf("not implemented")
+	// TODO(paralta) When persistent storage is available, check if the provider is already registered.
+	// If not registered, post the provider and store the received UUID.
+	apiProvider, err := c.backendClient.PostProvider(
+		ctx,
+		models.Provider{
+			DisplayName: utils.PointerTo(string(c.Kind())),
+			Status: &models.ProviderStatus{
+				State:              models.ProviderStatusStateUnknown,
+				Reason:             models.NoHeartbeatReceived,
+				LastTransitionTime: time.Now(),
+			},
+		})
+	if err != nil {
+		return fmt.Errorf("failed to post provider: %w", err)
+	}
+
+	c.uuid = *apiProvider.Id
+	return nil
 }

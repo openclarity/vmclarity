@@ -18,6 +18,7 @@ package kubernetes
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -26,9 +27,11 @@ import (
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/orchestrator/provider"
 	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
+	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
 type Provider struct {
+	uuid          string
 	clientset     kubernetes.Interface
 	config        *Config
 	backendClient *backendclient.BackendClient
@@ -97,5 +100,22 @@ func (p *Provider) RemoveAssetScan(context.Context, *provider.ScanJobConfig) err
 }
 
 func (p *Provider) Register(ctx context.Context) error {
-	return fmt.Errorf("not implemented")
+	// TODO(paralta) When persistent storage is available, check if the provider is already registered.
+	// If not registered, post the provider and store the received UUID.
+	apiProvider, err := p.backendClient.PostProvider(
+		ctx,
+		models.Provider{
+			DisplayName: utils.PointerTo(string(p.Kind())),
+			Status: &models.ProviderStatus{
+				State:              models.ProviderStatusStateUnknown,
+				Reason:             models.NoHeartbeatReceived,
+				LastTransitionTime: time.Now(),
+			},
+		})
+	if err != nil {
+		return fmt.Errorf("failed to post provider: %w", err)
+	}
+
+	p.uuid = *apiProvider.Id
+	return nil
 }
