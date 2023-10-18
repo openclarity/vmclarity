@@ -16,37 +16,24 @@
 package common
 
 import (
-	"bytes"
-	"context"
 	"fmt"
-	"io"
-	"net/url"
 	"os"
 	"os/exec"
-	"time"
 
-	"github.com/docker/distribution/reference"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-
-	envtypes "github.com/openclarity/vmclarity/e2e/testenv/types"
+	"github.com/openclarity/vmclarity/e2e/testenv/kubernetes/utils"
 )
 
 const (
-	VMClarityChartPath            = "../charts/vmclarity"
-	HelmDriverEnvVar              = "HELM_DRIVER"
-	VMClarityNamespace            = "vmclarity"
-	VMClarityReleaseName          = "vmclarity-e2e"
-	KubernetesProvider            = "kubernetes"
-	APIServerContainerImage       = "APIServerContainerImage"
-	OrchestratorContainerImage    = "OrchestratorContainerImage"
-	ScannerContainerImage         = "ScannerContainerImage"
-	UIContainerImage              = "UIContainerImage"
-	UIBackendContainerImage       = "UIBackendContainerImage"
-	VMClarityAPIServerPort        = "8888"
-	VMClarityAPIServerServiceName = "apiserver"
+	VMClarityChartPath         = "../charts/vmclarity"
+	HelmDriverEnvVar           = "HELM_DRIVER"
+	VMClarityNamespace         = "vmclarity"
+	VMClarityReleaseName       = "vmclarity-e2e"
+	KubernetesProvider         = "kubernetes"
+	APIServerContainerImage    = "APIServerContainerImage"
+	OrchestratorContainerImage = "OrchestratorContainerImage"
+	ScannerContainerImage      = "ScannerContainerImage"
+	UIContainerImage           = "UIContainerImage"
+	UIBackendContainerImage    = "UIBackendContainerImage"
 )
 
 type ChartHelper struct {
@@ -116,7 +103,7 @@ func (c *ChartHelper) DeployHelmChart() error {
 	parsedImageList := make(map[string]map[string]string)
 	var err error
 	for k, v := range GetImageList() {
-		parsedImageList[k], err = getImageRegistryRepositoryTag(v)
+		parsedImageList[k], err = utils.GetImageRegistryRepositoryTag(v)
 		if err != nil {
 			return fmt.Errorf("failed to parse %s image: %s", k, v)
 		}
@@ -197,7 +184,7 @@ func createValues(imageList map[string]string) (map[string]interface{}, error) {
 	parsedImageList := make(map[string]map[string]string)
 	var err error
 	for k, v := range imageList {
-		parsedImageList[k], err = getImageRegistryRepositoryTag(v)
+		parsedImageList[k], err = utils.GetImageRegistryRepositoryTag(v)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse %s image: %s", k, v)
 		}
@@ -240,113 +227,4 @@ func GetImageList() map[string]string {
 		UIContainerImage:           os.Getenv(UIContainerImage),
 		UIBackendContainerImage:    os.Getenv(UIBackendContainerImage),
 	}
-}
-
-func getImageRegistryRepositoryTag(image string) (map[string]string, error) {
-	named, err := reference.ParseNormalizedNamed(image)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse image: %s", image)
-	}
-
-	registry := reference.Domain(named)
-	repository := reference.Path(named)
-	tagged, ok := named.(reference.Tagged)
-	if !ok {
-		return nil, fmt.Errorf("failed to get image tag from image name: %s", image)
-	}
-	tag := tagged.Tag()
-
-	return map[string]string{
-		"registry":   registry,
-		"repository": repository,
-		"tag":        tag,
-	}, nil
-}
-
-func GetVMClarityInternalAPIURL() *url.URL {
-	vmclarityAPIServerService := fmt.Sprintf("%s-%s.%s.svc.cluster.local",
-		VMClarityReleaseName,
-		VMClarityAPIServerServiceName,
-		VMClarityNamespace,
-	)
-	return &url.URL{
-		Scheme: "http",
-		Host:   fmt.Sprintf("%s:%s", vmclarityAPIServerService, VMClarityAPIServerPort),
-	}
-}
-
-func CreateK8sClient(kubeConfig string) (kubernetes.Interface, error) {
-	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create k8s config: %w", err)
-	}
-	clientSet, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create k8s client: %w", err)
-	}
-	return clientSet, nil
-}
-
-func ListVMClarityPods(ctx context.Context) (*corev1.PodList, error) {
-	clientSet, err := GetKubernetesClientFromContext(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get kuberntes clientset ftom context: %w", err)
-	}
-	pods, err := clientSet.CoreV1().Pods(VMClarityNamespace).List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return nil, fmt.Errorf("error getting pods: %w", err)
-	}
-
-	return pods, nil
-}
-
-func GetVMClarityPodByName(ctx context.Context, podName string) (*corev1.Pod, error) {
-	clientSet, err := GetKubernetesClientFromContext(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get kuberntes clientset ftom context: %w", err)
-	}
-	pod, err := clientSet.CoreV1().Pods(VMClarityNamespace).Get(ctx, podName, metav1.GetOptions{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to get pod %s: %w", podName, err)
-	}
-
-	return pod, nil
-}
-
-func GetPodLogs(ctx context.Context, pod *corev1.Pod, startTime time.Time) ([]byte, error) {
-	podLogOpts := corev1.PodLogOptions{
-		SinceTime: &metav1.Time{
-			Time: startTime,
-		},
-	}
-	clientSet, err := GetKubernetesClientFromContext(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get kuberntes clientset ftom context: %w", err)
-	}
-	req := clientSet.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOpts)
-	podLogs, err := req.Stream(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get pod logs: %w", err)
-	}
-	defer podLogs.Close()
-
-	buf := new(bytes.Buffer)
-	_, err = io.Copy(buf, podLogs)
-	if err != nil {
-		return nil, fmt.Errorf("error in copy information from podLogs to buf: %w", err)
-	}
-
-	return buf.Bytes(), nil
-}
-
-func GetKubernetesClientFromContext(ctx context.Context) (kubernetes.Interface, error) {
-	clientSet, ok := ctx.Value(envtypes.KubernetesContextKey).(kubernetes.Interface)
-	if !ok {
-		return nil, fmt.Errorf(
-			"context key doesn't exist: %w",
-			ctx.Value(envtypes.KubernetesContextKey),
-		)
-	}
-
-	return clientSet, nil
 }

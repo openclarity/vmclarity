@@ -35,6 +35,7 @@ import (
 	"sigs.k8s.io/kind/pkg/fs"
 
 	"github.com/openclarity/vmclarity/e2e/testenv/kubernetes/common"
+	"github.com/openclarity/vmclarity/e2e/testenv/kubernetes/utils"
 	envtypes "github.com/openclarity/vmclarity/e2e/testenv/types"
 )
 
@@ -74,7 +75,7 @@ func (e *KindEnv) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to deploy VMClarity helm chart: %w", err)
 	}
 
-	k8sClientSet, err := common.CreateK8sClient(e.kubeConfigPath)
+	k8sClientSet, err := utils.CreateK8sClient(e.kubeConfigPath)
 	if err != nil {
 		return fmt.Errorf("failed to create k8s clientset: %w", err)
 	}
@@ -133,11 +134,11 @@ func (e *KindEnv) ServicesReady(ctx context.Context) (bool, error) {
 func (e *KindEnv) ServiceLogs(ctx context.Context, services []string, startTime time.Time, stdout, _ io.Writer) error {
 	ctx = e.Context(ctx)
 	for _, podName := range services {
-		pod, err := common.GetVMClarityPodByName(ctx, podName)
+		pod, err := utils.GetVMClarityPodByName(ctx, podName, common.VMClarityReleaseName)
 		if err != nil {
 			return fmt.Errorf("failed to get pod %s: %w", err)
 		}
-		logBytes, err := common.GetPodLogs(ctx, pod, startTime)
+		logBytes, err := utils.GetPodLogs(ctx, pod, startTime)
 		if err != nil {
 			return fmt.Errorf("failed to get log for pod %s: %w", podName, err)
 		}
@@ -152,7 +153,7 @@ func (e *KindEnv) ServiceLogs(ctx context.Context, services []string, startTime 
 
 // nolint:wrapcheck
 func (e *KindEnv) Services(ctx context.Context) ([]string, error) {
-	podList, err := common.ListVMClarityPods(e.Context(ctx))
+	podList, err := utils.ListVMClarityPods(e.Context(ctx), common.VMClarityNamespace)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list VMClarity pods: %w", err)
 	}

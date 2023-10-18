@@ -23,7 +23,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
+	"github.com/openclarity/vmclarity/e2e/testenv/kubernetes/utils"
+	sharedutils "github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
 const (
@@ -33,7 +34,7 @@ const (
 )
 
 func CreateTestDeployment(ctx context.Context) error {
-	clientSet, err := GetKubernetesClientFromContext(ctx)
+	clientSet, err := utils.GetKubernetesClientFromContext(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get kuberntes clientset ftom context: %w", err)
 	}
@@ -44,7 +45,7 @@ func CreateTestDeployment(ctx context.Context) error {
 			Name: TestDeploymentName,
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: utils.PointerTo(testReplicas),
+			Replicas: sharedutils.PointerTo(testReplicas),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"scanconfig": "test",
@@ -78,7 +79,7 @@ func CreateTestDeployment(ctx context.Context) error {
 }
 
 func DeleteTestDeployment(ctx context.Context) error {
-	clientSet, err := GetKubernetesClientFromContext(ctx)
+	clientSet, err := utils.GetKubernetesClientFromContext(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get kuberntes clientset ftom context: %w", err)
 	}
