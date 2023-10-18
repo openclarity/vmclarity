@@ -22,9 +22,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 
-	envtypes "github.com/openclarity/vmclarity/e2e/testenv/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
@@ -35,12 +33,9 @@ const (
 )
 
 func CreateTestDeployment(ctx context.Context) error {
-	clientSet, ok := ctx.Value(envtypes.KubernetesContextKey).(kubernetes.Interface)
-	if !ok {
-		return fmt.Errorf(
-			"failed to get kubernetes clientset from context: %v",
-			ctx.Value(envtypes.KubernetesContextKey),
-		)
+	clientSet, err := GetKubernetesClientFromContext(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get kuberntes clientset ftom context: %w", err)
 	}
 	deploymentsClient := clientSet.AppsV1().Deployments(TestNamespace)
 	testReplicas := TestReplicaNumber
@@ -74,7 +69,7 @@ func CreateTestDeployment(ctx context.Context) error {
 		},
 	}
 
-	_, err := deploymentsClient.Create(ctx, deployment, metav1.CreateOptions{})
+	_, err = deploymentsClient.Create(ctx, deployment, metav1.CreateOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to create test deployment: %w", err)
 	}
@@ -83,15 +78,12 @@ func CreateTestDeployment(ctx context.Context) error {
 }
 
 func DeleteTestDeployment(ctx context.Context) error {
-	clientSet, ok := ctx.Value(envtypes.KubernetesContextKey).(kubernetes.Interface)
-	if !ok {
-		return fmt.Errorf(
-			"failed to get kubernetes clientset from context: %v",
-			ctx.Value(envtypes.KubernetesContextKey),
-		)
+	clientSet, err := GetKubernetesClientFromContext(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get kuberntes clientset ftom context: %w", err)
 	}
 	deploymentsClient := clientSet.AppsV1().Deployments(TestNamespace)
-	err := deploymentsClient.Delete(ctx, TestDeploymentName, metav1.DeleteOptions{})
+	err = deploymentsClient.Delete(ctx, TestDeploymentName, metav1.DeleteOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to create test deployment: %w", err)
 	}

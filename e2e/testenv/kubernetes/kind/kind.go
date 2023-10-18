@@ -130,8 +130,23 @@ func (e *KindEnv) ServicesReady(ctx context.Context) (bool, error) {
 }
 
 // nolint:wrapcheck
-func (e *KindEnv) ServiceLogs(ctx context.Context, services []string, startTime time.Time, stdout, stderr io.Writer) error {
-	// TODO (pebalogh) get vmclarity pod logs
+func (e *KindEnv) ServiceLogs(ctx context.Context, services []string, startTime time.Time, stdout, _ io.Writer) error {
+	ctx = e.Context(ctx)
+	for _, podName := range services {
+		pod, err := common.GetVMClarityPodByName(ctx, podName)
+		if err != nil {
+			return fmt.Errorf("failed to get pod %s: %w", err)
+		}
+		logBytes, err := common.GetPodLogs(ctx, pod, startTime)
+		if err != nil {
+			return fmt.Errorf("failed to get log for pod %s: %w", podName, err)
+		}
+		_, err = stdout.Write(logBytes)
+		if err != nil {
+			return fmt.Errorf("failed to write logs to stdout: %w", err)
+		}
+	}
+
 	return nil
 }
 

@@ -16,11 +16,14 @@
 package common
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"net/url"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/docker/distribution/reference"
 	corev1 "k8s.io/api/core/v1"
@@ -285,17 +288,65 @@ func CreateK8sClient(kubeConfig string) (kubernetes.Interface, error) {
 }
 
 func ListVMClarityPods(ctx context.Context) (*corev1.PodList, error) {
-	clientSet, ok := ctx.Value(envtypes.KubernetesContextKey).(kubernetes.Interface)
-	if !ok {
-		return nil, fmt.Errorf(
-			"failed to get kubernetes clientset from context: %v",
-			ctx.Value(envtypes.KubernetesContextKey),
-		)
+	clientSet, err := GetKubernetesClientFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get kuberntes clientset ftom context: %w", err)
 	}
-	pods, err := clientSet.CoreV1().Pods(VMClarityNamespace).List(context.Background(), metav1.ListOptions{})
+	pods, err := clientSet.CoreV1().Pods(VMClarityNamespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("error getting pods: %w", err)
 	}
 
 	return pods, nil
+}
+
+func GetVMClarityPodByName(ctx context.Context, podName string) (*corev1.Pod, error) {
+	clientSet, err := GetKubernetesClientFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get kuberntes clientset ftom context: %w", err)
+	}
+	pod, err := clientSet.CoreV1().Pods(VMClarityNamespace).Get(ctx, podName, metav1.GetOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get pod %s: %w", podName, err)
+	}
+
+	return pod, nil
+}
+
+func GetPodLogs(ctx context.Context, pod *corev1.Pod, startTime time.Time) ([]byte, error) {
+	podLogOpts := corev1.PodLogOptions{
+		SinceTime: &metav1.Time{
+			Time: startTime,
+		},
+	}
+	clientSet, err := GetKubernetesClientFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get kuberntes clientset ftom context: %w", err)
+	}
+	req := clientSet.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOpts)
+	podLogs, err := req.Stream(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get pod logs: %w", err)
+	}
+	defer podLogs.Close()
+
+	buf := new(bytes.Buffer)
+	_, err = io.Copy(buf, podLogs)
+	if err != nil {
+		return nil, fmt.Errorf("error in copy information from podLogs to buf: %w", err)
+	}
+
+	return buf.Bytes(), nil
+}
+
+func GetKubernetesClientFromContext(ctx context.Context) (kubernetes.Interface, error) {
+	clientSet, ok := ctx.Value(envtypes.KubernetesContextKey).(kubernetes.Interface)
+	if !ok {
+		return nil, fmt.Errorf(
+			"context key doesn't exist: %w",
+			ctx.Value(envtypes.KubernetesContextKey),
+		)
+	}
+
+	return clientSet, nil
 }
