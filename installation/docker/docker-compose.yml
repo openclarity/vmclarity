@@ -43,6 +43,9 @@ services:
       - type: bind
         source: /var/run/docker.sock
         target: /var/run/docker.sock
+      - type: volume
+        source: provider-registration-data
+        target: /var/opt/vmclarity
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://127.0.0.1:8082/healthz/ready || exit 1
       interval: 10s
@@ -201,6 +204,7 @@ configs:
 
 volumes:
   apiserver-db-data:
+  provider-registration-data:
   grype-server-db:
 
 networks:

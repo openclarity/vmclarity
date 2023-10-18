@@ -42,8 +42,12 @@ import (
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
-// mountPointPath defines the location in the container where assets will be mounted.
-var mountPointPath = "/mnt/snapshot"
+var (
+	// mountPointPath defines the location in the container where assets will be mounted.
+	mountPointPath = "/mnt/snapshot"
+	// registrationFilePath defines the path to the file where the registered provider id is stored.
+	registrationFilePath = "/var/opt/vmclarity/registration.yaml"
+)
 
 type Client struct {
 	uuid          string
@@ -495,8 +499,18 @@ func convertTags(tags map[string]string) *[]models.Tag {
 }
 
 func (c *Client) Register(ctx context.Context) error {
-	// TODO(paralta) When persistent storage is available, check if the provider is already registered.
-	// If not registered, post the provider and store the received UUID.
+	// TODO(paralta) While an IAM service is not available to authenticate a new provider, a
+	// registration file will be stored inside a persistent volume to avoid re-registration.
+	// Please note that the current approach only allows one Docker provider per node.
+	id, err := c.CheckIfProviderIsRegistered(ctx)
+	if err == nil {
+		log.GetLoggerFromContextOrDiscard(ctx).Infof("provider registration found")
+		c.uuid = id
+		return nil
+	}
+
+	log.GetLoggerFromContextOrDiscard(ctx).Infof("new provider registration is required: %s", err)
+
 	apiProvider, err := c.backendClient.PostProvider(
 		ctx,
 		models.Provider{
@@ -512,5 +526,38 @@ func (c *Client) Register(ctx context.Context) error {
 	}
 
 	c.uuid = *apiProvider.Id
+
+	err = provider.WriteFile(ctx, registrationFilePath, []byte(c.uuid))
+	if err != nil {
+		return fmt.Errorf("failed to write to file: %w", err)
+	}
+
 	return nil
+}
+
+func (c *Client) CheckIfProviderIsRegistered(ctx context.Context) (string, error) {
+	buffer, err := provider.ReadFile(ctx, registrationFilePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read file: %w", err)
+	}
+
+	idFromRegistrationFile := string(buffer)
+
+	providers, err := c.backendClient.GetProviders(
+		ctx,
+		models.GetProvidersParams{
+			Filter: utils.PointerTo(fmt.Sprintf("id eq '%s'", idFromRegistrationFile)),
+		},
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to get providers: %w", err)
+	}
+
+	if len(*providers.Items) == 0 {
+		return "", fmt.Errorf("registered provider not found in database")
+	} else if len(*providers.Items) > 1 {
+		return "", fmt.Errorf("found more than one registered provider in database")
+	}
+
+	return idFromRegistrationFile, nil
 }
