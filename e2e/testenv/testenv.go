@@ -21,7 +21,6 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/openclarity/vmclarity/e2e/testenv/docker"
-	"github.com/openclarity/vmclarity/e2e/testenv/kubernetes/external"
 	"github.com/openclarity/vmclarity/e2e/testenv/kubernetes/kind"
 	"github.com/openclarity/vmclarity/e2e/testenv/types"
 )
@@ -62,9 +61,7 @@ func New(config *types.Config) (types.Environment, error) {
 		env, err = docker.New(config)
 	case types.Kind:
 		env, err = kind.New(config)
-	case types.Kubernetes:
-		env, err = external.New(config)
-	case types.AWS, types.Azure, types.GCP:
+	case types.AWS, types.Azure, types.GCP, types.Kubernetes:
 		fallthrough
 	default:
 		err = fmt.Errorf("platform is not supported: %s", config.Platform)

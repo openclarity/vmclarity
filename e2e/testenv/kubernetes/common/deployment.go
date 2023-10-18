@@ -20,7 +20,7 @@ import (
 	"fmt"
 
 	appsv1 "k8s.io/api/apps/v1"
-	apiv1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -30,7 +30,7 @@ import (
 
 const (
 	TestDeploymentName       = "test-deployment"
-	TestNamespace            = apiv1.NamespaceDefault
+	TestNamespace            = corev1.NamespaceDefault
 	TestReplicaNumber  int32 = 2
 )
 
@@ -55,14 +55,14 @@ func CreateTestDeployment(ctx context.Context) error {
 					"scanconfig": "test",
 				},
 			},
-			Template: apiv1.PodTemplateSpec{
+			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
 						"scanconfig": "test",
 					},
 				},
-				Spec: apiv1.PodSpec{
-					Containers: []apiv1.Container{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
 						{
 							Name:    "alpine",
 							Image:   "alpine:3.18.2",
