@@ -64,7 +64,7 @@ func CreateK8sClient(kubeConfig string) (kubernetes.Interface, error) {
 	return clientSet, nil
 }
 
-func ListVMClarityPods(ctx context.Context, namespace string) (*corev1.PodList, error) {
+func ListPods(ctx context.Context, namespace string) (*corev1.PodList, error) {
 	clientSet, err := GetKubernetesClientFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get kuberntes clientset from context: %w", err)
@@ -77,7 +77,7 @@ func ListVMClarityPods(ctx context.Context, namespace string) (*corev1.PodList, 
 	return pods, nil
 }
 
-func GetVMClarityPodByName(ctx context.Context, podName, namespace string) (*corev1.Pod, error) {
+func GetPodByName(ctx context.Context, podName, namespace string) (*corev1.Pod, error) {
 	clientSet, err := GetKubernetesClientFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get kuberntes clientset from context: %w", err)

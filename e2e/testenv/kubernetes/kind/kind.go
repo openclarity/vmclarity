@@ -132,7 +132,7 @@ func (e *KindEnv) ServicesReady(ctx context.Context) (bool, error) {
 func (e *KindEnv) ServiceLogs(ctx context.Context, services []string, startTime time.Time, stdout, _ io.Writer) error {
 	ctx = e.Context(ctx)
 	for _, podName := range services {
-		pod, err := utils.GetVMClarityPodByName(ctx, podName, common.VMClarityNamespace)
+		pod, err := utils.GetPodByName(ctx, podName, common.VMClarityNamespace)
 		if err != nil {
 			return fmt.Errorf("failed to get pod: %w", err)
 		}
@@ -151,7 +151,7 @@ func (e *KindEnv) ServiceLogs(ctx context.Context, services []string, startTime 
 
 // nolint:wrapcheck
 func (e *KindEnv) Services(ctx context.Context) ([]string, error) {
-	podList, err := utils.ListVMClarityPods(e.Context(ctx), common.VMClarityNamespace)
+	podList, err := utils.ListPods(e.Context(ctx), common.VMClarityNamespace)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list VMClarity pods: %w", err)
 	}

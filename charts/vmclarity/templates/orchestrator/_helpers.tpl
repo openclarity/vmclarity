@@ -1,4 +1,4 @@
- {{/*
+{{/*
 Base name for the orchestrator components
 */}}
 {{- define "vmclarity.orchestrator.name" -}}
