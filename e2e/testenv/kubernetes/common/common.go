@@ -28,7 +28,7 @@ const (
 	HelmDriverEnvVar           = "HELM_DRIVER"
 	VMClarityNamespace         = "vmclarity"
 	VMClarityReleaseName       = "vmclarity-e2e"
-	KubernetesProvider         = "kubernetes"
+	KubernetesProviderName     = "kubernetes"
 	APIServerContainerImage    = "APIServerContainerImage"
 	OrchestratorContainerImage = "OrchestratorContainerImage"
 	ScannerContainerImage      = "ScannerContainerImage"
@@ -37,15 +37,16 @@ const (
 )
 
 type ChartHelper struct {
-	//	ActionConfig   *action.Configuration
+	// NOTE(pebalogh) Commented out because of the https://github.com/helm/helm/issues/12357
+	//ActionConfig   *action.Configuration
 	Namespace      string
 	KubeConfigPath string
 	ReleaseName    string
 }
 
 func NewChartHelper(kubeConfigPath string) (*ChartHelper, error) {
-	// Commented out because of the https://github.com/helm/helm/issues/12357
-	// before finding the proper solution we are using command to deploy helm chart
+	// NOTE(pebalogh) Commented out because of the https://github.com/helm/helm/issues/12357
+	// Before finding the proper solution we are using command to deploy helm chart.
 
 	//actionConfig := new(action.Configuration)
 	//namespace := VMClarityNamespace
@@ -68,7 +69,7 @@ func NewChartHelper(kubeConfigPath string) (*ChartHelper, error) {
 	//	ReleaseName:    VMClarityReleaseName,
 	//}, nil
 
-	// TODO (pebalogh) remove after issue above is solved
+	// TODO(pebalogh) remove after issue above is solved
 	return &ChartHelper{
 		Namespace:      VMClarityNamespace,
 		KubeConfigPath: kubeConfigPath,
@@ -77,8 +78,8 @@ func NewChartHelper(kubeConfigPath string) (*ChartHelper, error) {
 }
 
 func (c *ChartHelper) DeployHelmChart() error {
-	// Commented out because of the https://github.com/helm/helm/issues/12357
-	// before finding the proper solution we are using command to deploy helm chart
+	// NOTE(pebalogh) Commented out because of the https://github.com/helm/helm/issues/12357
+	// Before finding the proper solution we are using command to deploy helm chart.
 
 	//chart, err := loader.LoadDir(VMClarityChartPath)
 	//if err != nil {
@@ -99,7 +100,7 @@ func (c *ChartHelper) DeployHelmChart() error {
 	//	return fmt.Errorf("failed to install VMClarity helm chart: %w", err)
 	//}
 
-	// TODO (pebalogh) remove this after the issue above is solved
+	// TODO(pebalogh) remove this after the issue above is solved
 	parsedImageList := make(map[string]map[string]string)
 	var err error
 	for k, v := range GetImageList() {
@@ -160,15 +161,15 @@ func (c *ChartHelper) DeployHelmChart() error {
 }
 
 func (c *ChartHelper) DeleteHelmChart() error {
-	// Commented out because of the https://github.com/helm/helm/issues/12357
-	// before finding the proper solution we are using command to deploy helm chart
+	// NOTE(pebalogh) Commented out because of the https://github.com/helm/helm/issues/12357
+	// Before finding the proper solution we are using command to deploy helm chart.
 
 	//uninstall := action.NewUninstall(c.ActionConfig)
 	//if _, err := uninstall.Run(c.ReleaseName); err != nil {
 	//	return fmt.Errorf("failed to delete VMClarity helm chart: %w", err)
 	//}
 
-	// TODO (pebalogh) remove this after the issue above is solved
+	// TODO(pebalogh) remove this after the issue above is solved
 	cmd := exec.Command("helm", "delete", c.ReleaseName, "--namespace", VMClarityNamespace) // nolint: gosec
 
 	output, err := cmd.CombinedOutput()
@@ -179,6 +180,8 @@ func (c *ChartHelper) DeleteHelmChart() error {
 	return nil
 }
 
+// NOTE(pebalogh) the createValues is used by the helm install,
+// the unused nolint has to be removed after the oras-go issue is solved.
 // nolint: unused
 func createValues(imageList map[string]string) (map[string]interface{}, error) {
 	parsedImageList := make(map[string]map[string]string)
@@ -195,7 +198,7 @@ func createValues(imageList map[string]string) (map[string]interface{}, error) {
 			"image": parsedImageList[APIServerContainerImage],
 		},
 		"orchestrator": map[string]interface{}{
-			"provider": KubernetesProvider,
+			"provider": KubernetesProviderName,
 			"serviceAccount": map[string]interface{}{
 				"automountServiceAccountToken": true,
 			},

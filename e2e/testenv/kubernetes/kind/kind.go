@@ -87,11 +87,9 @@ func (e *KindEnv) Start(ctx context.Context) error {
 // nolint:wrapcheck
 func (e *KindEnv) Stop(ctx context.Context) error {
 	if err := common.DeleteTestDeployment(e.Context(ctx)); err != nil {
-		// TODO (pebalogh) maybe just log ???
 		return fmt.Errorf("failed to delete test deployment: %w", err)
 	}
 	if err := e.ChartHelper.DeleteHelmChart(); err != nil {
-		// TODO (pebalogh) maybe just log ???
 		return fmt.Errorf("failed to delete VMclarity helm chart: %w", err)
 	}
 
@@ -126,7 +124,7 @@ func (e *KindEnv) TearDown(_ context.Context) error {
 
 // nolint:wrapcheck
 func (e *KindEnv) ServicesReady(ctx context.Context) (bool, error) {
-	// Note (pebalogh) checking services isn't necessary because of the `helm install --wait`
+	// NOTE(pebalogh) checking services isn't necessary because of the `helm install --wait`
 	return true, nil
 }
 
@@ -192,7 +190,7 @@ func (e *KindEnv) loadContainerImagesToCluster(ctx context.Context) error {
 		images = append(images, image)
 	}
 
-	// Setup the tar path where the images will be saved
+	// Set up the tar path where the images will be saved
 	dir, err := fs.TempDir("", "images-tar")
 	if err != nil {
 		return fmt.Errorf("failed to create tempdir: %w", err)
