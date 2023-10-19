@@ -37,8 +37,8 @@ const (
 )
 
 type ChartHelper struct {
-	// NOTE(pebalogh) Commented out because of the https://github.com/helm/helm/issues/12357
-	//ActionConfig   *action.Configuration
+	// NOTE(pebalogh) AutoConfig is commented out because of the https://github.com/helm/helm/issues/12357
+	//  ActionConfig   *action.Configuration
 	Namespace      string
 	KubeConfigPath string
 	ReleaseName    string
