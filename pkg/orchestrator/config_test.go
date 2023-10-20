@@ -111,8 +111,7 @@ func TestConfig(t *testing.T) {
 			Name: "Custom config",
 			EnvVars: map[string]string{
 				"VMCLARITY_ORCHESTRATOR_PROVIDER":                                           "docker",
-				"VMCLARITY_ORCHESTRATOR_APISERVER_HOST":                                     "example.com",
-				"VMCLARITY_ORCHESTRATOR_APISERVER_PORT":                                     "8484",
+				"VMCLARITY_ORCHESTRATOR_APISERVER_ADDRESS":                                  "http://example.com:8484/api",
 				"VMCLARITY_ORCHESTRATOR_HEALTHCHECK_ADDRESS":                                "example.com:18888",
 				"VMCLARITY_ORCHESTRATOR_CONTROLLER_STARTUP_DELAY":                           "15s",
 				"VMCLARITY_ORCHESTRATOR_DISCOVERY_INTERVAL":                                 "60s",
@@ -125,7 +124,7 @@ func TestConfig(t *testing.T) {
 				"VMCLARITY_ORCHESTRATOR_ASSETSCAN_WATCHER_RECONCILE_TIMEOUT":                "7m",
 				"VMCLARITY_ORCHESTRATOR_ASSETSCAN_WATCHER_ABORT_TIMEOUT":                    "12h",
 				"VMCLARITY_ORCHESTRATOR_ASSETSCAN_WATCHER_DELETE_POLICY":                    "never",
-				"VMCLARITY_ORCHESTRATOR_ASSETSCAN_WATCHER_SCANNER_BACKEND_ADDRESS":          "another.example.com",
+				"VMCLARITY_ORCHESTRATOR_ASSETSCAN_WATCHER_SCANNER_APISERVER_ADDRESS":        "http://alternative.example.com:8484/api",
 				"VMCLARITY_ORCHESTRATOR_ASSETSCAN_WATCHER_SCANNER_EXPLOITSDB_ADDRESS":       "exploitsdb.example.com",
 				"VMCLARITY_ORCHESTRATOR_ASSETSCAN_WATCHER_SCANNER_TRIVY_SERVER_ADDRESS":     "trivy.example.com",
 				"VMCLARITY_ORCHESTRATOR_ASSETSCAN_WATCHER_SCANNER_TRIVY_SERVER_TIMEOUT":     "14m",
@@ -151,8 +150,7 @@ func TestConfig(t *testing.T) {
 			ExpectedNewErrorMatcher: Not(HaveOccurred()),
 			ExpectedConfig: &Config{
 				ProviderKind:           models.Docker,
-				APIServerHost:          "example.com",
-				APIServerPort:          8484,
+				APIServerAddress:       "http://example.com:8484/api",
 				HealthCheckAddress:     "example.com:18888",
 				ControllerStartupDelay: 15 * time.Second,
 				DiscoveryConfig: discovery.Config{
@@ -173,7 +171,7 @@ func TestConfig(t *testing.T) {
 					AbortTimeout:     12 * time.Hour,
 					DeleteJobPolicy:  assetscanwatcher.DeleteJobPolicyNever,
 					ScannerConfig: assetscanwatcher.ScannerConfig{
-						ScannerBackendAddress:         "another.example.com",
+						APIServerAddress:              "http://alternative.example.com:8484/api",
 						ExploitsDBAddress:             "exploitsdb.example.com",
 						TrivyServerAddress:            "trivy.example.com",
 						TrivyServerTimeout:            14 * time.Minute,
@@ -211,8 +209,7 @@ func TestConfig(t *testing.T) {
 			ExpectedNewErrorMatcher: Not(HaveOccurred()),
 			ExpectedConfig: &Config{
 				ProviderKind:           DefaultProviderKind,
-				APIServerHost:          "",
-				APIServerPort:          0,
+				APIServerAddress:       "",
 				HealthCheckAddress:     DefaultHealthCheckAddress,
 				ControllerStartupDelay: DefaultControllerStartupDelay,
 				DiscoveryConfig: discovery.Config{
@@ -233,7 +230,7 @@ func TestConfig(t *testing.T) {
 					AbortTimeout:     assetscanwatcher.DefaultAbortTimeout,
 					DeleteJobPolicy:  assetscanwatcher.DeleteJobPolicyAlways,
 					ScannerConfig: assetscanwatcher.ScannerConfig{
-						ScannerBackendAddress:         "",
+						APIServerAddress:              "",
 						ExploitsDBAddress:             "",
 						TrivyServerAddress:            "",
 						TrivyServerTimeout:            assetscanwatcher.DefaultTrivyServerTimeout,

@@ -48,8 +48,7 @@ const (
 type Config struct {
 	ProviderKind models.CloudProvider `json:"provider,omitempty" mapstructure:"provider"`
 
-	APIServerHost      string `json:"apiserver-host,omitempty" mapstructure:"apiserver_host"`
-	APIServerPort      int    `json:"apiserver-port,omitempty" mapstructure:"apiserver_port"`
+	APIServerAddress   string `json:"apiserver-address,omitempty" mapstructure:"apiserver_address"`
 	HealthCheckAddress string `json:"healthcheck-address,omitempty" mapstructure:"healthcheck_address"`
 
 	// The Orchestrator starts the Controller(s) in a sequence and the ControllerStartupDelay is used for waiting
@@ -66,14 +65,6 @@ type Config struct {
 	AssetScanProcessorConfig         assetscanprocessor.Config         `json:"assetscan-processor,omitempty" mapstructure:"assetscan_processor"`
 }
 
-func (c *Config) IsValid() error {
-	if c.APIServerHost == "" || c.APIServerPort == 0 {
-		return fmt.Errorf("invalid config: APIServerHost and/or APIServerPort parameters are not set")
-	}
-
-	return nil
-}
-
 func NewConfig() (*Config, error) {
 	v := viper.NewWithOptions(
 		viper.KeyDelimiter("."),
@@ -88,8 +79,7 @@ func NewConfig() (*Config, error) {
 	_ = v.BindEnv("provider")
 	v.SetDefault("provider", DefaultProviderKind)
 
-	_ = v.BindEnv("apiserver_host")
-	_ = v.BindEnv("apiserver_port")
+	_ = v.BindEnv("apiserver_address")
 
 	_ = v.BindEnv("healthcheck_address")
 	v.SetDefault("healthcheck_address", DefaultHealthCheckAddress)
@@ -132,7 +122,7 @@ func NewConfig() (*Config, error) {
 	v.SetDefault("assetscan_watcher.delete_policy", assetscanwatcher.DeleteJobPolicyAlways)
 
 	// Scanner configuration
-	_ = v.BindEnv("assetscan_watcher.scanner.backend_address")
+	_ = v.BindEnv("assetscan_watcher.scanner.apiserver_address")
 
 	_ = v.BindEnv("assetscan_watcher.scanner.exploitsdb_address")
 

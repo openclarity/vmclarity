@@ -34,7 +34,7 @@ type ScannerConfig struct {
 	// automatically in case VMClarity backend has multiple IPs (internal
 	// traffic and external traffic for example) so we need the specific
 	// address to use.
-	ScannerBackendAddress string `mapstructure:"backend_address"`
+	APIServerAddress string `json:"apiserver-address,omitempty" mapstructure:"apiserver_address"`
 
 	ExploitsDBAddress string `mapstructure:"exploitsdb_address"`
 
