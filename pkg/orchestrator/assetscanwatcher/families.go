@@ -167,7 +167,7 @@ func withMalwareConfig(config *models.MalwareConfig, opts *ScannerConfig) Famili
 					AlternativeFreshclamMirrorURL: opts.AlternativeFreshclamMirrorURL,
 				},
 				Yara: yaraconfig.Config{
-					BinaryPath:      opts.YaraBinaryPath,
+					YaraBinaryPath:  opts.YaraBinaryPath,
 					CompiledRuleURL: opts.YaraRuleServerAddress,
 				},
 			},
