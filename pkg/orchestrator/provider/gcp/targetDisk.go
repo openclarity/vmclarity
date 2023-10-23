@@ -40,8 +40,8 @@ func (p *Provider) ensureDiskFromSnapshot(ctx context.Context, config *provider.
 
 	diskRes, err := p.disksClient.Get(ctx, &computepb.GetDiskRequest{
 		Disk:    diskName,
-		Project: p.gcpConfig.ProjectID,
-		Zone:    p.gcpConfig.ScannerZone,
+		Project: p.config.ProjectID,
+		Zone:    p.config.ScannerZone,
 	})
 	if err == nil {
 		if *diskRes.Status != ProvisioningStateReady {
@@ -59,12 +59,12 @@ func (p *Provider) ensureDiskFromSnapshot(ctx context.Context, config *provider.
 
 	// create the disk if not exists
 	req := &computepb.InsertDiskRequest{
-		Project: p.gcpConfig.ProjectID,
-		Zone:    p.gcpConfig.ScannerZone,
+		Project: p.config.ProjectID,
+		Zone:    p.config.ScannerZone,
 		DiskResource: &computepb.Disk{
 			Name: &diskName,
 			// Use pd-balanced so that we have SSD not spinning HDD
-			Type:           utils.PointerTo(fmt.Sprintf("zones/%v/diskTypes/pd-balanced", p.gcpConfig.ScannerZone)),
+			Type:           utils.PointerTo(fmt.Sprintf("zones/%v/diskTypes/pd-balanced", p.config.ScannerZone)),
 			SourceSnapshot: utils.PointerTo(snapshot.GetSelfLink()),
 			SizeGb:         snapshot.DiskSizeGb, // specify the size of the source disk (target scan)
 		},
@@ -87,16 +87,16 @@ func (p *Provider) ensureTargetDiskDeleted(ctx context.Context, config *provider
 		func() error {
 			_, err := p.disksClient.Get(ctx, &computepb.GetDiskRequest{
 				Disk:    diskName,
-				Project: p.gcpConfig.ProjectID,
-				Zone:    p.gcpConfig.ScannerZone,
+				Project: p.config.ProjectID,
+				Zone:    p.config.ScannerZone,
 			})
 			return err // nolint: wrapcheck
 		},
 		func() error {
 			_, err := p.disksClient.Delete(ctx, &computepb.DeleteDiskRequest{
 				Disk:    diskName,
-				Project: p.gcpConfig.ProjectID,
-				Zone:    p.gcpConfig.ScannerZone,
+				Project: p.config.ProjectID,
+				Zone:    p.config.ScannerZone,
 			})
 			return err // nolint: wrapcheck
 		},

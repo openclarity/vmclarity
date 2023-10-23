@@ -43,7 +43,7 @@ func scannerVMNameFromJobConfig(config *provider.ScanJobConfig) string {
 func (p *Provider) ensureScannerVirtualMachine(ctx context.Context, config *provider.ScanJobConfig, networkInterface armnetwork.Interface) (armcompute.VirtualMachine, error) {
 	vmName := scannerVMNameFromJobConfig(config)
 
-	vmResp, err := p.vmClient.Get(ctx, p.azureConfig.ScannerResourceGroup, vmName, nil)
+	vmResp, err := p.vmClient.Get(ctx, p.config.ScannerResourceGroup, vmName, nil)
 	if err == nil {
 		if *vmResp.VirtualMachine.Properties.ProvisioningState != ProvisioningStateSucceeded {
 			return vmResp.VirtualMachine, provider.RetryableErrorf(VMCreateEstimateProvisionTime, "VM is not ready yet, provisioning state: %s", *vmResp.VirtualMachine.Properties.ProvisioningState)
@@ -63,21 +63,21 @@ func (p *Provider) ensureScannerVirtualMachine(ctx context.Context, config *prov
 	userDataBase64 := base64.StdEncoding.EncodeToString([]byte(userData))
 
 	parameters := armcompute.VirtualMachine{
-		Location: to.Ptr(p.azureConfig.ScannerLocation),
+		Location: to.Ptr(p.config.ScannerLocation),
 		Identity: &armcompute.VirtualMachineIdentity{
 			// Scanners don't need access to Azure so no need for an Identity
 			Type: to.Ptr(armcompute.ResourceIdentityTypeNone),
 		},
 		Properties: &armcompute.VirtualMachineProperties{
 			HardwareProfile: &armcompute.HardwareProfile{
-				VMSize: to.Ptr(armcompute.VirtualMachineSizeTypes(p.azureConfig.ScannerVMSize)),
+				VMSize: to.Ptr(armcompute.VirtualMachineSizeTypes(p.config.ScannerVMSize)),
 			},
 			StorageProfile: &armcompute.StorageProfile{
 				ImageReference: &armcompute.ImageReference{
-					Offer:     to.Ptr(p.azureConfig.ScannerImageOffer),
-					Publisher: to.Ptr(p.azureConfig.ScannerImagePublisher),
-					SKU:       to.Ptr(p.azureConfig.ScannerImageSKU),
-					Version:   to.Ptr(p.azureConfig.ScannerImageVersion),
+					Offer:     to.Ptr(p.config.ScannerImageOffer),
+					Publisher: to.Ptr(p.config.ScannerImagePublisher),
+					SKU:       to.Ptr(p.config.ScannerImageSKU),
+					Version:   to.Ptr(p.config.ScannerImageVersion),
 				},
 				OSDisk: &armcompute.OSDisk{
 					Name:         to.Ptr(fmt.Sprintf("%s-rootvolume", vmName)),
@@ -110,18 +110,18 @@ func (p *Provider) ensureScannerVirtualMachine(ctx context.Context, config *prov
 		},
 	}
 
-	if p.azureConfig.ScannerPublicKey != "" {
+	if p.config.ScannerPublicKey != "" {
 		parameters.Properties.OSProfile.LinuxConfiguration.SSH = &armcompute.SSHConfiguration{
 			PublicKeys: []*armcompute.SSHPublicKey{
 				{
 					Path:    to.Ptr(fmt.Sprintf("/home/%s/.ssh/authorized_keys", "vmclarity")),
-					KeyData: to.Ptr(string(p.azureConfig.ScannerPublicKey)),
+					KeyData: to.Ptr(string(p.config.ScannerPublicKey)),
 				},
 			},
 		}
 	}
 
-	_, err = p.vmClient.BeginCreateOrUpdate(ctx, p.azureConfig.ScannerResourceGroup, vmName, parameters, nil)
+	_, err = p.vmClient.BeginCreateOrUpdate(ctx, p.config.ScannerResourceGroup, vmName, parameters, nil)
 	if err != nil {
 		_, err = handleAzureRequestError(err, "creating virtual machine")
 		return armcompute.VirtualMachine{}, err
@@ -136,11 +136,11 @@ func (p *Provider) ensureScannerVirtualMachineDeleted(ctx context.Context, confi
 	return ensureDeleted(
 		"virtual machine",
 		func() error {
-			_, err := p.vmClient.Get(ctx, p.azureConfig.ScannerResourceGroup, vmName, nil)
+			_, err := p.vmClient.Get(ctx, p.config.ScannerResourceGroup, vmName, nil)
 			return err // nolint: wrapcheck
 		},
 		func() error {
-			_, err := p.vmClient.BeginDelete(ctx, p.azureConfig.ScannerResourceGroup, vmName, nil)
+			_, err := p.vmClient.BeginDelete(ctx, p.config.ScannerResourceGroup, vmName, nil)
 			return err // nolint: wrapcheck
 		},
 		VMDeleteEstimateTime,
@@ -168,14 +168,14 @@ func (p *Provider) ensureDiskAttachedToScannerVM(ctx context.Context, vm armcomp
 			},
 		}
 
-		_, err := p.vmClient.BeginCreateOrUpdate(ctx, p.azureConfig.ScannerResourceGroup, *vm.Name, vm, nil)
+		_, err := p.vmClient.BeginCreateOrUpdate(ctx, p.config.ScannerResourceGroup, *vm.Name, vm, nil)
 		if err != nil {
 			_, err := handleAzureRequestError(err, "attaching disk %s to VM %s", *disk.Name, *vm.Name)
 			return err
 		}
 	}
 
-	diskResp, err := p.disksClient.Get(ctx, p.azureConfig.ScannerResourceGroup, *disk.Name, nil)
+	diskResp, err := p.disksClient.Get(ctx, p.config.ScannerResourceGroup, *disk.Name, nil)
 	if err != nil {
 		_, err := handleAzureRequestError(err, "getting disk %s", *disk.Name)
 		return err

@@ -39,7 +39,7 @@ type Provider struct {
 	instancesClient *compute.InstancesClient
 	regionsClient   *compute.RegionsClient
 
-	gcpConfig *Config
+	config *Config
 }
 
 func New(ctx context.Context) (*Provider, error) {
@@ -53,35 +53,33 @@ func New(ctx context.Context) (*Provider, error) {
 		return nil, fmt.Errorf("failed to validate configuration: %w", err)
 	}
 
-	provider := Provider{
-		gcpConfig: config,
-	}
-
 	regionsClient, err := compute.NewRegionsRESTClient(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create regions client: %w", err)
 	}
-	provider.regionsClient = regionsClient
 
 	instancesClient, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create instance client: %w", err)
 	}
-	provider.instancesClient = instancesClient
 
 	snapshotsClient, err := compute.NewSnapshotsRESTClient(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create snapshot client: %w", err)
 	}
-	provider.snapshotsClient = snapshotsClient
 
 	disksClient, err := compute.NewDisksRESTClient(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create disks client: %w", err)
 	}
-	provider.disksClient = disksClient
 
-	return &provider, nil
+	return &Provider{
+		snapshotsClient: snapshotsClient,
+		disksClient:     disksClient,
+		instancesClient: instancesClient,
+		regionsClient:   regionsClient,
+		config:          config,
+	}, nil
 }
 
 func (p *Provider) Kind() models.CloudProvider {
@@ -104,7 +102,7 @@ func (p *Provider) RunAssetScan(ctx context.Context, config *provider.ScanJobCon
 		"AssetScanID":   config.AssetScanID,
 		"AssetLocation": vminfo.Location,
 		"InstanceID":    vminfo.InstanceID,
-		"ScannerZone":   p.gcpConfig.ScannerZone,
+		"ScannerZone":   p.config.ScannerZone,
 		"Provider":      string(p.Kind()),
 	})
 	logger.Debugf("Running asset scan")
@@ -115,7 +113,7 @@ func (p *Provider) RunAssetScan(ctx context.Context, config *provider.ScanJobCon
 	// get the target instance to scan from gcp.
 	targetVM, err := p.instancesClient.Get(ctx, &computepb.GetInstanceRequest{
 		Instance: targetName,
-		Project:  p.gcpConfig.ProjectID,
+		Project:  p.config.ProjectID,
 		Zone:     targetZone,
 	})
 	if err != nil {
@@ -167,7 +165,7 @@ func (p *Provider) RunAssetScan(ctx context.Context, config *provider.ScanJobCon
 func (p *Provider) RemoveAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
 	logger := log.GetLoggerFromContextOrDefault(ctx).WithFields(logrus.Fields{
 		"AssetScanID": config.AssetScanID,
-		"ScannerZone": p.gcpConfig.ScannerZone,
+		"ScannerZone": p.config.ScannerZone,
 		"Provider":    string(p.Kind()),
 	})
 
@@ -266,7 +264,7 @@ func (p *Provider) listInstances(ctx context.Context, filter *string, zone strin
 	it := p.instancesClient.List(ctx, &computepb.ListInstancesRequest{
 		Filter:     filter,
 		MaxResults: utils.PointerTo[uint32](maxResults),
-		Project:    p.gcpConfig.ProjectID,
+		Project:    p.config.ProjectID,
 		Zone:       zone,
 	})
 	for {
@@ -275,7 +273,7 @@ func (p *Provider) listInstances(ctx context.Context, filter *string, zone strin
 			break
 		}
 		if err != nil {
-			_, err = handleGcpRequestError(err, "listing instances for project %s zone %s", p.gcpConfig.ProjectID, zone)
+			_, err = handleGcpRequestError(err, "listing instances for project %s zone %s", p.config.ProjectID, zone)
 			return nil, err
 		}
 
@@ -294,7 +292,7 @@ func (p *Provider) listAllRegions(ctx context.Context) ([]*computepb.Region, err
 
 	it := p.regionsClient.List(ctx, &computepb.ListRegionsRequest{
 		MaxResults: utils.PointerTo[uint32](maxResults),
-		Project:    p.gcpConfig.ProjectID,
+		Project:    p.config.ProjectID,
 	})
 	for {
 		resp, err := it.Next()
@@ -326,7 +324,7 @@ func (p *Provider) getVMInfoFromVirtualMachine(ctx context.Context, vm *computep
 	// get disk from gcp
 	disk, err := p.disksClient.Get(ctx, &computepb.GetDiskRequest{
 		Disk:    diskName,
-		Project: p.gcpConfig.ProjectID,
+		Project: p.config.ProjectID,
 		Zone:    getLastURLPart(vm.Zone),
 	})
 	if err != nil {

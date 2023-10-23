@@ -46,8 +46,8 @@ func (p *Provider) ensureScannerVirtualMachine(ctx context.Context, config *prov
 
 	instanceRes, err := p.instancesClient.Get(ctx, &computepb.GetInstanceRequest{
 		Instance: vmName,
-		Project:  p.gcpConfig.ProjectID,
-		Zone:     p.gcpConfig.ScannerZone,
+		Project:  p.config.ProjectID,
+		Zone:     p.config.ScannerZone,
 	})
 	if err == nil {
 		if *instanceRes.Status != InstanceStateRunning {
@@ -70,11 +70,11 @@ func (p *Provider) ensureScannerVirtualMachine(ctx context.Context, config *prov
 		return nil, provider.FatalErrorf("failed to generate cloud-init: %v", err)
 	}
 
-	zone := p.gcpConfig.ScannerZone
+	zone := p.config.ScannerZone
 	instanceName := vmName
 
 	req := &computepb.InsertInstanceRequest{
-		Project: p.gcpConfig.ProjectID,
+		Project: p.config.ProjectID,
 		Zone:    zone,
 		InstanceResource: &computepb.Instance{
 			Metadata: &computepb.Metadata{
@@ -92,28 +92,28 @@ func (p *Provider) ensureScannerVirtualMachine(ctx context.Context, config *prov
 					InitializeParams: &computepb.AttachedDiskInitializeParams{
 						DiskType:    utils.PointerTo(fmt.Sprintf("zones/%s/diskTypes/pd-balanced", zone)),
 						DiskSizeGb:  utils.PointerTo[int64](DiskSizeGB),
-						SourceImage: &p.gcpConfig.ScannerSourceImage,
+						SourceImage: &p.config.ScannerSourceImage,
 					},
 					AutoDelete: utils.PointerTo(true),
 					Boot:       utils.PointerTo(true),
 					Type:       utils.PointerTo(computepb.AttachedDisk_PERSISTENT.String()),
 				},
 			},
-			MachineType: utils.PointerTo(fmt.Sprintf("zones/%s/machineTypes/%s", zone, p.gcpConfig.ScannerMachineType)),
+			MachineType: utils.PointerTo(fmt.Sprintf("zones/%s/machineTypes/%s", zone, p.config.ScannerMachineType)),
 			NetworkInterfaces: []*computepb.NetworkInterface{
 				{
-					Subnetwork: &p.gcpConfig.ScannerSubnetwork,
+					Subnetwork: &p.config.ScannerSubnetwork,
 				},
 			},
 		},
 	}
 
-	if p.gcpConfig.ScannerSSHPublicKey != "" {
+	if p.config.ScannerSSHPublicKey != "" {
 		req.InstanceResource.Metadata.Items = append(
 			req.InstanceResource.Metadata.Items,
 			&computepb.Items{
 				Key:   utils.PointerTo("ssh-keys"),
-				Value: utils.PointerTo(fmt.Sprintf("vmclarity:%s", p.gcpConfig.ScannerSSHPublicKey)),
+				Value: utils.PointerTo(fmt.Sprintf("vmclarity:%s", p.config.ScannerSSHPublicKey)),
 			},
 		)
 	}
@@ -135,16 +135,16 @@ func (p *Provider) ensureScannerVirtualMachineDeleted(ctx context.Context, confi
 		func() error {
 			_, err := p.instancesClient.Get(ctx, &computepb.GetInstanceRequest{
 				Instance: vmName,
-				Project:  p.gcpConfig.ProjectID,
-				Zone:     p.gcpConfig.ScannerZone,
+				Project:  p.config.ProjectID,
+				Zone:     p.config.ScannerZone,
 			})
 			return err // nolint: wrapcheck
 		},
 		func() error {
 			_, err := p.instancesClient.Delete(ctx, &computepb.DeleteInstanceRequest{
 				Instance: vmName,
-				Project:  p.gcpConfig.ProjectID,
-				Zone:     p.gcpConfig.ScannerZone,
+				Project:  p.config.ProjectID,
+				Zone:     p.config.ScannerZone,
 			})
 			return err // nolint: wrapcheck
 		},
@@ -166,8 +166,8 @@ func (p *Provider) ensureDiskAttachedToScannerVM(ctx context.Context, vm *comput
 		req := &computepb.AttachDiskInstanceRequest{
 			AttachedDiskResource: &computepb.AttachedDisk{Source: utils.PointerTo(disk.GetSelfLink())},
 			Instance:             *vm.Name,
-			Project:              p.gcpConfig.ProjectID,
-			Zone:                 p.gcpConfig.ScannerZone,
+			Project:              p.config.ProjectID,
+			Zone:                 p.config.ScannerZone,
 		}
 
 		_, err := p.instancesClient.AttachDisk(ctx, req)
@@ -179,8 +179,8 @@ func (p *Provider) ensureDiskAttachedToScannerVM(ctx context.Context, vm *comput
 
 	diskResp, err := p.disksClient.Get(ctx, &computepb.GetDiskRequest{
 		Disk:    *disk.Name,
-		Project: p.gcpConfig.ProjectID,
-		Zone:    p.gcpConfig.ScannerZone,
+		Project: p.config.ProjectID,
+		Zone:    p.config.ScannerZone,
 	})
 	if err != nil {
 		_, err = handleGcpRequestError(err, "get disk %v", *disk.Name)

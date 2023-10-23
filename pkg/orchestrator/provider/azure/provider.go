@@ -47,7 +47,7 @@ type Provider struct {
 	disksClient      *armcompute.DisksClient
 	interfacesClient *armnetwork.InterfacesClient
 
-	azureConfig *Config
+	config *Config
 }
 
 func New(_ context.Context) (*Provider, error) {
@@ -61,17 +61,12 @@ func New(_ context.Context) (*Provider, error) {
 		return nil, fmt.Errorf("failed to validate configuration: %w", err)
 	}
 
-	provider := Provider{
-		azureConfig: config,
-	}
-
 	cred, err := azidentity.NewManagedIdentityCredential(nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed create managed identity credential: %w", err)
 	}
-	provider.cred = cred
 
-	provider.rgClient, err = armresources.NewResourceGroupsClient(config.SubscriptionID, cred, nil)
+	rgClient, err := armresources.NewResourceGroupsClient(config.SubscriptionID, cred, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create resource group client: %w", err)
 	}
@@ -80,17 +75,21 @@ func New(_ context.Context) (*Provider, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create network client factory: %w", err)
 	}
-	provider.interfacesClient = networkClientFactory.NewInterfacesClient()
 
 	computeClientFactory, err := armcompute.NewClientFactory(config.SubscriptionID, cred, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create compute client factory: %w", err)
 	}
-	provider.vmClient = computeClientFactory.NewVirtualMachinesClient()
-	provider.disksClient = computeClientFactory.NewDisksClient()
-	provider.snapshotsClient = computeClientFactory.NewSnapshotsClient()
 
-	return &provider, nil
+	return &Provider{
+		cred:             cred,
+		rgClient:         rgClient,
+		vmClient:         computeClientFactory.NewVirtualMachinesClient(),
+		snapshotsClient:  computeClientFactory.NewSnapshotsClient(),
+		disksClient:      computeClientFactory.NewDisksClient(),
+		interfacesClient: networkClientFactory.NewInterfacesClient(),
+		config:           config,
+	}, nil
 }
 
 func (p *Provider) Kind() models.CloudProvider {
@@ -125,7 +124,7 @@ func (p *Provider) RunAssetScan(ctx context.Context, config *provider.ScanJobCon
 	}
 
 	var disk armcompute.Disk
-	if *assetVM.Location == p.azureConfig.ScannerLocation {
+	if *assetVM.Location == p.config.ScannerLocation {
 		disk, err = p.ensureManagedDiskFromSnapshot(ctx, config, snapshot)
 		if err != nil {
 			return fmt.Errorf("failed to ensure managed disk created from snapshot: %w", err)

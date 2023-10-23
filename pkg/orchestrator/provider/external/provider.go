@@ -45,10 +45,6 @@ func New(_ context.Context) (*Provider, error) {
 		return nil, fmt.Errorf("failed to validate configuration: %w", err)
 	}
 
-	provider := Provider{
-		config: config,
-	}
-
 	var opts []grpc.DialOption
 	// TODO secure connections
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -57,10 +53,12 @@ func New(_ context.Context) (*Provider, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to dial grpc. address=%v: %w", config.ProviderPluginAddress, err)
 	}
-	provider.conn = conn
-	provider.client = provider_service.NewProviderClient(conn)
 
-	return &provider, nil
+	return &Provider{
+		client: provider_service.NewProviderClient(conn),
+		config: config,
+		conn:   conn,
+	}, nil
 }
 
 func (p *Provider) Kind() models.CloudProvider {

@@ -38,7 +38,7 @@ func volumeNameFromJobConfig(config *provider.ScanJobConfig) string {
 func (p *Provider) ensureManagedDiskFromSnapshot(ctx context.Context, config *provider.ScanJobConfig, snapshot armcompute.Snapshot) (armcompute.Disk, error) {
 	volumeName := volumeNameFromJobConfig(config)
 
-	volumeRes, err := p.disksClient.Get(ctx, p.azureConfig.ScannerResourceGroup, volumeName, nil)
+	volumeRes, err := p.disksClient.Get(ctx, p.config.ScannerResourceGroup, volumeName, nil)
 	if err == nil {
 		if *volumeRes.Disk.Properties.ProvisioningState != ProvisioningStateSucceeded {
 			return volumeRes.Disk, provider.RetryableErrorf(DiskEstimateProvisionTime, "volume is not ready yet, provisioning state: %s", *volumeRes.Disk.Properties.ProvisioningState)
@@ -52,8 +52,8 @@ func (p *Provider) ensureManagedDiskFromSnapshot(ctx context.Context, config *pr
 		return armcompute.Disk{}, err
 	}
 
-	_, err = p.disksClient.BeginCreateOrUpdate(ctx, p.azureConfig.ScannerResourceGroup, volumeName, armcompute.Disk{
-		Location: to.Ptr(p.azureConfig.ScannerLocation),
+	_, err = p.disksClient.BeginCreateOrUpdate(ctx, p.config.ScannerResourceGroup, volumeName, armcompute.Disk{
+		Location: to.Ptr(p.config.ScannerLocation),
 		SKU: &armcompute.DiskSKU{
 			Name: to.Ptr(armcompute.DiskStorageAccountTypesStandardSSDLRS),
 		},
@@ -80,7 +80,7 @@ func (p *Provider) ensureManagedDiskFromSnapshotInDifferentRegion(ctx context.Co
 
 	volumeName := volumeNameFromJobConfig(config)
 
-	volumeRes, err := p.disksClient.Get(ctx, p.azureConfig.ScannerResourceGroup, volumeName, nil)
+	volumeRes, err := p.disksClient.Get(ctx, p.config.ScannerResourceGroup, volumeName, nil)
 	if err == nil {
 		if *volumeRes.Disk.Properties.ProvisioningState != ProvisioningStateSucceeded {
 			return volumeRes.Disk, provider.RetryableErrorf(DiskEstimateProvisionTime, "volume is not ready yet, provisioning state: %s", *volumeRes.Disk.Properties.ProvisioningState)
@@ -94,8 +94,8 @@ func (p *Provider) ensureManagedDiskFromSnapshotInDifferentRegion(ctx context.Co
 		return armcompute.Disk{}, err
 	}
 
-	_, err = p.disksClient.BeginCreateOrUpdate(ctx, p.azureConfig.ScannerResourceGroup, volumeName, armcompute.Disk{
-		Location: to.Ptr(p.azureConfig.ScannerLocation),
+	_, err = p.disksClient.BeginCreateOrUpdate(ctx, p.config.ScannerResourceGroup, volumeName, armcompute.Disk{
+		Location: to.Ptr(p.config.ScannerLocation),
 		SKU: &armcompute.DiskSKU{
 			Name: to.Ptr(armcompute.DiskStorageAccountTypesStandardSSDLRS),
 		},
@@ -103,7 +103,7 @@ func (p *Provider) ensureManagedDiskFromSnapshotInDifferentRegion(ctx context.Co
 			CreationData: &armcompute.CreationData{
 				CreateOption:     to.Ptr(armcompute.DiskCreateOptionImport),
 				SourceURI:        to.Ptr(blobURL),
-				StorageAccountID: to.Ptr(fmt.Sprintf("subscriptions/%s/resourceGroups/%s/providers/Microsoft.Storage/storageAccounts/%s", p.azureConfig.SubscriptionID, p.azureConfig.ScannerResourceGroup, p.azureConfig.ScannerStorageAccountName)),
+				StorageAccountID: to.Ptr(fmt.Sprintf("subscriptions/%s/resourceGroups/%s/providers/Microsoft.Storage/storageAccounts/%s", p.config.SubscriptionID, p.config.ScannerResourceGroup, p.config.ScannerStorageAccountName)),
 			},
 		},
 	}, nil)
@@ -120,11 +120,11 @@ func (p *Provider) ensureTargetDiskDeleted(ctx context.Context, config *provider
 	return ensureDeleted(
 		"target disk",
 		func() error {
-			_, err := p.disksClient.Get(ctx, p.azureConfig.ScannerResourceGroup, volumeName, nil)
+			_, err := p.disksClient.Get(ctx, p.config.ScannerResourceGroup, volumeName, nil)
 			return err // nolint: wrapcheck
 		},
 		func() error {
-			_, err := p.disksClient.BeginDelete(ctx, p.azureConfig.ScannerResourceGroup, volumeName, nil)
+			_, err := p.disksClient.BeginDelete(ctx, p.config.ScannerResourceGroup, volumeName, nil)
 			return err // nolint: wrapcheck
 		},
 		DiskDeleteEstimateTime,

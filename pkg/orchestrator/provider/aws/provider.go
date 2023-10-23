@@ -53,20 +53,18 @@ func New(ctx context.Context) (*Provider, error) {
 		return nil, fmt.Errorf("failed to validate provider configuration. Provider=AWS: %w", err)
 	}
 
-	provider := Provider{
-		config: config,
-	}
-
 	cfg, err := awsconfig.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load aws config: %w", err)
 	}
 
-	// nolint:contextcheck
-	provider.ec2Client = ec2.NewFromConfig(cfg)
-	provider.scanEstimator = scanestimation.New(pricing.NewFromConfig(cfg), provider.ec2Client)
+	ec2Client := ec2.NewFromConfig(cfg)
 
-	return &provider, nil
+	return &Provider{
+		ec2Client:     ec2Client,
+		scanEstimator: scanestimation.New(pricing.NewFromConfig(cfg), ec2Client),
+		config:        config,
+	}, nil
 }
 
 func (p *Provider) Kind() models.CloudProvider {

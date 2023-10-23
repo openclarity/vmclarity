@@ -40,7 +40,7 @@ func blobNameFromJobConfig(config *provider.ScanJobConfig) string {
 }
 
 func (p *Provider) blobURLFromBlobName(blobName string) string {
-	return fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s", p.azureConfig.ScannerStorageAccountName, p.azureConfig.ScannerStorageContainerName, blobName)
+	return fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s", p.config.ScannerStorageAccountName, p.config.ScannerStorageContainerName, blobName)
 }
 
 func (p *Provider) ensureBlobFromSnapshot(ctx context.Context, config *provider.ScanJobConfig, snapshot armcompute.Snapshot) (string, error) {
@@ -59,7 +59,7 @@ func (p *Provider) ensureBlobFromSnapshot(ctx context.Context, config *provider.
 			return blobURL, provider.RetryableErrorf(estimatedBlobCopyTime, "blob is still copying")
 		}
 
-		revokepoller, err := p.snapshotsClient.BeginRevokeAccess(ctx, p.azureConfig.ScannerResourceGroup, *snapshot.Name, nil)
+		revokepoller, err := p.snapshotsClient.BeginRevokeAccess(ctx, p.config.ScannerResourceGroup, *snapshot.Name, nil)
 		if err != nil {
 			_, err := handleAzureRequestError(err, "revoking SAS access for snapshot %s", *snapshot.Name)
 			return blobURL, err
@@ -82,7 +82,7 @@ func (p *Provider) ensureBlobFromSnapshot(ctx context.Context, config *provider.
 	// atomically with starting the CopyFromUrl Operation because
 	// GrantAccess only provides the URL once, and we don't want to store
 	// it.
-	poller, err := p.snapshotsClient.BeginGrantAccess(ctx, p.azureConfig.ScannerResourceGroup, *snapshot.Name, armcompute.GrantAccessData{
+	poller, err := p.snapshotsClient.BeginGrantAccess(ctx, p.config.ScannerResourceGroup, *snapshot.Name, armcompute.GrantAccessData{
 		Access:            to.Ptr(armcompute.AccessLevelRead),
 		DurationInSeconds: to.Ptr[int32](int32(snapshotSASAccessSeconds)),
 	}, nil)

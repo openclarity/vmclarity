@@ -38,7 +38,7 @@ func (p *Provider) ensureSnapshotFromAttachedDisk(ctx context.Context, config *p
 	snapshotName := snapshotNameFromJobConfig(config)
 
 	snapshotRes, err := p.snapshotsClient.Get(ctx, &computepb.GetSnapshotRequest{
-		Project:  p.gcpConfig.ProjectID,
+		Project:  p.config.ProjectID,
 		Snapshot: snapshotName,
 	})
 	if err == nil {
@@ -57,7 +57,7 @@ func (p *Provider) ensureSnapshotFromAttachedDisk(ctx context.Context, config *p
 
 	// Snapshot not found, Create the snapshot
 	req := &computepb.InsertSnapshotRequest{
-		Project: p.gcpConfig.ProjectID,
+		Project: p.config.ProjectID,
 		SnapshotResource: &computepb.Snapshot{
 			Name:       &snapshotName,
 			SourceDisk: disk.Source,
@@ -80,14 +80,14 @@ func (p *Provider) ensureSnapshotDeleted(ctx context.Context, config *provider.S
 		"snapshot",
 		func() error {
 			_, err := p.snapshotsClient.Get(ctx, &computepb.GetSnapshotRequest{
-				Project:  p.gcpConfig.ProjectID,
+				Project:  p.config.ProjectID,
 				Snapshot: snapshotName,
 			})
 			return err // nolint: wrapcheck
 		},
 		func() error {
 			_, err := p.snapshotsClient.Delete(ctx, &computepb.DeleteSnapshotRequest{
-				Project:  p.gcpConfig.ProjectID,
+				Project:  p.config.ProjectID,
 				Snapshot: snapshotName,
 			})
 			return err // nolint: wrapcheck
