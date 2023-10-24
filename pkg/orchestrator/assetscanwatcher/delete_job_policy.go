@@ -46,10 +46,3 @@ func (p *DeleteJobPolicyType) UnmarshalText(text []byte) error {
 
 	return nil
 }
-
-func DeleteJobPolicyOrDefault(p string) DeleteJobPolicyType {
-	policy := DeleteJobPolicyAlways
-	_ = policy.UnmarshalText([]byte(p))
-
-	return policy
-}
