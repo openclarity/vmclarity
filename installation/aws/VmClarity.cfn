@@ -478,7 +478,7 @@ Resources:
                     ## Orchestrator configuration
                     ##
                     # VMClarity API server address
-                    VMCLARITY_ORCHESTRATOR_APISERVER_ADDRESS=http://__CONTROLPLANE_HOST__:8888
+                    VMCLARITY_ORCHESTRATOR_APISERVER_ADDRESS=http://apiserver:8888
                     # Container image for Scanner instance
                     VMCLARITY_ORCHESTRATOR_ASSETSCAN_WATCHER_SCANNER_CONTAINER_IMAGE=${ScannerContainerImage}
                     # API Server Address for the Scanner to connect to
