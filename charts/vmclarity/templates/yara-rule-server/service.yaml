@@ -15,5 +15,5 @@ spec:
     - name: http
       protocol: TCP
       port: 9993
-      targetPort: 9993
+      targetPort: 8080
   selector: {{- include "vmclarity.yaraRuleServer.labels.matchLabels" . | nindent 4 }}
