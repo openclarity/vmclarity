@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/openclarity/vmclarity/api/models"
 	cliutils "github.com/openclarity/vmclarity/pkg/cli/utils"
 	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
