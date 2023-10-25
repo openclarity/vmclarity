@@ -228,10 +228,10 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 					ComplexFieldSchemas: []string{"Package"},
 				},
 			},
-			"state":              odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
-			"reason":             odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
-			"message":            odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
-			"lastTransitionTime": odatasql.FieldMeta{FieldType: odatasql.DateTimeFieldType},
+			"status": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"ScannerStatus"},
+			},
 		},
 	},
 	"Package": {
@@ -1187,6 +1187,14 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 			"message":            odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
 			"reason":             odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
 			"state":              odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+		},
+	},
+	"ScannerStatus": {
+		Fields: odatasql.Schema{
+			"state":              odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+			"reason":             odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+			"message":            odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+			"lastTransitionTime": odatasql.FieldMeta{FieldType: odatasql.DateTimeFieldType},
 		},
 	},
 	"Annotation": {
