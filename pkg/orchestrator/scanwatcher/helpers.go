@@ -18,7 +18,6 @@ package scanwatcher
 import (
 	"errors"
 	"fmt"
-
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
@@ -55,14 +54,6 @@ func newAssetScanFromScan(scan *models.Scan, assetID string) (*models.AssetScan,
 		return nil, errors.New("failed to create AssetScan: AssetScanTemplate and/or AssetScanTemplate.ScanFamiliesConfig is nil")
 	}
 	familiesConfig := scan.AssetScanTemplate.ScanFamiliesConfig
-
-	sbomState := models.SbomScanStateSkipped
-	sbomReason := models.SbomScanReasonScannerSkipped
-	if scan.AssetScanTemplate.ScanFamiliesConfig.Sbom.IsEnabled() {
-		sbomState = models.SbomScanStatePending
-		sbomReason = models.SbomScanReasonScannerPending
-	}
-	sboms := models.NewSbomScan(nil, sbomState, sbomReason, nil)
 
 	return &models.AssetScan{
 		Summary: newAssetScanSummary(),
@@ -113,8 +104,19 @@ func newAssetScanFromScan(scan *models.Scan, assetID string) (*models.AssetScan,
 			models.ResourceCleanupStatusReasonAssetScanCreated,
 			nil,
 		),
-		Sboms: sboms,
+		Sboms: &models.SbomScan{
+			Packages: nil,
+			Status:   mapFamilyConfigToScannerStatus(familiesConfig.Sbom),
+		},
 	}, nil
+}
+
+func mapFamilyConfigToScannerStatus(config models.FamilyConfigEnabler) *models.ScannerStatus {
+	if config == nil || !config.IsEnabled() {
+		return models.NewScannerStatus(models.ScannerStatusStateSkipped, models.ScannerSkipped, nil)
+	}
+
+	return models.NewScannerStatus(models.ScannerStatusStatePending, models.ScannerPending, nil)
 }
 
 func getInitStateFromFamilyConfig(config models.FamilyConfigEnabler) *models.AssetScanStateState {

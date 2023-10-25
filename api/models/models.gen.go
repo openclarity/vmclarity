@@ -111,25 +111,6 @@ const (
 	RootkitTypeUNKNOWN     RootkitType = "UNKNOWN"
 )
 
-// Defines values for SbomScanReason.
-const (
-	SbomScanReasonScannerDone       SbomScanReason = "ScannerDone"
-	SbomScanReasonScannerFailed     SbomScanReason = "ScannerFailed"
-	SbomScanReasonScannerInProgress SbomScanReason = "ScannerInProgress"
-	SbomScanReasonScannerPending    SbomScanReason = "ScannerPending"
-	SbomScanReasonScannerSkipped    SbomScanReason = "ScannerSkipped"
-)
-
-// Defines values for SbomScanState.
-const (
-	SbomScanStateAborted    SbomScanState = "Aborted"
-	SbomScanStateDone       SbomScanState = "Done"
-	SbomScanStateFailed     SbomScanState = "Failed"
-	SbomScanStateInProgress SbomScanState = "InProgress"
-	SbomScanStatePending    SbomScanState = "Pending"
-	SbomScanStateSkipped    SbomScanState = "Skipped"
-)
-
 // Defines values for ScanState.
 const (
 	ScanStateAborted    ScanState = "Aborted"
@@ -207,21 +188,21 @@ const (
 
 // Defines values for ScannerStatusReason.
 const (
-	ScannerStatusReasonScannerDone       ScannerStatusReason = "ScannerDone"
-	ScannerStatusReasonScannerFailed     ScannerStatusReason = "ScannerFailed"
-	ScannerStatusReasonScannerInProgress ScannerStatusReason = "ScannerInProgress"
-	ScannerStatusReasonScannerPending    ScannerStatusReason = "ScannerPending"
-	ScannerStatusReasonScannerSkipped    ScannerStatusReason = "ScannerSkipped"
+	ScannerDone       ScannerStatusReason = "ScannerDone"
+	ScannerFailed     ScannerStatusReason = "ScannerFailed"
+	ScannerInProgress ScannerStatusReason = "ScannerInProgress"
+	ScannerPending    ScannerStatusReason = "ScannerPending"
+	ScannerSkipped    ScannerStatusReason = "ScannerSkipped"
 )
 
 // Defines values for ScannerStatusState.
 const (
-	Aborted    ScannerStatusState = "Aborted"
-	Done       ScannerStatusState = "Done"
-	Failed     ScannerStatusState = "Failed"
-	InProgress ScannerStatusState = "InProgress"
-	Pending    ScannerStatusState = "Pending"
-	Skipped    ScannerStatusState = "Skipped"
+	ScannerStatusStateAborted    ScannerStatusState = "Aborted"
+	ScannerStatusStateDone       ScannerStatusState = "Done"
+	ScannerStatusStateFailed     ScannerStatusState = "Failed"
+	ScannerStatusStateInProgress ScannerStatusState = "InProgress"
+	ScannerStatusStatePending    ScannerStatusState = "Pending"
+	ScannerStatusStateSkipped    ScannerStatusState = "Skipped"
 )
 
 // Defines values for VulnerabilitySeverity.
@@ -1019,59 +1000,9 @@ type SBOMConfig struct {
 
 // SbomScan defines model for SbomScan.
 type SbomScan struct {
-	// LastTransitionTime Last date time when the status has changed.
-	LastTransitionTime time.Time `json:"lastTransitionTime"`
-
-	// Message Human readable message.
-	Message  *string    `json:"message,omitempty"`
-	Packages *[]Package `json:"packages"`
-
-	// Reason Machine readable reason for state transition.
-	//
-	// | State      | Reason            | Description                                 |
-	// | ---------- | ----------------- | ------------------------------------------- |
-	// | Pending    | ScannerPending    | Scanner has been enabled in ScanConfig      |
-	// | InProgress | ScannerInProgress | Scanner is currently running                |
-	// | Skipped    | ScannerSkipped    | Scanner hasn't been enabled in ScanConfig   |
-	// | Failed     | ScannerFailed     | Scanner finished with an error              |
-	// | Done       | ScannerDone       | Scanner finished successfully               |
-	Reason SbomScanReason `json:"reason"`
-
-	// State Describes the state of a scanner on the asset.
-	//
-	// | State       | Description                                                              |
-	// | ----------- | ------------------------------------------------------------------------ |
-	// | Pending     | Scanner is pending and waits for state transition to InProgress state    |
-	// | InProgress  | Scanning is being performed                                              |
-	// | Aborted     | Scanning is aborted, check *reason* and *message* fields for the details |
-	// | Skipped     | Scanner is **not** scheduled                                             |
-	// | Failed      | Scanner has failed, check *reason* and *message* fields for the details  |
-	// | Done        | Scanner has finished scanning with no errors                             |
-	State SbomScanState `json:"state"`
+	Packages *[]Package     `json:"packages"`
+	Status   *ScannerStatus `json:"status,omitempty"`
 }
-
-// SbomScanReason Machine readable reason for state transition.
-//
-// | State      | Reason            | Description                                 |
-// | ---------- | ----------------- | ------------------------------------------- |
-// | Pending    | ScannerPending    | Scanner has been enabled in ScanConfig      |
-// | InProgress | ScannerInProgress | Scanner is currently running                |
-// | Skipped    | ScannerSkipped    | Scanner hasn't been enabled in ScanConfig   |
-// | Failed     | ScannerFailed     | Scanner finished with an error              |
-// | Done       | ScannerDone       | Scanner finished successfully               |
-type SbomScanReason string
-
-// SbomScanState Describes the state of a scanner on the asset.
-//
-// | State       | Description                                                              |
-// | ----------- | ------------------------------------------------------------------------ |
-// | Pending     | Scanner is pending and waits for state transition to InProgress state    |
-// | InProgress  | Scanning is being performed                                              |
-// | Aborted     | Scanning is aborted, check *reason* and *message* fields for the details |
-// | Skipped     | Scanner is **not** scheduled                                             |
-// | Failed      | Scanner has failed, check *reason* and *message* fields for the details  |
-// | Done        | Scanner has finished scanning with no errors                             |
-type SbomScanState string
 
 // Scan defines model for Scan.
 type Scan struct {

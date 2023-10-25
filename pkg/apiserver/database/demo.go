@@ -796,12 +796,10 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 
 			// Create Packages if needed
 			if *result.ScanFamiliesConfig.Sbom.Enabled {
-				result.Sboms = models.NewSbomScan(
-					createPackagesResult(),
-					models.SbomScanStatePending,
-					models.SbomScanReasonScannerPending,
-					nil,
-				)
+				result.Sboms = &models.SbomScan{
+					Packages: createPackagesResult(),
+					Status:   models.NewScannerStatus(models.ScannerStatusStatePending, models.ScannerPending, nil),
+				}
 				result.Stats.Sbom = &[]models.AssetScanInputScanStats{
 					{
 						Path: utils.PointerTo("/mnt"),
@@ -815,12 +813,10 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 				}
 				result.Summary.TotalPackages = utils.PointerTo(len(*result.Sboms.Packages))
 			} else {
-				result.Sboms = models.NewSbomScan(
-					nil,
-					models.SbomScanStateSkipped,
-					models.SbomScanReasonScannerSkipped,
-					nil,
-				)
+				result.Sboms = &models.SbomScan{
+					Packages: nil,
+					Status:   models.NewScannerStatus(models.ScannerStatusStateSkipped, models.ScannerSkipped, nil),
+				}
 				result.Summary.TotalPackages = utils.PointerTo(0)
 			}
 

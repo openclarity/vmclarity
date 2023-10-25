@@ -38,13 +38,12 @@ func TestNewAssetScanFromScan(t *testing.T) {
 	)
 	resourceCleanupStatus.LastTransitionTime = transitionTime
 
-	sbomScan := models.NewSbomScan(
-		nil,
-		models.SbomScanStatePending,
-		models.SbomScanReasonScannerPending,
+	sbomScanStatus := models.NewScannerStatus(
+		models.ScannerStatusStatePending,
+		models.ScannerPending,
 		nil,
 	)
-	sbomScan.LastTransitionTime = transitionTime
+	sbomScanStatus.LastTransitionTime = transitionTime
 
 	tests := []struct {
 		Name    string
@@ -124,7 +123,10 @@ func TestNewAssetScanFromScan(t *testing.T) {
 						State: utils.PointerTo(models.AssetScanStateStatePending),
 					},
 				},
-				Sboms:   sbomScan,
+				Sboms: &models.SbomScan{
+					Packages: nil,
+					Status:   sbomScanStatus,
+				},
 				Summary: newAssetScanSummary(),
 				Asset: &models.AssetRelationship{
 					Id: assetID,
@@ -160,7 +162,7 @@ func TestNewAssetScanFromScan(t *testing.T) {
 
 			result, err := newAssetScanFromScan(test.Scan, test.AssetID)
 			result.ResourceCleanupStatus.LastTransitionTime = transitionTime
-			result.Sboms.LastTransitionTime = transitionTime
+			result.Sboms.Status.LastTransitionTime = transitionTime
 
 			g.Expect(err).Should(test.ExpectedErrorMatcher)
 			g.Expect(result).Should(BeComparableTo(test.ExpectedAssetScan))

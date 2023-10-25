@@ -3042,15 +3042,15 @@ components:
           nullable: true
 
     SbomScan:
-      allOf:
-        - $ref: "#/components/schemas/ScannerStatus"
-        - type: object
-          properties:
-            packages:
-              type: array
-              items:
-                $ref: '#/components/schemas/Package'
-              nullable: true
+      type: object
+      properties:
+        status:
+          $ref: "#/components/schemas/ScannerStatus"
+        packages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Package'
+          nullable: true
 
     VulnerabilityScan:
       type: object

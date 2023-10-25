@@ -19,7 +19,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"github.com/openclarity/vmclarity/api/models"
 	cliutils "github.com/openclarity/vmclarity/pkg/cli/utils"
 	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
@@ -78,6 +77,9 @@ func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res families.
 	if assetScan.Status == nil {
 		assetScan.Status = &models.AssetScanStatus{}
 	}
+	if assetScan.Sboms == nil {
+		assetScan.Sboms = &models.SbomScan{}
+	}
 	if assetScan.Summary == nil {
 		assetScan.Summary = &models.ScanFindingsSummary{}
 	}
@@ -86,29 +88,27 @@ func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res families.
 	}
 
 	if res.Err != nil {
-		assetScan.Sboms = models.NewSbomScan(
-			nil,
-			models.SbomScanStateFailed,
-			models.SbomScanReasonScannerFailed,
+		assetScan.Sboms.Status = models.NewScannerStatus(
+			models.ScannerStatusStateFailed,
+			models.ScannerFailed,
 			utils.PointerTo(res.Err.Error()),
 		)
 	} else {
 		sbomResults, ok := res.Result.(*sbom.Results)
 		if !ok {
-			assetScan.Sboms = models.NewSbomScan(
-				nil,
-				models.SbomScanStateFailed,
-				models.SbomScanReasonScannerFailed,
+			assetScan.Sboms.Status = models.NewScannerStatus(
+				models.ScannerStatusStateFailed,
+				models.ScannerFailed,
 				utils.PointerTo(fmt.Errorf("failed to convert to sbom results").Error()),
 			)
 		} else {
 			packages := cliutils.ConvertSBOMResultToPackages(sbomResults)
 			assetScan.Summary.TotalPackages = utils.PointerTo(len(*packages))
 			assetScan.Stats.Sbom = getInputScanStats(sbomResults.Metadata.InputScans)
-			assetScan.Sboms = models.NewSbomScan(
-				packages,
-				models.SbomScanStateDone,
-				models.SbomScanReasonScannerDone,
+			assetScan.Sboms.Packages = packages
+			assetScan.Sboms.Status = models.NewScannerStatus(
+				models.ScannerStatusStateDone,
+				models.ScannerDone,
 				nil,
 			)
 		}
