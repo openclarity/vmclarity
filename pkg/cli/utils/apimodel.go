@@ -19,9 +19,7 @@ import (
 	"fmt"
 	"strings"
 
-
-	"github.com/CycloneDX/cyclonedx-go"
-
+	cdx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/openclarity/kubeclarity/shared/pkg/scanner"
 	"github.com/openclarity/kubeclarity/shared/pkg/utils/cyclonedx_helper"
 	"github.com/openclarity/kubeclarity/shared/pkg/utils/vulnerability"
@@ -54,7 +52,7 @@ func ConvertSBOMResultToPackages(sbomResults *sbom.Results) *[]models.Package {
 	return &packages
 }
 
-func createPackageFromComponent(component cyclonedx.Component) *models.Package {
+func createPackageFromComponent(component cdx.Component) *models.Package {
 	return &models.Package{
 		Cpes:     utils.PointerTo([]string{component.CPE}),
 		Language: utils.PointerTo(cyclonedx_helper.GetComponentLanguage(component)),
