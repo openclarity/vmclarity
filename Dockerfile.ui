@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM --platform=$BUILDPLATFORM node:20-slim AS site-build
+FROM --platform=$BUILDPLATFORM node:21-slim AS site-build
 
 WORKDIR /src
 
