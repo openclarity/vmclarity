@@ -17,8 +17,10 @@ package utils
 
 import (
 	"fmt"
-	"github.com/CycloneDX/cyclonedx-go"
 	"strings"
+
+
+	"github.com/CycloneDX/cyclonedx-go"
 
 	"github.com/openclarity/kubeclarity/shared/pkg/scanner"
 	"github.com/openclarity/kubeclarity/shared/pkg/utils/cyclonedx_helper"
