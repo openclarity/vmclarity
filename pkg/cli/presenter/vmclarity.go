@@ -90,16 +90,16 @@ func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res families.
 
 	if res.Err != nil {
 		assetScan.Sboms.Status = models.NewScannerStatus(
-			models.ScannerStatusStateFailed,
-			models.ScannerFailed,
+			models.Failed,
+			models.ScannerStatusReasonError,
 			utils.PointerTo(res.Err.Error()),
 		)
 	} else {
 		sbomResults, ok := res.Result.(*sbom.Results)
 		if !ok {
 			assetScan.Sboms.Status = models.NewScannerStatus(
-				models.ScannerStatusStateFailed,
-				models.ScannerFailed,
+				models.Failed,
+				models.ScannerStatusReasonError,
 				utils.PointerTo(fmt.Errorf("failed to convert to sbom results").Error()),
 			)
 		} else {
@@ -108,8 +108,8 @@ func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res families.
 			assetScan.Stats.Sbom = getInputScanStats(sbomResults.Metadata.InputScans)
 			assetScan.Sboms.Packages = packages
 			assetScan.Sboms.Status = models.NewScannerStatus(
-				models.ScannerStatusStateDone,
-				models.ScannerDone,
+				models.Done,
+				models.ScannerStatusReasonSuccess,
 				nil,
 			)
 		}

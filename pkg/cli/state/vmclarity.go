@@ -247,8 +247,8 @@ func (v *VMClarityState) markSBOMScanInProgress(ctx context.Context) error {
 	}
 
 	assetScan.Sboms.Status = models.NewScannerStatus(
-		models.ScannerStatusStateInProgress,
-		models.ScannerInProgress,
+		models.InProgress,
+		models.ScannerStatusReasonScanning,
 		nil,
 	)
 

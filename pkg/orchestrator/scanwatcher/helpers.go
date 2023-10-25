@@ -114,10 +114,10 @@ func newAssetScanFromScan(scan *models.Scan, assetID string) (*models.AssetScan,
 
 func mapFamilyConfigToScannerStatus(config models.FamilyConfigEnabler) *models.ScannerStatus {
 	if config == nil || !config.IsEnabled() {
-		return models.NewScannerStatus(models.ScannerStatusStateSkipped, models.ScannerSkipped, nil)
+		return models.NewScannerStatus(models.Skipped, models.ScannerStatusReasonNotScheduled, nil)
 	}
 
-	return models.NewScannerStatus(models.ScannerStatusStatePending, models.ScannerPending, nil)
+	return models.NewScannerStatus(models.Pending, models.ScannerStatusReasonScheduled, nil)
 }
 
 func getInitStateFromFamilyConfig(config models.FamilyConfigEnabler) *models.AssetScanStateState {

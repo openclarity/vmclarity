@@ -188,21 +188,20 @@ const (
 
 // Defines values for ScannerStatusReason.
 const (
-	ScannerDone       ScannerStatusReason = "ScannerDone"
-	ScannerFailed     ScannerStatusReason = "ScannerFailed"
-	ScannerInProgress ScannerStatusReason = "ScannerInProgress"
-	ScannerPending    ScannerStatusReason = "ScannerPending"
-	ScannerSkipped    ScannerStatusReason = "ScannerSkipped"
+	ScannerStatusReasonError        ScannerStatusReason = "Error"
+	ScannerStatusReasonNotScheduled ScannerStatusReason = "NotScheduled"
+	ScannerStatusReasonScanning     ScannerStatusReason = "Scanning"
+	ScannerStatusReasonScheduled    ScannerStatusReason = "Scheduled"
+	ScannerStatusReasonSuccess      ScannerStatusReason = "Success"
 )
 
 // Defines values for ScannerStatusState.
 const (
-	ScannerStatusStateAborted    ScannerStatusState = "Aborted"
-	ScannerStatusStateDone       ScannerStatusState = "Done"
-	ScannerStatusStateFailed     ScannerStatusState = "Failed"
-	ScannerStatusStateInProgress ScannerStatusState = "InProgress"
-	ScannerStatusStatePending    ScannerStatusState = "Pending"
-	ScannerStatusStateSkipped    ScannerStatusState = "Skipped"
+	Done       ScannerStatusState = "Done"
+	Failed     ScannerStatusState = "Failed"
+	InProgress ScannerStatusState = "InProgress"
+	Pending    ScannerStatusState = "Pending"
+	Skipped    ScannerStatusState = "Skipped"
 )
 
 // Defines values for VulnerabilitySeverity.
@@ -1345,11 +1344,11 @@ type ScannerStatus struct {
 	//
 	// | State      | Reason            | Description                                 |
 	// | ---------- | ----------------- | ------------------------------------------- |
-	// | Pending    | ScannerPending    | Scanner has been enabled in ScanConfig      |
-	// | InProgress | ScannerInProgress | Scanner is currently running                |
-	// | Skipped    | ScannerSkipped    | Scanner hasn't been enabled in ScanConfig   |
-	// | Failed     | ScannerFailed     | Scanner finished with an error              |
-	// | Done       | ScannerDone       | Scanner finished successfully               |
+	// | Pending    | Scheduled         | Scanner has been enabled in ScanConfig      |
+	// | InProgress | Scanning          | Scanner is currently running                |
+	// | Skipped    | NotScheduled      | Scanner hasn't been enabled in ScanConfig   |
+	// | Failed     | Error             | Scanner finished with an error              |
+	// | Done       | Success           | Scanner finished successfully               |
 	Reason ScannerStatusReason `json:"reason"`
 
 	// State Describes the state of a scanner on the asset.
@@ -1358,7 +1357,6 @@ type ScannerStatus struct {
 	// | ----------- | ------------------------------------------------------------------------ |
 	// | Pending     | Scanner is pending and waits for state transition to InProgress state    |
 	// | InProgress  | Scanning is being performed                                              |
-	// | Aborted     | Scanning is aborted, check *reason* and *message* fields for the details |
 	// | Skipped     | Scanner is **not** scheduled                                             |
 	// | Failed      | Scanner has failed, check *reason* and *message* fields for the details  |
 	// | Done        | Scanner has finished scanning with no errors                             |
@@ -1369,11 +1367,11 @@ type ScannerStatus struct {
 //
 // | State      | Reason            | Description                                 |
 // | ---------- | ----------------- | ------------------------------------------- |
-// | Pending    | ScannerPending    | Scanner has been enabled in ScanConfig      |
-// | InProgress | ScannerInProgress | Scanner is currently running                |
-// | Skipped    | ScannerSkipped    | Scanner hasn't been enabled in ScanConfig   |
-// | Failed     | ScannerFailed     | Scanner finished with an error              |
-// | Done       | ScannerDone       | Scanner finished successfully               |
+// | Pending    | Scheduled         | Scanner has been enabled in ScanConfig      |
+// | InProgress | Scanning          | Scanner is currently running                |
+// | Skipped    | NotScheduled      | Scanner hasn't been enabled in ScanConfig   |
+// | Failed     | Error             | Scanner finished with an error              |
+// | Done       | Success           | Scanner finished successfully               |
 type ScannerStatusReason string
 
 // ScannerStatusState Describes the state of a scanner on the asset.
@@ -1382,7 +1380,6 @@ type ScannerStatusReason string
 // | ----------- | ------------------------------------------------------------------------ |
 // | Pending     | Scanner is pending and waits for state transition to InProgress state    |
 // | InProgress  | Scanning is being performed                                              |
-// | Aborted     | Scanning is aborted, check *reason* and *message* fields for the details |
 // | Skipped     | Scanner is **not** scheduled                                             |
 // | Failed      | Scanner has failed, check *reason* and *message* fields for the details  |
 // | Done        | Scanner has finished scanning with no errors                             |

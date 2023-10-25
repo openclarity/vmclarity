@@ -39,8 +39,8 @@ func TestNewAssetScanFromScan(t *testing.T) {
 	resourceCleanupStatus.LastTransitionTime = transitionTime
 
 	sbomScanStatus := models.NewScannerStatus(
-		models.ScannerStatusStatePending,
-		models.ScannerPending,
+		models.Pending,
+		models.ScannerStatusReasonScheduled,
 		nil,
 	)
 	sbomScanStatus.LastTransitionTime = transitionTime

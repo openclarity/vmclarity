@@ -2433,7 +2433,6 @@ components:
             | ----------- | ------------------------------------------------------------------------ |
             | Pending     | Scanner is pending and waits for state transition to InProgress state    |
             | InProgress  | Scanning is being performed                                              |
-            | Aborted     | Scanning is aborted, check *reason* and *message* fields for the details |
             | Skipped     | Scanner is **not** scheduled                                             |
             | Failed      | Scanner has failed, check *reason* and *message* fields for the details  |
             | Done        | Scanner has finished scanning with no errors                             |
@@ -2441,7 +2440,6 @@ components:
           enum:
             - Pending
             - InProgress
-            - Aborted
             - Skipped
             - Failed
             - Done
@@ -2451,18 +2449,18 @@ components:
 
             | State      | Reason            | Description                                 |
             | ---------- | ----------------- | ------------------------------------------- |
-            | Pending    | ScannerPending    | Scanner has been enabled in ScanConfig      |
-            | InProgress | ScannerInProgress | Scanner is currently running                |
-            | Skipped    | ScannerSkipped    | Scanner hasn't been enabled in ScanConfig   |
-            | Failed     | ScannerFailed     | Scanner finished with an error              |
-            | Done       | ScannerDone       | Scanner finished successfully               |
+            | Pending    | Scheduled         | Scanner has been enabled in ScanConfig      |
+            | InProgress | Scanning          | Scanner is currently running                |
+            | Skipped    | NotScheduled      | Scanner hasn't been enabled in ScanConfig   |
+            | Failed     | Error             | Scanner finished with an error              |
+            | Done       | Success           | Scanner finished successfully               |
           type: string
           enum:
-            - ScannerPending
-            - ScannerInProgress
-            - ScannerSkipped
-            - ScannerFailed
-            - ScannerDone
+            - Scheduled
+            - Scanning
+            - NotScheduled
+            - Error
+            - Success
         message:
           description: Human readable message.
           type: string

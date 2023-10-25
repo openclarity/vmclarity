@@ -798,7 +798,7 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 			if *result.ScanFamiliesConfig.Sbom.Enabled {
 				result.Sboms = &models.SbomScan{
 					Packages: createPackagesResult(),
-					Status:   models.NewScannerStatus(models.ScannerStatusStatePending, models.ScannerPending, nil),
+					Status:   models.NewScannerStatus(models.Pending, models.ScannerStatusReasonScheduled, nil),
 				}
 				result.Stats.Sbom = &[]models.AssetScanInputScanStats{
 					{
@@ -815,7 +815,7 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 			} else {
 				result.Sboms = &models.SbomScan{
 					Packages: nil,
-					Status:   models.NewScannerStatus(models.ScannerStatusStateSkipped, models.ScannerSkipped, nil),
+					Status:   models.NewScannerStatus(models.Skipped, models.ScannerStatusReasonNotScheduled, nil),
 				}
 				result.Summary.TotalPackages = utils.PointerTo(0)
 			}
