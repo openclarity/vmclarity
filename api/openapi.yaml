@@ -2642,8 +2642,6 @@ components:
           $ref: '#/components/schemas/AssetScanState'
         misconfigurations:
           $ref: '#/components/schemas/AssetScanState'
-        exploits:
-          $ref: '#/components/schemas/AssetScanState'
         infoFinder:
           $ref: '#/components/schemas/AssetScanState'
 
@@ -3146,6 +3144,8 @@ components:
     ExploitScan:
       type: object
       properties:
+        status:
+          $ref: "#/components/schemas/ScannerStatus"
         exploits:
           type: array
           items:

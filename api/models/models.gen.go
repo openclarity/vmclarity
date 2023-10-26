@@ -473,7 +473,6 @@ type AssetScanStats struct {
 
 // AssetScanStatus defines model for AssetScanStatus.
 type AssetScanStatus struct {
-	Exploits          *AssetScanState `json:"exploits,omitempty"`
 	General           *AssetScanState `json:"general,omitempty"`
 	InfoFinder        *AssetScanState `json:"infoFinder,omitempty"`
 	Malware           *AssetScanState `json:"malware,omitempty"`
@@ -599,7 +598,8 @@ type ExploitFindingInfo struct {
 
 // ExploitScan defines model for ExploitScan.
 type ExploitScan struct {
-	Exploits *[]Exploit `json:"exploits"`
+	Exploits *[]Exploit     `json:"exploits"`
+	Status   *ScannerStatus `json:"status,omitempty"`
 }
 
 // ExploitsConfig defines model for ExploitsConfig.

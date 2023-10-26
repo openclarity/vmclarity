@@ -67,10 +67,6 @@ func newAssetScanFromScan(scan *models.Scan, assetID string) (*models.AssetScan,
 		ScanFamiliesConfig:            familiesConfig,
 		ScannerInstanceCreationConfig: scan.AssetScanTemplate.ScannerInstanceCreationConfig,
 		Status: &models.AssetScanStatus{
-			Exploits: &models.AssetScanState{
-				Errors: nil,
-				State:  getInitStateFromFamilyConfig(familiesConfig.Exploits),
-			},
 			General: &models.AssetScanState{
 				Errors: nil,
 				State:  utils.PointerTo(models.AssetScanStateStatePending),
@@ -108,6 +104,10 @@ func newAssetScanFromScan(scan *models.Scan, assetID string) (*models.AssetScan,
 		Sboms: &models.SbomScan{
 			Packages: nil,
 			Status:   mapFamilyConfigToScannerStatus(familiesConfig.Sbom),
+		},
+		Exploits: &models.ExploitScan{
+			Exploits: nil,
+			Status:   mapFamilyConfigToScannerStatus(familiesConfig.Exploits),
 		},
 	}, nil
 }

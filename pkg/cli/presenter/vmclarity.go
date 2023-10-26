@@ -296,8 +296,8 @@ func (v *VMClarityPresenter) ExportExploitsResult(ctx context.Context, res famil
 	if assetScan.Status == nil {
 		assetScan.Status = &models.AssetScanStatus{}
 	}
-	if assetScan.Status.Exploits == nil {
-		assetScan.Status.Exploits = &models.AssetScanState{}
+	if assetScan.Exploits == nil {
+		assetScan.Exploits = &models.ExploitScan{}
 	}
 	if assetScan.Summary == nil {
 		assetScan.Summary = &models.ScanFindingsSummary{}
@@ -306,26 +306,32 @@ func (v *VMClarityPresenter) ExportExploitsResult(ctx context.Context, res famil
 		assetScan.Stats = &models.AssetScanStats{}
 	}
 
-	errs := []string{}
-
 	if res.Err != nil {
-		errs = append(errs, res.Err.Error())
+		assetScan.Exploits.Status = models.NewScannerStatus(
+			models.Failed,
+			models.ScannerStatusReasonError,
+			utils.PointerTo(res.Err.Error()),
+		)
 	} else {
 		exploitsResults, ok := res.Result.(*exploits.Results)
 		if !ok {
-			errs = append(errs, fmt.Errorf("failed to convert to exploits results").Error())
+			assetScan.Exploits.Status = models.NewScannerStatus(
+				models.Failed,
+				models.ScannerStatusReasonError,
+				utils.PointerTo(fmt.Errorf("failed to convert to exploits results").Error()),
+			)
 		} else {
-			assetScan.Exploits = cliutils.ConvertExploitsResultToAPIModel(exploitsResults)
-			if assetScan.Exploits.Exploits != nil {
-				assetScan.Summary.TotalExploits = utils.PointerTo(len(*assetScan.Exploits.Exploits))
-			}
+			foundExploits := cliutils.ConvertExploitsResultToExploits(exploitsResults)
+			assetScan.Summary.TotalExploits = utils.PointerTo(len(*foundExploits))
 			assetScan.Stats.Exploits = getInputScanStats(exploitsResults.Metadata.InputScans)
+			assetScan.Exploits.Exploits = foundExploits
+			assetScan.Exploits.Status = models.NewScannerStatus(
+				models.Done,
+				models.ScannerStatusReasonSuccess,
+				nil,
+			)
 		}
 	}
-
-	state := models.AssetScanStateStateDone
-	assetScan.Status.Exploits.State = &state
-	assetScan.Status.Exploits.Errors = &errs
 
 	err = v.client.PatchAssetScan(ctx, assetScan, v.assetScanID)
 	if err != nil {

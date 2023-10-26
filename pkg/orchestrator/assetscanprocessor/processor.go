@@ -80,7 +80,7 @@ func (asp *AssetScanProcessor) Reconcile(ctx context.Context, event AssetScanRec
 		}
 	}
 
-	if statusCompletedWithNoErrors(assetScan.Status.Exploits) {
+	if assetScan.Exploits.Status.State == models.Done {
 		if err := asp.reconcileResultExploitsToFindings(ctx, assetScan); err != nil {
 			return newFailedToReconcileTypeError(err, "exploits")
 		}

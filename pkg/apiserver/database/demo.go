@@ -691,10 +691,9 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 			}
 			// Create Exploits if needed
 			if *result.ScanFamiliesConfig.Exploits.Enabled {
-				result.Status.Exploits = &models.AssetScanState{
-					Errors:             nil,
-					LastTransitionTime: &timeNow,
-					State:              utils.PointerTo(models.AssetScanStateStateDone),
+				result.Exploits = &models.ExploitScan{
+					Exploits: createExploitsResult(),
+					Status:   models.NewScannerStatus(models.Pending, models.ScannerStatusReasonScheduled, nil),
 				}
 				result.Stats.Exploits = &[]models.AssetScanInputScanStats{
 					{
@@ -716,13 +715,11 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 						Type: utils.PointerTo("dir"),
 					},
 				}
-				result.Exploits = &models.ExploitScan{
-					Exploits: createExploitsResult(),
-				}
 				result.Summary.TotalExploits = utils.PointerTo(len(*result.Exploits.Exploits))
 			} else {
-				result.Status.Exploits = &models.AssetScanState{
-					State: utils.PointerTo(models.AssetScanStateStateNotScanned),
+				result.Exploits = &models.ExploitScan{
+					Exploits: nil,
+					Status:   models.NewScannerStatus(models.Skipped, models.ScannerStatusReasonNotScheduled, nil),
 				}
 				result.Summary.TotalExploits = utils.PointerTo(0)
 			}

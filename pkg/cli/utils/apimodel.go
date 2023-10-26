@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"strings"
 
-	cdx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/openclarity/kubeclarity/shared/pkg/scanner"
 	"github.com/openclarity/kubeclarity/shared/pkg/utils/cyclonedx_helper"
 	"github.com/openclarity/kubeclarity/shared/pkg/utils/vulnerability"
@@ -45,23 +44,19 @@ func ConvertSBOMResultToPackages(sbomResults *sbom.Results) *[]models.Package {
 
 	if sbomResults.SBOM.Components != nil {
 		for _, component := range *sbomResults.SBOM.Components {
-			packages = append(packages, *createPackageFromComponent(component))
+			packages = append(packages, models.Package{
+				Cpes:     utils.PointerTo([]string{component.CPE}),
+				Language: utils.PointerTo(cyclonedx_helper.GetComponentLanguage(component)),
+				Licenses: utils.PointerTo(cyclonedx_helper.GetComponentLicenses(component)),
+				Name:     utils.PointerTo(component.Name),
+				Purl:     utils.PointerTo(component.PackageURL),
+				Type:     utils.PointerTo(string(component.Type)),
+				Version:  utils.PointerTo(component.Version),
+			})
 		}
 	}
 
 	return &packages
-}
-
-func createPackageFromComponent(component cdx.Component) *models.Package {
-	return &models.Package{
-		Cpes:     utils.PointerTo([]string{component.CPE}),
-		Language: utils.PointerTo(cyclonedx_helper.GetComponentLanguage(component)),
-		Licenses: utils.PointerTo(cyclonedx_helper.GetComponentLicenses(component)),
-		Name:     utils.PointerTo(component.Name),
-		Purl:     utils.PointerTo(component.PackageURL),
-		Type:     utils.PointerTo(string(component.Type)),
-		Version:  utils.PointerTo(component.Version),
-	}
 }
 
 func ConvertVulnResultToAPIModel(vulnerabilitiesResults *vulnerabilities.Results) *models.VulnerabilityScan {
@@ -239,13 +234,12 @@ func ConvertSecretsResultToAPIModel(secretsResults *secrets.Results) *models.Sec
 	}
 }
 
-func ConvertExploitsResultToAPIModel(exploitsResults *exploits.Results) *models.ExploitScan {
-	if exploitsResults == nil || exploitsResults.Exploits == nil {
-		return &models.ExploitScan{}
-	}
+func ConvertExploitsResultToExploits(exploitsResults *exploits.Results) *[]models.Exploit {
+	retExploits := []models.Exploit{}
 
-	// nolint:prealloc
-	var retExploits []models.Exploit
+	if exploitsResults == nil || exploitsResults.Exploits == nil {
+		return &retExploits
+	}
 
 	for i := range exploitsResults.Exploits {
 		exploit := exploitsResults.Exploits[i]
@@ -259,13 +253,7 @@ func ConvertExploitsResultToAPIModel(exploitsResults *exploits.Results) *models.
 		})
 	}
 
-	if retExploits == nil {
-		return &models.ExploitScan{}
-	}
-
-	return &models.ExploitScan{
-		Exploits: &retExploits,
-	}
+	return &retExploits
 }
 
 func MisconfigurationSeverityToAPIMisconfigurationSeverity(sev misconfigurationTypes.Severity) (models.MisconfigurationSeverity, error) {

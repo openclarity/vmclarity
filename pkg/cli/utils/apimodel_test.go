@@ -630,7 +630,7 @@ func Test_ConvertMalwareResultToAPIModel(t *testing.T) {
 	}
 }
 
-func Test_ConvertExploitsResultToAPIModel(t *testing.T) {
+func Test_ConvertExploitsResultToExploits(t *testing.T) {
 	exploit1 := common2.Exploit{
 		ID:          "id1",
 		Name:        "name1",
@@ -664,14 +664,14 @@ func Test_ConvertExploitsResultToAPIModel(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want *models.ExploitScan
+		want *[]models.Exploit
 	}{
 		{
 			name: "nil exploitsResults",
 			args: args{
 				exploitsResults: nil,
 			},
-			want: &models.ExploitScan{},
+			want: &[]models.Exploit{},
 		},
 		{
 			name: "nil exploitsResults.Exploits",
@@ -680,7 +680,7 @@ func Test_ConvertExploitsResultToAPIModel(t *testing.T) {
 					Exploits: nil,
 				},
 			},
-			want: &models.ExploitScan{},
+			want: &[]models.Exploit{},
 		},
 		{
 			name: "sanity",
@@ -699,39 +699,37 @@ func Test_ConvertExploitsResultToAPIModel(t *testing.T) {
 					},
 				},
 			},
-			want: &models.ExploitScan{
-				Exploits: &[]models.Exploit{
-					{
-						CveID:       utils.PointerTo(exploit1.CveID),
-						Description: utils.PointerTo(exploit1.Description),
-						Name:        utils.PointerTo(exploit1.Name),
-						SourceDB:    utils.PointerTo(exploit1.SourceDB),
-						Title:       utils.PointerTo(exploit1.Title),
-						Urls:        &exploit1.URLs,
-					},
-					{
-						CveID:       utils.PointerTo(exploit2.CveID),
-						Description: utils.PointerTo(exploit2.Description),
-						Name:        utils.PointerTo(exploit2.Name),
-						SourceDB:    utils.PointerTo(exploit2.SourceDB),
-						Title:       utils.PointerTo(exploit2.Title),
-						Urls:        &exploit2.URLs,
-					},
-					{
-						CveID:       utils.PointerTo(exploit3.CveID),
-						Description: utils.PointerTo(exploit3.Description),
-						Name:        utils.PointerTo(exploit3.Name),
-						SourceDB:    utils.PointerTo(exploit3.SourceDB),
-						Title:       utils.PointerTo(exploit3.Title),
-						Urls:        &exploit3.URLs,
-					},
+			want: &[]models.Exploit{
+				{
+					CveID:       utils.PointerTo(exploit1.CveID),
+					Description: utils.PointerTo(exploit1.Description),
+					Name:        utils.PointerTo(exploit1.Name),
+					SourceDB:    utils.PointerTo(exploit1.SourceDB),
+					Title:       utils.PointerTo(exploit1.Title),
+					Urls:        &exploit1.URLs,
+				},
+				{
+					CveID:       utils.PointerTo(exploit2.CveID),
+					Description: utils.PointerTo(exploit2.Description),
+					Name:        utils.PointerTo(exploit2.Name),
+					SourceDB:    utils.PointerTo(exploit2.SourceDB),
+					Title:       utils.PointerTo(exploit2.Title),
+					Urls:        &exploit2.URLs,
+				},
+				{
+					CveID:       utils.PointerTo(exploit3.CveID),
+					Description: utils.PointerTo(exploit3.Description),
+					Name:        utils.PointerTo(exploit3.Name),
+					SourceDB:    utils.PointerTo(exploit3.SourceDB),
+					Title:       utils.PointerTo(exploit3.Title),
+					Urls:        &exploit3.URLs,
 				},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ConvertExploitsResultToAPIModel(tt.args.exploitsResults)
+			got := ConvertExploitsResultToExploits(tt.args.exploitsResults)
 			if diff := cmp.Diff(tt.want, got, cmpopts.SortSlices(func(a, b models.Exploit) bool { return *a.CveID < *b.CveID })); diff != "" {
 				t.Errorf("convertExploitsResultToAPIModel() mismatch (-want +got):\n%s", diff)
 			}
