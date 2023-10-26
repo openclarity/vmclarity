@@ -13,26 +13,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package containerruntimediscovery
+package docker
 
 import (
 	"context"
 	"fmt"
+	"io"
 	"time"
 
 	dtypes "github.com/docker/docker/api/types"
 	dcontainer "github.com/docker/docker/api/types/container"
+	dfilters "github.com/docker/docker/api/types/filters"
 	dclient "github.com/docker/docker/client"
 
 	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/pkg/containerruntimediscovery/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
+	"github.com/openclarity/vmclarity/utils/log"
 )
 
 type DockerDiscoverer struct {
 	client *dclient.Client
 }
 
-func NewDockerDiscoverer(ctx context.Context) (Discoverer, error) {
+var _ types.Discoverer = &DockerDiscoverer{}
+
+func NewDockerDiscoverer(ctx context.Context) (types.Discoverer, error) {
 	client, err := dclient.NewClientWithOpts(dclient.FromEnv, dclient.WithAPIVersionNegotiation())
 	if err != nil {
 		return nil, fmt.Errorf("failed to create docker client: %w", err)
@@ -67,6 +73,14 @@ func (dd *DockerDiscoverer) Images(ctx context.Context) ([]models.ContainerImage
 	return result, nil
 }
 
+func (dd *DockerDiscoverer) Image(ctx context.Context, imageID string) (models.ContainerImageInfo, error) {
+	info, err := dd.getContainerImageInfo(ctx, imageID)
+	if dclient.IsErrNotFound(err) {
+		return info, types.ErrNotFound
+	}
+	return info, err
+}
+
 func (dd *DockerDiscoverer) getContainerImageInfo(ctx context.Context, imageID string) (models.ContainerImageInfo, error) {
 	image, _, err := dd.client.ImageInspectWithRaw(ctx, imageID)
 	if err != nil {
@@ -76,7 +90,7 @@ func (dd *DockerDiscoverer) getContainerImageInfo(ctx context.Context, imageID s
 	return models.ContainerImageInfo{
 		Architecture: utils.PointerTo(image.Architecture),
 		ImageID:      image.ID,
-		Labels:       convertTags(image.Config.Labels),
+		Labels:       models.MapToTags(image.Config.Labels),
 		RepoTags:     &image.RepoTags,
 		RepoDigests:  &image.RepoDigests,
 		ObjectType:   "ContainerImageInfo",
@@ -85,15 +99,12 @@ func (dd *DockerDiscoverer) getContainerImageInfo(ctx context.Context, imageID s
 	}, nil
 }
 
-func convertTags(tags map[string]string) *[]models.Tag {
-	ret := make([]models.Tag, 0, len(tags))
-	for key, val := range tags {
-		ret = append(ret, models.Tag{
-			Key:   key,
-			Value: val,
-		})
+func (dd *DockerDiscoverer) ExportImage(ctx context.Context, imageID string) (io.ReadCloser, error) {
+	reader, err := dd.client.ImageSave(ctx, []string{imageID})
+	if err != nil {
+		return nil, fmt.Errorf("unable to save image from daemon: %w", err)
 	}
-	return &ret
+	return reader, nil
 }
 
 func (dd *DockerDiscoverer) Containers(ctx context.Context) ([]models.ContainerInfo, error) {
@@ -113,6 +124,61 @@ func (dd *DockerDiscoverer) Containers(ctx context.Context) ([]models.ContainerI
 		result[i] = info
 	}
 	return result, nil
+}
+
+func (dd *DockerDiscoverer) Container(ctx context.Context, containerID string) (models.ContainerInfo, error) {
+	// List all docker containers filtered by containerID
+	containers, err := dd.client.ContainerList(ctx, dtypes.ContainerListOptions{
+		All:     true,
+		Filters: dfilters.NewArgs(dfilters.KeyValuePair{Key: "id", Value: containerID}),
+	})
+	if err != nil {
+		return models.ContainerInfo{}, fmt.Errorf("failed to list containers: %w", err)
+	}
+
+	if len(containers) == 0 {
+		return models.ContainerInfo{}, types.ErrNotFound
+	}
+	if len(containers) > 1 {
+		return models.ContainerInfo{}, fmt.Errorf("found more than one container with id %s", containerID)
+	}
+
+	info, err := dd.getContainerInfo(ctx, containers[0].ID, containers[0].ImageID)
+	if err != nil {
+		return models.ContainerInfo{}, fmt.Errorf("failed to convert container to ContainerInfo: %w", err)
+	}
+	return info, nil
+}
+
+func (dd *DockerDiscoverer) ExportContainer(ctx context.Context, containerID string) (io.ReadCloser, func(), error) {
+	clean := &types.Cleanup{}
+	defer clean.Clean()
+
+	imageName := fmt.Sprintf("vmclarity.io/container-snapshot:%s", containerID)
+	idresp, err := dd.client.ContainerCommit(ctx, containerID, dtypes.ContainerCommitOptions{
+		Reference: imageName,
+		Comment:   fmt.Sprintf("Snapshot of container %s for security scanning", containerID),
+		Author:    "VMClarity",
+		Pause:     false,
+	})
+	if err != nil {
+		return nil, func() {}, fmt.Errorf("failed to commit container to image: %w", err)
+	}
+	clean.Add(func() {
+		_, err := dd.client.ImageRemove(ctx, idresp.ID, dtypes.ImageRemoveOptions{
+			Force: true,
+		})
+		if err != nil {
+			log.GetLoggerFromContextOrDefault(ctx).Errorf("failed to cleanup container snapshot: %v", err)
+		}
+	})
+
+	reader, err := dd.client.ImageSave(ctx, []string{idresp.ID})
+	if err != nil {
+		return nil, func() {}, fmt.Errorf("unable to save image from daemon: %w", err)
+	}
+
+	return reader, clean.Release(), nil
 }
 
 func (dd *DockerDiscoverer) getContainerInfo(ctx context.Context, containerID, imageID string) (models.ContainerInfo, error) {
@@ -138,7 +204,7 @@ func (dd *DockerDiscoverer) getContainerInfo(ctx context.Context, containerID, i
 		CreatedAt:     utils.PointerTo(createdAt),
 		ContainerID:   containerID,
 		Image:         utils.PointerTo(imageInfo),
-		Labels:        convertTags(info.Config.Labels),
+		Labels:        models.MapToTags(info.Config.Labels),
 		ObjectType:    "ContainerInfo",
 	}, nil
 }
