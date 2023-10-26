@@ -59,7 +59,7 @@ func ConvertSBOMResultToPackages(sbomResults *sbom.Results) *[]models.Package {
 	return &packages
 }
 
-func ConvertVulnResultToAPIModel(vulnerabilitiesResults *vulnerabilities.Results) *models.VulnerabilityScan {
+func ConvertVulnResultToVulnerabilities(vulnerabilitiesResults *vulnerabilities.Results) *[]models.Vulnerability {
 	// nolint:prealloc
 	var vuls []models.Vulnerability
 	for _, vulCandidates := range vulnerabilitiesResults.MergedResults.MergedVulnerabilitiesByKey {
@@ -84,9 +84,7 @@ func ConvertVulnResultToAPIModel(vulnerabilitiesResults *vulnerabilities.Results
 		vuls = append(vuls, vul)
 	}
 
-	return &models.VulnerabilityScan{
-		Vulnerabilities: &vuls,
-	}
+	return &vuls
 }
 
 func ConvertVulnSeverityToAPIModel(severity string) *models.VulnerabilitySeverity {

@@ -87,10 +87,6 @@ func newAssetScanFromScan(scan *models.Scan, assetID string) (*models.AssetScan,
 				Errors: nil,
 				State:  getInitStateFromFamilyConfig(familiesConfig.Secrets),
 			},
-			Vulnerabilities: &models.AssetScanState{
-				Errors: nil,
-				State:  getInitStateFromFamilyConfig(familiesConfig.Vulnerabilities),
-			},
 			InfoFinder: &models.AssetScanState{
 				Errors: nil,
 				State:  getInitStateFromFamilyConfig(familiesConfig.InfoFinder),
@@ -108,6 +104,10 @@ func newAssetScanFromScan(scan *models.Scan, assetID string) (*models.AssetScan,
 		Exploits: &models.ExploitScan{
 			Exploits: nil,
 			Status:   mapFamilyConfigToScannerStatus(familiesConfig.Exploits),
+		},
+		Vulnerabilities: &models.VulnerabilityScan{
+			Vulnerabilities: nil,
+			Status:          mapFamilyConfigToScannerStatus(familiesConfig.Vulnerabilities),
 		},
 	}, nil
 }

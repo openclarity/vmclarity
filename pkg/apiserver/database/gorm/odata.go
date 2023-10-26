@@ -260,6 +260,10 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 					ComplexFieldSchemas: []string{"Vulnerability"},
 				},
 			},
+			"status": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"ScannerStatus"},
+			},
 		},
 	},
 	"Vulnerability": {
@@ -408,8 +412,13 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 					ComplexFieldSchemas: []string{"Exploit"},
 				},
 			},
+			"status": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"ScannerStatus"},
+			},
 		},
 	},
+
 	"Exploit": {
 		Fields: odatasql.Schema{
 			"name":        odatasql.FieldMeta{FieldType: odatasql.StringFieldType},

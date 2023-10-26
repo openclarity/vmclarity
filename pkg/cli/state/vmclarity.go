@@ -265,16 +265,15 @@ func (v *VMClarityState) markVulnerabilitiesScanInProgress(ctx context.Context) 
 		return fmt.Errorf("failed to get asset scan: %w", err)
 	}
 
-	if assetScan.Status == nil {
-		assetScan.Status = &models.AssetScanStatus{}
-	}
-	if assetScan.Status.Vulnerabilities == nil {
-		assetScan.Status.Vulnerabilities = &models.AssetScanState{}
+	if assetScan.Vulnerabilities == nil {
+		assetScan.Vulnerabilities = &models.VulnerabilityScan{}
 	}
 
-	state := models.AssetScanStateStateInProgress
-	assetScan.Status.Vulnerabilities.State = &state
-	assetScan.Status.Vulnerabilities.LastTransitionTime = utils.PointerTo(time.Now())
+	assetScan.Vulnerabilities.Status = models.NewScannerStatus(
+		models.InProgress,
+		models.ScannerStatusReasonScanning,
+		nil,
+	)
 
 	err = v.client.PatchAssetScan(ctx, assetScan, v.assetScanID)
 	if err != nil {

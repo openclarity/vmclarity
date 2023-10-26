@@ -886,10 +886,9 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 
 			// Create Vulnerabilities if needed
 			if *result.ScanFamiliesConfig.Vulnerabilities.Enabled {
-				result.Status.Vulnerabilities = &models.AssetScanState{
-					Errors:             nil,
-					LastTransitionTime: &timeNow,
-					State:              utils.PointerTo(models.AssetScanStateStateDone),
+				result.Vulnerabilities = &models.VulnerabilityScan{
+					Vulnerabilities: createVulnerabilitiesResult(),
+					Status:          models.NewScannerStatus(models.Pending, models.ScannerStatusReasonScheduled, nil),
 				}
 				result.Stats.Vulnerabilities = &[]models.AssetScanInputScanStats{
 					{
@@ -902,13 +901,11 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 						Type: utils.PointerTo("rootfs"),
 					},
 				}
-				result.Vulnerabilities = &models.VulnerabilityScan{
-					Vulnerabilities: createVulnerabilitiesResult(),
-				}
 				result.Summary.TotalVulnerabilities = utils.GetVulnerabilityTotalsPerSeverity(result.Vulnerabilities.Vulnerabilities)
 			} else {
-				result.Status.Vulnerabilities = &models.AssetScanState{
-					State: utils.PointerTo(models.AssetScanStateStateNotScanned),
+				result.Vulnerabilities = &models.VulnerabilityScan{
+					Vulnerabilities: nil,
+					Status:          models.NewScannerStatus(models.Skipped, models.ScannerStatusReasonNotScheduled, nil),
 				}
 				result.Summary.TotalVulnerabilities = utils.GetVulnerabilityTotalsPerSeverity(nil)
 			}

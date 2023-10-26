@@ -68,7 +68,7 @@ func (asp *AssetScanProcessor) Reconcile(ctx context.Context, event AssetScanRec
 	}
 
 	// Process each of the successfully scanned (state DONE and no errors) families into findings.
-	if statusCompletedWithNoErrors(assetScan.Status.Vulnerabilities) {
+	if assetScan.Vulnerabilities.Status.State == models.Done {
 		if err := asp.reconcileResultVulnerabilitiesToFindings(ctx, assetScan); err != nil {
 			return newFailedToReconcileTypeError(err, "vulnerabilities")
 		}

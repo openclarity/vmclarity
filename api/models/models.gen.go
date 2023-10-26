@@ -479,7 +479,6 @@ type AssetScanStatus struct {
 	Misconfigurations *AssetScanState `json:"misconfigurations,omitempty"`
 	Rootkits          *AssetScanState `json:"rootkits,omitempty"`
 	Secrets           *AssetScanState `json:"secrets,omitempty"`
-	Vulnerabilities   *AssetScanState `json:"vulnerabilities,omitempty"`
 }
 
 // AssetScanTemplate defines model for AssetScanTemplate.
@@ -1555,6 +1554,7 @@ type VulnerabilityFix struct {
 
 // VulnerabilityScan defines model for VulnerabilityScan.
 type VulnerabilityScan struct {
+	Status          *ScannerStatus   `json:"status,omitempty"`
 	Vulnerabilities *[]Vulnerability `json:"vulnerabilities"`
 }
 

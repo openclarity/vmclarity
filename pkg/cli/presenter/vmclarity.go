@@ -132,8 +132,8 @@ func (v *VMClarityPresenter) ExportVulResult(ctx context.Context, res families.F
 	if assetScan.Status == nil {
 		assetScan.Status = &models.AssetScanStatus{}
 	}
-	if assetScan.Status.Vulnerabilities == nil {
-		assetScan.Status.Vulnerabilities = &models.AssetScanState{}
+	if assetScan.Vulnerabilities == nil {
+		assetScan.Vulnerabilities = &models.VulnerabilityScan{}
 	}
 	if assetScan.Summary == nil {
 		assetScan.Summary = &models.ScanFindingsSummary{}
@@ -142,24 +142,32 @@ func (v *VMClarityPresenter) ExportVulResult(ctx context.Context, res families.F
 		assetScan.Stats = &models.AssetScanStats{}
 	}
 
-	errs := []string{}
-
 	if res.Err != nil {
-		errs = append(errs, res.Err.Error())
+		assetScan.Vulnerabilities.Status = models.NewScannerStatus(
+			models.Failed,
+			models.ScannerStatusReasonError,
+			utils.PointerTo(res.Err.Error()),
+		)
 	} else {
 		vulnerabilitiesResults, ok := res.Result.(*vulnerabilities.Results)
 		if !ok {
-			errs = append(errs, fmt.Errorf("failed to convert to vulnerabilities results").Error())
+			assetScan.Vulnerabilities.Status = models.NewScannerStatus(
+				models.Failed,
+				models.ScannerStatusReasonError,
+				utils.PointerTo(fmt.Errorf("failed to convert to vulnerabilities results").Error()),
+			)
 		} else {
-			assetScan.Vulnerabilities = cliutils.ConvertVulnResultToAPIModel(vulnerabilitiesResults)
+			foundVulnerabilities := cliutils.ConvertVulnResultToVulnerabilities(vulnerabilitiesResults)
+			assetScan.Summary.TotalVulnerabilities = utils.GetVulnerabilityTotalsPerSeverity(foundVulnerabilities)
+			assetScan.Stats.Vulnerabilities = getInputScanStats(vulnerabilitiesResults.Metadata.InputScans)
+			assetScan.Vulnerabilities.Vulnerabilities = foundVulnerabilities
+			assetScan.Vulnerabilities.Status = models.NewScannerStatus(
+				models.Done,
+				models.ScannerStatusReasonSuccess,
+				nil,
+			)
 		}
-		assetScan.Summary.TotalVulnerabilities = utils.GetVulnerabilityTotalsPerSeverity(assetScan.Vulnerabilities.Vulnerabilities)
-		assetScan.Stats.Vulnerabilities = getInputScanStats(vulnerabilitiesResults.Metadata.InputScans)
 	}
-
-	state := models.AssetScanStateStateDone
-	assetScan.Status.Vulnerabilities.State = &state
-	assetScan.Status.Vulnerabilities.Errors = &errs
 
 	err = v.client.PatchAssetScan(ctx, assetScan, v.assetScanID)
 	if err != nil {

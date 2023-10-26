@@ -153,12 +153,12 @@ func Test_ConvertSBOMResultToPackages(t *testing.T) {
 	}
 }
 
-func Test_ConvertVulnResultToAPIModel(t *testing.T) {
+func Test_ConvertVulnResultToVulnerabilities(t *testing.T) {
 	type args struct {
 		result *vulnerabilities.Results
 	}
 	type returns struct {
-		vulScan *models.VulnerabilityScan
+		vulnerabilities *[]models.Vulnerability
 	}
 	tests := []struct {
 		name string
@@ -279,100 +279,98 @@ func Test_ConvertVulnResultToAPIModel(t *testing.T) {
 				},
 			},
 			want: returns{
-				vulScan: &models.VulnerabilityScan{
-					Vulnerabilities: &[]models.Vulnerability{
-						{
-							Cvss: utils.PointerTo([]models.VulnerabilityCvss{
-								{
-									Metrics: &models.VulnerabilityCvssMetrics{
-										BaseScore:           utils.PointerTo[float32](1),
-										ExploitabilityScore: nil,
-										ImpactScore:         nil,
-									},
-									Vector:  utils.PointerTo("vector1"),
-									Version: utils.PointerTo("v1"),
+				vulnerabilities: &[]models.Vulnerability{
+					{
+						Cvss: utils.PointerTo([]models.VulnerabilityCvss{
+							{
+								Metrics: &models.VulnerabilityCvssMetrics{
+									BaseScore:           utils.PointerTo[float32](1),
+									ExploitabilityScore: nil,
+									ImpactScore:         nil,
 								},
-								{
-									Metrics: &models.VulnerabilityCvssMetrics{
-										BaseScore:           utils.PointerTo[float32](2),
-										ExploitabilityScore: utils.PointerTo[float32](2.1),
-										ImpactScore:         utils.PointerTo[float32](2.2),
-									},
-									Vector:  utils.PointerTo("vector2"),
-									Version: utils.PointerTo("v2"),
+								Vector:  utils.PointerTo("vector1"),
+								Version: utils.PointerTo("v1"),
+							},
+							{
+								Metrics: &models.VulnerabilityCvssMetrics{
+									BaseScore:           utils.PointerTo[float32](2),
+									ExploitabilityScore: utils.PointerTo[float32](2.1),
+									ImpactScore:         utils.PointerTo[float32](2.2),
 								},
-							}),
-							Description: utils.PointerTo("testbleed"),
-							Distro: &models.VulnerabilityDistro{
-								IDLike:  utils.PointerTo([]string{"IDLike1", "IDLike2"}),
-								Name:    utils.PointerTo("distro1"),
-								Version: utils.PointerTo("distrov1"),
+								Vector:  utils.PointerTo("vector2"),
+								Version: utils.PointerTo("v2"),
 							},
-							Fix: &models.VulnerabilityFix{
-								State:    utils.PointerTo("fixed"),
-								Versions: utils.PointerTo([]string{"fv1", "fv2"}),
-							},
-							LayerId: utils.PointerTo("lid1"),
-							Links:   utils.PointerTo([]string{"link1", "link2"}),
-							Package: &models.Package{
-								Cpes:     utils.PointerTo([]string{"cpe1", "cpe2"}),
-								Language: utils.PointerTo("pl1"),
-								Licenses: utils.PointerTo([]string{"plic1", "plic2"}),
-								Name:     utils.PointerTo("package1"),
-								Purl:     utils.PointerTo("purl1"),
-								Type:     utils.PointerTo("pt1"),
-								Version:  utils.PointerTo("pv1"),
-							},
-							Path:              utils.PointerTo("path1"),
-							Severity:          utils.PointerTo[models.VulnerabilitySeverity](models.CRITICAL),
-							VulnerabilityName: utils.PointerTo("CVE-test-test-foo"),
+						}),
+						Description: utils.PointerTo("testbleed"),
+						Distro: &models.VulnerabilityDistro{
+							IDLike:  utils.PointerTo([]string{"IDLike1", "IDLike2"}),
+							Name:    utils.PointerTo("distro1"),
+							Version: utils.PointerTo("distrov1"),
 						},
-						{
-							Cvss: utils.PointerTo([]models.VulnerabilityCvss{
-								{
-									Metrics: &models.VulnerabilityCvssMetrics{
-										BaseScore:           utils.PointerTo[float32](3),
-										ExploitabilityScore: nil,
-										ImpactScore:         nil,
-									},
-									Vector:  utils.PointerTo("vector3"),
-									Version: utils.PointerTo("v3"),
-								},
-								{
-									Metrics: &models.VulnerabilityCvssMetrics{
-										BaseScore:           utils.PointerTo[float32](4),
-										ExploitabilityScore: utils.PointerTo[float32](4.1),
-										ImpactScore:         utils.PointerTo[float32](4.2),
-									},
-									Vector:  utils.PointerTo("vector4"),
-									Version: utils.PointerTo("v4"),
-								},
-							}),
-							Description: utils.PointerTo("solartest"),
-							Distro: &models.VulnerabilityDistro{
-								IDLike:  utils.PointerTo([]string{"IDLike3", "IDLike4"}),
-								Name:    utils.PointerTo("distro2"),
-								Version: utils.PointerTo("distrov2"),
-							},
-							Fix: &models.VulnerabilityFix{
-								State:    utils.PointerTo("not-fixed"),
-								Versions: utils.PointerTo([]string{"fv3", "fv4"}),
-							},
-							LayerId: utils.PointerTo("lid2"),
-							Links:   utils.PointerTo([]string{"link3", "link4"}),
-							Package: &models.Package{
-								Cpes:     utils.PointerTo([]string{"cpe3", "cpe4"}),
-								Language: utils.PointerTo("pl2"),
-								Licenses: utils.PointerTo([]string{"plic3", "plic4"}),
-								Name:     utils.PointerTo("package2"),
-								Purl:     utils.PointerTo("purl2"),
-								Type:     utils.PointerTo("pt2"),
-								Version:  utils.PointerTo("pv2"),
-							},
-							Path:              utils.PointerTo("path2"),
-							Severity:          utils.PointerTo[models.VulnerabilitySeverity](models.HIGH),
-							VulnerabilityName: utils.PointerTo("CVE-test-test-bar"),
+						Fix: &models.VulnerabilityFix{
+							State:    utils.PointerTo("fixed"),
+							Versions: utils.PointerTo([]string{"fv1", "fv2"}),
 						},
+						LayerId: utils.PointerTo("lid1"),
+						Links:   utils.PointerTo([]string{"link1", "link2"}),
+						Package: &models.Package{
+							Cpes:     utils.PointerTo([]string{"cpe1", "cpe2"}),
+							Language: utils.PointerTo("pl1"),
+							Licenses: utils.PointerTo([]string{"plic1", "plic2"}),
+							Name:     utils.PointerTo("package1"),
+							Purl:     utils.PointerTo("purl1"),
+							Type:     utils.PointerTo("pt1"),
+							Version:  utils.PointerTo("pv1"),
+						},
+						Path:              utils.PointerTo("path1"),
+						Severity:          utils.PointerTo[models.VulnerabilitySeverity](models.CRITICAL),
+						VulnerabilityName: utils.PointerTo("CVE-test-test-foo"),
+					},
+					{
+						Cvss: utils.PointerTo([]models.VulnerabilityCvss{
+							{
+								Metrics: &models.VulnerabilityCvssMetrics{
+									BaseScore:           utils.PointerTo[float32](3),
+									ExploitabilityScore: nil,
+									ImpactScore:         nil,
+								},
+								Vector:  utils.PointerTo("vector3"),
+								Version: utils.PointerTo("v3"),
+							},
+							{
+								Metrics: &models.VulnerabilityCvssMetrics{
+									BaseScore:           utils.PointerTo[float32](4),
+									ExploitabilityScore: utils.PointerTo[float32](4.1),
+									ImpactScore:         utils.PointerTo[float32](4.2),
+								},
+								Vector:  utils.PointerTo("vector4"),
+								Version: utils.PointerTo("v4"),
+							},
+						}),
+						Description: utils.PointerTo("solartest"),
+						Distro: &models.VulnerabilityDistro{
+							IDLike:  utils.PointerTo([]string{"IDLike3", "IDLike4"}),
+							Name:    utils.PointerTo("distro2"),
+							Version: utils.PointerTo("distrov2"),
+						},
+						Fix: &models.VulnerabilityFix{
+							State:    utils.PointerTo("not-fixed"),
+							Versions: utils.PointerTo([]string{"fv3", "fv4"}),
+						},
+						LayerId: utils.PointerTo("lid2"),
+						Links:   utils.PointerTo([]string{"link3", "link4"}),
+						Package: &models.Package{
+							Cpes:     utils.PointerTo([]string{"cpe3", "cpe4"}),
+							Language: utils.PointerTo("pl2"),
+							Licenses: utils.PointerTo([]string{"plic3", "plic4"}),
+							Name:     utils.PointerTo("package2"),
+							Purl:     utils.PointerTo("purl2"),
+							Type:     utils.PointerTo("pt2"),
+							Version:  utils.PointerTo("pv2"),
+						},
+						Path:              utils.PointerTo("path2"),
+						Severity:          utils.PointerTo[models.VulnerabilitySeverity](models.HIGH),
+						VulnerabilityName: utils.PointerTo("CVE-test-test-bar"),
 					},
 				},
 			},
@@ -381,8 +379,8 @@ func Test_ConvertVulnResultToAPIModel(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ConvertVulnResultToAPIModel(tt.args.result)
-			if diff := cmp.Diff(tt.want.vulScan, got, cmpopts.SortSlices(func(a, b models.Vulnerability) bool { return *a.VulnerabilityName < *b.VulnerabilityName })); diff != "" {
+			got := ConvertVulnResultToVulnerabilities(tt.args.result)
+			if diff := cmp.Diff(tt.want.vulnerabilities, got, cmpopts.SortSlices(func(a, b models.Vulnerability) bool { return *a.VulnerabilityName < *b.VulnerabilityName })); diff != "" {
 				t.Errorf("convertVulnResultToAPIModel() mismatch (-want +got):\n%s", diff)
 			}
 		})
