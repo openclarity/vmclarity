@@ -359,7 +359,6 @@ func (p *Provider) createScanContainer(ctx context.Context, assetVolume, network
 			},
 		},
 		&container.HostConfig{
-			Binds: []string{fmt.Sprintf("%s:/tmp", path.Dir(scanConfigFilePath))},
 			Mounts: []mount.Mount{
 				{
 					Type:   mount.TypeVolume,
