@@ -223,6 +223,7 @@ func TestNewAssetScanFromScan(t *testing.T) {
 			result.Malware.Status.LastTransitionTime = transitionTime
 			result.Rootkits.Status.LastTransitionTime = transitionTime
 			result.Secrets.Status.LastTransitionTime = transitionTime
+			result.Misconfigurations.Status.LastTransitionTime = transitionTime
 			result.InfoFinder.Status.LastTransitionTime = transitionTime
 
 			g.Expect(err).Should(test.ExpectedErrorMatcher)
