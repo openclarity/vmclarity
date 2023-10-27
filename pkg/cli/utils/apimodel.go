@@ -260,9 +260,9 @@ func MisconfigurationSeverityToAPIMisconfigurationSeverity(sev misconfigurationT
 	}
 }
 
-func ConvertMisconfigurationResultToAPIModel(misconfigurationResults *misconfiguration.Results) (*models.MisconfigurationScan, error) {
+func ConvertMisconfigurationResultToMisconfigurations(misconfigurationResults *misconfiguration.Results) (*[]models.Misconfiguration, *[]string, error) {
 	if misconfigurationResults == nil || misconfigurationResults.Misconfigurations == nil {
-		return &models.MisconfigurationScan{}, nil
+		return nil, nil, nil
 	}
 
 	retMisconfigurations := make([]models.Misconfiguration, len(misconfigurationResults.Misconfigurations))
@@ -275,7 +275,7 @@ func ConvertMisconfigurationResultToAPIModel(misconfigurationResults *misconfigu
 
 		severity, err := MisconfigurationSeverityToAPIMisconfigurationSeverity(misconfig.Severity)
 		if err != nil {
-			return nil, fmt.Errorf("unable to convert scanner result severity to API severity: %w", err)
+			return nil, nil, fmt.Errorf("unable to convert scanner result severity to API severity: %w", err)
 		}
 
 		retMisconfigurations[i] = models.Misconfiguration{
@@ -290,10 +290,7 @@ func ConvertMisconfigurationResultToAPIModel(misconfigurationResults *misconfigu
 		}
 	}
 
-	return &models.MisconfigurationScan{
-		Scanners:          utils.PointerTo(misconfigurationResults.Metadata.Scanners),
-		Misconfigurations: &retMisconfigurations,
-	}, nil
+	return &retMisconfigurations, utils.PointerTo(misconfigurationResults.Metadata.Scanners), nil
 }
 
 func ConvertInfoFinderResultToAPIModel(results *infofinder.Results) (*models.InfoFinderScan, error) {

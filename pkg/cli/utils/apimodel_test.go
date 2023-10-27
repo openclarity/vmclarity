@@ -795,7 +795,7 @@ func Test_MisconfigurationSeverityToAPIMisconfigurationSeverity(t *testing.T) {
 	}
 }
 
-func Test_ConvertMisconfigurationResultToAPIModel(t *testing.T) {
+func Test_ConvertMisconfigurationResultToMisconfigurations(t *testing.T) {
 	misconfiguration1 := misconfiguration.FlattenedMisconfiguration{
 		ScannerName: "foo",
 		Misconfiguration: misconfigurationTypes.Misconfiguration{
@@ -846,17 +846,24 @@ func Test_ConvertMisconfigurationResultToAPIModel(t *testing.T) {
 	type args struct {
 		misconfigurationResults *misconfiguration.Results
 	}
+	type returns struct {
+		Misconfigs *[]models.Misconfiguration
+		Scanners   *[]string
+	}
 	tests := []struct {
 		name string
 		args args
-		want *models.MisconfigurationScan
+		want returns
 	}{
 		{
 			name: "nil misconfigurationResults",
 			args: args{
 				misconfigurationResults: nil,
 			},
-			want: &models.MisconfigurationScan{},
+			want: returns{
+				nil,
+				nil,
+			},
 		},
 		{
 			name: "nil misconfigurationResults.Misconfigurations",
@@ -869,7 +876,10 @@ func Test_ConvertMisconfigurationResultToAPIModel(t *testing.T) {
 					Misconfigurations: nil,
 				},
 			},
-			want: &models.MisconfigurationScan{},
+			want: returns{
+				nil,
+				nil,
+			},
 		},
 		{
 			name: "sanity",
@@ -886,9 +896,8 @@ func Test_ConvertMisconfigurationResultToAPIModel(t *testing.T) {
 					},
 				},
 			},
-			want: &models.MisconfigurationScan{
-				Scanners: &[]string{"foo", "bar"},
-				Misconfigurations: &[]models.Misconfiguration{
+			want: returns{
+				&[]models.Misconfiguration{
 					{
 						Message:         utils.PointerTo(misconfiguration1.Message),
 						Remediation:     utils.PointerTo(misconfiguration1.Remediation),
@@ -920,17 +929,18 @@ func Test_ConvertMisconfigurationResultToAPIModel(t *testing.T) {
 						TestID:          utils.PointerTo(misconfiguration3.TestID),
 					},
 				},
+				&[]string{"foo", "bar"},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ConvertMisconfigurationResultToAPIModel(tt.args.misconfigurationResults)
+			misconfigs, scanners, err := ConvertMisconfigurationResultToMisconfigurations(tt.args.misconfigurationResults)
 			if err != nil {
 				t.Fatalf("Unexpected error: %v", err)
 			}
 
-			if diff := cmp.Diff(tt.want, got, cmpopts.SortSlices(func(a, b models.Misconfiguration) bool { return *a.TestID < *b.TestID })); diff != "" {
+			if diff := cmp.Diff(tt.want, returns{Misconfigs: misconfigs, Scanners: scanners}, cmpopts.SortSlices(func(a, b models.Misconfiguration) bool { return *a.TestID < *b.TestID })); diff != "" {
 				t.Errorf("convertMisconfigurationResultToAPIModel() mismatch (-want +got):\n%s", diff)
 			}
 		})

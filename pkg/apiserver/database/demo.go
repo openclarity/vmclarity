@@ -763,10 +763,10 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 
 			// Create Misconfigurations if needed
 			if *result.ScanFamiliesConfig.Misconfigurations.Enabled {
-				result.Status.Misconfigurations = &models.AssetScanState{
-					Errors:             nil,
-					LastTransitionTime: &timeNow,
-					State:              utils.PointerTo(models.AssetScanStateStateInProgress),
+				result.Misconfigurations = &models.MisconfigurationScan{
+					Misconfigurations: createMisconfigurationsResult(),
+					Scanners:          nil,
+					Status:            models.NewScannerStatus(models.InProgress, models.ScannerStatusReasonScanning, nil),
 				}
 				result.Stats.Misconfigurations = &[]models.AssetScanInputScanStats{
 					{
@@ -779,13 +779,12 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 						Type: utils.PointerTo("rootfs"),
 					},
 				}
-				result.Misconfigurations = &models.MisconfigurationScan{
-					Misconfigurations: createMisconfigurationsResult(),
-				}
 				result.Summary.TotalMisconfigurations = utils.PointerTo(len(*result.Misconfigurations.Misconfigurations))
 			} else {
-				result.Status.Misconfigurations = &models.AssetScanState{
-					State: utils.PointerTo(models.AssetScanStateStateNotScanned),
+				result.Misconfigurations = &models.MisconfigurationScan{
+					Misconfigurations: nil,
+					Scanners:          nil,
+					Status:            models.NewScannerStatus(models.Skipped, models.ScannerStatusReasonNotScheduled, nil),
 				}
 				result.Summary.TotalMisconfigurations = utils.PointerTo(0)
 			}

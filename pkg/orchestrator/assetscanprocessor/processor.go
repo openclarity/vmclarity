@@ -104,7 +104,7 @@ func (asp *AssetScanProcessor) Reconcile(ctx context.Context, event AssetScanRec
 		}
 	}
 
-	if statusCompletedWithNoErrors(assetScan.Status.Misconfigurations) {
+	if assetScan.Misconfigurations.Status.State == models.Done {
 		if err := asp.reconcileResultMisconfigurationsToFindings(ctx, assetScan); err != nil {
 			return newFailedToReconcileTypeError(err, "misconfigurations")
 		}

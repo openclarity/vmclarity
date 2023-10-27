@@ -80,6 +80,13 @@ func TestNewAssetScanFromScan(t *testing.T) {
 	)
 	secretScanStatus.LastTransitionTime = transitionTime
 
+	misconfigurationScanStatus := models.NewScannerStatus(
+		models.Skipped,
+		models.ScannerStatusReasonNotScheduled,
+		nil,
+	)
+	misconfigurationScanStatus.LastTransitionTime = transitionTime
+
 	tests := []struct {
 		Name    string
 		Scan    *models.Scan
@@ -130,10 +137,6 @@ func TestNewAssetScanFromScan(t *testing.T) {
 						Errors: nil,
 						State:  utils.PointerTo(models.AssetScanStateStatePending),
 					},
-					Misconfigurations: &models.AssetScanState{
-						Errors: nil,
-						State:  utils.PointerTo(models.AssetScanStateStateNotScanned),
-					},
 					InfoFinder: &models.AssetScanState{
 						State: utils.PointerTo(models.AssetScanStateStatePending),
 					},
@@ -162,6 +165,11 @@ func TestNewAssetScanFromScan(t *testing.T) {
 				Secrets: &models.SecretScan{
 					Secrets: nil,
 					Status:  secretScanStatus,
+				},
+				Misconfigurations: &models.MisconfigurationScan{
+					Misconfigurations: nil,
+					Scanners:          nil,
+					Status:            nil,
 				},
 				Summary: newAssetScanSummary(),
 				Asset: &models.AssetRelationship{

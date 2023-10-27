@@ -473,9 +473,8 @@ type AssetScanStats struct {
 
 // AssetScanStatus defines model for AssetScanStatus.
 type AssetScanStatus struct {
-	General           *AssetScanState `json:"general,omitempty"`
-	InfoFinder        *AssetScanState `json:"infoFinder,omitempty"`
-	Misconfigurations *AssetScanState `json:"misconfigurations,omitempty"`
+	General    *AssetScanState `json:"general,omitempty"`
+	InfoFinder *AssetScanState `json:"infoFinder,omitempty"`
 }
 
 // AssetScanTemplate defines model for AssetScanTemplate.
@@ -760,6 +759,7 @@ type MisconfigurationFindingInfo struct {
 type MisconfigurationScan struct {
 	Misconfigurations *[]Misconfiguration `json:"misconfigurations"`
 	Scanners          *[]string           `json:"scanners"`
+	Status            *ScannerStatus      `json:"status,omitempty"`
 }
 
 // MisconfigurationSeverity defines model for MisconfigurationSeverity.

@@ -337,16 +337,15 @@ func (v *VMClarityState) markMisconfigurationsScanInProgress(ctx context.Context
 		return fmt.Errorf("failed to get asset scan: %w", err)
 	}
 
-	if assetScan.Status == nil {
-		assetScan.Status = &models.AssetScanStatus{}
-	}
-	if assetScan.Status.Misconfigurations == nil {
-		assetScan.Status.Misconfigurations = &models.AssetScanState{}
+	if assetScan.Misconfigurations == nil {
+		assetScan.Misconfigurations = &models.MisconfigurationScan{}
 	}
 
-	state := models.AssetScanStateStateInProgress
-	assetScan.Status.Misconfigurations.State = &state
-	assetScan.Status.Misconfigurations.LastTransitionTime = utils.PointerTo(time.Now())
+	assetScan.Misconfigurations.Status = models.NewScannerStatus(
+		models.InProgress,
+		models.ScannerStatusReasonScanning,
+		nil,
+	)
 
 	err = v.client.PatchAssetScan(ctx, assetScan, v.assetScanID)
 	if err != nil {

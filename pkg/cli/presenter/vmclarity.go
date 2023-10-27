@@ -351,11 +351,8 @@ func (v *VMClarityPresenter) ExportMisconfigurationResult(ctx context.Context, r
 		return fmt.Errorf("failed to get asset scan: %w", err)
 	}
 
-	if assetScan.Status == nil {
-		assetScan.Status = &models.AssetScanStatus{}
-	}
-	if assetScan.Status.Misconfigurations == nil {
-		assetScan.Status.Misconfigurations = &models.AssetScanState{}
+	if assetScan.Misconfigurations == nil {
+		assetScan.Misconfigurations = &models.MisconfigurationScan{}
 	}
 	if assetScan.Summary == nil {
 		assetScan.Summary = &models.ScanFindingsSummary{}
@@ -364,29 +361,36 @@ func (v *VMClarityPresenter) ExportMisconfigurationResult(ctx context.Context, r
 		assetScan.Stats = &models.AssetScanStats{}
 	}
 
-	errs := []string{}
-
 	if res.Err != nil {
-		errs = append(errs, res.Err.Error())
+		assetScan.Misconfigurations.Status = models.NewScannerStatus(
+			models.Failed,
+			models.ScannerStatusReasonError,
+			utils.PointerTo(res.Err.Error()),
+		)
 	} else {
 		misconfigurationResults, ok := res.Result.(*misconfiguration.Results)
 		if !ok {
-			errs = append(errs, fmt.Errorf("failed to convert to misconfiguration results").Error())
+			assetScan.Misconfigurations.Status = models.NewScannerStatus(
+				models.Failed,
+				models.ScannerStatusReasonError,
+				utils.PointerTo(fmt.Errorf("failed to convert to misconfiguration results").Error()),
+			)
 		} else {
-			apiMisconfigurations, err := cliutils.ConvertMisconfigurationResultToAPIModel(misconfigurationResults)
+			misconfigurations, scanners, err := cliutils.ConvertMisconfigurationResultToMisconfigurations(misconfigurationResults)
 			if err != nil {
-				errs = append(errs, fmt.Sprintf("failed to convert misconfiguration results from scan to API model: %v", err))
+				assetScan.Misconfigurations.Status = models.NewScannerStatus(
+					models.Failed,
+					models.ScannerStatusReasonError,
+					utils.PointerTo(fmt.Errorf("failed to convert misconfiguration results from scan to API model: %v", err).Error()),
+				)
 			} else {
-				assetScan.Misconfigurations = apiMisconfigurations
+				assetScan.Misconfigurations.Misconfigurations = misconfigurations
+				assetScan.Misconfigurations.Scanners = scanners
 				assetScan.Summary.TotalMisconfigurations = utils.PointerTo(len(misconfigurationResults.Misconfigurations))
 			}
 			assetScan.Stats.Misconfigurations = getInputScanStats(misconfigurationResults.Metadata.InputScans)
 		}
 	}
-
-	state := models.AssetScanStateStateDone
-	assetScan.Status.Misconfigurations.State = &state
-	assetScan.Status.Misconfigurations.Errors = &errs
 
 	err = v.client.PatchAssetScan(ctx, assetScan, v.assetScanID)
 	if err != nil {

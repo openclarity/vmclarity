@@ -71,10 +71,6 @@ func newAssetScanFromScan(scan *models.Scan, assetID string) (*models.AssetScan,
 				Errors: nil,
 				State:  utils.PointerTo(models.AssetScanStateStatePending),
 			},
-			Misconfigurations: &models.AssetScanState{
-				Errors: nil,
-				State:  getInitStateFromFamilyConfig(familiesConfig.Misconfigurations),
-			},
 			InfoFinder: &models.AssetScanState{
 				Errors: nil,
 				State:  getInitStateFromFamilyConfig(familiesConfig.InfoFinder),
@@ -109,6 +105,11 @@ func newAssetScanFromScan(scan *models.Scan, assetID string) (*models.AssetScan,
 		Secrets: &models.SecretScan{
 			Secrets: nil,
 			Status:  mapFamilyConfigToScannerStatus(familiesConfig.Secrets),
+		},
+		Misconfigurations: &models.MisconfigurationScan{
+			Misconfigurations: nil,
+			Scanners:          nil,
+			Status:            mapFamilyConfigToScannerStatus(familiesConfig.Misconfigurations),
 		},
 	}, nil
 }
