@@ -381,7 +381,7 @@ func (v *VMClarityPresenter) ExportMisconfigurationResult(ctx context.Context, r
 				assetScan.Misconfigurations.Status = models.NewScannerStatus(
 					models.Failed,
 					models.ScannerStatusReasonError,
-					utils.PointerTo(fmt.Errorf("failed to convert misconfiguration results from scan to API model: %v", err).Error()),
+					utils.PointerTo(fmt.Errorf("failed to convert misconfiguration results from scan to API model: %w", err).Error()),
 				)
 			} else {
 				assetScan.Misconfigurations.Misconfigurations = misconfigurations
@@ -436,7 +436,7 @@ func (v *VMClarityPresenter) ExportInfoFinderResult(ctx context.Context, res fam
 				assetScan.InfoFinder.Status = models.NewScannerStatus(
 					models.Failed,
 					models.ScannerStatusReasonError,
-					utils.PointerTo(fmt.Errorf("failed to convert info finder results from scan to API model: %v", err).Error()),
+					utils.PointerTo(fmt.Errorf("failed to convert info finder results from scan to API model: %w", err).Error()),
 				)
 			} else {
 				assetScan.InfoFinder.Infos = apiInfoFinder
