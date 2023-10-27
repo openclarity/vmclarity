@@ -363,16 +363,15 @@ func (v *VMClarityState) markRootkitsScanInProgress(ctx context.Context) error {
 		return fmt.Errorf("failed to get asset scan: %w", err)
 	}
 
-	if assetScan.Status == nil {
-		assetScan.Status = &models.AssetScanStatus{}
-	}
-	if assetScan.Status.Rootkits == nil {
-		assetScan.Status.Rootkits = &models.AssetScanState{}
+	if assetScan.Rootkits == nil {
+		assetScan.Rootkits = &models.RootkitScan{}
 	}
 
-	state := models.AssetScanStateStateInProgress
-	assetScan.Status.Rootkits.State = &state
-	assetScan.Status.Rootkits.LastTransitionTime = utils.PointerTo(time.Now())
+	assetScan.Rootkits.Status = models.NewScannerStatus(
+		models.InProgress,
+		models.ScannerStatusReasonScanning,
+		nil,
+	)
 
 	err = v.client.PatchAssetScan(ctx, assetScan, v.assetScanID)
 	if err != nil {

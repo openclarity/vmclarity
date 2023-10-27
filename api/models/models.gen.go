@@ -476,7 +476,6 @@ type AssetScanStatus struct {
 	General           *AssetScanState `json:"general,omitempty"`
 	InfoFinder        *AssetScanState `json:"infoFinder,omitempty"`
 	Misconfigurations *AssetScanState `json:"misconfigurations,omitempty"`
-	Rootkits          *AssetScanState `json:"rootkits,omitempty"`
 	Secrets           *AssetScanState `json:"secrets,omitempty"`
 }
 
@@ -969,7 +968,8 @@ type RootkitFindingInfo struct {
 
 // RootkitScan defines model for RootkitScan.
 type RootkitScan struct {
-	Rootkits *[]Rootkit `json:"rootkits"`
+	Rootkits *[]Rootkit     `json:"rootkits"`
+	Status   *ScannerStatus `json:"status,omitempty"`
 }
 
 // RootkitType defines model for RootkitType.

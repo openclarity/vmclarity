@@ -98,7 +98,7 @@ func (asp *AssetScanProcessor) Reconcile(ctx context.Context, event AssetScanRec
 		}
 	}
 
-	if statusCompletedWithNoErrors(assetScan.Status.Rootkits) {
+	if assetScan.Rootkits.Status.State == models.Done {
 		if err := asp.reconcileResultRootkitsToFindings(ctx, assetScan); err != nil {
 			return newFailedToReconcileTypeError(err, "rootkits")
 		}

@@ -75,10 +75,6 @@ func newAssetScanFromScan(scan *models.Scan, assetID string) (*models.AssetScan,
 				Errors: nil,
 				State:  getInitStateFromFamilyConfig(familiesConfig.Misconfigurations),
 			},
-			Rootkits: &models.AssetScanState{
-				Errors: nil,
-				State:  getInitStateFromFamilyConfig(familiesConfig.Rootkits),
-			},
 			Secrets: &models.AssetScanState{
 				Errors: nil,
 				State:  getInitStateFromFamilyConfig(familiesConfig.Secrets),
@@ -109,6 +105,10 @@ func newAssetScanFromScan(scan *models.Scan, assetID string) (*models.AssetScan,
 			Malware:  nil,
 			Metadata: nil,
 			Status:   mapFamilyConfigToScannerStatus(familiesConfig.Malware),
+		},
+		Rootkits: &models.RootkitScan{
+			Rootkits: nil,
+			Status:   mapFamilyConfigToScannerStatus(familiesConfig.Rootkits),
 		},
 	}, nil
 }

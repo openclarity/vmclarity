@@ -341,12 +341,9 @@ func convertInfoTypeToAPIModel(infoType types.InfoType) *models.InfoType {
 	}
 }
 
-func ConvertRootkitsResultToAPIModel(rootkitsResults *rootkits.Results) *models.RootkitScan {
-	if rootkitsResults == nil || rootkitsResults.MergedResults == nil {
-		return &models.RootkitScan{}
-	}
-
+func ConvertRootkitsResultToRootkits(rootkitsResults *rootkits.Results) *[]models.Rootkit {
 	rootkitsList := []models.Rootkit{}
+
 	for _, r := range rootkitsResults.MergedResults.Rootkits {
 		rootkit := r // Prevent loop variable pointer export
 		rootkitsList = append(rootkitsList, models.Rootkit{
@@ -356,9 +353,7 @@ func ConvertRootkitsResultToAPIModel(rootkitsResults *rootkits.Results) *models.
 		})
 	}
 
-	return &models.RootkitScan{
-		Rootkits: &rootkitsList,
-	}
+	return &rootkitsList
 }
 
 func ConvertRootkitTypeToAPIModel(rootkitType rootkitsTypes.RootkitType) *models.RootkitType {

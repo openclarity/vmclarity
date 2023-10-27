@@ -66,6 +66,13 @@ func TestNewAssetScanFromScan(t *testing.T) {
 	)
 	malwareScanStatus.LastTransitionTime = transitionTime
 
+	rootkitScanStatus := models.NewScannerStatus(
+		models.Skipped,
+		models.ScannerStatusReasonNotScheduled,
+		nil,
+	)
+	rootkitScanStatus.LastTransitionTime = transitionTime
+
 	tests := []struct {
 		Name    string
 		Scan    *models.Scan
@@ -120,10 +127,6 @@ func TestNewAssetScanFromScan(t *testing.T) {
 						Errors: nil,
 						State:  utils.PointerTo(models.AssetScanStateStateNotScanned),
 					},
-					Rootkits: &models.AssetScanState{
-						Errors: nil,
-						State:  utils.PointerTo(models.AssetScanStateStateNotScanned),
-					},
 					Secrets: &models.AssetScanState{
 						Errors: nil,
 						State:  utils.PointerTo(models.AssetScanStateStateNotScanned),
@@ -148,6 +151,10 @@ func TestNewAssetScanFromScan(t *testing.T) {
 					Malware:  nil,
 					Metadata: nil,
 					Status:   malwareScanStatus,
+				},
+				Rootkits: &models.RootkitScan{
+					Rootkits: nil,
+					Status:   rootkitScanStatus,
 				},
 				Summary: newAssetScanSummary(),
 				Asset: &models.AssetRelationship{
@@ -188,6 +195,7 @@ func TestNewAssetScanFromScan(t *testing.T) {
 			result.Exploits.Status.LastTransitionTime = transitionTime
 			result.Vulnerabilities.Status.LastTransitionTime = transitionTime
 			result.Malware.Status.LastTransitionTime = transitionTime
+			result.Rootkits.Status.LastTransitionTime = transitionTime
 
 			g.Expect(err).Should(test.ExpectedErrorMatcher)
 			g.Expect(result).Should(BeComparableTo(test.ExpectedAssetScan))

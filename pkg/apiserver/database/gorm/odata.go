@@ -375,6 +375,10 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 					ComplexFieldSchemas: []string{"Rootkit"},
 				},
 			},
+			"status": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"ScannerStatus"},
+			},
 		},
 	},
 	"Rootkit": {

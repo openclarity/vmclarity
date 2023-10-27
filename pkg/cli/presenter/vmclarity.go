@@ -452,11 +452,8 @@ func (v *VMClarityPresenter) ExportRootkitResult(ctx context.Context, res famili
 		return fmt.Errorf("failed to get asset scan: %w", err)
 	}
 
-	if assetScan.Status == nil {
-		assetScan.Status = &models.AssetScanStatus{}
-	}
-	if assetScan.Status.Rootkits == nil {
-		assetScan.Status.Rootkits = &models.AssetScanState{}
+	if assetScan.Rootkits == nil {
+		assetScan.Rootkits = &models.RootkitScan{}
 	}
 	if assetScan.Summary == nil {
 		assetScan.Summary = &models.ScanFindingsSummary{}
@@ -465,26 +462,31 @@ func (v *VMClarityPresenter) ExportRootkitResult(ctx context.Context, res famili
 		assetScan.Stats = &models.AssetScanStats{}
 	}
 
-	errs := []string{}
-
 	if res.Err != nil {
-		errs = append(errs, res.Err.Error())
+		assetScan.Rootkits.Status = models.NewScannerStatus(
+			models.Failed,
+			models.ScannerStatusReasonError,
+			utils.PointerTo(res.Err.Error()),
+		)
 	} else {
 		rootkitsResults, ok := res.Result.(*rootkits.Results)
 		if !ok {
-			errs = append(errs, fmt.Errorf("failed to convert to rootkits results").Error())
+			assetScan.Rootkits.Status = models.NewScannerStatus(
+				models.Failed,
+				models.ScannerStatusReasonError,
+				utils.PointerTo(fmt.Errorf("failed to convert to rootkits results").Error()),
+			)
 		} else {
-			assetScan.Rootkits = cliutils.ConvertRootkitsResultToAPIModel(rootkitsResults)
-			if assetScan.Rootkits.Rootkits != nil {
-				assetScan.Summary.TotalRootkits = utils.PointerTo[int](len(*assetScan.Rootkits.Rootkits))
-			}
+			assetScan.Rootkits.Rootkits = cliutils.ConvertRootkitsResultToRootkits(rootkitsResults)
+			assetScan.Summary.TotalRootkits = utils.PointerTo(len(*assetScan.Rootkits.Rootkits))
 			assetScan.Stats.Rootkits = getInputScanStats(rootkitsResults.Metadata.InputScans)
+			assetScan.Rootkits.Status = models.NewScannerStatus(
+				models.Done,
+				models.ScannerStatusReasonSuccess,
+				nil,
+			)
 		}
 	}
-
-	state := models.AssetScanStateStateDone
-	assetScan.Status.Rootkits.State = &state
-	assetScan.Status.Rootkits.Errors = &errs
 
 	if err = v.client.PatchAssetScan(ctx, assetScan, v.assetScanID); err != nil {
 		return fmt.Errorf("failed to patch asset scan: %w", err)

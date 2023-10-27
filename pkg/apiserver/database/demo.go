@@ -818,10 +818,9 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 
 			// Create Rootkits if needed
 			if *result.ScanFamiliesConfig.Rootkits.Enabled {
-				result.Status.Rootkits = &models.AssetScanState{
-					Errors:             nil,
-					LastTransitionTime: &timeNow,
-					State:              utils.PointerTo(models.AssetScanStateStateDone),
+				result.Rootkits = &models.RootkitScan{
+					Rootkits: createRootkitsResult(),
+					Status:   models.NewScannerStatus(models.Done, models.ScannerStatusReasonSuccess, nil),
 				}
 				result.Stats.Rootkits = &[]models.AssetScanInputScanStats{
 					{
@@ -834,13 +833,11 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 						Type: utils.PointerTo("rootfs"),
 					},
 				}
-				result.Rootkits = &models.RootkitScan{
-					Rootkits: createRootkitsResult(),
-				}
 				result.Summary.TotalRootkits = utils.PointerTo(len(*result.Rootkits.Rootkits))
 			} else {
-				result.Status.Rootkits = &models.AssetScanState{
-					State: utils.PointerTo(models.AssetScanStateStateNotScanned),
+				result.Rootkits = &models.RootkitScan{
+					Rootkits: nil,
+					Status:   models.NewScannerStatus(models.Skipped, models.ScannerStatusReasonNotScheduled, nil),
 				}
 				result.Summary.TotalRootkits = utils.PointerTo(0)
 			}

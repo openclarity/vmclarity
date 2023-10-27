@@ -2632,8 +2632,6 @@ components:
       properties:
         general:
           $ref: '#/components/schemas/AssetScanState'
-        rootkits:
-          $ref: '#/components/schemas/AssetScanState'
         secrets:
           $ref: '#/components/schemas/AssetScanState'
         misconfigurations:
@@ -3074,6 +3072,8 @@ components:
     RootkitScan:
       type: object
       properties:
+        status:
+          $ref: '#/components/schemas/ScannerStatus'
         rootkits:
           type: array
           items:
