@@ -484,7 +484,7 @@ func (p *Provider) exportAsset(ctx context.Context, config *provider.ScanJobConf
 }
 
 func getScanConfigFileName(config *provider.ScanJobConfig) string {
-	return "scanconfig_" + config.AssetScanID + ".yaml"
+	return fmt.Sprintf("scanconfig_%s.yaml", config.AssetScanID)
 }
 
 func convertTags(tags map[string]string) *[]models.Tag {
