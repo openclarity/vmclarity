@@ -1,13 +1,11 @@
 import React from 'react';
 import TitleValueDisplay, { TitleValueDisplayRow } from 'components/TitleValueDisplay';
-import { TagsList } from 'components/Tag';
-import { formatTagsToStringsList } from 'utils/utils';
-import prettyBytes from 'pretty-bytes';
+import { ContainerImageInfoDetails } from './ContainerImageInfoDetails';
+import { FieldSet } from 'components/FieldSet';
 
 
 export const ContainerInfoDetails = ({assetData}) => {
     const {containerName, containerID, image} = assetData.assetInfo || {};
-    const {repoTags, labels, architecture, os, size} = image || {};
 
 
     return (
@@ -17,19 +15,9 @@ export const ContainerInfoDetails = ({assetData}) => {
                 <TitleValueDisplay title="Container ID">{containerID}</TitleValueDisplay>
             </TitleValueDisplayRow>
 
-            <TitleValueDisplayRow>
-                <TitleValueDisplay title="Architecture">{architecture}</TitleValueDisplay>
-                <TitleValueDisplay title="OS">{os}</TitleValueDisplay>
-                <TitleValueDisplay title="Size">{prettyBytes(size)}</TitleValueDisplay>
-            </TitleValueDisplayRow>
-
-            <TitleValueDisplayRow>
-                <TitleValueDisplay title="Labels"><TagsList items={formatTagsToStringsList(labels)} /></TitleValueDisplay>
-            </TitleValueDisplayRow>
-
-            <TitleValueDisplayRow>
-                <TitleValueDisplay title="Repo tags">{repoTags?.[0]}</TitleValueDisplay>
-            </TitleValueDisplayRow>
+            <FieldSet legend="Image">
+                <ContainerImageInfoDetails assetData={{assetInfo: image}} />
+            </FieldSet>
         </>
     )
 }

@@ -12,21 +12,24 @@ export const ContainerImageInfoDetails = ({assetData}) => {
         <>
             <TitleValueDisplayRow>
                 <TitleValueDisplay title="Image ID">{imageID}</TitleValueDisplay>
-                <TitleValueDisplay title="Repo digests">{repoDigests?.[0]}</TitleValueDisplay>
+                <TitleValueDisplay title="Size">{prettyBytes(size)}</TitleValueDisplay>
+            </TitleValueDisplayRow>
+
+            <TitleValueDisplayRow>
+                <TitleValueDisplay title="Repo digests">{(repoDigests ?? []).map(digest => <div>{digest}</div>)}</TitleValueDisplay>
+            </TitleValueDisplayRow>
+
+            <TitleValueDisplayRow>
+                <TitleValueDisplay title="Repo tags">{(repoTags ?? []).map(tag => <div>{tag}</div>)}</TitleValueDisplay>
             </TitleValueDisplayRow>
             
             <TitleValueDisplayRow>
                 <TitleValueDisplay title="Architecture">{architecture}</TitleValueDisplay>
                 <TitleValueDisplay title="OS">{os}</TitleValueDisplay>
-                <TitleValueDisplay title="Size">{prettyBytes(size)}</TitleValueDisplay>
             </TitleValueDisplayRow>
             
             <TitleValueDisplayRow>
                 <TitleValueDisplay title="Labels"><TagsList items={formatTagsToStringsList(labels)} /></TitleValueDisplay>
-            </TitleValueDisplayRow>
-            
-            <TitleValueDisplayRow>
-                <TitleValueDisplay title="Repo tags">{repoTags?.[0]}</TitleValueDisplay>
             </TitleValueDisplayRow>
         </>
     )
