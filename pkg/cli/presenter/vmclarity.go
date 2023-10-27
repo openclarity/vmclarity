@@ -75,9 +75,6 @@ func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res families.
 		return fmt.Errorf("failed to get asset scan: %w", err)
 	}
 
-	if assetScan.Status == nil {
-		assetScan.Status = &models.AssetScanStatus{}
-	}
 	if assetScan.Sboms == nil {
 		assetScan.Sboms = &models.SbomScan{}
 	}
@@ -129,9 +126,6 @@ func (v *VMClarityPresenter) ExportVulResult(ctx context.Context, res families.F
 		return fmt.Errorf("failed to get asset scan: %w", err)
 	}
 
-	if assetScan.Status == nil {
-		assetScan.Status = &models.AssetScanStatus{}
-	}
 	if assetScan.Vulnerabilities == nil {
 		assetScan.Vulnerabilities = &models.VulnerabilityScan{}
 	}
@@ -254,11 +248,8 @@ func (v *VMClarityPresenter) ExportMalwareResult(ctx context.Context, res famili
 		return fmt.Errorf("failed to get asset scan: %w", err)
 	}
 
-	if assetScan.Status == nil {
-		assetScan.Status = &models.AssetScanStatus{}
-	}
-	if assetScan.Status.Malware == nil {
-		assetScan.Status.Malware = &models.AssetScanState{}
+	if assetScan.Malware == nil {
+		assetScan.Malware = &models.MalwareScan{}
 	}
 	if assetScan.Summary == nil {
 		assetScan.Summary = &models.ScanFindingsSummary{}
@@ -267,26 +258,33 @@ func (v *VMClarityPresenter) ExportMalwareResult(ctx context.Context, res famili
 		assetScan.Stats = &models.AssetScanStats{}
 	}
 
-	errs := []string{}
-
 	if res.Err != nil {
-		errs = append(errs, res.Err.Error())
+		assetScan.Malware.Status = models.NewScannerStatus(
+			models.Failed,
+			models.ScannerStatusReasonError,
+			utils.PointerTo(res.Err.Error()),
+		)
 	} else {
 		malwareResults, ok := res.Result.(*malware.MergedResults)
 		if !ok {
-			errs = append(errs, fmt.Errorf("failed to convert to malware results").Error())
+			assetScan.Sboms.Status = models.NewScannerStatus(
+				models.Failed,
+				models.ScannerStatusReasonError,
+				utils.PointerTo(fmt.Errorf("failed to convert to malware results").Error()),
+			)
 		} else {
-			assetScan.Malware = cliutils.ConvertMalwareResultToAPIModel(malwareResults)
-			if assetScan.Malware.Malware != nil {
-				assetScan.Summary.TotalMalware = utils.PointerTo[int](len(*assetScan.Malware.Malware))
-			}
+			mware, mdata := cliutils.ConvertMalwareResultToMalwareAndMetadata(malwareResults)
+			assetScan.Summary.TotalMalware = utils.PointerTo(len(*mware))
 			assetScan.Stats.Malware = getInputScanStats(malwareResults.Metadata.InputScans)
+			assetScan.Malware.Malware = mware
+			assetScan.Malware.Metadata = mdata
+			assetScan.Malware.Status = models.NewScannerStatus(
+				models.Done,
+				models.ScannerStatusReasonSuccess,
+				nil,
+			)
 		}
 	}
-
-	state := models.AssetScanStateStateDone
-	assetScan.Status.Malware.State = &state
-	assetScan.Status.Malware.Errors = &errs
 
 	if err = v.client.PatchAssetScan(ctx, assetScan, v.assetScanID); err != nil {
 		return fmt.Errorf("failed to patch asset scan: %w", err)
@@ -301,9 +299,6 @@ func (v *VMClarityPresenter) ExportExploitsResult(ctx context.Context, res famil
 		return fmt.Errorf("failed to get asset scan: %w", err)
 	}
 
-	if assetScan.Status == nil {
-		assetScan.Status = &models.AssetScanStatus{}
-	}
 	if assetScan.Exploits == nil {
 		assetScan.Exploits = &models.ExploitScan{}
 	}

@@ -475,7 +475,6 @@ type AssetScanStats struct {
 type AssetScanStatus struct {
 	General           *AssetScanState `json:"general,omitempty"`
 	InfoFinder        *AssetScanState `json:"infoFinder,omitempty"`
-	Malware           *AssetScanState `json:"malware,omitempty"`
 	Misconfigurations *AssetScanState `json:"misconfigurations,omitempty"`
 	Rootkits          *AssetScanState `json:"rootkits,omitempty"`
 	Secrets           *AssetScanState `json:"secrets,omitempty"`
@@ -716,6 +715,7 @@ type MalwareFindingInfo struct {
 type MalwareScan struct {
 	Malware  *[]Malware         `json:"malware"`
 	Metadata *[]ScannerMetadata `json:"metadata"`
+	Status   *ScannerStatus     `json:"status,omitempty"`
 }
 
 // MalwareType defines model for MalwareType.

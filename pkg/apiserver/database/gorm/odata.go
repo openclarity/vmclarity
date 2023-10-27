@@ -303,6 +303,10 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 					ComplexFieldSchemas: []string{"Malware"},
 				},
 			},
+			"status": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"ScannerStatus"},
+			},
 		},
 	},
 	"Malware": {

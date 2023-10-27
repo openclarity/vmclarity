@@ -92,7 +92,7 @@ func (asp *AssetScanProcessor) Reconcile(ctx context.Context, event AssetScanRec
 		}
 	}
 
-	if statusCompletedWithNoErrors(assetScan.Status.Malware) {
+	if assetScan.Malware.Status.State == models.Done {
 		if err := asp.reconcileResultMalwareToFindings(ctx, assetScan); err != nil {
 			return newFailedToReconcileTypeError(err, "malware")
 		}

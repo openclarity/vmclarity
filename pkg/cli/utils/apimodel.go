@@ -161,12 +161,14 @@ func ConvertVulnCvssToAPIModel(cvss []scanner.CVSS) *[]models.VulnerabilityCvss 
 	return &ret
 }
 
-func ConvertMalwareResultToAPIModel(malwareResults *malware.MergedResults) *models.MalwareScan {
+func ConvertMalwareResultToMalwareAndMetadata(malwareResults *malware.MergedResults) (*[]models.Malware, *[]models.ScannerMetadata) {
+	malwareList := []models.Malware{}
+	metadata := []models.ScannerMetadata{}
+
 	if malwareResults == nil {
-		return &models.MalwareScan{}
+		return &malwareList, &metadata
 	}
 
-	malwareList := []models.Malware{}
 	for _, m := range malwareResults.DetectedMalware {
 		mal := m // Prevent loop variable pointer export
 		malwareList = append(malwareList, models.Malware{
@@ -177,7 +179,6 @@ func ConvertMalwareResultToAPIModel(malwareResults *malware.MergedResults) *mode
 		})
 	}
 
-	metadata := []models.ScannerMetadata{}
 	for n, s := range malwareResults.ScansSummary {
 		name, summary := n, s // Prevent loop variable pointer export
 		metadata = append(metadata, models.ScannerMetadata{
@@ -196,10 +197,7 @@ func ConvertMalwareResultToAPIModel(malwareResults *malware.MergedResults) *mode
 		})
 	}
 
-	return &models.MalwareScan{
-		Malware:  &malwareList,
-		Metadata: &metadata,
-	}
+	return &malwareList, &metadata
 }
 
 func ConvertSecretsResultToAPIModel(secretsResults *secrets.Results) *models.SecretScan {

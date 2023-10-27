@@ -314,16 +314,15 @@ func (v *VMClarityState) markMalwareScanInProgress(ctx context.Context) error {
 		return fmt.Errorf("failed to get asset scan: %w", err)
 	}
 
-	if assetScan.Status == nil {
-		assetScan.Status = &models.AssetScanStatus{}
-	}
-	if assetScan.Status.Malware == nil {
-		assetScan.Status.Malware = &models.AssetScanState{}
+	if assetScan.Malware == nil {
+		assetScan.Malware = &models.MalwareScan{}
 	}
 
-	state := models.AssetScanStateStateInProgress
-	assetScan.Status.Malware.State = &state
-	assetScan.Status.Malware.LastTransitionTime = utils.PointerTo(time.Now())
+	assetScan.Malware.Status = models.NewScannerStatus(
+		models.InProgress,
+		models.ScannerStatusReasonScanning,
+		nil,
+	)
 
 	err = v.client.PatchAssetScan(ctx, assetScan, v.assetScanID)
 	if err != nil {

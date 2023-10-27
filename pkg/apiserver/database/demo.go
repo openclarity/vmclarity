@@ -726,10 +726,10 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 
 			// Create Malware if needed
 			if *result.ScanFamiliesConfig.Malware.Enabled {
-				result.Status.Malware = &models.AssetScanState{
-					Errors:             &[]string{"failed to scan malware"},
-					LastTransitionTime: &timeNow,
-					State:              utils.PointerTo(models.AssetScanStateStateDone),
+				result.Malware = &models.MalwareScan{
+					Malware:  createMalwareResult(),
+					Metadata: nil,
+					Status:   models.NewScannerStatus(models.Failed, models.ScannerStatusReasonError, nil),
 				}
 				result.Stats.Malware = &[]models.AssetScanInputScanStats{
 					{
@@ -751,13 +751,12 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 						Type: utils.PointerTo("dir"),
 					},
 				}
-				result.Malware = &models.MalwareScan{
-					Malware: createMalwareResult(),
-				}
 				result.Summary.TotalMalware = utils.PointerTo(len(*result.Malware.Malware))
 			} else {
-				result.Status.Malware = &models.AssetScanState{
-					State: utils.PointerTo(models.AssetScanStateStateNotScanned),
+				result.Malware = &models.MalwareScan{
+					Malware:  nil,
+					Metadata: nil,
+					Status:   models.NewScannerStatus(models.Skipped, models.ScannerStatusReasonNotScheduled, nil),
 				}
 				result.Summary.TotalMalware = utils.PointerTo(0)
 			}

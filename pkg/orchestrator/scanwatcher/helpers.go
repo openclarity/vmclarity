@@ -71,10 +71,6 @@ func newAssetScanFromScan(scan *models.Scan, assetID string) (*models.AssetScan,
 				Errors: nil,
 				State:  utils.PointerTo(models.AssetScanStateStatePending),
 			},
-			Malware: &models.AssetScanState{
-				Errors: nil,
-				State:  getInitStateFromFamilyConfig(familiesConfig.Malware),
-			},
 			Misconfigurations: &models.AssetScanState{
 				Errors: nil,
 				State:  getInitStateFromFamilyConfig(familiesConfig.Misconfigurations),
@@ -108,6 +104,11 @@ func newAssetScanFromScan(scan *models.Scan, assetID string) (*models.AssetScan,
 		Vulnerabilities: &models.VulnerabilityScan{
 			Vulnerabilities: nil,
 			Status:          mapFamilyConfigToScannerStatus(familiesConfig.Vulnerabilities),
+		},
+		Malware: &models.MalwareScan{
+			Malware:  nil,
+			Metadata: nil,
+			Status:   mapFamilyConfigToScannerStatus(familiesConfig.Malware),
 		},
 	}, nil
 }

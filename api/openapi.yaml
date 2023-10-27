@@ -2632,8 +2632,6 @@ components:
       properties:
         general:
           $ref: '#/components/schemas/AssetScanState'
-        malware:
-          $ref: '#/components/schemas/AssetScanState'
         rootkits:
           $ref: '#/components/schemas/AssetScanState'
         secrets:
@@ -3060,6 +3058,8 @@ components:
     MalwareScan:
       type: object
       properties:
+        status:
+          $ref: "#/components/schemas/ScannerStatus"
         malware:
           type: array
           items:

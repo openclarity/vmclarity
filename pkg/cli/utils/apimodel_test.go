@@ -517,21 +517,28 @@ func Test_ConvertSecretsResultToAPIModel(t *testing.T) {
 	}
 }
 
-func Test_ConvertMalwareResultToAPIModel(t *testing.T) {
+func Test_ConvertMalwareResultToMalwareAndMetadata(t *testing.T) {
 	type args struct {
 		mergedResults *malware.MergedResults
+	}
+	type returns struct {
+		Malware  *[]models.Malware
+		Metadata *[]models.ScannerMetadata
 	}
 	tests := []struct {
 		name string
 		args args
-		want *models.MalwareScan
+		want returns
 	}{
 		{
 			name: "nil mergedResults",
 			args: args{
 				mergedResults: nil,
 			},
-			want: &models.MalwareScan{},
+			want: returns{
+				Malware:  &[]models.Malware{},
+				Metadata: &[]models.ScannerMetadata{},
+			},
 		},
 		{
 			name: "nil malwareResults.Malware",
@@ -540,7 +547,7 @@ func Test_ConvertMalwareResultToAPIModel(t *testing.T) {
 					DetectedMalware: nil,
 				},
 			},
-			want: &models.MalwareScan{
+			want: returns{
 				Malware:  &[]models.Malware{},
 				Metadata: &[]models.ScannerMetadata{},
 			},
@@ -581,7 +588,7 @@ func Test_ConvertMalwareResultToAPIModel(t *testing.T) {
 					},
 				},
 			},
-			want: &models.MalwareScan{
+			want: returns{
 				Malware: &[]models.Malware{
 					{
 						MalwareName: utils.PointerTo("Ransom!"),
@@ -620,8 +627,8 @@ func Test_ConvertMalwareResultToAPIModel(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ConvertMalwareResultToAPIModel(tt.args.mergedResults)
-			if diff := cmp.Diff(tt.want, got, cmpopts.SortSlices(func(a, b models.Malware) bool { return *a.MalwareType < *b.MalwareType })); diff != "" {
+			mware, mdata := ConvertMalwareResultToMalwareAndMetadata(tt.args.mergedResults)
+			if diff := cmp.Diff(tt.want, returns{Malware: mware, Metadata: mdata}, cmpopts.SortSlices(func(a, b models.Malware) bool { return *a.MalwareType < *b.MalwareType })); diff != "" {
 				t.Errorf("convertMalwareResultToAPIModel() mismatch (-want +got):\n%s", diff)
 			}
 		})
