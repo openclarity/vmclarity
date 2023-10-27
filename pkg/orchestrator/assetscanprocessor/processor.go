@@ -86,7 +86,7 @@ func (asp *AssetScanProcessor) Reconcile(ctx context.Context, event AssetScanRec
 		}
 	}
 
-	if statusCompletedWithNoErrors(assetScan.Status.Secrets) {
+	if assetScan.Secrets.Status.State == models.Done {
 		if err := asp.reconcileResultSecretsToFindings(ctx, assetScan); err != nil {
 			return newFailedToReconcileTypeError(err, "secrets")
 		}

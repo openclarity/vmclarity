@@ -200,12 +200,13 @@ func ConvertMalwareResultToMalwareAndMetadata(malwareResults *malware.MergedResu
 	return &malwareList, &metadata
 }
 
-func ConvertSecretsResultToAPIModel(secretsResults *secrets.Results) *models.SecretScan {
+func ConvertSecretsResultToSecrets(secretsResults *secrets.Results) *[]models.Secret {
+	secretsSlice := []models.Secret{}
+
 	if secretsResults == nil || secretsResults.MergedResults == nil {
-		return &models.SecretScan{}
+		return &secretsSlice
 	}
 
-	var secretsSlice []models.Secret
 	for _, resultsCandidate := range secretsResults.MergedResults.Results {
 		for i := range resultsCandidate.Findings {
 			finding := resultsCandidate.Findings[i]
@@ -221,13 +222,7 @@ func ConvertSecretsResultToAPIModel(secretsResults *secrets.Results) *models.Sec
 		}
 	}
 
-	if secretsSlice == nil {
-		return &models.SecretScan{}
-	}
-
-	return &models.SecretScan{
-		Secrets: &secretsSlice,
-	}
+	return &secretsSlice
 }
 
 func ConvertExploitsResultToExploits(exploitsResults *exploits.Results) *[]models.Exploit {

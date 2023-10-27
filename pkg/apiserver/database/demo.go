@@ -844,10 +844,9 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 
 			// Create Secrets if needed
 			if *result.ScanFamiliesConfig.Secrets.Enabled {
-				result.Status.Secrets = &models.AssetScanState{
-					Errors:             nil,
-					LastTransitionTime: &timeNow,
-					State:              utils.PointerTo(models.AssetScanStateStateDone),
+				result.Secrets = &models.SecretScan{
+					Secrets: createSecretsResult(),
+					Status:  models.NewScannerStatus(models.Done, models.ScannerStatusReasonSuccess, nil),
 				}
 				result.Stats.Secrets = &[]models.AssetScanInputScanStats{
 					{
@@ -869,13 +868,11 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 						Type: utils.PointerTo("dir"),
 					},
 				}
-				result.Secrets = &models.SecretScan{
-					Secrets: createSecretsResult(),
-				}
 				result.Summary.TotalSecrets = utils.PointerTo(len(*result.Secrets.Secrets))
 			} else {
-				result.Status.Secrets = &models.AssetScanState{
-					State: utils.PointerTo(models.AssetScanStateStateNotScanned),
+				result.Secrets = &models.SecretScan{
+					Secrets: nil,
+					Status:  models.NewScannerStatus(models.Skipped, models.ScannerStatusReasonNotScheduled, nil),
 				}
 				result.Summary.TotalSecrets = utils.PointerTo(0)
 			}

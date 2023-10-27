@@ -177,13 +177,9 @@ func (v *VMClarityPresenter) ExportSecretsResult(ctx context.Context, res famili
 		return fmt.Errorf("failed to get asset scan: %w", err)
 	}
 
-	if assetScan.Status == nil {
-		assetScan.Status = &models.AssetScanStatus{}
+	if assetScan.Secrets == nil {
+		assetScan.Secrets = &models.SecretScan{}
 	}
-	if assetScan.Status.Secrets == nil {
-		assetScan.Status.Secrets = &models.AssetScanState{}
-	}
-
 	if assetScan.Summary == nil {
 		assetScan.Summary = &models.ScanFindingsSummary{}
 	}
@@ -191,26 +187,31 @@ func (v *VMClarityPresenter) ExportSecretsResult(ctx context.Context, res famili
 		assetScan.Stats = &models.AssetScanStats{}
 	}
 
-	errs := []string{}
-
 	if res.Err != nil {
-		errs = append(errs, res.Err.Error())
+		assetScan.Secrets.Status = models.NewScannerStatus(
+			models.Failed,
+			models.ScannerStatusReasonError,
+			utils.PointerTo(res.Err.Error()),
+		)
 	} else {
 		secretsResults, ok := res.Result.(*secrets.Results)
 		if !ok {
-			errs = append(errs, fmt.Errorf("failed to convert to secrets results").Error())
+			assetScan.Secrets.Status = models.NewScannerStatus(
+				models.Failed,
+				models.ScannerStatusReasonError,
+				utils.PointerTo(fmt.Errorf("failed to convert to secrets results").Error()),
+			)
 		} else {
-			assetScan.Secrets = cliutils.ConvertSecretsResultToAPIModel(secretsResults)
-			if assetScan.Secrets.Secrets != nil {
-				assetScan.Summary.TotalSecrets = utils.PointerTo(len(*assetScan.Secrets.Secrets))
-			}
+			assetScan.Secrets.Secrets = cliutils.ConvertSecretsResultToSecrets(secretsResults)
+			assetScan.Summary.TotalSecrets = utils.PointerTo[int](len(*assetScan.Secrets.Secrets))
 			assetScan.Stats.Secrets = getInputScanStats(secretsResults.Metadata.InputScans)
+			assetScan.Secrets.Status = models.NewScannerStatus(
+				models.Done,
+				models.ScannerStatusReasonSuccess,
+				nil,
+			)
 		}
 	}
-
-	state := models.AssetScanStateStateDone
-	assetScan.Status.Secrets.State = &state
-	assetScan.Status.Secrets.Errors = &errs
 
 	err = v.client.PatchAssetScan(ctx, assetScan, v.assetScanID)
 	if err != nil {

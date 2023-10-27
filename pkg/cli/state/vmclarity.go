@@ -216,16 +216,15 @@ func (v *VMClarityState) markSecretsScanInProgress(ctx context.Context) error {
 		return fmt.Errorf("failed to get asset scan: %w", err)
 	}
 
-	if assetScan.Status == nil {
-		assetScan.Status = &models.AssetScanStatus{}
-	}
-	if assetScan.Status.Secrets == nil {
-		assetScan.Status.Secrets = &models.AssetScanState{}
+	if assetScan.Secrets == nil {
+		assetScan.Secrets = &models.SecretScan{}
 	}
 
-	state := models.AssetScanStateStateInProgress
-	assetScan.Status.Secrets.State = &state
-	assetScan.Status.Secrets.LastTransitionTime = utils.PointerTo(time.Now())
+	assetScan.Secrets.Status = models.NewScannerStatus(
+		models.InProgress,
+		models.ScannerStatusReasonScanning,
+		nil,
+	)
 
 	err = v.client.PatchAssetScan(ctx, assetScan, v.assetScanID)
 	if err != nil {

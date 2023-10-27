@@ -421,14 +421,14 @@ func Test_ConvertSecretsResultToAPIModel(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want *models.SecretScan
+		want *[]models.Secret
 	}{
 		{
 			name: "nil secretsResults",
 			args: args{
 				secretsResults: nil,
 			},
-			want: &models.SecretScan{},
+			want: &[]models.Secret{},
 		},
 		{
 			name: "nil secretsResults.MergedResults",
@@ -437,7 +437,7 @@ func Test_ConvertSecretsResultToAPIModel(t *testing.T) {
 					MergedResults: nil,
 				},
 			},
-			want: &models.SecretScan{},
+			want: &[]models.Secret{},
 		},
 		{
 			name: "empty secretsResults.MergedResults.Results",
@@ -448,7 +448,7 @@ func Test_ConvertSecretsResultToAPIModel(t *testing.T) {
 					},
 				},
 			},
-			want: &models.SecretScan{},
+			want: &[]models.Secret{},
 		},
 		{
 			name: "sanity",
@@ -474,42 +474,40 @@ func Test_ConvertSecretsResultToAPIModel(t *testing.T) {
 					},
 				},
 			},
-			want: &models.SecretScan{
-				Secrets: &[]models.Secret{
-					{
-						Description: &finding1.Description,
-						EndLine:     &finding1.EndLine,
-						FilePath:    &finding1.File,
-						Fingerprint: &finding1.Fingerprint,
-						StartLine:   &finding1.StartLine,
-						StartColumn: &finding1.StartColumn,
-						EndColumn:   &finding1.EndColumn,
-					},
-					{
-						Description: &finding2.Description,
-						EndLine:     &finding2.EndLine,
-						FilePath:    &finding2.File,
-						Fingerprint: &finding2.Fingerprint,
-						StartLine:   &finding2.StartLine,
-						StartColumn: &finding2.StartColumn,
-						EndColumn:   &finding2.EndColumn,
-					},
-					{
-						Description: &finding3.Description,
-						EndLine:     &finding3.EndLine,
-						FilePath:    &finding3.File,
-						Fingerprint: &finding3.Fingerprint,
-						StartLine:   &finding3.StartLine,
-						StartColumn: &finding3.StartColumn,
-						EndColumn:   &finding3.EndColumn,
-					},
+			want: &[]models.Secret{
+				{
+					Description: &finding1.Description,
+					EndLine:     &finding1.EndLine,
+					FilePath:    &finding1.File,
+					Fingerprint: &finding1.Fingerprint,
+					StartLine:   &finding1.StartLine,
+					StartColumn: &finding1.StartColumn,
+					EndColumn:   &finding1.EndColumn,
+				},
+				{
+					Description: &finding2.Description,
+					EndLine:     &finding2.EndLine,
+					FilePath:    &finding2.File,
+					Fingerprint: &finding2.Fingerprint,
+					StartLine:   &finding2.StartLine,
+					StartColumn: &finding2.StartColumn,
+					EndColumn:   &finding2.EndColumn,
+				},
+				{
+					Description: &finding3.Description,
+					EndLine:     &finding3.EndLine,
+					FilePath:    &finding3.File,
+					Fingerprint: &finding3.Fingerprint,
+					StartLine:   &finding3.StartLine,
+					StartColumn: &finding3.StartColumn,
+					EndColumn:   &finding3.EndColumn,
 				},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ConvertSecretsResultToAPIModel(tt.args.secretsResults)
+			got := ConvertSecretsResultToSecrets(tt.args.secretsResults)
 			if diff := cmp.Diff(tt.want, got, cmpopts.SortSlices(func(a, b models.Secret) bool { return *a.Fingerprint < *b.Fingerprint })); diff != "" {
 				t.Errorf("convertSBOMResultToAPIModel() mismatch (-want +got):\n%s", diff)
 			}

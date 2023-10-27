@@ -476,7 +476,6 @@ type AssetScanStatus struct {
 	General           *AssetScanState `json:"general,omitempty"`
 	InfoFinder        *AssetScanState `json:"infoFinder,omitempty"`
 	Misconfigurations *AssetScanState `json:"misconfigurations,omitempty"`
-	Secrets           *AssetScanState `json:"secrets,omitempty"`
 }
 
 // AssetScanTemplate defines model for AssetScanTemplate.
@@ -1439,7 +1438,8 @@ type SecretFindingInfo struct {
 
 // SecretScan defines model for SecretScan.
 type SecretScan struct {
-	Secrets *[]Secret `json:"secrets"`
+	Secrets *[]Secret      `json:"secrets"`
+	Status  *ScannerStatus `json:"status,omitempty"`
 }
 
 // SecretsConfig defines model for SecretsConfig.

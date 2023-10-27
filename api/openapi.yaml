@@ -2632,8 +2632,6 @@ components:
       properties:
         general:
           $ref: '#/components/schemas/AssetScanState'
-        secrets:
-          $ref: '#/components/schemas/AssetScanState'
         misconfigurations:
           $ref: '#/components/schemas/AssetScanState'
         infoFinder:
@@ -3083,6 +3081,8 @@ components:
     SecretScan:
       type: object
       properties:
+        status:
+          $ref: "#/components/schemas/ScannerStatus"
         secrets:
           type: array
           items:
