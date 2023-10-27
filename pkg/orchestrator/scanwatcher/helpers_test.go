@@ -30,7 +30,9 @@ import (
 func TestNewAssetScanFromScan(t *testing.T) {
 	scanID := string(uuid.NewUUID())
 	assetID := string(uuid.NewUUID())
+
 	transitionTime := time.Now()
+
 	resourceCleanupStatus := models.NewResourceCleanupStatus(
 		models.ResourceCleanupStatusStatePending,
 		models.ResourceCleanupStatusReasonAssetScanCreated,
@@ -87,7 +89,11 @@ func TestNewAssetScanFromScan(t *testing.T) {
 	)
 	misconfigurationScanStatus.LastTransitionTime = transitionTime
 
-	infoFinderScanStatus := models.NewScannerStatus(models.Pending, models.ScannerStatusReasonScheduled, nil)
+	infoFinderScanStatus := models.NewScannerStatus(
+		models.Pending,
+		models.ScannerStatusReasonScheduled,
+		nil,
+	)
 	infoFinderScanStatus.LastTransitionTime = transitionTime
 
 	tests := []struct {
@@ -169,7 +175,7 @@ func TestNewAssetScanFromScan(t *testing.T) {
 				Misconfigurations: &models.MisconfigurationScan{
 					Misconfigurations: nil,
 					Scanners:          nil,
-					Status:            nil,
+					Status:            misconfigurationScanStatus,
 				},
 				InfoFinder: &models.InfoFinderScan{
 					Infos:    nil,
@@ -217,6 +223,7 @@ func TestNewAssetScanFromScan(t *testing.T) {
 			result.Malware.Status.LastTransitionTime = transitionTime
 			result.Rootkits.Status.LastTransitionTime = transitionTime
 			result.Secrets.Status.LastTransitionTime = transitionTime
+			result.InfoFinder.Status.LastTransitionTime = transitionTime
 
 			g.Expect(err).Should(test.ExpectedErrorMatcher)
 			g.Expect(result).Should(BeComparableTo(test.ExpectedAssetScan))
