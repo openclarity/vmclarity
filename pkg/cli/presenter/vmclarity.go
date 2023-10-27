@@ -406,11 +406,8 @@ func (v *VMClarityPresenter) ExportInfoFinderResult(ctx context.Context, res fam
 		return fmt.Errorf("failed to get asset scan: %w", err)
 	}
 
-	if assetScan.Status == nil {
-		assetScan.Status = &models.AssetScanStatus{}
-	}
-	if assetScan.Status.InfoFinder == nil {
-		assetScan.Status.InfoFinder = &models.AssetScanState{}
+	if assetScan.InfoFinder == nil {
+		assetScan.InfoFinder = &models.InfoFinderScan{}
 	}
 	if assetScan.Summary == nil {
 		assetScan.Summary = &models.ScanFindingsSummary{}
@@ -419,29 +416,36 @@ func (v *VMClarityPresenter) ExportInfoFinderResult(ctx context.Context, res fam
 		assetScan.Stats = &models.AssetScanStats{}
 	}
 
-	errs := []string{}
-
 	if res.Err != nil {
-		errs = append(errs, res.Err.Error())
+		assetScan.InfoFinder.Status = models.NewScannerStatus(
+			models.Failed,
+			models.ScannerStatusReasonError,
+			utils.PointerTo(res.Err.Error()),
+		)
 	} else {
 		results, ok := res.Result.(*infofinder.Results)
 		if !ok {
-			errs = append(errs, fmt.Errorf("failed to convert to info finder results").Error())
+			assetScan.InfoFinder.Status = models.NewScannerStatus(
+				models.Failed,
+				models.ScannerStatusReasonError,
+				utils.PointerTo(fmt.Errorf("failed to convert to info finder results").Error()),
+			)
 		} else {
-			apiInfoFinder, err := cliutils.ConvertInfoFinderResultToAPIModel(results)
+			apiInfoFinder, scanners, err := cliutils.ConvertInfoFinderResultToInfosAndScanners(results)
 			if err != nil {
-				errs = append(errs, fmt.Sprintf("failed to convert info finder results from scan to API model: %v", err))
+				assetScan.InfoFinder.Status = models.NewScannerStatus(
+					models.Failed,
+					models.ScannerStatusReasonError,
+					utils.PointerTo(fmt.Errorf("failed to convert info finder results from scan to API model: %v", err).Error()),
+				)
 			} else {
-				assetScan.InfoFinder = apiInfoFinder
+				assetScan.InfoFinder.Infos = apiInfoFinder
+				assetScan.InfoFinder.Scanners = scanners
 				assetScan.Summary.TotalInfoFinder = utils.PointerTo(len(results.Infos))
 			}
 			assetScan.Stats.InfoFinder = getInputScanStats(results.Metadata.InputScans)
 		}
 	}
-
-	state := models.AssetScanStateStateDone
-	assetScan.Status.InfoFinder.State = &state
-	assetScan.Status.InfoFinder.Errors = &errs
 
 	err = v.client.PatchAssetScan(ctx, assetScan, v.assetScanID)
 	if err != nil {

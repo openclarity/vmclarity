@@ -2632,8 +2632,6 @@ components:
       properties:
         general:
           $ref: '#/components/schemas/AssetScanState'
-        infoFinder:
-          $ref: '#/components/schemas/AssetScanState'
 
     AssetScanState:
       type: object
@@ -3106,6 +3104,8 @@ components:
     InfoFinderScan:
       type: object
       properties:
+        status:
+          $ref: "#/components/schemas/ScannerStatus"
         scanners:
           type: array
           items:

@@ -43,11 +43,6 @@ func New(config Config) *AssetScanProcessor {
 	}
 }
 
-// Returns true if AssetScanStatus.State is DONE and there are no Errors.
-func statusCompletedWithNoErrors(tss *models.AssetScanState) bool {
-	return tss != nil && tss.State != nil && *tss.State == models.AssetScanStateStateDone && (tss.Errors == nil || len(*tss.Errors) == 0)
-}
-
 // nolint:cyclop
 func (asp *AssetScanProcessor) Reconcile(ctx context.Context, event AssetScanReconcileEvent) error {
 	// Get latest information, in case we've been sat in the reconcile
@@ -110,7 +105,7 @@ func (asp *AssetScanProcessor) Reconcile(ctx context.Context, event AssetScanRec
 		}
 	}
 
-	if statusCompletedWithNoErrors(assetScan.Status.InfoFinder) {
+	if assetScan.InfoFinder.Status.State == models.Done {
 		if err := asp.reconcileResultInfoFindersToFindings(ctx, assetScan); err != nil {
 			return newFailedToReconcileTypeError(err, "infoFinder")
 		}

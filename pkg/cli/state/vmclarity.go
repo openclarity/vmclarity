@@ -288,16 +288,15 @@ func (v *VMClarityState) markInfoFinderScanInProgress(ctx context.Context) error
 		return fmt.Errorf("failed to get asset scan: %w", err)
 	}
 
-	if assetScan.Status == nil {
-		assetScan.Status = &models.AssetScanStatus{}
-	}
-	if assetScan.Status.InfoFinder == nil {
-		assetScan.Status.InfoFinder = &models.AssetScanState{}
+	if assetScan.InfoFinder == nil {
+		assetScan.InfoFinder = &models.InfoFinderScan{}
 	}
 
-	state := models.AssetScanStateStateInProgress
-	assetScan.Status.InfoFinder.State = &state
-	assetScan.Status.InfoFinder.LastTransitionTime = utils.PointerTo(time.Now())
+	assetScan.InfoFinder.Status = models.NewScannerStatus(
+		models.InProgress,
+		models.ScannerStatusReasonScanning,
+		nil,
+	)
 
 	err = v.client.PatchAssetScan(ctx, assetScan, v.assetScanID)
 	if err != nil {

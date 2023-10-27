@@ -904,10 +904,10 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 
 			// Create InfoFinder if needed
 			if *result.ScanFamiliesConfig.InfoFinder.Enabled {
-				result.Status.InfoFinder = &models.AssetScanState{
-					Errors:             nil,
-					LastTransitionTime: &timeNow,
-					State:              utils.PointerTo(models.AssetScanStateStateInProgress),
+				result.InfoFinder = &models.InfoFinderScan{
+					Infos:    creatInfoFinderInfos(),
+					Scanners: nil,
+					Status:   models.NewScannerStatus(models.InProgress, models.ScannerStatusReasonScanning, nil),
 				}
 				result.Stats.InfoFinder = &[]models.AssetScanInputScanStats{
 					{
@@ -920,13 +920,12 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 						Type: utils.PointerTo("rootfs"),
 					},
 				}
-				result.InfoFinder = &models.InfoFinderScan{
-					Infos: creatInfoFinderInfos(),
-				}
 				result.Summary.TotalInfoFinder = utils.PointerTo(len(*result.InfoFinder.Infos))
 			} else {
-				result.Status.InfoFinder = &models.AssetScanState{
-					State: utils.PointerTo(models.AssetScanStateStateNotScanned),
+				result.InfoFinder = &models.InfoFinderScan{
+					Infos:    nil,
+					Scanners: nil,
+					Status:   models.NewScannerStatus(models.Skipped, models.ScannerStatusReasonNotScheduled, nil),
 				}
 				result.Summary.TotalInfoFinder = utils.PointerTo(0)
 			}

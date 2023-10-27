@@ -293,9 +293,9 @@ func ConvertMisconfigurationResultToMisconfigurations(misconfigurationResults *m
 	return &retMisconfigurations, utils.PointerTo(misconfigurationResults.Metadata.Scanners), nil
 }
 
-func ConvertInfoFinderResultToAPIModel(results *infofinder.Results) (*models.InfoFinderScan, error) {
+func ConvertInfoFinderResultToInfosAndScanners(results *infofinder.Results) (*[]models.InfoFinderInfo, *[]string, error) {
 	if results == nil || results.Infos == nil {
-		return &models.InfoFinderScan{}, nil
+		return nil, nil, nil
 	}
 
 	ret := make([]models.InfoFinderInfo, len(results.Infos))
@@ -311,10 +311,7 @@ func ConvertInfoFinderResultToAPIModel(results *infofinder.Results) (*models.Inf
 		}
 	}
 
-	return &models.InfoFinderScan{
-		Infos:    &ret,
-		Scanners: utils.PointerTo(results.Metadata.Scanners),
-	}, nil
+	return &ret, utils.PointerTo(results.Metadata.Scanners), nil
 }
 
 func convertInfoTypeToAPIModel(infoType types.InfoType) *models.InfoType {

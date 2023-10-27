@@ -1036,14 +1036,18 @@ func Test_ConvertVulnSeverityToAPIModel(t *testing.T) {
 	}
 }
 
-func TestConvertInfoFinderResultToAPIModel(t *testing.T) {
+func TestConvertInfoFinderResultToInfosAndScanners(t *testing.T) {
 	type args struct {
 		results *infofinder.Results
+	}
+	type returns struct {
+		Infos    *[]models.InfoFinderInfo
+		Scanners *[]string
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    *models.InfoFinderScan
+		want    returns
 		wantErr bool
 	}{
 		{
@@ -1051,7 +1055,10 @@ func TestConvertInfoFinderResultToAPIModel(t *testing.T) {
 			args: args{
 				results: nil,
 			},
-			want:    &models.InfoFinderScan{},
+			want: returns{
+				Infos:    nil,
+				Scanners: nil,
+			},
 			wantErr: false,
 		},
 		{
@@ -1061,7 +1068,10 @@ func TestConvertInfoFinderResultToAPIModel(t *testing.T) {
 					Infos: nil,
 				},
 			},
-			want:    &models.InfoFinderScan{},
+			want: returns{
+				Infos:    nil,
+				Scanners: nil,
+			},
 			wantErr: false,
 		},
 		{
@@ -1099,7 +1109,7 @@ func TestConvertInfoFinderResultToAPIModel(t *testing.T) {
 					},
 				},
 			},
-			want: &models.InfoFinderScan{
+			want: returns{
 				Infos: utils.PointerTo([]models.InfoFinderInfo{
 					{
 						Type:        utils.PointerTo(models.InfoTypeSSHKnownHostFingerprint),
@@ -1127,13 +1137,16 @@ func TestConvertInfoFinderResultToAPIModel(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ConvertInfoFinderResultToAPIModel(tt.args.results)
+			infos, scanners, err := ConvertInfoFinderResultToInfosAndScanners(tt.args.results)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ConvertInfoFinderResultToAPIModel() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ConvertInfoFinderResultToAPIModel() got = %v, want %v", got, tt.want)
+			if !reflect.DeepEqual(returns{
+				Infos:    infos,
+				Scanners: scanners,
+			}, tt.want) {
+				t.Errorf("ConvertInfoFinderResultToAPIModel() infos = %v, scanners = %v, want %v", infos, scanners, tt.want)
 			}
 		})
 	}

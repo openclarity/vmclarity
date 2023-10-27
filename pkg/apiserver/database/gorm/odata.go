@@ -409,6 +409,10 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 					ComplexFieldSchemas: []string{"InfoFinderInfo"},
 				},
 			},
+			"status": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"ScannerStatus"},
+			},
 		},
 	},
 	"InfoFinderInfo": {

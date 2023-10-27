@@ -71,10 +71,6 @@ func newAssetScanFromScan(scan *models.Scan, assetID string) (*models.AssetScan,
 				Errors: nil,
 				State:  utils.PointerTo(models.AssetScanStateStatePending),
 			},
-			InfoFinder: &models.AssetScanState{
-				Errors: nil,
-				State:  getInitStateFromFamilyConfig(familiesConfig.InfoFinder),
-			},
 		},
 		ResourceCleanupStatus: models.NewResourceCleanupStatus(
 			models.ResourceCleanupStatusStatePending,
@@ -111,6 +107,11 @@ func newAssetScanFromScan(scan *models.Scan, assetID string) (*models.AssetScan,
 			Scanners:          nil,
 			Status:            mapFamilyConfigToScannerStatus(familiesConfig.Misconfigurations),
 		},
+		InfoFinder: &models.InfoFinderScan{
+			Infos:    nil,
+			Scanners: nil,
+			Status:   mapFamilyConfigToScannerStatus(familiesConfig.InfoFinder),
+		},
 	}, nil
 }
 
@@ -120,14 +121,6 @@ func mapFamilyConfigToScannerStatus(config models.FamilyConfigEnabler) *models.S
 	}
 
 	return models.NewScannerStatus(models.Pending, models.ScannerStatusReasonScheduled, nil)
-}
-
-func getInitStateFromFamilyConfig(config models.FamilyConfigEnabler) *models.AssetScanStateState {
-	if config == nil || !config.IsEnabled() {
-		return utils.PointerTo(models.AssetScanStateStateNotScanned)
-	}
-
-	return utils.PointerTo(models.AssetScanStateStatePending)
 }
 
 func newScanSummary() *models.ScanSummary {

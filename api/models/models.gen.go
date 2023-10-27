@@ -473,8 +473,7 @@ type AssetScanStats struct {
 
 // AssetScanStatus defines model for AssetScanStatus.
 type AssetScanStatus struct {
-	General    *AssetScanState `json:"general,omitempty"`
-	InfoFinder *AssetScanState `json:"infoFinder,omitempty"`
+	General *AssetScanState `json:"general,omitempty"`
 }
 
 // AssetScanTemplate defines model for AssetScanTemplate.
@@ -676,6 +675,7 @@ type InfoFinderInfo struct {
 type InfoFinderScan struct {
 	Infos    *[]InfoFinderInfo `json:"infos"`
 	Scanners *[]string         `json:"scanners"`
+	Status   *ScannerStatus    `json:"status,omitempty"`
 }
 
 // InfoType defines model for InfoType.
