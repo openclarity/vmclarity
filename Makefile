@@ -26,6 +26,8 @@ BIN_DIR := $(ROOT_DIR)/bin
 GOMODULES := $(shell find $(ROOT_DIR) -name 'go.mod')
 BUILD_TIMESTAMP := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 COMMIT_HASH := $(shell git rev-parse HEAD)
+INSTALLATION_DIR := $(ROOT_DIR)/installation
+HELM_CHART_DIR := $(INSTALLATION_DIR)/kubernetes/helm
 
 include makefile.d/*.mk
 
@@ -108,11 +110,11 @@ fix: bin/golangci-lint $(FIXGOMODULES) ## Fix linter errors in Go source code
 .PHONY: e2e
 e2e: docker-apiserver docker-cli docker-orchestrator docker-ui docker-ui-backend ## Run end-to-end test suite
 	@cd e2e && \
-	export APIServerContainerImage=$(DOCKER_REGISTRY)/vmclarity-apiserver:$(DOCKER_TAG) && \
-	export OrchestratorContainerImage=$(DOCKER_REGISTRY)/vmclarity-orchestrator:$(DOCKER_TAG) && \
-	export ScannerContainerImage=$(DOCKER_REGISTRY)/vmclarity-cli:$(DOCKER_TAG) && \
-	export UIContainerImage=$(DOCKER_REGISTRY)/vmclarity-ui:$(DOCKER_TAG) && \
-	export UIBackendContainerImage=$(DOCKER_REGISTRY)/vmclarity-ui-backend:$(DOCKER_TAG) && \
+	export VMCLARITY_APISERVER_CONTAINER_IMAGE=$(DOCKER_REGISTRY)/vmclarity-apiserver:$(DOCKER_TAG) && \
+	export VMCLARITY_ORCHESTRATOR_CONTAINER_IMAGE=$(DOCKER_REGISTRY)/vmclarity-orchestrator:$(DOCKER_TAG) && \
+	export VMCLARITY_SCANNER_CONTAINER_IMAGE=$(DOCKER_REGISTRY)/vmclarity-cli:$(DOCKER_TAG) && \
+	export VMCLARITY_UI_CONTAINER_IMAGE=$(DOCKER_REGISTRY)/vmclarity-ui:$(DOCKER_TAG) && \
+	export VMCLARITY_UIBACKEND_CONTAINER_IMAGE=$(DOCKER_REGISTRY)/vmclarity-ui-backend:$(DOCKER_TAG) && \
 	go test -v -failfast -test.v -test.paniconexit0 -timeout 2h -ginkgo.v .
 
 .PHONY: license-check
@@ -147,7 +149,7 @@ lint-go: bin/golangci-lint $(LINTGOMODULES) ## Lint Go source code
 
 .PHONY: lint-helm
 lint-helm: ## Lint Helm charts
-	docker run --rm --workdir /workdir --volume "$(shell pwd):/workdir" quay.io/helmpack/chart-testing:v3.8.0 ct lint --all
+	docker run --rm --workdir /workdir --volume "$(ROOT_DIR):/workdir" quay.io/helmpack/chart-testing:v3.8.0 ct lint --all
 
 .PHONY: test
 test: ## Run Go unit tests
@@ -255,5 +257,5 @@ gen-bicep: bin/bicep ## Generating Azure Bicep template(s)
 .PHONY: gen-helm-docs
 gen-helm-docs: ## Generating documentation for Helm chart
 	$(info Generating Helm chart(s) documentation ...)
-	docker run --rm --volume "$(shell pwd):/helm-docs" -u $(shell id -u) jnorwood/helm-docs:v1.11.0
+	docker run --rm --volume "$(HELM_CHART_DIR):/helm-docs" -u $(shell id -u) jnorwood/helm-docs:v1.11.0
 
