@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import classnames from 'classnames';
 import Arrow, { ARROW_NAMES } from 'components/Arrow';
-import { isEmpty } from 'lodash';
 
 import './title-value-display.scss';
+import { ValueWithFallback } from 'components/ValueWithFallback';
 
 export const TitleValueDisplayRow = ({children}) => (
     <div className="title-value-display-row">{children}</div>
@@ -29,9 +29,7 @@ const TitleValueDisplay = ({title, children, className, withOpen=false, defaultO
                 {withOpen && <Arrow name={isOpen ? ARROW_NAMES.TOP : ARROW_NAMES.BOTTOM} small />}
             </div>
             {(!withOpen || isOpen) && <div className="title-value-display-content">
-                {isEmpty(children)
-                    ? <span className="empty">-</span>
-                    : children}
+                <ValueWithFallback>{children}</ValueWithFallback>
             </div>}
         </div>
     );
