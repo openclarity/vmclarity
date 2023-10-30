@@ -30,12 +30,20 @@ import (
 	"github.com/openclarity/vmclarity/e2e/testenv/types"
 	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
 	"github.com/openclarity/vmclarity/pkg/shared/log"
+	"github.com/openclarity/vmclarity/pkg/shared/uibackendclient"
 )
 
 var (
-	testEnv types.Environment
-	client  *backendclient.BackendClient
-	config  *types.Config
+	testEnv  types.Environment
+	client   *backendclient.BackendClient
+	uiClient *uibackendclient.UIBackendClient
+	config   *types.Config
+)
+
+const (
+	dockerVMclarityAPIServerServiceName = "apiserver"
+	dockerVMclarityUIBackendServiceName = "uibackend"
+	dockerVMclarityUIBackendPort        = "8890"
 )
 
 func TestEndToEnd(t *testing.T) {
@@ -76,10 +84,16 @@ func beforeSuite(ctx context.Context) {
 		return ready
 	}, time.Second*5).Should(gomega.BeTrue())
 
-	u, err := testEnv.VMClarityAPIURL()
+	u, err := testEnv.GetServiceURL(dockerVMclarityAPIServerServiceName, "")
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 	client, err = backendclient.Create(fmt.Sprintf("%s://%s/%s", u.Scheme, u.Host, u.Path))
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+
+	u, err = testEnv.GetServiceURL(dockerVMclarityUIBackendServiceName, dockerVMclarityUIBackendPort)
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+
+	uiClient, err = uibackendclient.Create(fmt.Sprintf("%s://%s/%s", u.Scheme, u.Host, u.Path))
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 }
 

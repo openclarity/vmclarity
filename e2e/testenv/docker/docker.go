@@ -37,9 +37,8 @@ import (
 )
 
 const (
-	dockerVMclarityAPIServerServiceName = "apiserver"
-	dockerStateRunning                  = "running"
-	dockerHealthStateHealthy            = "healthy"
+	dockerStateRunning       = "running"
+	dockerHealthStateHealthy = "healthy"
 )
 
 type ContextKeyType string
@@ -195,28 +194,30 @@ func (e *DockerEnv) Services() []string {
 	return services
 }
 
-func (e *DockerEnv) VMClarityAPIURL() (*url.URL, error) {
-	var vmClarityBackend types.ServiceConfig
+func (e *DockerEnv) GetServiceURL(serviceName string, port string) (*url.URL, error) {
+	var service types.ServiceConfig
 	var ok bool
 
 	for _, srv := range e.project.Services {
-		if srv.Name == dockerVMclarityAPIServerServiceName {
-			vmClarityBackend = srv
+		if srv.Name == serviceName {
+			service = srv
 			ok = true
 			break
 		}
 	}
 
 	if !ok {
-		return nil, errors.Errorf("container with name %s is not available", dockerVMclarityAPIServerServiceName)
+		return nil, errors.Errorf("container with name %s is not available", serviceName)
 	}
 
-	if len(vmClarityBackend.Ports) < 1 {
-		return nil, errors.Errorf("container with name %s has no ports published", dockerVMclarityAPIServerServiceName)
+	if len(service.Ports) < 1 {
+		return nil, errors.Errorf("container with name %s has no ports published", serviceName)
 	}
 
-	port := vmClarityBackend.Ports[0].Published
-	hostIP := vmClarityBackend.Ports[0].HostIP
+	if port == "" {
+		port = service.Ports[0].Published
+	}
+	hostIP := service.Ports[0].HostIP
 	if hostIP == "" {
 		hostIP = "127.0.0.1"
 	}
