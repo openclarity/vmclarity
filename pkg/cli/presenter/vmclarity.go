@@ -75,8 +75,8 @@ func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res families.
 		return fmt.Errorf("failed to get asset scan: %w", err)
 	}
 
-	if assetScan.Sboms == nil {
-		assetScan.Sboms = &models.SbomScan{}
+	if assetScan.Sbom == nil {
+		assetScan.Sbom = &models.SbomScan{}
 	}
 	if assetScan.Summary == nil {
 		assetScan.Summary = &models.ScanFindingsSummary{}
@@ -86,7 +86,7 @@ func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res families.
 	}
 
 	if res.Err != nil {
-		assetScan.Sboms.Status = models.NewScannerStatus(
+		assetScan.Sbom.Status = models.NewScannerStatus(
 			models.Failed,
 			models.ScannerStatusReasonError,
 			utils.PointerTo(res.Err.Error()),
@@ -94,7 +94,7 @@ func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res families.
 	} else {
 		sbomResults, ok := res.Result.(*sbom.Results)
 		if !ok {
-			assetScan.Sboms.Status = models.NewScannerStatus(
+			assetScan.Sbom.Status = models.NewScannerStatus(
 				models.Failed,
 				models.ScannerStatusReasonError,
 				utils.PointerTo(fmt.Errorf("failed to convert to sbom results").Error()),
@@ -103,8 +103,8 @@ func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res families.
 			packages := cliutils.ConvertSBOMResultToPackages(sbomResults)
 			assetScan.Summary.TotalPackages = utils.PointerTo(len(*packages))
 			assetScan.Stats.Sbom = getInputScanStats(sbomResults.Metadata.InputScans)
-			assetScan.Sboms.Packages = packages
-			assetScan.Sboms.Status = models.NewScannerStatus(
+			assetScan.Sbom.Packages = packages
+			assetScan.Sbom.Status = models.NewScannerStatus(
 				models.Done,
 				models.ScannerStatusReasonSuccess,
 				nil,
@@ -268,7 +268,7 @@ func (v *VMClarityPresenter) ExportMalwareResult(ctx context.Context, res famili
 	} else {
 		malwareResults, ok := res.Result.(*malware.MergedResults)
 		if !ok {
-			assetScan.Sboms.Status = models.NewScannerStatus(
+			assetScan.Sbom.Status = models.NewScannerStatus(
 				models.Failed,
 				models.ScannerStatusReasonError,
 				utils.PointerTo(fmt.Errorf("failed to convert to malware results").Error()),

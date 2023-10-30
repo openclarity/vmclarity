@@ -240,11 +240,11 @@ func (v *VMClarityState) markSBOMScanInProgress(ctx context.Context) error {
 		return fmt.Errorf("failed to get asset scan: %w", err)
 	}
 
-	if assetScan.Sboms == nil {
-		assetScan.Sboms = &models.SbomScan{}
+	if assetScan.Sbom == nil {
+		assetScan.Sbom = &models.SbomScan{}
 	}
 
-	assetScan.Sboms.Status = models.NewScannerStatus(
+	assetScan.Sbom.Status = models.NewScannerStatus(
 		models.InProgress,
 		models.ScannerStatusReasonScanning,
 		nil,

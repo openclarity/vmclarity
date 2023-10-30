@@ -297,7 +297,7 @@ type AssetScan struct {
 	ResourceCleanupStatus *ResourceCleanupStatus `json:"resourceCleanupStatus,omitempty"`
 	Revision              *int                   `json:"revision,omitempty"`
 	Rootkits              *RootkitScan           `json:"rootkits,omitempty"`
-	Sboms                 *SbomScan              `json:"sboms,omitempty"`
+	Sbom                  *SbomScan              `json:"sbom,omitempty"`
 
 	// Scan Describes an expandable relationship to Scan object
 	Scan *ScanRelationship `json:"scan,omitempty"`
@@ -421,7 +421,7 @@ type AssetScanRelationship struct {
 	ResourceCleanupStatus *ResourceCleanupStatus `json:"resourceCleanupStatus,omitempty"`
 	Revision              *int                   `json:"revision,omitempty"`
 	Rootkits              *RootkitScan           `json:"rootkits,omitempty"`
-	Sboms                 *SbomScan              `json:"sboms,omitempty"`
+	Sbom                  *SbomScan              `json:"sbom,omitempty"`
 
 	// Scan Describes an expandable relationship to Scan object
 	Scan *ScanRelationship `json:"scan,omitempty"`

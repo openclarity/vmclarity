@@ -119,8 +119,8 @@ func createFindings(ctx context.Context, assetScans []models.AssetScan) []models
 			FoundOn:     foundOn,
 			// InvalidatedOn: utils.PointerTo(foundOn.Add(2 * time.Minute)),
 		}
-		if assetScan.Sboms != nil && assetScan.Sboms.Packages != nil {
-			ret = append(ret, createPackageFindings(ctx, findingBase, *assetScan.Sboms.Packages)...)
+		if assetScan.Sbom != nil && assetScan.Sbom.Packages != nil {
+			ret = append(ret, createPackageFindings(ctx, findingBase, *assetScan.Sbom.Packages)...)
 		}
 		if assetScan.Vulnerabilities != nil && assetScan.Vulnerabilities.Vulnerabilities != nil {
 			ret = append(ret, createVulnerabilityFindings(ctx, findingBase, *assetScan.Vulnerabilities.Vulnerabilities)...)
@@ -791,7 +791,7 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 
 			// Create Packages if needed
 			if *result.ScanFamiliesConfig.Sbom.Enabled {
-				result.Sboms = &models.SbomScan{
+				result.Sbom = &models.SbomScan{
 					Packages: createPackagesResult(),
 					Status:   models.NewScannerStatus(models.Pending, models.ScannerStatusReasonScheduled, nil),
 				}
@@ -806,9 +806,9 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 						Type: utils.PointerTo("rootfs"),
 					},
 				}
-				result.Summary.TotalPackages = utils.PointerTo(len(*result.Sboms.Packages))
+				result.Summary.TotalPackages = utils.PointerTo(len(*result.Sbom.Packages))
 			} else {
-				result.Sboms = &models.SbomScan{
+				result.Sbom = &models.SbomScan{
 					Packages: nil,
 					Status:   models.NewScannerStatus(models.Skipped, models.ScannerStatusReasonNotScheduled, nil),
 				}

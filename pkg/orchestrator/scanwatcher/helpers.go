@@ -77,7 +77,7 @@ func newAssetScanFromScan(scan *models.Scan, assetID string) (*models.AssetScan,
 			models.ResourceCleanupStatusReasonAssetScanCreated,
 			nil,
 		),
-		Sboms: &models.SbomScan{
+		Sbom: &models.SbomScan{
 			Packages: nil,
 			Status:   mapFamilyConfigToScannerStatus(familiesConfig.Sbom),
 		},

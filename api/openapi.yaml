@@ -2378,7 +2378,7 @@ components:
               $ref: '#/components/schemas/ScanRelationship'
             status:
               $ref: '#/components/schemas/AssetScanStatus'
-            sboms:
+            sbom:
               $ref: '#/components/schemas/SbomScan'
             vulnerabilities:
               $ref: '#/components/schemas/VulnerabilityScan'
@@ -2544,7 +2544,7 @@ components:
             status:
               $ref: '#/components/schemas/AssetScanStatus'
               readOnly: true
-            sboms:
+            sbom:
               $ref: '#/components/schemas/SbomScan'
               readOnly: true
             vulnerabilities:

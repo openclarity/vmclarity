@@ -147,7 +147,7 @@ func TestNewAssetScanFromScan(t *testing.T) {
 						State:  utils.PointerTo(models.AssetScanStateStatePending),
 					},
 				},
-				Sboms: &models.SbomScan{
+				Sbom: &models.SbomScan{
 					Packages: nil,
 					Status:   sbomScanStatus,
 				},
@@ -217,7 +217,7 @@ func TestNewAssetScanFromScan(t *testing.T) {
 
 			result, err := newAssetScanFromScan(test.Scan, test.AssetID)
 			result.ResourceCleanupStatus.LastTransitionTime = transitionTime
-			result.Sboms.Status.LastTransitionTime = transitionTime
+			result.Sbom.Status.LastTransitionTime = transitionTime
 			result.Exploits.Status.LastTransitionTime = transitionTime
 			result.Vulnerabilities.Status.LastTransitionTime = transitionTime
 			result.Malware.Status.LastTransitionTime = transitionTime

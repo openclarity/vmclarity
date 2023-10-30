@@ -89,7 +89,7 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 				FieldType:           odatasql.ComplexFieldType,
 				ComplexFieldSchemas: []string{"AssetScanStatus"},
 			},
-			"sboms": odatasql.FieldMeta{
+			"sbom": odatasql.FieldMeta{
 				FieldType:           odatasql.ComplexFieldType,
 				ComplexFieldSchemas: []string{"SbomScan"},
 			},
