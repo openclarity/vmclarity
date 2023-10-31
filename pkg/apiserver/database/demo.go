@@ -693,7 +693,7 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 			if *result.ScanFamiliesConfig.Exploits.Enabled {
 				result.Exploits = &models.ExploitScan{
 					Exploits: createExploitsResult(),
-					Status:   models.NewScannerStatus(models.Pending, models.ScannerStatusReasonScheduled, nil),
+					Status:   models.NewScannerStatus(models.Done, models.ScannerStatusReasonSuccess, nil),
 				}
 				result.Stats.Exploits = &[]models.AssetScanInputScanStats{
 					{
@@ -729,7 +729,11 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 				result.Malware = &models.MalwareScan{
 					Malware:  createMalwareResult(),
 					Metadata: nil,
-					Status:   models.NewScannerStatus(models.Failed, models.ScannerStatusReasonError, nil),
+					Status: models.NewScannerStatus(
+						models.Failed,
+						models.ScannerStatusReasonError,
+						utils.PointerTo("failed to scan malware"),
+					),
 				}
 				result.Stats.Malware = &[]models.AssetScanInputScanStats{
 					{
@@ -880,7 +884,11 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 			if *result.ScanFamiliesConfig.Vulnerabilities.Enabled {
 				result.Vulnerabilities = &models.VulnerabilityScan{
 					Vulnerabilities: createVulnerabilitiesResult(),
-					Status:          models.NewScannerStatus(models.Pending, models.ScannerStatusReasonScheduled, nil),
+					Status: models.NewScannerStatus(
+						models.Done,
+						models.ScannerStatusReasonSuccess,
+						nil,
+					),
 				}
 				result.Stats.Vulnerabilities = &[]models.AssetScanInputScanStats{
 					{
