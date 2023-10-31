@@ -43,7 +43,7 @@ type Environment interface {
 	ServiceLogs(ctx context.Context, services []string, startTime time.Time, stdout, stderr io.Writer) error
 	// Services returns a list of services for the environment.
 	Services() []string
-	// GetServiceURL returns the URL for communicating with a VMClarity srrvice.
+	// GetServiceURL returns the URL for communicating with a VMClarity service.
 	// Returns error if it fails to determine the URL.
 	GetServiceURL(serviceName string, port string) (*url.URL, error)
 	// Context updates the provided ctx with environment specific data like with initialized client data allowing tests

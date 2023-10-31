@@ -58,3 +58,63 @@ func (b *UIBackendClient) GetDashboardRiskiestAssets(ctx context.Context) (*mode
 		return nil, fmt.Errorf("failed to get dashboard riskiest assets: status code=%v", resp.StatusCode())
 	}
 }
+
+func (b *UIBackendClient) GetDashboardRiskiestRegions(ctx context.Context) (*models.RiskiestRegions, error) {
+	resp, err := b.apiClient.GetDashboardRiskiestRegionsWithResponse(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get dashboard riskiest regions: %w", err)
+	}
+
+	switch resp.StatusCode() {
+	case http.StatusOK:
+		if resp.JSON200 == nil {
+			return nil, fmt.Errorf("failed to get dashboard riskiest regions: empty body")
+		}
+		return resp.JSON200, nil
+	default:
+		if resp.JSONDefault != nil && resp.JSONDefault.Message != nil {
+			return nil, fmt.Errorf("failed to get dashboard riskiest regions: status code=%v: %v", resp.StatusCode(), *resp.JSONDefault.Message)
+		}
+		return nil, fmt.Errorf("failed to get dashboard riskiest regions: status code=%v", resp.StatusCode())
+	}
+}
+
+func (b *UIBackendClient) GetDashboardFindingsImpact(ctx context.Context) (*models.FindingsImpact, error) {
+	resp, err := b.apiClient.GetDashboardFindingsImpactWithResponse(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get dashboard findings trends: %w", err)
+	}
+
+	switch resp.StatusCode() {
+	case http.StatusOK:
+		if resp.JSON200 == nil {
+			return nil, fmt.Errorf("failed to get dashboard findings trends: empty body")
+		}
+		return resp.JSON200, nil
+	default:
+		if resp.JSONDefault != nil && resp.JSONDefault.Message != nil {
+			return nil, fmt.Errorf("failed to get dashboard findings trends: status code=%v: %v", resp.StatusCode(), *resp.JSONDefault.Message)
+		}
+		return nil, fmt.Errorf("failed to get dashboard findings trends: status code=%v", resp.StatusCode())
+	}
+}
+
+func (b *UIBackendClient) GetDashboardFindingsTrends(ctx context.Context, params models.GetDashboardFindingsTrendsParams) (*[]models.FindingTrends, error) {
+	resp, err := b.apiClient.GetDashboardFindingsTrendsWithResponse(ctx, &params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get dashboard findings trends: %w", err)
+	}
+
+	switch resp.StatusCode() {
+	case http.StatusOK:
+		if resp.JSON200 == nil {
+			return nil, fmt.Errorf("failed to get dashboard findings trends: empty body")
+		}
+		return resp.JSON200, nil
+	default:
+		if resp.JSONDefault != nil && resp.JSONDefault.Message != nil {
+			return nil, fmt.Errorf("failed to get dashboard findings trends: status code=%v: %v", resp.StatusCode(), *resp.JSONDefault.Message)
+		}
+		return nil, fmt.Errorf("failed to get dashboard findings trends: status code=%v", resp.StatusCode())
+	}
+}
