@@ -8,18 +8,23 @@ import {APIS} from "../../../utils/systemConsts";
 import './counter-display.scss';
 
 export const ScanCounterDisplay = () => {
-    const [{data, error, loading}] = useFetch(APIS.SCANS, {queryParams: {"$select": "state"}});
-
-    const completedScans = useMemo(
-        () => data?.items.filter((item) => ['Aborted', 'Failed', 'Done'].includes(item.state)).length ?? 0,
-        [data]
-    )
+    const [{data, error, loading}] = useFetch(
+        APIS.SCANS,
+        {
+            queryParams: {
+                "$count": true,
+                "$top": 1,
+                "$select": "id",
+                "$filter": "state eq 'Aborted' or state eq 'Failed' or state eq 'Done'",
+            }
+        }
+    );
 
     return (
         <div className="dashboard-counter" style={{background: COLORS["color-gradient-green"]}}>
             {loading || error ? "" :
                 <div className="dashboard-counter-content">
-                    <div className="dashboard-counter-count">{formatNumber(completedScans)}</div>
+                    <div className="dashboard-counter-count">{formatNumber(data.count)}</div>
                     Completed scans
                 </div>
             }
