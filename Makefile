@@ -49,16 +49,32 @@ build: ui build-all-go ## Build all components
 build-all-go: bin/vmclarity-apiserver bin/vmclarity-cli bin/vmclarity-orchestrator bin/vmclarity-ui-backend ## Build all go components
 
 bin/vmclarity-orchestrator: $(shell find api) $(shell find cmd/vmclarity-orchestrator) $(shell find pkg) go.mod go.sum | $(BIN_DIR)
-	go build -race -o bin/vmclarity-orchestrator cmd/vmclarity-orchestrator/main.go
+	go build -race -ldflags="-s -w \
+         -X 'github.com/openclarity/vmclarity/pkg/version.Version=$(VERSION)' \
+         -X 'github.com/openclarity/vmclarity/pkg/version.CommitHash=$(COMMIT_HASH)' \
+         -X 'github.com/openclarity/vmclarity/pkg/version.BuildTimestamp=$(BUILD_TIMESTAMP)'" \
+        -o bin/vmclarity-orchestrator cmd/vmclarity-orchestrator/main.go
 
 bin/vmclarity-apiserver: $(shell find api) $(shell find cmd/vmclarity-apiserver) $(shell find pkg) go.mod go.sum | $(BIN_DIR)
-	go build -race -o bin/vmclarity-apiserver cmd/vmclarity-apiserver/main.go
+	go build -race -ldflags="-s -w \
+             -X 'github.com/openclarity/vmclarity/pkg/version.Version=$(VERSION)' \
+             -X 'github.com/openclarity/vmclarity/pkg/version.CommitHash=$(COMMIT_HASH)' \
+             -X 'github.com/openclarity/vmclarity/pkg/version.BuildTimestamp=$(BUILD_TIMESTAMP)'" \
+            -o bin/vmclarity-apiserver cmd/vmclarity-apiserver/main.go
 
 bin/vmclarity-cli: $(shell find api) $(shell find cmd/vmclarity-cli) $(shell find pkg) go.mod go.sum | $(BIN_DIR)
-	go build -race -o bin/vmclarity-cli cmd/vmclarity-cli/main.go
+	go build -race -ldflags="-s -w  \
+         -X 'github.com/openclarity/vmclarity/pkg/version.Version=$(VERSION)' \
+         -X 'github.com/openclarity/vmclarity/pkg/version.CommitHash=$(COMMIT_HASH)' \
+         -X 'github.com/openclarity/vmclarity/pkg/version.BuildTimestamp=$(BUILD_TIMESTAMP)'" \
+        -o bin/vmclarity-cli cmd/vmclarity-cli/main.go
 
 bin/vmclarity-ui-backend: $(shell find api) $(shell find cmd/vmclarity-ui-backend) $(shell find pkg) go.mod go.sum | $(BIN_DIR)
-	go build -race -o bin/vmclarity-ui-backend cmd/vmclarity-ui-backend/main.go
+	go build -race -ldflags="-s -w \
+             -X 'github.com/openclarity/vmclarity/pkg/version.Version=$(VERSION)' \
+             -X 'github.com/openclarity/vmclarity/pkg/version.CommitHash=$(COMMIT_HASH)' \
+             -X 'github.com/openclarity/vmclarity/pkg/version.BuildTimestamp=$(BUILD_TIMESTAMP)'" \
+            -o bin/vmclarity-ui-backend cmd/vmclarity-ui-backend/main.go
 
 .PHONY: clean
 clean: clean-ui clean-go ## Clean all build artifacts
