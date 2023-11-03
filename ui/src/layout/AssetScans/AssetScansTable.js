@@ -13,7 +13,7 @@ const NAME_SORT_IDS = [
     "asset.assetInfo.instanceID",
     "asset.assetInfo.podName",
     "asset.assetInfo.dirName",
-    "asset.assetInfo.name",
+    "asset.assetInfo.imageID",
     "asset.assetInfo.containerName"
 ];
 const SCAN_START_TIME_SORT_IDS = ["scan.startTime"];
