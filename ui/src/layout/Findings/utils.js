@@ -5,7 +5,7 @@ const NAME_SORT_IDS = [
     "asset.assetInfo.instanceID",
     "asset.assetInfo.podName",
     "asset.assetInfo.dirName",
-    "asset.assetInfo.name",
+    "asset.assetInfo.imageID",
     "asset.assetInfo.containerName"
 ];
 

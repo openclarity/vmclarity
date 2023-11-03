@@ -12,7 +12,7 @@ import { getAssetName } from 'utils/utils';
 
 const TABLE_TITLE = "assets";
 
-const NAME_SORT_IDS = ["assetInfo.instanceID", "assetInfo.podName", "assetInfo.dirName", "assetInfo.name", "assetInfo.containerName"];
+const NAME_SORT_IDS = ["assetInfo.instanceID", "assetInfo.podName", "assetInfo.dirName", "assetInfo.imageID", "assetInfo.containerName"];
 const LABEL_SORT_IDS = ["assetInfo.tags", "assetInfo.labels"];
 const LOCATION_SORT_IDS = ["assetInfo.location"];
 
