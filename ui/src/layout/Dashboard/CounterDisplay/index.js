@@ -44,5 +44,3 @@ export const CounterDisplay = ({url, title, background}) => {
         </div>
     )
 }
-
-export default CounterDisplay;
