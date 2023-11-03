@@ -11,7 +11,7 @@ SHELL = /usr/bin/env bash -o pipefail
 ####
 
 BINARY_NAME ?= vmclarity
-VERSION ?= $(COMMIT_HASH)
+VERSION ?= $(shell git rev-parse --short HEAD)
 DOCKER_REGISTRY ?= ghcr.io/openclarity
 DOCKER_IMAGE ?= $(DOCKER_REGISTRY)/$(BINARY_NAME)
 DOCKER_TAG ?= $(VERSION)
@@ -28,11 +28,15 @@ BUILD_TIMESTAMP := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 COMMIT_HASH := $(shell git rev-parse HEAD)
 INSTALLATION_DIR := $(ROOT_DIR)/installation
 HELM_CHART_DIR := $(INSTALLATION_DIR)/kubernetes/helm
+DIST_DIR ?= $(ROOT_DIR)/dist
 
 include makefile.d/*.mk
 
 $(BIN_DIR):
 	@mkdir -p $(BIN_DIR)
+
+$(DIST_DIR):
+	@mkdir -p $(DIST_DIR)
 
 ##@ General
 
@@ -50,31 +54,31 @@ build-all-go: bin/vmclarity-apiserver bin/vmclarity-cli bin/vmclarity-orchestrat
 
 bin/vmclarity-orchestrator: $(shell find api) $(shell find cmd/vmclarity-orchestrator) $(shell find pkg) go.mod go.sum | $(BIN_DIR)
 	go build -race -ldflags="-s -w \
-         -X 'github.com/openclarity/vmclarity/pkg/version.Version=$(VERSION)' \
-         -X 'github.com/openclarity/vmclarity/pkg/version.CommitHash=$(COMMIT_HASH)' \
-         -X 'github.com/openclarity/vmclarity/pkg/version.BuildTimestamp=$(BUILD_TIMESTAMP)'" \
-        -o bin/vmclarity-orchestrator cmd/vmclarity-orchestrator/main.go
+		-X 'github.com/openclarity/vmclarity/pkg/version.Version=$(VERSION)' \
+		-X 'github.com/openclarity/vmclarity/pkg/version.CommitHash=$(COMMIT_HASH)' \
+		-X 'github.com/openclarity/vmclarity/pkg/version.BuildTimestamp=$(BUILD_TIMESTAMP)'" \
+		-o $@ cmd/vmclarity-orchestrator/main.go
 
 bin/vmclarity-apiserver: $(shell find api) $(shell find cmd/vmclarity-apiserver) $(shell find pkg) go.mod go.sum | $(BIN_DIR)
 	go build -race -ldflags="-s -w \
-             -X 'github.com/openclarity/vmclarity/pkg/version.Version=$(VERSION)' \
-             -X 'github.com/openclarity/vmclarity/pkg/version.CommitHash=$(COMMIT_HASH)' \
-             -X 'github.com/openclarity/vmclarity/pkg/version.BuildTimestamp=$(BUILD_TIMESTAMP)'" \
-            -o bin/vmclarity-apiserver cmd/vmclarity-apiserver/main.go
+		-X 'github.com/openclarity/vmclarity/pkg/version.Version=$(VERSION)' \
+		-X 'github.com/openclarity/vmclarity/pkg/version.CommitHash=$(COMMIT_HASH)' \
+		-X 'github.com/openclarity/vmclarity/pkg/version.BuildTimestamp=$(BUILD_TIMESTAMP)'" \
+		-o $@ cmd/vmclarity-apiserver/main.go
 
 bin/vmclarity-cli: $(shell find api) $(shell find cmd/vmclarity-cli) $(shell find pkg) go.mod go.sum | $(BIN_DIR)
 	go build -race -ldflags="-s -w  \
-         -X 'github.com/openclarity/vmclarity/pkg/version.Version=$(VERSION)' \
-         -X 'github.com/openclarity/vmclarity/pkg/version.CommitHash=$(COMMIT_HASH)' \
-         -X 'github.com/openclarity/vmclarity/pkg/version.BuildTimestamp=$(BUILD_TIMESTAMP)'" \
-        -o bin/vmclarity-cli cmd/vmclarity-cli/main.go
+		-X 'github.com/openclarity/vmclarity/pkg/version.Version=$(VERSION)' \
+		-X 'github.com/openclarity/vmclarity/pkg/version.CommitHash=$(COMMIT_HASH)' \
+		-X 'github.com/openclarity/vmclarity/pkg/version.BuildTimestamp=$(BUILD_TIMESTAMP)'" \
+		-o $@ cmd/vmclarity-cli/main.go
 
 bin/vmclarity-ui-backend: $(shell find api) $(shell find cmd/vmclarity-ui-backend) $(shell find pkg) go.mod go.sum | $(BIN_DIR)
 	go build -race -ldflags="-s -w \
-             -X 'github.com/openclarity/vmclarity/pkg/version.Version=$(VERSION)' \
-             -X 'github.com/openclarity/vmclarity/pkg/version.CommitHash=$(COMMIT_HASH)' \
-             -X 'github.com/openclarity/vmclarity/pkg/version.BuildTimestamp=$(BUILD_TIMESTAMP)'" \
-            -o bin/vmclarity-ui-backend cmd/vmclarity-ui-backend/main.go
+		-X 'github.com/openclarity/vmclarity/pkg/version.Version=$(VERSION)' \
+		-X 'github.com/openclarity/vmclarity/pkg/version.CommitHash=$(COMMIT_HASH)' \
+		-X 'github.com/openclarity/vmclarity/pkg/version.BuildTimestamp=$(BUILD_TIMESTAMP)'" \
+		-o $@ cmd/vmclarity-ui-backend/main.go
 
 .PHONY: clean
 clean: clean-ui clean-go ## Clean all build artifacts
@@ -275,3 +279,34 @@ gen-helm-docs: ## Generating documentation for Helm chart
 	$(info Generating Helm chart(s) documentation ...)
 	docker run --rm --volume "$(HELM_CHART_DIR):/helm-docs" -u $(shell id -u) jnorwood/helm-docs:v1.11.0
 
+##@ Release
+
+CLI_OSARCH := $(shell echo {linux-,darwin-}{amd64,arm64})
+CLI_BINARIES := $(CLI_OSARCH:%=$(DIST_DIR)/%/vmclarity-cli)
+CLI_TARS := $(CLI_OSARCH:%=$(DIST_DIR)/vmclarity-cli-$(VERSION)-%.tar.gz)
+
+.PHONY: dist-vmclarity-cli
+dist-vmclarity-cli: $(CLI_BINARIES) $(CLI_TARS) | $(DIST_DIR) ## Create vmclarity-cli release artifacts
+
+$(DIST_DIR)/vmclarity-cli-$(VERSION)-%.tar.gz: $(DIST_DIR)/%/vmclarity-cli $(DIST_DIR)/%/LICENSE $(DIST_DIR)/%/README.md
+	$(info --- Bundling $(dir $<) into $(notdir $@))
+	tar cv -f $@ -C $(dir $<) --use-compress-program='gzip -9' $(notdir $^)
+
+$(DIST_DIR)/%/vmclarity-cli: $(shell find api) $(shell find cmd/vmclarity-cli) $(shell find pkg) go.mod go.sum
+	$(info --- Building $(notdir $@) for $*)
+	GOOS=$(firstword $(subst -, ,$*)) \
+	GOARCH=$(lastword $(subst -, ,$*)) \
+	CGO_ENABLED=0 \
+	go build -ldflags="-s -w \
+		-X 'github.com/openclarity/vmclarity/pkg/version.Version=$(VERSION)' \
+		-X 'github.com/openclarity/vmclarity/pkg/version.CommitHash=$(COMMIT_HASH)' \
+		-X 'github.com/openclarity/vmclarity/pkg/version.BuildTimestamp=$(BUILD_TIMESTAMP)'" \
+		-o $@ cmd/$(notdir $@)/main.go
+
+$(DIST_DIR)/%/LICENSE: $(ROOT_DIR)/LICENSE
+	$(info --- Copy $(notdir $<) to $@)
+	@cp $< $@
+
+$(DIST_DIR)/%/README.md: $(ROOT_DIR)/README.md
+	$(info --- Copy $(notdir $<) to $@)
+	@cp $< $@

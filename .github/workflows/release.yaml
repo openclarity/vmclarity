@@ -23,8 +23,53 @@ jobs:
       push: true
       use_release_repository: true
 
+  dist-vmclarity-cli:
+    name: Create vmclarity-cli release artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          # NOTE(chrisgacsal): Use actions/cache for caching Go dependency and build caches
+          # as if provides better flexibility like setting the cache key which reduces cache misses significantly.
+          cache: false
+          go-version-file: 'go.mod'
+
+      - name: Setup Go caching
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-api-${{ github.ref_name }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-api-${{ github.ref_name }}-
+            ${{ runner.os }}-go-api-${{ github.event.repository.default_branch }}-
+
+      - name: Build and Bundle
+        id: dist-vmclarity-cli
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: |
+          make dist-vmclarity-cli
+
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: release
+          path: dist/vmclarity-cli-*.tar.gz
+          if-no-files-found: error
+
   main_release:
-    needs: build_and_push
+    needs:
+      - verification
+      - build_and_push
+      - dist-vmclarity-cli
     name: Release
     runs-on: ubuntu-latest
     steps:
