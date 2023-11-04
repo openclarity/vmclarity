@@ -281,6 +281,12 @@ gen-helm-docs: ## Generating documentation for Helm chart
 
 ##@ Release
 
+.DELETE_ON_ERROR:
+
+.PHONY: clean-dist
+clean-dist:
+	rm -rf $(DIST_DIR)/*
+
 CLI_OSARCH := $(shell echo {linux-,darwin-}{amd64,arm64})
 CLI_BINARIES := $(CLI_OSARCH:%=$(DIST_DIR)/%/vmclarity-cli)
 CLI_TARS := $(CLI_OSARCH:%=$(DIST_DIR)/vmclarity-cli-$(VERSION)-%.tar.gz)
@@ -310,3 +316,28 @@ $(DIST_DIR)/%/LICENSE: $(ROOT_DIR)/LICENSE
 $(DIST_DIR)/%/README.md: $(ROOT_DIR)/README.md
 	$(info --- Copy $(notdir $<) to $@)
 	@cp $< $@
+
+CFN_DIR := $(INSTALLATION_DIR)/aws
+CFN_FILES := $(shell find $(CFN_DIR))
+CFN_DIST_DIR := $(DIST_DIR)/cloudformation
+
+.PHONY: dist-cloudformation
+dist-cloudformation: $(DIST_DIR)/aws-cloudformation-$(VERSION).tar.gz ## Create AWS CloudFormation release artifacts
+
+$(DIST_DIR)/aws-cloudformation-$(VERSION).tar.gz: $(DIST_DIR)/aws-cloudformation-$(VERSION).bundle $(CFN_DIST_DIR)/LICENSE | $(CFN_DIST_DIR)
+	$(info --- Bundle $(CFN_DIST_DIR) into $(notdir $@))
+	tar cv -f $@ -C $(CFN_DIST_DIR) --use-compress-program='gzip -9' $(shell ls $(CFN_DIST_DIR))
+
+# TODO(chrisgacsal): use yq for manipulating VmClarity.cfn file. It will require to move default container images to Mappings.
+$(DIST_DIR)/aws-cloudformation-$(VERSION).bundle: $(CFN_FILES) | $(CFN_DIST_DIR)
+	$(info --- Generate Cloudformation bundle)
+	cp -R $(CFN_DIR)/ $(CFN_DIST_DIR)/
+	sed -i -E 's@(ghcr\.io\/openclarity\/vmclarity\-(apiserver|cli|orchestrator|ui-backend|ui)):latest@\1:$(VERSION)@' $(CFN_DIST_DIR)/VmClarity.cfn
+	@touch $@
+
+$(CFN_DIST_DIR)/LICENSE: $(ROOT_DIR)/LICENSE | $(CFN_DIST_DIR)
+	$(info --- Copy $(notdir $@) to $@)
+	@cp $< $@
+
+$(CFN_DIST_DIR):
+	@mkdir -p $@
