@@ -66,6 +66,11 @@ jobs:
           VERSION: ${{ github.ref_name }}
         run: make dist-bicep
 
+      - name: Create Docker Compose manifest(s)
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: make dist-docker-compose
+
       - name: Upload
         uses: actions/upload-artifact@v3
         with:

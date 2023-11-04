@@ -367,3 +367,28 @@ $(BICEP_DIST_DIR)/LICENSE: $(ROOT_DIR)/LICENSE | $(BICEP_DIST_DIR)
 
 $(BICEP_DIST_DIR):
 	@mkdir -p $@
+
+DOCKER_COMPOSE_DIR := $(INSTALLATION_DIR)/docker
+DOCKER_COMPOSE_FILES := $(shell find $(DOCKER_COMPOSE_DIR))
+DOCKER_COMPOSE_DIST_DIR := $(DIST_DIR)/docker-compose
+
+.PHONY: dist-docker-compose
+dist-docker-compose: $(DIST_DIR)/docker-compose-$(VERSION).tar.gz ## Create Docker Compose release artifacts
+
+$(DIST_DIR)/docker-compose-$(VERSION).tar.gz: $(DIST_DIR)/docker-compose-$(VERSION).bundle $(DOCKER_COMPOSE_DIST_DIR)/LICENSE | $(DOCKER_COMPOSE_DIST_DIR)
+	$(info --- Bundle $(DOCKER_COMPOSE_DIST_DIR) into $(notdir $@))
+	tar cv -f $@ -C $(DOCKER_COMPOSE_DIST_DIR) --use-compress-program='gzip -9' $(shell ls $(DOCKER_COMPOSE_DIST_DIR))
+
+$(DIST_DIR)/docker-compose-$(VERSION).bundle: $(DOCKER_COMPOSE_FILES) | $(DOCKER_COMPOSE_DIST_DIR)
+	$(info --- Generate Docker Compose bundle)
+	cp -R $(DOCKER_COMPOSE_DIR)/ $(DOCKER_COMPOSE_DIST_DIR)/
+	sed -i -E 's@(ghcr\.io\/openclarity\/vmclarity\-(apiserver|cli|orchestrator|ui-backend|ui)):latest@\1:$(VERSION)@' \
+		$(DOCKER_COMPOSE_DIST_DIR)/docker-compose.yml $(DOCKER_COMPOSE_DIST_DIR)/image_override.env
+	@touch $@
+
+$(DOCKER_COMPOSE_DIST_DIR)/LICENSE: $(ROOT_DIR)/LICENSE | $(DOCKER_COMPOSE_DIST_DIR)
+	$(info --- Copy $(notdir $@) to $@)
+	@cp $< $@
+
+$(DOCKER_COMPOSE_DIST_DIR):
+	@mkdir -p $@
