@@ -341,3 +341,29 @@ $(CFN_DIST_DIR)/LICENSE: $(ROOT_DIR)/LICENSE | $(CFN_DIST_DIR)
 
 $(CFN_DIST_DIR):
 	@mkdir -p $@
+
+BICEP_DIR := $(INSTALLATION_DIR)/azure
+BICEP_FILES := $(shell find $(BICEP_DIR))
+BICEP_DIST_DIR := $(DIST_DIR)/bicep
+
+.PHONY: dist-bicep
+dist-bicep: $(DIST_DIR)/azure-bicep-$(VERSION).tar.gz ## Create Azure Bicep release artifacts
+
+$(DIST_DIR)/azure-bicep-$(VERSION).tar.gz: $(DIST_DIR)/azure-bicep-$(VERSION).bundle $(BICEP_DIST_DIR)/LICENSE | $(BICEP_DIST_DIR)
+	$(info --- Bundle $(BICEP_DIST_DIR) into $(notdir $@))
+	tar cv -f $@ -C $(BICEP_DIST_DIR) --use-compress-program='gzip -9' $(shell ls $(BICEP_DIST_DIR))
+
+$(DIST_DIR)/azure-bicep-$(VERSION).bundle: $(BICEP_FILES) $(BICEP_BIN) | $(BICEP_DIST_DIR)
+	$(info --- Generate Bicep bundle)
+	cp -R $(BICEP_DIR)/ $(BICEP_DIST_DIR)/
+	sed -i -E 's@(ghcr\.io\/openclarity\/vmclarity\-(apiserver|cli|orchestrator|ui-backend|ui)):latest@\1:$(VERSION)@' \
+		$(BICEP_DIST_DIR)/*.bicep $(BICEP_DIST_DIR)/vmclarity-UI.json
+	$(BICEP_BIN) build $(BICEP_DIST_DIR)/vmclarity.bicep
+	@touch $@
+
+$(BICEP_DIST_DIR)/LICENSE: $(ROOT_DIR)/LICENSE | $(BICEP_DIST_DIR)
+	$(info --- Copy $(notdir $@) to $@)
+	@cp $< $@
+
+$(BICEP_DIST_DIR):
+	@mkdir -p $@

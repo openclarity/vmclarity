@@ -61,6 +61,11 @@ jobs:
           VERSION: ${{ github.ref_name }}
         run: make dist-cloudformation
 
+      - name: Create Azure Bicep manifest(s)
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: make dist-bicep
+
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
