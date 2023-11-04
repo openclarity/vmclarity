@@ -71,6 +71,11 @@ jobs:
           VERSION: ${{ github.ref_name }}
         run: make dist-docker-compose
 
+      - name: Create Google Cloud Deployment manifest(s)
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: make dist-gcp-deployment
+
       - name: Upload
         uses: actions/upload-artifact@v3
         with:

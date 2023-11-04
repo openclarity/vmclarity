@@ -392,3 +392,28 @@ $(DOCKER_COMPOSE_DIST_DIR)/LICENSE: $(ROOT_DIR)/LICENSE | $(DOCKER_COMPOSE_DIST_
 
 $(DOCKER_COMPOSE_DIST_DIR):
 	@mkdir -p $@
+
+GCP_DM_DIR := $(INSTALLATION_DIR)/gcp/dm
+GCP_DM_FILES := $(shell find $(GCP_DM_DIR))
+GCP_DM_DIST_DIR := $(DIST_DIR)/gcp-deployment
+
+.PHONY: dist-gcp-deployment
+dist-gcp-deployment: $(DIST_DIR)/gcp-deployment-$(VERSION).tar.gz ## Create Google Cloud Deployment bundle
+
+$(DIST_DIR)/gcp-deployment-$(VERSION).tar.gz: $(DIST_DIR)/gcp-deployment-$(VERSION).bundle $(GCP_DM_DIST_DIR)/LICENSE | $(GCP_DM_DIST_DIR)
+	$(info --- Bundle $(GCP_DM_DIST_DIR) into $(notdir $@))
+	tar cv -f $@ -C $(GCP_DM_DIST_DIR) --use-compress-program='gzip -9' $(shell ls $(GCP_DM_DIST_DIR))
+
+$(DIST_DIR)/gcp-deployment-$(VERSION).bundle: $(GCP_DM_FILES) | $(GCP_DM_DIST_DIR)
+	$(info --- Generate Google Cloud Deployment bundle)
+	cp -R $(GCP_DM_DIR)/ $(GCP_DM_DIST_DIR)/
+	sed -i -E 's@(ghcr\.io\/openclarity\/vmclarity\-(apiserver|cli|orchestrator|ui-backend|ui)):latest@\1:$(VERSION)@' \
+		$(GCP_DM_DIST_DIR)/vmclarity.py.schema $(GCP_DM_DIST_DIR)/components/vmclarity-server.py.schema
+	@touch $@
+
+$(GCP_DM_DIST_DIR)/LICENSE: $(ROOT_DIR)/LICENSE | $(GCP_DM_DIST_DIR)
+	$(info --- Copy $(notdir $@) to $@)
+	@cp $< $@
+
+$(GCP_DM_DIST_DIR):
+	@mkdir -p $@
