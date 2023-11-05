@@ -100,3 +100,60 @@ bin/golangci-lint: bin/golangci-lint-$(GOLANGCI_VERSION)
 bin/golangci-lint-$(GOLANGCI_VERSION): | $(BIN_DIR)
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | bash -s -- -b "$(BIN_DIR)" "v$(GOLANGCI_VERSION)"
 	@mv bin/golangci-lint $@
+
+####
+##  yq CLI
+####
+
+YQ_BIN := $(BIN_DIR)/yq
+YQ_VERSION := 4.35.2
+
+bin/yq: bin/yq-$(YQ_VERSION)
+	@ln -sf $(notdir $<) $@
+
+bin/yq-$(YQ_VERSION): | $(BIN_DIR)
+	@curl -sSfL 'https://github.com/mikefarah/yq/releases/download/v$(YQ_VERSION)/yq_$(OSTYPE)_$(ARCHTYPE)' \
+	--output $@
+	@chmod +x $@
+
+####
+##  Helm CLI
+####
+
+HELM_BIN := $(BIN_DIR)/helm
+HELM_VERSION := 3.13.1
+
+bin/helm: bin/helm-$(HELM_VERSION)
+	@ln -sf $(notdir $<) $@
+
+bin/helm-$(HELM_VERSION): | $(BIN_DIR)
+	@curl -sSfL 'https://get.helm.sh/helm-v$(HELM_VERSION)-$(OSTYPE)-$(ARCHTYPE).tar.gz' --output - \
+	| tar xvOf - '$(OSTYPE)-$(ARCHTYPE)/helm' > $@
+	@chmod +x $@
+
+####
+##  helm-docs CLI
+####
+
+HELMDOCS_BIN := $(BIN_DIR)/helm-docs
+HELMDOCS_VERSION := 1.11.3
+HELMDOCS_OSTYPE := $(OSTYPE)
+HELMDOCS_ARCH := $(ARCHTYPE)
+
+ifeq ($(HELMDOCS_OSTYPE),darwin)
+	HELMDOCS_OSTYPE = Darwin
+endif
+ifeq ($(HELMDOCS_OSTYPE),linux)
+	HELMDOCS_OSTYPE = Linux
+endif
+ifeq ($(HELMDOCS_ARCH),amd64)
+	HELMDOCS_ARCH = x86_64
+endif
+
+bin/helm-docs: bin/helm-docs-$(HELMDOCS_VERSION)
+	@ln -sf $(notdir $<) $@
+
+bin/helm-docs-$(HELMDOCS_VERSION): | $(BIN_DIR)
+	@curl -sSfL 'https://github.com/norwoodj/helm-docs/releases/download/v$(HELMDOCS_VERSION)/helm-docs_$(HELMDOCS_VERSION)_$(HELMDOCS_OSTYPE)_$(HELMDOCS_ARCH).tar.gz' --output - \
+	| tar xvOf - 'helm-docs' > $@
+	@chmod +x $@

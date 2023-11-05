@@ -28,6 +28,7 @@ BUILD_TIMESTAMP := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 COMMIT_HASH := $(shell git rev-parse HEAD)
 INSTALLATION_DIR := $(ROOT_DIR)/installation
 HELM_CHART_DIR := $(INSTALLATION_DIR)/kubernetes/helm
+HELM_OCI_REPOSITORY := ghcr.io/openclarity/charts
 DIST_DIR ?= $(ROOT_DIR)/dist
 
 include makefile.d/*.mk
@@ -275,9 +276,9 @@ gen-bicep: bin/bicep ## Generating Azure Bicep template(s)
 	@$(BICEP_BIN) build installation/azure/vmclarity.bicep
 
 .PHONY: gen-helm-docs
-gen-helm-docs: ## Generating documentation for Helm chart
+gen-helm-docs: bin/helm-docs ## Generating documentation for Helm chart
 	$(info Generating Helm chart(s) documentation ...)
-	docker run --rm --volume "$(HELM_CHART_DIR):/helm-docs" -u $(shell id -u) jnorwood/helm-docs:v1.11.0
+	$(HELMDOCS_BIN) --chart-search-root $(HELM_CHART_DIR)
 
 ##@ Release
 
@@ -286,6 +287,9 @@ gen-helm-docs: ## Generating documentation for Helm chart
 .PHONY: clean-dist
 clean-dist:
 	rm -rf $(DIST_DIR)/*
+
+.PHONY: dist-all
+dist-all: dist-bicep dist-cloudformation dist-docker-compose dist-gcp-deployment dist-helm-chart dist-vmclarity-cli
 
 CLI_OSARCH := $(shell echo {linux-,darwin-}{amd64,arm64})
 CLI_BINARIES := $(CLI_OSARCH:%=$(DIST_DIR)/%/vmclarity-cli)
@@ -417,3 +421,38 @@ $(GCP_DM_DIST_DIR)/LICENSE: $(ROOT_DIR)/LICENSE | $(GCP_DM_DIST_DIR)
 
 $(GCP_DM_DIST_DIR):
 	@mkdir -p $@
+
+HELM_CHART_DIR := $(INSTALLATION_DIR)/kubernetes/helm/vmclarity
+HELM_CHART_FILES := $(shell find $(HELM_CHART_DIR))
+HELM_CHART_DIST_DIR := $(DIST_DIR)/helm-vmclarity-chart
+
+.PHONY: dist-helm-chart
+dist-helm-chart: $(DIST_DIR)/vmclarity-$(VERSION).tgz ## Create Helm Chart bundle
+
+$(DIST_DIR)/vmclarity-$(VERSION).tgz: $(DIST_DIR)/helm-vmclarity-chart-$(VERSION).bundle | $(HELM_CHART_DIST_DIR)
+	$(info --- Bundle $(HELM_CHART_DIST_DIR) into $(notdir $@))
+	$(HELM_BIN) package $(HELM_CHART_DIST_DIR) --version "$(VERSION)" --app-version "$(VERSION)" --destination $(DIST_DIR)
+
+$(DIST_DIR)/helm-vmclarity-chart-$(VERSION).bundle: $(HELM_CHART_FILES) $(YQ_BIN) | $(HELM_CHART_DIST_DIR)
+	$(info --- Generate Helm Chart bundle)
+	cp -R $(HELM_CHART_DIR)/ $(HELM_CHART_DIST_DIR)/
+	$(YQ_BIN) -i ' \
+	.apiserver.image.tag = "$(VERSION)" | \
+	.orchestrator.image.tag = "$(VERSION)" | \
+	.orchestrator.scannerImage.tag = "$(VERSION)" | \
+	.ui.image.tag = "$(VERSION)" | \
+	.uibackend.image.tag = "$(VERSION)" \
+	' $(HELM_CHART_DIST_DIR)/values.yaml
+	$(YQ_BIN) -i ' \
+	.version = "$(VERSION)" | \
+	.appVersion = "$(VERSION)" \
+	' $(HELM_CHART_DIST_DIR)/Chart.yaml
+	$(HELMDOCS_BIN) --chart-search-root $(HELM_CHART_DIST_DIR)
+	@touch $@
+
+$(HELM_CHART_DIST_DIR):
+	@mkdir -p $@
+
+.PHONY: publish-helm-chart
+publish-helm-chart: $(DIST_DIR)/vmclarity-$(VERSION).tgz ## Publish Helm Chart bundle to OCI registry
+	$(HELM_BIN) push $< oci://$(HELM_OCI_REPOSITORY)
