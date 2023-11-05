@@ -105,6 +105,8 @@ jobs:
           name: manifests
           path: |
             dist/*.tar.gz
+            dist/*.tgz
+            dist/*.sha256sum
           if-no-files-found: error
 
   main_release:

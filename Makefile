@@ -294,9 +294,10 @@ dist-all: dist-bicep dist-cloudformation dist-docker-compose dist-gcp-deployment
 CLI_OSARCH := $(shell echo {linux-,darwin-}{amd64,arm64})
 CLI_BINARIES := $(CLI_OSARCH:%=$(DIST_DIR)/%/vmclarity-cli)
 CLI_TARS := $(CLI_OSARCH:%=$(DIST_DIR)/vmclarity-cli-$(VERSION)-%.tar.gz)
+CLI_TAR_SHA256SUMS := $(CLI_TARS:%=%.sha256sum)
 
 .PHONY: dist-vmclarity-cli
-dist-vmclarity-cli: $(CLI_BINARIES) $(CLI_TARS) | $(DIST_DIR) ## Create vmclarity-cli release artifacts
+dist-vmclarity-cli: $(CLI_BINARIES) $(CLI_TARS) $(CLI_TAR_SHA256SUMS) | $(DIST_DIR) ## Create vmclarity-cli release artifacts
 
 $(DIST_DIR)/vmclarity-cli-$(VERSION)-%.tar.gz: $(DIST_DIR)/%/vmclarity-cli $(DIST_DIR)/%/LICENSE $(DIST_DIR)/%/README.md
 	$(info --- Bundling $(dir $<) into $(notdir $@))
@@ -326,13 +327,12 @@ CFN_FILES := $(shell find $(CFN_DIR))
 CFN_DIST_DIR := $(DIST_DIR)/cloudformation
 
 .PHONY: dist-cloudformation
-dist-cloudformation: $(DIST_DIR)/aws-cloudformation-$(VERSION).tar.gz ## Create AWS CloudFormation release artifacts
+dist-cloudformation: $(DIST_DIR)/aws-cloudformation-$(VERSION).tar.gz $(DIST_DIR)/aws-cloudformation-$(VERSION).tar.gz.sha256sum ## Create AWS CloudFormation release artifacts
 
 $(DIST_DIR)/aws-cloudformation-$(VERSION).tar.gz: $(DIST_DIR)/aws-cloudformation-$(VERSION).bundle $(CFN_DIST_DIR)/LICENSE | $(CFN_DIST_DIR)
 	$(info --- Bundle $(CFN_DIST_DIR) into $(notdir $@))
 	tar cv -f $@ -C $(CFN_DIST_DIR) --use-compress-program='gzip -9' $(shell ls $(CFN_DIST_DIR))
 
-# TODO(chrisgacsal): use yq for manipulating VmClarity.cfn file. It will require to move default container images to Mappings.
 $(DIST_DIR)/aws-cloudformation-$(VERSION).bundle: $(CFN_FILES) | $(CFN_DIST_DIR)
 	$(info --- Generate Cloudformation bundle)
 	cp -R $(CFN_DIR)/ $(CFN_DIST_DIR)/
@@ -351,7 +351,7 @@ BICEP_FILES := $(shell find $(BICEP_DIR))
 BICEP_DIST_DIR := $(DIST_DIR)/bicep
 
 .PHONY: dist-bicep
-dist-bicep: $(DIST_DIR)/azure-bicep-$(VERSION).tar.gz ## Create Azure Bicep release artifacts
+dist-bicep: $(DIST_DIR)/azure-bicep-$(VERSION).tar.gz $(DIST_DIR)/azure-bicep-$(VERSION).tar.gz.sha256sum ## Create Azure Bicep release artifacts
 
 $(DIST_DIR)/azure-bicep-$(VERSION).tar.gz: $(DIST_DIR)/azure-bicep-$(VERSION).bundle $(BICEP_DIST_DIR)/LICENSE | $(BICEP_DIST_DIR)
 	$(info --- Bundle $(BICEP_DIST_DIR) into $(notdir $@))
@@ -377,7 +377,7 @@ DOCKER_COMPOSE_FILES := $(shell find $(DOCKER_COMPOSE_DIR))
 DOCKER_COMPOSE_DIST_DIR := $(DIST_DIR)/docker-compose
 
 .PHONY: dist-docker-compose
-dist-docker-compose: $(DIST_DIR)/docker-compose-$(VERSION).tar.gz ## Create Docker Compose release artifacts
+dist-docker-compose: $(DIST_DIR)/docker-compose-$(VERSION).tar.gz $(DIST_DIR)/docker-compose-$(VERSION).tar.gz.sha256sum ## Create Docker Compose release artifacts
 
 $(DIST_DIR)/docker-compose-$(VERSION).tar.gz: $(DIST_DIR)/docker-compose-$(VERSION).bundle $(DOCKER_COMPOSE_DIST_DIR)/LICENSE | $(DOCKER_COMPOSE_DIST_DIR)
 	$(info --- Bundle $(DOCKER_COMPOSE_DIST_DIR) into $(notdir $@))
@@ -402,7 +402,7 @@ GCP_DM_FILES := $(shell find $(GCP_DM_DIR))
 GCP_DM_DIST_DIR := $(DIST_DIR)/gcp-deployment
 
 .PHONY: dist-gcp-deployment
-dist-gcp-deployment: $(DIST_DIR)/gcp-deployment-$(VERSION).tar.gz ## Create Google Cloud Deployment bundle
+dist-gcp-deployment: $(DIST_DIR)/gcp-deployment-$(VERSION).tar.gz $(DIST_DIR)/gcp-deployment-$(VERSION).tar.gz.sha256sum ## Create Google Cloud Deployment bundle
 
 $(DIST_DIR)/gcp-deployment-$(VERSION).tar.gz: $(DIST_DIR)/gcp-deployment-$(VERSION).bundle $(GCP_DM_DIST_DIR)/LICENSE | $(GCP_DM_DIST_DIR)
 	$(info --- Bundle $(GCP_DM_DIST_DIR) into $(notdir $@))
@@ -427,7 +427,7 @@ HELM_CHART_FILES := $(shell find $(HELM_CHART_DIR))
 HELM_CHART_DIST_DIR := $(DIST_DIR)/helm-vmclarity-chart
 
 .PHONY: dist-helm-chart
-dist-helm-chart: $(DIST_DIR)/vmclarity-$(VERSION).tgz ## Create Helm Chart bundle
+dist-helm-chart: $(DIST_DIR)/vmclarity-$(VERSION).tgz $(DIST_DIR)/vmclarity-$(VERSION).tgz.sha256sum ## Create Helm Chart bundle
 
 $(DIST_DIR)/vmclarity-$(VERSION).tgz: $(DIST_DIR)/helm-vmclarity-chart-$(VERSION).bundle | $(HELM_CHART_DIST_DIR)
 	$(info --- Bundle $(HELM_CHART_DIST_DIR) into $(notdir $@))
@@ -456,3 +456,7 @@ $(HELM_CHART_DIST_DIR):
 .PHONY: publish-helm-chart
 publish-helm-chart: $(DIST_DIR)/vmclarity-$(VERSION).tgz ## Publish Helm Chart bundle to OCI registry
 	$(HELM_BIN) push $< oci://$(HELM_OCI_REPOSITORY)
+
+$(DIST_DIR)/%.sha256sum: | $(DIST_DIR)
+	$(info --- Generate SHA256 for $(notdir $@))
+	shasum -a 256 $(basename $@) | sed "s@$(dir $@)@@" > $@
