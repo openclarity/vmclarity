@@ -460,3 +460,11 @@ publish-helm-chart: $(DIST_DIR)/vmclarity-$(VERSION).tgz ## Publish Helm Chart b
 $(DIST_DIR)/%.sha256sum: | $(DIST_DIR)
 	$(info --- Generate SHA256 for $(notdir $@))
 	shasum -a 256 $(basename $@) | sed "s@$(dir $@)@@" > $@
+
+.PHONY: generate-release-notes
+generate-release-notes: $(DIST_DIR)/RELEASE.md ## Generate Release Notes
+
+$(DIST_DIR)/RELEASE.md: $(DIST_DIR)/CHANGELOG.md
+
+$(DIST_DIR)/CHANGELOG.md: $(ROOT_DIR)/.git/refs/heads/$(shell git rev-parse --abbrev-ref HEAD) $(ROOT_DIR)/cliff.toml $(ROOT_DIR)/release.tmpl
+	$(GITCLIFF_BIN) -vv --strip all --unreleased --tag $(VERSION) --output $@

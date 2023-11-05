@@ -157,3 +157,65 @@ bin/helm-docs-$(HELMDOCS_VERSION): | $(BIN_DIR)
 	@curl -sSfL 'https://github.com/norwoodj/helm-docs/releases/download/v$(HELMDOCS_VERSION)/helm-docs_$(HELMDOCS_VERSION)_$(HELMDOCS_OSTYPE)_$(HELMDOCS_ARCH).tar.gz' --output - \
 	| tar xvOf - 'helm-docs' > $@
 	@chmod +x $@
+
+####
+##  git-cliff CLI
+####
+
+GITCLIFF_BIN := $(BIN_DIR)/git-cliff
+GITCLIFF_VERSION := 1.4.0
+GITCLIFF_OSTYPE := $(OSTYPE)
+GITCLIFF_ARCH := $(ARCHTYPE)
+GITCLIFF_URL =
+
+ifeq ($(GITCLIFF_OSTYPE),darwin)
+	GITCLIFF_OSTYPE = apple-darwin
+endif
+ifeq ($(GITCLIFF_OSTYPE),linux)
+	GITCLIFF_OSTYPE = unknown-linux-gnu
+endif
+ifeq ($(GITCLIFF_ARCH),amd64)
+	GITCLIFF_ARCH = x86_64
+endif
+ifeq ($(GITCLIFF_ARCH),arm64)
+	GITCLIFF_ARCH = aarch64
+endif
+
+bin/git-cliff: bin/git-cliff-$(GITCLIFF_VERSION)
+	@ln -sf $(notdir $<) $@
+
+bin/git-cliff-$(GITCLIFF_VERSION): | $(BIN_DIR)
+	@curl -sSfL 'https://github.com/orhun/git-cliff/releases/download/v$(GITCLIFF_VERSION)/git-cliff-$(GITCLIFF_VERSION)-$(GITCLIFF_ARCH)-$(GITCLIFF_OSTYPE).tar.gz' --output - \
+	| tar xvOf - 'git-cliff-$(GITCLIFF_VERSION)/git-cliff' > $@
+	@chmod +x $@
+
+####
+##  typos CLI
+####
+
+TYPOS_BIN := $(BIN_DIR)/typos
+TYPOS_VERSION := 1.4.0
+TYPOS_OSTYPE := $(OSTYPE)
+TYPOS_ARCH := $(ARCHTYPE)
+TYPOS_URL =
+
+ifeq ($(TYPOS_OSTYPE),darwin)
+	TYPOS_OSTYPE = apple-darwin
+endif
+ifeq ($(TYPOS_OSTYPE),linux)
+	TYPOS_OSTYPE = unknown-linux-gnu
+endif
+ifeq ($(TYPOS_ARCH),amd64)
+	TYPOS_ARCH = x86_64
+endif
+ifeq ($(TYPOS_ARCH),arm64)
+	TYPOS_ARCH = aarch64
+endif
+
+bin/typos: bin/typos-$(TYPOS_VERSION)
+	@ln -sf $(notdir $<) $@
+
+bin/typos-$(TYPOS_VERSION): | $(BIN_DIR)
+	@curl -sSfL 'https://github.com/crate-ci/typos/releases/download/v$(TYPOS_VERSION)/typos-v$(TYPOS_VERSION)-$(TYPOS_ARCH)-$(TYPOS_OSTYPE).tar.gz' --output - \
+	| tar xvOf - './typos' > $@
+	@chmod +x $@
