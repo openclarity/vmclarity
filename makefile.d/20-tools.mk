@@ -128,7 +128,7 @@ bin/helm: bin/helm-$(HELM_VERSION)
 
 bin/helm-$(HELM_VERSION): | $(BIN_DIR)
 	@curl -sSfL 'https://get.helm.sh/helm-v$(HELM_VERSION)-$(OSTYPE)-$(ARCHTYPE).tar.gz' --output - \
-	| tar xvOf - '$(OSTYPE)-$(ARCHTYPE)/helm' > $@
+	| tar xzvOf - '$(OSTYPE)-$(ARCHTYPE)/helm' > $@
 	@chmod +x $@
 
 ####
@@ -155,7 +155,7 @@ bin/helm-docs: bin/helm-docs-$(HELMDOCS_VERSION)
 
 bin/helm-docs-$(HELMDOCS_VERSION): | $(BIN_DIR)
 	@curl -sSfL 'https://github.com/norwoodj/helm-docs/releases/download/v$(HELMDOCS_VERSION)/helm-docs_$(HELMDOCS_VERSION)_$(HELMDOCS_OSTYPE)_$(HELMDOCS_ARCH).tar.gz' --output - \
-	| tar xvOf - 'helm-docs' > $@
+	| tar xzvOf - 'helm-docs' > $@
 	@chmod +x $@
 
 ####
@@ -186,7 +186,7 @@ bin/git-cliff: bin/git-cliff-$(GITCLIFF_VERSION)
 
 bin/git-cliff-$(GITCLIFF_VERSION): | $(BIN_DIR)
 	@curl -sSfL 'https://github.com/orhun/git-cliff/releases/download/v$(GITCLIFF_VERSION)/git-cliff-$(GITCLIFF_VERSION)-$(GITCLIFF_ARCH)-$(GITCLIFF_OSTYPE).tar.gz' --output - \
-	| tar xvOf - 'git-cliff-$(GITCLIFF_VERSION)/git-cliff' > $@
+	| tar xzvOf - 'git-cliff-$(GITCLIFF_VERSION)/git-cliff' > $@
 	@chmod +x $@
 
 ####
@@ -217,5 +217,5 @@ bin/typos: bin/typos-$(TYPOS_VERSION)
 
 bin/typos-$(TYPOS_VERSION): | $(BIN_DIR)
 	@curl -sSfL 'https://github.com/crate-ci/typos/releases/download/v$(TYPOS_VERSION)/typos-v$(TYPOS_VERSION)-$(TYPOS_ARCH)-$(TYPOS_OSTYPE).tar.gz' --output - \
-	| tar xvOf - './typos' > $@
+	| tar xzvOf - './typos' > $@
 	@chmod +x $@
