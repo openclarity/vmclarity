@@ -3,6 +3,7 @@ on:
   push:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-rc.[0-9]+"
 
 permissions:
   packages: write
@@ -48,8 +49,8 @@ jobs:
           VERSION: ${{ github.ref_name }}
         run: make publish-helm-chart
 
-  manifests:
-    name: Create manifests
+  artifacts:
+    name: Create artifacts
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -102,11 +103,13 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
-          name: manifests
+          name: artifacts
           path: |
             dist/*.tar.gz
             dist/*.tgz
             dist/*.sha256sum
+            dist/bicep/vmclarity.json
+            dist/bicep/vmclarity-UI.json
           if-no-files-found: error
 
   main_release:
@@ -114,41 +117,33 @@ jobs:
       - verification
       - build_and_push
       - publish_helm
-      - manifests
+      - artifacts
     name: Release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Set up Go
-        uses: actions/setup-go@v4
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
         with:
-          # NOTE(chrisgacsal): Use actions/cache for caching Go dependency and build caches
-          # as if provides better flexibility like setting the cache key which reduces cache misses significantly.
-          cache: false
-          go-version-file: 'go.mod'
+          name: artifacts
+          path: dist
 
-      - name: Setup Go caching
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ github.ref_name }}-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-${{ github.ref_name }}-
-            ${{ runner.os }}-go-${{ github.event.repository.default_branch }}-
-
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v5
-        with:
-          version: v1.16.0
-          args: release --clean --skip-validate
+      - name: Generate changelog
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ github.ref_name }}
+        run: make generate-release-notes
+
+      - uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifactErrorsFailBuild: true
+          artifacts: "dist/*.tar.gz,dist/*.sha256sum,dist/bicep/vmclarity.json,dist/bicep/vmclarity-UI.json"
+          bodyFile: "dist/CHANGELOG.md"
+          draft: true
+          name: "Release ${{ github.ref_name }}"
+          updateOnlyUnreleased: true
 
   # TODO(sambetts) We need to publish a tag in the format "api/<version>" tag
   # so that go mod is able to import the api module without overriding. We need
