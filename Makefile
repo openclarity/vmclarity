@@ -316,12 +316,10 @@ $(DIST_DIR)/%/vmclarity-cli: $(shell find api) $(shell find cmd/vmclarity-cli) $
 		-o $@ cmd/$(notdir $@)/main.go
 
 $(DIST_DIR)/%/LICENSE: $(ROOT_DIR)/LICENSE
-	$(info --- Copy $(notdir $<) to $@)
-	@cp $< $@
+	cp -v $< $@
 
 $(DIST_DIR)/%/README.md: $(ROOT_DIR)/README.md
-	$(info --- Copy $(notdir $<) to $@)
-	@cp $< $@
+	cp -v $< $@
 
 CFN_DIR := $(INSTALLATION_DIR)/aws
 CFN_FILES := $(shell find $(CFN_DIR))
@@ -336,13 +334,13 @@ $(DIST_DIR)/aws-cloudformation-$(VERSION).tar.gz: $(DIST_DIR)/aws-cloudformation
 
 $(DIST_DIR)/aws-cloudformation-$(VERSION).bundle: $(CFN_FILES) | $(CFN_DIST_DIR)
 	$(info --- Generate Cloudformation bundle)
-	cp -R $(CFN_DIR)/ $(CFN_DIST_DIR)/
+	cp -vR $(CFN_DIR)/* $(CFN_DIST_DIR)/
 	sed -i -E 's@(ghcr\.io\/openclarity\/vmclarity\-(apiserver|cli|orchestrator|ui-backend|ui)):latest@\1:$(VERSION)@' $(CFN_DIST_DIR)/VmClarity.cfn
 	@touch $@
 
 $(CFN_DIST_DIR)/LICENSE: $(ROOT_DIR)/LICENSE | $(CFN_DIST_DIR)
 	$(info --- Copy $(notdir $@) to $@)
-	@cp $< $@
+	cp -v $< $@
 
 $(CFN_DIST_DIR):
 	@mkdir -p $@
@@ -360,15 +358,14 @@ $(DIST_DIR)/azure-bicep-$(VERSION).tar.gz: $(DIST_DIR)/azure-bicep-$(VERSION).bu
 
 $(DIST_DIR)/azure-bicep-$(VERSION).bundle: $(BICEP_FILES) $(BICEP_BIN) | $(BICEP_DIST_DIR)
 	$(info --- Generate Bicep bundle)
-	cp -R $(BICEP_DIR)/ $(BICEP_DIST_DIR)/
+	cp -vR $(BICEP_DIR)/* $(BICEP_DIST_DIR)/
 	sed -i -E 's@(ghcr\.io\/openclarity\/vmclarity\-(apiserver|cli|orchestrator|ui-backend|ui)):latest@\1:$(VERSION)@' \
 		$(BICEP_DIST_DIR)/*.bicep $(BICEP_DIST_DIR)/vmclarity-UI.json
 	$(BICEP_BIN) build $(BICEP_DIST_DIR)/vmclarity.bicep
 	@touch $@
 
 $(BICEP_DIST_DIR)/LICENSE: $(ROOT_DIR)/LICENSE | $(BICEP_DIST_DIR)
-	$(info --- Copy $(notdir $@) to $@)
-	@cp $< $@
+	cp -v $< $@
 
 $(BICEP_DIST_DIR):
 	@mkdir -p $@
@@ -386,14 +383,14 @@ $(DIST_DIR)/docker-compose-$(VERSION).tar.gz: $(DIST_DIR)/docker-compose-$(VERSI
 
 $(DIST_DIR)/docker-compose-$(VERSION).bundle: $(DOCKER_COMPOSE_FILES) | $(DOCKER_COMPOSE_DIST_DIR)
 	$(info --- Generate Docker Compose bundle)
-	cp -R $(DOCKER_COMPOSE_DIR)/ $(DOCKER_COMPOSE_DIST_DIR)/
+	cp -vR $(DOCKER_COMPOSE_DIR)/* $(DOCKER_COMPOSE_DIST_DIR)/
 	sed -i -E 's@(ghcr\.io\/openclarity\/vmclarity\-(apiserver|cli|orchestrator|ui-backend|ui)):latest@\1:$(VERSION)@' \
 		$(DOCKER_COMPOSE_DIST_DIR)/docker-compose.yml $(DOCKER_COMPOSE_DIST_DIR)/image_override.env
 	@touch $@
 
 $(DOCKER_COMPOSE_DIST_DIR)/LICENSE: $(ROOT_DIR)/LICENSE | $(DOCKER_COMPOSE_DIST_DIR)
 	$(info --- Copy $(notdir $@) to $@)
-	@cp $< $@
+	cp -v $< $@
 
 $(DOCKER_COMPOSE_DIST_DIR):
 	@mkdir -p $@
@@ -411,14 +408,13 @@ $(DIST_DIR)/gcp-deployment-$(VERSION).tar.gz: $(DIST_DIR)/gcp-deployment-$(VERSI
 
 $(DIST_DIR)/gcp-deployment-$(VERSION).bundle: $(GCP_DM_FILES) | $(GCP_DM_DIST_DIR)
 	$(info --- Generate Google Cloud Deployment bundle)
-	cp -R $(GCP_DM_DIR)/ $(GCP_DM_DIST_DIR)/
+	cp -vR $(GCP_DM_DIR)/* $(GCP_DM_DIST_DIR)/
 	sed -i -E 's@(ghcr\.io\/openclarity\/vmclarity\-(apiserver|cli|orchestrator|ui-backend|ui)):latest@\1:$(VERSION)@' \
 		$(GCP_DM_DIST_DIR)/vmclarity.py.schema $(GCP_DM_DIST_DIR)/components/vmclarity-server.py.schema
 	@touch $@
 
 $(GCP_DM_DIST_DIR)/LICENSE: $(ROOT_DIR)/LICENSE | $(GCP_DM_DIST_DIR)
-	$(info --- Copy $(notdir $@) to $@)
-	@cp $< $@
+	cp -v $< $@
 
 $(GCP_DM_DIST_DIR):
 	@mkdir -p $@
@@ -436,7 +432,7 @@ $(DIST_DIR)/vmclarity-$(VERSION:v%=%).tgz: $(DIST_DIR)/helm-vmclarity-chart-$(VE
 
 $(DIST_DIR)/helm-vmclarity-chart-$(VERSION:v%=%).bundle: $(HELM_CHART_FILES) bin/yq bin/helm-docs | $(HELM_CHART_DIST_DIR)
 	$(info --- Generate Helm Chart bundle)
-	cp -R $(HELM_CHART_DIR)/ $(HELM_CHART_DIST_DIR)/
+	cp -vR $(HELM_CHART_DIR)/* $(HELM_CHART_DIST_DIR)/
 	$(YQ_BIN) -i ' \
 	.apiserver.image.tag = "$(VERSION)" | \
 	.orchestrator.image.tag = "$(VERSION)" | \
