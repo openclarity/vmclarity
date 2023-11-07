@@ -356,7 +356,7 @@ $(DIST_DIR)/azure-bicep-$(VERSION).tar.gz: $(DIST_DIR)/azure-bicep-$(VERSION).bu
 	$(info --- Bundle $(BICEP_DIST_DIR) into $(notdir $@))
 	tar cv -f $@ -C $(BICEP_DIST_DIR) --use-compress-program='gzip -9' $(shell ls $(BICEP_DIST_DIR))
 
-$(DIST_DIR)/azure-bicep-$(VERSION).bundle: $(BICEP_FILES) $(BICEP_BIN) | $(BICEP_DIST_DIR)
+$(DIST_DIR)/azure-bicep-$(VERSION).bundle: $(BICEP_FILES) bin/bicep | $(BICEP_DIST_DIR)
 	$(info --- Generate Bicep bundle)
 	cp -vR $(BICEP_DIR)/* $(BICEP_DIST_DIR)/
 	sed -i -E 's@(ghcr\.io\/openclarity\/vmclarity\-(apiserver|cli|orchestrator|ui-backend|ui)):latest@\1:$(VERSION)@' \
