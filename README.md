@@ -9,7 +9,7 @@
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/openclarity/vmclarity/main-merge.yml?style=flat-square&branch=main)
 [![Go Report Card](https://goreportcard.com/badge/github.com/openclarity/vmclarity)](https://goreportcard.com/report/github.com/openclarity/vmclarity)
 
-VM Security (formerly VMClarity) is an open source tool for agentless detection and management of Virtual Machine
+VMClarity is an open source tool for agentless detection and management of Virtual Machine
 Software Bill Of Materials (SBOM) and security threats such as vulnerabilities, exploits, malware, rootkits, misconfigurations and leaked secrets.
 
 <img src="./img/vmclarity_demo.gif" alt="VMClarity demo" />
