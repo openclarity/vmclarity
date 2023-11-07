@@ -463,5 +463,5 @@ generate-release-notes: $(DIST_DIR)/RELEASE.md ## Generate Release Notes
 
 $(DIST_DIR)/RELEASE.md: $(DIST_DIR)/CHANGELOG.md
 
-$(DIST_DIR)/CHANGELOG.md: $(ROOT_DIR)/.git/refs/heads/$(shell git rev-parse --abbrev-ref HEAD) $(ROOT_DIR)/cliff.toml $(ROOT_DIR)/release.tmpl
+$(DIST_DIR)/CHANGELOG.md: $(ROOT_DIR)/.git/refs/heads/$(shell git rev-parse --abbrev-ref HEAD) $(ROOT_DIR)/cliff.toml $(ROOT_DIR)/release.tmpl bin/git-cliff
 	$(GITCLIFF_BIN) -vv --strip all --unreleased --tag $(VERSION) --output $@
