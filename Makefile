@@ -12,6 +12,7 @@ SHELL = /usr/bin/env bash -o pipefail
 
 BINARY_NAME ?= vmclarity
 VERSION ?= $(shell git rev-parse --short HEAD)
+SEMVER := $(VERSION:v%=%)
 DOCKER_REGISTRY ?= ghcr.io/openclarity
 DOCKER_IMAGE ?= $(DOCKER_REGISTRY)/$(BINARY_NAME)
 DOCKER_TAG ?= $(VERSION)
@@ -427,13 +428,13 @@ HELM_CHART_FILES := $(shell find $(HELM_CHART_DIR))
 HELM_CHART_DIST_DIR := $(DIST_DIR)/helm-vmclarity-chart
 
 .PHONY: dist-helm-chart
-dist-helm-chart: $(DIST_DIR)/vmclarity-$(VERSION).tgz $(DIST_DIR)/vmclarity-$(VERSION).tgz.sha256sum ## Create Helm Chart bundle
+dist-helm-chart: $(DIST_DIR)/vmclarity-$(VERSION:v%=%).tgz $(DIST_DIR)/vmclarity-$(VERSION:v%=%).tgz.sha256sum ## Create Helm Chart bundle
 
-$(DIST_DIR)/vmclarity-$(VERSION).tgz: $(DIST_DIR)/helm-vmclarity-chart-$(VERSION).bundle | $(HELM_CHART_DIST_DIR)
+$(DIST_DIR)/vmclarity-$(VERSION:v%=%).tgz: $(DIST_DIR)/helm-vmclarity-chart-$(VERSION:v%=%).bundle bin/helm | $(HELM_CHART_DIST_DIR)
 	$(info --- Bundle $(HELM_CHART_DIST_DIR) into $(notdir $@))
 	$(HELM_BIN) package $(HELM_CHART_DIST_DIR) --version "$(VERSION:v%=%)" --app-version "$(VERSION)" --destination $(DIST_DIR)
 
-$(DIST_DIR)/helm-vmclarity-chart-$(VERSION).bundle: $(HELM_CHART_FILES) $(YQ_BIN) | $(HELM_CHART_DIST_DIR)
+$(DIST_DIR)/helm-vmclarity-chart-$(VERSION:v%=%).bundle: $(HELM_CHART_FILES) bin/yq bin/helm-docs | $(HELM_CHART_DIST_DIR)
 	$(info --- Generate Helm Chart bundle)
 	cp -R $(HELM_CHART_DIR)/ $(HELM_CHART_DIST_DIR)/
 	$(YQ_BIN) -i ' \
@@ -454,7 +455,7 @@ $(HELM_CHART_DIST_DIR):
 	@mkdir -p $@
 
 .PHONY: publish-helm-chart
-publish-helm-chart: $(DIST_DIR)/vmclarity-$(VERSION).tgz ## Publish Helm Chart bundle to OCI registry
+publish-helm-chart: $(DIST_DIR)/vmclarity-$(VERSION:v%=%).tgz bin/helm ## Publish Helm Chart bundle to OCI registry
 	$(HELM_BIN) push $< oci://$(HELM_OCI_REPOSITORY)
 
 $(DIST_DIR)/%.sha256sum: | $(DIST_DIR)
