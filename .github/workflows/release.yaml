@@ -16,7 +16,10 @@ jobs:
     secrets: inherit
 
   build_and_push:
-    needs: verification
+    needs:
+      - verification
+      - artifacts
+      - publish_helm
     name: Build & Push
     uses: ./.github/workflows/reusable-build-and-push.yml
     with:
