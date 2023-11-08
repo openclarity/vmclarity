@@ -430,20 +430,14 @@ $(DIST_DIR)/vmclarity-$(VERSION:v%=%).tgz: $(DIST_DIR)/helm-vmclarity-chart-$(VE
 	$(info --- Bundle $(HELM_CHART_DIST_DIR) into $(notdir $@))
 	$(HELM_BIN) package $(HELM_CHART_DIST_DIR) --version "$(VERSION:v%=%)" --app-version "$(VERSION)" --destination $(DIST_DIR)
 
+
+
 $(DIST_DIR)/helm-vmclarity-chart-$(VERSION:v%=%).bundle: $(HELM_CHART_FILES) bin/yq bin/helm-docs | $(HELM_CHART_DIST_DIR)
 	$(info --- Generate Helm Chart bundle)
 	cp -vR $(HELM_CHART_DIR)/* $(HELM_CHART_DIST_DIR)/
-	$(YQ_BIN) -i ' \
-	.apiserver.image.tag = "$(VERSION)" | \
-	.orchestrator.image.tag = "$(VERSION)" | \
-	.orchestrator.scannerImage.tag = "$(VERSION)" | \
-	.ui.image.tag = "$(VERSION)" | \
-	.uibackend.image.tag = "$(VERSION)" \
-	' $(HELM_CHART_DIST_DIR)/values.yaml
-	$(YQ_BIN) -i ' \
-	.version = "$(VERSION:v%=%)" | \
-	.appVersion = "$(VERSION)" \
-	' $(HELM_CHART_DIST_DIR)/Chart.yaml
+	$(YQ_BIN) -i '.apiserver.image.tag = "$(VERSION)" | .orchestrator.image.tag = "$(VERSION)" | .orchestrator.scannerImage.tag = "$(VERSION)" | .ui.image.tag = "$(VERSION)" | .uibackend.image.tag = "$(VERSION)"' \
+	$(HELM_CHART_DIST_DIR)/values.yaml
+	$(YQ_BIN) -i '.version = "$(VERSION:v%=%)" | .appVersion = "$(VERSION)"' $(HELM_CHART_DIST_DIR)/Chart.yaml
 	$(HELMDOCS_BIN) --chart-search-root $(HELM_CHART_DIST_DIR)
 	@touch $@
 
