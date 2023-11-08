@@ -16,7 +16,7 @@ Software Bill Of Materials (SBOM) and security threats such as vulnerabilities, 
 
 Join [VMClarity's Slack channel](https://outshift.slack.com/messages/vmclarity) to hear about the latest announcements and upcoming activities. We would love to get your feedback!
 
-VMClarity is now part of the [Openclarity platform](https://openclarity.io).
+VMClarity is the tool responsible for VM Security in the [OpenClarity platform](https://openclarity.io).
 
 # Table of Contents<!-- omit in toc -->
 
