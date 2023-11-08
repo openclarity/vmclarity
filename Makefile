@@ -452,9 +452,7 @@ $(DIST_DIR)/%.sha256sum: | $(DIST_DIR)
 	shasum -a 256 $(basename $@) | sed "s@$(dir $@)@@" > $@
 
 .PHONY: generate-release-notes
-generate-release-notes: $(DIST_DIR)/RELEASE.md ## Generate Release Notes
+generate-release-notes: $(DIST_DIR)/CHANGELOG.md ## Generate Release Notes
 
-$(DIST_DIR)/RELEASE.md: $(DIST_DIR)/CHANGELOG.md
-
-$(DIST_DIR)/CHANGELOG.md: $(ROOT_DIR)/cliff.toml $(ROOT_DIR)/release.tmpl bin/git-cliff
+$(DIST_DIR)/CHANGELOG.md: $(ROOT_DIR)/cliff.toml bin/git-cliff
 	$(GITCLIFF_BIN) --config $(ROOT_DIR)/cliff.toml -vv --strip all --unreleased --tag $(VERSION) --output $@
