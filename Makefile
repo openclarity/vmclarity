@@ -12,7 +12,6 @@ SHELL = /usr/bin/env bash -o pipefail
 
 BINARY_NAME ?= vmclarity
 VERSION ?= $(shell git rev-parse --short HEAD)
-SEMVER := $(VERSION:v%=%)
 DOCKER_REGISTRY ?= ghcr.io/openclarity
 DOCKER_IMAGE ?= $(DOCKER_REGISTRY)/$(BINARY_NAME)
 DOCKER_TAG ?= $(VERSION)
