@@ -51,9 +51,10 @@ const TABS_COLUMNS_MAPPING = {
 		]
 	},
 	[FINDINGS_MAPPING.ROOTKITS.dataKey]: {
-		headerItems: ["Rootkit name"],
+		headerItems: ["Rootkit name", "Message"],
 		bodyItems: [
-			{dataKey: "rootkit.rootkitName"}
+			{dataKey: "rootkit.rootkitName"},
+			{dataKey: "rootkit.message"}
 		]
 	},
 	[FINDINGS_MAPPING.PACKAGES.dataKey]: {
