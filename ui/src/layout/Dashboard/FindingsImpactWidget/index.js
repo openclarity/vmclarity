@@ -33,9 +33,9 @@ const TABS_COLUMNS_MAPPING = {
 		]
 	},
 	[FINDINGS_MAPPING.MISCONFIGURATIONS.dataKey]: {
-		headerItems: ["Test description"],
+		headerItems: ["Message"],
 		bodyItems: [
-			{dataKey: "misconfiguration.testDescription"}
+			{dataKey: "misconfiguration.message"}
 		]
 	},
 	[FINDINGS_MAPPING.SECRETS.dataKey]: {
