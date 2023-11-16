@@ -70,7 +70,13 @@ For a detailed installation guide, please see [AWS](installation/aws/README.md).
 
 ### GCP
 
-For a detailed installation guide, please see the [website](https://openclarity.io/docs/vmclarity/getting-started/gcp/).
+1. Change directory to `installation/gcp/dm`
+2. Copy `vmclarity-config.example.yaml` to `vmclarity-config.yaml`, update with required values.
+3. Deploy vmclarity using GCP deployment manager
+   ```
+   gcloud deployment-manager deployments create <vmclarity deployment name> --config vmclarity-config.yaml
+   ```
+4. Once deployed, copy the VMClarity SSH IP address from the CLI output.
 
 ### Kubernetes
 
