@@ -40,36 +40,45 @@ No abandoned ideas so far.
 You can find a POC implementation on the [`open-api-codegen-poc`](https://github.com/openclarity/vmclarity/tree/open-api-codegen-poc) branch.
 
 1. Install the openapi-generator-cli
-    ```
-    npm install @openapitools/openapi-generator-cli -D
-    ```
+
+```sh
+npm install @openapitools/openapi-generator-cli -D
+```
+
 
 2. Run the code generation
-    ```sh
-    npx @openapitools/openapi-generator-cli generate -i ../api/openapi.yaml -g typescript-axios -o ./src/api/generated --openapi-normalizer SET_TAGS_FOR_ALL_OPERATIONS=VMClarity
-    ```
-    This should be added as an npm command and run in CI as well.
-    SET_TAGS_FOR_ALL_OPERATIONS is used to make sure that the API is properly named (without this it would be named as DefaultApi)
+
+```sh
+npx @openapitools/openapi-generator-cli generate -i ../api/openapi.yaml -g typescript-axios -o ./src/api/generated --openapi-normalizer SET_TAGS_FOR_ALL_OPERATIONS=VMClarity
+```
+
+This should be added as an npm command and run in CI as well.
+SET_TAGS_FOR_ALL_OPERATIONS is used to make sure that the API is properly named (without this it would be named as DefaultApi)
+
 
 3. Create a single axios instance and a single instance of the API.
-    ```ts
-    const axiosClient = axios.create({
-        baseURL: `${window.location.origin}/api`,
-    });
 
-    // create an instance of the api with default configuration and the above defined axios instance.
-    const vmClarityApi = new VMClarityApi(undefined, undefined, axiosClient);
-    ```
+```ts
+const axiosClient = axios.create({
+    baseURL: `${window.location.origin}/api`,
+});
+
+// create an instance of the api with default configuration and the above defined axios instance.
+const vmClarityApi = new VMClarityApi(undefined, undefined, axiosClient);
+```
+
 
 4. Use the API instance in the your react-query based queries.
-    ```ts
-    const { data: assets } = useQuery({
-        queryKey: ['assets'],
-        queryFn: () => vmClarityApi.getAssets(),
-        select: (resp) => resp.data
-    });
-    ```
-    The nice thing about the code above is that we get type safety out of the box without the need to declare the types manually. I also don't have to know the path and parameters of the specific API calls.
+
+```ts
+const { data: assets } = useQuery({
+    queryKey: ['assets'],
+    queryFn: () => vmClarityApi.getAssets(),
+    select: (resp) => resp.data
+});
+```
+The nice thing about the code above is that we get type safety out of the box without the need to declare the types manually. I also don't have to know the path and parameters of the specific API calls.
+
 
 ## UX
 
