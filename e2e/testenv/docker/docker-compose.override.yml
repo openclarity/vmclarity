@@ -1,7 +1,4 @@
 services:
-  uibackend:
-    ports:
-      - "8890:8890"
   alpine:
     image: alpine:3.18.2
     command: ["sleep", "infinity"]

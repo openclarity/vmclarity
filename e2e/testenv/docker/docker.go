@@ -194,12 +194,12 @@ func (e *DockerEnv) Services() []string {
 	return services
 }
 
-func (e *DockerEnv) GetServiceURL(serviceName string, port string) (*url.URL, error) {
+func (e *DockerEnv) GetGatewayServiceURL() (*url.URL, error) {
 	var service types.ServiceConfig
 	var ok bool
 
 	for _, srv := range e.project.Services {
-		if srv.Name == serviceName {
+		if srv.Name == "gateway" {
 			service = srv
 			ok = true
 			break
@@ -207,16 +207,14 @@ func (e *DockerEnv) GetServiceURL(serviceName string, port string) (*url.URL, er
 	}
 
 	if !ok {
-		return nil, errors.Errorf("container with name %s is not available", serviceName)
+		return nil, errors.Errorf("container with name gateway is not available")
 	}
 
 	if len(service.Ports) < 1 {
-		return nil, errors.Errorf("container with name %s has no ports published", serviceName)
+		return nil, errors.Errorf("container with name gateway has no ports published")
 	}
 
-	if port == "" {
-		port = service.Ports[0].Published
-	}
+	port := service.Ports[0].Published
 	hostIP := service.Ports[0].HostIP
 	if hostIP == "" {
 		hostIP = "127.0.0.1"

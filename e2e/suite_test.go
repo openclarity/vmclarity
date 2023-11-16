@@ -18,6 +18,7 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 	"testing"
 	"time"
@@ -38,12 +39,6 @@ var (
 	client   *backendclient.BackendClient
 	uiClient *uibackendclient.UIBackendClient
 	config   *types.Config
-)
-
-const (
-	dockerVMclarityAPIServerServiceName = "apiserver"
-	dockerVMclarityUIBackendServiceName = "uibackend"
-	dockerVMclarityUIBackendPort        = "8890"
 )
 
 func TestEndToEnd(t *testing.T) {
@@ -84,16 +79,21 @@ func beforeSuite(ctx context.Context) {
 		return ready
 	}, time.Second*5).Should(gomega.BeTrue())
 
-	u, err := testEnv.GetServiceURL(dockerVMclarityAPIServerServiceName, "")
+	u, err := testEnv.GetGatewayServiceURL()
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-	client, err = backendclient.Create(fmt.Sprintf("%s://%s/%s", u.Scheme, u.Host, u.Path))
+	base := fmt.Sprintf("%s://%s", u.Scheme, u.Host)
+
+	clientURL, err := url.JoinPath(base, "api")
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-	u, err = testEnv.GetServiceURL(dockerVMclarityUIBackendServiceName, dockerVMclarityUIBackendPort)
+	client, err = backendclient.Create(clientURL)
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-	uiClient, err = uibackendclient.Create(fmt.Sprintf("%s://%s/%s", u.Scheme, u.Host, u.Path))
+	uiClientURL, err := url.JoinPath(base, "ui", "api")
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+
+	uiClient, err = uibackendclient.Create(uiClientURL)
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 }
 
