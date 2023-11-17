@@ -31,14 +31,14 @@ func Test_convertLabelsToTags(t *testing.T) {
 	tests := []struct {
 		name string
 		args map[string]string
-		want *[]models.Tag
+		want []models.Tag
 	}{
 		{
 			name: "sanity",
 			args: map[string]string{
 				"valid-tag": "valid-value",
 			},
-			want: &[]models.Tag{{
+			want: []models.Tag{{
 				Key: "valid-tag", Value: "valid-value",
 			}},
 		},

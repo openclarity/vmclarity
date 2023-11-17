@@ -344,7 +344,7 @@ func (p *Provider) getVMInfoFromVirtualMachine(ctx context.Context, vm *computep
 		Location:         getLastURLPart(vm.Zone),
 		Platform:         platform,
 		SecurityGroups:   &[]models.SecurityGroup{},
-		Tags:             convertLabelsToTags(vm.Labels),
+		Tags:             utils.PointerTo(convertLabelsToTags(vm.Labels)),
 	})
 	if err != nil {
 		return models.AssetType{}, provider.FatalErrorf("failed to create AssetType from VMInfo: %w", err)
@@ -353,7 +353,7 @@ func (p *Provider) getVMInfoFromVirtualMachine(ctx context.Context, vm *computep
 	return assetType, nil
 }
 
-func convertLabelsToTags(labels map[string]string) *[]models.Tag {
+func convertLabelsToTags(labels map[string]string) []models.Tag {
 	tags := make([]models.Tag, 0, len(labels))
 
 	for k, v := range labels {
@@ -366,5 +366,5 @@ func convertLabelsToTags(labels map[string]string) *[]models.Tag {
 		)
 	}
 
-	return &tags
+	return tags
 }
