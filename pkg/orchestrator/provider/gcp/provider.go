@@ -19,7 +19,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	compute "cloud.google.com/go/compute/apiv1"
@@ -368,12 +367,4 @@ func convertLabelsToTags(labels map[string]string) *[]models.Tag {
 	}
 
 	return &tags
-}
-
-func getKeyValue(str string) (string, string) {
-	key, value, found := strings.Cut(str, "=")
-	if found {
-		return key, value
-	}
-	return str, ""
 }
