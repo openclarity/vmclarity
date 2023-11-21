@@ -45,7 +45,7 @@ func New(config Config) *AssetScanProcessor {
 
 // Returns true if AssetScanStatus.State is DONE and there are no Errors.
 func statusCompletedWithNoErrors(status *models.ScannerStatus) bool {
-	return status != nil && status.State == models.Done
+	return status != nil && status.State == models.ScannerStatusStateDone
 }
 
 // nolint:cyclop

@@ -197,11 +197,11 @@ const (
 
 // Defines values for ScannerStatusState.
 const (
-	Done       ScannerStatusState = "Done"
-	Failed     ScannerStatusState = "Failed"
-	InProgress ScannerStatusState = "InProgress"
-	Pending    ScannerStatusState = "Pending"
-	Skipped    ScannerStatusState = "Skipped"
+	ScannerStatusStateDone       ScannerStatusState = "Done"
+	ScannerStatusStateFailed     ScannerStatusState = "Failed"
+	ScannerStatusStateInProgress ScannerStatusState = "InProgress"
+	ScannerStatusStatePending    ScannerStatusState = "Pending"
+	ScannerStatusStateSkipped    ScannerStatusState = "Skipped"
 )
 
 // Defines values for VulnerabilitySeverity.

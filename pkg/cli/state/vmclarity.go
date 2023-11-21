@@ -197,7 +197,7 @@ func (v *VMClarityState) markExploitsScanInProgress(ctx context.Context) error {
 	}
 
 	assetScan.Exploits.Status = models.NewScannerStatus(
-		models.InProgress,
+		models.ScannerStatusStateInProgress,
 		models.ScannerStatusReasonScanning,
 		nil,
 	)
@@ -221,7 +221,7 @@ func (v *VMClarityState) markSecretsScanInProgress(ctx context.Context) error {
 	}
 
 	assetScan.Secrets.Status = models.NewScannerStatus(
-		models.InProgress,
+		models.ScannerStatusStateInProgress,
 		models.ScannerStatusReasonScanning,
 		nil,
 	)
@@ -245,7 +245,7 @@ func (v *VMClarityState) markSBOMScanInProgress(ctx context.Context) error {
 	}
 
 	assetScan.Sbom.Status = models.NewScannerStatus(
-		models.InProgress,
+		models.ScannerStatusStateInProgress,
 		models.ScannerStatusReasonScanning,
 		nil,
 	)
@@ -269,7 +269,7 @@ func (v *VMClarityState) markVulnerabilitiesScanInProgress(ctx context.Context) 
 	}
 
 	assetScan.Vulnerabilities.Status = models.NewScannerStatus(
-		models.InProgress,
+		models.ScannerStatusStateInProgress,
 		models.ScannerStatusReasonScanning,
 		nil,
 	)
@@ -293,7 +293,7 @@ func (v *VMClarityState) markInfoFinderScanInProgress(ctx context.Context) error
 	}
 
 	assetScan.InfoFinder.Status = models.NewScannerStatus(
-		models.InProgress,
+		models.ScannerStatusStateInProgress,
 		models.ScannerStatusReasonScanning,
 		nil,
 	)
@@ -317,7 +317,7 @@ func (v *VMClarityState) markMalwareScanInProgress(ctx context.Context) error {
 	}
 
 	assetScan.Malware.Status = models.NewScannerStatus(
-		models.InProgress,
+		models.ScannerStatusStateInProgress,
 		models.ScannerStatusReasonScanning,
 		nil,
 	)
@@ -341,7 +341,7 @@ func (v *VMClarityState) markMisconfigurationsScanInProgress(ctx context.Context
 	}
 
 	assetScan.Misconfigurations.Status = models.NewScannerStatus(
-		models.InProgress,
+		models.ScannerStatusStateInProgress,
 		models.ScannerStatusReasonScanning,
 		nil,
 	)
@@ -365,7 +365,7 @@ func (v *VMClarityState) markRootkitsScanInProgress(ctx context.Context) error {
 	}
 
 	assetScan.Rootkits.Status = models.NewScannerStatus(
-		models.InProgress,
+		models.ScannerStatusStateInProgress,
 		models.ScannerStatusReasonScanning,
 		nil,
 	)

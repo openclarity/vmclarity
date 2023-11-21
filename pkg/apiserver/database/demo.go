@@ -693,7 +693,7 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 			if *result.ScanFamiliesConfig.Exploits.Enabled {
 				result.Exploits = &models.ExploitScan{
 					Exploits: createExploitsResult(),
-					Status:   models.NewScannerStatus(models.Done, models.ScannerStatusReasonSuccess, nil),
+					Status:   models.NewScannerStatus(models.ScannerStatusStateDone, models.ScannerStatusReasonSuccess, nil),
 				}
 				result.Stats.Exploits = &[]models.AssetScanInputScanStats{
 					{
@@ -719,7 +719,7 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 			} else {
 				result.Exploits = &models.ExploitScan{
 					Exploits: nil,
-					Status:   models.NewScannerStatus(models.Skipped, models.ScannerStatusReasonNotScheduled, nil),
+					Status:   models.NewScannerStatus(models.ScannerStatusStateSkipped, models.ScannerStatusReasonNotScheduled, nil),
 				}
 				result.Summary.TotalExploits = utils.PointerTo(0)
 			}
@@ -730,7 +730,7 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 					Malware:  createMalwareResult(),
 					Metadata: nil,
 					Status: models.NewScannerStatus(
-						models.Failed,
+						models.ScannerStatusStateFailed,
 						models.ScannerStatusReasonError,
 						utils.PointerTo("failed to scan malware"),
 					),
@@ -760,7 +760,7 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 				result.Malware = &models.MalwareScan{
 					Malware:  nil,
 					Metadata: nil,
-					Status:   models.NewScannerStatus(models.Skipped, models.ScannerStatusReasonNotScheduled, nil),
+					Status:   models.NewScannerStatus(models.ScannerStatusStateSkipped, models.ScannerStatusReasonNotScheduled, nil),
 				}
 				result.Summary.TotalMalware = utils.PointerTo(0)
 			}
@@ -770,7 +770,7 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 				result.Misconfigurations = &models.MisconfigurationScan{
 					Misconfigurations: createMisconfigurationsResult(),
 					Scanners:          nil,
-					Status:            models.NewScannerStatus(models.InProgress, models.ScannerStatusReasonScanning, nil),
+					Status:            models.NewScannerStatus(models.ScannerStatusStateInProgress, models.ScannerStatusReasonScanning, nil),
 				}
 				result.Stats.Misconfigurations = &[]models.AssetScanInputScanStats{
 					{
@@ -788,7 +788,7 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 				result.Misconfigurations = &models.MisconfigurationScan{
 					Misconfigurations: nil,
 					Scanners:          nil,
-					Status:            models.NewScannerStatus(models.Skipped, models.ScannerStatusReasonNotScheduled, nil),
+					Status:            models.NewScannerStatus(models.ScannerStatusStateSkipped, models.ScannerStatusReasonNotScheduled, nil),
 				}
 				result.Summary.TotalMisconfigurations = utils.PointerTo(0)
 			}
@@ -797,7 +797,7 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 			if *result.ScanFamiliesConfig.Sbom.Enabled {
 				result.Sbom = &models.SbomScan{
 					Packages: createPackagesResult(),
-					Status:   models.NewScannerStatus(models.Pending, models.ScannerStatusReasonScheduled, nil),
+					Status:   models.NewScannerStatus(models.ScannerStatusStatePending, models.ScannerStatusReasonScheduled, nil),
 				}
 				result.Stats.Sbom = &[]models.AssetScanInputScanStats{
 					{
@@ -814,7 +814,7 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 			} else {
 				result.Sbom = &models.SbomScan{
 					Packages: nil,
-					Status:   models.NewScannerStatus(models.Skipped, models.ScannerStatusReasonNotScheduled, nil),
+					Status:   models.NewScannerStatus(models.ScannerStatusStateSkipped, models.ScannerStatusReasonNotScheduled, nil),
 				}
 				result.Summary.TotalPackages = utils.PointerTo(0)
 			}
@@ -823,7 +823,7 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 			if *result.ScanFamiliesConfig.Rootkits.Enabled {
 				result.Rootkits = &models.RootkitScan{
 					Rootkits: createRootkitsResult(),
-					Status:   models.NewScannerStatus(models.Done, models.ScannerStatusReasonSuccess, nil),
+					Status:   models.NewScannerStatus(models.ScannerStatusStateDone, models.ScannerStatusReasonSuccess, nil),
 				}
 				result.Stats.Rootkits = &[]models.AssetScanInputScanStats{
 					{
@@ -840,7 +840,7 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 			} else {
 				result.Rootkits = &models.RootkitScan{
 					Rootkits: nil,
-					Status:   models.NewScannerStatus(models.Skipped, models.ScannerStatusReasonNotScheduled, nil),
+					Status:   models.NewScannerStatus(models.ScannerStatusStateSkipped, models.ScannerStatusReasonNotScheduled, nil),
 				}
 				result.Summary.TotalRootkits = utils.PointerTo(0)
 			}
@@ -849,7 +849,7 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 			if *result.ScanFamiliesConfig.Secrets.Enabled {
 				result.Secrets = &models.SecretScan{
 					Secrets: createSecretsResult(),
-					Status:  models.NewScannerStatus(models.Done, models.ScannerStatusReasonSuccess, nil),
+					Status:  models.NewScannerStatus(models.ScannerStatusStateDone, models.ScannerStatusReasonSuccess, nil),
 				}
 				result.Stats.Secrets = &[]models.AssetScanInputScanStats{
 					{
@@ -875,7 +875,7 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 			} else {
 				result.Secrets = &models.SecretScan{
 					Secrets: nil,
-					Status:  models.NewScannerStatus(models.Skipped, models.ScannerStatusReasonNotScheduled, nil),
+					Status:  models.NewScannerStatus(models.ScannerStatusStateSkipped, models.ScannerStatusReasonNotScheduled, nil),
 				}
 				result.Summary.TotalSecrets = utils.PointerTo(0)
 			}
@@ -885,7 +885,7 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 				result.Vulnerabilities = &models.VulnerabilityScan{
 					Vulnerabilities: createVulnerabilitiesResult(),
 					Status: models.NewScannerStatus(
-						models.Done,
+						models.ScannerStatusStateDone,
 						models.ScannerStatusReasonSuccess,
 						nil,
 					),
@@ -905,7 +905,7 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 			} else {
 				result.Vulnerabilities = &models.VulnerabilityScan{
 					Vulnerabilities: nil,
-					Status:          models.NewScannerStatus(models.Skipped, models.ScannerStatusReasonNotScheduled, nil),
+					Status:          models.NewScannerStatus(models.ScannerStatusStateSkipped, models.ScannerStatusReasonNotScheduled, nil),
 				}
 				result.Summary.TotalVulnerabilities = utils.GetVulnerabilityTotalsPerSeverity(nil)
 			}
@@ -915,7 +915,7 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 				result.InfoFinder = &models.InfoFinderScan{
 					Infos:    creatInfoFinderInfos(),
 					Scanners: nil,
-					Status:   models.NewScannerStatus(models.InProgress, models.ScannerStatusReasonScanning, nil),
+					Status:   models.NewScannerStatus(models.ScannerStatusStateInProgress, models.ScannerStatusReasonScanning, nil),
 				}
 				result.Stats.InfoFinder = &[]models.AssetScanInputScanStats{
 					{
@@ -933,7 +933,7 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 				result.InfoFinder = &models.InfoFinderScan{
 					Infos:    nil,
 					Scanners: nil,
-					Status:   models.NewScannerStatus(models.Skipped, models.ScannerStatusReasonNotScheduled, nil),
+					Status:   models.NewScannerStatus(models.ScannerStatusStateSkipped, models.ScannerStatusReasonNotScheduled, nil),
 				}
 				result.Summary.TotalInfoFinder = utils.PointerTo(0)
 			}

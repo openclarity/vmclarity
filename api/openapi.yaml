@@ -2443,6 +2443,12 @@ components:
             - Skipped
             - Failed
             - Done
+          x-enum-varnames:
+            - ScannerStatusStatePending
+            - ScannerStatusStateInProgress
+            - ScannerStatusStateSkipped
+            - ScannerStatusStateFailed
+            - ScannerStatusStateDone
         reason:
           description: |
             Machine readable reason for state transition.

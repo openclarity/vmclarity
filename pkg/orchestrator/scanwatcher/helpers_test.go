@@ -41,56 +41,56 @@ func TestNewAssetScanFromScan(t *testing.T) {
 	resourceCleanupStatus.LastTransitionTime = transitionTime
 
 	sbomScanStatus := models.NewScannerStatus(
-		models.Pending,
+		models.ScannerStatusStatePending,
 		models.ScannerStatusReasonScheduled,
 		nil,
 	)
 	sbomScanStatus.LastTransitionTime = transitionTime
 
 	exploitScanStatus := models.NewScannerStatus(
-		models.Pending,
+		models.ScannerStatusStatePending,
 		models.ScannerStatusReasonScheduled,
 		nil,
 	)
 	exploitScanStatus.LastTransitionTime = transitionTime
 
 	vulnerabilityScanStatus := models.NewScannerStatus(
-		models.Pending,
+		models.ScannerStatusStatePending,
 		models.ScannerStatusReasonScheduled,
 		nil,
 	)
 	vulnerabilityScanStatus.LastTransitionTime = transitionTime
 
 	malwareScanStatus := models.NewScannerStatus(
-		models.Pending,
+		models.ScannerStatusStatePending,
 		models.ScannerStatusReasonScheduled,
 		nil,
 	)
 	malwareScanStatus.LastTransitionTime = transitionTime
 
 	rootkitScanStatus := models.NewScannerStatus(
-		models.Skipped,
+		models.ScannerStatusStateSkipped,
 		models.ScannerStatusReasonNotScheduled,
 		nil,
 	)
 	rootkitScanStatus.LastTransitionTime = transitionTime
 
 	secretScanStatus := models.NewScannerStatus(
-		models.Skipped,
+		models.ScannerStatusStateSkipped,
 		models.ScannerStatusReasonNotScheduled,
 		nil,
 	)
 	secretScanStatus.LastTransitionTime = transitionTime
 
 	misconfigurationScanStatus := models.NewScannerStatus(
-		models.Skipped,
+		models.ScannerStatusStateSkipped,
 		models.ScannerStatusReasonNotScheduled,
 		nil,
 	)
 	misconfigurationScanStatus.LastTransitionTime = transitionTime
 
 	infoFinderScanStatus := models.NewScannerStatus(
-		models.Pending,
+		models.ScannerStatusStatePending,
 		models.ScannerStatusReasonScheduled,
 		nil,
 	)
