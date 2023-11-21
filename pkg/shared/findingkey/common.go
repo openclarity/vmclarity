@@ -29,7 +29,7 @@ func GenerateFindingKey(findingInfo *models.Finding_FindingInfo) (string, error)
 
 	switch info := value.(type) {
 	case models.ExploitFindingInfo:
-		return GenerateExploitFindingUniqueKey(info), nil
+		return GenerateExploitKey(info).String(), nil
 	case models.VulnerabilityFindingInfo:
 		return GenerateVulnerabilityKey(info).String(), nil
 	case models.MalwareFindingInfo:

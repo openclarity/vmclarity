@@ -81,7 +81,7 @@ func TestGenerateFindingKey(t *testing.T) {
 			args: args{
 				findingInfo: createFindingInfo(t, exploitFindingInfo),
 			},
-			want:    GenerateExploitFindingUniqueKey(exploitFindingInfo),
+			want:    GenerateExploitKey(exploitFindingInfo).String(),
 			wantErr: false,
 		},
 		{
