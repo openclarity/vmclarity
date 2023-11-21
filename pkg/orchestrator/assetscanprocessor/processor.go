@@ -43,6 +43,11 @@ func New(config Config) *AssetScanProcessor {
 	}
 }
 
+// Returns true if AssetScanStatus.State is DONE and there are no Errors.
+func statusCompletedWithNoErrors(status *models.ScannerStatus) bool {
+	return status != nil && status.State == models.Done
+}
+
 // nolint:cyclop
 func (asp *AssetScanProcessor) Reconcile(ctx context.Context, event AssetScanReconcileEvent) error {
 	// Get latest information, in case we've been sat in the reconcile
@@ -63,49 +68,49 @@ func (asp *AssetScanProcessor) Reconcile(ctx context.Context, event AssetScanRec
 	}
 
 	// Process each of the successfully scanned (state DONE and no errors) families into findings.
-	if assetScan.Vulnerabilities.Status.State == models.Done {
+	if statusCompletedWithNoErrors(assetScan.Vulnerabilities.Status) {
 		if err := asp.reconcileResultVulnerabilitiesToFindings(ctx, assetScan); err != nil {
 			return newFailedToReconcileTypeError(err, "vulnerabilities")
 		}
 	}
 
-	if assetScan.Sbom.Status.State == models.Done {
+	if statusCompletedWithNoErrors(assetScan.Sbom.Status) {
 		if err := asp.reconcileResultPackagesToFindings(ctx, assetScan); err != nil {
 			return newFailedToReconcileTypeError(err, "sbom")
 		}
 	}
 
-	if assetScan.Exploits.Status.State == models.Done {
+	if statusCompletedWithNoErrors(assetScan.Exploits.Status) {
 		if err := asp.reconcileResultExploitsToFindings(ctx, assetScan); err != nil {
 			return newFailedToReconcileTypeError(err, "exploits")
 		}
 	}
 
-	if assetScan.Secrets.Status.State == models.Done {
+	if statusCompletedWithNoErrors(assetScan.Secrets.Status) {
 		if err := asp.reconcileResultSecretsToFindings(ctx, assetScan); err != nil {
 			return newFailedToReconcileTypeError(err, "secrets")
 		}
 	}
 
-	if assetScan.Malware.Status.State == models.Done {
+	if statusCompletedWithNoErrors(assetScan.Malware.Status) {
 		if err := asp.reconcileResultMalwareToFindings(ctx, assetScan); err != nil {
 			return newFailedToReconcileTypeError(err, "malware")
 		}
 	}
 
-	if assetScan.Rootkits.Status.State == models.Done {
+	if statusCompletedWithNoErrors(assetScan.Rootkits.Status) {
 		if err := asp.reconcileResultRootkitsToFindings(ctx, assetScan); err != nil {
 			return newFailedToReconcileTypeError(err, "rootkits")
 		}
 	}
 
-	if assetScan.Misconfigurations.Status.State == models.Done {
+	if statusCompletedWithNoErrors(assetScan.Misconfigurations.Status) {
 		if err := asp.reconcileResultMisconfigurationsToFindings(ctx, assetScan); err != nil {
 			return newFailedToReconcileTypeError(err, "misconfigurations")
 		}
 	}
 
-	if assetScan.InfoFinder.Status.State == models.Done {
+	if statusCompletedWithNoErrors(assetScan.InfoFinder.Status) {
 		if err := asp.reconcileResultInfoFindersToFindings(ctx, assetScan); err != nil {
 			return newFailedToReconcileTypeError(err, "infoFinder")
 		}

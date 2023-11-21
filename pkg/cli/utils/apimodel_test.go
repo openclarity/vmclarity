@@ -48,7 +48,7 @@ func Test_ConvertSBOMResultToPackages(t *testing.T) {
 		result *sbom.Results
 	}
 	type returns struct {
-		packages *[]models.Package
+		packages []models.Package
 	}
 	tests := []struct {
 		name string
@@ -106,7 +106,7 @@ func Test_ConvertSBOMResultToPackages(t *testing.T) {
 				},
 			},
 			want: returns{
-				packages: &[]models.Package{
+				packages: []models.Package{
 					{
 						Cpes:     utils.PointerTo([]string{"cpe1"}),
 						Language: utils.PointerTo("python"),
@@ -138,7 +138,7 @@ func Test_ConvertSBOMResultToPackages(t *testing.T) {
 				},
 			},
 			want: returns{
-				packages: &[]models.Package{},
+				packages: []models.Package{},
 			},
 		},
 	}
@@ -158,7 +158,7 @@ func Test_ConvertVulnResultToVulnerabilities(t *testing.T) {
 		result *vulnerabilities.Results
 	}
 	type returns struct {
-		vulnerabilities *[]models.Vulnerability
+		vulnerabilities []models.Vulnerability
 	}
 	tests := []struct {
 		name string
@@ -279,7 +279,7 @@ func Test_ConvertVulnResultToVulnerabilities(t *testing.T) {
 				},
 			},
 			want: returns{
-				vulnerabilities: &[]models.Vulnerability{
+				vulnerabilities: []models.Vulnerability{
 					{
 						Cvss: utils.PointerTo([]models.VulnerabilityCvss{
 							{
@@ -421,14 +421,14 @@ func Test_ConvertSecretsResultToAPIModel(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want *[]models.Secret
+		want []models.Secret
 	}{
 		{
 			name: "nil secretsResults",
 			args: args{
 				secretsResults: nil,
 			},
-			want: &[]models.Secret{},
+			want: []models.Secret{},
 		},
 		{
 			name: "nil secretsResults.MergedResults",
@@ -437,7 +437,7 @@ func Test_ConvertSecretsResultToAPIModel(t *testing.T) {
 					MergedResults: nil,
 				},
 			},
-			want: &[]models.Secret{},
+			want: []models.Secret{},
 		},
 		{
 			name: "empty secretsResults.MergedResults.Results",
@@ -448,7 +448,7 @@ func Test_ConvertSecretsResultToAPIModel(t *testing.T) {
 					},
 				},
 			},
-			want: &[]models.Secret{},
+			want: []models.Secret{},
 		},
 		{
 			name: "sanity",
@@ -474,7 +474,7 @@ func Test_ConvertSecretsResultToAPIModel(t *testing.T) {
 					},
 				},
 			},
-			want: &[]models.Secret{
+			want: []models.Secret{
 				{
 					Description: &finding1.Description,
 					EndLine:     &finding1.EndLine,
@@ -520,8 +520,8 @@ func Test_ConvertMalwareResultToMalwareAndMetadata(t *testing.T) {
 		mergedResults *malware.MergedResults
 	}
 	type returns struct {
-		Malware  *[]models.Malware
-		Metadata *[]models.ScannerMetadata
+		Malware  []models.Malware
+		Metadata []models.ScannerMetadata
 	}
 	tests := []struct {
 		name string
@@ -534,8 +534,8 @@ func Test_ConvertMalwareResultToMalwareAndMetadata(t *testing.T) {
 				mergedResults: nil,
 			},
 			want: returns{
-				Malware:  &[]models.Malware{},
-				Metadata: &[]models.ScannerMetadata{},
+				Malware:  []models.Malware{},
+				Metadata: []models.ScannerMetadata{},
 			},
 		},
 		{
@@ -546,8 +546,8 @@ func Test_ConvertMalwareResultToMalwareAndMetadata(t *testing.T) {
 				},
 			},
 			want: returns{
-				Malware:  &[]models.Malware{},
-				Metadata: &[]models.ScannerMetadata{},
+				Malware:  []models.Malware{},
+				Metadata: []models.ScannerMetadata{},
 			},
 		},
 		{
@@ -587,7 +587,7 @@ func Test_ConvertMalwareResultToMalwareAndMetadata(t *testing.T) {
 				},
 			},
 			want: returns{
-				Malware: &[]models.Malware{
+				Malware: []models.Malware{
 					{
 						MalwareName: utils.PointerTo("Ransom!"),
 						MalwareType: utils.PointerTo[models.MalwareType]("RANSOMWARE"),
@@ -604,7 +604,7 @@ func Test_ConvertMalwareResultToMalwareAndMetadata(t *testing.T) {
 						Path:        utils.PointerTo("/somepath/innocent.exe"),
 					},
 				},
-				Metadata: &[]models.ScannerMetadata{
+				Metadata: []models.ScannerMetadata{
 					{
 						ScannerName: utils.PointerTo("clam"),
 						ScannerSummary: &models.ScannerSummary{
@@ -667,14 +667,14 @@ func Test_ConvertExploitsResultToExploits(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want *[]models.Exploit
+		want []models.Exploit
 	}{
 		{
 			name: "nil exploitsResults",
 			args: args{
 				exploitsResults: nil,
 			},
-			want: &[]models.Exploit{},
+			want: []models.Exploit{},
 		},
 		{
 			name: "nil exploitsResults.Exploits",
@@ -683,7 +683,7 @@ func Test_ConvertExploitsResultToExploits(t *testing.T) {
 					Exploits: nil,
 				},
 			},
-			want: &[]models.Exploit{},
+			want: []models.Exploit{},
 		},
 		{
 			name: "sanity",
@@ -702,7 +702,7 @@ func Test_ConvertExploitsResultToExploits(t *testing.T) {
 					},
 				},
 			},
-			want: &[]models.Exploit{
+			want: []models.Exploit{
 				{
 					CveID:       utils.PointerTo(exploit1.CveID),
 					Description: utils.PointerTo(exploit1.Description),
@@ -847,8 +847,8 @@ func Test_ConvertMisconfigurationResultToMisconfigurations(t *testing.T) {
 		misconfigurationResults *misconfiguration.Results
 	}
 	type returns struct {
-		Misconfigs *[]models.Misconfiguration
-		Scanners   *[]string
+		Misconfigs []models.Misconfiguration
+		Scanners   []string
 	}
 	tests := []struct {
 		name string
@@ -861,8 +861,8 @@ func Test_ConvertMisconfigurationResultToMisconfigurations(t *testing.T) {
 				misconfigurationResults: nil,
 			},
 			want: returns{
-				nil,
-				nil,
+				[]models.Misconfiguration{},
+				[]string{},
 			},
 		},
 		{
@@ -877,8 +877,8 @@ func Test_ConvertMisconfigurationResultToMisconfigurations(t *testing.T) {
 				},
 			},
 			want: returns{
-				nil,
-				nil,
+				[]models.Misconfiguration{},
+				[]string{},
 			},
 		},
 		{
@@ -897,7 +897,7 @@ func Test_ConvertMisconfigurationResultToMisconfigurations(t *testing.T) {
 				},
 			},
 			want: returns{
-				&[]models.Misconfiguration{
+				[]models.Misconfiguration{
 					{
 						Message:         utils.PointerTo(misconfiguration1.Message),
 						Remediation:     utils.PointerTo(misconfiguration1.Remediation),
@@ -929,13 +929,13 @@ func Test_ConvertMisconfigurationResultToMisconfigurations(t *testing.T) {
 						TestID:          utils.PointerTo(misconfiguration3.TestID),
 					},
 				},
-				&[]string{"foo", "bar"},
+				[]string{"foo", "bar"},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			misconfigs, scanners, err := ConvertMisconfigurationResultToMisconfigurations(tt.args.misconfigurationResults)
+			misconfigs, scanners, err := ConvertMisconfigurationResultToMisconfigurationsAndScanners(tt.args.misconfigurationResults)
 			if err != nil {
 				t.Fatalf("Unexpected error: %v", err)
 			}
@@ -1041,8 +1041,8 @@ func TestConvertInfoFinderResultToInfosAndScanners(t *testing.T) {
 		results *infofinder.Results
 	}
 	type returns struct {
-		Infos    *[]models.InfoFinderInfo
-		Scanners *[]string
+		Infos    []models.InfoFinderInfo
+		Scanners []string
 	}
 	tests := []struct {
 		name    string
@@ -1056,8 +1056,8 @@ func TestConvertInfoFinderResultToInfosAndScanners(t *testing.T) {
 				results: nil,
 			},
 			want: returns{
-				Infos:    nil,
-				Scanners: nil,
+				Infos:    []models.InfoFinderInfo{},
+				Scanners: []string{},
 			},
 			wantErr: false,
 		},
@@ -1069,8 +1069,8 @@ func TestConvertInfoFinderResultToInfosAndScanners(t *testing.T) {
 				},
 			},
 			want: returns{
-				Infos:    nil,
-				Scanners: nil,
+				Infos:    []models.InfoFinderInfo{},
+				Scanners: []string{},
 			},
 			wantErr: false,
 		},
@@ -1110,7 +1110,7 @@ func TestConvertInfoFinderResultToInfosAndScanners(t *testing.T) {
 				},
 			},
 			want: returns{
-				Infos: utils.PointerTo([]models.InfoFinderInfo{
+				Infos: []models.InfoFinderInfo{
 					{
 						Type:        utils.PointerTo(models.InfoTypeSSHKnownHostFingerprint),
 						Path:        utils.PointerTo("Path1"),
@@ -1129,8 +1129,8 @@ func TestConvertInfoFinderResultToInfosAndScanners(t *testing.T) {
 						Data:        utils.PointerTo("Data3"),
 						ScannerName: utils.PointerTo("scanner2"),
 					},
-				}),
-				Scanners: utils.PointerTo([]string{"scanner1", "scanner2"}),
+				},
+				Scanners: []string{"scanner1", "scanner2"},
 			},
 			wantErr: false,
 		},
