@@ -381,14 +381,14 @@ func (v *VMClarityPresenter) ExportMisconfigurationResult(ctx context.Context, r
 					utils.PointerTo(fmt.Errorf("failed to convert misconfiguration results from scan to API model: %w", err).Error()),
 				)
 			} else {
+				assetScan.Misconfigurations.Status = models.NewScannerStatus(
+					models.ScannerStatusStateDone,
+					models.ScannerStatusReasonSuccess,
+					nil,
+				)
 				assetScan.Misconfigurations.Misconfigurations = utils.PointerTo(misconfigurations)
 				assetScan.Misconfigurations.Scanners = utils.PointerTo(scanners)
 			}
-			assetScan.Misconfigurations.Status = models.NewScannerStatus(
-				models.ScannerStatusStateDone,
-				models.ScannerStatusReasonSuccess,
-				nil,
-			)
 			assetScan.Summary.TotalMisconfigurations = utils.PointerTo(len(misconfigurationResults.Misconfigurations))
 			assetScan.Stats.Misconfigurations = getInputScanStats(misconfigurationResults.Metadata.InputScans)
 		}
@@ -441,14 +441,14 @@ func (v *VMClarityPresenter) ExportInfoFinderResult(ctx context.Context, res fam
 					utils.PointerTo(fmt.Errorf("failed to convert info finder results from scan to API model: %w", err).Error()),
 				)
 			} else {
+				assetScan.InfoFinder.Status = models.NewScannerStatus(
+					models.ScannerStatusStateDone,
+					models.ScannerStatusReasonSuccess,
+					nil,
+				)
 				assetScan.InfoFinder.Infos = utils.PointerTo(apiInfoFinder)
 				assetScan.InfoFinder.Scanners = utils.PointerTo(scanners)
 			}
-			assetScan.InfoFinder.Status = models.NewScannerStatus(
-				models.ScannerStatusStateDone,
-				models.ScannerStatusReasonSuccess,
-				nil,
-			)
 			assetScan.Summary.TotalInfoFinder = utils.PointerTo(len(results.Infos))
 			assetScan.Stats.InfoFinder = getInputScanStats(results.Metadata.InputScans)
 		}
