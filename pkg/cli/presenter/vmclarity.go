@@ -87,7 +87,7 @@ func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res families.
 
 	if res.Err != nil {
 		assetScan.Sbom.Status = models.NewScannerStatus(
-			models.Failed,
+			models.ScannerStatusStateFailed,
 			models.ScannerStatusReasonError,
 			utils.PointerTo(res.Err.Error()),
 		)
@@ -95,7 +95,7 @@ func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res families.
 		sbomResults, ok := res.Result.(*sbom.Results)
 		if !ok {
 			assetScan.Sbom.Status = models.NewScannerStatus(
-				models.Failed,
+				models.ScannerStatusStateFailed,
 				models.ScannerStatusReasonError,
 				utils.PointerTo("failed to convert to sbom results"),
 			)
@@ -104,7 +104,7 @@ func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res families.
 			assetScan.Summary.TotalPackages = utils.PointerTo(len(*assetScan.Sbom.Packages))
 			assetScan.Stats.Sbom = getInputScanStats(sbomResults.Metadata.InputScans)
 			assetScan.Sbom.Status = models.NewScannerStatus(
-				models.Done,
+				models.ScannerStatusStateDone,
 				models.ScannerStatusReasonSuccess,
 				nil,
 			)
@@ -137,7 +137,7 @@ func (v *VMClarityPresenter) ExportVulResult(ctx context.Context, res families.F
 
 	if res.Err != nil {
 		assetScan.Vulnerabilities.Status = models.NewScannerStatus(
-			models.Failed,
+			models.ScannerStatusStateFailed,
 			models.ScannerStatusReasonError,
 			utils.PointerTo(res.Err.Error()),
 		)
@@ -145,7 +145,7 @@ func (v *VMClarityPresenter) ExportVulResult(ctx context.Context, res families.F
 		vulnerabilitiesResults, ok := res.Result.(*vulnerabilities.Results)
 		if !ok {
 			assetScan.Vulnerabilities.Status = models.NewScannerStatus(
-				models.Failed,
+				models.ScannerStatusStateFailed,
 				models.ScannerStatusReasonError,
 				utils.PointerTo("failed to convert to vulnerabilities results"),
 			)
@@ -154,7 +154,7 @@ func (v *VMClarityPresenter) ExportVulResult(ctx context.Context, res families.F
 			assetScan.Summary.TotalVulnerabilities = utils.GetVulnerabilityTotalsPerSeverity(assetScan.Vulnerabilities.Vulnerabilities)
 			assetScan.Stats.Vulnerabilities = getInputScanStats(vulnerabilitiesResults.Metadata.InputScans)
 			assetScan.Vulnerabilities.Status = models.NewScannerStatus(
-				models.Done,
+				models.ScannerStatusStateDone,
 				models.ScannerStatusReasonSuccess,
 				nil,
 			)
@@ -187,7 +187,7 @@ func (v *VMClarityPresenter) ExportSecretsResult(ctx context.Context, res famili
 
 	if res.Err != nil {
 		assetScan.Secrets.Status = models.NewScannerStatus(
-			models.Failed,
+			models.ScannerStatusStateFailed,
 			models.ScannerStatusReasonError,
 			utils.PointerTo(res.Err.Error()),
 		)
@@ -195,7 +195,7 @@ func (v *VMClarityPresenter) ExportSecretsResult(ctx context.Context, res famili
 		secretsResults, ok := res.Result.(*secrets.Results)
 		if !ok {
 			assetScan.Secrets.Status = models.NewScannerStatus(
-				models.Failed,
+				models.ScannerStatusStateFailed,
 				models.ScannerStatusReasonError,
 				utils.PointerTo("failed to convert to secrets results"),
 			)
@@ -204,7 +204,7 @@ func (v *VMClarityPresenter) ExportSecretsResult(ctx context.Context, res famili
 			assetScan.Summary.TotalSecrets = utils.PointerTo(len(*assetScan.Secrets.Secrets))
 			assetScan.Stats.Secrets = getInputScanStats(secretsResults.Metadata.InputScans)
 			assetScan.Secrets.Status = models.NewScannerStatus(
-				models.Done,
+				models.ScannerStatusStateDone,
 				models.ScannerStatusReasonSuccess,
 				nil,
 			)
@@ -259,7 +259,7 @@ func (v *VMClarityPresenter) ExportMalwareResult(ctx context.Context, res famili
 
 	if res.Err != nil {
 		assetScan.Malware.Status = models.NewScannerStatus(
-			models.Failed,
+			models.ScannerStatusStateFailed,
 			models.ScannerStatusReasonError,
 			utils.PointerTo(res.Err.Error()),
 		)
@@ -267,7 +267,7 @@ func (v *VMClarityPresenter) ExportMalwareResult(ctx context.Context, res famili
 		malwareResults, ok := res.Result.(*malware.MergedResults)
 		if !ok {
 			assetScan.Sbom.Status = models.NewScannerStatus(
-				models.Failed,
+				models.ScannerStatusStateFailed,
 				models.ScannerStatusReasonError,
 				utils.PointerTo("failed to convert to malware results"),
 			)
@@ -278,7 +278,7 @@ func (v *VMClarityPresenter) ExportMalwareResult(ctx context.Context, res famili
 			assetScan.Malware.Malware = utils.PointerTo(mware)
 			assetScan.Malware.Metadata = utils.PointerTo(mdata)
 			assetScan.Malware.Status = models.NewScannerStatus(
-				models.Done,
+				models.ScannerStatusStateDone,
 				models.ScannerStatusReasonSuccess,
 				nil,
 			)
@@ -310,7 +310,7 @@ func (v *VMClarityPresenter) ExportExploitsResult(ctx context.Context, res famil
 
 	if res.Err != nil {
 		assetScan.Exploits.Status = models.NewScannerStatus(
-			models.Failed,
+			models.ScannerStatusStateFailed,
 			models.ScannerStatusReasonError,
 			utils.PointerTo(res.Err.Error()),
 		)
@@ -318,7 +318,7 @@ func (v *VMClarityPresenter) ExportExploitsResult(ctx context.Context, res famil
 		exploitsResults, ok := res.Result.(*exploits.Results)
 		if !ok {
 			assetScan.Exploits.Status = models.NewScannerStatus(
-				models.Failed,
+				models.ScannerStatusStateFailed,
 				models.ScannerStatusReasonError,
 				utils.PointerTo("failed to convert to exploits results"),
 			)
@@ -327,7 +327,7 @@ func (v *VMClarityPresenter) ExportExploitsResult(ctx context.Context, res famil
 			assetScan.Summary.TotalExploits = utils.PointerTo(len(*assetScan.Exploits.Exploits))
 			assetScan.Stats.Exploits = getInputScanStats(exploitsResults.Metadata.InputScans)
 			assetScan.Exploits.Status = models.NewScannerStatus(
-				models.Done,
+				models.ScannerStatusStateDone,
 				models.ScannerStatusReasonSuccess,
 				nil,
 			)
@@ -360,7 +360,7 @@ func (v *VMClarityPresenter) ExportMisconfigurationResult(ctx context.Context, r
 
 	if res.Err != nil {
 		assetScan.Misconfigurations.Status = models.NewScannerStatus(
-			models.Failed,
+			models.ScannerStatusStateFailed,
 			models.ScannerStatusReasonError,
 			utils.PointerTo(res.Err.Error()),
 		)
@@ -368,7 +368,7 @@ func (v *VMClarityPresenter) ExportMisconfigurationResult(ctx context.Context, r
 		misconfigurationResults, ok := res.Result.(*misconfiguration.Results)
 		if !ok {
 			assetScan.Misconfigurations.Status = models.NewScannerStatus(
-				models.Failed,
+				models.ScannerStatusStateFailed,
 				models.ScannerStatusReasonError,
 				utils.PointerTo("failed to convert to misconfiguration results"),
 			)
@@ -376,7 +376,7 @@ func (v *VMClarityPresenter) ExportMisconfigurationResult(ctx context.Context, r
 			misconfigurations, scanners, err := cliutils.ConvertMisconfigurationResultToMisconfigurationsAndScanners(misconfigurationResults)
 			if err != nil {
 				assetScan.Misconfigurations.Status = models.NewScannerStatus(
-					models.Failed,
+					models.ScannerStatusStateFailed,
 					models.ScannerStatusReasonError,
 					utils.PointerTo(fmt.Errorf("failed to convert misconfiguration results from scan to API model: %w", err).Error()),
 				)
@@ -384,6 +384,11 @@ func (v *VMClarityPresenter) ExportMisconfigurationResult(ctx context.Context, r
 				assetScan.Misconfigurations.Misconfigurations = utils.PointerTo(misconfigurations)
 				assetScan.Misconfigurations.Scanners = utils.PointerTo(scanners)
 			}
+			assetScan.Misconfigurations.Status = models.NewScannerStatus(
+				models.ScannerStatusStateDone,
+				models.ScannerStatusReasonSuccess,
+				nil,
+			)
 			assetScan.Summary.TotalMisconfigurations = utils.PointerTo(len(misconfigurationResults.Misconfigurations))
 			assetScan.Stats.Misconfigurations = getInputScanStats(misconfigurationResults.Metadata.InputScans)
 		}
@@ -415,7 +420,7 @@ func (v *VMClarityPresenter) ExportInfoFinderResult(ctx context.Context, res fam
 
 	if res.Err != nil {
 		assetScan.InfoFinder.Status = models.NewScannerStatus(
-			models.Failed,
+			models.ScannerStatusStateFailed,
 			models.ScannerStatusReasonError,
 			utils.PointerTo(res.Err.Error()),
 		)
@@ -423,7 +428,7 @@ func (v *VMClarityPresenter) ExportInfoFinderResult(ctx context.Context, res fam
 		results, ok := res.Result.(*infofinder.Results)
 		if !ok {
 			assetScan.InfoFinder.Status = models.NewScannerStatus(
-				models.Failed,
+				models.ScannerStatusStateFailed,
 				models.ScannerStatusReasonError,
 				utils.PointerTo("failed to convert to info finder results"),
 			)
@@ -431,7 +436,7 @@ func (v *VMClarityPresenter) ExportInfoFinderResult(ctx context.Context, res fam
 			apiInfoFinder, scanners, err := cliutils.ConvertInfoFinderResultToInfosAndScanners(results)
 			if err != nil {
 				assetScan.InfoFinder.Status = models.NewScannerStatus(
-					models.Failed,
+					models.ScannerStatusStateFailed,
 					models.ScannerStatusReasonError,
 					utils.PointerTo(fmt.Errorf("failed to convert info finder results from scan to API model: %w", err).Error()),
 				)
@@ -439,6 +444,11 @@ func (v *VMClarityPresenter) ExportInfoFinderResult(ctx context.Context, res fam
 				assetScan.InfoFinder.Infos = utils.PointerTo(apiInfoFinder)
 				assetScan.InfoFinder.Scanners = utils.PointerTo(scanners)
 			}
+			assetScan.Misconfigurations.Status = models.NewScannerStatus(
+				models.ScannerStatusStateDone,
+				models.ScannerStatusReasonSuccess,
+				nil,
+			)
 			assetScan.Summary.TotalInfoFinder = utils.PointerTo(len(results.Infos))
 			assetScan.Stats.InfoFinder = getInputScanStats(results.Metadata.InputScans)
 		}
@@ -470,7 +480,7 @@ func (v *VMClarityPresenter) ExportRootkitResult(ctx context.Context, res famili
 
 	if res.Err != nil {
 		assetScan.Rootkits.Status = models.NewScannerStatus(
-			models.Failed,
+			models.ScannerStatusStateFailed,
 			models.ScannerStatusReasonError,
 			utils.PointerTo(res.Err.Error()),
 		)
@@ -478,7 +488,7 @@ func (v *VMClarityPresenter) ExportRootkitResult(ctx context.Context, res famili
 		rootkitsResults, ok := res.Result.(*rootkits.Results)
 		if !ok {
 			assetScan.Rootkits.Status = models.NewScannerStatus(
-				models.Failed,
+				models.ScannerStatusStateFailed,
 				models.ScannerStatusReasonError,
 				utils.PointerTo("failed to convert to rootkits results"),
 			)
@@ -487,7 +497,7 @@ func (v *VMClarityPresenter) ExportRootkitResult(ctx context.Context, res famili
 			assetScan.Summary.TotalRootkits = utils.PointerTo(len(*assetScan.Rootkits.Rootkits))
 			assetScan.Stats.Rootkits = getInputScanStats(rootkitsResults.Metadata.InputScans)
 			assetScan.Rootkits.Status = models.NewScannerStatus(
-				models.Done,
+				models.ScannerStatusStateDone,
 				models.ScannerStatusReasonSuccess,
 				nil,
 			)
