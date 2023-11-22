@@ -444,7 +444,7 @@ func (v *VMClarityPresenter) ExportInfoFinderResult(ctx context.Context, res fam
 				assetScan.InfoFinder.Infos = utils.PointerTo(apiInfoFinder)
 				assetScan.InfoFinder.Scanners = utils.PointerTo(scanners)
 			}
-			assetScan.Misconfigurations.Status = models.NewScannerStatus(
+			assetScan.InfoFinder.Status = models.NewScannerStatus(
 				models.ScannerStatusStateDone,
 				models.ScannerStatusReasonSuccess,
 				nil,
