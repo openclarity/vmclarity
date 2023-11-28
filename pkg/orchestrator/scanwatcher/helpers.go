@@ -153,14 +153,14 @@ func updateScanSummaryFromAssetScan(scan *models.Scan, result models.AssetScan) 
 		scan.Summary = newScanSummary()
 	}
 
-	state, ok := result.GetGeneralState()
+	status, ok := result.GetStatus()
 	if !ok {
-		return fmt.Errorf("general state must not be nil for AssetScan. AssetScanID=%s", *result.Id)
+		return fmt.Errorf("status must not be nil for AssetScan. AssetScanID=%s", *result.Id)
 	}
 
 	s, r := scan.Summary, result.Summary
 
-	switch state {
+	switch status.State {
 	case models.AssetScanStateStateNotScanned:
 	case models.AssetScanStateStatePending, models.AssetScanStateStateScheduled, models.AssetScanStateStateReadyToScan:
 		fallthrough

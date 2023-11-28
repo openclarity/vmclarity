@@ -92,8 +92,8 @@ var ScanCmd = &cobra.Command{
 
 		if err := cli.WaitForReadyState(abortCtx); err != nil {
 			err = fmt.Errorf("failed to wait for AssetScan being ready to scan: %w", err)
-			if e := cli.MarkDone(ctx, []error{err}); e != nil {
-				logutil.Logger.Errorf("Failed to update AssetScan status to completed with errors: %v", e)
+			if e := cli.MarkFailed(ctx, []string{err.Error()}); e != nil {
+				logutil.Logger.Errorf("Failed to update AssetScan status to failed: %v", e)
 			}
 			return err
 		}
@@ -106,8 +106,8 @@ var ScanCmd = &cobra.Command{
 			mountPoints, err := cli.MountVolumes(mountCtx)
 			if err != nil {
 				err = fmt.Errorf("failed to mount attached volume: %w", err)
-				if e := cli.MarkDone(ctx, []error{err}); e != nil {
-					logutil.Logger.Errorf("Failed to update asset scan stat to completed with errors: %v", e)
+				if e := cli.MarkFailed(ctx, []string{err.Error()}); e != nil {
+					logutil.Logger.Errorf("Failed to update asset scan stat to failed: %v", e)
 				}
 				return err
 			}
@@ -122,7 +122,7 @@ var ScanCmd = &cobra.Command{
 		logutil.Logger.Infof("Running scanners...")
 		runErrors := families.New(config).Run(abortCtx, cli)
 
-		err = cli.MarkDone(ctx, runErrors)
+		err = cli.MarkDone(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to inform the server %v the scan was completed: %w", server, err)
 		}

@@ -146,14 +146,14 @@ func (w *Watcher) Reconcile(ctx context.Context, event AssetScanReconcileEvent) 
 		return fmt.Errorf("failed to get AssetScan with %s id: %w", event.AssetScanID, err)
 	}
 
-	state, ok := assetScan.GetGeneralState()
+	status, ok := assetScan.GetStatus()
 	if !ok {
-		return fmt.Errorf("cannot determine state of AssetScan with %s id", event.AssetScanID)
+		return fmt.Errorf("cannot determine status of AssetScan with %s id", event.AssetScanID)
 	}
 
-	logger.Tracef("Reconciling AssetScan state: %s", state)
+	logger.Tracef("Reconciling AssetScan state: %s", status.State)
 
-	switch state {
+	switch status.State {
 	case models.AssetScanStateStatePending:
 		if err = w.reconcilePending(ctx, &assetScan); err != nil {
 			return err
@@ -325,11 +325,6 @@ func (w *Watcher) cleanupResources(ctx context.Context, assetScan *models.AssetS
 		return errors.New("invalid AssetScan: ID is nil")
 	}
 
-	isDone, ok := assetScan.IsDone()
-	if !ok {
-		return fmt.Errorf("invalid AssetScan: failed to determine General State. AssetScanID=%s", *assetScan.Id)
-	}
-
 	switch w.deleteJobPolicy {
 	case DeleteJobPolicyNever:
 		assetScan.ResourceCleanupStatus = models.NewResourceCleanupStatus(
@@ -337,17 +332,7 @@ func (w *Watcher) cleanupResources(ctx context.Context, assetScan *models.AssetS
 			models.ResourceCleanupStatusReasonDeletePolicy,
 			nil,
 		)
-	case DeleteJobPolicyOnSuccess:
-		if isDone && assetScan.HasErrors() {
-			assetScan.ResourceCleanupStatus = models.NewResourceCleanupStatus(
-				models.ResourceCleanupStatusStateSkipped,
-				models.ResourceCleanupStatusReasonDeletePolicy,
-				nil,
-			)
-			break
-		}
-		fallthrough
-	case DeleteJobPolicyAlways:
+	case DeleteJobPolicyOnSuccess, DeleteJobPolicyAlways:
 		fallthrough
 	default:
 		// Get Asset

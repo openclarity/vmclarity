@@ -2418,6 +2418,79 @@ components:
       #  - asset
       #  - scan
 
+    AssetScanStatus:
+      type: object
+      required:
+        - state
+        - reason
+        - lastTransitionTime
+      properties:
+        state:
+          description: |
+            Describes the state of scan result.
+
+            | State       | Description                                                                                      |
+            | ----------- | ------------------------------------------------------------------------------------------------ |
+            | Pending     | Initial state for AssetScan waiting for being scheduled                                          |
+            | Scheduled   | AssetScan which has been scheduled on Provider                                                   |
+            | ReadyToScan | Provider acknowledged that scanners for AssetScan is ready to run                                |
+            | InProgress  | Scanners are running on the Target                                                               |
+            | Aborted     | AssetScan has been aborted and all running Scanners need to be cancelled and shutdown gracefully |
+            | Failed      | Running Scanners on Target has failed, check *reason* and *message* fields for the details       |
+            | Done        | Running Scanners on Target has finished with no errors                                           |
+          type: string
+          enum:
+            - Pending
+            - Scheduled
+            - ReadyToScan
+            - InProgress
+            - Aborted
+            - Failed
+            - Done
+        reason:
+          description: |
+            Machine readable reason for state transition.
+
+            | State       | Reason         | Description                                  |
+            | ----------- | -------------- | -------------------------------------------- |
+            | Pending     | Created        | AssetScan has been created                   |
+            | Scheduled   | Scheduled      | Moved to scheduled state                     |
+            | ReadyToScan | OutOfVMClarity | Started without VMClarity orchestration      |
+            | ReadyToScan | ReadyToScan    | Scans are ready to be started                |
+            | InProgress  | InProgress     | Scans are running on the target              |
+            | Aborted     | Aborted        | Scans have been aborted                      |
+            | Failed      | Failed         | At least one scan failed on target           |
+            | Failed      | AbortTimedOut  | AssetScan was in Aborted state for too long  |
+            | Done        | Done           | Scan finished successfully                   |
+          type: string
+          enum:
+            - Created
+            - Scheduled
+            - OutOfVMClarity
+            - ReadyToScan
+            - InProgress
+            - Aborted
+            - Failed
+            - AbortTimedOut
+            - Done
+          x-enum-varnames:
+            - AssetScanStatusReasonCreated
+            - AssetScanStatusReasonScheduled
+            - AssetScanStatusReasonOutOfVMClarity
+            - AssetScanStatusReasonReadyToScan
+            - AssetScanStatusReasonInProgress
+            - AssetScanStatusReasonAborted
+            - AssetScanStatusReasonFailed
+            - AssetScanStatusReasonAbortTimedOut
+            - AssetScanStatusReasonDone
+        message:
+          description: Human readable message.
+          type: string
+        lastTransitionTime:
+          description: Last date time when the status has changed.
+          type: string
+          format: date-time
+
     ScannerStatus:
       type: object
       required:
@@ -2632,34 +2705,6 @@ components:
           type: string
         assetScan:
           $ref: '#/components/schemas/AssetScan'
-
-    AssetScanStatus:
-      type: object
-      properties:
-        general:
-          $ref: '#/components/schemas/AssetScanState'
-
-    AssetScanState:
-      type: object
-      properties:
-        state:
-          type: string
-          enum:
-            - NotScanned
-            - Pending
-            - Scheduled
-            - ReadyToScan
-            - InProgress
-            - Aborted
-            - Done
-        lastTransitionTime:
-          type: string
-          format: date-time
-        errors:
-          type: array
-          items:
-            type: string
-          nullable: true
 
     AssetScanEstimationState:
       type: object

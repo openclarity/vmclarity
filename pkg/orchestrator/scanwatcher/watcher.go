@@ -373,7 +373,7 @@ func (w *Watcher) reconcileInProgress(ctx context.Context, scan *models.Scan) er
 	// Reset Scan Summary as it is going to be recalculated
 	scan.Summary = newScanSummary()
 
-	var assetScansWithErr int
+	var failedAssetScans int
 	for _, assetScan := range *assetScans.Items {
 		assetScanID, ok := assetScan.GetID()
 		if !ok {
@@ -385,16 +385,20 @@ func (w *Watcher) reconcileInProgress(ctx context.Context, scan *models.Scan) er
 				scanID, assetScanID, err)
 		}
 
-		errs := assetScan.GetGeneralErrors()
-		if len(errs) > 0 {
-			assetScansWithErr++
+		status, ok := assetScan.GetStatus()
+		if !ok {
+			return fmt.Errorf("status must not be nil for AssetScan. AssetScanID=%s", *assetScan.Id)
+		}
+
+		if status.State == models.AssetScanStatusStateFailed {
+			failedAssetScans++
 		}
 	}
 	logger.Tracef("Scan Summary updated. JobCompleted=%d JobLeftToRun=%d", *scan.Summary.JobsCompleted,
 		*scan.Summary.JobsLeftToRun)
 
 	if *scan.Summary.JobsLeftToRun <= 0 {
-		if assetScansWithErr > 0 {
+		if failedAssetScans > 0 {
 			scan.State = utils.PointerTo(models.ScanStateFailed)
 			scan.StateReason = utils.PointerTo(models.ScanStateReasonOneOrMoreAssetFailedToScan)
 		} else {
@@ -402,7 +406,7 @@ func (w *Watcher) reconcileInProgress(ctx context.Context, scan *models.Scan) er
 			scan.StateReason = utils.PointerTo(models.ScanStateReasonSuccess)
 		}
 		scan.StateMessage = utils.PointerTo(fmt.Sprintf("%d succeeded, %d failed out of %d total asset scans",
-			*assetScans.Count-assetScansWithErr, assetScansWithErr, *assetScans.Count))
+			*assetScans.Count-failedAssetScans, failedAssetScans, *assetScans.Count))
 
 		scan.EndTime = utils.PointerTo(time.Now())
 	}
