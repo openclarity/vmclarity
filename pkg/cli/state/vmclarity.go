@@ -139,16 +139,11 @@ func (v *VMClarityState) MarkFailed(ctx context.Context, errors []string) error 
 		return fmt.Errorf("failed to get asset scan: %w", err)
 	}
 
-	var errorString string
-	for _, e := range errors {
-		errorString += e + "; "
-	}
-
 	assetScan.Stats.General.ScanTime.EndTime = utils.PointerTo(time.Now())
 	assetScan.Status = models.NewAssetScanStatus(
 		models.AssetScanStatusStateFailed,
 		models.AssetScanStatusReasonFailed,
-		&errorString,
+		utils.PointerTo(utils.ConcatenateStringSlice(errors)),
 	)
 
 	err = v.client.PatchAssetScan(ctx, assetScan, v.assetScanID)

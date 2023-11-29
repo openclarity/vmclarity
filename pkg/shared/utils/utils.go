@@ -199,3 +199,16 @@ func GetVulnerabilityTotalsPerSeverity(vulnerabilities *[]models.Vulnerability) 
 	}
 	return ret
 }
+
+func ConcatenateStringSlice(errs []string) string {
+	var errorString string
+
+	for k, s := range errs {
+		errorString += s
+		if k != len(errs)-1 {
+			errorString += "; "
+		}
+	}
+
+	return errorString
+}

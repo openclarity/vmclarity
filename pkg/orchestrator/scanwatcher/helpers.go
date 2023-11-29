@@ -66,12 +66,11 @@ func newAssetScanFromScan(scan *models.Scan, assetID string) (*models.AssetScan,
 		},
 		ScanFamiliesConfig:            familiesConfig,
 		ScannerInstanceCreationConfig: scan.AssetScanTemplate.ScannerInstanceCreationConfig,
-		Status: &models.AssetScanStatus{
-			General: &models.AssetScanState{
-				Errors: nil,
-				State:  utils.PointerTo(models.AssetScanStateStatePending),
-			},
-		},
+		Status: models.NewAssetScanStatus(
+			models.AssetScanStatusStatePending,
+			models.AssetScanStatusReasonCreated,
+			nil,
+		),
 		ResourceCleanupStatus: models.NewResourceCleanupStatus(
 			models.ResourceCleanupStatusStatePending,
 			models.ResourceCleanupStatusReasonAssetScanCreated,
@@ -161,12 +160,11 @@ func updateScanSummaryFromAssetScan(scan *models.Scan, result models.AssetScan) 
 	s, r := scan.Summary, result.Summary
 
 	switch status.State {
-	case models.AssetScanStateStateNotScanned:
-	case models.AssetScanStateStatePending, models.AssetScanStateStateScheduled, models.AssetScanStateStateReadyToScan:
+	case models.AssetScanStatusStatePending, models.AssetScanStatusStateScheduled, models.AssetScanStatusStateReadyToScan:
 		fallthrough
-	case models.AssetScanStateStateInProgress, models.AssetScanStateStateAborted:
+	case models.AssetScanStatusStateInProgress, models.AssetScanStatusStateAborted:
 		s.JobsLeftToRun = utils.PointerTo(*s.JobsLeftToRun + 1)
-	case models.AssetScanStateStateDone:
+	case models.AssetScanStatusStateDone, models.AssetScanStatusStateFailed:
 		s.JobsCompleted = utils.PointerTo(*s.JobsCompleted + 1)
 		s.TotalExploits = utils.PointerTo(*s.TotalExploits + *r.TotalExploits)
 		s.TotalInfoFinder = utils.PointerTo(*s.TotalInfoFinder + *r.TotalInfoFinder)

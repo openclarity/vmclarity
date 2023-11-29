@@ -141,12 +141,11 @@ func TestNewAssetScanFromScan(t *testing.T) {
 				Scan: &models.ScanRelationship{
 					Id: scanID,
 				},
-				Status: &models.AssetScanStatus{
-					General: &models.AssetScanState{
-						Errors: nil,
-						State:  utils.PointerTo(models.AssetScanStateStatePending),
-					},
-				},
+				Status: models.NewAssetScanStatus(
+					models.AssetScanStatusStatePending,
+					models.AssetScanStatusReasonCreated,
+					nil,
+				),
 				Sbom: &models.SbomScan{
 					Packages: nil,
 					Status:   sbomScanStatus,
