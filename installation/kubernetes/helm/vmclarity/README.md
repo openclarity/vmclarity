@@ -61,9 +61,9 @@ secrets.
 | crDiscoveryServer.containerSecurityContext.runAsUser | int | `1001` | User ID which the containers should run as |
 | crDiscoveryServer.image.digest | string | `""` | Container Runtime Discovery Server image digest. If set will override the tag. |
 | crDiscoveryServer.image.pullPolicy | string | `"IfNotPresent"` | Container Runtime Discovery Server image pull policy |
-| crDiscoveryServer.image.registry | string | `"docker.io"` | Container Runtime Discovery Server container registry |
-| crDiscoveryServer.image.repository | string | `"tehsmash/vmclarity-cr-discovery-server"` | Container Runtime Discovery Server container repository |
-| crDiscoveryServer.image.tag | string | `"k8simagediscovery"` | Container Runtime Discovery Server container tag |
+| crDiscoveryServer.image.registry | string | `"ghcr.io"` | Container Runtime Discovery Server container registry |
+| crDiscoveryServer.image.repository | string | `"openclarity/vmclarity-cr-discovery-server"` | Container Runtime Discovery Server container repository |
+| crDiscoveryServer.image.tag | string | `"latest"` | Container Runtime Discovery Server container tag |
 | crDiscoveryServer.podSecurityContext.enabled | bool | `false` | Pod security context enabled |
 | crDiscoveryServer.podSecurityContext.fsGroup | int | `1001` | Pod security context fsGroup |
 | crDiscoveryServer.resources.limits | object | `{}` | The resources limits for the container runtime discovery server containers |

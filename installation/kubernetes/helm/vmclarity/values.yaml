@@ -843,11 +843,11 @@ yaraRuleServer:
 crDiscoveryServer:
   image:
     # -- Container Runtime Discovery Server container registry
-    registry: docker.io
+    registry: ghcr.io
     # -- Container Runtime Discovery Server container repository
-    repository: tehsmash/vmclarity-cr-discovery-server
+    repository: openclarity/vmclarity-cr-discovery-server
     # -- Container Runtime Discovery Server container tag
-    tag: k8simagediscovery
+    tag: latest
     # -- Container Runtime Discovery Server image digest. If set will override the tag.
     digest: ""
     # -- Container Runtime Discovery Server image pull policy

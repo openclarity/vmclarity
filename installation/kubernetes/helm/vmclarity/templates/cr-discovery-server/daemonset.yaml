@@ -1,3 +1,4 @@
+{{- if eq .Values.orchestrator.provider "kubernetes" -}}
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -47,3 +48,4 @@ spec:
           hostPath:
             path: /var/run/containerd
       serviceAccountName: {{ include "vmclarity.crDiscoveryServer.serviceAccountName" . }}
+{{- end -}}
