@@ -35,6 +35,7 @@ VMCLARITY_ORCHESTRATOR_IMAGE = $(DOCKER_REGISTRY)/vmclarity-orchestrator:$(DOCKE
 VMCLARITY_UI_IMAGE = $(DOCKER_REGISTRY)/vmclarity-ui:$(DOCKER_TAG)
 VMCLARITY_UIBACKEND_IMAGE = $(DOCKER_REGISTRY)/vmclarity-ui-backend:$(DOCKER_TAG)
 VMCLARITY_SCANNER_IMAGE = $(DOCKER_REGISTRY)/vmclarity-cli:$(DOCKER_TAG)
+VMCLARITY_CR_DISCOVERY_SERVER_IMAGE = $(DOCKER_REGISTRY)/vmclarity-cr-discovery-server:$(DOCKER_TAG)
 
 ####
 ## Load additional makefiles
@@ -238,11 +239,11 @@ docker-ui-backend: ## Build UI Backend container image
 
 .PHONY: docker-cr-discovery-server
 docker-cr-discovery-server: ## Build K8S Image Resolver Docker image
-	@(echo "Building cr-discovery-server docker image ..." )
-	docker build --file ./Dockerfile.cr-discovery-server --build-arg VERSION=${VERSION} \
-		--build-arg BUILD_TIMESTAMP=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ") \
-		--build-arg COMMIT_HASH=$(shell git rev-parse HEAD) \
-		-t ${DOCKER_IMAGE}-cr-discovery-server:${DOCKER_TAG} .
+	$(info Building cr-discovery-server docker image ...)
+	docker build --file ./Dockerfile.cr-discovery-server --build-arg VERSION=$(VERSION) \
+		--build-arg BUILD_TIMESTAMP=$(BUILD_TIMESTAMP)  \
+		--build-arg COMMIT_HASH=$(COMMIT_HASH) \
+		-t $(VMCLARITY_CR_DISCOVERY_SERVER_IMAGE) .
 
 .PHONY: push-docker
 push-docker: push-docker-apiserver push-docker-cli push-docker-orchestrator push-docker-ui push-docker-ui-backend push-docker-cr-discovery-server ## Build and Push All Docker images
