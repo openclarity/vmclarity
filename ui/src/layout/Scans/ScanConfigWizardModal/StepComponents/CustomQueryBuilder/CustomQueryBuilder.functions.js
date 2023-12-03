@@ -1,4 +1,7 @@
 import cloneDeep from "lodash/cloneDeep";
+import { Utils as QbUtils } from '@react-awesome-query-builder/mui';
+import { BASIC_CONFIG } from './CustomQueryBuilder.constants';
+import { SCOPE_CONFIG_KEY, SCOPE_TREE_KEY } from "../../ScanConfigWizardModal.constants";
 
 const convertDataType = (originalType) => {
     switch (originalType) {
@@ -153,4 +156,37 @@ const collectProperties = (assetObject) => {
 
 const postFixQuery = (text) => text ? text.replace(/"/g, "'") : '';
 
-export { collectProperties, postFixQuery };
+const updateSavedScopeTree = (annotations, jsTree) => {
+    const newAnnotations = [...annotations];
+    const newObject = {
+        key: SCOPE_TREE_KEY,
+        value: jsTree
+    };
+    const position = annotations.map(a => a.key).indexOf(SCOPE_TREE_KEY);
+    if (position >= 0) {
+        newAnnotations[position] = newObject;
+    } else {
+        newAnnotations.push(newObject)
+    }
+
+    return newAnnotations;
+}
+
+const updateSavedScopeConfig = (annotations, newConfig) => {
+
+    const newAnnotations = [...annotations];
+    const newObject = {
+        key: SCOPE_CONFIG_KEY,
+        value: QbUtils.compressConfig(newConfig, BASIC_CONFIG)
+    };
+    const position = annotations.map(a => a.key).indexOf(SCOPE_CONFIG_KEY);
+    if (position >= 0) {
+        newAnnotations[position] = newObject;
+    } else {
+        newAnnotations.push(newObject)
+    }
+
+    return newAnnotations;
+}
+
+export { collectProperties, postFixQuery, updateSavedScopeConfig, updateSavedScopeTree };

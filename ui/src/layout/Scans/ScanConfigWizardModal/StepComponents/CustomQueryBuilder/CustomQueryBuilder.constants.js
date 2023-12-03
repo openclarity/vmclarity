@@ -301,6 +301,7 @@ const BASIC_CONFIG = {
         },
         fieldSeparator: "/",
         fieldSources: ["field", "func"],
+        useConfigCompress: true,
         valueSourcesInfo: {
             value: {
                 label: "Value"

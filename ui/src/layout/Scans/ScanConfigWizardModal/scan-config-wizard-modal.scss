@@ -6,25 +6,48 @@
             margin-bottom: 10px;
         }
     }
+
     .scan-config-general-step {
         flex: 1 1 auto;
-        
-        .scan-config-instances .form-field-wrapper {
-            margin-bottom: 17px;
+        display: flex;
+        flex-direction: row;
+
+        .manual-query-container {
+            flex: 1 1 auto;
+            max-width: 720px;
+            padding-right: 20px;
+
+            .scan-config-instances .form-field-wrapper {
+                margin-bottom: 17px;
+            }
+
+            &>.checkbox {
+                margin-top: 30px;
+            }
+        }
+
+        .query-builder-wrapper {
+            flex: 1 1 auto;
+            border-left: 1px dashed $color-grey-dark;
+            padding-left: 20px;
+            height: 100%;
         }
     }
+
     .scan-config-time-config-step {
         .schedule-later-form-fields {
             display: flex;
-    
+
             .date-field-wrapper {
                 min-width: 100px;
             }
         }
+
         .repetitive-later-form-fields {
             margin-top: 30px;
         }
     }
+
     .scan-config-advanced-settings-step {
         .checkbox-field-wrapper {
             margin-top: 30px;

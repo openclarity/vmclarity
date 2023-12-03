@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import classnames from 'classnames';
 import { Formik, Form, useFormikContext } from 'formik';
 import { cloneDeep, isNull, isEmpty } from 'lodash';
@@ -18,14 +18,13 @@ const Wizard = ({
     removeTitleMargin = false,
     steps,
     submitUrl,
-    wideModal = false
 }) => {
     const { values, isSubmitting, isValidating, setSubmitting, status, setStatus, isValid, setErrors, validateForm } = useFormikContext();
 
     const [activeStepId, setActiveStepId] = useState(steps[0].id);
 
     const activeStepIndex = steps.findIndex(({ id }) => id === activeStepId);
-    const { component: ActiveStepComponent, title: activeTitle } = steps[activeStepIndex];
+    const { component: ActiveStepComponent, componentProps, title: activeTitle } = steps[activeStepIndex];
     const { title: nextStepTitle, id: nextStepId } = steps[activeStepIndex + 1] || {};
 
     const disableStepDone = isSubmitting || isValidating || !isValid;
@@ -94,7 +93,7 @@ const Wizard = ({
                 <div className="wizard-step-display">
                     {!!status && <div className="main-error-message">{status}</div>}
                     <Title medium removeMargin={removeTitleMargin}>{activeTitle}</Title>
-                    <ActiveStepComponent />
+                    <ActiveStepComponent {...componentProps} />
                     {!!nextStepTitle &&
                         <div className={classnames("wizard-next-step-wrapper", { disabled: disableStepDone })} onClick={disableStepDone ? undefined : () => onStepClick(nextStepId)}>
                             <div className="wizard-next-step-title">{`Go to ${nextStepTitle}`}</div>
@@ -117,7 +116,7 @@ const WizardModal = ({
     removeTitleMargin,
     title,
     validate,
-    wideModal,
+    extended,
     ...props
 }) => (
     <Modal
@@ -129,10 +128,14 @@ const WizardModal = ({
         removeTitleMargin={removeTitleMargin}
         stickLeft
         title={title}
-        wideModal={wideModal}
+        extended={extended}
     >
         <Formik initialValues={initialValues} validate={validate}>
-            <Wizard {...props} onClose={onClose} removeTitleMargin={removeTitleMargin} />
+            <Wizard
+                {...props}
+                onClose={onClose}
+                removeTitleMargin={removeTitleMargin}
+            />
         </Formik>
     </Modal>
 )

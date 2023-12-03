@@ -7,10 +7,11 @@ import Title from 'components/Title';
 
 import './modal.scss';
 
-const WIDE_MODAL_STYLE = {
-    minWidth: "720px",
-    width: "75%",
-    maxWidth: "1200px"
+const FULLWIDTH_MODAL_STYLE = {
+    width: "100%"
+    // minWidth: "720px",
+    // width: "75%",
+    // maxWidth: "1200px"
 }
 
 const Modal = (props) => {
@@ -28,7 +29,7 @@ const Modal = (props) => {
         removeTitleMargin = false,
         stickLeft = false,
         title,
-        wideModal = false,
+        extended = false,
         width = 720,
     } = props;
 
@@ -59,7 +60,7 @@ const Modal = (props) => {
                 className={classnames("modal-inner-wrapper", { "stick-left": stickLeft }, className)}
                 style={{
                     ...stickLeft ? { width: `${width}px` } : { height: `${height}px`, width: `${width}px` },
-                    ...wideModal ? WIDE_MODAL_STYLE : null
+                    ...extended ? FULLWIDTH_MODAL_STYLE : null
                 }}
                 onClick={(event) => event.stopPropagation()}
             >
