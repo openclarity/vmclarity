@@ -44,11 +44,12 @@ var DockerContainerImages = docker.ContainerImages{
 }
 
 var KubernetesContainerImages = kubernetes.ContainerImages{
-	APIServer:    envtypes.NewImageRef("ghcr.io/openclarity/vmclarity-apiserver", "ghcr.io", "openclarity/vmclarity-apiserver", ImageTag, ""),
-	Orchestrator: envtypes.NewImageRef("ghcr.io/openclarity/vmclarity-orchestrator", "ghcr.io", "openclarity/vmclarity-orchestrator", ImageTag, ""),
-	UI:           envtypes.NewImageRef("ghcr.io/openclarity/vmclarity-ui", "ghcr.io", "openclarity/vmclarity-ui", ImageTag, ""),
-	UIBackend:    envtypes.NewImageRef("ghcr.io/openclarity/vmclarity-ui-backend", "ghcr.io", "openclarity/vmclarity-ui-backend", ImageTag, ""),
-	Scanner:      envtypes.NewImageRef("ghcr.io/openclarity/vmclarity-cli", "ghcr.io", "openclarity/vmclarity-cli", ImageTag, ""),
+	APIServer:         envtypes.NewImageRef("ghcr.io/openclarity/vmclarity-apiserver", "ghcr.io", "openclarity/vmclarity-apiserver", ImageTag, ""),
+	Orchestrator:      envtypes.NewImageRef("ghcr.io/openclarity/vmclarity-orchestrator", "ghcr.io", "openclarity/vmclarity-orchestrator", ImageTag, ""),
+	UI:                envtypes.NewImageRef("ghcr.io/openclarity/vmclarity-ui", "ghcr.io", "openclarity/vmclarity-ui", ImageTag, ""),
+	UIBackend:         envtypes.NewImageRef("ghcr.io/openclarity/vmclarity-ui-backend", "ghcr.io", "openclarity/vmclarity-ui-backend", ImageTag, ""),
+	Scanner:           envtypes.NewImageRef("ghcr.io/openclarity/vmclarity-cli", "ghcr.io", "openclarity/vmclarity-cli", ImageTag, ""),
+	CRDiscoveryServer: envtypes.NewImageRef("ghcr.io/openclarity/vmclarity-cr-discovery-server", "ghcr.io", "openclarity/vmclarity-cr-discovery-server", ImageTag, ""),
 }
 
 func TestTestEnv(t *testing.T) {
@@ -140,6 +141,7 @@ func TestTestEnv(t *testing.T) {
 			// Tear down the testenv at the end of test run
 			t.Cleanup(func() {
 				if env != nil {
+					t.Log("tearing down test environment...")
 					if err := env.TearDown(ctx); err != nil {
 						t.Logf("failed to cleanup testenv: %v", err)
 					}
@@ -304,6 +306,13 @@ func NewKubernetesServices(namespace, release string) envtypes.Services {
 			Namespace:   namespace,
 			Application: "postgresql",
 			Component:   "primary",
+			State:       envtypes.ServiceStateReady,
+		},
+		&kubernetes.Service{
+			ID:          release + "-vmclarity-cr-discovery-server",
+			Namespace:   namespace,
+			Application: "vmclarity",
+			Component:   "cr-discovery-server",
 			State:       envtypes.ServiceStateReady,
 		},
 	}
