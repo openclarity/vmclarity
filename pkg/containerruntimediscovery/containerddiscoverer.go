@@ -108,10 +108,8 @@ func (cd *ContainerdDiscoverer) getContainerImageInfo(ctx context.Context, image
 	// NOTE(sambetts) We can not use image.Size as it gives us the size of
 	// the compressed layers and not the real size of the content.
 	snapshotter := cd.client.SnapshotService(containerd.DefaultSnapshotter)
-	size, err := imgutil.UnpackedImageSize(ctx, snapshotter, image)
-	if err != nil {
-		return models.ContainerImageInfo{}, fmt.Errorf("unable to determine size for image: %w", err)
-	}
+	// NOTE(chrisgacsal): ignore error as determining size of the image is not critical
+	size, _ := imgutil.UnpackedImageSize(ctx, snapshotter, image)
 
 	repoTags, repoDigests := ParseImageReferences([]string{image.Name()})
 
