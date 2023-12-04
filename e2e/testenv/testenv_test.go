@@ -114,7 +114,9 @@ func TestTestEnv(t *testing.T) {
 				}
 			})
 
-			logger := logrus.NewEntry(logrus.StandardLogger())
+			log := logrus.StandardLogger()
+			log.SetLevel(logrus.DebugLevel)
+			logger := logrus.NewEntry(log)
 			ctx = utils.SetLoggerForContext(ctx, logger)
 
 			workDir := t.TempDir()
