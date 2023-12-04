@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 
@@ -60,7 +61,8 @@ func (p *Provider) discoverContainersFromDiscoverer(ctx context.Context, outputC
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected error from discoverer status %s", resp.Status)
+		b, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("unexpected error from discoverer status %s: %s", resp.Status, b)
 	}
 
 	var containerResponse containerruntimediscovery.ListContainersResponse

@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 
@@ -54,7 +55,8 @@ func (p *Provider) discoverImagesFromDiscoverer(ctx context.Context, outputChan 
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected error from discoverer status %s", resp.Status)
+		b, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("unexpected error from discoverer status %s: %s", resp.Status, b)
 	}
 
 	var imageResponse containerruntimediscovery.ListImagesResponse
