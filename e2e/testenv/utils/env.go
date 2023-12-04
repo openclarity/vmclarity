@@ -18,8 +18,9 @@ package utils
 import "os"
 
 func GetEnvOrDefault(k, d string) string {
-	if v, ok := os.LookupEnv(k); ok {
+	if v, ok := os.LookupEnv(k); ok && v != "" {
 		return v
 	}
+
 	return d
 }
