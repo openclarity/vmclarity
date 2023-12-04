@@ -25,7 +25,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/sirupsen/logrus"
 
-	docker2 "github.com/openclarity/vmclarity/e2e/testenv/docker"
+	"github.com/openclarity/vmclarity/e2e/testenv/docker"
 	"github.com/openclarity/vmclarity/e2e/testenv/kubernetes"
 	"github.com/openclarity/vmclarity/e2e/testenv/kubernetes/helm"
 	"github.com/openclarity/vmclarity/e2e/testenv/kubernetes/types"
@@ -35,7 +35,7 @@ import (
 
 var ImageTag = utils.GetEnvOrDefault("VERSION", "latest")
 
-var DockerContainerImages = docker2.ContainerImages{
+var DockerContainerImages = docker.ContainerImages{
 	APIServer:    "ghcr.io/openclarity/vmclarity-apiserver:" + ImageTag,
 	Orchestrator: "ghcr.io/openclarity/vmclarity-orchestrator:" + ImageTag,
 	UI:           "ghcr.io/openclarity/vmclarity-ui:" + ImageTag,
@@ -88,7 +88,7 @@ func TestTestEnv(t *testing.T) {
 			TestEnvConfig: &Config{
 				Platform: "docker",
 				EnvName:  "testenv-docker-test",
-				Docker: &docker2.Config{
+				Docker: &docker.Config{
 					EnvName: "testenv-docker-test",
 					Images:  DockerContainerImages,
 				},
@@ -306,84 +306,84 @@ func NewKubernetesServices(namespace, release string) envtypes.Services {
 
 func NewDockerServices(project string) envtypes.Services {
 	return envtypes.Services{
-		&docker2.Service{
+		&docker.Service{
 			ID:          "alpine",
 			Namespace:   project,
 			Application: "vmclarity",
 			Component:   "alpine",
 			State:       envtypes.ServiceStateReady,
 		},
-		&docker2.Service{
+		&docker.Service{
 			ID:          "apiserver",
 			Namespace:   project,
 			Application: "vmclarity",
 			Component:   "apiserver",
 			State:       envtypes.ServiceStateReady,
 		},
-		&docker2.Service{
+		&docker.Service{
 			ID:          "exploit-db-server",
 			Namespace:   project,
 			Application: "vmclarity",
 			Component:   "exploit-db-server",
 			State:       envtypes.ServiceStateReady,
 		},
-		&docker2.Service{
+		&docker.Service{
 			ID:          "freshclam-mirror",
 			Namespace:   project,
 			Application: "vmclarity",
 			Component:   "freshclam-mirror",
 			State:       envtypes.ServiceStateReady,
 		},
-		&docker2.Service{
+		&docker.Service{
 			ID:          "gateway",
 			Namespace:   project,
 			Application: "vmclarity",
 			Component:   "gateway",
 			State:       envtypes.ServiceStateReady,
 		},
-		&docker2.Service{
+		&docker.Service{
 			ID:          "grype-server",
 			Namespace:   project,
 			Application: "vmclarity",
 			Component:   "grype-server",
 			State:       envtypes.ServiceStateReady,
 		},
-		&docker2.Service{
+		&docker.Service{
 			ID:          "orchestrator",
 			Namespace:   project,
 			Application: "vmclarity",
 			Component:   "orchestrator",
 			State:       envtypes.ServiceStateReady,
 		},
-		&docker2.Service{
+		&docker.Service{
 			ID:          "swagger-ui",
 			Namespace:   project,
 			Application: "vmclarity",
 			Component:   "swagger-ui",
 			State:       envtypes.ServiceStateReady,
 		},
-		&docker2.Service{
+		&docker.Service{
 			ID:          "trivy-server",
 			Namespace:   project,
 			Application: "vmclarity",
 			Component:   "trivy-server",
 			State:       envtypes.ServiceStateReady,
 		},
-		&docker2.Service{
+		&docker.Service{
 			ID:          "ui",
 			Namespace:   project,
 			Application: "vmclarity",
 			Component:   "ui",
 			State:       envtypes.ServiceStateReady,
 		},
-		&docker2.Service{
+		&docker.Service{
 			ID:          "uibackend",
 			Namespace:   project,
 			Application: "vmclarity",
 			Component:   "uibackend",
 			State:       envtypes.ServiceStateReady,
 		},
-		&docker2.Service{
+		&docker.Service{
 			ID:          "yara-rule-server",
 			Namespace:   project,
 			Application: "vmclarity",
