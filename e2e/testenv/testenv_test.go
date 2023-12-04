@@ -53,13 +53,15 @@ var KubernetesContainerImages = kubernetes.ContainerImages{
 
 func TestTestEnv(t *testing.T) {
 	tests := []struct {
-		Name string
+		Name    string
+		Timeout time.Duration
 
 		TestEnvConfig    *Config
 		ExpectedServices envtypes.Services
 	}{
 		{
-			Name: "Kind cluster with Helm installer and embedded Chart",
+			Name:    "Kind cluster with Helm installer and embedded Chart",
+			Timeout: 30 * time.Minute,
 			TestEnvConfig: &Config{
 				Platform: "kubernetes",
 				EnvName:  "testenv-k8s-test",
@@ -84,7 +86,8 @@ func TestTestEnv(t *testing.T) {
 			ExpectedServices: NewKubernetesServices("default", "testenv-k8s-test"),
 		},
 		{
-			Name: "Docker Compose with embedded Manifests",
+			Name:    "Docker Compose with embedded Manifests",
+			Timeout: 10 * time.Minute,
 			TestEnvConfig: &Config{
 				Platform: "docker",
 				EnvName:  "testenv-docker-test",
@@ -105,7 +108,7 @@ func TestTestEnv(t *testing.T) {
 		t.Run(test.Name, func(t *testing.T) {
 			g := NewGomegaWithT(t)
 
-			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+			ctx, cancel := context.WithTimeout(context.Background(), test.Timeout)
 
 			// Cancel test context at the end of test run
 			t.Cleanup(func() {
