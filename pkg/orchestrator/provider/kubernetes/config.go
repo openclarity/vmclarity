@@ -26,12 +26,10 @@ const (
 )
 
 type Config struct {
-	// KubeConfig defines a path to a kubeconfig file to use to connect to
-	// the Kubernetes API
+	// KubeConfig defines a path to a kubeconfig file to use to connect to the Kubernetes API.
 	KubeConfig string `mapstructure:"kubeconfig"`
 
-	// Container Runtime Discovery Namespace is the namespace where the
-	// container runtime discovery daemonset is running.
+	// ContainerRuntimeDiscoveryNamespace defines the name of the namespace where container runtime discovery DaemonSet is deployed.
 	ContainerRuntimeDiscoveryNamespace string `mapstructure:"container_runtime_discovery_namespace"`
 }
 

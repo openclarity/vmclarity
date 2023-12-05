@@ -160,10 +160,10 @@ func (c *Client) GetContainer(ctx context.Context, containerID string) (models.C
 	}
 }
 
-func (c *Client) ExportImageURL(ctx context.Context, imageID string) string {
+func (c *Client) ExportImageURL(_ context.Context, imageID string) string {
 	return fmt.Sprintf("http://%s/exportimage/%s", c.endpoint, imageID)
 }
 
-func (c *Client) ExportContainerURL(ctx context.Context, containerID string) string {
+func (c *Client) ExportContainerURL(_ context.Context, containerID string) string {
 	return fmt.Sprintf("http://%s/exportcontainer/%s", c.endpoint, containerID)
 }

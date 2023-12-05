@@ -39,13 +39,13 @@ import (
 )
 
 type Provider struct {
-	clientset kubernetes.Interface
+	clientSet kubernetes.Interface
 	config    *Config
 }
 
 var _ provider.Provider = &Provider{}
 
-func New(ctx context.Context) (provider.Provider, error) {
+func New(_ context.Context) (provider.Provider, error) {
 	config, err := NewConfig()
 	if err != nil {
 		return nil, fmt.Errorf("invalid configuration: %w", err)
@@ -53,8 +53,7 @@ func New(ctx context.Context) (provider.Provider, error) {
 
 	var clientConfig *rest.Config
 	if config.KubeConfig == "" {
-		// If KubeConfig config option not set, assume we're running
-		// incluster.
+		// If KubeConfig config option not set, assume we're running in-cluster.
 		clientConfig, err = rest.InClusterConfig()
 		if err != nil {
 			return nil, fmt.Errorf("unable to load in-cluster client configuration: %w", err)
@@ -70,13 +69,13 @@ func New(ctx context.Context) (provider.Provider, error) {
 		}
 	}
 
-	clientset, err := kubernetes.NewForConfig(clientConfig)
+	clientSet, err := kubernetes.NewForConfig(clientConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create kubernetes clientset: %w", err)
 	}
 
 	return &Provider{
-		clientset: clientset,
+		clientSet: clientSet,
 		config:    config,
 	}, nil
 }
@@ -85,7 +84,7 @@ func (p *Provider) Kind() models.CloudProvider {
 	return models.Kubernetes
 }
 
-func (p *Provider) Estimate(ctx context.Context, stats models.AssetScanStats, asset *models.Asset, assetScanTemplate *models.AssetScanTemplate) (*models.Estimation, error) {
+func (p *Provider) Estimate(_ context.Context, _ models.AssetScanStats, _ *models.Asset, _ *models.AssetScanTemplate) (*models.Estimation, error) {
 	return &models.Estimation{}, provider.FatalErrorf("Not Implemented")
 }
 
@@ -95,7 +94,7 @@ func (p *Provider) DiscoverAssets(ctx context.Context) provider.AssetDiscoverer 
 	go func() {
 		defer close(assetDiscoverer.OutputChan)
 
-		discoverers, err := p.clientset.CoreV1().Pods(p.config.ContainerRuntimeDiscoveryNamespace).List(ctx, metav1.ListOptions{
+		discoverers, err := p.clientSet.CoreV1().Pods(p.config.ContainerRuntimeDiscoveryNamespace).List(ctx, metav1.ListOptions{
 			LabelSelector: labels.Set(crDiscovererLabels).String(),
 		})
 		if err != nil {
@@ -123,7 +122,7 @@ func (p *Provider) DiscoverAssets(ctx context.Context) provider.AssetDiscoverer 
 
 // nolint: cyclop
 func (p *Provider) RunAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
-	discoverers, err := p.clientset.CoreV1().Pods(p.config.ContainerRuntimeDiscoveryNamespace).List(ctx, metav1.ListOptions{
+	discoverers, err := p.clientSet.CoreV1().Pods(p.config.ContainerRuntimeDiscoveryNamespace).List(ctx, metav1.ListOptions{
 		LabelSelector: labels.Set(crDiscovererLabels).String(),
 	})
 	if err != nil {
@@ -231,7 +230,7 @@ func (p *Provider) runScannerJob(ctx context.Context, config *provider.ScanJobCo
 			"config.yaml": configBytes,
 		},
 	}
-	_, err = p.clientset.CoreV1().ConfigMaps(namespace).Create(ctx, configMap, metav1.CreateOptions{})
+	_, err = p.clientSet.CoreV1().ConfigMaps(namespace).Create(ctx, configMap, metav1.CreateOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to create config map: %w", err)
 	}
@@ -312,7 +311,7 @@ func (p *Provider) runScannerJob(ctx context.Context, config *provider.ScanJobCo
 		},
 	}
 
-	_, err = p.clientset.BatchV1().Jobs(namespace).Create(ctx, jobSpec, metav1.CreateOptions{})
+	_, err = p.clientSet.BatchV1().Jobs(namespace).Create(ctx, jobSpec, metav1.CreateOptions{})
 	if err != nil {
 		return fmt.Errorf("unable to create job: %w", err)
 	}
@@ -327,14 +326,14 @@ func (p *Provider) RemoveAssetScan(ctx context.Context, config *provider.ScanJob
 	// configuration
 	namespace := "vmclarity"
 
-	err := p.clientset.BatchV1().Jobs(namespace).Delete(ctx, jobName, metav1.DeleteOptions{
+	err := p.clientSet.BatchV1().Jobs(namespace).Delete(ctx, jobName, metav1.DeleteOptions{
 		PropagationPolicy: utils.PointerTo(metav1.DeletePropagationBackground),
 	})
 	if err != nil && !k8sErrors.IsNotFound(err) {
 		return fmt.Errorf("unable to delete job: %w", err)
 	}
 
-	err = p.clientset.CoreV1().ConfigMaps(namespace).Delete(ctx, jobName, metav1.DeleteOptions{})
+	err = p.clientSet.CoreV1().ConfigMaps(namespace).Delete(ctx, jobName, metav1.DeleteOptions{})
 	if err != nil && !k8sErrors.IsNotFound(err) {
 		return fmt.Errorf("failed to delete config map: %w", err)
 	}
