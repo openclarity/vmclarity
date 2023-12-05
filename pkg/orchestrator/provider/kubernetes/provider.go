@@ -217,20 +217,16 @@ func (p *Provider) runScannerJob(ctx context.Context, config *provider.ScanJobCo
 
 	jobName := fmt.Sprintf("vmclarity-scan-%s", config.AssetScanID)
 
-	// TODO(sambetts) Add a scan namespace to the kubernetes provider
-	// configuration
-	namespace := "vmclarity"
-
 	configMap := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      jobName,
-			Namespace: namespace,
+			Namespace: p.config.ScannerNamespace,
 		},
 		BinaryData: map[string][]byte{
 			"config.yaml": configBytes,
 		},
 	}
-	_, err = p.clientSet.CoreV1().ConfigMaps(namespace).Create(ctx, configMap, metav1.CreateOptions{})
+	_, err = p.clientSet.CoreV1().ConfigMaps(p.config.ScannerNamespace).Create(ctx, configMap, metav1.CreateOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to create config map: %w", err)
 	}
@@ -239,7 +235,7 @@ func (p *Provider) runScannerJob(ctx context.Context, config *provider.ScanJobCo
 	jobSpec := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      jobName,
-			Namespace: namespace,
+			Namespace: p.config.ScannerNamespace,
 		},
 		Spec: batchv1.JobSpec{
 			// TTLSecondsAfterFinished: utils.PointerTo(int32(120)),
@@ -311,7 +307,7 @@ func (p *Provider) runScannerJob(ctx context.Context, config *provider.ScanJobCo
 		},
 	}
 
-	_, err = p.clientSet.BatchV1().Jobs(namespace).Create(ctx, jobSpec, metav1.CreateOptions{})
+	_, err = p.clientSet.BatchV1().Jobs(p.config.ScannerNamespace).Create(ctx, jobSpec, metav1.CreateOptions{})
 	if err != nil {
 		return fmt.Errorf("unable to create job: %w", err)
 	}
@@ -322,18 +318,14 @@ func (p *Provider) runScannerJob(ctx context.Context, config *provider.ScanJobCo
 func (p *Provider) RemoveAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
 	jobName := fmt.Sprintf("vmclarity-scan-%s", config.AssetScanID)
 
-	// TODO(sambetts) Add a scan namespace to the kubernetes provider
-	// configuration
-	namespace := "vmclarity"
-
-	err := p.clientSet.BatchV1().Jobs(namespace).Delete(ctx, jobName, metav1.DeleteOptions{
+	err := p.clientSet.BatchV1().Jobs(p.config.ScannerNamespace).Delete(ctx, jobName, metav1.DeleteOptions{
 		PropagationPolicy: utils.PointerTo(metav1.DeletePropagationBackground),
 	})
 	if err != nil && !k8sErrors.IsNotFound(err) {
 		return fmt.Errorf("unable to delete job: %w", err)
 	}
 
-	err = p.clientSet.CoreV1().ConfigMaps(namespace).Delete(ctx, jobName, metav1.DeleteOptions{})
+	err = p.clientSet.CoreV1().ConfigMaps(p.config.ScannerNamespace).Delete(ctx, jobName, metav1.DeleteOptions{})
 	if err != nil && !k8sErrors.IsNotFound(err) {
 		return fmt.Errorf("failed to delete config map: %w", err)
 	}
