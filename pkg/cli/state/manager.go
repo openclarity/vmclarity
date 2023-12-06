@@ -27,6 +27,6 @@ type Manager interface {
 	MarkInProgress(context.Context, *families.Config) error
 	MarkFamilyScanInProgress(context.Context, types.FamilyType) error
 	MarkDone(context.Context) error
-	MarkFailed(context.Context, []string) error
+	MarkFailed(context.Context, string) error
 	IsAborted(ctx context.Context) (bool, error)
 }

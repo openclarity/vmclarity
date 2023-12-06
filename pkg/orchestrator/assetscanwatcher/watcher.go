@@ -287,7 +287,7 @@ func (w *Watcher) reconcileScheduled(ctx context.Context, assetScan *models.Asse
 		assetScan.Status = models.NewAssetScanStatus(
 			models.AssetScanStatusStateFailed,
 			models.AssetScanStatusReasonFailed,
-			utils.PointerTo(utils.ConcatenateStringSlice(utils.UnwrapErrorStrings(err))),
+			utils.PointerTo(errors.Join(utils.UnwrapErrors(err)...).Error()),
 		)
 	default:
 		assetScan.Status = models.NewAssetScanStatus(

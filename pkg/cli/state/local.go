@@ -65,7 +65,7 @@ func (l *LocalState) MarkDone(ctx context.Context) error {
 	return nil
 }
 
-func (l *LocalState) MarkFailed(ctx context.Context, errors []string) error {
+func (l *LocalState) MarkFailed(ctx context.Context, errors string) error {
 	logger := log.GetLoggerFromContextOrDiscard(ctx)
 	logger.Errorf("scan has been completed with errors: %v", errors)
 	return nil

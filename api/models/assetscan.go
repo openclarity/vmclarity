@@ -15,17 +15,6 @@
 
 package models
 
-import "time"
-
-func NewAssetScanStatus(s AssetScanStatusState, r AssetScanStatusReason, m *string) *AssetScanStatus {
-	return &AssetScanStatus{
-		State:              s,
-		Reason:             r,
-		Message:            m,
-		LastTransitionTime: time.Now(),
-	}
-}
-
 func (r *AssetScan) GetStatus() (*AssetScanStatus, bool) {
 	if r.Status == nil {
 		return nil, false

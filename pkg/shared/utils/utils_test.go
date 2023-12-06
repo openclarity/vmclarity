@@ -21,8 +21,6 @@ import (
 	"sort"
 	"testing"
 
-	. "github.com/onsi/gomega"
-
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/openclarity/vmclarity/api/models"
@@ -257,29 +255,6 @@ func Test_IntPointerValOrEmpty(t *testing.T) {
 			if got := IntPointerValOrEmpty(tt.args.val); got != tt.want {
 				t.Errorf("IntPointerValOrEmpty() = %v, want %v", got, tt.want)
 			}
-		})
-	}
-}
-
-func TestConcatenateStringSlice(t *testing.T) {
-	tests := []struct {
-		Name           string
-		Strings        []string
-		ExpectedResult string
-	}{
-		{
-			Name:           "Error slice",
-			Strings:        []string{"error 1", "error 2"},
-			ExpectedResult: "error 1; error 2",
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.Name, func(t *testing.T) {
-			g := NewGomegaWithT(t)
-
-			concatenated := ConcatenateStringSlice(test.Strings)
-			g.Expect(concatenated).Should(Equal(test.ExpectedResult))
 		})
 	}
 }
