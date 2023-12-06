@@ -257,8 +257,8 @@ github.com/BurntSushi/toml v0.4.1/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbi
 github.com/BurntSushi/toml v1.3.2 h1:o7IhLm0Msx3BaB+n3Ag7L8EVlByGnpq14C4YWiu/gL8=
 github.com/BurntSushi/toml v1.3.2/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/CiscoM31/godata v1.0.8 h1:ZhPjm1dSwZWMUvb33P4bcVm048iiQ1wbncoCc9bLChQ=
-github.com/CiscoM31/godata v1.0.8/go.mod h1:ZMiT6JuD3Rm83HEtiTx4JEChsd25YCrxchKGag/sdTc=
+github.com/CiscoM31/godata v1.0.9 h1:7ovi2efjWb6RloX96AJqBB9eyIfBdarzj8kzg7glPC4=
+github.com/CiscoM31/godata v1.0.9/go.mod h1:ZMiT6JuD3Rm83HEtiTx4JEChsd25YCrxchKGag/sdTc=
 github.com/CycloneDX/cyclonedx-go v0.7.2-0.20230625092137-07e2f29defc3 h1:NqeV+ZMqpcosu0Xg2VW14Ru9ayBs/toe2oihS7sN6Xo=
 github.com/CycloneDX/cyclonedx-go v0.7.2-0.20230625092137-07e2f29defc3/go.mod h1:fGXSp1lCDfMQ8KR1EjxT4ewc5HHhGczRF2pWhLSWohs=
 github.com/CycloneDX/cyclonedx-gomod v1.4.1 h1:uYISo8sJCFtg27mKGEuYsQQT90oDsx+PNLEBcTJ3ENI=
@@ -433,8 +433,8 @@ github.com/aws/aws-sdk-go-v2/internal/ini v1.7.1 h1:uR9lXYjdPX0xY+NhvaJ4dD8rpSRz
 github.com/aws/aws-sdk-go-v2/internal/ini v1.7.1/go.mod h1:6fQQgfuGmw8Al/3M2IgIllycxV7ZW7WCdVSqfBeUiCY=
 github.com/aws/aws-sdk-go-v2/service/ebs v1.18.1 h1:iUgGXA8fg41B4Of0F+BS766SRQ7c8rr5jtka8RgaocQ=
 github.com/aws/aws-sdk-go-v2/service/ebs v1.18.1/go.mod h1:9n0SC5yHomD8IjsR37+/txpdfNdpGSgV1RzmsTHrbWg=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.138.2 h1:e3Imv1oXz+W3Tfclflkh72t5TUPUwWdkHP7ctQGk8Dc=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.138.2/go.mod h1:d1hAqgLDOPaSO1Piy/0bBmj6oAplFwv6p0cquHntNHM=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.139.0 h1:sl7srh3DGVE2Vwuau5fEW8eIX79MAqe3bLqahYBH60s=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.139.0/go.mod h1:d1hAqgLDOPaSO1Piy/0bBmj6oAplFwv6p0cquHntNHM=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.18.11 h1:wlTgmb/sCmVRJrN5De3CiHj4v/bTCgL5+qpdEd0CPtw=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.18.11/go.mod h1:Ce1q2jlNm8BVpjLaOnwnm5v2RClAbK6txwPljFzyW6c=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.16.2 h1:yflJrGmi1pXtP9lOpOeaNZyc0vXnJTuP2sor3nJcGGo=
@@ -2318,8 +2318,8 @@ google.golang.org/api v0.96.0/go.mod h1:w7wJQLTM+wvQpNf5JyEcBoxK0RH7EDrh/L4qfsuJ
 google.golang.org/api v0.97.0/go.mod h1:w7wJQLTM+wvQpNf5JyEcBoxK0RH7EDrh/L4qfsuJ13s=
 google.golang.org/api v0.98.0/go.mod h1:w7wJQLTM+wvQpNf5JyEcBoxK0RH7EDrh/L4qfsuJ13s=
 google.golang.org/api v0.100.0/go.mod h1:ZE3Z2+ZOr87Rx7dqFsdRQkRBk36kDtp/h+QpHbB7a70=
-google.golang.org/api v0.152.0 h1:t0r1vPnfMc260S2Ci+en7kfCZaLOPs5KI0sVV/6jZrY=
-google.golang.org/api v0.152.0/go.mod h1:3qNJX5eOmhiWYc67jRA/3GsDw97UFb5ivv7Y2PrriAY=
+google.golang.org/api v0.153.0 h1:N1AwGhielyKFaUqH07/ZSIQR3uNPcV7NVw0vj+j4iR4=
+google.golang.org/api v0.153.0/go.mod h1:3qNJX5eOmhiWYc67jRA/3GsDw97UFb5ivv7Y2PrriAY=
 google.golang.org/appengine v1.1.0/go.mod h1:EbEs0AVv82hx2wNQdGPgUI5lhzA/G0D9YwlJXL52JkM=
 google.golang.org/appengine v1.4.0/go.mod h1:xpcJRLb0r/rnEns0DIKYYv+WjYCduHsrkT7/EB5XEv4=
 google.golang.org/appengine v1.5.0/go.mod h1:xpcJRLb0r/rnEns0DIKYYv+WjYCduHsrkT7/EB5XEv4=

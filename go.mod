@@ -10,7 +10,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v3 v3.0.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v1.2.0
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.2.0
-	github.com/CiscoM31/godata v1.0.8
+	github.com/CiscoM31/godata v1.0.9
 	github.com/CycloneDX/cyclonedx-go v0.7.2-0.20230625092137-07e2f29defc3
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/Portshift/go-utils v0.0.0-20220421083203-89265d8a6487
@@ -19,7 +19,7 @@ require (
 	github.com/aptible/supercronic v0.2.28
 	github.com/aws/aws-sdk-go-v2 v1.23.5
 	github.com/aws/aws-sdk-go-v2/config v1.25.11
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.138.2
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.139.0
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.24.2
 	github.com/aws/smithy-go v1.18.1
 	github.com/cenkalti/backoff v2.2.1+incompatible
@@ -51,7 +51,7 @@ require (
 	github.com/vulsio/go-exploitdb v0.4.6
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
 	golang.org/x/sync v0.5.0
-	google.golang.org/api v0.152.0
+	google.golang.org/api v0.153.0
 	google.golang.org/grpc v1.59.0
 	google.golang.org/protobuf v1.31.0
 	gopkg.in/yaml.v2 v2.4.0
