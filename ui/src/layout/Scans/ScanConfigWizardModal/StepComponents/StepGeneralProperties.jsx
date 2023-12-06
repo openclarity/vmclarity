@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useField } from 'formik';
-import { Utils as QbUtils } from '@react-awesome-query-builder/mui';
+import { Utils as QbUtils } from '@react-awesome-query-builder/core';
 
 import { FieldLabel, TextAreaField, TextField, validators } from 'components/Form'; // useFormikContext,
 import { StatelessCheckbox, StatelessRadioButtonGroup } from 'components/statelessComponents';

@@ -20,6 +20,7 @@ export default defineConfig(({ mode }) => {
         resolve: {
             alias: {
                 utils: '/src/utils',
+                process: 'process/browser',
             }
         },
         server: {    
