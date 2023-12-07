@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FETCH_METHODS, useFetch } from 'hooks';
-import { Utils as QbUtils } from '@react-awesome-query-builder/mui';
+import { Utils as QbUtils } from '@react-awesome-query-builder/core';
 import OpenAPIParser from '@readme/openapi-parser';
 
 import {
