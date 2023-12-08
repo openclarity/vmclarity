@@ -23,8 +23,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.24.4
 	github.com/aws/smithy-go v1.19.0
 	github.com/cenkalti/backoff v2.2.1+incompatible
-	github.com/containerd/containerd v1.7.6
-	github.com/containerd/nerdctl v1.6.0
+	github.com/containerd/containerd v1.7.10
+	github.com/containerd/nerdctl v1.7.1
 	github.com/containers/image/v5 v5.29.0
 	github.com/deepmap/oapi-codegen/v2 v2.0.0
 	github.com/docker/docker v24.0.7+incompatible
@@ -158,10 +158,11 @@ require (
 	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/containerd/cgroups/v3 v3.0.2 // indirect
 	github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 // indirect
-	github.com/containerd/continuity v0.4.2 // indirect
+	github.com/containerd/continuity v0.4.3 // indirect
 	github.com/containerd/fifo v1.1.0 // indirect
-	github.com/containerd/imgcrypt v1.1.8 // indirect
-	github.com/containerd/stargz-snapshotter v0.14.3 // indirect
+	github.com/containerd/imgcrypt v1.1.9 // indirect
+	github.com/containerd/log v0.1.0 // indirect
+	github.com/containerd/stargz-snapshotter v0.15.1 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.15.1 // indirect
 	github.com/containerd/ttrpc v1.2.2 // indirect
 	github.com/containerd/typeurl v1.0.3-0.20220422153119-7f6e6d160d67 // indirect
@@ -191,7 +192,7 @@ require (
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d // indirect
 	github.com/facebookincubator/nvdtools v0.1.5 // indirect
-	github.com/fatih/color v1.15.0 // indirect
+	github.com/fatih/color v1.16.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/github/go-spdx/v2 v2.1.2 // indirect
@@ -302,14 +303,14 @@ require (
 	github.com/masahiro331/go-vmdk-parser v0.0.0-20221225061455-612096e4bbbd // indirect
 	github.com/masahiro331/go-xfs-filesystem v0.0.0-20230608043311-a335f4599b70 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/mattn/go-sqlite3 v1.14.18 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mholt/archiver/v3 v3.5.1 // indirect
 	github.com/microsoft/go-rustaudit v0.0.0-20220808201409-204dfee52032 // indirect
 	github.com/miekg/pkcs11 v1.1.1 // indirect
-	github.com/minio/sha256-simd v1.0.0 // indirect
+	github.com/minio/sha256-simd v1.0.1 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
@@ -427,9 +428,9 @@ require (
 	go.mongodb.org/mongo-driver v1.11.3 // indirect
 	go.mozilla.org/pkcs7 v0.0.0-20210826202110-33d05740a352 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	go.opentelemetry.io/otel v1.16.0 // indirect
-	go.opentelemetry.io/otel/metric v1.16.0 // indirect
-	go.opentelemetry.io/otel/trace v1.16.0 // indirect
+	go.opentelemetry.io/otel v1.19.0 // indirect
+	go.opentelemetry.io/otel/metric v1.19.0 // indirect
+	go.opentelemetry.io/otel/trace v1.19.0 // indirect
 	go.starlark.net v0.0.0-20230525235612-a134d8f9ddca // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
