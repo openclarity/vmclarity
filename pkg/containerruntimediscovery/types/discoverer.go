@@ -22,7 +22,7 @@ import (
 	"github.com/openclarity/vmclarity/api/models"
 )
 
-type DiscovererFactory func(ctx context.Context) (Discoverer, error)
+type DiscovererFactory func() (Discoverer, error)
 
 type Discoverer interface {
 	Images(ctx context.Context) ([]models.ContainerImageInfo, error)
@@ -32,4 +32,6 @@ type Discoverer interface {
 	Containers(ctx context.Context) ([]models.ContainerInfo, error)
 	Container(ctx context.Context, containerID string) (models.ContainerInfo, error)
 	ExportContainer(ctx context.Context, containerID string) (io.ReadCloser, func(), error)
+
+	Ready(ctx context.Context) (bool, error)
 }

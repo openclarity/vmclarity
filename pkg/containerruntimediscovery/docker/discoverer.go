@@ -32,31 +32,26 @@ import (
 	"github.com/openclarity/vmclarity/utils/log"
 )
 
-type DockerDiscoverer struct {
+type discoverer struct {
 	client *dclient.Client
 }
 
-var _ types.Discoverer = &DockerDiscoverer{}
+var _ types.Discoverer = &discoverer{}
 
-func NewDockerDiscoverer(ctx context.Context) (types.Discoverer, error) {
+func New() (types.Discoverer, error) {
 	client, err := dclient.NewClientWithOpts(dclient.FromEnv, dclient.WithAPIVersionNegotiation())
 	if err != nil {
 		return nil, fmt.Errorf("failed to create docker client: %w", err)
 	}
 
-	_, err = client.ImageList(ctx, dtypes.ImageListOptions{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to list images: %w", err)
-	}
-
-	return &DockerDiscoverer{
+	return &discoverer{
 		client: client,
 	}, nil
 }
 
-func (dd *DockerDiscoverer) Images(ctx context.Context) ([]models.ContainerImageInfo, error) {
+func (d *discoverer) Images(ctx context.Context) ([]models.ContainerImageInfo, error) {
 	// List all docker images
-	images, err := dd.client.ImageList(ctx, dtypes.ImageListOptions{})
+	images, err := d.client.ImageList(ctx, dtypes.ImageListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list images: %w", err)
 	}
@@ -64,7 +59,7 @@ func (dd *DockerDiscoverer) Images(ctx context.Context) ([]models.ContainerImage
 	// Convert images to container image info
 	result := make([]models.ContainerImageInfo, len(images))
 	for i, image := range images {
-		ii, err := dd.getContainerImageInfo(ctx, image.ID)
+		ii, err := d.getContainerImageInfo(ctx, image.ID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert image to ContainerImageInfo: %w", err)
 		}
@@ -73,16 +68,16 @@ func (dd *DockerDiscoverer) Images(ctx context.Context) ([]models.ContainerImage
 	return result, nil
 }
 
-func (dd *DockerDiscoverer) Image(ctx context.Context, imageID string) (models.ContainerImageInfo, error) {
-	info, err := dd.getContainerImageInfo(ctx, imageID)
+func (d *discoverer) Image(ctx context.Context, imageID string) (models.ContainerImageInfo, error) {
+	info, err := d.getContainerImageInfo(ctx, imageID)
 	if dclient.IsErrNotFound(err) {
 		return info, types.ErrNotFound
 	}
 	return info, err
 }
 
-func (dd *DockerDiscoverer) getContainerImageInfo(ctx context.Context, imageID string) (models.ContainerImageInfo, error) {
-	image, _, err := dd.client.ImageInspectWithRaw(ctx, imageID)
+func (d *discoverer) getContainerImageInfo(ctx context.Context, imageID string) (models.ContainerImageInfo, error) {
+	image, _, err := d.client.ImageInspectWithRaw(ctx, imageID)
 	if err != nil {
 		return models.ContainerImageInfo{}, fmt.Errorf("failed to inspect image: %w", err)
 	}
@@ -99,17 +94,17 @@ func (dd *DockerDiscoverer) getContainerImageInfo(ctx context.Context, imageID s
 	}, nil
 }
 
-func (dd *DockerDiscoverer) ExportImage(ctx context.Context, imageID string) (io.ReadCloser, error) {
-	reader, err := dd.client.ImageSave(ctx, []string{imageID})
+func (d *discoverer) ExportImage(ctx context.Context, imageID string) (io.ReadCloser, error) {
+	reader, err := d.client.ImageSave(ctx, []string{imageID})
 	if err != nil {
 		return nil, fmt.Errorf("unable to save image from daemon: %w", err)
 	}
 	return reader, nil
 }
 
-func (dd *DockerDiscoverer) Containers(ctx context.Context) ([]models.ContainerInfo, error) {
+func (d *discoverer) Containers(ctx context.Context) ([]models.ContainerInfo, error) {
 	// List all docker containers
-	containers, err := dd.client.ContainerList(ctx, dcontainer.ListOptions{All: true})
+	containers, err := d.client.ContainerList(ctx, dcontainer.ListOptions{All: true})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list containers: %w", err)
 	}
@@ -117,7 +112,7 @@ func (dd *DockerDiscoverer) Containers(ctx context.Context) ([]models.ContainerI
 	result := make([]models.ContainerInfo, len(containers))
 	for i, container := range containers {
 		// Get container info
-		info, err := dd.getContainerInfo(ctx, container.ID, container.ImageID)
+		info, err := d.getContainerInfo(ctx, container.ID, container.ImageID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert container to ContainerInfo: %w", err)
 		}
@@ -126,9 +121,9 @@ func (dd *DockerDiscoverer) Containers(ctx context.Context) ([]models.ContainerI
 	return result, nil
 }
 
-func (dd *DockerDiscoverer) Container(ctx context.Context, containerID string) (models.ContainerInfo, error) {
+func (d *discoverer) Container(ctx context.Context, containerID string) (models.ContainerInfo, error) {
 	// List all docker containers filtered by containerID
-	containers, err := dd.client.ContainerList(ctx, dtypes.ContainerListOptions{
+	containers, err := d.client.ContainerList(ctx, dcontainer.ListOptions{
 		All:     true,
 		Filters: dfilters.NewArgs(dfilters.KeyValuePair{Key: "id", Value: containerID}),
 	})
@@ -143,19 +138,19 @@ func (dd *DockerDiscoverer) Container(ctx context.Context, containerID string) (
 		return models.ContainerInfo{}, fmt.Errorf("found more than one container with id %s", containerID)
 	}
 
-	info, err := dd.getContainerInfo(ctx, containers[0].ID, containers[0].ImageID)
+	info, err := d.getContainerInfo(ctx, containers[0].ID, containers[0].ImageID)
 	if err != nil {
 		return models.ContainerInfo{}, fmt.Errorf("failed to convert container to ContainerInfo: %w", err)
 	}
 	return info, nil
 }
 
-func (dd *DockerDiscoverer) ExportContainer(ctx context.Context, containerID string) (io.ReadCloser, func(), error) {
+func (d *discoverer) ExportContainer(ctx context.Context, containerID string) (io.ReadCloser, func(), error) {
 	clean := &types.Cleanup{}
 	defer clean.Clean()
 
 	imageName := fmt.Sprintf("vmclarity.io/container-snapshot:%s", containerID)
-	idresp, err := dd.client.ContainerCommit(ctx, containerID, dtypes.ContainerCommitOptions{
+	idresp, err := d.client.ContainerCommit(ctx, containerID, dcontainer.CommitOptions{
 		Reference: imageName,
 		Comment:   fmt.Sprintf("Snapshot of container %s for security scanning", containerID),
 		Author:    "VMClarity",
@@ -165,7 +160,7 @@ func (dd *DockerDiscoverer) ExportContainer(ctx context.Context, containerID str
 		return nil, func() {}, fmt.Errorf("failed to commit container to image: %w", err)
 	}
 	clean.Add(func() {
-		_, err := dd.client.ImageRemove(ctx, idresp.ID, dtypes.ImageRemoveOptions{
+		_, err := d.client.ImageRemove(ctx, idresp.ID, dtypes.ImageRemoveOptions{
 			Force: true,
 		})
 		if err != nil {
@@ -173,7 +168,7 @@ func (dd *DockerDiscoverer) ExportContainer(ctx context.Context, containerID str
 		}
 	})
 
-	reader, err := dd.client.ImageSave(ctx, []string{idresp.ID})
+	reader, err := d.client.ImageSave(ctx, []string{idresp.ID})
 	if err != nil {
 		return nil, func() {}, fmt.Errorf("unable to save image from daemon: %w", err)
 	}
@@ -181,9 +176,9 @@ func (dd *DockerDiscoverer) ExportContainer(ctx context.Context, containerID str
 	return reader, clean.Release(), nil
 }
 
-func (dd *DockerDiscoverer) getContainerInfo(ctx context.Context, containerID, imageID string) (models.ContainerInfo, error) {
+func (d *discoverer) getContainerInfo(ctx context.Context, containerID, imageID string) (models.ContainerInfo, error) {
 	// Inspect container
-	info, err := dd.client.ContainerInspect(ctx, containerID)
+	info, err := d.client.ContainerInspect(ctx, containerID)
 	if err != nil {
 		return models.ContainerInfo{}, fmt.Errorf("failed to inspect container: %w", err)
 	}
@@ -194,7 +189,7 @@ func (dd *DockerDiscoverer) getContainerInfo(ctx context.Context, containerID, i
 	}
 
 	// Get container image info
-	imageInfo, err := dd.getContainerImageInfo(ctx, imageID)
+	imageInfo, err := d.getContainerImageInfo(ctx, imageID)
 	if err != nil {
 		return models.ContainerInfo{}, err
 	}
@@ -207,4 +202,13 @@ func (dd *DockerDiscoverer) getContainerInfo(ctx context.Context, containerID, i
 		Labels:        models.MapToTags(info.Config.Labels),
 		ObjectType:    "ContainerInfo",
 	}, nil
+}
+
+func (d *discoverer) Ready(ctx context.Context) (bool, error) {
+	_, err := d.client.Ping(ctx)
+	if err != nil {
+		return false, fmt.Errorf("failed to get connection state: %w", err)
+	}
+
+	return true, nil
 }

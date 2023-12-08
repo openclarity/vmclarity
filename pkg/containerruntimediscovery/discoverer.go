@@ -27,8 +27,8 @@ import (
 )
 
 var discovererFactories = map[string]types.DiscovererFactory{
-	"docker":     docker.NewDockerDiscoverer,
-	"containerd": containerd.NewContainerdDiscoverer,
+	"docker":     docker.New,
+	"containerd": containerd.New,
 }
 
 // NewDiscoverer tries to create all registered discoverers and returns the
@@ -39,12 +39,18 @@ func NewDiscoverer(ctx context.Context) (types.Discoverer, error) {
 	errs := []error{}
 
 	for name, factory := range discovererFactories {
-		discoverer, err := factory(ctx)
+		discoverer, err := factory()
 		if err == nil {
 			logger.Infof("Loaded %s discoverer", name)
+			ok, err := discoverer.Ready(ctx)
+			if err != nil || !ok {
+				logger.Warnf("The %s discoverer is not ready. Skipping...", name)
+				continue
+			}
 			return discoverer, nil
 		}
 		errs = append(errs, fmt.Errorf("failed to create %s discoverer: %w", name, err))
 	}
+
 	return nil, errors.Join(errs...)
 }
