@@ -123,31 +123,32 @@ func (d *discoverer) Images(ctx context.Context) ([]models.ContainerImageInfo, e
 			continue
 		}
 
-		cii, err := d.getContainerImageInfo(ctx, image)
+		imageInfo, err := d.getContainerImageInfo(ctx, image)
 		if err != nil {
 			return nil, fmt.Errorf("unable to convert image %s to container image info: %w", image.Name(), err)
 		}
 
-		if cii.ImageID == "" {
-			logger.Warnf("found image with empty ImageID: %s", cii.String())
+		if imageInfo.ImageID == "" {
+			logger.Warnf("found image with empty ImageID: %s", imageInfo.String())
 			continue
 		}
 
-		existing, ok := imageSet[cii.ImageID]
+		existing, ok := imageSet[imageInfo.ImageID]
 		if ok {
-			merged, err := existing.Merge(cii)
+			merged, err := existing.Merge(imageInfo)
 			if err != nil {
-				return nil, fmt.Errorf("unable to merge image %v with %v: %w", existing, cii, err)
+				return nil, fmt.Errorf("unable to merge image %v with %v: %w", existing, imageInfo, err)
 			}
-			cii = merged
+			imageInfo = merged
 		}
-		imageSet[cii.ImageID] = cii
+		imageSet[imageInfo.ImageID] = imageInfo
 	}
 
 	result := []models.ContainerImageInfo{}
 	for _, image := range imageSet {
 		result = append(result, image)
 	}
+
 	return result, nil
 }
 
