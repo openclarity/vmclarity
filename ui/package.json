@@ -2,6 +2,7 @@
   "name": "vmclarity",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "dependencies": {
     "@ant-design/icons": "^5.2.6",
     "@emotion/react": "^11.11.1",
@@ -36,7 +37,6 @@
     "react-js-cron": "^3.1.0",
     "react-querybuilder": "^6.5.3",
     "react-router-dom": "^6.8.1",
-    "react-scripts": "^5.0.1",
     "react-select": "^5.7.0",
     "react-table": "^7.8.0",
     "react-time-picker": "^5.2.0",
@@ -52,14 +52,16 @@
     "util": "^0.12.5",
     "yaml-loader": "^0.8.0"
   },
-  "overrides": {
-    "nth-check": "^2.0.1",
-    "webpack": "^5.76.0"
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "esbuild-plugin-browserslist": "^0.10.0",
+    "vite": "^5.0.6",
+    "vite-tsconfig-paths": "^4.2.1"
   },
   "scripts": {
-    "start": "react-app-rewired start",
-    "build": "react-app-rewired build",
-    "eject": "react-scripts eject"
+    "start": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
   },
   "eslintConfig": {
     "extends": [
@@ -79,10 +81,5 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:8080",
-  "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "@babel/plugin-transform-private-property-in-object": "^7.22.11",
-    "react-app-rewired": "^2.2.1"
-  }
+  "proxy": "http://localhost:8080"
 }
