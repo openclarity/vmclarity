@@ -2458,7 +2458,7 @@ components:
             | ReadyToScan | UnSupervised     | Scan is created manually without the involvement of the Orchestrator (e.g. CI/CD scenario) |
             | ReadyToScan | ResourcesReady   | Scan is ready to scan as Asset resources have been provisioned                             |
             | InProgress  | ScannerIsRunning | Scan is in progress as Scanner is still performing scanning on Asset resources             |
-            | Aborted     | Cancellation     | Scans have been aborted                                                                    |
+            | Aborted     | Cancellation     | Scan has been aborted due to cancellation request                                          |
             | Aborted     | Timeout          | Scan has been aborted due to timeout                                                       |
             | Failed      | Error            | Scan has failed to one or more errors reported by the Scanner                              |
             | Failed      | AbortTimeout     | Scan has failed due to being in Aborted state for too long                                 |
