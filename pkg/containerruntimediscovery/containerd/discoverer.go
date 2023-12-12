@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/containerd/containerd"
+	"github.com/containerd/containerd/defaults"
 	"github.com/containerd/containerd/errdefs"
 	containerdImages "github.com/containerd/containerd/images"
 	"github.com/containerd/containerd/images/archive"
@@ -40,10 +41,19 @@ import (
 	"github.com/openclarity/vmclarity/utils/log"
 )
 
-const ContainerdSockAddress = "/var/run/containerd/containerd.sock"
+const (
+	ContainerdSockAddress  = "/var/run/containerd/containerd.sock"
+	DefaultSnapshotterName = "overlayfs"
+	DefaultClientTimeout   = 30 * time.Second
+	DefaultNamespace       = criConstants.K8sContainerdNamespace
+	DefaultSkipUnpackImage = false
+)
 
 type discoverer struct {
-	client *containerd.Client
+	client          *containerd.Client
+	snapshotterName string
+	namespace       string
+	skipUnpackImage bool
 }
 
 var _ types.Discoverer = &discoverer{}
@@ -55,15 +65,18 @@ func New() (types.Discoverer, error) {
 	// containers for kubernetes we need to set the kubernetes namespace as
 	// the default for our client.
 	client, err := containerd.New(ContainerdSockAddress,
-		containerd.WithDefaultNamespace(criConstants.K8sContainerdNamespace),
-		containerd.WithTimeout(30*time.Second),
+		containerd.WithDefaultNamespace(DefaultNamespace),
+		containerd.WithTimeout(DefaultClientTimeout),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create containerd client: %w", err)
 	}
 
 	return &discoverer{
-		client: client,
+		client:          client,
+		snapshotterName: DefaultSnapshotterName,
+		namespace:       DefaultNamespace,
+		skipUnpackImage: DefaultSkipUnpackImage,
 	}, nil
 }
 
@@ -178,6 +191,8 @@ func (d *discoverer) Image(ctx context.Context, imageID string) (models.Containe
 }
 
 func (d *discoverer) getContainerImageInfo(ctx context.Context, image containerd.Image) (models.ContainerImageInfo, error) {
+	logger := log.GetLoggerFromContextOrDiscard(ctx)
+
 	configDescriptor, err := image.Config(ctx)
 	if err != nil {
 		return models.ContainerImageInfo{}, fmt.Errorf("failed to load image config descriptor: %w", err)
@@ -189,11 +204,37 @@ func (d *discoverer) getContainerImageInfo(ctx context.Context, image containerd
 		return models.ContainerImageInfo{}, fmt.Errorf("failed to load image spec: %w", err)
 	}
 
-	// NOTE(sambetts) We can not use image.Size as it gives us the size of
-	// the compressed layers and not the real size of the content.
-	snapshotter := d.client.SnapshotService(containerd.DefaultSnapshotter)
-	// NOTE(chrisgacsal): ignore error as determining size of the image is not critical
-	size, _ := imgutil.UnpackedImageSize(ctx, snapshotter, image)
+	// Try to calculate uncompressed size of the image
+	snapshotterName := d.getSnapshotterName(ctx)
+	unpacked, err := image.IsUnpacked(ctx, snapshotterName)
+	if err != nil {
+		return models.ContainerImageInfo{}, fmt.Errorf("failed to determine whether the image is unpacked or not: %w", err)
+	}
+
+	if !unpacked && !d.skipUnpackImage {
+		if err = image.Unpack(ctx, snapshotterName); err != nil {
+			logger.Warnf("failed to unpack image %s: %v", id, err)
+		} else {
+			unpacked = true
+		}
+	}
+
+	var size int64
+	if unpacked {
+		// Get uncompressed image size
+		size, err = imgutil.UnpackedImageSize(ctx, d.client.SnapshotService(snapshotterName), image)
+		if err != nil {
+			logger.Debugf("failed to get unpacked size of image %s. Falling back to the compressed size: %v", id, err)
+		}
+	}
+
+	if size == 0 {
+		// Get compressed image size
+		size, err = image.Size(ctx)
+		if err != nil {
+			return models.ContainerImageInfo{}, fmt.Errorf("failed to get compressed size of image %s: %w", id, err)
+		}
+	}
 
 	repoTags, repoDigests := ParseImageReferences([]string{image.Name()})
 
@@ -207,6 +248,16 @@ func (d *discoverer) getContainerImageInfo(ctx context.Context, image containerd
 		Os:           utils.PointerTo(imageSpec.OS),
 		Size:         utils.PointerTo(size),
 	}, nil
+}
+
+func (d discoverer) getSnapshotterName(ctx context.Context) string {
+	name := d.snapshotterName
+	label, _ := d.client.GetLabel(ctx, defaults.DefaultSnapshotterNSLabel)
+	if label != "" {
+		name = label
+	}
+
+	return name
 }
 
 // TODO(sambetts) Support auth config for fetching private images if they are missing.
