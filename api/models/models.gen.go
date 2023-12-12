@@ -37,6 +37,7 @@ const (
 	AssetScanStatusReasonResourcesReady   AssetScanStatusReason = "ResourcesReady"
 	AssetScanStatusReasonScannerIsRunning AssetScanStatusReason = "ScannerIsRunning"
 	AssetScanStatusReasonSuccess          AssetScanStatusReason = "Success"
+	AssetScanStatusReasonTimeout          AssetScanStatusReason = "Timeout"
 	AssetScanStatusReasonUnSupervised     AssetScanStatusReason = "UnSupervised"
 )
 
@@ -492,6 +493,7 @@ type AssetScanStatus struct {
 	// | ReadyToScan | ResourcesReady   | Scan is ready to scan as Asset resources have been provisioned                             |
 	// | InProgress  | ScannerIsRunning | Scan is in progress as Scanner is still performing scanning on Asset resources             |
 	// | Aborted     | Cancellation     | Scans have been aborted                                                                    |
+	// | Aborted     | Timeout          | Scan has been aborted due to timeout                                                       |
 	// | Failed      | Error            | Scan has failed to one or more errors reported by the Scanner                              |
 	// | Failed      | AbortTimedOut    | Scan has failed due to being in Aborted state for too long                                 |
 	// | Done        | Success          | Scan has finished successfully                                                             |
@@ -521,6 +523,7 @@ type AssetScanStatus struct {
 // | ReadyToScan | ResourcesReady   | Scan is ready to scan as Asset resources have been provisioned                             |
 // | InProgress  | ScannerIsRunning | Scan is in progress as Scanner is still performing scanning on Asset resources             |
 // | Aborted     | Cancellation     | Scans have been aborted                                                                    |
+// | Aborted     | Timeout          | Scan has been aborted due to timeout                                                       |
 // | Failed      | Error            | Scan has failed to one or more errors reported by the Scanner                              |
 // | Failed      | AbortTimedOut    | Scan has failed due to being in Aborted state for too long                                 |
 // | Done        | Success          | Scan has finished successfully                                                             |
