@@ -33,14 +33,28 @@ const StepGeneralProperties = ({
     const { value: annotations } = annotationsField;
 
     const savedScopeTree = useMemo(
-        () => (annotations?.length >= 0 ? annotations : []).find(f => f.key === SCOPE_TREE_KEY)?.value,
+        () => {
+            const treeObject = (annotations?.length >= 0 ? annotations : []).find(f => Object.keys(f).includes(SCOPE_TREE_KEY));
+            const valueString = treeObject[SCOPE_TREE_KEY];
+            if (valueString) return JSON.parse(valueString);
+            return undefined
+        },
         [annotations]
     );
 
+    console.log('savedScopeTree:', savedScopeTree);
+
     const savedScopeConfig = useMemo(
-        () => (annotations?.length >= 0 ? annotations : []).find(f => f.key === SCOPE_CONFIG_KEY)?.value,
+        () => {
+            const configObject = (annotations?.length >= 0 ? annotations : []).find(f => Object.keys(f).includes(SCOPE_CONFIG_KEY));
+            const valueString = configObject[SCOPE_CONFIG_KEY];
+            if (valueString) return JSON.parse(valueString);
+            return undefined
+        },
         [annotations]
     );
+
+    console.log('savedScopeConfig:', savedScopeConfig);
 
     const initialConfig = useMemo(
         () => (isEditForm && savedScopeConfig) ? QbUtils.decompressConfig(savedScopeConfig, configWithFields) : configWithFields,

@@ -158,15 +158,14 @@ const postFixQuery = (text) => text ? text.replace(/"/g, "'") : '';
 
 const updateSavedScopeTree = (annotations, jsTree) => {
     const newAnnotations = [...annotations];
-    const newObject = {
-        key: SCOPE_TREE_KEY,
-        value: jsTree
-    };
-    const position = annotations.map(a => a.key).indexOf(SCOPE_TREE_KEY);
-    if (position >= 0) {
-        newAnnotations[position] = newObject;
+
+    const currentTreeObject = newAnnotations.find(a => Object.keys(a).includes(SCOPE_TREE_KEY));
+    if (currentTreeObject) {
+        currentTreeObject[SCOPE_TREE_KEY] = JSON.stringify(jsTree);
     } else {
-        newAnnotations.push(newObject)
+        newAnnotations.push({
+            [SCOPE_TREE_KEY]: JSON.stringify(jsTree)
+        })
     }
 
     return newAnnotations;
@@ -175,15 +174,15 @@ const updateSavedScopeTree = (annotations, jsTree) => {
 const updateSavedScopeConfig = (annotations, newConfig) => {
 
     const newAnnotations = [...annotations];
-    const newObject = {
-        key: SCOPE_CONFIG_KEY,
-        value: QbUtils.compressConfig(newConfig, BASIC_CONFIG)
-    };
-    const position = annotations.map(a => a.key).indexOf(SCOPE_CONFIG_KEY);
-    if (position >= 0) {
-        newAnnotations[position] = newObject;
+    const currentConfigObject = newAnnotations.find(a => Object.keys(a).includes(SCOPE_CONFIG_KEY));
+    const configValue = JSON.stringify(QbUtils.compressConfig(newConfig, BASIC_CONFIG))
+
+    if (currentConfigObject) {
+        currentConfigObject[SCOPE_TREE_KEY] = configValue;
     } else {
-        newAnnotations.push(newObject)
+        newAnnotations.push({
+            [SCOPE_TREE_KEY]: configValue
+        })
     }
 
     return newAnnotations;
