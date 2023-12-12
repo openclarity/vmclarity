@@ -47,7 +47,7 @@ var assetScanStatusReasonMapping = map[AssetScanStatusState][]AssetScanStatusRea
 	},
 	AssetScanStatusStateFailed: {
 		AssetScanStatusReasonError,
-		AssetScanStatusReasonAbortTimedOut,
+		AssetScanStatusReasonAbortTimeout,
 	},
 	AssetScanStatusStateDone: {
 		AssetScanStatusReasonSuccess,

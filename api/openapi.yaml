@@ -2461,7 +2461,7 @@ components:
             | Aborted     | Cancellation     | Scans have been aborted                                                                    |
             | Aborted     | Timeout          | Scan has been aborted due to timeout                                                       |
             | Failed      | Error            | Scan has failed to one or more errors reported by the Scanner                              |
-            | Failed      | AbortTimedOut    | Scan has failed due to being in Aborted state for too long                                 |
+            | Failed      | AbortTimeout     | Scan has failed due to being in Aborted state for too long                                 |
             | Done        | Success          | Scan has finished successfully                                                             |
           type: string
           enum:
@@ -2484,7 +2484,7 @@ components:
             - AssetScanStatusReasonCancellation
             - AssetScanStatusReasonTimeout
             - AssetScanStatusReasonError
-            - AssetScanStatusReasonAbortTimedOut
+            - AssetScanStatusReasonAbortTimeout
             - AssetScanStatusReasonSuccess
         message:
           description: Human readable message.

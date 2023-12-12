@@ -29,7 +29,7 @@ const (
 
 // Defines values for AssetScanStatusReason.
 const (
-	AssetScanStatusReasonAbortTimedOut    AssetScanStatusReason = "AbortTimedOut"
+	AssetScanStatusReasonAbortTimeout     AssetScanStatusReason = "AbortTimedOut"
 	AssetScanStatusReasonCancellation     AssetScanStatusReason = "Cancellation"
 	AssetScanStatusReasonCreated          AssetScanStatusReason = "Created"
 	AssetScanStatusReasonError            AssetScanStatusReason = "Error"
@@ -495,7 +495,7 @@ type AssetScanStatus struct {
 	// | Aborted     | Cancellation     | Scans have been aborted                                                                    |
 	// | Aborted     | Timeout          | Scan has been aborted due to timeout                                                       |
 	// | Failed      | Error            | Scan has failed to one or more errors reported by the Scanner                              |
-	// | Failed      | AbortTimedOut    | Scan has failed due to being in Aborted state for too long                                 |
+	// | Failed      | AbortTimeout     | Scan has failed due to being in Aborted state for too long                                 |
 	// | Done        | Success          | Scan has finished successfully                                                             |
 	Reason AssetScanStatusReason `json:"reason"`
 
@@ -525,7 +525,7 @@ type AssetScanStatus struct {
 // | Aborted     | Cancellation     | Scans have been aborted                                                                    |
 // | Aborted     | Timeout          | Scan has been aborted due to timeout                                                       |
 // | Failed      | Error            | Scan has failed to one or more errors reported by the Scanner                              |
-// | Failed      | AbortTimedOut    | Scan has failed due to being in Aborted state for too long                                 |
+// | Failed      | AbortTimeout     | Scan has failed due to being in Aborted state for too long                                 |
 // | Done        | Success          | Scan has finished successfully                                                             |
 type AssetScanStatusReason string
 

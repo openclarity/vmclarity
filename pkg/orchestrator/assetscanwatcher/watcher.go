@@ -444,7 +444,7 @@ func (w *Watcher) reconcileAborted(ctx context.Context, assetScan *models.AssetS
 
 	assetScan.Status = models.NewAssetScanStatus(
 		models.AssetScanStatusStateFailed,
-		models.AssetScanStatusReasonAbortTimedOut,
+		models.AssetScanStatusReasonAbortTimeout,
 		utils.PointerTo(fmt.Sprintf("failed to wait for scanner to finish graceful shutdown on abort after: %s", w.abortTimeout)),
 	)
 
