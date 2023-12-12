@@ -33,24 +33,24 @@ var assetScanStatusReasonMapping = map[AssetScanStatusState][]AssetScanStatusRea
 		AssetScanStatusReasonCreated,
 	},
 	AssetScanStatusStateScheduled: {
-		AssetScanStatusReasonScheduled,
+		AssetScanStatusReasonProvisioning,
 	},
 	AssetScanStatusStateReadyToScan: {
-		AssetScanStatusReasonOutOfVMClarity,
-		AssetScanStatusReasonReadyToScan,
+		AssetScanStatusReasonUnSupervised,
+		AssetScanStatusReasonResourcesReady,
 	},
 	AssetScanStatusStateInProgress: {
-		AssetScanStatusReasonInProgress,
+		AssetScanStatusReasonScannerIsRunning,
 	},
 	AssetScanStatusStateAborted: {
-		AssetScanStatusReasonAborted,
+		AssetScanStatusReasonCancellation,
 	},
 	AssetScanStatusStateFailed: {
-		AssetScanStatusReasonFailed,
+		AssetScanStatusReasonError,
 		AssetScanStatusReasonAbortTimedOut,
 	},
 	AssetScanStatusStateDone: {
-		AssetScanStatusReasonDone,
+		AssetScanStatusReasonSuccess,
 	},
 }
 

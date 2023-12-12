@@ -223,7 +223,7 @@ func (w *Watcher) reconcilePending(ctx context.Context, assetScan *models.AssetS
 
 	assetScan.Status = models.NewAssetScanStatus(
 		models.AssetScanStatusStateScheduled,
-		models.AssetScanStatusReasonScheduled,
+		models.AssetScanStatusReasonProvisioning,
 		nil,
 	)
 
@@ -277,7 +277,7 @@ func (w *Watcher) reconcileScheduled(ctx context.Context, assetScan *models.Asse
 	case errors.As(err, &fatalError):
 		assetScan.Status = models.NewAssetScanStatus(
 			models.AssetScanStatusStateFailed,
-			models.AssetScanStatusReasonFailed,
+			models.AssetScanStatusReasonError,
 			utils.PointerTo(fatalError.Error()),
 		)
 	case errors.As(err, &retryableError):
@@ -286,13 +286,13 @@ func (w *Watcher) reconcileScheduled(ctx context.Context, assetScan *models.Asse
 	case err != nil:
 		assetScan.Status = models.NewAssetScanStatus(
 			models.AssetScanStatusStateFailed,
-			models.AssetScanStatusReasonFailed,
+			models.AssetScanStatusReasonError,
 			utils.PointerTo(errors.Join(utils.UnwrapErrors(err)...).Error()),
 		)
 	default:
 		assetScan.Status = models.NewAssetScanStatus(
 			models.AssetScanStatusStateReadyToScan,
-			models.AssetScanStatusReasonReadyToScan,
+			models.AssetScanStatusReasonResourcesReady,
 			nil,
 		)
 	}

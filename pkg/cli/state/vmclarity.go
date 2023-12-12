@@ -95,7 +95,7 @@ func (v *VMClarityState) MarkInProgress(ctx context.Context, config *families.Co
 
 	assetScan.Status = models.NewAssetScanStatus(
 		models.AssetScanStatusStateInProgress,
-		models.AssetScanStatusReasonInProgress,
+		models.AssetScanStatusReasonScannerIsRunning,
 		nil,
 	)
 
@@ -121,7 +121,7 @@ func (v *VMClarityState) MarkDone(ctx context.Context) error {
 	assetScan.Stats.General.ScanTime.EndTime = utils.PointerTo(time.Now())
 	assetScan.Status = models.NewAssetScanStatus(
 		models.AssetScanStatusStateDone,
-		models.AssetScanStatusReasonDone,
+		models.AssetScanStatusReasonSuccess,
 		nil,
 	)
 
@@ -142,7 +142,7 @@ func (v *VMClarityState) MarkFailed(ctx context.Context, errorMessage string) er
 	assetScan.Stats.General.ScanTime.EndTime = utils.PointerTo(time.Now())
 	assetScan.Status = models.NewAssetScanStatus(
 		models.AssetScanStatusStateFailed,
-		models.AssetScanStatusReasonFailed,
+		models.AssetScanStatusReasonError,
 		utils.PointerTo(errorMessage),
 	)
 

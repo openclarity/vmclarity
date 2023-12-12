@@ -468,7 +468,7 @@ func (w *Watcher) reconcileAborted(ctx context.Context, scan *models.Scan) error
 				as := models.AssetScan{
 					Status: models.NewAssetScanStatus(
 						models.AssetScanStatusStateAborted,
-						models.AssetScanStatusReasonAborted,
+						models.AssetScanStatusReasonCancellation,
 						nil,
 					),
 				}

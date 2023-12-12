@@ -105,7 +105,7 @@ func createEmptyAssetScanForAsset(asset models.Asset) models.AssetScan {
 		},
 		Status: models.NewAssetScanStatus(
 			models.AssetScanStatusStateReadyToScan,
-			models.AssetScanStatusReasonReadyToScan,
+			models.AssetScanStatusReasonResourcesReady,
 			nil,
 		),
 		ResourceCleanupStatus: models.NewResourceCleanupStatus(

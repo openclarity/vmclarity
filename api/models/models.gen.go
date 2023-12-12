@@ -29,15 +29,15 @@ const (
 
 // Defines values for AssetScanStatusReason.
 const (
-	AssetScanStatusReasonAbortTimedOut  AssetScanStatusReason = "AbortTimedOut"
-	AssetScanStatusReasonAborted        AssetScanStatusReason = "Aborted"
-	AssetScanStatusReasonCreated        AssetScanStatusReason = "Created"
-	AssetScanStatusReasonDone           AssetScanStatusReason = "Done"
-	AssetScanStatusReasonFailed         AssetScanStatusReason = "Failed"
-	AssetScanStatusReasonInProgress     AssetScanStatusReason = "InProgress"
-	AssetScanStatusReasonOutOfVMClarity AssetScanStatusReason = "OutOfVMClarity"
-	AssetScanStatusReasonReadyToScan    AssetScanStatusReason = "ReadyToScan"
-	AssetScanStatusReasonScheduled      AssetScanStatusReason = "Scheduled"
+	AssetScanStatusReasonAbortTimedOut    AssetScanStatusReason = "AbortTimedOut"
+	AssetScanStatusReasonCancellation     AssetScanStatusReason = "Cancellation"
+	AssetScanStatusReasonCreated          AssetScanStatusReason = "Created"
+	AssetScanStatusReasonError            AssetScanStatusReason = "Error"
+	AssetScanStatusReasonProvisioning     AssetScanStatusReason = "Provisioning"
+	AssetScanStatusReasonResourcesReady   AssetScanStatusReason = "ResourcesReady"
+	AssetScanStatusReasonScannerIsRunning AssetScanStatusReason = "ScannerIsRunning"
+	AssetScanStatusReasonSuccess          AssetScanStatusReason = "Success"
+	AssetScanStatusReasonUnSupervised     AssetScanStatusReason = "UnSupervised"
 )
 
 // Defines values for AssetScanStatusState.
@@ -484,17 +484,17 @@ type AssetScanStatus struct {
 
 	// Reason Machine readable reason for state transition.
 	//
-	// | State       | Reason         | Description                                  |
-	// | ----------- | -------------- | -------------------------------------------- |
-	// | Pending     | Created        | AssetScan has been created                   |
-	// | Scheduled   | Scheduled      | Moved to scheduled state                     |
-	// | ReadyToScan | OutOfVMClarity | Started without VMClarity orchestration      |
-	// | ReadyToScan | ReadyToScan    | Scans are ready to be started                |
-	// | InProgress  | InProgress     | Scans are running on the target              |
-	// | Aborted     | Aborted        | Scans have been aborted                      |
-	// | Failed      | Failed         | At least one scan failed on target           |
-	// | Failed      | AbortTimedOut  | AssetScan was in Aborted state for too long  |
-	// | Done        | Done           | Scan finished successfully                   |
+	// | State       | Reason           | Description                                                                                |
+	// | ----------- | ---------------- | ------------------------------------------------------------------------------------------ |
+	// | Pending     | Created          | Scan is pending as it has been newly created                                               |
+	// | Scheduled   | Provisioning     | Scan is scheduled as Asset resources are being provisioned                                 |
+	// | ReadyToScan | UnSupervised     | Scan is created manually without the involvement of the Orchestrator (e.g. CI/CD scenario) |
+	// | ReadyToScan | ResourcesReady   | Scan is ready to scan as Asset resources have been provisioned                             |
+	// | InProgress  | ScannerIsRunning | Scan is in progress as Scanner is still performing scanning on Asset resources             |
+	// | Aborted     | Cancellation     | Scans have been aborted                                                                    |
+	// | Failed      | Error            | Scan has failed to one or more errors reported by the Scanner                              |
+	// | Failed      | AbortTimedOut    | Scan has failed due to being in Aborted state for too long                                 |
+	// | Done        | Success          | Scan has finished successfully                                                             |
 	Reason AssetScanStatusReason `json:"reason"`
 
 	// State Describes the state of scan result.
@@ -513,17 +513,17 @@ type AssetScanStatus struct {
 
 // AssetScanStatusReason Machine readable reason for state transition.
 //
-// | State       | Reason         | Description                                  |
-// | ----------- | -------------- | -------------------------------------------- |
-// | Pending     | Created        | AssetScan has been created                   |
-// | Scheduled   | Scheduled      | Moved to scheduled state                     |
-// | ReadyToScan | OutOfVMClarity | Started without VMClarity orchestration      |
-// | ReadyToScan | ReadyToScan    | Scans are ready to be started                |
-// | InProgress  | InProgress     | Scans are running on the target              |
-// | Aborted     | Aborted        | Scans have been aborted                      |
-// | Failed      | Failed         | At least one scan failed on target           |
-// | Failed      | AbortTimedOut  | AssetScan was in Aborted state for too long  |
-// | Done        | Done           | Scan finished successfully                   |
+// | State       | Reason           | Description                                                                                |
+// | ----------- | ---------------- | ------------------------------------------------------------------------------------------ |
+// | Pending     | Created          | Scan is pending as it has been newly created                                               |
+// | Scheduled   | Provisioning     | Scan is scheduled as Asset resources are being provisioned                                 |
+// | ReadyToScan | UnSupervised     | Scan is created manually without the involvement of the Orchestrator (e.g. CI/CD scenario) |
+// | ReadyToScan | ResourcesReady   | Scan is ready to scan as Asset resources have been provisioned                             |
+// | InProgress  | ScannerIsRunning | Scan is in progress as Scanner is still performing scanning on Asset resources             |
+// | Aborted     | Cancellation     | Scans have been aborted                                                                    |
+// | Failed      | Error            | Scan has failed to one or more errors reported by the Scanner                              |
+// | Failed      | AbortTimedOut    | Scan has failed due to being in Aborted state for too long                                 |
+// | Done        | Success          | Scan has finished successfully                                                             |
 type AssetScanStatusReason string
 
 // AssetScanStatusState Describes the state of scan result.

@@ -669,7 +669,7 @@ func createAssetScans(scans []models.Scan) []models.AssetScan {
 				Secrets: nil,
 				Status: models.NewAssetScanStatus(
 					models.AssetScanStatusStateInProgress,
-					models.AssetScanStatusReasonInProgress,
+					models.AssetScanStatusReasonScannerIsRunning,
 					nil,
 				),
 				Summary: &models.ScanFindingsSummary{},
