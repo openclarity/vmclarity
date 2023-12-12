@@ -102,7 +102,7 @@ const nilString = "nil"
 func (c ContainerImageInfo) String() string {
 	size := nilString
 	if c.Size != nil {
-		size = strconv.Itoa(*c.Size)
+		size = strconv.FormatInt(*c.Size, 10)
 	}
 
 	labels := nilString

@@ -205,7 +205,7 @@ func (d *discoverer) getContainerImageInfo(ctx context.Context, image containerd
 		RepoDigests:  &repoDigests,
 		ObjectType:   "ContainerImageInfo",
 		Os:           utils.PointerTo(imageSpec.OS),
-		Size:         utils.PointerTo(int(size)),
+		Size:         utils.PointerTo(size),
 	}, nil
 }
 
