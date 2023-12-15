@@ -18,8 +18,9 @@ package rest
 import (
 	"errors"
 	"fmt"
-	"gorm.io/gorm"
 	"net/http"
+
+	"gorm.io/gorm"
 
 	"github.com/labstack/echo/v4"
 
@@ -162,6 +163,7 @@ func (s *ServerImpl) PatchScansScanID(ctx echo.Context, scanID models.ScanID, pa
 	return sendResponse(ctx, http.StatusOK, updatedScan)
 }
 
+// nolint:cyclop
 func (s *ServerImpl) PutScansScanID(ctx echo.Context, scanID models.ScanID, params models.PutScansScanIDParams) error {
 	var scan models.Scan
 	err := ctx.Bind(&scan)
