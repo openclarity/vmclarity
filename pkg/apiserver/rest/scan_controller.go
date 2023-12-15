@@ -18,6 +18,7 @@ package rest
 import (
 	"errors"
 	"fmt"
+	"gorm.io/gorm"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -42,6 +43,15 @@ func (s *ServerImpl) PostScans(ctx echo.Context) error {
 	err := ctx.Bind(&scan)
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
+	}
+
+	status, ok := scan.GetStatus()
+	switch {
+	case !ok:
+		return sendError(ctx, http.StatusBadRequest, "invalid request: status is missing")
+	case status.State != models.ScanStatusStatePending:
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("invalid request: initial state for scan is invalid: %s", status.State))
+	default:
 	}
 
 	createdScan, err := s.dbHandler.ScansTable().CreateScan(scan)
@@ -98,6 +108,27 @@ func (s *ServerImpl) PatchScansScanID(ctx echo.Context, scanID models.ScanID, pa
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
 
+	// check that an asset with that id exists
+	existingScan, err := s.dbHandler.ScansTable().GetScan(scanID, models.GetScansScanIDParams{})
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("scan was not found: scanID=%v: %v", scanID, err))
+		}
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scan: scanID=%v: %v", scanID, err))
+	}
+
+	// check for valid state transition
+	if status, ok := scan.GetStatus(); ok {
+		existingStatus, ok := existingScan.GetStatus()
+		if !ok {
+			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to retrieve Status for existing scan: scanID=%v", existingScan.Id))
+		}
+		err = existingStatus.IsValidTransition(status)
+		if err != nil {
+			return sendError(ctx, http.StatusBadRequest, err.Error())
+		}
+	}
+
 	// PATCH request might not contain the ID in the body, so set it from
 	// the URL field so that the DB layer knows which object is being updated.
 	if scan.Id != nil && *scan.Id != scanID {
@@ -136,6 +167,31 @@ func (s *ServerImpl) PutScansScanID(ctx echo.Context, scanID models.ScanID, para
 	err := ctx.Bind(&scan)
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
+	}
+
+	// check that a scan with that id exists
+	existingScan, err := s.dbHandler.ScansTable().GetScan(scanID, models.GetScansScanIDParams{})
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("scan was not found: scanID=%v: %v", scanID, err))
+		}
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scan: scanID=%v: %v", scanID, err))
+	}
+
+	// check for valid state transition
+	status, ok := scan.GetStatus()
+	if !ok {
+		return sendError(ctx, http.StatusBadRequest, err.Error())
+	}
+	if ok {
+		existingStatus, ok := existingScan.GetStatus()
+		if !ok {
+			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to retrieve Status for existing scan: scanID=%v", existingScan.Id))
+		}
+		err = existingStatus.IsValidTransition(status)
+		if err != nil {
+			return sendError(ctx, http.StatusBadRequest, err.Error())
+		}
 	}
 
 	// PUT request might not contain the ID in the body, so set it from the
