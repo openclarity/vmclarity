@@ -104,7 +104,7 @@ jobs:
 
       - name: Upload digests
         if: inputs.push
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ needs.build-vars.outputs.digests-cache-name }}
           path: /tmp/digests/*
