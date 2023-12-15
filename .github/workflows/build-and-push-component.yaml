@@ -119,7 +119,7 @@ jobs:
       - build-and-push
     steps:
       - name: Download digests
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ needs.build-vars.outputs.digests-cache-name }}
           path: /tmp/digests
