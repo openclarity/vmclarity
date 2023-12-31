@@ -1705,7 +1705,7 @@ components:
             | InProgress | AssetScansRunning | AssetScans are currently running                           |
             | Aborted    | Cancellation      | Scan has been aborted due to cancellation request          |
             | Failed     | Cancellation      | Scan has been aborted due to cancellation request          |
-            | Failed     | AssetScanFailed   | At least one AssetScan has ended with an error             |
+            | Failed     | Error             | At least one AssetScan has ended with an error             |
             | Failed     | Timeout           | Scan has been timed out                                    |
             | Done       | NothingToScan     | There are no assets that need to be scanned                |
             | Done       | Success           | Scan ended successfully without any errors                 |
@@ -1715,7 +1715,7 @@ components:
             - AssetsDiscovered
             - AssetScansRunning
             - Cancellation
-            - AssetScanFailed
+            - Error
             - Timeout
             - NothingToScan
             - Success
@@ -1724,7 +1724,7 @@ components:
             - ScanStatusReasonAssetsDiscovered
             - ScanStatusReasonAssetScansRunning
             - ScanStatusReasonCancellation
-            - ScanStatusReasonAssetScanFailed
+            - ScanStatusReasonError
             - ScanStatusReasonTimeout
             - ScanStatusReasonNothingToScan
             - ScanStatusReasonSuccess

@@ -139,9 +139,10 @@ func RunSuccessfulScan(ctx ginkgo.SpecContext, report *ReportFailedConfig, filte
 	ginkgo.By("waiting until scan state changes to done")
 	scanParams = models.GetScansParams{
 		Filter: utils.PointerTo(fmt.Sprintf(
-			"scanConfig/id eq '%s' and status/state eq '%s'",
+			"scanConfig/id eq '%s' and status/state eq '%s' and status/reason eq '%s'",
 			*apiScanConfig.Id,
 			models.AssetScanStatusStateDone,
+			models.AssetScanStatusReasonSuccess,
 		)),
 	}
 	gomega.Eventually(func() bool {

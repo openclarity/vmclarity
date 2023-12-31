@@ -148,11 +148,11 @@ const (
 
 // Defines values for ScanStatusReason.
 const (
-	ScanStatusReasonAssetScanFailed   ScanStatusReason = "AssetScanFailed"
 	ScanStatusReasonAssetScansRunning ScanStatusReason = "AssetScansRunning"
 	ScanStatusReasonAssetsDiscovered  ScanStatusReason = "AssetsDiscovered"
 	ScanStatusReasonCancellation      ScanStatusReason = "Cancellation"
 	ScanStatusReasonCreated           ScanStatusReason = "Created"
+	ScanStatusReasonError             ScanStatusReason = "Error"
 	ScanStatusReasonNothingToScan     ScanStatusReason = "NothingToScan"
 	ScanStatusReasonSuccess           ScanStatusReason = "Success"
 	ScanStatusReasonTimeout           ScanStatusReason = "Timeout"
@@ -1295,7 +1295,7 @@ type ScanStatus struct {
 	// | InProgress | AssetScansRunning | AssetScans are currently running                           |
 	// | Aborted    | Cancellation      | Scan has been aborted due to cancellation request          |
 	// | Failed     | Cancellation      | Scan has been aborted due to cancellation request          |
-	// | Failed     | AssetScanFailed   | At least one AssetScan has ended with an error             |
+	// | Failed     | Error             | At least one AssetScan has ended with an error             |
 	// | Failed     | Timeout           | Scan has been timed out                                    |
 	// | Done       | NothingToScan     | There are no assets that need to be scanned                |
 	// | Done       | Success           | Scan ended successfully without any errors                 |
@@ -1323,7 +1323,7 @@ type ScanStatus struct {
 // | InProgress | AssetScansRunning | AssetScans are currently running                           |
 // | Aborted    | Cancellation      | Scan has been aborted due to cancellation request          |
 // | Failed     | Cancellation      | Scan has been aborted due to cancellation request          |
-// | Failed     | AssetScanFailed   | At least one AssetScan has ended with an error             |
+// | Failed     | Error             | At least one AssetScan has ended with an error             |
 // | Failed     | Timeout           | Scan has been timed out                                    |
 // | Done       | NothingToScan     | There are no assets that need to be scanned                |
 // | Done       | Success           | Scan ended successfully without any errors                 |

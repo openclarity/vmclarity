@@ -41,7 +41,7 @@ var scanStatusReasonMapping = map[ScanStatusState][]ScanStatusReason{
 	},
 	ScanStatusStateFailed: {
 		ScanStatusReasonCancellation,
-		ScanStatusReasonAssetScanFailed,
+		ScanStatusReasonError,
 		ScanStatusReasonTimeout,
 	},
 	ScanStatusStateDone: {
@@ -59,38 +59,36 @@ func NewScanStatus(s ScanStatusState, r ScanStatusReason, m *string) *ScanStatus
 	}
 }
 
-func (a *ScanStatus) Equals(aa *ScanStatus) bool {
-	if a.Message == nil && aa.Message != nil {
+func (a *ScanStatus) Equals(b *ScanStatus) bool {
+	if a.Message == nil && b.Message != nil {
 		return false
 	}
-	if aa.Message == nil && a.Message != nil {
+	if b.Message == nil && a.Message != nil {
 		return false
 	}
-	if a.Message == nil && aa.Message == nil {
-		return a.State == aa.State && a.Reason == aa.Reason
+	if a.Message == nil && b.Message == nil {
+		return a.State == b.State && a.Reason == b.Reason
 	}
 
-	return a.State == aa.State && a.Reason == aa.Reason && *a.Message == *aa.Message
+	return a.State == b.State && a.Reason == b.Reason && *a.Message == *b.Message
 }
 
-func (a *ScanStatus) isValidStatusTransition(aa *ScanStatus) error {
-	transitions, ok := scanStatusStateTransitions[a.State]
-	if ok {
-		for _, transition := range transitions {
-			if transition == aa.State {
-				return nil
-			}
+func (a *ScanStatus) isValidStatusTransition(b *ScanStatus) error {
+	transitions := scanStatusStateTransitions[a.State]
+	for _, transition := range transitions {
+		if transition == b.State {
+			return nil
 		}
 	}
 
-	return fmt.Errorf("invalid transition: from=%s to=%s", a.State, aa.State)
+	return fmt.Errorf("invalid transition: from=%s to=%s", a.State, b.State)
 }
 
-func (a *ScanStatus) isValidReason(aa *ScanStatus) error {
-	reasons, ok := scanStatusReasonMapping[aa.State]
+func (a *ScanStatus) isValidReason(b *ScanStatus) error {
+	reasons, ok := scanStatusReasonMapping[b.State]
 	if ok {
 		for _, reason := range reasons {
-			if reason == aa.Reason {
+			if reason == b.Reason {
 				return nil
 			}
 		}
@@ -99,15 +97,15 @@ func (a *ScanStatus) isValidReason(aa *ScanStatus) error {
 	return fmt.Errorf("invalid reason for state: state=%s reason=%s", a.State, a.Reason)
 }
 
-func (a *ScanStatus) IsValidTransition(aa *ScanStatus) error {
-	if a.Equals(aa) {
+func (a *ScanStatus) IsValidTransition(b *ScanStatus) error {
+	if a.Equals(b) {
 		return nil
 	}
 
-	if err := a.isValidStatusTransition(aa); err != nil {
+	if err := a.isValidStatusTransition(b); err != nil {
 		return err
 	}
-	if err := a.isValidReason(aa); err != nil {
+	if err := a.isValidReason(b); err != nil {
 		return err
 	}
 

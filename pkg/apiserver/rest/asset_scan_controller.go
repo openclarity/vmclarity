@@ -190,15 +190,13 @@ func (s *ServerImpl) PutAssetScansAssetScanID(ctx echo.Context, assetScanID mode
 	if !ok {
 		return sendError(ctx, http.StatusBadRequest, err.Error())
 	}
-	if ok {
-		existingStatus, ok := existingAssetScan.GetStatus()
-		if !ok {
-			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to retrieve Status for existing asset scan: assetScanID=%v", existingAssetScan.Id))
-		}
-		err = existingStatus.IsValidTransition(status)
-		if err != nil {
-			return sendError(ctx, http.StatusBadRequest, err.Error())
-		}
+	existingStatus, ok := existingAssetScan.GetStatus()
+	if !ok {
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to retrieve Status for existing asset scan: assetScanID=%v", existingAssetScan.Id))
+	}
+	err = existingStatus.IsValidTransition(status)
+	if err != nil {
+		return sendError(ctx, http.StatusBadRequest, err.Error())
 	}
 
 	// check for valid resource cleanup state transition
@@ -206,15 +204,13 @@ func (s *ServerImpl) PutAssetScansAssetScanID(ctx echo.Context, assetScanID mode
 	if !ok {
 		return sendError(ctx, http.StatusBadRequest, err.Error())
 	}
-	if ok {
-		existingResourceCleanupStatus, ok := existingAssetScan.GetResourceCleanupStatus()
-		if !ok {
-			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to retrieve ResourceCleanupStatus for existing asset scan. assetScanID=%v", existingAssetScan.Id))
-		}
-		err = existingResourceCleanupStatus.IsValidTransition(resourceCleanupStatus)
-		if err != nil {
-			return sendError(ctx, http.StatusBadRequest, err.Error())
-		}
+	existingResourceCleanupStatus, ok := existingAssetScan.GetResourceCleanupStatus()
+	if !ok {
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to retrieve ResourceCleanupStatus for existing asset scan. assetScanID=%v", existingAssetScan.Id))
+	}
+	err = existingResourceCleanupStatus.IsValidTransition(resourceCleanupStatus)
+	if err != nil {
+		return sendError(ctx, http.StatusBadRequest, err.Error())
 	}
 
 	// PUT request might not contain the ID in the body, so set it from

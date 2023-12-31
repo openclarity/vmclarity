@@ -109,7 +109,7 @@ func (s *ServerImpl) PatchScansScanID(ctx echo.Context, scanID models.ScanID, pa
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
 
-	// check that an asset with that id exists
+	// check if a scan with id already exists
 	existingScan, err := s.dbHandler.ScansTable().GetScan(scanID, models.GetScansScanIDParams{})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -171,7 +171,7 @@ func (s *ServerImpl) PutScansScanID(ctx echo.Context, scanID models.ScanID, para
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
 
-	// check that a scan with that id exists
+	// check if a scan with id already exists
 	existingScan, err := s.dbHandler.ScansTable().GetScan(scanID, models.GetScansScanIDParams{})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -185,15 +185,13 @@ func (s *ServerImpl) PutScansScanID(ctx echo.Context, scanID models.ScanID, para
 	if !ok {
 		return sendError(ctx, http.StatusBadRequest, err.Error())
 	}
-	if ok {
-		existingStatus, ok := existingScan.GetStatus()
-		if !ok {
-			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to retrieve Status for existing scan: scanID=%v", existingScan.Id))
-		}
-		err = existingStatus.IsValidTransition(status)
-		if err != nil {
-			return sendError(ctx, http.StatusBadRequest, err.Error())
-		}
+	existingStatus, ok := existingScan.GetStatus()
+	if !ok {
+		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to retrieve Status for existing scan: scanID=%v", existingScan.Id))
+	}
+	err = existingStatus.IsValidTransition(status)
+	if err != nil {
+		return sendError(ctx, http.StatusBadRequest, err.Error())
 	}
 
 	// PUT request might not contain the ID in the body, so set it from the

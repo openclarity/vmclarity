@@ -135,7 +135,7 @@ func (w *Watcher) Reconcile(ctx context.Context, event ScanReconcileEvent) error
 		scan.Status = models.NewScanStatus(
 			models.ScanStatusStateFailed,
 			models.ScanStatusReasonTimeout,
-			utils.PointerTo("Scan has been timed out"),
+			utils.PointerTo("Scan has timed out"),
 		)
 
 		err = w.backend.PatchScan(ctx, *scan.Id, &models.Scan{Status: scan.Status})
@@ -402,31 +402,26 @@ func (w *Watcher) reconcileInProgress(ctx context.Context, scan *models.Scan) er
 		*scan.Summary.JobsLeftToRun)
 
 	if *scan.Summary.JobsLeftToRun <= 0 {
+		message := utils.PointerTo(
+			fmt.Sprintf(
+				"%d succeeded, %d failed out of %d total asset scans",
+				*assetScans.Count-failedAssetScans,
+				failedAssetScans,
+				*assetScans.Count,
+			),
+		)
+
 		if failedAssetScans > 0 {
 			scan.Status = models.NewScanStatus(
 				models.ScanStatusStateFailed,
-				models.ScanStatusReasonAssetScanFailed,
-				utils.PointerTo(
-					fmt.Sprintf(
-						"%d succeeded, %d failed out of %d total asset scans",
-						*assetScans.Count-failedAssetScans,
-						failedAssetScans,
-						*assetScans.Count,
-					),
-				),
+				models.ScanStatusReasonError,
+				message,
 			)
 		} else {
 			scan.Status = models.NewScanStatus(
 				models.ScanStatusStateDone,
 				models.ScanStatusReasonSuccess,
-				utils.PointerTo(
-					fmt.Sprintf(
-						"%d succeeded, %d failed out of %d total asset scans",
-						*assetScans.Count-failedAssetScans,
-						failedAssetScans,
-						*assetScans.Count,
-					),
-				),
+				message,
 			)
 		}
 		scan.EndTime = utils.PointerTo(time.Now())
