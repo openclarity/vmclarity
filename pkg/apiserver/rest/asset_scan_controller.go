@@ -103,6 +103,13 @@ func (s *ServerImpl) PatchAssetScansAssetScanID(ctx echo.Context, assetScanID mo
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
 
+	// PATCH request might not contain the ID in the body, so set it from
+	// the URL field so that the DB layer knows which object is being updated.
+	if assetScan.Id != nil && *assetScan.Id != assetScanID {
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *assetScan.Id, assetScanID))
+	}
+	assetScan.Id = &assetScanID
+
 	// check that an asset scan with that id exists.
 	existingAssetScan, err := s.dbHandler.AssetScansTable().GetAssetScan(assetScanID, models.GetAssetScansAssetScanIDParams{})
 	if err != nil {
@@ -135,13 +142,6 @@ func (s *ServerImpl) PatchAssetScansAssetScanID(ctx echo.Context, assetScanID mo
 			return sendError(ctx, http.StatusBadRequest, err.Error())
 		}
 	}
-
-	// PATCH request might not contain the ID in the body, so set it from
-	// the URL field so that the DB layer knows which object is being updated.
-	if assetScan.Id != nil && *assetScan.Id != assetScanID {
-		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *assetScan.Id, assetScanID))
-	}
-	assetScan.Id = &assetScanID
 
 	updatedAssetScan, err := s.dbHandler.AssetScansTable().UpdateAssetScan(assetScan, params)
 	if err != nil {
@@ -176,6 +176,13 @@ func (s *ServerImpl) PutAssetScansAssetScanID(ctx echo.Context, assetScanID mode
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
 
+	// PUT request might not contain the ID in the body, so set it from
+	// the URL field so that the DB layer knows which object is being updated.
+	if assetScan.Id != nil && *assetScan.Id != assetScanID {
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *assetScan.Id, assetScanID))
+	}
+	assetScan.Id = &assetScanID
+
 	// check that an asset scan with that id exists.
 	existingAssetScan, err := s.dbHandler.AssetScansTable().GetAssetScan(assetScanID, models.GetAssetScansAssetScanIDParams{})
 	if err != nil {
@@ -185,7 +192,7 @@ func (s *ServerImpl) PutAssetScansAssetScanID(ctx echo.Context, assetScanID mode
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get asset scan. assetScanID=%v: %v", assetScanID, err))
 	}
 
-	// check for valid state transition
+	// check for valid state transition if the status was provided
 	status, ok := assetScan.GetStatus()
 	if !ok {
 		return sendError(ctx, http.StatusBadRequest, err.Error())
@@ -212,13 +219,6 @@ func (s *ServerImpl) PutAssetScansAssetScanID(ctx echo.Context, assetScanID mode
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, err.Error())
 	}
-
-	// PUT request might not contain the ID in the body, so set it from
-	// the URL field so that the DB layer knows which object is being updated.
-	if assetScan.Id != nil && *assetScan.Id != assetScanID {
-		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *assetScan.Id, assetScanID))
-	}
-	assetScan.Id = &assetScanID
 
 	updatedAssetScan, err := s.dbHandler.AssetScansTable().SaveAssetScan(assetScan, params)
 	if err != nil {

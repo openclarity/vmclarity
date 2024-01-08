@@ -1293,8 +1293,8 @@ type ScanStatus struct {
 	// | Pending    | Created           | Scan is pending as it has been newly created               |
 	// | Discovered | AssetsDiscovered  | Assets that fall into the scope of the Scan are discovered |
 	// | InProgress | AssetScansRunning | AssetScans are currently running                           |
-	// | Aborted    | Cancellation      | Scan has been aborted due to cancellation request          |
-	// | Failed     | Cancellation      | Scan has been aborted due to cancellation request          |
+	// | Aborted    | Cancellation      | AssetScans are being moved to Aborted state                |
+	// | Failed     | Cancellation      | AssetScans are in Aborted state                            |
 	// | Failed     | Error             | At least one AssetScan has ended with an error             |
 	// | Failed     | Timeout           | Scan has been timed out                                    |
 	// | Done       | NothingToScan     | There are no assets that need to be scanned                |
@@ -1303,14 +1303,14 @@ type ScanStatus struct {
 
 	// State Describes the state of Scan.
 	//
-	// | State      | Description                                       |
-	// | ---------- | ------------------------------------------------- |
-	// | Pending    | Scan is waiting to be scheduled                   |
-	// | Discovered | Assets have been found for the Scan               |
-	// | InProgress | The AssetScans are running on the target machines |
-	// | Aborted    | Scan has been aborted through the API             |
-	// | Failed     | At least one AssetScan ended with an error        |
-	// | Done       | Every AssetScan ended successfully                |
+	// | State      | Description                                                                   |
+	// | ---------- | ----------------------------------------------------------------------------- |
+	// | Pending    | The initial state when the scan is created, and is working to discover assets |
+	// | Discovered | The asset scans have been discovered and are waiting to be scheduled          |
+	// | InProgress | The asset scans have been scheduled and the assets are being scanned          |
+	// | Aborted    | The scan has been manually aborted                                            |
+	// | Failed     | One or more assets could not be successfully scanned                          |
+	// | Done       | All assets have been scanned successfully                                     |
 	State ScanStatusState `json:"state"`
 }
 
@@ -1321,8 +1321,8 @@ type ScanStatus struct {
 // | Pending    | Created           | Scan is pending as it has been newly created               |
 // | Discovered | AssetsDiscovered  | Assets that fall into the scope of the Scan are discovered |
 // | InProgress | AssetScansRunning | AssetScans are currently running                           |
-// | Aborted    | Cancellation      | Scan has been aborted due to cancellation request          |
-// | Failed     | Cancellation      | Scan has been aborted due to cancellation request          |
+// | Aborted    | Cancellation      | AssetScans are being moved to Aborted state                |
+// | Failed     | Cancellation      | AssetScans are in Aborted state                            |
 // | Failed     | Error             | At least one AssetScan has ended with an error             |
 // | Failed     | Timeout           | Scan has been timed out                                    |
 // | Done       | NothingToScan     | There are no assets that need to be scanned                |
@@ -1331,14 +1331,14 @@ type ScanStatusReason string
 
 // ScanStatusState Describes the state of Scan.
 //
-// | State      | Description                                       |
-// | ---------- | ------------------------------------------------- |
-// | Pending    | Scan is waiting to be scheduled                   |
-// | Discovered | Assets have been found for the Scan               |
-// | InProgress | The AssetScans are running on the target machines |
-// | Aborted    | Scan has been aborted through the API             |
-// | Failed     | At least one AssetScan ended with an error        |
-// | Done       | Every AssetScan ended successfully                |
+// | State      | Description                                                                   |
+// | ---------- | ----------------------------------------------------------------------------- |
+// | Pending    | The initial state when the scan is created, and is working to discover assets |
+// | Discovered | The asset scans have been discovered and are waiting to be scheduled          |
+// | InProgress | The asset scans have been scheduled and the assets are being scanned          |
+// | Aborted    | The scan has been manually aborted                                            |
+// | Failed     | One or more assets could not be successfully scanned                          |
+// | Done       | All assets have been scanned successfully                                     |
 type ScanStatusState string
 
 // ScanSummary defines model for ScanSummary.

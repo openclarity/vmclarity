@@ -88,17 +88,15 @@ func (a *AssetScanStatus) isValidStatusTransition(b *AssetScanStatus) error {
 	return fmt.Errorf("invalid transition: from=%s to=%s", a.State, b.State)
 }
 
-func (a *AssetScanStatus) isValidReason(b *AssetScanStatus) error {
-	reasons, ok := assetScanStatusReasonMapping[b.State]
-	if ok {
-		for _, reason := range reasons {
-			if reason == b.Reason {
-				return nil
-			}
+func (a *AssetScanStatus) isValidReason() error {
+	reasons := assetScanStatusReasonMapping[a.State]
+	for _, reason := range reasons {
+		if reason == a.Reason {
+			return nil
 		}
 	}
 
-	return fmt.Errorf("invalid reason for state: state=%s reason=%s", b.State, b.Reason)
+	return fmt.Errorf("invalid reason for state: state=%s reason=%s", a.State, a.Reason)
 }
 
 func (a *AssetScanStatus) IsValidTransition(b *AssetScanStatus) error {
@@ -106,10 +104,11 @@ func (a *AssetScanStatus) IsValidTransition(b *AssetScanStatus) error {
 		return nil
 	}
 
-	if err := a.isValidStatusTransition(b); err != nil {
+	if err := b.isValidReason(); err != nil {
 		return err
 	}
-	if err := a.isValidReason(b); err != nil {
+
+	if err := a.isValidStatusTransition(b); err != nil {
 		return err
 	}
 

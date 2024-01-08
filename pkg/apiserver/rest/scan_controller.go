@@ -109,6 +109,13 @@ func (s *ServerImpl) PatchScansScanID(ctx echo.Context, scanID models.ScanID, pa
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
 
+	// PATCH request might not contain the ID in the body, so set it from
+	// the URL field so that the DB layer knows which object is being updated.
+	if scan.Id != nil && *scan.Id != scanID {
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *scan.Id, scanID))
+	}
+	scan.Id = &scanID
+
 	// check if a scan with id already exists
 	existingScan, err := s.dbHandler.ScansTable().GetScan(scanID, models.GetScansScanIDParams{})
 	if err != nil {
@@ -118,7 +125,7 @@ func (s *ServerImpl) PatchScansScanID(ctx echo.Context, scanID models.ScanID, pa
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scan: scanID=%v: %v", scanID, err))
 	}
 
-	// check for valid state transition
+	// check for valid state transition if the status was provided
 	if status, ok := scan.GetStatus(); ok {
 		existingStatus, ok := existingScan.GetStatus()
 		if !ok {
@@ -129,13 +136,6 @@ func (s *ServerImpl) PatchScansScanID(ctx echo.Context, scanID models.ScanID, pa
 			return sendError(ctx, http.StatusBadRequest, err.Error())
 		}
 	}
-
-	// PATCH request might not contain the ID in the body, so set it from
-	// the URL field so that the DB layer knows which object is being updated.
-	if scan.Id != nil && *scan.Id != scanID {
-		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *scan.Id, scanID))
-	}
-	scan.Id = &scanID
 
 	updatedScan, err := s.dbHandler.ScansTable().UpdateScan(scan, params)
 	if err != nil {
@@ -171,6 +171,13 @@ func (s *ServerImpl) PutScansScanID(ctx echo.Context, scanID models.ScanID, para
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
 
+	// PUT request might not contain the ID in the body, so set it from the
+	// URL field so that the DB layer knows which object is being updated.
+	if scan.Id != nil && *scan.Id != scanID {
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *scan.Id, scanID))
+	}
+	scan.Id = &scanID
+
 	// check if a scan with id already exists
 	existingScan, err := s.dbHandler.ScansTable().GetScan(scanID, models.GetScansScanIDParams{})
 	if err != nil {
@@ -193,13 +200,6 @@ func (s *ServerImpl) PutScansScanID(ctx echo.Context, scanID models.ScanID, para
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, err.Error())
 	}
-
-	// PUT request might not contain the ID in the body, so set it from the
-	// URL field so that the DB layer knows which object is being updated.
-	if scan.Id != nil && *scan.Id != scanID {
-		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *scan.Id, scanID))
-	}
-	scan.Id = &scanID
 
 	updatedScan, err := s.dbHandler.ScansTable().SaveScan(scan, params)
 	if err != nil {

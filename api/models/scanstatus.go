@@ -84,13 +84,11 @@ func (a *ScanStatus) isValidStatusTransition(b *ScanStatus) error {
 	return fmt.Errorf("invalid transition: from=%s to=%s", a.State, b.State)
 }
 
-func (a *ScanStatus) isValidReason(b *ScanStatus) error {
-	reasons, ok := scanStatusReasonMapping[b.State]
-	if ok {
-		for _, reason := range reasons {
-			if reason == b.Reason {
-				return nil
-			}
+func (a *ScanStatus) isValidReason() error {
+	reasons := scanStatusReasonMapping[a.State]
+	for _, reason := range reasons {
+		if reason == a.Reason {
+			return nil
 		}
 	}
 
@@ -102,10 +100,11 @@ func (a *ScanStatus) IsValidTransition(b *ScanStatus) error {
 		return nil
 	}
 
-	if err := a.isValidStatusTransition(b); err != nil {
+	if err := b.isValidReason(); err != nil {
 		return err
 	}
-	if err := a.isValidReason(b); err != nil {
+
+	if err := a.isValidStatusTransition(b); err != nil {
 		return err
 	}
 

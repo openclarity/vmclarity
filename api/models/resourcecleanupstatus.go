@@ -64,17 +64,15 @@ func (a *ResourceCleanupStatus) isValidStatusTransition(b *ResourceCleanupStatus
 	return fmt.Errorf("invalid transition: from=%s to=%s", a.State, b.State)
 }
 
-func (a *ResourceCleanupStatus) isValidReason(b *ResourceCleanupStatus) error {
-	reasons, ok := resourceCleanupStatusReasonMapping[b.State]
-	if ok {
-		for _, reason := range reasons {
-			if reason == b.Reason {
-				return nil
-			}
+func (a *ResourceCleanupStatus) isValidReason() error {
+	reasons := resourceCleanupStatusReasonMapping[a.State]
+	for _, reason := range reasons {
+		if reason == a.Reason {
+			return nil
 		}
 	}
 
-	return fmt.Errorf("invalid reason for state: state=%s reason=%s", b.State, b.Reason)
+	return fmt.Errorf("invalid reason for state: state=%s reason=%s", a.State, a.Reason)
 }
 
 func (a *ResourceCleanupStatus) IsValidTransition(b *ResourceCleanupStatus) error {
@@ -82,10 +80,11 @@ func (a *ResourceCleanupStatus) IsValidTransition(b *ResourceCleanupStatus) erro
 		return nil
 	}
 
-	if err := a.isValidStatusTransition(b); err != nil {
+	if err := b.isValidReason(); err != nil {
 		return err
 	}
-	if err := a.isValidReason(b); err != nil {
+
+	if err := a.isValidStatusTransition(b); err != nil {
 		return err
 	}
 
