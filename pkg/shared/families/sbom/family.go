@@ -21,10 +21,10 @@ import (
 	"time"
 
 	kubeclaritycli "github.com/openclarity/kubeclarity/cli/pkg"
-	kubeclaritysharedanalyzer "github.com/openclarity/kubeclarity/shared/pkg/analyzer"
-	kubeclaritysharedanalyzerjob "github.com/openclarity/kubeclarity/shared/pkg/analyzer/job"
 	"github.com/openclarity/vmclarity/pkg/shared/converter"
 
+	"github.com/openclarity/vmclarity/pkg/shared/analyzer"
+	"github.com/openclarity/vmclarity/pkg/shared/analyzer/job"
 	"github.com/openclarity/vmclarity/pkg/shared/families/interfaces"
 	familiesresults "github.com/openclarity/vmclarity/pkg/shared/families/results"
 	"github.com/openclarity/vmclarity/pkg/shared/families/types"
@@ -55,8 +55,8 @@ func (s SBOM) Run(ctx context.Context, _ *familiesresults.Results) (interfaces.I
 		return nil, fmt.Errorf("failed to generate hash for source %s: %w", s.conf.Inputs[0].Input, err)
 	}
 
-	manager := job_manager.New(s.conf.AnalyzersList, s.conf.AnalyzersConfig, logger, kubeclaritysharedanalyzerjob.Factory)
-	mergedResults := kubeclaritysharedanalyzer.NewMergedResults(utils.SourceType(s.conf.Inputs[0].InputType), hash)
+	manager := job_manager.New(s.conf.AnalyzersList, s.conf.AnalyzersConfig, logger, job.Factory)
+	mergedResults := analyzer.NewMergedResults(utils.SourceType(s.conf.Inputs[0].InputType), hash)
 
 	var sbomResults Results
 	for _, input := range s.conf.Inputs {
@@ -74,7 +74,7 @@ func (s SBOM) Run(ctx context.Context, _ *familiesresults.Results) (interfaces.I
 		// Merge results.
 		for name, result := range results {
 			logger.Infof("Merging result from %q", name)
-			mergedResults = mergedResults.Merge(result.(*kubeclaritysharedanalyzer.Results)) // nolint:forcetypeassert
+			mergedResults = mergedResults.Merge(result.(*analyzer.Results)) // nolint:forcetypeassert
 		}
 		sbomResults.Metadata.InputScans = append(sbomResults.Metadata.InputScans, types.CreateInputScanMetadata(startTime, endTime, inputSize, input))
 	}
@@ -85,7 +85,7 @@ func (s SBOM) Run(ctx context.Context, _ *familiesresults.Results) (interfaces.I
 		if err != nil {
 			return nil, fmt.Errorf("failed to get CDX SBOM from path=%s: %w", with.SbomPath, err)
 		}
-		results := kubeclaritysharedanalyzer.CreateResults(cdxBOMBytes, name, with.SbomPath, utils.SBOM)
+		results := analyzer.CreateResults(cdxBOMBytes, name, with.SbomPath, utils.SBOM)
 		logger.Infof("Merging result from %q", with.SbomPath)
 		mergedResults = mergedResults.Merge(results)
 	}
