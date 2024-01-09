@@ -16,9 +16,8 @@
 package vulnerabilities
 
 import (
-	kubeclaritysharedconfig "github.com/openclarity/kubeclarity/shared/pkg/config"
-
 	"github.com/openclarity/vmclarity/pkg/shared/families/types"
+	"github.com/openclarity/vmclarity/pkg/shared/config"
 )
 
 type Config struct {
@@ -26,7 +25,7 @@ type Config struct {
 	ScannersList   []string                        `yaml:"scanners_list" mapstructure:"scanners_list"`
 	Inputs         []types.Input                   `yaml:"inputs" mapstructure:"inputs"`
 	InputFromSbom  bool                            `yaml:"input_from_sbom" mapstructure:"input_from_sbom"`
-	ScannersConfig *kubeclaritysharedconfig.Config `yaml:"scanners_config" mapstructure:"scanners_config"`
+	ScannersConfig *config.Config `yaml:"scanners_config" mapstructure:"scanners_config"`
 }
 
 type InputFromFamily struct {

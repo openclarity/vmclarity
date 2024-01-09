@@ -16,9 +16,8 @@
 package sbom
 
 import (
-	kubeclaritysharedconfig "github.com/openclarity/kubeclarity/shared/pkg/config"
-
 	"github.com/openclarity/vmclarity/pkg/shared/families/types"
+	"github.com/openclarity/vmclarity/pkg/shared/config"
 )
 
 type Config struct {
@@ -26,7 +25,7 @@ type Config struct {
 	AnalyzersList   []string                        `yaml:"analyzers_list" mapstructure:"analyzers_list"`
 	Inputs          []types.Input                   `yaml:"inputs" mapstructure:"inputs"`
 	MergeWith       []MergeWith                     `yaml:"merge_with" mapstructure:"merge_with"`
-	AnalyzersConfig *kubeclaritysharedconfig.Config `yaml:"analyzers_config" mapstructure:"analyzers_config"`
+	AnalyzersConfig *config.Config `yaml:"analyzers_config" mapstructure:"analyzers_config"`
 }
 
 type MergeWith struct {

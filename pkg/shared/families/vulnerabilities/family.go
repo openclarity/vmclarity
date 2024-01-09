@@ -21,10 +21,10 @@ import (
 	"os"
 	"time"
 
-	kubeclaritysharedconfig "github.com/openclarity/kubeclarity/shared/pkg/config"
 	kubeclaritysharedscanner "github.com/openclarity/kubeclarity/shared/pkg/scanner"
 	kubeclaritysharedscannerjob "github.com/openclarity/kubeclarity/shared/pkg/scanner/job"
 
+	"github.com/openclarity/vmclarity/pkg/shared/config"
 	"github.com/openclarity/vmclarity/pkg/shared/families/interfaces"
 	"github.com/openclarity/vmclarity/pkg/shared/families/results"
 	"github.com/openclarity/vmclarity/pkg/shared/families/sbom"
@@ -40,7 +40,7 @@ const (
 
 type Vulnerabilities struct {
 	conf           Config
-	ScannersConfig kubeclaritysharedconfig.Config
+	ScannersConfig config.Config
 }
 
 func (v Vulnerabilities) Run(ctx context.Context, res *results.Results) (interfaces.IsResults, error) {
