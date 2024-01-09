@@ -28,7 +28,7 @@ import (
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
-func KubeclaritySourceToTrivySource(sourceType utils.SourceType) (artifact.TargetKind, error) {
+func SourceToTrivySource(sourceType utils.SourceType) (artifact.TargetKind, error) {
 	switch sourceType {
 	case utils.IMAGE:
 		return artifact.TargetContainerImage, nil

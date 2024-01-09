@@ -119,8 +119,8 @@ func (a *Analyzer) Run(sourceType utils.SourceType, userInput string) error {
 			},
 		}
 
-		// Convert the kubeclarity source to the trivy source type
-		trivySourceType, err := trivy.KubeclaritySourceToTrivySource(sourceType)
+		// Convert the source to the trivy source type
+		trivySourceType, err := trivy.SourceToTrivySource(sourceType)
 		if err != nil {
 			a.setError(res, fmt.Errorf("failed to configure trivy: %w", err))
 			return

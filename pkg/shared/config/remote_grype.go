@@ -43,7 +43,7 @@ func loadRemoteGrypeConfig() RemoteGrypeConfig {
 }
 
 func setRemoteGrypeScannerConfigDefaults() {
-	viper.SetDefault(ScannerRemoteGrypeServerAddress, "kubeclarity-grype-server.kubeclarity:9991")
+	viper.SetDefault(ScannerRemoteGrypeServerAddress, "vmclarity-grype-server.vmclarity:9991")
 	viper.SetDefault(ScannerRemoteGrypeServerSchemes, []string{"http"})
 	viper.SetDefault(ScannerRemoteGrypeServerTimeout, 2*time.Minute) // nolint:gomnd
 }

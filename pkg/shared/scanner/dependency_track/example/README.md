@@ -99,7 +99,7 @@ SCANNER_DEPENDENCY_TRACK_INSECURE_SKIP_VERIFY=true \
 SCANNER_DEPENDENCY_TRACK_DISABLE_TLS=false \
 SCANNER_DEPENDENCY_TRACK_HOST=dependency-track-apiserver.dependency-track \
 SCANNER_DEPENDENCY_TRACK_API_KEY=XXX \
-./bin/kubeclarity scan sbom.cyclonedx  -i sbom -o sbom-result.json
+./bin/vmclarity scan sbom.cyclonedx  -i sbom -o sbom-result.json
 ```
 
 #### Localhost (replace `XXX` with your API key)
@@ -110,7 +110,7 @@ k -n dependency-track port-forward svc/dependency-track-apiserver 8081:80
 SCANNER_DEPENDENCY_TRACK_DISABLE_TLS=true \
 SCANNER_DEPENDENCY_TRACK_HOST=localhost:8081 \
 SCANNER_DEPENDENCY_TRACK_API_KEY=XXX \
-./bin/kubeclarity scan sbom.cyclonedx  -i sbom -o sbom-result.json
+./bin/vmclarity scan sbom.cyclonedx  -i sbom -o sbom-result.json
 ```
 
 ### Cleanup

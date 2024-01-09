@@ -293,7 +293,7 @@ func (m *MergedResults) createMergedSBOM(version string) *cdx.BOM {
 		log.Errorf("Failed to get source metadata")
 		return cdxBOM
 	}
-	cdxBOM.Metadata = toBomDescriptor("kubeclarity", versionInfo, m.Source, m.SrcMetaData, m.SourceHash)
+	cdxBOM.Metadata = toBomDescriptor("vmclarity", versionInfo, m.Source, m.SrcMetaData, m.SourceHash)
 	cdxBOM.Components = m.createComponentListFromMap()
 	cdxBOM.Dependencies = m.Dependencies
 
@@ -397,7 +397,7 @@ func toBomDescriptor(name, version string, source utils.SourceType, srcMetadata 
 		Timestamp: time.Now().Format(time.RFC3339),
 		Tools: &[]cdx.Tool{
 			{
-				Vendor:  "kubeclarity",
+				Vendor:  "vmclarity",
 				Name:    name,
 				Version: version,
 			},
