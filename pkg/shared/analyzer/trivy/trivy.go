@@ -30,12 +30,12 @@ import (
 	trivyTypes "github.com/aquasecurity/trivy/pkg/types"
 	trivyFsutils "github.com/aquasecurity/trivy/pkg/utils/fsutils"
 
-	"github.com/openclarity/kubeclarity/shared/pkg/utils/image_helper"
-	utilsTrivy "github.com/openclarity/kubeclarity/shared/pkg/utils/trivy"
 	"github.com/openclarity/vmclarity/pkg/shared/analyzer"
 	"github.com/openclarity/vmclarity/pkg/shared/config"
 	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
+	"github.com/openclarity/vmclarity/pkg/shared/utils/image_helper"
+	"github.com/openclarity/vmclarity/pkg/shared/utils/trivy"
 )
 
 const AnalyzerName = "trivy"
@@ -68,7 +68,7 @@ func (a *Analyzer) Run(sourceType utils.SourceType, userInput string) error {
 		return fmt.Errorf("failed to create temp file: %v", err)
 	}
 
-	dbOptions, err := utilsTrivy.GetTrivyDBOptions()
+	dbOptions, err := trivy.GetTrivyDBOptions()
 	if err != nil {
 		return fmt.Errorf("unable to get db options: %w", err)
 	}
@@ -120,14 +120,14 @@ func (a *Analyzer) Run(sourceType utils.SourceType, userInput string) error {
 		}
 
 		// Convert the kubeclarity source to the trivy source type
-		trivySourceType, err := utilsTrivy.KubeclaritySourceToTrivySource(sourceType)
+		trivySourceType, err := trivy.KubeclaritySourceToTrivySource(sourceType)
 		if err != nil {
 			a.setError(res, fmt.Errorf("failed to configure trivy: %w", err))
 			return
 		}
 
 		// Configure Trivy image options according to the source type and user input.
-		trivyOptions, cleanup, err := utilsTrivy.SetTrivyImageOptions(sourceType, userInput, trivyOptions)
+		trivyOptions, cleanup, err := trivy.SetTrivyImageOptions(sourceType, userInput, trivyOptions)
 		defer cleanup(a.logger)
 		if err != nil {
 			a.setError(res, fmt.Errorf("failed to configure trivy image options: %w", err))
@@ -135,7 +135,7 @@ func (a *Analyzer) Run(sourceType utils.SourceType, userInput string) error {
 		}
 
 		// Ensure we're configured for private registry if required
-		trivyOptions = utilsTrivy.SetTrivyRegistryConfigs(a.config.Registry, trivyOptions)
+		trivyOptions = trivy.SetTrivyRegistryConfigs(a.config.Registry, trivyOptions)
 
 		err = artifact.Run(context.TODO(), trivyOptions, trivySourceType)
 		if err != nil {

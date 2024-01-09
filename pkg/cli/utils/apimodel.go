@@ -19,8 +19,6 @@ import (
 	"fmt"
 	"strings"
 
-	kubeclaritysharedutilscyclonedxhelper "github.com/openclarity/kubeclarity/shared/pkg/utils/cyclonedx_helper"
-	kubeclaritysharedutilsvulnerability "github.com/openclarity/kubeclarity/shared/pkg/utils/vulnerability"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/api/models"
@@ -37,6 +35,8 @@ import (
 	"github.com/openclarity/vmclarity/pkg/shared/families/vulnerabilities"
 	"github.com/openclarity/vmclarity/pkg/shared/scanner"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
+	"github.com/openclarity/vmclarity/pkg/shared/utils/cyclonedx_helper"
+	"github.com/openclarity/vmclarity/pkg/shared/utils/vulnerability"
 )
 
 func ConvertSBOMResultToPackages(sbomResults *sbom.Results) []models.Package {
@@ -49,8 +49,8 @@ func ConvertSBOMResultToPackages(sbomResults *sbom.Results) []models.Package {
 	for _, component := range *sbomResults.SBOM.Components {
 		packages = append(packages, models.Package{
 			Cpes:     utils.PointerTo([]string{component.CPE}),
-			Language: utils.PointerTo(kubeclaritysharedutilscyclonedxhelper.GetComponentLanguage(component)),
-			Licenses: utils.PointerTo(kubeclaritysharedutilscyclonedxhelper.GetComponentLicenses(component)),
+			Language: utils.PointerTo(cyclonedx_helper.GetComponentLanguage(component)),
+			Licenses: utils.PointerTo(cyclonedx_helper.GetComponentLicenses(component)),
 			Name:     utils.PointerTo(component.Name),
 			Purl:     utils.PointerTo(component.PackageURL),
 			Type:     utils.PointerTo(string(component.Type)),
@@ -95,15 +95,15 @@ func ConvertVulnResultToVulnerabilities(vulnerabilitiesResults *vulnerabilities.
 
 func ConvertVulnSeverityToAPIModel(severity string) *models.VulnerabilitySeverity {
 	switch strings.ToUpper(severity) {
-	case kubeclaritysharedutilsvulnerability.DEFCON1, kubeclaritysharedutilsvulnerability.CRITICAL:
+	case vulnerability.DEFCON1, vulnerability.CRITICAL:
 		return utils.PointerTo(models.CRITICAL)
-	case kubeclaritysharedutilsvulnerability.HIGH:
+	case vulnerability.HIGH:
 		return utils.PointerTo(models.HIGH)
-	case kubeclaritysharedutilsvulnerability.MEDIUM:
+	case vulnerability.MEDIUM:
 		return utils.PointerTo(models.MEDIUM)
-	case kubeclaritysharedutilsvulnerability.LOW:
+	case vulnerability.LOW:
 		return utils.PointerTo(models.LOW)
-	case kubeclaritysharedutilsvulnerability.NEGLIGIBLE, kubeclaritysharedutilsvulnerability.UNKNOWN, kubeclaritysharedutilsvulnerability.NONE:
+	case vulnerability.NEGLIGIBLE, vulnerability.UNKNOWN, vulnerability.NONE:
 		return utils.PointerTo(models.NEGLIGIBLE)
 	default:
 		log.Errorf("Can't convert severity %q, treating as negligible", severity)

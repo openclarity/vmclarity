@@ -23,7 +23,6 @@ import (
 	cdx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	kubeclaritysharedutilsvulnerability "github.com/openclarity/kubeclarity/shared/pkg/utils/vulnerability"
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/shared/families/exploits"
@@ -41,6 +40,7 @@ import (
 	"github.com/openclarity/vmclarity/pkg/shared/families/vulnerabilities"
 	"github.com/openclarity/vmclarity/pkg/shared/scanner"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
+	"github.com/openclarity/vmclarity/pkg/shared/utils/vulnerability"
 )
 
 func Test_ConvertSBOMResultToPackages(t *testing.T) {
@@ -959,56 +959,56 @@ func Test_ConvertVulnSeverityToAPIModel(t *testing.T) {
 		{
 			name: "DEFCON1 -> CRITICAL",
 			args: args{
-				severity: kubeclaritysharedutilsvulnerability.DEFCON1,
+				severity: vulnerability.DEFCON1,
 			},
 			want: utils.PointerTo(models.CRITICAL),
 		},
 		{
 			name: "CRITICAL -> CRITICAL",
 			args: args{
-				severity: kubeclaritysharedutilsvulnerability.CRITICAL,
+				severity: vulnerability.CRITICAL,
 			},
 			want: utils.PointerTo(models.CRITICAL),
 		},
 		{
 			name: "HIGH -> HIGH",
 			args: args{
-				severity: kubeclaritysharedutilsvulnerability.HIGH,
+				severity: vulnerability.HIGH,
 			},
 			want: utils.PointerTo(models.HIGH),
 		},
 		{
 			name: "MEDIUM -> MEDIUM",
 			args: args{
-				severity: kubeclaritysharedutilsvulnerability.MEDIUM,
+				severity: vulnerability.MEDIUM,
 			},
 			want: utils.PointerTo(models.MEDIUM),
 		},
 		{
 			name: "LOW -> LOW",
 			args: args{
-				severity: kubeclaritysharedutilsvulnerability.LOW,
+				severity: vulnerability.LOW,
 			},
 			want: utils.PointerTo(models.LOW),
 		},
 		{
 			name: "NEGLIGIBLE -> NEGLIGIBLE",
 			args: args{
-				severity: kubeclaritysharedutilsvulnerability.NEGLIGIBLE,
+				severity: vulnerability.NEGLIGIBLE,
 			},
 			want: utils.PointerTo(models.NEGLIGIBLE),
 		},
 		{
 			name: "UNKNOWN -> NEGLIGIBLE",
 			args: args{
-				severity: kubeclaritysharedutilsvulnerability.UNKNOWN,
+				severity: vulnerability.UNKNOWN,
 			},
 			want: utils.PointerTo(models.NEGLIGIBLE),
 		},
 		{
 			name: "NONE -> NEGLIGIBLE",
 			args: args{
-				severity: kubeclaritysharedutilsvulnerability.NONE,
+				severity: vulnerability.NONE,
 			},
 			want: utils.PointerTo(models.NEGLIGIBLE),
 		},

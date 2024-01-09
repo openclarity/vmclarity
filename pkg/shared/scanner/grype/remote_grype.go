@@ -29,11 +29,11 @@ import (
 	grype_client_models "github.com/openclarity/grype-server/api/client/models"
 	log "github.com/sirupsen/logrus"
 
-	utilsSBOM "github.com/openclarity/kubeclarity/shared/pkg/utils/sbom"
 	"github.com/openclarity/vmclarity/pkg/shared/config"
 	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
 	"github.com/openclarity/vmclarity/pkg/shared/scanner"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
+	utilsSBOM "github.com/openclarity/vmclarity/pkg/shared/utils/sbom"
 )
 
 type RemoteScanner struct {

@@ -21,7 +21,7 @@ import (
 	"github.com/anchore/syft/syft/source"
 
 	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/pkg/shared/config"
+	sharedconfig "github.com/openclarity/vmclarity/pkg/shared/config"
 	"github.com/openclarity/vmclarity/pkg/shared/families"
 	"github.com/openclarity/vmclarity/pkg/shared/families/exploits"
 	exploitsCommon "github.com/openclarity/vmclarity/pkg/shared/families/exploits/common"
@@ -54,12 +54,12 @@ func withSBOM(config *models.SBOMConfig, opts *ScannerConfig) FamiliesConfigOpti
 			Enabled:       true,
 			AnalyzersList: config.GetAnalyzersList(),
 			Inputs:        nil, // rootfs directory will be determined by the CLI after mount.
-			AnalyzersConfig: &config.Config{
+			AnalyzersConfig: &sharedconfig.Config{
 				// TODO(sambetts) The user needs to be able to provide this configuration
-				Registry: &config.Registry{},
-				Analyzer: &config.Analyzer{
+				Registry: &sharedconfig.Registry{},
+				Analyzer: &sharedconfig.Analyzer{
 					OutputFormat: "cyclonedx",
-					TrivyConfig: config.AnalyzerTrivyConfig{
+					TrivyConfig: sharedconfig.AnalyzerTrivyConfig{
 						Timeout: int(opts.TrivyScanTimeout / time.Second), // NOTE(chrisgacsal): Timeout is expected to be in seconds.
 					},
 				},
@@ -74,19 +74,19 @@ func withVulnerabilities(config *models.VulnerabilitiesConfig, opts *ScannerConf
 			return
 		}
 
-		var grypeConfig config.GrypeConfig
+		var grypeConfig sharedconfig.GrypeConfig
 		if opts.GrypeServerAddress != "" {
-			grypeConfig = config.GrypeConfig{
-				Mode: config.ModeRemote,
-				RemoteGrypeConfig: config.RemoteGrypeConfig{
+			grypeConfig = sharedconfig.GrypeConfig{
+				Mode: sharedconfig.ModeRemote,
+				RemoteGrypeConfig: sharedconfig.RemoteGrypeConfig{
 					GrypeServerAddress: opts.GrypeServerAddress,
 					GrypeServerTimeout: opts.GrypeServerTimeout,
 				},
 			}
 		} else {
-			grypeConfig = config.GrypeConfig{
-				Mode: config.ModeLocal,
-				LocalGrypeConfig: config.LocalGrypeConfig{
+			grypeConfig = sharedconfig.GrypeConfig{
+				Mode: sharedconfig.ModeLocal,
+				LocalGrypeConfig: sharedconfig.LocalGrypeConfig{
 					UpdateDB:   true,
 					DBRootDir:  "/tmp/",
 					ListingURL: "https://toolbox-data.anchore.io/grype/databases/listing.json",
@@ -99,12 +99,12 @@ func withVulnerabilities(config *models.VulnerabilitiesConfig, opts *ScannerConf
 			Enabled:       true,
 			ScannersList:  config.GetScannersList(),
 			InputFromSbom: false, // will be determined by the CLI.
-			ScannersConfig: &config.Config{
+			ScannersConfig: &sharedconfig.Config{
 				// TODO(sambetts) The user needs to be able to provide this configuration
-				Registry: &config.Registry{},
-				Scanner: &config.Scanner{
+				Registry: &sharedconfig.Registry{},
+				Scanner: &sharedconfig.Scanner{
 					GrypeConfig: grypeConfig,
-					TrivyConfig: config.ScannerTrivyConfig{
+					TrivyConfig: sharedconfig.ScannerTrivyConfig{
 						Timeout:    int(opts.TrivyScanTimeout / time.Second), // NOTE(chrisgacsal): Timeout is expected to be in seconds.
 						ServerAddr: opts.TrivyServerAddress,
 					},

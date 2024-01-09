@@ -36,10 +36,10 @@ import (
 	"github.com/anchore/syft/syft/pkg/cataloger"
 	log "github.com/sirupsen/logrus"
 
-	utilsSBOM "github.com/openclarity/kubeclarity/shared/pkg/utils/sbom"
 	"github.com/openclarity/vmclarity/pkg/shared/config"
 	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
+	"github.com/openclarity/vmclarity/pkg/shared/utils/sbom"
 )
 
 const (
@@ -90,7 +90,7 @@ func (s *LocalScanner) run(sourceType utils.SourceType, userInput string) {
 	var hash string
 	origInput := userInput
 	if sourceType == utils.SBOM {
-		origInput, hash, err = utilsSBOM.GetTargetNameAndHashFromSBOM(userInput)
+		origInput, hash, err = sbom.GetTargetNameAndHashFromSBOM(userInput)
 		if err != nil {
 			ReportError(s.resultChan, fmt.Errorf("failed to get original source and hash from SBOM: %w", err), s.logger)
 			return

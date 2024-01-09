@@ -37,14 +37,14 @@ import (
 	log "github.com/sirupsen/logrus"
 	"go.uber.org/zap"
 
-	"github.com/openclarity/kubeclarity/shared/pkg/utils/image_helper"
-	utilsSBOM "github.com/openclarity/kubeclarity/shared/pkg/utils/sbom"
-	utilsTrivy "github.com/openclarity/kubeclarity/shared/pkg/utils/trivy"
-	utilsVul "github.com/openclarity/kubeclarity/shared/pkg/utils/vulnerability"
 	"github.com/openclarity/vmclarity/pkg/shared/config"
 	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
 	"github.com/openclarity/vmclarity/pkg/shared/scanner"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
+	"github.com/openclarity/vmclarity/pkg/shared/utils/image_helper"
+	utilsSBOM "github.com/openclarity/vmclarity/pkg/shared/utils/sbom"
+	utilsTrivy "github.com/openclarity/vmclarity/pkg/shared/utils/trivy"
+	utilsVul "github.com/openclarity/vmclarity/pkg/shared/utils/vulnerability"
 )
 
 const ScannerName = "trivy"

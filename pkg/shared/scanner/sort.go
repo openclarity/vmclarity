@@ -18,14 +18,14 @@ package scanner
 import (
 	"sort"
 
-	vulutil "github.com/openclarity/kubeclarity/shared/pkg/utils/vulnerability"
+	"github.com/openclarity/vmclarity/pkg/shared/utils/vulnerability"
 )
 
 // SortBySeverityAndCVSS sorts vulnerabilities by severity, CVSSv3.1, CVSSv3.0 and CVSSv2.0.
 func SortBySeverityAndCVSS(vulnerabilities []MergedVulnerability) []MergedVulnerability {
 	sort.Slice(vulnerabilities, func(i, j int) bool {
-		if vulutil.GetSeverityIntFromString(vulnerabilities[i].Vulnerability.Severity) >
-			vulutil.GetSeverityIntFromString(vulnerabilities[j].Vulnerability.Severity) {
+		if vulnerability.GetSeverityIntFromString(vulnerabilities[i].Vulnerability.Severity) >
+			vulnerability.GetSeverityIntFromString(vulnerabilities[j].Vulnerability.Severity) {
 			return true
 		}
 

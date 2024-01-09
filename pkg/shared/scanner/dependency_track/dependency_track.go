@@ -31,7 +31,6 @@ import (
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 
-	utilsVul "github.com/openclarity/kubeclarity/shared/pkg/utils/vulnerability"
 	"github.com/openclarity/vmclarity/pkg/shared/config"
 	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
 	"github.com/openclarity/vmclarity/pkg/shared/scanner"
@@ -41,6 +40,7 @@ import (
 	"github.com/openclarity/vmclarity/pkg/shared/scanner/dependency_track/api/client/client/vulnerability"
 	"github.com/openclarity/vmclarity/pkg/shared/scanner/dependency_track/api/client/models"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
+	utilsVul "github.com/openclarity/vmclarity/pkg/shared/utils/vulnerability"
 )
 
 // nolint:gosec

@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"testing"
 
-	vulutil "github.com/openclarity/kubeclarity/shared/pkg/utils/vulnerability"
+	"github.com/openclarity/vmclarity/pkg/shared/utils/vulnerability"
 )
 
 func Test_getCVSSBaseScore(t *testing.T) {
@@ -210,17 +210,17 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 				vulnerabilities: []MergedVulnerability{
 					{
 						Vulnerability: Vulnerability{
-							Severity: vulutil.HIGH,
+							Severity: vulnerability.HIGH,
 						},
 					},
 					{
 						Vulnerability: Vulnerability{
-							Severity: vulutil.CRITICAL,
+							Severity: vulnerability.CRITICAL,
 						},
 					},
 					{
 						Vulnerability: Vulnerability{
-							Severity: vulutil.LOW,
+							Severity: vulnerability.LOW,
 						},
 					},
 				},
@@ -228,17 +228,17 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 			want: []MergedVulnerability{
 				{
 					Vulnerability: Vulnerability{
-						Severity: vulutil.CRITICAL,
+						Severity: vulnerability.CRITICAL,
 					},
 				},
 				{
 					Vulnerability: Vulnerability{
-						Severity: vulutil.HIGH,
+						Severity: vulnerability.HIGH,
 					},
 				},
 				{
 					Vulnerability: Vulnerability{
-						Severity: vulutil.LOW,
+						Severity: vulnerability.LOW,
 					},
 				},
 			},
@@ -257,7 +257,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 									},
 								},
 							},
-							Severity: vulutil.HIGH,
+							Severity: vulnerability.HIGH,
 						},
 					},
 					{
@@ -270,7 +270,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 									},
 								},
 							},
-							Severity: vulutil.HIGH,
+							Severity: vulnerability.HIGH,
 						},
 					},
 					{
@@ -283,7 +283,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 									},
 								},
 							},
-							Severity: vulutil.HIGH,
+							Severity: vulnerability.HIGH,
 						},
 					},
 				},
@@ -299,7 +299,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 								},
 							},
 						},
-						Severity: vulutil.HIGH,
+						Severity: vulnerability.HIGH,
 					},
 				},
 				{
@@ -312,7 +312,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 								},
 							},
 						},
-						Severity: vulutil.HIGH,
+						Severity: vulnerability.HIGH,
 					},
 				},
 				{
@@ -325,7 +325,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 								},
 							},
 						},
-						Severity: vulutil.HIGH,
+						Severity: vulnerability.HIGH,
 					},
 				},
 			},
@@ -344,7 +344,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 									},
 								},
 							},
-							Severity: vulutil.HIGH,
+							Severity: vulnerability.HIGH,
 						},
 					},
 					{
@@ -357,7 +357,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 									},
 								},
 							},
-							Severity: vulutil.HIGH,
+							Severity: vulnerability.HIGH,
 						},
 					},
 					{
@@ -370,7 +370,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 									},
 								},
 							},
-							Severity: vulutil.HIGH,
+							Severity: vulnerability.HIGH,
 						},
 					},
 				},
@@ -386,7 +386,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 								},
 							},
 						},
-						Severity: vulutil.HIGH,
+						Severity: vulnerability.HIGH,
 					},
 				},
 				{
@@ -399,7 +399,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 								},
 							},
 						},
-						Severity: vulutil.HIGH,
+						Severity: vulnerability.HIGH,
 					},
 				},
 				{
@@ -412,7 +412,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 								},
 							},
 						},
-						Severity: vulutil.HIGH,
+						Severity: vulnerability.HIGH,
 					},
 				},
 			},
@@ -431,7 +431,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 									},
 								},
 							},
-							Severity: vulutil.HIGH,
+							Severity: vulnerability.HIGH,
 						},
 					},
 					{
@@ -444,7 +444,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 									},
 								},
 							},
-							Severity: vulutil.HIGH,
+							Severity: vulnerability.HIGH,
 						},
 					},
 					{
@@ -457,7 +457,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 									},
 								},
 							},
-							Severity: vulutil.HIGH,
+							Severity: vulnerability.HIGH,
 						},
 					},
 				},
@@ -473,7 +473,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 								},
 							},
 						},
-						Severity: vulutil.HIGH,
+						Severity: vulnerability.HIGH,
 					},
 				},
 				{
@@ -486,7 +486,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 								},
 							},
 						},
-						Severity: vulutil.HIGH,
+						Severity: vulnerability.HIGH,
 					},
 				},
 				{
@@ -499,7 +499,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 								},
 							},
 						},
-						Severity: vulutil.HIGH,
+						Severity: vulnerability.HIGH,
 					},
 				},
 			},
@@ -518,7 +518,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 									},
 								},
 							},
-							Severity: vulutil.LOW,
+							Severity: vulnerability.LOW,
 						},
 					},
 					{
@@ -537,7 +537,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 									},
 								},
 							},
-							Severity: vulutil.HIGH,
+							Severity: vulnerability.HIGH,
 						},
 					},
 					{
@@ -556,7 +556,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 									},
 								},
 							},
-							Severity: vulutil.HIGH,
+							Severity: vulnerability.HIGH,
 						},
 					},
 					{
@@ -569,7 +569,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 									},
 								},
 							},
-							Severity: vulutil.CRITICAL,
+							Severity: vulnerability.CRITICAL,
 						},
 					},
 					{
@@ -582,7 +582,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 									},
 								},
 							},
-							Severity: vulutil.CRITICAL,
+							Severity: vulnerability.CRITICAL,
 						},
 					},
 				},
@@ -598,7 +598,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 								},
 							},
 						},
-						Severity: vulutil.CRITICAL,
+						Severity: vulnerability.CRITICAL,
 					},
 				},
 				{
@@ -611,7 +611,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 								},
 							},
 						},
-						Severity: vulutil.CRITICAL,
+						Severity: vulnerability.CRITICAL,
 					},
 				},
 				{
@@ -630,7 +630,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 								},
 							},
 						},
-						Severity: vulutil.HIGH,
+						Severity: vulnerability.HIGH,
 					},
 				},
 				{
@@ -649,7 +649,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 								},
 							},
 						},
-						Severity: vulutil.HIGH,
+						Severity: vulnerability.HIGH,
 					},
 				},
 				{
@@ -662,7 +662,7 @@ func TestSortBySeverityAndCVSS(t *testing.T) {
 								},
 							},
 						},
-						Severity: vulutil.LOW,
+						Severity: vulnerability.LOW,
 					},
 				},
 			},
