@@ -25,14 +25,13 @@ import (
 	kubeclaritysharedjobmanager "github.com/openclarity/kubeclarity/shared/pkg/job_manager"
 	kubeclaritysharedscanner "github.com/openclarity/kubeclarity/shared/pkg/scanner"
 	kubeclaritysharedscannerjob "github.com/openclarity/kubeclarity/shared/pkg/scanner/job"
-	kubeclaritysharedutils "github.com/openclarity/kubeclarity/shared/pkg/utils"
 
 	"github.com/openclarity/vmclarity/pkg/shared/families/interfaces"
 	"github.com/openclarity/vmclarity/pkg/shared/families/results"
 	"github.com/openclarity/vmclarity/pkg/shared/families/sbom"
 	"github.com/openclarity/vmclarity/pkg/shared/families/types"
 	familiesutils "github.com/openclarity/vmclarity/pkg/shared/families/utils"
-	"github.com/openclarity/vmclarity/pkg/shared/log"
+	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
 const (
@@ -82,7 +81,7 @@ func (v Vulnerabilities) Run(ctx context.Context, res *results.Results) (interfa
 	var vulResults Results
 	for _, input := range v.conf.Inputs {
 		startTime := time.Now()
-		runResults, err := manager.Run(kubeclaritysharedutils.SourceType(input.InputType), input.Input)
+		runResults, err := manager.Run(utils.SourceType(input.InputType), input.Input)
 		if err != nil {
 			return nil, fmt.Errorf("failed to run for input %v of type %v: %w", input.Input, input.InputType, err)
 		}

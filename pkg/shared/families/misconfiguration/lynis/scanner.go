@@ -25,12 +25,11 @@ import (
 	"strings"
 
 	kubeclaritysharedjobmanager "github.com/openclarity/kubeclarity/shared/pkg/job_manager"
-	kubeclaritysharedutils "github.com/openclarity/kubeclarity/shared/pkg/utils"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/pkg/shared/families/misconfiguration/types"
 	familiesutils "github.com/openclarity/vmclarity/pkg/shared/families/utils"
-	sharedUtils "github.com/openclarity/vmclarity/pkg/shared/utils"
+	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
 const (
@@ -56,7 +55,7 @@ func New(c kubeclaritysharedjobmanager.IsConfig, logger *log.Entry, resultChan c
 }
 
 // nolint: cyclop
-func (a *Scanner) Run(sourceType kubeclaritysharedutils.SourceType, userInput string) error {
+func (a *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 	go func() {
 		retResults := types.ScannerResult{
 			ScannerName: ScannerName,
@@ -123,7 +122,7 @@ func (a *Scanner) Run(sourceType kubeclaritysharedutils.SourceType, userInput st
 		cmd := exec.Command(lynisBinaryPath, args...) // nolint:gosec
 
 		a.logger.Infof("Running command: %v", cmd.String())
-		_, err = sharedUtils.RunCommand(cmd)
+		_, err = utils.RunCommand(cmd)
 		if err != nil {
 			a.sendResults(retResults, fmt.Errorf("failed to run command: %w", err))
 			return
@@ -131,7 +130,7 @@ func (a *Scanner) Run(sourceType kubeclaritysharedutils.SourceType, userInput st
 
 		// Get Lynis DB directory
 		cmd = exec.Command(lynisBinaryPath, []string{"show", "dbdir"}...) // nolint:gosec
-		out, err := sharedUtils.RunCommand(cmd)
+		out, err := utils.RunCommand(cmd)
 		if err != nil {
 			a.sendResults(retResults, fmt.Errorf("failed to run command: %w", err))
 			return
@@ -157,11 +156,11 @@ func (a *Scanner) Run(sourceType kubeclaritysharedutils.SourceType, userInput st
 	return nil
 }
 
-func (a *Scanner) isValidInputType(sourceType kubeclaritysharedutils.SourceType) bool {
+func (a *Scanner) isValidInputType(sourceType utils.SourceType) bool {
 	switch sourceType {
-	case kubeclaritysharedutils.ROOTFS, kubeclaritysharedutils.IMAGE, kubeclaritysharedutils.DOCKERARCHIVE, kubeclaritysharedutils.OCIARCHIVE, kubeclaritysharedutils.OCIDIR:
+	case utils.ROOTFS, utils.IMAGE, utils.DOCKERARCHIVE, utils.OCIARCHIVE, utils.OCIDIR:
 		return true
-	case kubeclaritysharedutils.DIR, kubeclaritysharedutils.FILE, kubeclaritysharedutils.SBOM:
+	case utils.DIR, utils.FILE, utils.SBOM:
 		a.logger.Infof("source type %v is not supported for lynis, skipping.", sourceType)
 	default:
 		a.logger.Infof("unknown source type %v, skipping.", sourceType)

@@ -28,12 +28,11 @@ import (
 	"sync"
 
 	kubeclaritysharedjobmanager "github.com/openclarity/kubeclarity/shared/pkg/job_manager"
-	kubeclaritysharedutils "github.com/openclarity/kubeclarity/shared/pkg/utils"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/pkg/shared/families/infofinder/types"
 	familiesutils "github.com/openclarity/vmclarity/pkg/shared/families/utils"
-	sharedUtils "github.com/openclarity/vmclarity/pkg/shared/utils"
+	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
 const ScannerName = "sshTopology"
@@ -56,7 +55,7 @@ func New(c kubeclaritysharedjobmanager.IsConfig, logger *log.Entry, resultChan c
 }
 
 // nolint:cyclop,gocognit
-func (s *Scanner) Run(sourceType kubeclaritysharedutils.SourceType, userInput string) error {
+func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 	go func() {
 		s.logger.Debugf("Running with input=%v and source type=%v", userInput, sourceType)
 		retResults := types.ScannerResult{
@@ -364,7 +363,7 @@ func (s *Scanner) executeSSHKeyGenFingerprintCommand(hashAlgo string, filePath s
 	}
 	cmd := exec.Command("ssh-keygen", args...)
 	s.logger.Infof("Running command: %v", cmd.String())
-	output, err := sharedUtils.RunCommand(cmd)
+	output, err := utils.RunCommand(cmd)
 	if err != nil {
 		return nil, fmt.Errorf("failed to run command: %w", err)
 	}
@@ -372,11 +371,11 @@ func (s *Scanner) executeSSHKeyGenFingerprintCommand(hashAlgo string, filePath s
 	return output, nil
 }
 
-func (s *Scanner) isValidInputType(sourceType kubeclaritysharedutils.SourceType) bool {
+func (s *Scanner) isValidInputType(sourceType utils.SourceType) bool {
 	switch sourceType {
-	case kubeclaritysharedutils.ROOTFS, kubeclaritysharedutils.IMAGE, kubeclaritysharedutils.DOCKERARCHIVE, kubeclaritysharedutils.OCIARCHIVE, kubeclaritysharedutils.OCIDIR:
+	case utils.ROOTFS, utils.IMAGE, utils.DOCKERARCHIVE, utils.OCIARCHIVE, utils.OCIDIR:
 		return true
-	case kubeclaritysharedutils.DIR, kubeclaritysharedutils.FILE, kubeclaritysharedutils.SBOM:
+	case utils.DIR, utils.FILE, utils.SBOM:
 		s.logger.Infof("Source type %v is not supported for %s, skipping.", ScannerName, sourceType)
 	default:
 		s.logger.Infof("Unknown source type %v, skipping.", sourceType)

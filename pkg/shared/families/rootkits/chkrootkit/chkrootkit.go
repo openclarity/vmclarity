@@ -21,14 +21,13 @@ import (
 	"os/exec"
 
 	kubeclaritysharedjobmanager "github.com/openclarity/kubeclarity/shared/pkg/job_manager"
-	kubeclaritysharedutils "github.com/openclarity/kubeclarity/shared/pkg/utils"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/pkg/shared/families/rootkits/chkrootkit/config"
 	chkrootkitutils "github.com/openclarity/vmclarity/pkg/shared/families/rootkits/chkrootkit/utils"
 	"github.com/openclarity/vmclarity/pkg/shared/families/rootkits/common"
 	familiesutils "github.com/openclarity/vmclarity/pkg/shared/families/utils"
-	sharedutils "github.com/openclarity/vmclarity/pkg/shared/utils"
+	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
 const (
@@ -43,7 +42,7 @@ type Scanner struct {
 	resultChan chan kubeclaritysharedjobmanager.Result
 }
 
-func (s *Scanner) Run(sourceType kubeclaritysharedutils.SourceType, userInput string) error {
+func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 	go func() {
 		retResults := common.Results{
 			ScannedInput: userInput,
@@ -83,7 +82,7 @@ func (s *Scanner) Run(sourceType kubeclaritysharedutils.SourceType, userInput st
 		// nolint:gosec
 		cmd := exec.Command(chkrootkitBinaryPath, args...)
 		s.logger.Infof("running chkrootkit command: %v", cmd.String())
-		out, err := sharedutils.RunCommand(cmd)
+		out, err := utils.RunCommand(cmd)
 		if err != nil {
 			s.sendResults(retResults, fmt.Errorf("failed to run chkrootkit command: %w", err))
 			return
@@ -147,11 +146,11 @@ func New(c kubeclaritysharedjobmanager.IsConfig, logger *log.Entry, resultChan c
 	}
 }
 
-func (s *Scanner) isValidInputType(sourceType kubeclaritysharedutils.SourceType) bool {
+func (s *Scanner) isValidInputType(sourceType utils.SourceType) bool {
 	switch sourceType {
-	case kubeclaritysharedutils.DIR, kubeclaritysharedutils.ROOTFS, kubeclaritysharedutils.IMAGE, kubeclaritysharedutils.DOCKERARCHIVE, kubeclaritysharedutils.OCIARCHIVE, kubeclaritysharedutils.OCIDIR:
+	case utils.DIR, utils.ROOTFS, utils.IMAGE, utils.DOCKERARCHIVE, utils.OCIARCHIVE, utils.OCIDIR:
 		return true
-	case kubeclaritysharedutils.FILE, kubeclaritysharedutils.SBOM:
+	case utils.FILE, utils.SBOM:
 		fallthrough
 	default:
 		s.logger.Infof("source type %v is not supported for chkrootkit, skipping.", sourceType)

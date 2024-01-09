@@ -25,26 +25,24 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
-
-	kubeclaritysharedutils "github.com/openclarity/kubeclarity/shared/pkg/utils"
 )
 
-func GenerateHash(inputType kubeclaritysharedutils.SourceType, source string) (string, error) {
+func GenerateHash(inputType SourceType, source string) (string, error) {
 	absPath, err := filepath.Abs(source)
 	if err != nil {
 		return "", fmt.Errorf("failed to get absolute path of the source %s: %w", source, err)
 	}
 	switch inputType {
-	case kubeclaritysharedutils.IMAGE, kubeclaritysharedutils.DOCKERARCHIVE, kubeclaritysharedutils.OCIARCHIVE, kubeclaritysharedutils.OCIDIR:
+	case IMAGE, DOCKERARCHIVE, OCIARCHIVE, OCIDIR:
 		log.Infof("Skip generating hash in the case of image")
 		return "", nil
-	case kubeclaritysharedutils.DIR, kubeclaritysharedutils.ROOTFS:
+	case DIR, ROOTFS:
 		hash, err := hashDir(absPath)
 		if err != nil {
 			return "", fmt.Errorf("failed to create hash for directory %s: %w", absPath, err)
 		}
 		return hash, nil
-	case kubeclaritysharedutils.FILE:
+	case FILE:
 		input, err := os.Open(absPath)
 		if err != nil {
 			return "", fmt.Errorf("failed to open file %s for generating hash: %w", absPath, err)
@@ -55,7 +53,7 @@ func GenerateHash(inputType kubeclaritysharedutils.SourceType, source string) (s
 			return "", fmt.Errorf("failed to create hash for file %s: %w", absPath, err)
 		}
 		return fmt.Sprintf("%x", hash.Sum(nil)), nil // nolint:perfsprint
-	case kubeclaritysharedutils.SBOM:
+	case SBOM:
 		log.Infof("Skip generating hash in the case of sbom")
 		return "", nil
 	default:
