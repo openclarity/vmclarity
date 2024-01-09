@@ -20,8 +20,6 @@ import (
 	"fmt"
 	"time"
 
-	kubeclaritycli "github.com/openclarity/kubeclarity/cli/pkg"
-
 	"github.com/openclarity/vmclarity/pkg/shared/analyzer"
 	"github.com/openclarity/vmclarity/pkg/shared/analyzer/job"
 	"github.com/openclarity/vmclarity/pkg/shared/converter"
@@ -32,6 +30,7 @@ import (
 	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
 	"github.com/openclarity/vmclarity/pkg/shared/log"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
+	"github.com/openclarity/vmclarity/pkg/version"
 )
 
 type SBOM struct {
@@ -92,7 +91,7 @@ func (s SBOM) Run(ctx context.Context, _ *familiesresults.Results) (interfaces.I
 
 	// TODO(sambetts) Expose CreateMergedSBOM as well as
 	// CreateMergedSBOMBytes so that we don't need to re-convert it
-	mergedSBOMBytes, err := mergedResults.CreateMergedSBOMBytes("cyclonedx-json", kubeclaritycli.GitRevision)
+	mergedSBOMBytes, err := mergedResults.CreateMergedSBOMBytes("cyclonedx-json", version.CommitHash)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create merged output: %w", err)
 	}
