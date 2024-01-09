@@ -21,7 +21,7 @@ import (
 
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gstruct"
-	"github.com/openclarity/kubeclarity/shared/pkg/config"
+	kubeclaritysharedconfig "github.com/openclarity/kubeclarity/shared/pkg/config"
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/shared/families"
@@ -58,8 +58,8 @@ func Test_appendEffectiveScanConfigAnnotation(t *testing.T) {
 								InputType: "dir",
 							},
 						},
-						AnalyzersConfig: &config.Config{
-							Analyzer: &config.Analyzer{
+						AnalyzersConfig: &kubeclaritysharedconfig.Config{
+							Analyzer: &kubeclaritysharedconfig.Analyzer{
 								AnalyzerList: []string{"syft"},
 							},
 						},
@@ -87,8 +87,8 @@ func Test_appendEffectiveScanConfigAnnotation(t *testing.T) {
 								InputType: "dir",
 							},
 						},
-						AnalyzersConfig: &config.Config{
-							Analyzer: &config.Analyzer{
+						AnalyzersConfig: &kubeclaritysharedconfig.Config{
+							Analyzer: &kubeclaritysharedconfig.Analyzer{
 								AnalyzerList: []string{"syft"},
 							},
 						},
@@ -121,8 +121,8 @@ func Test_appendEffectiveScanConfigAnnotation(t *testing.T) {
 								InputType: "dir",
 							},
 						},
-						AnalyzersConfig: &config.Config{
-							Analyzer: &config.Analyzer{
+						AnalyzersConfig: &kubeclaritysharedconfig.Config{
+							Analyzer: &kubeclaritysharedconfig.Analyzer{
 								AnalyzerList: []string{"syft"},
 							},
 						},
@@ -159,8 +159,8 @@ func Test_appendEffectiveScanConfigAnnotation(t *testing.T) {
 								InputType: "dir",
 							},
 						},
-						AnalyzersConfig: &config.Config{
-							Analyzer: &config.Analyzer{
+						AnalyzersConfig: &kubeclaritysharedconfig.Config{
+							Analyzer: &kubeclaritysharedconfig.Analyzer{
 								AnalyzerList: []string{"syft"},
 							},
 						},

@@ -20,13 +20,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/openclarity/kubeclarity/cli/pkg"
-	cliutils "github.com/openclarity/kubeclarity/cli/pkg/utils"
-	sharedanalyzer "github.com/openclarity/kubeclarity/shared/pkg/analyzer"
-	"github.com/openclarity/kubeclarity/shared/pkg/analyzer/job"
-	"github.com/openclarity/kubeclarity/shared/pkg/converter"
-	"github.com/openclarity/kubeclarity/shared/pkg/job_manager"
-	"github.com/openclarity/kubeclarity/shared/pkg/utils"
+	kubeclaritycli "github.com/openclarity/kubeclarity/cli/pkg"
+	kubeclaritycliutils "github.com/openclarity/kubeclarity/cli/pkg/utils"
+	kubeclaritysharedanalyzer "github.com/openclarity/kubeclarity/shared/pkg/analyzer"
+	kubeclaritysharedanalyzerjob "github.com/openclarity/kubeclarity/shared/pkg/analyzer/job"
+	kubeclaritysharedconverter "github.com/openclarity/kubeclarity/shared/pkg/converter"
+	kubeclaritysharedjobmanager "github.com/openclarity/kubeclarity/shared/pkg/job_manager"
+	kubeclaritysharedutils "github.com/openclarity/kubeclarity/shared/pkg/utils"
 
 	"github.com/openclarity/vmclarity/pkg/shared/families/interfaces"
 	familiesresults "github.com/openclarity/vmclarity/pkg/shared/families/results"
@@ -51,18 +51,18 @@ func (s SBOM) Run(ctx context.Context, _ *familiesresults.Results) (interfaces.I
 	// TODO: move the logic from cli utils to shared utils
 	// TODO: now that we support multiple inputs,
 	//  we need to change the fact the MergedResults assumes it is only for 1 input?
-	hash, err := cliutils.GenerateHash(utils.SourceType(s.conf.Inputs[0].InputType), s.conf.Inputs[0].Input)
+	hash, err := kubeclaritycliutils.GenerateHash(kubeclaritysharedutils.SourceType(s.conf.Inputs[0].InputType), s.conf.Inputs[0].Input)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate hash for source %s: %w", s.conf.Inputs[0].Input, err)
 	}
 
-	manager := job_manager.New(s.conf.AnalyzersList, s.conf.AnalyzersConfig, logger, job.Factory)
-	mergedResults := sharedanalyzer.NewMergedResults(utils.SourceType(s.conf.Inputs[0].InputType), hash)
+	manager := kubeclaritysharedjobmanager.New(s.conf.AnalyzersList, s.conf.AnalyzersConfig, logger, kubeclaritysharedanalyzerjob.Factory)
+	mergedResults := kubeclaritysharedanalyzer.NewMergedResults(kubeclaritysharedutils.SourceType(s.conf.Inputs[0].InputType), hash)
 
 	var sbomResults Results
 	for _, input := range s.conf.Inputs {
 		startTime := time.Now()
-		results, err := manager.Run(utils.SourceType(input.InputType), input.Input)
+		results, err := manager.Run(kubeclaritysharedutils.SourceType(input.InputType), input.Input)
 		if err != nil {
 			return nil, fmt.Errorf("failed to analyzer input %q: %w", s.conf.Inputs[0].Input, err)
 		}
@@ -75,30 +75,30 @@ func (s SBOM) Run(ctx context.Context, _ *familiesresults.Results) (interfaces.I
 		// Merge results.
 		for name, result := range results {
 			logger.Infof("Merging result from %q", name)
-			mergedResults = mergedResults.Merge(result.(*sharedanalyzer.Results)) // nolint:forcetypeassert
+			mergedResults = mergedResults.Merge(result.(*kubeclaritysharedanalyzer.Results)) // nolint:forcetypeassert
 		}
 		sbomResults.Metadata.InputScans = append(sbomResults.Metadata.InputScans, types.CreateInputScanMetadata(startTime, endTime, inputSize, input))
 	}
 
 	for i, with := range s.conf.MergeWith {
 		name := fmt.Sprintf("merge_with_%d", i)
-		cdxBOMBytes, err := converter.GetCycloneDXSBOMFromFile(with.SbomPath)
+		cdxBOMBytes, err := kubeclaritysharedconverter.GetCycloneDXSBOMFromFile(with.SbomPath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get CDX SBOM from path=%s: %w", with.SbomPath, err)
 		}
-		results := sharedanalyzer.CreateResults(cdxBOMBytes, name, with.SbomPath, utils.SBOM)
+		results := kubeclaritysharedanalyzer.CreateResults(cdxBOMBytes, name, with.SbomPath, kubeclaritysharedutils.SBOM)
 		logger.Infof("Merging result from %q", with.SbomPath)
 		mergedResults = mergedResults.Merge(results)
 	}
 
 	// TODO(sambetts) Expose CreateMergedSBOM as well as
 	// CreateMergedSBOMBytes so that we don't need to re-convert it
-	mergedSBOMBytes, err := mergedResults.CreateMergedSBOMBytes("cyclonedx-json", pkg.GitRevision)
+	mergedSBOMBytes, err := mergedResults.CreateMergedSBOMBytes("cyclonedx-json", kubeclaritycli.GitRevision)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create merged output: %w", err)
 	}
 
-	cdxBom, err := converter.GetCycloneDXSBOMFromBytes(mergedSBOMBytes)
+	cdxBom, err := kubeclaritysharedconverter.GetCycloneDXSBOMFromBytes(mergedSBOMBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load merged output to CDX bom: %w", err)
 	}

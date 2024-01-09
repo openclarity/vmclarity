@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/openclarity/kubeclarity/shared/pkg/job_manager"
-	"github.com/openclarity/kubeclarity/shared/pkg/utils"
+	kubeclaritysharedjobmanager "github.com/openclarity/kubeclarity/shared/pkg/job_manager"
+	kubeclaritysharedutils "github.com/openclarity/kubeclarity/shared/pkg/utils"
 
 	"github.com/openclarity/vmclarity/pkg/shared/families/infofinder/job"
 	infofinderTypes "github.com/openclarity/vmclarity/pkg/shared/families/infofinder/types"
@@ -42,10 +42,10 @@ func (i InfoFinder) Run(ctx context.Context, _ *results.Results) (interfaces.IsR
 
 	infoFinderResults := NewResults()
 
-	manager := job_manager.New(i.conf.ScannersList, i.conf.ScannersConfig, logger, job.Factory)
+	manager := kubeclaritysharedjobmanager.New(i.conf.ScannersList, i.conf.ScannersConfig, logger, job.Factory)
 	for _, input := range i.conf.Inputs {
 		startTime := time.Now()
-		managerResults, err := manager.Run(utils.SourceType(input.InputType), input.Input)
+		managerResults, err := manager.Run(kubeclaritysharedutils.SourceType(input.InputType), input.Input)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan input %q for info: %w", input.Input, err)
 		}

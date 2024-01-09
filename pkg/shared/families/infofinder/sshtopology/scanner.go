@@ -27,8 +27,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/openclarity/kubeclarity/shared/pkg/job_manager"
-	"github.com/openclarity/kubeclarity/shared/pkg/utils"
+	kubeclaritysharedjobmanager "github.com/openclarity/kubeclarity/shared/pkg/job_manager"
+	kubeclaritysharedutils "github.com/openclarity/kubeclarity/shared/pkg/utils"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/pkg/shared/families/infofinder/types"
@@ -42,10 +42,10 @@ type Scanner struct {
 	name       string
 	logger     *log.Entry
 	config     types.SSHTopologyConfig
-	resultChan chan job_manager.Result
+	resultChan chan kubeclaritysharedjobmanager.Result
 }
 
-func New(c job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.Result) job_manager.Job {
+func New(c kubeclaritysharedjobmanager.IsConfig, logger *log.Entry, resultChan chan kubeclaritysharedjobmanager.Result) kubeclaritysharedjobmanager.Job {
 	conf := c.(types.ScannersConfig) // nolint:forcetypeassert
 	return &Scanner{
 		name:       ScannerName,
@@ -56,7 +56,7 @@ func New(c job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.
 }
 
 // nolint:cyclop,gocognit
-func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
+func (s *Scanner) Run(sourceType kubeclaritysharedutils.SourceType, userInput string) error {
 	go func() {
 		s.logger.Debugf("Running with input=%v and source type=%v", userInput, sourceType)
 		retResults := types.ScannerResult{
@@ -372,11 +372,11 @@ func (s *Scanner) executeSSHKeyGenFingerprintCommand(hashAlgo string, filePath s
 	return output, nil
 }
 
-func (s *Scanner) isValidInputType(sourceType utils.SourceType) bool {
+func (s *Scanner) isValidInputType(sourceType kubeclaritysharedutils.SourceType) bool {
 	switch sourceType {
-	case utils.ROOTFS, utils.IMAGE, utils.DOCKERARCHIVE, utils.OCIARCHIVE, utils.OCIDIR:
+	case kubeclaritysharedutils.ROOTFS, kubeclaritysharedutils.IMAGE, kubeclaritysharedutils.DOCKERARCHIVE, kubeclaritysharedutils.OCIARCHIVE, kubeclaritysharedutils.OCIDIR:
 		return true
-	case utils.DIR, utils.FILE, utils.SBOM:
+	case kubeclaritysharedutils.DIR, kubeclaritysharedutils.FILE, kubeclaritysharedutils.SBOM:
 		s.logger.Infof("Source type %v is not supported for %s, skipping.", ScannerName, sourceType)
 	default:
 		s.logger.Infof("Unknown source type %v, skipping.", sourceType)

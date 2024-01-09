@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/openclarity/kubeclarity/shared/pkg/job_manager"
-	"github.com/openclarity/kubeclarity/shared/pkg/utils"
+	kubeclaritysharedjobmanager "github.com/openclarity/kubeclarity/shared/pkg/job_manager"
+	kubeclaritysharedutils "github.com/openclarity/kubeclarity/shared/pkg/utils"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/pkg/shared/families/rootkits/chkrootkit/config"
@@ -40,10 +40,10 @@ type Scanner struct {
 	name       string
 	logger     *log.Entry
 	config     config.Config
-	resultChan chan job_manager.Result
+	resultChan chan kubeclaritysharedjobmanager.Result
 }
 
-func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
+func (s *Scanner) Run(sourceType kubeclaritysharedutils.SourceType, userInput string) error {
 	go func() {
 		retResults := common.Results{
 			ScannedInput: userInput,
@@ -137,7 +137,7 @@ func toResultsRootkits(rootkits []chkrootkitutils.Rootkit) []common.Rootkit {
 	return ret
 }
 
-func New(c job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.Result) job_manager.Job {
+func New(c kubeclaritysharedjobmanager.IsConfig, logger *log.Entry, resultChan chan kubeclaritysharedjobmanager.Result) kubeclaritysharedjobmanager.Job {
 	conf := c.(*common.ScannersConfig) // nolint:forcetypeassert
 	return &Scanner{
 		name:       ScannerName,
@@ -147,11 +147,11 @@ func New(c job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.
 	}
 }
 
-func (s *Scanner) isValidInputType(sourceType utils.SourceType) bool {
+func (s *Scanner) isValidInputType(sourceType kubeclaritysharedutils.SourceType) bool {
 	switch sourceType {
-	case utils.DIR, utils.ROOTFS, utils.IMAGE, utils.DOCKERARCHIVE, utils.OCIARCHIVE, utils.OCIDIR:
+	case kubeclaritysharedutils.DIR, kubeclaritysharedutils.ROOTFS, kubeclaritysharedutils.IMAGE, kubeclaritysharedutils.DOCKERARCHIVE, kubeclaritysharedutils.OCIARCHIVE, kubeclaritysharedutils.OCIDIR:
 		return true
-	case utils.FILE, utils.SBOM:
+	case kubeclaritysharedutils.FILE, kubeclaritysharedutils.SBOM:
 		fallthrough
 	default:
 		s.logger.Infof("source type %v is not supported for chkrootkit, skipping.", sourceType)

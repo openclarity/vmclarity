@@ -16,12 +16,12 @@
 package job
 
 import (
-	"github.com/openclarity/kubeclarity/shared/pkg/job_manager"
+	kubeclaritysharedjobmanager "github.com/openclarity/kubeclarity/shared/pkg/job_manager"
 
 	"github.com/openclarity/vmclarity/pkg/shared/families/rootkits/chkrootkit"
 )
 
-var Factory = job_manager.NewJobFactory()
+var Factory = kubeclaritysharedjobmanager.NewJobFactory()
 
 func init() {
 	Factory.Register(chkrootkit.ScannerName, chkrootkit.New)

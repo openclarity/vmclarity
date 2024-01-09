@@ -19,9 +19,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/openclarity/kubeclarity/shared/pkg/scanner"
-	"github.com/openclarity/kubeclarity/shared/pkg/utils/cyclonedx_helper"
-	"github.com/openclarity/kubeclarity/shared/pkg/utils/vulnerability"
+	kubeclaritysharedscanner "github.com/openclarity/kubeclarity/shared/pkg/scanner"
+	kubeclaritysharedutilscyclonedxhelper "github.com/openclarity/kubeclarity/shared/pkg/utils/cyclonedx_helper"
+	kubeclaritysharedutilsvulnerability "github.com/openclarity/kubeclarity/shared/pkg/utils/vulnerability"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/api/models"
@@ -49,8 +49,8 @@ func ConvertSBOMResultToPackages(sbomResults *sbom.Results) []models.Package {
 	for _, component := range *sbomResults.SBOM.Components {
 		packages = append(packages, models.Package{
 			Cpes:     utils.PointerTo([]string{component.CPE}),
-			Language: utils.PointerTo(cyclonedx_helper.GetComponentLanguage(component)),
-			Licenses: utils.PointerTo(cyclonedx_helper.GetComponentLicenses(component)),
+			Language: utils.PointerTo(kubeclaritysharedutilscyclonedxhelper.GetComponentLanguage(component)),
+			Licenses: utils.PointerTo(kubeclaritysharedutilscyclonedxhelper.GetComponentLicenses(component)),
 			Name:     utils.PointerTo(component.Name),
 			Purl:     utils.PointerTo(component.PackageURL),
 			Type:     utils.PointerTo(string(component.Type)),
@@ -95,15 +95,15 @@ func ConvertVulnResultToVulnerabilities(vulnerabilitiesResults *vulnerabilities.
 
 func ConvertVulnSeverityToAPIModel(severity string) *models.VulnerabilitySeverity {
 	switch strings.ToUpper(severity) {
-	case vulnerability.DEFCON1, vulnerability.CRITICAL:
+	case kubeclaritysharedutilsvulnerability.DEFCON1, kubeclaritysharedutilsvulnerability.CRITICAL:
 		return utils.PointerTo(models.CRITICAL)
-	case vulnerability.HIGH:
+	case kubeclaritysharedutilsvulnerability.HIGH:
 		return utils.PointerTo(models.HIGH)
-	case vulnerability.MEDIUM:
+	case kubeclaritysharedutilsvulnerability.MEDIUM:
 		return utils.PointerTo(models.MEDIUM)
-	case vulnerability.LOW:
+	case kubeclaritysharedutilsvulnerability.LOW:
 		return utils.PointerTo(models.LOW)
-	case vulnerability.NEGLIGIBLE, vulnerability.UNKNOWN, vulnerability.NONE:
+	case kubeclaritysharedutilsvulnerability.NEGLIGIBLE, kubeclaritysharedutilsvulnerability.UNKNOWN, kubeclaritysharedutilsvulnerability.NONE:
 		return utils.PointerTo(models.NEGLIGIBLE)
 	default:
 		log.Errorf("Can't convert severity %q, treating as negligible", severity)
@@ -111,14 +111,14 @@ func ConvertVulnSeverityToAPIModel(severity string) *models.VulnerabilitySeverit
 	}
 }
 
-func ConvertVulnFixToAPIModel(fix scanner.Fix) *models.VulnerabilityFix {
+func ConvertVulnFixToAPIModel(fix kubeclaritysharedscanner.Fix) *models.VulnerabilityFix {
 	return &models.VulnerabilityFix{
 		State:    utils.PointerTo(fix.State),
 		Versions: utils.PointerTo(fix.Versions),
 	}
 }
 
-func ConvertVulnDistroToAPIModel(distro scanner.Distro) *models.VulnerabilityDistro {
+func ConvertVulnDistroToAPIModel(distro kubeclaritysharedscanner.Distro) *models.VulnerabilityDistro {
 	return &models.VulnerabilityDistro{
 		IDLike:  utils.PointerTo(distro.IDLike),
 		Name:    utils.PointerTo(distro.Name),
@@ -126,7 +126,7 @@ func ConvertVulnDistroToAPIModel(distro scanner.Distro) *models.VulnerabilityDis
 	}
 }
 
-func ConvertVulnPackageToAPIModel(p scanner.Package) *models.Package {
+func ConvertVulnPackageToAPIModel(p kubeclaritysharedscanner.Package) *models.Package {
 	return &models.Package{
 		Cpes:     utils.PointerTo(p.CPEs),
 		Language: utils.PointerTo(p.Language),
@@ -138,7 +138,7 @@ func ConvertVulnPackageToAPIModel(p scanner.Package) *models.Package {
 	}
 }
 
-func ConvertVulnCvssToAPIModel(cvss []scanner.CVSS) *[]models.VulnerabilityCvss {
+func ConvertVulnCvssToAPIModel(cvss []kubeclaritysharedscanner.CVSS) *[]models.VulnerabilityCvss {
 	if cvss == nil {
 		return nil
 	}

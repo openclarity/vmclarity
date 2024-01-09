@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/openclarity/kubeclarity/shared/pkg/job_manager"
-	"github.com/openclarity/kubeclarity/shared/pkg/utils"
+	kubeclaritysharedjobmanager "github.com/openclarity/kubeclarity/shared/pkg/job_manager"
+	kubeclaritysharedutils "github.com/openclarity/kubeclarity/shared/pkg/utils"
 
 	"github.com/openclarity/vmclarity/pkg/shared/families/interfaces"
 	familiesresults "github.com/openclarity/vmclarity/pkg/shared/families/results"
@@ -40,13 +40,13 @@ func (s Secrets) Run(ctx context.Context, _ *familiesresults.Results) (interface
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "secrets")
 	logger.Info("Secrets Run...")
 
-	manager := job_manager.New(s.conf.ScannersList, s.conf.ScannersConfig, logger, job.Factory)
+	manager := kubeclaritysharedjobmanager.New(s.conf.ScannersList, s.conf.ScannersConfig, logger, job.Factory)
 	mergedResults := NewMergedResults()
 
 	var secretsResults Results
 	for _, input := range s.conf.Inputs {
 		startTime := time.Now()
-		results, err := manager.Run(utils.SourceType(input.InputType), input.Input)
+		results, err := manager.Run(kubeclaritysharedutils.SourceType(input.InputType), input.Input)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan input %q for secrets: %w", input.Input, err)
 		}

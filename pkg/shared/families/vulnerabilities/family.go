@@ -21,11 +21,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/openclarity/kubeclarity/shared/pkg/config"
-	"github.com/openclarity/kubeclarity/shared/pkg/job_manager"
-	sharedscanner "github.com/openclarity/kubeclarity/shared/pkg/scanner"
-	"github.com/openclarity/kubeclarity/shared/pkg/scanner/job"
-	"github.com/openclarity/kubeclarity/shared/pkg/utils"
+	kubeclaritysharedconfig "github.com/openclarity/kubeclarity/shared/pkg/config"
+	kubeclaritysharedjobmanager "github.com/openclarity/kubeclarity/shared/pkg/job_manager"
+	kubeclaritysharedscanner "github.com/openclarity/kubeclarity/shared/pkg/scanner"
+	kubeclaritysharedscannerjob "github.com/openclarity/kubeclarity/shared/pkg/scanner/job"
+	kubeclaritysharedutils "github.com/openclarity/kubeclarity/shared/pkg/utils"
 
 	"github.com/openclarity/vmclarity/pkg/shared/families/interfaces"
 	"github.com/openclarity/vmclarity/pkg/shared/families/results"
@@ -41,15 +41,15 @@ const (
 
 type Vulnerabilities struct {
 	conf           Config
-	ScannersConfig config.Config
+	ScannersConfig kubeclaritysharedconfig.Config
 }
 
 func (v Vulnerabilities) Run(ctx context.Context, res *results.Results) (interfaces.IsResults, error) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "vulnerabilities")
 	logger.Info("Vulnerabilities Run...")
 
-	manager := job_manager.New(v.conf.ScannersList, v.conf.ScannersConfig, logger, job.Factory)
-	mergedResults := sharedscanner.NewMergedResults()
+	manager := kubeclaritysharedjobmanager.New(v.conf.ScannersList, v.conf.ScannersConfig, logger, kubeclaritysharedscannerjob.Factory)
+	mergedResults := kubeclaritysharedscanner.NewMergedResults()
 
 	if v.conf.InputFromSbom {
 		logger.Infof("Using input from SBOM results")
@@ -82,7 +82,7 @@ func (v Vulnerabilities) Run(ctx context.Context, res *results.Results) (interfa
 	var vulResults Results
 	for _, input := range v.conf.Inputs {
 		startTime := time.Now()
-		runResults, err := manager.Run(utils.SourceType(input.InputType), input.Input)
+		runResults, err := manager.Run(kubeclaritysharedutils.SourceType(input.InputType), input.Input)
 		if err != nil {
 			return nil, fmt.Errorf("failed to run for input %v of type %v: %w", input.Input, input.InputType, err)
 		}
@@ -95,7 +95,7 @@ func (v Vulnerabilities) Run(ctx context.Context, res *results.Results) (interfa
 		// Merge results.
 		for name, result := range runResults {
 			logger.Infof("Merging result from %q", name)
-			mergedResults = mergedResults.Merge(result.(*sharedscanner.Results)) // nolint:forcetypeassert
+			mergedResults = mergedResults.Merge(result.(*kubeclaritysharedscanner.Results)) // nolint:forcetypeassert
 		}
 		vulResults.Metadata.InputScans = append(vulResults.Metadata.InputScans, types.CreateInputScanMetadata(startTime, endTime, inputSize, input))
 

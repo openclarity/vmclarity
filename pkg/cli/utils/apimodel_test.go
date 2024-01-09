@@ -23,8 +23,8 @@ import (
 	cdx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/openclarity/kubeclarity/shared/pkg/scanner"
-	"github.com/openclarity/kubeclarity/shared/pkg/utils/vulnerability"
+	kubeclaritysharedscanner "github.com/openclarity/kubeclarity/shared/pkg/scanner"
+	kubeclaritysharedutilsvulnerability "github.com/openclarity/kubeclarity/shared/pkg/utils/vulnerability"
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/shared/families/exploits"
@@ -169,25 +169,25 @@ func Test_ConvertVulnResultToVulnerabilities(t *testing.T) {
 			name: "Vuls",
 			args: args{
 				result: &vulnerabilities.Results{
-					MergedResults: &scanner.MergedResults{
-						MergedVulnerabilitiesByKey: map[scanner.VulnerabilityKey][]scanner.MergedVulnerability{
+					MergedResults: &kubeclaritysharedscanner.MergedResults{
+						MergedVulnerabilitiesByKey: map[kubeclaritysharedscanner.VulnerabilityKey][]kubeclaritysharedscanner.MergedVulnerability{
 							"vulkey1": {
 								{
 									ID: "id1",
-									Vulnerability: scanner.Vulnerability{
+									Vulnerability: kubeclaritysharedscanner.Vulnerability{
 										ID:          "CVE-test-test-foo",
 										Description: "testbleed",
 										Links:       []string{"link1", "link2"},
-										Distro: scanner.Distro{
+										Distro: kubeclaritysharedscanner.Distro{
 											Name:    "distro1",
 											Version: "distrov1",
 											IDLike:  []string{"IDLike1", "IDLike2"},
 										},
-										CVSS: []scanner.CVSS{
+										CVSS: []kubeclaritysharedscanner.CVSS{
 											{
 												Version: "v1",
 												Vector:  "vector1",
-												Metrics: scanner.CvssMetrics{
+												Metrics: kubeclaritysharedscanner.CvssMetrics{
 													BaseScore:           1,
 													ExploitabilityScore: nil,
 													ImpactScore:         nil,
@@ -196,19 +196,19 @@ func Test_ConvertVulnResultToVulnerabilities(t *testing.T) {
 											{
 												Version: "v2",
 												Vector:  "vector2",
-												Metrics: scanner.CvssMetrics{
+												Metrics: kubeclaritysharedscanner.CvssMetrics{
 													BaseScore:           2,
 													ExploitabilityScore: utils.PointerTo(2.1),
 													ImpactScore:         utils.PointerTo(2.2),
 												},
 											},
 										},
-										Fix: scanner.Fix{
+										Fix: kubeclaritysharedscanner.Fix{
 											Versions: []string{"fv1", "fv2"},
 											State:    "fixed",
 										},
 										Severity: string(models.CRITICAL),
-										Package: scanner.Package{
+										Package: kubeclaritysharedscanner.Package{
 											Name:     "package1",
 											Version:  "pv1",
 											Type:     "pt1",
@@ -225,20 +225,20 @@ func Test_ConvertVulnResultToVulnerabilities(t *testing.T) {
 							"vulkey2": {
 								{
 									ID: "id2",
-									Vulnerability: scanner.Vulnerability{
+									Vulnerability: kubeclaritysharedscanner.Vulnerability{
 										ID:          "CVE-test-test-bar",
 										Description: "solartest",
 										Links:       []string{"link3", "link4"},
-										Distro: scanner.Distro{
+										Distro: kubeclaritysharedscanner.Distro{
 											Name:    "distro2",
 											Version: "distrov2",
 											IDLike:  []string{"IDLike3", "IDLike4"},
 										},
-										CVSS: []scanner.CVSS{
+										CVSS: []kubeclaritysharedscanner.CVSS{
 											{
 												Version: "v3",
 												Vector:  "vector3",
-												Metrics: scanner.CvssMetrics{
+												Metrics: kubeclaritysharedscanner.CvssMetrics{
 													BaseScore:           3,
 													ExploitabilityScore: nil,
 													ImpactScore:         nil,
@@ -247,19 +247,19 @@ func Test_ConvertVulnResultToVulnerabilities(t *testing.T) {
 											{
 												Version: "v4",
 												Vector:  "vector4",
-												Metrics: scanner.CvssMetrics{
+												Metrics: kubeclaritysharedscanner.CvssMetrics{
 													BaseScore:           4,
 													ExploitabilityScore: utils.PointerTo(4.1),
 													ImpactScore:         utils.PointerTo(4.2),
 												},
 											},
 										},
-										Fix: scanner.Fix{
+										Fix: kubeclaritysharedscanner.Fix{
 											Versions: []string{"fv3", "fv4"},
 											State:    "not-fixed",
 										},
 										Severity: string(models.HIGH),
-										Package: scanner.Package{
+										Package: kubeclaritysharedscanner.Package{
 											Name:     "package2",
 											Version:  "pv2",
 											Type:     "pt2",
@@ -959,56 +959,56 @@ func Test_ConvertVulnSeverityToAPIModel(t *testing.T) {
 		{
 			name: "DEFCON1 -> CRITICAL",
 			args: args{
-				severity: vulnerability.DEFCON1,
+				severity: kubeclaritysharedutilsvulnerability.DEFCON1,
 			},
 			want: utils.PointerTo(models.CRITICAL),
 		},
 		{
 			name: "CRITICAL -> CRITICAL",
 			args: args{
-				severity: vulnerability.CRITICAL,
+				severity: kubeclaritysharedutilsvulnerability.CRITICAL,
 			},
 			want: utils.PointerTo(models.CRITICAL),
 		},
 		{
 			name: "HIGH -> HIGH",
 			args: args{
-				severity: vulnerability.HIGH,
+				severity: kubeclaritysharedutilsvulnerability.HIGH,
 			},
 			want: utils.PointerTo(models.HIGH),
 		},
 		{
 			name: "MEDIUM -> MEDIUM",
 			args: args{
-				severity: vulnerability.MEDIUM,
+				severity: kubeclaritysharedutilsvulnerability.MEDIUM,
 			},
 			want: utils.PointerTo(models.MEDIUM),
 		},
 		{
 			name: "LOW -> LOW",
 			args: args{
-				severity: vulnerability.LOW,
+				severity: kubeclaritysharedutilsvulnerability.LOW,
 			},
 			want: utils.PointerTo(models.LOW),
 		},
 		{
 			name: "NEGLIGIBLE -> NEGLIGIBLE",
 			args: args{
-				severity: vulnerability.NEGLIGIBLE,
+				severity: kubeclaritysharedutilsvulnerability.NEGLIGIBLE,
 			},
 			want: utils.PointerTo(models.NEGLIGIBLE),
 		},
 		{
 			name: "UNKNOWN -> NEGLIGIBLE",
 			args: args{
-				severity: vulnerability.UNKNOWN,
+				severity: kubeclaritysharedutilsvulnerability.UNKNOWN,
 			},
 			want: utils.PointerTo(models.NEGLIGIBLE),
 		},
 		{
 			name: "NONE -> NEGLIGIBLE",
 			args: args{
-				severity: vulnerability.NONE,
+				severity: kubeclaritysharedutilsvulnerability.NONE,
 			},
 			want: utils.PointerTo(models.NEGLIGIBLE),
 		},

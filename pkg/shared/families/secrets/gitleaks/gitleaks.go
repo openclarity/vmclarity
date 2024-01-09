@@ -22,8 +22,8 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/openclarity/kubeclarity/shared/pkg/job_manager"
-	"github.com/openclarity/kubeclarity/shared/pkg/utils"
+	kubeclaritysharedjobmanager "github.com/openclarity/kubeclarity/shared/pkg/job_manager"
+	kubeclaritysharedutils "github.com/openclarity/kubeclarity/shared/pkg/utils"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/pkg/shared/families/secrets/common"
@@ -41,10 +41,10 @@ type Scanner struct {
 	name       string
 	logger     *log.Entry
 	config     gitleaksconfig.Config
-	resultChan chan job_manager.Result
+	resultChan chan kubeclaritysharedjobmanager.Result
 }
 
-func New(c job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.Result) job_manager.Job {
+func New(c kubeclaritysharedjobmanager.IsConfig, logger *log.Entry, resultChan chan kubeclaritysharedjobmanager.Result) kubeclaritysharedjobmanager.Job {
 	conf := c.(*common.ScannersConfig) // nolint:forcetypeassert
 	return &Scanner{
 		name:       ScannerName,
@@ -54,7 +54,7 @@ func New(c job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.
 	}
 }
 
-func (a *Scanner) Run(sourceType utils.SourceType, userInput string) error {
+func (a *Scanner) Run(sourceType kubeclaritysharedutils.SourceType, userInput string) error {
 	go func() {
 		retResults := common.Results{
 			Source:      userInput,
@@ -134,11 +134,11 @@ func (a *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 	return nil
 }
 
-func (a *Scanner) isValidInputType(sourceType utils.SourceType) bool {
+func (a *Scanner) isValidInputType(sourceType kubeclaritysharedutils.SourceType) bool {
 	switch sourceType {
-	case utils.DIR, utils.ROOTFS, utils.IMAGE, utils.DOCKERARCHIVE, utils.OCIARCHIVE, utils.OCIDIR:
+	case kubeclaritysharedutils.DIR, kubeclaritysharedutils.ROOTFS, kubeclaritysharedutils.IMAGE, kubeclaritysharedutils.DOCKERARCHIVE, kubeclaritysharedutils.OCIARCHIVE, kubeclaritysharedutils.OCIDIR:
 		return true
-	case utils.FILE, utils.SBOM:
+	case kubeclaritysharedutils.FILE, kubeclaritysharedutils.SBOM:
 		fallthrough
 	default:
 		a.logger.Infof("source type %v is not supported for gitleaks, skipping.", sourceType)

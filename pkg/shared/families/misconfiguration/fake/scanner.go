@@ -16,7 +16,7 @@
 package fake
 
 import (
-	"github.com/openclarity/kubeclarity/shared/pkg/job_manager"
+	kubeclaritysharedjobmanager "github.com/openclarity/kubeclarity/shared/pkg/job_manager"
 	kubeclarityUtils "github.com/openclarity/kubeclarity/shared/pkg/utils"
 	log "github.com/sirupsen/logrus"
 
@@ -28,10 +28,10 @@ const ScannerName = "fake"
 type Scanner struct {
 	name       string
 	logger     *log.Entry
-	resultChan chan job_manager.Result
+	resultChan chan kubeclaritysharedjobmanager.Result
 }
 
-func New(_ job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.Result) job_manager.Job {
+func New(_ kubeclaritysharedjobmanager.IsConfig, logger *log.Entry, resultChan chan kubeclaritysharedjobmanager.Result) kubeclaritysharedjobmanager.Job {
 	return &Scanner{
 		name:       ScannerName,
 		logger:     logger.Dup().WithField("scanner", ScannerName),

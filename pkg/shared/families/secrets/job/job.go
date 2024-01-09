@@ -16,12 +16,12 @@
 package job
 
 import (
-	"github.com/openclarity/kubeclarity/shared/pkg/job_manager"
+	kubeclaritysharedjobmanager "github.com/openclarity/kubeclarity/shared/pkg/job_manager"
 
 	"github.com/openclarity/vmclarity/pkg/shared/families/secrets/gitleaks"
 )
 
-var Factory = job_manager.NewJobFactory()
+var Factory = kubeclaritysharedjobmanager.NewJobFactory()
 
 func init() {
 	Factory.Register(gitleaks.ScannerName, gitleaks.New)

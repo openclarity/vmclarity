@@ -24,8 +24,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/openclarity/kubeclarity/shared/pkg/job_manager"
-	"github.com/openclarity/kubeclarity/shared/pkg/utils"
+	kubeclaritysharedjobmanager "github.com/openclarity/kubeclarity/shared/pkg/job_manager"
+	kubeclaritysharedutils "github.com/openclarity/kubeclarity/shared/pkg/utils"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/pkg/shared/families/misconfiguration/types"
@@ -42,10 +42,10 @@ type Scanner struct {
 	name       string
 	logger     *log.Entry
 	config     types.LynisConfig
-	resultChan chan job_manager.Result
+	resultChan chan kubeclaritysharedjobmanager.Result
 }
 
-func New(c job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.Result) job_manager.Job {
+func New(c kubeclaritysharedjobmanager.IsConfig, logger *log.Entry, resultChan chan kubeclaritysharedjobmanager.Result) kubeclaritysharedjobmanager.Job {
 	conf := c.(types.ScannersConfig) // nolint:forcetypeassert
 	return &Scanner{
 		name:       ScannerName,
@@ -56,7 +56,7 @@ func New(c job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.
 }
 
 // nolint: cyclop
-func (a *Scanner) Run(sourceType utils.SourceType, userInput string) error {
+func (a *Scanner) Run(sourceType kubeclaritysharedutils.SourceType, userInput string) error {
 	go func() {
 		retResults := types.ScannerResult{
 			ScannerName: ScannerName,
@@ -157,11 +157,11 @@ func (a *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 	return nil
 }
 
-func (a *Scanner) isValidInputType(sourceType utils.SourceType) bool {
+func (a *Scanner) isValidInputType(sourceType kubeclaritysharedutils.SourceType) bool {
 	switch sourceType {
-	case utils.ROOTFS, utils.IMAGE, utils.DOCKERARCHIVE, utils.OCIARCHIVE, utils.OCIDIR:
+	case kubeclaritysharedutils.ROOTFS, kubeclaritysharedutils.IMAGE, kubeclaritysharedutils.DOCKERARCHIVE, kubeclaritysharedutils.OCIARCHIVE, kubeclaritysharedutils.OCIDIR:
 		return true
-	case utils.DIR, utils.FILE, utils.SBOM:
+	case kubeclaritysharedutils.DIR, kubeclaritysharedutils.FILE, kubeclaritysharedutils.SBOM:
 		a.logger.Infof("source type %v is not supported for lynis, skipping.", sourceType)
 	default:
 		a.logger.Infof("unknown source type %v, skipping.", sourceType)
