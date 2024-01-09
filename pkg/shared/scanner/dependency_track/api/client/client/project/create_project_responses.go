@@ -51,7 +51,8 @@ func NewCreateProjectCreated() *CreateProjectCreated {
 	return &CreateProjectCreated{}
 }
 
-/* CreateProjectCreated describes a response with status code 201, with default header values.
+/*
+CreateProjectCreated describes a response with status code 201, with default header values.
 
 successful operation
 */
@@ -83,7 +84,8 @@ func NewCreateProjectUnauthorized() *CreateProjectUnauthorized {
 	return &CreateProjectUnauthorized{}
 }
 
-/* CreateProjectUnauthorized describes a response with status code 401, with default header values.
+/*
+CreateProjectUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -104,7 +106,8 @@ func NewCreateProjectConflict() *CreateProjectConflict {
 	return &CreateProjectConflict{}
 }
 
-/* CreateProjectConflict describes a response with status code 409, with default header values.
+/*
+CreateProjectConflict describes a response with status code 409, with default header values.
 
 A project with the specified name already exists
 */

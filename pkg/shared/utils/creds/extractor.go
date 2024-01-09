@@ -32,27 +32,27 @@ import (
 func GetAuthConfig(ipsPath string, imageName string) (*authn.AuthConfig, error) {
 	named, err := reference.ParseNormalizedNamed(imageName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to normalized image name: %v", err)
+		return nil, fmt.Errorf("failed to normalized image name: %w", err)
 	}
 
 	keychain, err := newKeyChain(context.TODO(), ipsPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create keychain: %v", err)
+		return nil, fmt.Errorf("failed to create keychain: %w", err)
 	}
 
 	repository, err := name.NewRepository(reference.FamiliarName(named))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create repository: %v", err)
+		return nil, fmt.Errorf("failed to create repository: %w", err)
 	}
 
 	authenticator, err := keychain.Resolve(repository)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create authenticator: %v", err)
+		return nil, fmt.Errorf("failed to create authenticator: %w", err)
 	}
 
 	authorization, err := authenticator.Authorization()
 	if err != nil {
-		return nil, fmt.Errorf("failed to create authorization: %v", err)
+		return nil, fmt.Errorf("failed to create authorization: %w", err)
 	}
 
 	return authorization, nil

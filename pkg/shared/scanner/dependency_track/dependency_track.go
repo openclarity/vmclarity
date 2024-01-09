@@ -60,7 +60,7 @@ type Scanner struct {
 
 func (s *Scanner) AuthenticateRequest(request runtime.ClientRequest, _ strfmt.Registry) error {
 	if err := request.SetHeaderParam(apiKeyHeaderName, s.config.APIKey); err != nil {
-		return fmt.Errorf("failed to set API key header: %v", err)
+		return fmt.Errorf("failed to set API key header: %w", err)
 	}
 	return nil
 }

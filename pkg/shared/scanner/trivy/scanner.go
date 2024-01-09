@@ -165,7 +165,7 @@ func (a *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 
 	tempFile, err := os.CreateTemp(a.config.CacheDir, "trivy.scan.*.json")
 	if err != nil {
-		return fmt.Errorf("failed to create temp file: %v", err)
+		return fmt.Errorf("failed to create temp file: %w", err)
 	}
 
 	go func() {

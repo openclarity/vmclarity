@@ -57,7 +57,8 @@ func NewGetProjectOK() *GetProjectOK {
 	return &GetProjectOK{}
 }
 
-/* GetProjectOK describes a response with status code 200, with default header values.
+/*
+GetProjectOK describes a response with status code 200, with default header values.
 
 successful operation
 */
@@ -89,7 +90,8 @@ func NewGetProjectUnauthorized() *GetProjectUnauthorized {
 	return &GetProjectUnauthorized{}
 }
 
-/* GetProjectUnauthorized describes a response with status code 401, with default header values.
+/*
+GetProjectUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -110,7 +112,8 @@ func NewGetProjectForbidden() *GetProjectForbidden {
 	return &GetProjectForbidden{}
 }
 
-/* GetProjectForbidden describes a response with status code 403, with default header values.
+/*
+GetProjectForbidden describes a response with status code 403, with default header values.
 
 Access to the specified project is forbidden
 */
@@ -131,7 +134,8 @@ func NewGetProjectNotFound() *GetProjectNotFound {
 	return &GetProjectNotFound{}
 }
 
-/* GetProjectNotFound describes a response with status code 404, with default header values.
+/*
+GetProjectNotFound describes a response with status code 404, with default header values.
 
 The project could not be found
 */

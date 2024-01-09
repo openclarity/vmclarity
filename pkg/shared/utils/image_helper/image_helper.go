@@ -77,18 +77,18 @@ func GetHashFromRepoDigest(repoDigests []string, imageName string) string {
 func fetchFsCommands(img containerregistry_v1.Image) ([]*FsLayerCommand, error) {
 	configFile, err := img.RawConfigFile()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get raw config file: %v", err)
+		return nil, fmt.Errorf("failed to get raw config file: %w", err)
 	}
 
 	var conf containerregistry_v1.ConfigFile
 	if err = json.Unmarshal(configFile, &conf); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal config file: %v", err)
+		return nil, fmt.Errorf("failed to unmarshal config file: %w", err)
 	}
 
 	if log.IsLevelEnabled(log.DebugLevel) {
 		confB, err := json.Marshal(conf)
 		if err != nil {
-			return nil, fmt.Errorf("failed to marshal config: %v", err)
+			return nil, fmt.Errorf("failed to marshal config: %w", err)
 		}
 		log.Debugf("Image config: %s", confB)
 	}
@@ -97,7 +97,7 @@ func fetchFsCommands(img containerregistry_v1.Image) ([]*FsLayerCommand, error) 
 
 	layers, err := img.Layers()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get layers: %v", err)
+		return nil, fmt.Errorf("failed to get layers: %w", err)
 	}
 
 	if len(layers) != len(commands) {
@@ -107,13 +107,13 @@ func fetchFsCommands(img containerregistry_v1.Image) ([]*FsLayerCommand, error) 
 
 	fsLayerCommands, err := createFsLayerCommands(layers, commands)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create fs layer commands: %v", err)
+		return nil, fmt.Errorf("failed to create fs layer commands: %w", err)
 	}
 
 	if log.IsLevelEnabled(log.DebugLevel) {
 		fsLayerCommandsB, err := json.Marshal(fsLayerCommands)
 		if err != nil {
-			return nil, fmt.Errorf("failed to marshal layer commands: %v", err)
+			return nil, fmt.Errorf("failed to marshal layer commands: %w", err)
 		}
 		log.Debugf("Layer commands: %s", fsLayerCommandsB)
 	}
@@ -127,7 +127,7 @@ func createFsLayerCommands(layers []containerregistry_v1.Layer, commands []strin
 	for i, layer := range layers {
 		layerDiffID, err := layer.DiffID() // specifies the Hash of the uncompressed layer
 		if err != nil {
-			return nil, fmt.Errorf("failed to get layer diffID: %v", err)
+			return nil, fmt.Errorf("failed to get layer diffID: %w", err)
 		}
 		layerCommands[i] = &FsLayerCommand{
 			Command: commands[i],
@@ -161,21 +161,21 @@ func stripDockerMetaFromCommand(command string) string {
 func getV1Image(imageName string, registryOptions *image.RegistryOptions, localImage bool) (containerregistry_v1.Image, error) {
 	ref, err := name.ParseReference(imageName, prepareReferenceOptions(registryOptions)...)
 	if err != nil {
-		return nil, fmt.Errorf("unable to parse registry reference=%q: %v", imageName, err)
+		return nil, fmt.Errorf("unable to parse registry reference=%q: %w", imageName, err)
 	}
 
 	switch localImage {
 	case true:
 		img, err := daemon.Image(ref, daemon.WithUnbufferedOpener())
 		if err != nil {
-			return nil, fmt.Errorf("failed to get image from daemon: %v", err)
+			return nil, fmt.Errorf("failed to get image from daemon: %w", err)
 		}
 		return img, nil
 	default:
 		log.Debugf("pulling image info directly from registry image=%q", imageName)
 		img, err := remote.Image(ref, prepareRemoteOptions(ref, registryOptions)...)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get image from registry: %v", err)
+			return nil, fmt.Errorf("failed to get image from registry: %w", err)
 		}
 		return img, nil
 	}
@@ -220,11 +220,11 @@ func GetImageLayerCommands(imageName string, sharedConf *config.Config) ([]*FsLa
 	registryOptions := config.CreateRegistryOptions(sharedConf.Registry)
 	img, err := getV1Image(imageName, registryOptions, sharedConf.LocalImageScan)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get v1.image=%s: %v", imageName, err)
+		return nil, fmt.Errorf("failed to get v1.image=%s: %w", imageName, err)
 	}
 	layerCommands, err := fetchFsCommands(img)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get layer commands from image=%s: %v", imageName, err)
+		return nil, fmt.Errorf("failed to get layer commands from image=%s: %w", imageName, err)
 	}
 	return layerCommands, nil
 }

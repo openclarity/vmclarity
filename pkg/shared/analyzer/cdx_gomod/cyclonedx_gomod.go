@@ -72,13 +72,13 @@ func (a *Analyzer) Run(sourceType utils.SourceType, userInput string) error {
 			mod.WithIncludeTestModules(false),
 			mod.WithLicenseDetector(licenseDetector))
 		if err != nil {
-			a.setError(res, fmt.Errorf("failed to create new CycloneDX-gomod generator: %v", err))
+			a.setError(res, fmt.Errorf("failed to create new CycloneDX-gomod generator: %w", err))
 			return
 		}
 
 		bom, err := generator.Generate()
 		if err != nil {
-			a.setError(res, fmt.Errorf("failed to generate sbom: %v", err))
+			a.setError(res, fmt.Errorf("failed to generate sbom: %w", err))
 			return
 		}
 
@@ -89,7 +89,7 @@ func (a *Analyzer) Run(sourceType utils.SourceType, userInput string) error {
 		// create cycloneDX sbom metadata
 		tool, err := buildToolMetadata()
 		if err != nil {
-			a.setError(res, fmt.Errorf("failed to build tool metadata: %v", err))
+			a.setError(res, fmt.Errorf("failed to build tool metadata: %w", err))
 			return
 		}
 

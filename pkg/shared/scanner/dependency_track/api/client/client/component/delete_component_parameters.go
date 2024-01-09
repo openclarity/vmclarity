@@ -52,10 +52,11 @@ func NewDeleteComponentParamsWithHTTPClient(client *http.Client) *DeleteComponen
 	}
 }
 
-/* DeleteComponentParams contains all the parameters to send to the API endpoint
-   for the delete component operation.
+/*
+DeleteComponentParams contains all the parameters to send to the API endpoint
+for the delete component operation.
 
-   Typically these are written to a http.Request.
+Typically these are written to a http.Request.
 */
 type DeleteComponentParams struct {
 

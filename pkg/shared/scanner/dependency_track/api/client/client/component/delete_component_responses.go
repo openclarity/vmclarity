@@ -48,7 +48,8 @@ func NewDeleteComponentUnauthorized() *DeleteComponentUnauthorized {
 	return &DeleteComponentUnauthorized{}
 }
 
-/* DeleteComponentUnauthorized describes a response with status code 401, with default header values.
+/*
+DeleteComponentUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -69,7 +70,8 @@ func NewDeleteComponentForbidden() *DeleteComponentForbidden {
 	return &DeleteComponentForbidden{}
 }
 
-/* DeleteComponentForbidden describes a response with status code 403, with default header values.
+/*
+DeleteComponentForbidden describes a response with status code 403, with default header values.
 
 Access to the specified component is forbidden
 */
@@ -90,7 +92,8 @@ func NewDeleteComponentNotFound() *DeleteComponentNotFound {
 	return &DeleteComponentNotFound{}
 }
 
-/* DeleteComponentNotFound describes a response with status code 404, with default header values.
+/*
+DeleteComponentNotFound describes a response with status code 404, with default header values.
 
 The UUID of the component could not be found
 */

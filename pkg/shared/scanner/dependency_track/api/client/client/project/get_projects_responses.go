@@ -47,7 +47,8 @@ func NewGetProjectsOK() *GetProjectsOK {
 	return &GetProjectsOK{}
 }
 
-/* GetProjectsOK describes a response with status code 200, with default header values.
+/*
+GetProjectsOK describes a response with status code 200, with default header values.
 
 successful operation
 */
@@ -95,7 +96,8 @@ func NewGetProjectsUnauthorized() *GetProjectsUnauthorized {
 	return &GetProjectsUnauthorized{}
 }
 
-/* GetProjectsUnauthorized describes a response with status code 401, with default header values.
+/*
+GetProjectsUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */

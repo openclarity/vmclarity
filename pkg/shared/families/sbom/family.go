@@ -21,10 +21,10 @@ import (
 	"time"
 
 	kubeclaritycli "github.com/openclarity/kubeclarity/cli/pkg"
-	"github.com/openclarity/vmclarity/pkg/shared/converter"
 
 	"github.com/openclarity/vmclarity/pkg/shared/analyzer"
 	"github.com/openclarity/vmclarity/pkg/shared/analyzer/job"
+	"github.com/openclarity/vmclarity/pkg/shared/converter"
 	"github.com/openclarity/vmclarity/pkg/shared/families/interfaces"
 	familiesresults "github.com/openclarity/vmclarity/pkg/shared/families/results"
 	"github.com/openclarity/vmclarity/pkg/shared/families/types"

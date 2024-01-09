@@ -57,7 +57,8 @@ func NewGetComponentByUUIDOK() *GetComponentByUUIDOK {
 	return &GetComponentByUUIDOK{}
 }
 
-/* GetComponentByUUIDOK describes a response with status code 200, with default header values.
+/*
+GetComponentByUUIDOK describes a response with status code 200, with default header values.
 
 successful operation
 */
@@ -89,7 +90,8 @@ func NewGetComponentByUUIDUnauthorized() *GetComponentByUUIDUnauthorized {
 	return &GetComponentByUUIDUnauthorized{}
 }
 
-/* GetComponentByUUIDUnauthorized describes a response with status code 401, with default header values.
+/*
+GetComponentByUUIDUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -110,7 +112,8 @@ func NewGetComponentByUUIDForbidden() *GetComponentByUUIDForbidden {
 	return &GetComponentByUUIDForbidden{}
 }
 
-/* GetComponentByUUIDForbidden describes a response with status code 403, with default header values.
+/*
+GetComponentByUUIDForbidden describes a response with status code 403, with default header values.
 
 Access to the specified component is forbidden
 */
@@ -131,7 +134,8 @@ func NewGetComponentByUUIDNotFound() *GetComponentByUUIDNotFound {
 	return &GetComponentByUUIDNotFound{}
 }
 
-/* GetComponentByUUIDNotFound describes a response with status code 404, with default header values.
+/*
+GetComponentByUUIDNotFound describes a response with status code 404, with default header values.
 
 The component could not be found
 */

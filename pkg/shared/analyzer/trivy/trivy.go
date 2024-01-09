@@ -65,7 +65,7 @@ func (a *Analyzer) Run(sourceType utils.SourceType, userInput string) error {
 
 	tempFile, err := os.CreateTemp(a.config.TempDir, "trivy.sbom.*.json")
 	if err != nil {
-		return fmt.Errorf("failed to create temp file: %v", err)
+		return fmt.Errorf("failed to create temp file: %w", err)
 	}
 
 	dbOptions, err := trivy.GetTrivyDBOptions()
@@ -147,7 +147,7 @@ func (a *Analyzer) Run(sourceType utils.SourceType, userInput string) error {
 		bom := new(cdx.BOM)
 		decoder := cdx.NewBOMDecoder(tempFile, cdx.BOMFileFormatJSON)
 		if err = decoder.Decode(bom); err != nil {
-			a.setError(res, fmt.Errorf("unable to decode BOM data: %v", err))
+			a.setError(res, fmt.Errorf("unable to decode BOM data: %w", err))
 			return
 		}
 

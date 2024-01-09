@@ -57,7 +57,8 @@ func NewUpdateProjectOK() *UpdateProjectOK {
 	return &UpdateProjectOK{}
 }
 
-/* UpdateProjectOK describes a response with status code 200, with default header values.
+/*
+UpdateProjectOK describes a response with status code 200, with default header values.
 
 successful operation
 */
@@ -89,7 +90,8 @@ func NewUpdateProjectUnauthorized() *UpdateProjectUnauthorized {
 	return &UpdateProjectUnauthorized{}
 }
 
-/* UpdateProjectUnauthorized describes a response with status code 401, with default header values.
+/*
+UpdateProjectUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -110,7 +112,8 @@ func NewUpdateProjectNotFound() *UpdateProjectNotFound {
 	return &UpdateProjectNotFound{}
 }
 
-/* UpdateProjectNotFound describes a response with status code 404, with default header values.
+/*
+UpdateProjectNotFound describes a response with status code 404, with default header values.
 
 The UUID of the project could not be found
 */
@@ -131,7 +134,8 @@ func NewUpdateProjectConflict() *UpdateProjectConflict {
 	return &UpdateProjectConflict{}
 }
 
-/* UpdateProjectConflict describes a response with status code 409, with default header values.
+/*
+UpdateProjectConflict describes a response with status code 409, with default header values.
 
 A project with the specified name already exists
 */

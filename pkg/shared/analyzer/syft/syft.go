@@ -63,13 +63,13 @@ func (a *Analyzer) Run(sourceType utils.SourceType, userInput string) error {
 	// https://github.com/anchore/syft/blob/b20310eaf847c259beb4fe5128c842bd8aa4d4fc/cmd/syft/cli/options/packages.go#L48
 	detection, err := source.Detect(src, source.DefaultDetectConfig())
 	if err != nil {
-		return fmt.Errorf("failed to create input from source analyzer=%s: %v", a.name, err)
+		return fmt.Errorf("failed to create input from source analyzer=%s: %w", a.name, err)
 	}
 	s, err := detection.NewSource(source.DetectionSourceConfig{
 		RegistryOptions: a.config.RegistryOptions,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to create source analyzer=%s: %v", a.name, err)
+		return fmt.Errorf("failed to create source analyzer=%s: %w", a.name, err)
 	}
 
 	go func() {
@@ -81,7 +81,7 @@ func (a *Analyzer) Run(sourceType utils.SourceType, userInput string) error {
 
 		p, r, d, err := syft.CatalogPackages(s, catalogerConfig)
 		if err != nil {
-			a.setError(res, fmt.Errorf("failed to write results: %v", err))
+			a.setError(res, fmt.Errorf("failed to write results: %w", err))
 			return
 		}
 		sbom := generateSBOM(p, r, d, s)
@@ -96,7 +96,7 @@ func (a *Analyzer) Run(sourceType utils.SourceType, userInput string) error {
 		switch sourceType {
 		case utils.IMAGE, utils.DOCKERARCHIVE, utils.OCIDIR, utils.OCIARCHIVE:
 			if res.AppInfo.SourceHash, err = getImageHash(sbom, userInput); err != nil {
-				a.setError(res, fmt.Errorf("failed to get image hash: %v", err))
+				a.setError(res, fmt.Errorf("failed to get image hash: %w", err))
 				return
 			}
 		case utils.SBOM, utils.DIR, utils.ROOTFS, utils.FILE:

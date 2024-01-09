@@ -49,7 +49,7 @@ func (m *Manager) Run(sourceType utils.SourceType, userInput string) (map[string
 		nameToResultChan[name] = make(chan Result, 10) // nolint:gomnd
 		job, err := m.jobFactory.CreateJob(name, m.config, m.logger, nameToResultChan[name])
 		if err != nil {
-			return nil, fmt.Errorf("failed to create job: %v", err)
+			return nil, fmt.Errorf("failed to create job: %w", err)
 		}
 
 		jobs[i] = job
@@ -59,7 +59,7 @@ func (m *Manager) Run(sourceType utils.SourceType, userInput string) (map[string
 	for _, j := range jobs {
 		err := j.Run(sourceType, userInput)
 		if err != nil {
-			return nil, fmt.Errorf("failed to run job: %v", err)
+			return nil, fmt.Errorf("failed to run job: %w", err)
 		}
 	}
 
@@ -72,7 +72,7 @@ func (m *Manager) Run(sourceType utils.SourceType, userInput string) (map[string
 		result := <-channel
 
 		if err := result.GetError(); err != nil {
-			errStr := fmt.Errorf("%q job failed: %v", name, err)
+			errStr := fmt.Errorf("%q job failed: %w", name, err)
 			m.logger.Warning(errStr)
 			resultError = multierror.Append(resultError, errStr)
 		} else {

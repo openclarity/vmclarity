@@ -53,10 +53,11 @@ func NewGetFindingsByProjectParamsWithHTTPClient(client *http.Client) *GetFindin
 	}
 }
 
-/* GetFindingsByProjectParams contains all the parameters to send to the API endpoint
-   for the get findings by project operation.
+/*
+GetFindingsByProjectParams contains all the parameters to send to the API endpoint
+for the get findings by project operation.
 
-   Typically these are written to a http.Request.
+Typically these are written to a http.Request.
 */
 type GetFindingsByProjectParams struct {
 

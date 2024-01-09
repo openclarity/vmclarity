@@ -48,7 +48,8 @@ func NewDeleteProjectUnauthorized() *DeleteProjectUnauthorized {
 	return &DeleteProjectUnauthorized{}
 }
 
-/* DeleteProjectUnauthorized describes a response with status code 401, with default header values.
+/*
+DeleteProjectUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -69,7 +70,8 @@ func NewDeleteProjectForbidden() *DeleteProjectForbidden {
 	return &DeleteProjectForbidden{}
 }
 
-/* DeleteProjectForbidden describes a response with status code 403, with default header values.
+/*
+DeleteProjectForbidden describes a response with status code 403, with default header values.
 
 Access to the specified project is forbidden
 */
@@ -90,7 +92,8 @@ func NewDeleteProjectNotFound() *DeleteProjectNotFound {
 	return &DeleteProjectNotFound{}
 }
 
-/* DeleteProjectNotFound describes a response with status code 404, with default header values.
+/*
+DeleteProjectNotFound describes a response with status code 404, with default header values.
 
 The UUID of the project could not be found
 */

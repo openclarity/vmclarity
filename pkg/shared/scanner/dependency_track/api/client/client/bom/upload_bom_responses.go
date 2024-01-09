@@ -54,7 +54,8 @@ func NewUploadBomOK() *UploadBomOK {
 	return &UploadBomOK{}
 }
 
-/* UploadBomOK describes a response with status code 200, with default header values.
+/*
+UploadBomOK describes a response with status code 200, with default header values.
 
 Successful
 */
@@ -75,7 +76,8 @@ func NewUploadBomUnauthorized() *UploadBomUnauthorized {
 	return &UploadBomUnauthorized{}
 }
 
-/* UploadBomUnauthorized describes a response with status code 401, with default header values.
+/*
+UploadBomUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -96,7 +98,8 @@ func NewUploadBomForbidden() *UploadBomForbidden {
 	return &UploadBomForbidden{}
 }
 
-/* UploadBomForbidden describes a response with status code 403, with default header values.
+/*
+UploadBomForbidden describes a response with status code 403, with default header values.
 
 Access to the specified project is forbidden
 */
@@ -117,7 +120,8 @@ func NewUploadBomNotFound() *UploadBomNotFound {
 	return &UploadBomNotFound{}
 }
 
-/* UploadBomNotFound describes a response with status code 404, with default header values.
+/*
+UploadBomNotFound describes a response with status code 404, with default header values.
 
 The project could not be found
 */

@@ -102,13 +102,13 @@ func (s *RemoteScanner) scanSbomWithGrypeServer(sbom []byte) (*grype_models.Docu
 		}).WithTimeout(s.timeout)
 	ok, err := s.client.Operations.PostScanSBOM(params)
 	if err != nil {
-		return nil, fmt.Errorf("failed to send sbom for scan: %v", err)
+		return nil, fmt.Errorf("failed to send sbom for scan: %w", err)
 	}
 	doc := grype_models.Document{}
 
 	err = json.Unmarshal(ok.Payload.Vulnerabilities, &doc)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal vulnerabilities document: %v", err)
+		return nil, fmt.Errorf("failed to unmarshal vulnerabilities document: %w", err)
 	}
 
 	return &doc, nil

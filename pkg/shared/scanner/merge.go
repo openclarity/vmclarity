@@ -148,18 +148,18 @@ func handleVulnerabilityWithExistingKey(mergedVulnerabilities []MergedVulnerabil
 func getDiff(vulnerability, compareToVulnerability Vulnerability, compareToID string) (*DiffInfo, error) {
 	compareToVulnerabilityB, err := json.Marshal(sortArrays(compareToVulnerability))
 	if err != nil {
-		return nil, fmt.Errorf("failed to Marshal. compareToVulnerability=%+v: %v", compareToVulnerability, err)
+		return nil, fmt.Errorf("failed to Marshal. compareToVulnerability=%+v: %w", compareToVulnerability, err)
 	}
 
 	vulnerabilityB, err := json.Marshal(sortArrays(vulnerability))
 	if err != nil {
-		return nil, fmt.Errorf("failed to Marshal. vulnerability=%+v: %v", vulnerability, err)
+		return nil, fmt.Errorf("failed to Marshal. vulnerability=%+v: %w", vulnerability, err)
 	}
 
 	differ := gojsondiff.New()
 	diff, err := differ.Compare(compareToVulnerabilityB, vulnerabilityB)
 	if err != nil {
-		return nil, fmt.Errorf("failed to compare vulnerabilities: %v", err)
+		return nil, fmt.Errorf("failed to compare vulnerabilities: %w", err)
 	}
 
 	// nolint:nilnil
@@ -170,17 +170,17 @@ func getDiff(vulnerability, compareToVulnerability Vulnerability, compareToID st
 	var templateJSON map[string]interface{}
 	err = json.Unmarshal(compareToVulnerabilityB, &templateJSON)
 	if err != nil {
-		return nil, fmt.Errorf("failed to Unmarshal. compareToVulnerabilityB=%s: %v", string(compareToVulnerabilityB), err)
+		return nil, fmt.Errorf("failed to Unmarshal. compareToVulnerabilityB=%s: %w", string(compareToVulnerabilityB), err)
 	}
 
 	asciiDiff, err := getASCIIFormatDiff(compareToVulnerabilityB, diff)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get ascii format diff: %v", err)
+		return nil, fmt.Errorf("failed to get ascii format diff: %w", err)
 	}
 
 	jsonDiff, err := formatter.NewDeltaFormatter().FormatAsJson(diff)
 	if err != nil {
-		return nil, fmt.Errorf("failed to format delta diff: %v", err)
+		return nil, fmt.Errorf("failed to format delta diff: %w", err)
 	}
 
 	// TODO: do we want to ignore some fields in the diff calculation, links for example?
@@ -201,7 +201,7 @@ func getASCIIFormatDiff(compareToVulnerabilityB []byte, diff gojsondiff.Diff) (s
 	_ = json.Unmarshal(compareToVulnerabilityB, &compareToVulnerabilityJSON)
 	asciiDiff, err := formatter.NewAsciiFormatter(compareToVulnerabilityJSON, config).Format(diff)
 	if err != nil {
-		return "", fmt.Errorf("failed to format ascii diff: %v", err)
+		return "", fmt.Errorf("failed to format ascii diff: %w", err)
 	}
 
 	return asciiDiff, nil

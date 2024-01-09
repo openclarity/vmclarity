@@ -59,7 +59,8 @@ func NewGetFindingsByProjectOK() *GetFindingsByProjectOK {
 	return &GetFindingsByProjectOK{}
 }
 
-/* GetFindingsByProjectOK describes a response with status code 200, with default header values.
+/*
+GetFindingsByProjectOK describes a response with status code 200, with default header values.
 
 successful operation
 */
@@ -107,7 +108,8 @@ func NewGetFindingsByProjectUnauthorized() *GetFindingsByProjectUnauthorized {
 	return &GetFindingsByProjectUnauthorized{}
 }
 
-/* GetFindingsByProjectUnauthorized describes a response with status code 401, with default header values.
+/*
+GetFindingsByProjectUnauthorized describes a response with status code 401, with default header values.
 
 Unauthorized
 */
@@ -128,7 +130,8 @@ func NewGetFindingsByProjectForbidden() *GetFindingsByProjectForbidden {
 	return &GetFindingsByProjectForbidden{}
 }
 
-/* GetFindingsByProjectForbidden describes a response with status code 403, with default header values.
+/*
+GetFindingsByProjectForbidden describes a response with status code 403, with default header values.
 
 Access to the specified project is forbidden
 */
@@ -149,7 +152,8 @@ func NewGetFindingsByProjectNotFound() *GetFindingsByProjectNotFound {
 	return &GetFindingsByProjectNotFound{}
 }
 
-/* GetFindingsByProjectNotFound describes a response with status code 404, with default header values.
+/*
+GetFindingsByProjectNotFound describes a response with status code 404, with default header values.
 
 The project could not be found
 */
