@@ -21,7 +21,6 @@ import (
 	"time"
 
 	kubeclaritycli "github.com/openclarity/kubeclarity/cli/pkg"
-	kubeclaritycliutils "github.com/openclarity/kubeclarity/cli/pkg/utils"
 	kubeclaritysharedanalyzer "github.com/openclarity/kubeclarity/shared/pkg/analyzer"
 	kubeclaritysharedanalyzerjob "github.com/openclarity/kubeclarity/shared/pkg/analyzer/job"
 	kubeclaritysharedconverter "github.com/openclarity/kubeclarity/shared/pkg/converter"
@@ -33,6 +32,7 @@ import (
 	"github.com/openclarity/vmclarity/pkg/shared/families/types"
 	familiesutils "github.com/openclarity/vmclarity/pkg/shared/families/utils"
 	"github.com/openclarity/vmclarity/pkg/shared/log"
+	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
 type SBOM struct {
@@ -51,7 +51,7 @@ func (s SBOM) Run(ctx context.Context, _ *familiesresults.Results) (interfaces.I
 	// TODO: move the logic from cli utils to shared utils
 	// TODO: now that we support multiple inputs,
 	//  we need to change the fact the MergedResults assumes it is only for 1 input?
-	hash, err := kubeclaritycliutils.GenerateHash(kubeclaritysharedutils.SourceType(s.conf.Inputs[0].InputType), s.conf.Inputs[0].Input)
+	hash, err := utils.GenerateHash(kubeclaritysharedutils.SourceType(s.conf.Inputs[0].InputType), s.conf.Inputs[0].Input)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate hash for source %s: %w", s.conf.Inputs[0].Input, err)
 	}
