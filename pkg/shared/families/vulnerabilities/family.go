@@ -21,8 +21,7 @@ import (
 	"os"
 	"time"
 
-	kubeclaritysharedscanner "github.com/openclarity/kubeclarity/shared/pkg/scanner"
-	kubeclaritysharedscannerjob "github.com/openclarity/kubeclarity/shared/pkg/scanner/job"
+	"github.com/openclarity/vmclarity/pkg/shared/scanner/job"
 
 	"github.com/openclarity/vmclarity/pkg/shared/config"
 	"github.com/openclarity/vmclarity/pkg/shared/families/interfaces"
@@ -31,6 +30,7 @@ import (
 	"github.com/openclarity/vmclarity/pkg/shared/families/types"
 	familiesutils "github.com/openclarity/vmclarity/pkg/shared/families/utils"
 	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
+	"github.com/openclarity/vmclarity/pkg/shared/scanner"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
@@ -47,8 +47,8 @@ func (v Vulnerabilities) Run(ctx context.Context, res *results.Results) (interfa
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "vulnerabilities")
 	logger.Info("Vulnerabilities Run...")
 
-	manager := job_manager.New(v.conf.ScannersList, v.conf.ScannersConfig, logger, kubeclaritysharedscannerjob.Factory)
-	mergedResults := kubeclaritysharedscanner.NewMergedResults()
+	manager := job_manager.New(v.conf.ScannersList, v.conf.ScannersConfig, logger, job.Factory)
+	mergedResults := scanner.NewMergedResults()
 
 	if v.conf.InputFromSbom {
 		logger.Infof("Using input from SBOM results")
@@ -94,7 +94,7 @@ func (v Vulnerabilities) Run(ctx context.Context, res *results.Results) (interfa
 		// Merge results.
 		for name, result := range runResults {
 			logger.Infof("Merging result from %q", name)
-			mergedResults = mergedResults.Merge(result.(*kubeclaritysharedscanner.Results)) // nolint:forcetypeassert
+			mergedResults = mergedResults.Merge(result.(*scanner.Results)) // nolint:forcetypeassert
 		}
 		vulResults.Metadata.InputScans = append(vulResults.Metadata.InputScans, types.CreateInputScanMetadata(startTime, endTime, inputSize, input))
 

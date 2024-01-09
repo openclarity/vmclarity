@@ -1,4 +1,4 @@
-// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,16 +13,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package vulnerabilities
+package scanner
 
-import (
-	"github.com/openclarity/vmclarity/pkg/shared/families/types"
-	"github.com/openclarity/vmclarity/pkg/shared/scanner"
-)
-
-type Results struct {
-	Metadata      types.Metadata
-	MergedResults *scanner.MergedResults
+type Match struct {
+	Vulnerability Vulnerability `json:"vulnerability"`
 }
 
-func (*Results) IsResults() {}
+type Matches []Match
+
+type Results struct {
+	Matches     Matches `json:"matches"`
+	ScannerInfo Info    `json:"scanner"`
+	Source      Source  `json:"source"`
+	Error       error   `json:"-"`
+}
+
+func (r *Results) GetError() error {
+	return r.Error
+}

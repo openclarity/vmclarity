@@ -1,4 +1,4 @@
-// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,16 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package vulnerabilities
+package scanner
 
-import (
-	"github.com/openclarity/vmclarity/pkg/shared/families/types"
-	"github.com/openclarity/vmclarity/pkg/shared/scanner"
-)
-
-type Results struct {
-	Metadata      types.Metadata
-	MergedResults *scanner.MergedResults
+type Source struct {
+	Type string `json:"type"`
+	// Name is the path in the case of the input type is dir or file, and userInput in the case of input type is image
+	Name string `json:"name"`
+	Hash string `json:"hash"`
 }
-
-func (*Results) IsResults() {}

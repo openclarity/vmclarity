@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"strings"
 
-	kubeclaritysharedscanner "github.com/openclarity/kubeclarity/shared/pkg/scanner"
 	kubeclaritysharedutilscyclonedxhelper "github.com/openclarity/kubeclarity/shared/pkg/utils/cyclonedx_helper"
 	kubeclaritysharedutilsvulnerability "github.com/openclarity/kubeclarity/shared/pkg/utils/vulnerability"
 	log "github.com/sirupsen/logrus"
@@ -36,6 +35,7 @@ import (
 	"github.com/openclarity/vmclarity/pkg/shared/families/sbom"
 	"github.com/openclarity/vmclarity/pkg/shared/families/secrets"
 	"github.com/openclarity/vmclarity/pkg/shared/families/vulnerabilities"
+	"github.com/openclarity/vmclarity/pkg/shared/scanner"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
@@ -111,14 +111,14 @@ func ConvertVulnSeverityToAPIModel(severity string) *models.VulnerabilitySeverit
 	}
 }
 
-func ConvertVulnFixToAPIModel(fix kubeclaritysharedscanner.Fix) *models.VulnerabilityFix {
+func ConvertVulnFixToAPIModel(fix scanner.Fix) *models.VulnerabilityFix {
 	return &models.VulnerabilityFix{
 		State:    utils.PointerTo(fix.State),
 		Versions: utils.PointerTo(fix.Versions),
 	}
 }
 
-func ConvertVulnDistroToAPIModel(distro kubeclaritysharedscanner.Distro) *models.VulnerabilityDistro {
+func ConvertVulnDistroToAPIModel(distro scanner.Distro) *models.VulnerabilityDistro {
 	return &models.VulnerabilityDistro{
 		IDLike:  utils.PointerTo(distro.IDLike),
 		Name:    utils.PointerTo(distro.Name),
@@ -126,7 +126,7 @@ func ConvertVulnDistroToAPIModel(distro kubeclaritysharedscanner.Distro) *models
 	}
 }
 
-func ConvertVulnPackageToAPIModel(p kubeclaritysharedscanner.Package) *models.Package {
+func ConvertVulnPackageToAPIModel(p scanner.Package) *models.Package {
 	return &models.Package{
 		Cpes:     utils.PointerTo(p.CPEs),
 		Language: utils.PointerTo(p.Language),
@@ -138,7 +138,7 @@ func ConvertVulnPackageToAPIModel(p kubeclaritysharedscanner.Package) *models.Pa
 	}
 }
 
-func ConvertVulnCvssToAPIModel(cvss []kubeclaritysharedscanner.CVSS) *[]models.VulnerabilityCvss {
+func ConvertVulnCvssToAPIModel(cvss []scanner.CVSS) *[]models.VulnerabilityCvss {
 	if cvss == nil {
 		return nil
 	}

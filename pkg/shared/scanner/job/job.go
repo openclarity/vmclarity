@@ -1,4 +1,4 @@
-// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,16 +13,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package vulnerabilities
+package job
 
 import (
-	"github.com/openclarity/vmclarity/pkg/shared/families/types"
-	"github.com/openclarity/vmclarity/pkg/shared/scanner"
+	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
+	"github.com/openclarity/vmclarity/pkg/shared/scanner/dependency_track"
+	"github.com/openclarity/vmclarity/pkg/shared/scanner/grype"
+	"github.com/openclarity/vmclarity/pkg/shared/scanner/trivy"
 )
 
-type Results struct {
-	Metadata      types.Metadata
-	MergedResults *scanner.MergedResults
-}
+var Factory = job_manager.NewJobFactory()
 
-func (*Results) IsResults() {}
+func init() {
+	Factory.Register(grype.ScannerName, grype.New)
+	Factory.Register(dependency_track.ScannerName, dependency_track.New)
+	Factory.Register(trivy.ScannerName, trivy.New)
+}

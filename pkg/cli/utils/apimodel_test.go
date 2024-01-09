@@ -23,7 +23,6 @@ import (
 	cdx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	kubeclaritysharedscanner "github.com/openclarity/kubeclarity/shared/pkg/scanner"
 	kubeclaritysharedutilsvulnerability "github.com/openclarity/kubeclarity/shared/pkg/utils/vulnerability"
 
 	"github.com/openclarity/vmclarity/api/models"
@@ -40,6 +39,7 @@ import (
 	"github.com/openclarity/vmclarity/pkg/shared/families/secrets/common"
 	"github.com/openclarity/vmclarity/pkg/shared/families/types"
 	"github.com/openclarity/vmclarity/pkg/shared/families/vulnerabilities"
+	"github.com/openclarity/vmclarity/pkg/shared/scanner"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
@@ -169,25 +169,25 @@ func Test_ConvertVulnResultToVulnerabilities(t *testing.T) {
 			name: "Vuls",
 			args: args{
 				result: &vulnerabilities.Results{
-					MergedResults: &kubeclaritysharedscanner.MergedResults{
-						MergedVulnerabilitiesByKey: map[kubeclaritysharedscanner.VulnerabilityKey][]kubeclaritysharedscanner.MergedVulnerability{
+					MergedResults: &scanner.MergedResults{
+						MergedVulnerabilitiesByKey: map[scanner.VulnerabilityKey][]scanner.MergedVulnerability{
 							"vulkey1": {
 								{
 									ID: "id1",
-									Vulnerability: kubeclaritysharedscanner.Vulnerability{
+									Vulnerability: scanner.Vulnerability{
 										ID:          "CVE-test-test-foo",
 										Description: "testbleed",
 										Links:       []string{"link1", "link2"},
-										Distro: kubeclaritysharedscanner.Distro{
+										Distro: scanner.Distro{
 											Name:    "distro1",
 											Version: "distrov1",
 											IDLike:  []string{"IDLike1", "IDLike2"},
 										},
-										CVSS: []kubeclaritysharedscanner.CVSS{
+										CVSS: []scanner.CVSS{
 											{
 												Version: "v1",
 												Vector:  "vector1",
-												Metrics: kubeclaritysharedscanner.CvssMetrics{
+												Metrics: scanner.CvssMetrics{
 													BaseScore:           1,
 													ExploitabilityScore: nil,
 													ImpactScore:         nil,
@@ -196,19 +196,19 @@ func Test_ConvertVulnResultToVulnerabilities(t *testing.T) {
 											{
 												Version: "v2",
 												Vector:  "vector2",
-												Metrics: kubeclaritysharedscanner.CvssMetrics{
+												Metrics: scanner.CvssMetrics{
 													BaseScore:           2,
 													ExploitabilityScore: utils.PointerTo(2.1),
 													ImpactScore:         utils.PointerTo(2.2),
 												},
 											},
 										},
-										Fix: kubeclaritysharedscanner.Fix{
+										Fix: scanner.Fix{
 											Versions: []string{"fv1", "fv2"},
 											State:    "fixed",
 										},
 										Severity: string(models.CRITICAL),
-										Package: kubeclaritysharedscanner.Package{
+										Package: scanner.Package{
 											Name:     "package1",
 											Version:  "pv1",
 											Type:     "pt1",
@@ -225,20 +225,20 @@ func Test_ConvertVulnResultToVulnerabilities(t *testing.T) {
 							"vulkey2": {
 								{
 									ID: "id2",
-									Vulnerability: kubeclaritysharedscanner.Vulnerability{
+									Vulnerability: scanner.Vulnerability{
 										ID:          "CVE-test-test-bar",
 										Description: "solartest",
 										Links:       []string{"link3", "link4"},
-										Distro: kubeclaritysharedscanner.Distro{
+										Distro: scanner.Distro{
 											Name:    "distro2",
 											Version: "distrov2",
 											IDLike:  []string{"IDLike3", "IDLike4"},
 										},
-										CVSS: []kubeclaritysharedscanner.CVSS{
+										CVSS: []scanner.CVSS{
 											{
 												Version: "v3",
 												Vector:  "vector3",
-												Metrics: kubeclaritysharedscanner.CvssMetrics{
+												Metrics: scanner.CvssMetrics{
 													BaseScore:           3,
 													ExploitabilityScore: nil,
 													ImpactScore:         nil,
@@ -247,19 +247,19 @@ func Test_ConvertVulnResultToVulnerabilities(t *testing.T) {
 											{
 												Version: "v4",
 												Vector:  "vector4",
-												Metrics: kubeclaritysharedscanner.CvssMetrics{
+												Metrics: scanner.CvssMetrics{
 													BaseScore:           4,
 													ExploitabilityScore: utils.PointerTo(4.1),
 													ImpactScore:         utils.PointerTo(4.2),
 												},
 											},
 										},
-										Fix: kubeclaritysharedscanner.Fix{
+										Fix: scanner.Fix{
 											Versions: []string{"fv3", "fv4"},
 											State:    "not-fixed",
 										},
 										Severity: string(models.HIGH),
-										Package: kubeclaritysharedscanner.Package{
+										Package: scanner.Package{
 											Name:     "package2",
 											Version:  "pv2",
 											Type:     "pt2",
