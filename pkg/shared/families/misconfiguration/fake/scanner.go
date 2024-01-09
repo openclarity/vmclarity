@@ -16,10 +16,10 @@
 package fake
 
 import (
-	kubeclaritysharedjobmanager "github.com/openclarity/kubeclarity/shared/pkg/job_manager"
 	log "github.com/sirupsen/logrus"
 
 	misconfigurationTypes "github.com/openclarity/vmclarity/pkg/shared/families/misconfiguration/types"
+	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
@@ -28,10 +28,10 @@ const ScannerName = "fake"
 type Scanner struct {
 	name       string
 	logger     *log.Entry
-	resultChan chan kubeclaritysharedjobmanager.Result
+	resultChan chan job_manager.Result
 }
 
-func New(_ kubeclaritysharedjobmanager.IsConfig, logger *log.Entry, resultChan chan kubeclaritysharedjobmanager.Result) kubeclaritysharedjobmanager.Job {
+func New(_ job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.Result) job_manager.Job {
 	return &Scanner{
 		name:       ScannerName,
 		logger:     logger.Dup().WithField("scanner", ScannerName),

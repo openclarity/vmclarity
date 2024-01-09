@@ -20,14 +20,13 @@ import (
 	"fmt"
 	"time"
 
-	kubeclaritysharedjobmanager "github.com/openclarity/kubeclarity/shared/pkg/job_manager"
-
 	"github.com/openclarity/vmclarity/pkg/shared/families/interfaces"
 	"github.com/openclarity/vmclarity/pkg/shared/families/misconfiguration/job"
 	misconfigurationTypes "github.com/openclarity/vmclarity/pkg/shared/families/misconfiguration/types"
 	"github.com/openclarity/vmclarity/pkg/shared/families/results"
 	"github.com/openclarity/vmclarity/pkg/shared/families/types"
 	familiesutils "github.com/openclarity/vmclarity/pkg/shared/families/utils"
+	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
 	"github.com/openclarity/vmclarity/pkg/shared/log"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
@@ -42,7 +41,7 @@ func (m Misconfiguration) Run(ctx context.Context, _ *results.Results) (interfac
 
 	misConfigResults := NewResults()
 
-	manager := kubeclaritysharedjobmanager.New(m.conf.ScannersList, m.conf.ScannersConfig, logger, job.Factory)
+	manager := job_manager.New(m.conf.ScannersList, m.conf.ScannersConfig, logger, job.Factory)
 	for _, input := range m.conf.Inputs {
 		startTime := time.Now()
 		managerResults, err := manager.Run(utils.SourceType(input.InputType), input.Input)

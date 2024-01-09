@@ -20,13 +20,13 @@ import (
 	"fmt"
 	"os/exec"
 
-	kubeclaritysharedjobmanager "github.com/openclarity/kubeclarity/shared/pkg/job_manager"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/pkg/shared/families/rootkits/chkrootkit/config"
 	chkrootkitutils "github.com/openclarity/vmclarity/pkg/shared/families/rootkits/chkrootkit/utils"
 	"github.com/openclarity/vmclarity/pkg/shared/families/rootkits/common"
 	familiesutils "github.com/openclarity/vmclarity/pkg/shared/families/utils"
+	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
@@ -39,7 +39,7 @@ type Scanner struct {
 	name       string
 	logger     *log.Entry
 	config     config.Config
-	resultChan chan kubeclaritysharedjobmanager.Result
+	resultChan chan job_manager.Result
 }
 
 func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
@@ -136,7 +136,7 @@ func toResultsRootkits(rootkits []chkrootkitutils.Rootkit) []common.Rootkit {
 	return ret
 }
 
-func New(c kubeclaritysharedjobmanager.IsConfig, logger *log.Entry, resultChan chan kubeclaritysharedjobmanager.Result) kubeclaritysharedjobmanager.Job {
+func New(c job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.Result) job_manager.Job {
 	conf := c.(*common.ScannersConfig) // nolint:forcetypeassert
 	return &Scanner{
 		name:       ScannerName,

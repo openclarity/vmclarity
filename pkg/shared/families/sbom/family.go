@@ -24,12 +24,12 @@ import (
 	kubeclaritysharedanalyzer "github.com/openclarity/kubeclarity/shared/pkg/analyzer"
 	kubeclaritysharedanalyzerjob "github.com/openclarity/kubeclarity/shared/pkg/analyzer/job"
 	kubeclaritysharedconverter "github.com/openclarity/kubeclarity/shared/pkg/converter"
-	kubeclaritysharedjobmanager "github.com/openclarity/kubeclarity/shared/pkg/job_manager"
 
 	"github.com/openclarity/vmclarity/pkg/shared/families/interfaces"
 	familiesresults "github.com/openclarity/vmclarity/pkg/shared/families/results"
 	"github.com/openclarity/vmclarity/pkg/shared/families/types"
 	familiesutils "github.com/openclarity/vmclarity/pkg/shared/families/utils"
+	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
 	"github.com/openclarity/vmclarity/pkg/shared/log"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
@@ -55,7 +55,7 @@ func (s SBOM) Run(ctx context.Context, _ *familiesresults.Results) (interfaces.I
 		return nil, fmt.Errorf("failed to generate hash for source %s: %w", s.conf.Inputs[0].Input, err)
 	}
 
-	manager := kubeclaritysharedjobmanager.New(s.conf.AnalyzersList, s.conf.AnalyzersConfig, logger, kubeclaritysharedanalyzerjob.Factory)
+	manager := job_manager.New(s.conf.AnalyzersList, s.conf.AnalyzersConfig, logger, kubeclaritysharedanalyzerjob.Factory)
 	mergedResults := kubeclaritysharedanalyzer.NewMergedResults(utils.SourceType(s.conf.Inputs[0].InputType), hash)
 
 	var sbomResults Results

@@ -20,14 +20,13 @@ import (
 	"fmt"
 	"time"
 
-	kubeclaritysharedjobmanager "github.com/openclarity/kubeclarity/shared/pkg/job_manager"
-
 	"github.com/openclarity/vmclarity/pkg/shared/families/interfaces"
 	familiesresults "github.com/openclarity/vmclarity/pkg/shared/families/results"
 	"github.com/openclarity/vmclarity/pkg/shared/families/secrets/common"
 	"github.com/openclarity/vmclarity/pkg/shared/families/secrets/job"
 	"github.com/openclarity/vmclarity/pkg/shared/families/types"
 	familiesutils "github.com/openclarity/vmclarity/pkg/shared/families/utils"
+	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
 	"github.com/openclarity/vmclarity/pkg/shared/log"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
@@ -40,7 +39,7 @@ func (s Secrets) Run(ctx context.Context, _ *familiesresults.Results) (interface
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "secrets")
 	logger.Info("Secrets Run...")
 
-	manager := kubeclaritysharedjobmanager.New(s.conf.ScannersList, s.conf.ScannersConfig, logger, job.Factory)
+	manager := job_manager.New(s.conf.ScannersList, s.conf.ScannersConfig, logger, job.Factory)
 	mergedResults := NewMergedResults()
 
 	var secretsResults Results

@@ -16,13 +16,12 @@
 package job
 
 import (
-	kubeclaritysharedjobmanager "github.com/openclarity/kubeclarity/shared/pkg/job_manager"
-
 	"github.com/openclarity/vmclarity/pkg/shared/families/misconfiguration/fake"
 	"github.com/openclarity/vmclarity/pkg/shared/families/misconfiguration/lynis"
+	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
 )
 
-var Factory = kubeclaritysharedjobmanager.NewJobFactory()
+var Factory = job_manager.NewJobFactory()
 
 func init() {
 	Factory.Register(fake.ScannerName, fake.New)

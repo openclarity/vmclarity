@@ -20,14 +20,13 @@ import (
 	"fmt"
 	"time"
 
-	kubeclaritysharedjobmanager "github.com/openclarity/kubeclarity/shared/pkg/job_manager"
-
 	familiesinterface "github.com/openclarity/vmclarity/pkg/shared/families/interfaces"
 	familiesresults "github.com/openclarity/vmclarity/pkg/shared/families/results"
 	"github.com/openclarity/vmclarity/pkg/shared/families/rootkits/common"
 	"github.com/openclarity/vmclarity/pkg/shared/families/rootkits/job"
 	"github.com/openclarity/vmclarity/pkg/shared/families/types"
 	familiesutils "github.com/openclarity/vmclarity/pkg/shared/families/utils"
+	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
 	"github.com/openclarity/vmclarity/pkg/shared/log"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
@@ -40,7 +39,7 @@ func (r Rootkits) Run(ctx context.Context, _ *familiesresults.Results) (families
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "rootkits")
 	logger.Info("Rootkits Run...")
 
-	manager := kubeclaritysharedjobmanager.New(r.conf.ScannersList, r.conf.ScannersConfig, logger, job.Factory)
+	manager := job_manager.New(r.conf.ScannersList, r.conf.ScannersConfig, logger, job.Factory)
 	mergedResults := NewMergedResults()
 
 	var rootkitsResults Results

@@ -1,4 +1,4 @@
-// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,15 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package job
+package job_manager // nolint:revive,stylecheck
 
-import (
-	"github.com/openclarity/vmclarity/pkg/shared/families/secrets/gitleaks"
-	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
-)
-
-var Factory = job_manager.NewJobFactory()
-
-func init() {
-	Factory.Register(gitleaks.ScannerName, gitleaks.New)
+type IsConfig interface {
+	IsConfig()
 }

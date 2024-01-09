@@ -22,7 +22,6 @@ import (
 	"time"
 
 	kubeclaritysharedconfig "github.com/openclarity/kubeclarity/shared/pkg/config"
-	kubeclaritysharedjobmanager "github.com/openclarity/kubeclarity/shared/pkg/job_manager"
 	kubeclaritysharedscanner "github.com/openclarity/kubeclarity/shared/pkg/scanner"
 	kubeclaritysharedscannerjob "github.com/openclarity/kubeclarity/shared/pkg/scanner/job"
 
@@ -31,6 +30,7 @@ import (
 	"github.com/openclarity/vmclarity/pkg/shared/families/sbom"
 	"github.com/openclarity/vmclarity/pkg/shared/families/types"
 	familiesutils "github.com/openclarity/vmclarity/pkg/shared/families/utils"
+	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
@@ -47,7 +47,7 @@ func (v Vulnerabilities) Run(ctx context.Context, res *results.Results) (interfa
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "vulnerabilities")
 	logger.Info("Vulnerabilities Run...")
 
-	manager := kubeclaritysharedjobmanager.New(v.conf.ScannersList, v.conf.ScannersConfig, logger, kubeclaritysharedscannerjob.Factory)
+	manager := job_manager.New(v.conf.ScannersList, v.conf.ScannersConfig, logger, kubeclaritysharedscannerjob.Factory)
 	mergedResults := kubeclaritysharedscanner.NewMergedResults()
 
 	if v.conf.InputFromSbom {

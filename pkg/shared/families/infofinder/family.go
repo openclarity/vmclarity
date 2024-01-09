@@ -20,14 +20,13 @@ import (
 	"fmt"
 	"time"
 
-	kubeclaritysharedjobmanager "github.com/openclarity/kubeclarity/shared/pkg/job_manager"
-
 	"github.com/openclarity/vmclarity/pkg/shared/families/infofinder/job"
 	infofinderTypes "github.com/openclarity/vmclarity/pkg/shared/families/infofinder/types"
 	"github.com/openclarity/vmclarity/pkg/shared/families/interfaces"
 	"github.com/openclarity/vmclarity/pkg/shared/families/results"
 	"github.com/openclarity/vmclarity/pkg/shared/families/types"
 	familiesutils "github.com/openclarity/vmclarity/pkg/shared/families/utils"
+	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
 	"github.com/openclarity/vmclarity/pkg/shared/log"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
@@ -42,7 +41,7 @@ func (i InfoFinder) Run(ctx context.Context, _ *results.Results) (interfaces.IsR
 
 	infoFinderResults := NewResults()
 
-	manager := kubeclaritysharedjobmanager.New(i.conf.ScannersList, i.conf.ScannersConfig, logger, job.Factory)
+	manager := job_manager.New(i.conf.ScannersList, i.conf.ScannersConfig, logger, job.Factory)
 	for _, input := range i.conf.Inputs {
 		startTime := time.Now()
 		managerResults, err := manager.Run(utils.SourceType(input.InputType), input.Input)
