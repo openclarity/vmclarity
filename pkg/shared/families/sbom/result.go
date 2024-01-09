@@ -19,8 +19,8 @@ import (
 	"fmt"
 
 	cdx "github.com/CycloneDX/cyclonedx-go"
-	kubeclaritysharedconverter "github.com/openclarity/kubeclarity/shared/pkg/converter"
 
+	"github.com/openclarity/vmclarity/pkg/shared/converter"
 	"github.com/openclarity/vmclarity/pkg/shared/families/types"
 )
 
@@ -32,12 +32,12 @@ type Results struct {
 func (*Results) IsResults() {}
 
 func (r *Results) EncodeToBytes(outputFormat string) ([]byte, error) {
-	f, err := kubeclaritysharedconverter.StringToSbomFormat(outputFormat)
+	f, err := converter.StringToSbomFormat(outputFormat)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse output format: %w", err)
 	}
 
-	bomBytes, err := kubeclaritysharedconverter.CycloneDxToBytes(r.SBOM, f)
+	bomBytes, err := converter.CycloneDxToBytes(r.SBOM, f)
 	if err != nil {
 		return nil, fmt.Errorf("unable to encode results to bytes: %w", err)
 	}

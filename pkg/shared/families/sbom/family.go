@@ -23,7 +23,7 @@ import (
 	kubeclaritycli "github.com/openclarity/kubeclarity/cli/pkg"
 	kubeclaritysharedanalyzer "github.com/openclarity/kubeclarity/shared/pkg/analyzer"
 	kubeclaritysharedanalyzerjob "github.com/openclarity/kubeclarity/shared/pkg/analyzer/job"
-	kubeclaritysharedconverter "github.com/openclarity/kubeclarity/shared/pkg/converter"
+	"github.com/openclarity/vmclarity/pkg/shared/converter"
 
 	"github.com/openclarity/vmclarity/pkg/shared/families/interfaces"
 	familiesresults "github.com/openclarity/vmclarity/pkg/shared/families/results"
@@ -81,7 +81,7 @@ func (s SBOM) Run(ctx context.Context, _ *familiesresults.Results) (interfaces.I
 
 	for i, with := range s.conf.MergeWith {
 		name := fmt.Sprintf("merge_with_%d", i)
-		cdxBOMBytes, err := kubeclaritysharedconverter.GetCycloneDXSBOMFromFile(with.SbomPath)
+		cdxBOMBytes, err := converter.GetCycloneDXSBOMFromFile(with.SbomPath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get CDX SBOM from path=%s: %w", with.SbomPath, err)
 		}
@@ -97,7 +97,7 @@ func (s SBOM) Run(ctx context.Context, _ *familiesresults.Results) (interfaces.I
 		return nil, fmt.Errorf("failed to create merged output: %w", err)
 	}
 
-	cdxBom, err := kubeclaritysharedconverter.GetCycloneDXSBOMFromBytes(mergedSBOMBytes)
+	cdxBom, err := converter.GetCycloneDXSBOMFromBytes(mergedSBOMBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load merged output to CDX bom: %w", err)
 	}

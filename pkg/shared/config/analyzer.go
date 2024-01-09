@@ -18,7 +18,7 @@ package config
 import (
 	"github.com/spf13/viper"
 
-	"github.com/openclarity/kubeclarity/shared/pkg/converter"
+	"github.com/openclarity/vmclarity/pkg/shared/converter"
 )
 
 // TODO: maybe we need to extend the unified config.
