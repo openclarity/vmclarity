@@ -45,7 +45,7 @@ func (s *ServerImpl) PostAssetScanEstimations(ctx echo.Context) error {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
 
-  status, ok := assetScanEstimation.GetStatus()
+	status, ok := assetScanEstimation.GetStatus()
 	switch {
 	case !ok:
 		return sendError(ctx, http.StatusBadRequest, "invalid request: status is missing")
@@ -53,8 +53,8 @@ func (s *ServerImpl) PostAssetScanEstimations(ctx echo.Context) error {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("invalid request: initial state for asset scan estimation is invalid: %s", status.State))
 	default:
 	}
-	
-  createdAssetScanEstimation, err := s.dbHandler.AssetScanEstimationsTable().CreateAssetScanEstimation(assetScanEstimation)
+
+	createdAssetScanEstimation, err := s.dbHandler.AssetScanEstimationsTable().CreateAssetScanEstimation(assetScanEstimation)
 	if err != nil {
 		var conflictErr *common.ConflictError
 		if errors.As(err, &conflictErr) {
@@ -98,7 +98,7 @@ func (s *ServerImpl) PatchAssetScanEstimationsAssetScanEstimationID(ctx echo.Con
 	assetScanEstimation.Id = &assetScanEstimationID
 
 	// check that an asset scan estimation with that id exists.
-  existingAssetScanEstimation, err := s.dbHandler.AssetScanEstimationsTable().GetAssetScanEstimation(assetScanEstimationID, models.GetAssetScanEstimationsAssetScanEstimationIDParams{})
+	existingAssetScanEstimation, err := s.dbHandler.AssetScanEstimationsTable().GetAssetScanEstimation(assetScanEstimationID, models.GetAssetScanEstimationsAssetScanEstimationIDParams{})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("asset scan estimation was not found. assetScanEstimationID=%v: %v", assetScanEstimationID, err))
@@ -150,7 +150,7 @@ func (s *ServerImpl) PutAssetScanEstimationsAssetScanEstimationID(ctx echo.Conte
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
 
-  // PUT request might not contain the ID in the body, so set it from
+	// PUT request might not contain the ID in the body, so set it from
 	// the URL field so that the DB layer knows which object is being updated.
 	if assetScanEstimation.Id != nil && *assetScanEstimation.Id != assetScanEstimationID {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("id in body %s does not match object %s to be updated", *assetScanEstimation.Id, assetScanEstimationID))
@@ -158,7 +158,7 @@ func (s *ServerImpl) PutAssetScanEstimationsAssetScanEstimationID(ctx echo.Conte
 	assetScanEstimation.Id = &assetScanEstimationID
 
 	// check that an asset scan estimation with that id exists.
-  existingAssetScanEstimation, err := s.dbHandler.AssetScanEstimationsTable().GetAssetScanEstimation(assetScanEstimationID, models.GetAssetScanEstimationsAssetScanEstimationIDParams{})
+	existingAssetScanEstimation, err := s.dbHandler.AssetScanEstimationsTable().GetAssetScanEstimation(assetScanEstimationID, models.GetAssetScanEstimationsAssetScanEstimationIDParams{})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("asset scan estimation was not found. assetScanEstimationID=%v: %v", assetScanEstimationID, err))
