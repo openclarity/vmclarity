@@ -417,10 +417,11 @@ func (w *Watcher) newAssetScanEstimationFromScanEstimation(scanEstimation *model
 		ScanEstimation: &models.ScanEstimationRelationship{
 			Id: scanEstimation.Id,
 		},
-		State: &models.AssetScanEstimationState{
-			LastTransitionTime: utils.PointerTo(time.Now()),
-			State:              utils.PointerTo(models.AssetScanEstimationStateStatePending),
-		},
+		Status: models.NewAssetScanEstimationStatus(
+			models.AssetScanEstimationStatusStatePending,
+			models.AssetScanEstimationStatusReasonCreated,
+			nil,
+		),
 	}, nil
 }
 
@@ -460,9 +461,9 @@ func updateScanEstimationSummaryFromAssetScanEstimation(scanEstimation *models.S
 	s := scanEstimation.Summary
 
 	switch state {
-	case models.AssetScanEstimationStateStatePending:
+	case models.AssetScanEstimationStatusStatePending:
 		s.JobsLeftToRun = utils.PointerTo(*s.JobsLeftToRun + 1)
-	case models.AssetScanEstimationStateStateDone:
+	case models.AssetScanEstimationStatusStateDone:
 		if s.TotalScanTime == nil {
 			s.TotalScanTime = utils.PointerTo(0)
 		}
@@ -476,7 +477,7 @@ func updateScanEstimationSummaryFromAssetScanEstimation(scanEstimation *models.S
 		*(s.TotalScanSize) += utils.ValueOrZero(assetScanEstimation.Estimation.Size)
 		*(s.TotalScanCost) += utils.ValueOrZero(assetScanEstimation.Estimation.Cost)
 		fallthrough
-	case models.AssetScanEstimationStateStateAborted, models.AssetScanEstimationStateStateFailed:
+	case models.AssetScanEstimationStatusStateAborted, models.AssetScanEstimationStatusStateFailed:
 		s.JobsCompleted = utils.PointerTo(*s.JobsCompleted + 1)
 	}
 
@@ -532,7 +533,7 @@ func (w *Watcher) reconcileInProgress(ctx context.Context, scanEstimation *model
 		state, ok := assetScanEstimation.GetState()
 		if !ok {
 			logger.Warnf("Failed to get assetScanEstimation %v state", assetScanEstimationID)
-		} else if state == models.AssetScanEstimationStateStateFailed {
+		} else if state == models.AssetScanEstimationStatusStateFailed {
 			failedAssetScanEstimations++
 		}
 	}
@@ -621,8 +622,8 @@ func (w *Watcher) reconcileAborted(ctx context.Context, scanEstimation *models.S
 		return errors.New("invalid ScanEstimation: ID is nil")
 	}
 
-	filter := fmt.Sprintf("scanEstimation/id eq '%s' and state/state ne '%s' and state/state ne '%s'",
-		scanEstimationID, models.AssetScanEstimationStateStateAborted, models.AssetScanEstimationStateStateDone)
+	filter := fmt.Sprintf("scanEstimation/id eq '%s' and status/state ne '%s' and status/state ne '%s'",
+		scanEstimationID, models.AssetScanEstimationStatusStateAborted, models.AssetScanEstimationStatusStateDone)
 	selector := "id,state"
 	params := models.GetAssetScanEstimationsParams{
 		Filter: &filter,
@@ -648,9 +649,11 @@ func (w *Watcher) reconcileAborted(ctx context.Context, scanEstimation *models.S
 			go func() {
 				defer wg.Done()
 				ase := models.AssetScanEstimation{
-					State: &models.AssetScanEstimationState{
-						State: utils.PointerTo(models.AssetScanEstimationStateStateAborted),
-					},
+					Status: models.NewAssetScanEstimationStatus(
+						models.AssetScanEstimationStatusStateAborted,
+						models.AssetScanEstimationStatusReasonCancellation,
+						nil,
+					),
 				}
 
 				err = w.backend.PatchAssetScanEstimation(ctx, ase, assetScanEstimationID)

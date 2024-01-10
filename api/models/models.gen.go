@@ -11,20 +11,21 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
-// Defines values for AssetScanEstimationStateState.
+// Defines values for AssetScanEstimationStatusReason.
 const (
-	AssetScanEstimationStateStateAborted AssetScanEstimationStateState = "Aborted"
-	AssetScanEstimationStateStateDone    AssetScanEstimationStateState = "Done"
-	AssetScanEstimationStateStateFailed  AssetScanEstimationStateState = "Failed"
-	AssetScanEstimationStateStatePending AssetScanEstimationStateState = "Pending"
+	AssetScanEstimationStatusReasonAborted      AssetScanEstimationStatusReason = "Aborted"
+	AssetScanEstimationStatusReasonCancellation AssetScanEstimationStatusReason = "Cancellation"
+	AssetScanEstimationStatusReasonCreated      AssetScanEstimationStatusReason = "Created"
+	AssetScanEstimationStatusReasonError        AssetScanEstimationStatusReason = "Error"
+	AssetScanEstimationStatusReasonSuccess      AssetScanEstimationStatusReason = "Success"
 )
 
-// Defines values for AssetScanEstimationStateStateReason.
+// Defines values for AssetScanEstimationStatusState.
 const (
-	AssetScanEstimationStateStateReasonAborted    AssetScanEstimationStateStateReason = "Aborted"
-	AssetScanEstimationStateStateReasonSuccess    AssetScanEstimationStateStateReason = "Success"
-	AssetScanEstimationStateStateReasonTimedOut   AssetScanEstimationStateStateReason = "TimedOut"
-	AssetScanEstimationStateStateReasonUnexpected AssetScanEstimationStateStateReason = "Unexpected"
+	AssetScanEstimationStatusStateAborted AssetScanEstimationStatusState = "Aborted"
+	AssetScanEstimationStatusStateDone    AssetScanEstimationStatusState = "Done"
+	AssetScanEstimationStatusStateFailed  AssetScanEstimationStatusState = "Failed"
+	AssetScanEstimationStatusStatePending AssetScanEstimationStatusState = "Pending"
 )
 
 // Defines values for AssetScanStatusReason.
@@ -160,12 +161,12 @@ const (
 
 // Defines values for ScanStatusState.
 const (
-	ScanStatusStateAborted    ScanStatusState = "Aborted"
-	ScanStatusStateDiscovered ScanStatusState = "Discovered"
-	ScanStatusStateDone       ScanStatusState = "Done"
-	ScanStatusStateFailed     ScanStatusState = "Failed"
-	ScanStatusStateInProgress ScanStatusState = "InProgress"
-	ScanStatusStatePending    ScanStatusState = "Pending"
+	Aborted    ScanStatusState = "Aborted"
+	Discovered ScanStatusState = "Discovered"
+	Done       ScanStatusState = "Done"
+	Failed     ScanStatusState = "Failed"
+	InProgress ScanStatusState = "InProgress"
+	Pending    ScanStatusState = "Pending"
 )
 
 // Defines values for ScanType.
@@ -327,7 +328,7 @@ type AssetScanEstimation struct {
 	Revision       *int                        `json:"revision,omitempty"`
 	ScanEstimation *ScanEstimationRelationship `json:"scanEstimation,omitempty"`
 	StartTime      *time.Time                  `json:"startTime,omitempty"`
-	State          *AssetScanEstimationState   `json:"state,omitempty"`
+	Status         *AssetScanEstimationStatus  `json:"status,omitempty"`
 
 	// TtlSecondsAfterFinished The duration in seconds this resource should last until it is deleted.
 	TTLSecondsAfterFinished *int `json:"ttlSecondsAfterFinished,omitempty"`
@@ -346,23 +347,56 @@ type AssetScanEstimationRelationship struct {
 	Id *string `json:"id,omitempty"`
 }
 
-// AssetScanEstimationState defines model for AssetScanEstimationState.
-type AssetScanEstimationState struct {
-	LastTransitionTime *time.Time                     `json:"lastTransitionTime,omitempty"`
-	State              *AssetScanEstimationStateState `json:"state,omitempty"`
+// AssetScanEstimationStatus defines model for AssetScanEstimationStatus.
+type AssetScanEstimationStatus struct {
+	// LastTransitionTime Last date time when the status has changed.
+	LastTransitionTime time.Time `json:"lastTransitionTime"`
 
-	// StateMessage Human-readable message indicating details about the last state transition.
-	StateMessage *string `json:"stateMessage,omitempty"`
+	// Message Human readable message.
+	Message *string `json:"message,omitempty"`
 
-	// StateReason Machine-readable, UpperCamelCase text indicating the reason for the condition's last transition.
-	StateReason *AssetScanEstimationStateStateReason `json:"stateReason,omitempty"`
+	// Reason Machine readable reason for state transition.
+	//
+	// | State   | Reason       | Description                                                      |
+	// | ------- | ------------ | ---------------------------------------------------------------- |
+	// | Pending | Created      | AssetScanEstimation is pending as it has been newly created      |
+	// | Aborted | Cancellation | AssetScanEstimation has been aborted due to cancellation request |
+	// | Failed  | Aborted      | AssetScanEstimation has failed due to abort                      |
+	// | Failed  | Error        | AssetScanEstimation has failed due to an error                   |
+	// | Done    | Success      | AssetScanEstimation has finished successfully                    |
+	Reason AssetScanEstimationStatusReason `json:"reason"`
+
+	// State Describes the state of asset scan estimation.
+	//
+	// | State   | Description                                   |
+	// | ------- | --------------------------------------------- |
+	// | Pending | Initial state for AssetScanEstimation         |
+	// | Aborted | AssetScanEstimation has been aborted          |
+	// | Failed  | AssetScanEstimation has been failed           |
+	// | Done    | AssetScanEstimation has finished successfully |
+	State AssetScanEstimationStatusState `json:"state"`
 }
 
-// AssetScanEstimationStateState defines model for AssetScanEstimationState.State.
-type AssetScanEstimationStateState string
+// AssetScanEstimationStatusReason Machine readable reason for state transition.
+//
+// | State   | Reason       | Description                                                      |
+// | ------- | ------------ | ---------------------------------------------------------------- |
+// | Pending | Created      | AssetScanEstimation is pending as it has been newly created      |
+// | Aborted | Cancellation | AssetScanEstimation has been aborted due to cancellation request |
+// | Failed  | Aborted      | AssetScanEstimation has failed due to abort                      |
+// | Failed  | Error        | AssetScanEstimation has failed due to an error                   |
+// | Done    | Success      | AssetScanEstimation has finished successfully                    |
+type AssetScanEstimationStatusReason string
 
-// AssetScanEstimationStateStateReason Machine-readable, UpperCamelCase text indicating the reason for the condition's last transition.
-type AssetScanEstimationStateStateReason string
+// AssetScanEstimationStatusState Describes the state of asset scan estimation.
+//
+// | State   | Description                                   |
+// | ------- | --------------------------------------------- |
+// | Pending | Initial state for AssetScanEstimation         |
+// | Aborted | AssetScanEstimation has been aborted          |
+// | Failed  | AssetScanEstimation has been failed           |
+// | Done    | AssetScanEstimation has finished successfully |
+type AssetScanEstimationStatusState string
 
 // AssetScanEstimations defines model for AssetScanEstimations.
 type AssetScanEstimations struct {
