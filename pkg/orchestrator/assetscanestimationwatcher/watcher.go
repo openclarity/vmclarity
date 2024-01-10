@@ -140,7 +140,7 @@ func (w *Watcher) Reconcile(ctx context.Context, event AssetScanEstimationReconc
 		return fmt.Errorf("failed to get AssetScanEstimation with %s id: %w", event.AssetScanEstimationID, err)
 	}
 
-	state, ok := assetScanEstimation.GetState()
+	status, ok := assetScanEstimation.GetStatus()
 	if !ok {
 		if err = w.reconcileNoState(ctx, &assetScanEstimation); err != nil {
 			return err
@@ -148,9 +148,9 @@ func (w *Watcher) Reconcile(ctx context.Context, event AssetScanEstimationReconc
 		return nil
 	}
 
-	logger.Tracef("Reconciling AssetScanEstimation state: %s", state)
+	logger.Tracef("Reconciling AssetScanEstimation state: %s", status.State)
 
-	switch state {
+	switch status.State {
 	case models.AssetScanEstimationStatusStatePending:
 		if err = w.reconcilePending(ctx, &assetScanEstimation); err != nil {
 			return err

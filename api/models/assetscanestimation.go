@@ -15,7 +15,7 @@
 
 package models
 
-func (r *AssetScanEstimation) GetState() (*AssetScanEstimationStatus, bool) {
+func (r *AssetScanEstimation) GetStatus() (*AssetScanEstimationStatus, bool) {
   if r.Status == nil {
     return nil, false
   }
@@ -56,13 +56,3 @@ func (r *AssetScanEstimation) GetAssetID() (string, bool) {
 	return assetID, ok
 }
 
-func (s *AssetScanEstimationState) GetState() (AssetScanEstimationStateState, bool) {
-	var state AssetScanEstimationStateState
-	var ok bool
-
-	if s.State != nil {
-		state, ok = *s.State, true
-	}
-
-	return state, ok
-}

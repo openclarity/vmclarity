@@ -1694,6 +1694,13 @@ components:
             - Aborted
             - Failed
             - Done
+          x-enum-varnames:
+            - ScanStatusStatePending
+            - ScanStatusStateDiscovered
+            - ScanStatusStateInProgress
+            - ScanStatusStateAborted
+            - ScanStatusStateFailed
+            - ScanStatusStateDone
         reason:
           description: |
             Machine readable reason for state transition.

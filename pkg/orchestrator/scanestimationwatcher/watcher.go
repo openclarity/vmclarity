@@ -453,14 +453,14 @@ func (w *Watcher) createAssetScanEstimationForAsset(ctx context.Context, scanEst
 }
 
 func updateScanEstimationSummaryFromAssetScanEstimation(scanEstimation *models.ScanEstimation, assetScanEstimation models.AssetScanEstimation) error {
-	state, ok := assetScanEstimation.GetState()
+	status, ok := assetScanEstimation.GetStatus()
 	if !ok {
 		return fmt.Errorf("state must not be nil for AssetScan. AssetScanID=%s", *assetScanEstimation.Id)
 	}
 
 	s := scanEstimation.Summary
 
-	switch state {
+	switch status.State {
 	case models.AssetScanEstimationStatusStatePending:
 		s.JobsLeftToRun = utils.PointerTo(*s.JobsLeftToRun + 1)
 	case models.AssetScanEstimationStatusStateDone:
@@ -530,10 +530,10 @@ func (w *Watcher) reconcileInProgress(ctx context.Context, scanEstimation *model
 				scanEstimationID, assetScanEstimationID, err)
 		}
 
-		state, ok := assetScanEstimation.GetState()
+		status, ok := assetScanEstimation.GetStatus()
 		if !ok {
 			logger.Warnf("Failed to get assetScanEstimation %v state", assetScanEstimationID)
-		} else if state == models.AssetScanEstimationStatusStateFailed {
+		} else if status.State == models.AssetScanEstimationStatusStateFailed {
 			failedAssetScanEstimations++
 		}
 	}

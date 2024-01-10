@@ -161,12 +161,12 @@ const (
 
 // Defines values for ScanStatusState.
 const (
-	Aborted    ScanStatusState = "Aborted"
-	Discovered ScanStatusState = "Discovered"
-	Done       ScanStatusState = "Done"
-	Failed     ScanStatusState = "Failed"
-	InProgress ScanStatusState = "InProgress"
-	Pending    ScanStatusState = "Pending"
+	ScanStatusStateAborted    ScanStatusState = "Aborted"
+	ScanStatusStateDiscovered ScanStatusState = "Discovered"
+	ScanStatusStateDone       ScanStatusState = "Done"
+	ScanStatusStateFailed     ScanStatusState = "Failed"
+	ScanStatusStateInProgress ScanStatusState = "InProgress"
+	ScanStatusStatePending    ScanStatusState = "Pending"
 )
 
 // Defines values for ScanType.
