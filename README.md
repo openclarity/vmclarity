@@ -124,7 +124,6 @@ These tools include:
 - Vulnerability detection
   - [Grype](https://github.com/anchore/grype)
   - [Trivy](https://github.com/aquasecurity/trivy)
-  - [Dependency-Track](https://github.com/DependencyTrack/dependency-track)
 - Exploits
   - [Go exploit db](https://github.com/vulsio/go-exploitdb)
 - Secrets

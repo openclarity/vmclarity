@@ -20,10 +20,9 @@ import (
 )
 
 type Scanner struct {
-	ScannersList          []string              `yaml:"scanners_list" mapstructure:"scanners_list"`
-	GrypeConfig           GrypeConfig           `yaml:"grype_config" mapstructure:"grype_config"`
-	DependencyTrackConfig DependencyTrackConfig `yaml:"dependency_track_config" mapstructure:"dependency_track_config"`
-	TrivyConfig           ScannerTrivyConfig    `yaml:"trivy_config" mapstructure:"trivy_config"`
+	ScannersList []string           `yaml:"scanners_list" mapstructure:"scanners_list"`
+	GrypeConfig  GrypeConfig        `yaml:"grype_config" mapstructure:"grype_config"`
+	TrivyConfig  ScannerTrivyConfig `yaml:"trivy_config" mapstructure:"trivy_config"`
 }
 
 const (
@@ -31,15 +30,14 @@ const (
 )
 
 func setScannerConfigDefaults() {
-	viper.SetDefault(ScannersList, []string{"grype", "dependency-track"})
+	viper.SetDefault(ScannersList, []string{"grype"})
 }
 
 func LoadScannerConfig() *Scanner {
 	setScannerConfigDefaults()
 	return &Scanner{
-		ScannersList:          viper.GetStringSlice(ScannersList),
-		GrypeConfig:           LoadGrypeConfig(),
-		DependencyTrackConfig: LoadDependencyTrackConfig(),
-		TrivyConfig:           LoadScannerTrivyConfig(),
+		ScannersList: viper.GetStringSlice(ScannersList),
+		GrypeConfig:  LoadGrypeConfig(),
+		TrivyConfig:  LoadScannerTrivyConfig(),
 	}
 }

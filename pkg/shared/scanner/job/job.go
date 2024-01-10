@@ -17,7 +17,6 @@ package job
 
 import (
 	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
-	"github.com/openclarity/vmclarity/pkg/shared/scanner/dependency_track"
 	"github.com/openclarity/vmclarity/pkg/shared/scanner/grype"
 	"github.com/openclarity/vmclarity/pkg/shared/scanner/trivy"
 )
@@ -26,6 +25,5 @@ var Factory = job_manager.NewJobFactory()
 
 func init() {
 	Factory.Register(grype.ScannerName, grype.New)
-	Factory.Register(dependency_track.ScannerName, dependency_track.New)
 	Factory.Register(trivy.ScannerName, trivy.New)
 }
