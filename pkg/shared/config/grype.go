@@ -15,17 +15,6 @@
 
 package config
 
-import (
-	"strings"
-
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
-)
-
-const (
-	ScannerGrypeMode = "SCANNER_GRYPE_MODE"
-)
-
 type Mode string
 
 const (
@@ -37,30 +26,4 @@ type GrypeConfig struct {
 	LocalGrypeConfig  `yaml:"local_grype_config" mapstructure:"local_grype_config"`
 	RemoteGrypeConfig `yaml:"remote_grype_config" mapstructure:"remote_grype_config"`
 	Mode              Mode `yaml:"mode" mapstructure:"mode"`
-}
-
-func LoadGrypeConfig() GrypeConfig {
-	setGrypeScannerConfigDefaults()
-	return GrypeConfig{
-		LocalGrypeConfig:  loadLocalGrypeConfig(),
-		RemoteGrypeConfig: loadRemoteGrypeConfig(),
-		Mode:              getGrypeMode(viper.GetString(ScannerGrypeMode)),
-	}
-}
-
-func getGrypeMode(mode string) Mode {
-	switch Mode(strings.ToUpper(mode)) {
-	case ModeLocal:
-		return ModeLocal
-	case ModeRemote:
-		return ModeRemote
-	default:
-		log.Fatalf("Unsupported grype mode %q. Supported values (%s, %s)", mode, ModeLocal, ModeRemote)
-	}
-
-	return ""
-}
-
-func setGrypeScannerConfigDefaults() {
-	viper.SetDefault(ScannerGrypeMode, string(ModeLocal))
 }

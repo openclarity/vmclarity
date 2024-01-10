@@ -254,29 +254,3 @@ func newMergedVulnerability(vulnerability Vulnerability, scannerInfo Info) *Merg
 		ScannersInfo:  []Info{scannerInfo},
 	}
 }
-
-func PrintIgnoredVulnerabilities(vulnerabilities []MergedVulnerability) {
-	if len(vulnerabilities) > 1 {
-		for i := 1; i < len(vulnerabilities); i++ {
-			vulnerability := vulnerabilities[i]
-			log.Warnf("Ignoring vulnerabilities results. vulnerability=%+v, scanners=%+v. diff=%+v",
-				vulnerability.Vulnerability, vulnerability.ScannersInfo, getDiffString(vulnerability, vulnerabilities[0]))
-		}
-	}
-}
-
-func getDiffString(vulnerability, vulnerability2 MergedVulnerability) string {
-	diffFormat := "Vulnerability result from %s (+) compared to %s (-):\n%v"
-	for _, diff := range vulnerability.Diffs {
-		if diff.CompareToID == vulnerability2.ID {
-			return fmt.Sprintf(diffFormat, vulnerability.ScannersInfo, vulnerability2.ScannersInfo, diff.ASCIIDiff)
-		}
-	}
-	for _, diff := range vulnerability2.Diffs {
-		if diff.CompareToID == vulnerability.ID {
-			return fmt.Sprintf(diffFormat, vulnerability2.ScannersInfo, vulnerability.ScannersInfo, diff.ASCIIDiff)
-		}
-	}
-
-	return ""
-}

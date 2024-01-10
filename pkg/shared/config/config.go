@@ -23,5 +23,3 @@ type Config struct {
 }
 
 func (Config) IsConfig() {}
-
-const LocalImageScan = "LOCAL_IMAGE_SCAN"

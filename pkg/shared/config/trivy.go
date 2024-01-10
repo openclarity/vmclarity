@@ -17,37 +17,12 @@ package config
 
 import (
 	"time"
-
-	"github.com/spf13/viper"
-)
-
-const AnalyzerTrivyTimeoutSecondsDefault = 300
-
-const (
-	AnalyzerTrivyTimeoutSeconds = "ANALYZER_TRIVY_TIMEOUT_SECONDS"
-	AnalyzerTrivyCacheDir       = "ANALYZER_TRIVY_CACHE_DIRECTORY"
-	AnalyzerTrivyTempDir        = "ANALYZER_TRIVY_TEMP_DIRECTORY"
 )
 
 type AnalyzerTrivyConfig struct {
 	Timeout  int    `yaml:"timeout" mapstructure:"timeout"`
 	CacheDir string `yaml:"cache_dir" mapstructure:"cache_dir"`
 	TempDir  string `yaml:"temp_dir" mapstructure:"temp_dir"`
-}
-
-func setAnalyzerTrivyConfigDefaults() {
-	viper.SetDefault(AnalyzerTrivyTimeoutSeconds, AnalyzerTrivyTimeoutSecondsDefault)
-	viper.SetDefault(AnalyzerTrivyTempDir, "/tmp")
-}
-
-func LoadAnalyzerTrivyConfig() AnalyzerTrivyConfig {
-	setAnalyzerTrivyConfigDefaults()
-
-	return AnalyzerTrivyConfig{
-		Timeout:  viper.GetInt(AnalyzerTrivyTimeoutSeconds),
-		CacheDir: viper.GetString(AnalyzerTrivyCacheDir),
-		TempDir:  viper.GetString(AnalyzerTrivyTempDir),
-	}
 }
 
 type AnalyzerTrivyConfigEx struct {
@@ -66,39 +41,12 @@ func CreateAnalyzerTrivyConfigEx(analyzer *Analyzer, registry *Registry) Analyze
 	}
 }
 
-const ScannerTrivyTimeoutSecondsDefault = 300
-
-const (
-	ScannerTrivyTimeoutSeconds = "SCANNER_TRIVY_TIMEOUT_SECONDS"
-	ScannerTrivyCacheDir       = "SCANNER_TRIVY_CACHE_DIRECTORY"
-	ScannerTrivyTempDir        = "SCANNER_TRIVY_TEMP_DIRECTORY"
-	ScannerTrivyServerAddress  = "SCANNER_TRIVY_SERVER_ADDRESS"
-	ScannerTrivyServerToken    = "SCANNER_TRIVY_SERVER_TOKEN" // nolint:gosec
-)
-
 type ScannerTrivyConfig struct {
 	Timeout     int
 	ServerAddr  string
 	ServerToken string
 	CacheDir    string
 	TempDir     string
-}
-
-func setScannerTrivyConfigDefaults() {
-	viper.SetDefault(ScannerTrivyTimeoutSeconds, ScannerTrivyTimeoutSecondsDefault)
-	viper.SetDefault(ScannerTrivyTempDir, "/tmp")
-}
-
-func LoadScannerTrivyConfig() ScannerTrivyConfig {
-	setScannerTrivyConfigDefaults()
-
-	return ScannerTrivyConfig{
-		Timeout:     viper.GetInt(ScannerTrivyTimeoutSeconds),
-		CacheDir:    viper.GetString(ScannerTrivyCacheDir),
-		TempDir:     viper.GetString(ScannerTrivyTempDir),
-		ServerAddr:  viper.GetString(ScannerTrivyServerAddress),
-		ServerToken: viper.GetString(ScannerTrivyServerToken),
-	}
 }
 
 type ScannerTrivyConfigEx struct {

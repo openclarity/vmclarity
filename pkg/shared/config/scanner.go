@@ -15,29 +15,8 @@
 
 package config
 
-import (
-	"github.com/spf13/viper"
-)
-
 type Scanner struct {
 	ScannersList []string           `yaml:"scanners_list" mapstructure:"scanners_list"`
 	GrypeConfig  GrypeConfig        `yaml:"grype_config" mapstructure:"grype_config"`
 	TrivyConfig  ScannerTrivyConfig `yaml:"trivy_config" mapstructure:"trivy_config"`
-}
-
-const (
-	ScannersList = "SCANNERS_LIST"
-)
-
-func setScannerConfigDefaults() {
-	viper.SetDefault(ScannersList, []string{"grype"})
-}
-
-func LoadScannerConfig() *Scanner {
-	setScannerConfigDefaults()
-	return &Scanner{
-		ScannersList: viper.GetStringSlice(ScannersList),
-		GrypeConfig:  LoadGrypeConfig(),
-		TrivyConfig:  LoadScannerTrivyConfig(),
-	}
 }

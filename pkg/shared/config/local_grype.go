@@ -18,14 +18,6 @@ package config
 import (
 	"github.com/anchore/stereoscope/pkg/image"
 	"github.com/anchore/syft/syft/source"
-	"github.com/spf13/viper"
-)
-
-const (
-	ScannerLocalGrypeScope      = "SCANNER_LOCAL_GRYPE_SCOPE"
-	ScannerLocalGrypeDBRootDir  = "SCANNER_LOCAL_GRYPE_DB_ROOT_DIR"
-	ScannerLocalGrypeListingURL = "SCANNER_LOCAL_GRYPE_LISTING_URL"
-	ScannerLocalGrypeUpdateDB   = "SCANNER_LOCAL_GRYPE_UPDATE_DB"
 )
 
 type LocalGrypeConfigEx struct {
@@ -65,21 +57,4 @@ func ConvertToLocalGrypeConfig(scanner *Scanner, registry *Registry) LocalGrypeC
 			Credentials:           credentials,
 		},
 	}
-}
-
-func loadLocalGrypeConfig() LocalGrypeConfig {
-	setLocalGrypeScannerConfigDefaults()
-	return LocalGrypeConfig{
-		DBRootDir:  viper.GetString(ScannerLocalGrypeDBRootDir),
-		ListingURL: viper.GetString(ScannerLocalGrypeListingURL),
-		Scope:      source.ParseScope(viper.GetString(ScannerLocalGrypeScope)),
-		UpdateDB:   viper.GetBool(ScannerLocalGrypeUpdateDB),
-	}
-}
-
-func setLocalGrypeScannerConfigDefaults() {
-	viper.SetDefault(ScannerLocalGrypeScope, source.SquashedScope)
-	viper.SetDefault(ScannerLocalGrypeDBRootDir, "/tmp/")
-	viper.SetDefault(ScannerLocalGrypeListingURL, "https://toolbox-data.anchore.io/grype/databases/listing.json")
-	viper.SetDefault(ScannerLocalGrypeUpdateDB, true)
 }

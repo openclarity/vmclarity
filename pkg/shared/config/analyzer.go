@@ -15,38 +15,10 @@
 
 package config
 
-import (
-	"github.com/spf13/viper"
-
-	"github.com/openclarity/vmclarity/pkg/shared/converter"
-)
-
 // TODO: maybe we need to extend the unified config.
 type Analyzer struct {
 	OutputFormat string              `yaml:"output_format" mapstructure:"output_format"`
 	AnalyzerList []string            `yaml:"analyzer_list" mapstructure:"analyzer_list"`
 	Scope        string              `yaml:"scope" mapstructure:"scope"`
 	TrivyConfig  AnalyzerTrivyConfig `yaml:"trivy_config" mapstructure:"trivy_config"`
-}
-
-const (
-	AnalyzerList  = "ANALYZER_LIST"
-	AnalyzerScope = "ANALYZER_SCOPE"
-	OutputFormat  = "ANALYZER_OUTPUT_FORMAT"
-)
-
-func setAnalyzerConfigDefaults() {
-	viper.SetDefault(AnalyzerList, []string{"syft", "gomod"})
-	viper.SetDefault(AnalyzerScope, "squashed")
-	viper.SetDefault(OutputFormat, converter.CycloneDxJSON.String())
-}
-
-func LoadAnalyzerConfig() *Analyzer {
-	setAnalyzerConfigDefaults()
-	return &Analyzer{
-		OutputFormat: viper.GetString(OutputFormat),
-		AnalyzerList: viper.GetStringSlice(AnalyzerList),
-		Scope:        viper.GetString(AnalyzerScope),
-		TrivyConfig:  LoadAnalyzerTrivyConfig(),
-	}
 }

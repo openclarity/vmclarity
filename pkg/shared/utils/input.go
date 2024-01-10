@@ -30,29 +30,6 @@ const (
 	FILE          SourceType = "file"
 )
 
-func ValidateInputType(inputType string) (SourceType, error) {
-	switch inputType {
-	case "sbom", "SBOM":
-		return SBOM, nil
-	case "image", "IMAGE", "":
-		return IMAGE, nil
-	case "docker-archive":
-		return DOCKERARCHIVE, nil
-	case "oci-archive":
-		return OCIARCHIVE, nil
-	case "oci-dir":
-		return OCIDIR, nil
-	case "dir", "DIR", "directory":
-		return DIR, nil
-	case "file", "FILE":
-		return FILE, nil
-	case "rootfs", "ROOTFS":
-		return ROOTFS, nil
-	default:
-		return "", fmt.Errorf("unsupported input type: %s", inputType)
-	}
-}
-
 func CreateSource(sourceType SourceType, src string, localImage bool) string {
 	switch sourceType {
 	case IMAGE:

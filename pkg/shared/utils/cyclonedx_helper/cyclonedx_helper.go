@@ -25,12 +25,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const (
-	InputTypeImage     = "image"
-	InputTypeDirectory = "directory"
-	InputTypeFile      = "file"
-)
-
 func GetComponentHash(component *cdx.Component) (string, error) {
 	expectedHashPartsLen := 2
 
@@ -175,17 +169,4 @@ func sortHashes(hashes []cdx.Hash) []cdx.Hash {
 		return hashes[i].Algorithm < hashes[j].Algorithm
 	})
 	return hashes
-}
-
-func GetMetaComponentType(component cdx.Component) string {
-	// nolint:exhaustive
-	switch component.Type {
-	case cdx.ComponentTypeFile, cdx.ComponentTypeApplication, "":
-		return InputTypeDirectory
-	case cdx.ComponentTypeContainer:
-		return InputTypeImage
-	default:
-		log.Errorf("unknown metadata component type: %s", component.Type)
-	}
-	return ""
 }
