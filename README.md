@@ -120,7 +120,6 @@ These tools include:
 - SBOM Generation and Analysis
   - [Syft](https://github.com/anchore/syft)
   - [Trivy](https://github.com/aquasecurity/trivy)
-  - [Cyclonedx-gomod](https://github.com/CycloneDX/cyclonedx-gomod)
 - Vulnerability detection
   - [Grype](https://github.com/anchore/grype)
   - [Trivy](https://github.com/aquasecurity/trivy)
