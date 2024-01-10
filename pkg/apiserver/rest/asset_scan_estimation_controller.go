@@ -110,7 +110,7 @@ func (s *ServerImpl) PatchAssetScanEstimationsAssetScanEstimationID(ctx echo.Con
 	if status, ok := assetScanEstimation.GetStatus(); ok {
 		existingStatus, ok := existingAssetScanEstimation.GetStatus()
 		if !ok {
-			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to retrieve Status for existing scan: scanID=%v", existingScan.Id))
+			return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to retrieve Status for existing scan: scanID=%v", existingAssetScanEstimation.Id))
 		}
 		err = existingStatus.IsValidTransition(status)
 		if err != nil {
