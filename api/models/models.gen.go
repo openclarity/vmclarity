@@ -1342,7 +1342,7 @@ type ScanStatus struct {
 	// | Pending    | The initial state when the scan is created, and is working to discover assets |
 	// | Discovered | The asset scans have been discovered and are waiting to be scheduled          |
 	// | InProgress | The asset scans have been scheduled and the assets are being scanned          |
-	// | Aborted    | The scan has been manually aborted                                            |
+	// | Aborted    | The scan has been aborted                                                     |
 	// | Failed     | One or more assets could not be successfully scanned                          |
 	// | Done       | All assets have been scanned successfully                                     |
 	State ScanStatusState `json:"state"`
@@ -1370,7 +1370,7 @@ type ScanStatusReason string
 // | Pending    | The initial state when the scan is created, and is working to discover assets |
 // | Discovered | The asset scans have been discovered and are waiting to be scheduled          |
 // | InProgress | The asset scans have been scheduled and the assets are being scanned          |
-// | Aborted    | The scan has been manually aborted                                            |
+// | Aborted    | The scan has been aborted                                                     |
 // | Failed     | One or more assets could not be successfully scanned                          |
 // | Done       | All assets have been scanned successfully                                     |
 type ScanStatusState string
