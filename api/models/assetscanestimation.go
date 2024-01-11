@@ -15,12 +15,12 @@
 
 package models
 
-func (r *AssetScanEstimation) GetStatus() (*AssetScanEstimationStatus, bool) {
+func (r *AssetScanEstimation) GetStatus() (AssetScanEstimationStatus, bool) {
 	if r.Status == nil {
-		return nil, false
+		return AssetScanEstimationStatus{}, false
 	}
 
-	return r.Status, true
+	return *r.Status, true
 }
 
 func (r *AssetScanEstimation) GetID() (string, bool) {
