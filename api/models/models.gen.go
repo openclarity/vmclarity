@@ -1215,7 +1215,7 @@ type ScanEstimationStatus struct {
 	// | ---------- | ------------------- | ----------------------------------------------------------------- |
 	// | Pending    | Created             | Initial state for ScanEstimation                                  |
 	// | Discovered | SuccessfulDiscovery | Assets to estimate successfully discovered                        |
-	// | InProgress | Running             | Estimating AssetScans are currently in progress                   |
+	// | InProgress | Running             | Scan estimation is currently in progress                          |
 	// | Aborted    | Cancellation        | ScanEstimation has been cancelled                                 |
 	// | Failed     | Aborted             | ScanEstimation has failed due to abort                            |
 	// | Failed     | Error               | ScanEstimation has failed due to an error                         |
@@ -1231,8 +1231,8 @@ type ScanEstimationStatus struct {
 	// | Pending    | Initial state for ScanEstimation         |
 	// | Discovered | Assets have been discovered              |
 	// | InProgress | Scan estimation is in progress           |
-	// | Aborted    | ScanEstimation has been aborted          |
-	// | Failed     | ScanEstimation has been failed           |
+	// | Aborted    | ScanEstimation has aborted               |
+	// | Failed     | ScanEstimation has failed                |
 	// | Done       | ScanEstimation has finished successfully |
 	State ScanEstimationStatusState `json:"state"`
 }
@@ -1243,7 +1243,7 @@ type ScanEstimationStatus struct {
 // | ---------- | ------------------- | ----------------------------------------------------------------- |
 // | Pending    | Created             | Initial state for ScanEstimation                                  |
 // | Discovered | SuccessfulDiscovery | Assets to estimate successfully discovered                        |
-// | InProgress | Running             | Estimating AssetScans are currently in progress                   |
+// | InProgress | Running             | Scan estimation is currently in progress                          |
 // | Aborted    | Cancellation        | ScanEstimation has been cancelled                                 |
 // | Failed     | Aborted             | ScanEstimation has failed due to abort                            |
 // | Failed     | Error               | ScanEstimation has failed due to an error                         |
@@ -1259,8 +1259,8 @@ type ScanEstimationStatusReason string
 // | Pending    | Initial state for ScanEstimation         |
 // | Discovered | Assets have been discovered              |
 // | InProgress | Scan estimation is in progress           |
-// | Aborted    | ScanEstimation has been aborted          |
-// | Failed     | ScanEstimation has been failed           |
+// | Aborted    | ScanEstimation has aborted               |
+// | Failed     | ScanEstimation has failed                |
 // | Done       | ScanEstimation has finished successfully |
 type ScanEstimationStatusState string
 
