@@ -507,7 +507,7 @@ func (w *Watcher) reconcileInProgress(ctx context.Context, scanEstimation *model
 	}
 
 	filter := fmt.Sprintf("scanEstimation/id eq '%s'", scanEstimationID)
-	selector := "id,state,estimation"
+	selector := "id,status,estimation"
 	assetScanEstimations, err := w.backend.GetAssetScanEstimations(ctx, models.GetAssetScanEstimationsParams{
 		Filter: &filter,
 		Select: &selector,
@@ -645,7 +645,7 @@ func (w *Watcher) reconcileAborted(ctx context.Context, scanEstimation *models.S
 
 	filter := fmt.Sprintf("scanEstimation/id eq '%s' and status/state ne '%s' and status/state ne '%s'",
 		scanEstimationID, models.AssetScanEstimationStatusStateAborted, models.AssetScanEstimationStatusStateDone)
-	selector := "id,state"
+	selector := "id,status"
 	params := models.GetAssetScanEstimationsParams{
 		Filter: &filter,
 		Select: &selector,
