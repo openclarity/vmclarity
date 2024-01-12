@@ -132,8 +132,8 @@ const (
 	ScanEstimationStatusReasonCancellation        ScanEstimationStatusReason = "Cancellation"
 	ScanEstimationStatusReasonCreated             ScanEstimationStatusReason = "Created"
 	ScanEstimationStatusReasonError               ScanEstimationStatusReason = "Error"
-	ScanEstimationStatusReasonEstimationsRunning  ScanEstimationStatusReason = "EstimationsRunning"
 	ScanEstimationStatusReasonNothingToEstimate   ScanEstimationStatusReason = "NothingToEstimate"
+	ScanEstimationStatusReasonRunning             ScanEstimationStatusReason = "EstimationsRunning"
 	ScanEstimationStatusReasonSuccess             ScanEstimationStatusReason = "Success"
 	ScanEstimationStatusReasonSuccessfulDiscovery ScanEstimationStatusReason = "SuccessfulDiscovery"
 	ScanEstimationStatusReasonTimeout             ScanEstimationStatusReason = "TimeOut"
@@ -1215,11 +1215,11 @@ type ScanEstimationStatus struct {
 	// | ---------- | ------------------- | ----------------------------------------------------------------- |
 	// | Pending    | Created             | Initial state for ScanEstimation                                  |
 	// | Discovered | SuccessfulDiscovery | Assets to estimate successfully discovered                        |
-	// | InProgress | EstimationsRunning  | Estimating AssetScans are currently in progress                   |
+	// | InProgress | Running             | Estimating AssetScans are currently in progress                   |
 	// | Aborted    | Cancellation        | ScanEstimation has been cancelled                                 |
-	// | Failed     | Aborted             | ScanEstimation has been failed due to abort                       |
-	// | Failed     | Error               | ScanEstimation has been failed due to an error                    |
-	// | Failed     | Timeout             | ScanEstimation has been failed due to timeout                     |
+	// | Failed     | Aborted             | ScanEstimation has failed due to abort                            |
+	// | Failed     | Error               | ScanEstimation has failed due to an error                         |
+	// | Failed     | Timeout             | ScanEstimation has failed due to timeout                          |
 	// | Done       | NothingToEstimate   | ScanEstimation has finished because there was nothing to estimate |
 	// | Done       | Success             | ScanEstimation has finished successfully                          |
 	Reason ScanEstimationStatusReason `json:"reason"`
@@ -1230,9 +1230,9 @@ type ScanEstimationStatus struct {
 	// | ---------- | ---------------------------------------- |
 	// | Pending    | Initial state for ScanEstimation         |
 	// | Discovered | Assets have been discovered              |
-	// | InProgress | Estimating AssetScans are in progress    |
+	// | InProgress | Scan estimation is in progress           |
 	// | Aborted    | ScanEstimation has been aborted          |
-	// | Failed     | SchanEstimation has been failed          |
+	// | Failed     | ScanEstimation has been failed           |
 	// | Done       | ScanEstimation has finished successfully |
 	State ScanEstimationStatusState `json:"state"`
 }
@@ -1243,11 +1243,11 @@ type ScanEstimationStatus struct {
 // | ---------- | ------------------- | ----------------------------------------------------------------- |
 // | Pending    | Created             | Initial state for ScanEstimation                                  |
 // | Discovered | SuccessfulDiscovery | Assets to estimate successfully discovered                        |
-// | InProgress | EstimationsRunning  | Estimating AssetScans are currently in progress                   |
+// | InProgress | Running             | Estimating AssetScans are currently in progress                   |
 // | Aborted    | Cancellation        | ScanEstimation has been cancelled                                 |
-// | Failed     | Aborted             | ScanEstimation has been failed due to abort                       |
-// | Failed     | Error               | ScanEstimation has been failed due to an error                    |
-// | Failed     | Timeout             | ScanEstimation has been failed due to timeout                     |
+// | Failed     | Aborted             | ScanEstimation has failed due to abort                            |
+// | Failed     | Error               | ScanEstimation has failed due to an error                         |
+// | Failed     | Timeout             | ScanEstimation has failed due to timeout                          |
 // | Done       | NothingToEstimate   | ScanEstimation has finished because there was nothing to estimate |
 // | Done       | Success             | ScanEstimation has finished successfully                          |
 type ScanEstimationStatusReason string
@@ -1258,9 +1258,9 @@ type ScanEstimationStatusReason string
 // | ---------- | ---------------------------------------- |
 // | Pending    | Initial state for ScanEstimation         |
 // | Discovered | Assets have been discovered              |
-// | InProgress | Estimating AssetScans are in progress    |
+// | InProgress | Scan estimation is in progress           |
 // | Aborted    | ScanEstimation has been aborted          |
-// | Failed     | SchanEstimation has been failed          |
+// | Failed     | ScanEstimation has been failed           |
 // | Done       | ScanEstimation has finished successfully |
 type ScanEstimationStatusState string
 

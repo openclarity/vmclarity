@@ -345,7 +345,7 @@ func (w *Watcher) reconcileDiscovered(ctx context.Context, scanEstimation *model
 	scanEstimationPatch := &models.ScanEstimation{
 		Status: models.NewScanEstimationStatus(
 			models.ScanEstimationStatusStateInProgress,
-			models.ScanEstimationStatusReasonEstimationsRunning,
+			models.ScanEstimationStatusReasonRunning,
 			nil,
 		),
 		Summary:              scanEstimation.Summary,

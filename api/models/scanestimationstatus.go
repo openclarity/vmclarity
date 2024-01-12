@@ -35,7 +35,7 @@ var scanEstimationStatusReasonMapping = map[ScanEstimationStatusState][]ScanEsti
 		ScanEstimationStatusReasonSuccessfulDiscovery,
 	},
 	ScanEstimationStatusStateInProgress: {
-		ScanEstimationStatusReasonEstimationsRunning,
+		ScanEstimationStatusReasonRunning,
 	},
 	ScanEstimationStatusStateAborted: {
 		ScanEstimationStatusReasonCancellation,
