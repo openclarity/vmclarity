@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useField } from 'formik';
-import { Utils as QbUtils } from '@react-awesome-query-builder/mui';
+import { Utils as QbUtils } from '@react-awesome-query-builder/core';
 
 import { FieldLabel, TextAreaField, TextField, validators } from 'components/Form'; // useFormikContext,
 import { StatelessCheckbox, StatelessRadioButtonGroup } from 'components/statelessComponents';
@@ -34,20 +34,44 @@ const StepGeneralProperties = ({
 
     const savedScopeTree = useMemo(
         () => {
-            const treeObject = (annotations?.length >= 0 ? annotations : []).find(f => Object.keys(f).includes(SCOPE_TREE_KEY));
-            const valueString = treeObject[SCOPE_TREE_KEY];
-            if (valueString) return JSON.parse(valueString);
-            return undefined
+            const annotationObjects = annotations?.length >= 0 ? annotations : [];
+            const treeObjects = [];
+            annotationObjects.forEach(ao => {
+                if (Object.keys(ao).includes(SCOPE_TREE_KEY)) {
+                    treeObjects.push(ao);
+                }
+            });
+            if (treeObjects.length > 1) {
+                throw new Error("Multiple tree objects found")
+            } else if (treeObjects.length === 1) {
+                const valueString = treeObjects[0][SCOPE_TREE_KEY];
+                if (valueString) return JSON.parse(valueString);
+                return undefined;
+            } else {
+                return undefined;
+            }
         },
         [annotations]
     );
 
     const savedScopeConfig = useMemo(
         () => {
-            const configObject = (annotations?.length >= 0 ? annotations : []).find(f => Object.keys(f).includes(SCOPE_CONFIG_KEY));
-            const valueString = configObject[SCOPE_CONFIG_KEY];
-            if (valueString) return JSON.parse(valueString);
-            return undefined
+            const annotationObjects = annotations?.length >= 0 ? annotations : [];
+            const configObjects = [];
+            annotationObjects.forEach(ao => {
+                if (Object.keys(ao).includes(SCOPE_CONFIG_KEY)) {
+                    configObjects.push(ao);
+                }
+            });
+            if (configObjects.length > 1) {
+                throw new Error("Multiple config objects found")
+            } else if (configObjects.length === 1) {
+                const valueString = configObjects[0][SCOPE_CONFIG_KEY];
+                if (valueString) return JSON.parse(valueString);
+                return undefined
+            } else {
+                return undefined;
+            }
         },
         [annotations]
     );

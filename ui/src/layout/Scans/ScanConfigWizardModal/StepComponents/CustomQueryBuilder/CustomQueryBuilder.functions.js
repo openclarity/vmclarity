@@ -1,5 +1,5 @@
 import cloneDeep from "lodash/cloneDeep";
-import { Utils as QbUtils } from '@react-awesome-query-builder/mui';
+import { Utils as QbUtils } from '@react-awesome-query-builder/core';
 import { BASIC_CONFIG } from './CustomQueryBuilder.constants';
 import { SCOPE_CONFIG_KEY, SCOPE_TREE_KEY } from "../../ScanConfigWizardModal.constants";
 
