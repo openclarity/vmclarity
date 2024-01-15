@@ -30,7 +30,7 @@ func (asp *AssetScanProcessor) newerExistingFindingTime(ctx context.Context, ass
 	// AssetScans can be processed out of chronological order:
 	//
 	// If multiple scans of the same asset complete, A first then B, we'll
-	// pick up the event for A, and then B. If while reconciling A we hit a
+	// pick up the event for A, and then B. If while reconciling A, we hit a
 	// failure (timeout or weird glitch), the reconciler will continue on
 	// and try to reconcile B. It will then pick up A on the next poll and
 	// re-reconcile it.

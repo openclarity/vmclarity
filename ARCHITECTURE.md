@@ -39,7 +39,7 @@ exporting the results to VMClarity API.
 
 These components are containerized and can be deployed in a number of different
 ways. For example our cloudformation installer deploys VMClarity on a VM using
-docker in an dedicated AWS Virtual Private Cloud (VPC).
+docker in a dedicated AWS Virtual Private Cloud (VPC).
 
 Once the VMClarity server instance has been deployed, and the scan
 configurations have been created, VMClarity will discover VM resources within
