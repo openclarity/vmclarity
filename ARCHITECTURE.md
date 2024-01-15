@@ -10,7 +10,7 @@ The VMClarity control plane includes several microservices:
 
 - **Orchestrator**: Orchestrates and manages the life cycle of VMClarity
   scan configs, scans and asset scans. Within the Orchestrator there is a
-  pluggable "provider" which connects the orchstrator to the environment to be
+  pluggable "provider" which connects the orchestrator to the environment to be
   scanned and abstracts asset discovery, VM snapshotting as well as creation of
   the scanner VMs. (**Note** The only supported provider today is AWS, other
   hyperscalers are on the roadmap)
@@ -28,7 +28,7 @@ The VMClarity control plane includes several microservices:
   CLI to offload work that would need to be done in every scanner, for example
   downloading the latest vulnerability or malware signatures from the various DB
   sources. The components included today are:
-    - grype-server: A rest API wrapper around the grype vulnerbility scanner
+    - grype-server: A rest API wrapper around the grype vulnerability scanner
     - trivy-server: Trivy vulnerability scanner server
     - exploitDB server: A test API which wraps the Exploit DB CVE to exploit mapping logic
     - freshclam-mirror: A mirror of the ClamAV malware signatures

@@ -39,7 +39,7 @@ func handleAzureRequestError(err error, actionTmpl string, parts ...interface{})
 	sc := respError.StatusCode
 	switch {
 	case sc >= 400 && sc < 500:
-		// Client errors (BadRequest/Unauthorized etc.) are Fatal. We
+		// Client errors (BadRequest/Unauthorized/etc.) are Fatal. We
 		// also return true to indicate we have NotFound which is a
 		// special case in a lot of processing.
 		return sc == http.StatusNotFound, provider.FatalErrorf("error from azure while %s: %w", action, err)
