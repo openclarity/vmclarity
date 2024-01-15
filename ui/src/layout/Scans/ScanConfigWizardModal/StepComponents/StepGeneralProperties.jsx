@@ -42,8 +42,6 @@ const StepGeneralProperties = ({
         [annotations]
     );
 
-    console.log('savedScopeTree:', savedScopeTree);
-
     const savedScopeConfig = useMemo(
         () => {
             const configObject = (annotations?.length >= 0 ? annotations : []).find(f => Object.keys(f).includes(SCOPE_CONFIG_KEY));
@@ -53,8 +51,6 @@ const StepGeneralProperties = ({
         },
         [annotations]
     );
-
-    console.log('savedScopeConfig:', savedScopeConfig);
 
     const initialConfig = useMemo(
         () => (isEditForm && savedScopeConfig) ? QbUtils.decompressConfig(savedScopeConfig, configWithFields) : configWithFields,
