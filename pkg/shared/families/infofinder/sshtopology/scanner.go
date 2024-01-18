@@ -77,11 +77,7 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 		defer cleanup()
 
 		var errs []error
-		homeUserDirs, err := getHomeUserDirs(fsPath)
-		if err != nil {
-			// Collect the error and continue.
-			errs = append(errs, fmt.Errorf("failed to get home user dirs: %w", err))
-		}
+		homeUserDirs := getHomeUserDirs(fsPath)
 		s.logger.Debugf("Found home user dirs %+v", homeUserDirs)
 
 		errorsChan := make(chan error)
@@ -172,7 +168,7 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 	return nil
 }
 
-func getHomeUserDirs(rootDir string) ([]string, error) {
+func getHomeUserDirs(rootDir string) []string {
 	var dirs []string
 
 	// Set root home if exists.
@@ -190,7 +186,7 @@ func getHomeUserDirs(rootDir string) ([]string, error) {
 		}
 	}
 
-	return dirs, nil
+	return dirs
 }
 
 func (s *Scanner) getSSHDaemonKeysFingerprints(rootPath string) ([]types.Info, error) {
