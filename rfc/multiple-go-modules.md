@@ -24,7 +24,7 @@ The build and deployment of these packages is already performed separately and i
 The proposal here is to split the VMClarity repository into multiple modules:
 
 - **api**. Interface between all the services in VMClarity including the DB. Composed by API model, backend client and server.
-- **scanner** or **cli**. Responsible for running a scan in an asset and report the results back to api. Contains the logic to configure, run and manage different analysers and scanners. 
+- **cli**. Responsible for running a scan in an asset and report the results back to api. Contains the logic to configure, run and manage different analysers and scanners. 
 - **orchestrator**. Responsible for managing scan configurations, scans, assets and estimations.
 - **provider**. Responsible for discovery and scan infrastructure setup for each provider. Contains logic to find assets and run scans on AWS, GCP, Azure, Docker and Kubernetes.
 - **uibackend**. Responsible for offloading the ui from data processing and filtering. Slightly coupled with ui. Composed by API model, backend client and server.
@@ -36,38 +36,151 @@ Each module will have its own go.mod file and each module will be versioned inde
 
 The scope of this RFC is not to change code logic but to change code structure. Therefore, the following table describes the path changes for each package impacted.
 
-| Module       | Current path                  | New path                      |
-| ------------ | ----------------------------- | ----------------------------- |
-| api          | pkg/apiserver                 | api/server                    |
-| api          | pkg/shared/backendclient      | api/client                    |
-| scanner      | pkg/cli                       | scanner/cli                   |
-| scanner      | pkg/shared/analyzer           | scanner/analyzer              |
-| scanner      | pkg/shared/config             | scanner/config                |
-| scanner      | pkg/shared/converter          | scanner/converter             |
-| scanner      | pkg/shared/families           | scanner/families              |
-| scanner      | pkg/shared/findingkey         | scanner/findingkey            |
-| scanner      | pkg/shared/job_manager        | scanner/jobmanager            |
-| scanner      | pkg/shared/scanner            | scanner/scanner               |
-| scanner      | pkg/shared/utils              | scanner/utils                 |
-| orchestrator | pkg/orchestrator              | orchestrator                  |
-| orchestrator | pkg/containerruntimediscovery | orchestrator/runtimediscovery |
-| uibackend    | pkg/uibackend                 | uibackend                     |
-| uibackend    | pkg/uibackend/rest            | uibackend/server              |
-| uibackend    | pkg/shared/uibackendclient    | uibackend/client              |
-| utils        | pkg/version                   | utils/version                 |
-| utils        | pkg/shared/command            | utils/command                 |
-| utils        | pkg/shared/fsutils            | utils/fsutils                 |
-| utils        | pkg/shared/log                | utils/log                     |
-| utils        | pkg/shared/manifest           | utils/manifest                |
+| Module           | Current path                  | New path                         | Version Tag                             |
+| ---------------- | ----------------------------- | -------------------------------- | --------------------------------------- |
+| api              | api                           | api                              | api/v0.7.0                              |
+| api/server       | pkg/apiserver                 | api/server                       | api/server/v0.7.0                       |
+| api/client       | pkg/shared/backendclient      | api/client                       | api/client/v0.7.0                       |
+| cli              | pkg/cli                       | cli                              | cli/v0.7.0                              |
+| cli              | pkg/shared/analyzer           | cli/pkg/analyzer                 | cli/v0.7.0                              |
+| cli              | pkg/shared/config             | cli/pkg/config                   | cli/v0.7.0                              |
+| cli              | pkg/shared/converter          | cli/pkg/converter                | cli/v0.7.0                              |
+| cli              | pkg/shared/families           | cli/pkg/families                 | cli/v0.7.0                              |
+| cli              | pkg/shared/findingkey         | cli/pkg/findingkey               | cli/v0.7.0                              |
+| cli              | pkg/shared/job_manager        | cli/pkg/jobmanager               | cli/v0.7.0                              |
+| cli              | pkg/shared/scanner            | cli/pkg/scanner                  | cli/v0.7.0                              |
+| cli              | pkg/shared/utils              | cli/pkg/utils                    | cli/v0.7.0                              |
+| orchestrator     | pkg/orchestrator              | orchestrator                     | orchestrator/v0.7.0                     |
+| uibackend        | pkg/uibackend                 | uibackend                        | uibackend/v0.7.0                        |
+| uibackend/server | pkg/uibackend/rest            | uibackend/server                 | uibackend/server/v0.7.0                 |
+| uibackend/client | pkg/shared/uibackendclient    | uibackend/client                 | uibackend/client/v0.7.0                 |
+| utils            | pkg/version                   | utils/version                    | utils/v0.7.0                            |
+| utils            | pkg/shared/command            | utils/command                    | utils/v0.7.0                            |
+| utils            | pkg/shared/fsutils            | utils/fsutils                    | utils/v0.7.0                            |
+| utils            | pkg/shared/log                | utils/log                        | utils/v0.7.0                            |
+| utils            | pkg/shared/manifest           | utils/manifest                   | utils/v0.7.0                            |
+| provider         | pkg/orchestrator/provider     | provider                         | provider/v0.7.0                         |
+| provider         | pkg/containerruntimediscovery | provider/common/runtimediscovery | provider/common/runtimediscovery/v0.7.0 |
 
+To improve compliance with https://github.com/golang-standards/project-layout, the changes below are also proposed.
 
-Furthermore, the provider could be removed from the orchestrator.
+| Module       | Current path                     | New path                      |
+| ------------ | -------------------------------- | ----------------------------- |
+| provider     | example_external_provider_plugin | provider/examples/external    |
+| cli          | scanner_boot_test                | cli/test/boot                 |
 
-| Module       | Current path                  | New path                      |
-| ------------ | ----------------------------- | ----------------------------- |
-| provider     | pkg/orchestrator/provider     | provider                      |
+Makefile, GitHub workflows and other files will need to be updated to point to the new paths.
 
-The Dockerfiles for each package will be moved to the corresponding directory. Makefile, GitHub workflows and other files will need to be updated.
+The VMClarity directory will have the following structure.
+
+```sh
+.
+├── Makefile
+├── api
+│   ├── client
+│   │   ├── client.cfg.yaml
+│   │   └── go.mod
+│   ├── go.mod
+│   ├── models
+│   │   └── models.cfg.yaml
+│   ├── openapi.yaml
+│   └── server
+│       ├── cmd
+│       ├── go.mod
+│       ├── pkg
+│       │   ├── common
+│       │   ├── database
+│       │   └── rest
+│       └── server.cfg.yaml
+├── cli
+│   ├── cmd
+│   ├── go.mod
+│   ├── pkg
+│   │   ├── analyzer
+│   │   ├── config
+│   │   ├── converter
+│   │   ├── families
+│   │   ├── findingkey
+│   │   ├── job_manager
+│   │   ├── presenter
+│   │   ├── scanner
+│   │   ├── state
+│   │   └── utils
+│   └── test
+│       └── boot
+├── docs
+├── e2e
+│   ├── config
+│   ├── go.mod
+│   └── testenv
+│       ├── docker
+│       ├── kubernetes
+│       ├── types
+│       └── utils
+├── img
+├── installation
+│   ├── aws
+│   ├── azure
+│   ├── docker
+│   ├── gcp
+│   └── kubernetes
+├── orchestrator
+│   ├── cmd
+│   ├── go.mod
+│   └── pkg
+│       ├── assetscanestimationwatcher
+│       ├── assetscanprocessor
+│       ├── assetscanwatcher
+│       ├── common
+│       ├── discovery
+│       ├── scanconfigwatcher
+│       ├── scanestimationwatcher
+│       └── scanwatcher
+├── provider
+│   ├── cmd
+│   ├── examples
+│   │   └── external
+│   ├── go.mod
+│   └── pkg
+│       ├── aws
+│       ├── azure
+│       ├── cloudinit
+│       ├── common
+│           └── containerruntimediscovery
+│               └── cmd
+│       ├── docker
+│       ├── external
+│       ├── gcp
+│       └── kubernetes
+├── rfc
+├── ui
+│   └── src
+├── uibackend
+│   ├── client
+│   │   └── client.cfg.yaml
+│   ├── go.mod
+│   ├── models
+│   │   └── models.cfg.yaml
+│   ├── openapi.yaml
+│   └── server
+│       ├── cmd
+│       ├── go.mod
+│       ├── pkg
+│       └── server.cfg.yaml
+└── utils
+    ├── command
+    ├── fsutils
+    ├── go.mod
+    ├── log
+    ├── manifest
+    └── version
+```
+
+# Release
+
+Each module will have a tag with the format `prefix/version` where prefix is the directory within the repository where the module is defined, more details [here](https://go.dev/wiki/Modules#publishing-a-release). For now, the same version will be used for each module even if there are no changes, this will simplify managing compatibility between modules across versions.
+
+The release GitHub workflow will be extended with an additional step to create a tag for each module. This step will only be performed after the release is successfully published.
 
 ## UX/UI
 
