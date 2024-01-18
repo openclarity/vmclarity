@@ -20,7 +20,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/fs"
 	"os"
 	"os/exec"
 	"path"
@@ -183,7 +182,7 @@ func getHomeUserDirs(rootDir string) ([]string, error) {
 	}
 
 	homeDirPath := path.Join(rootDir, "home")
-  files, _ := os.ReadDir(homeDirPath)
+	files, _ := os.ReadDir(homeDirPath)
 
 	for _, f := range files {
 		if f.IsDir() {
