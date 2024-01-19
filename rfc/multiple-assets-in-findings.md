@@ -12,7 +12,7 @@
 
 ---
 
-This RFC proposes the extension of the API by allowing multiple Assets to be referenced in Findings in order to improve efficiency and achieve parity with the existing features.
+This RFC proposes the API extensions by allowing multiple Assets to be referenced in Findings in order to improve efficiency and achieve parity with the existing features.
 
 ## Background
 
@@ -47,6 +47,11 @@ Findings can be extended to use a **list of assets** instead of referencing a si
 This ensures that the same finding can be discovered on multiple assets without having to duplicate the data.
 Combined, these changes address the performance and memory utilization issues while also enabling aggregation methods.
 
+Alternatively, the `Finding` model can also be extended by adding `AssetFinding` and `AssetFindingRelationship`.
+This addresses the issue when many assets contain the same finding.
+The implementation, although slightly more complex, would be more efficient as the number of assets grows for a given finding.
+_This remains an open question on how to address the `Asset-Finding` relationship._
+
 #### Non-goals
 
 This RFC does not intend to propose changes regarding the relationship of findings to other models like asset scans.
@@ -62,6 +67,8 @@ Adding the aggregation methods to the `uibackend` API was considered but abandon
 ## Implementation
 
 ### 1. Update `Finding` API model with the proposed changes
+
+_Option 1_ - simple finding extension
 
 ```yaml
 Finding:
@@ -110,6 +117,11 @@ Finding:
               InfoFinder: '#/components/schemas/InfoFinderFindingInfo'
 ```
 
+_Option 1_ - more verbose models
+
+Alternatively, depending on the selected approach, `AssetFinding` and `AssetFindingRelationship` can be implemented.
+The model should then use a list of `AssetFindingRelationship` to express the relationship of `Assets` for a given `Finding`.
+
 ### 2. Handle database-schema changes
 
 The API changes impact the database schema defined in `pkg/apiserver/database/gorm/odata.go` and should be handled accordingly.
@@ -150,7 +162,7 @@ func (s *FindingsTableHandler) checkUniqueness(finding models.Finding) (*models.
 
 Once done, the database and controller logic should also be updated to handle cases when:
 - the finding needs to be created or updated
-- the assets need to be removed from a finding but are not found
+- the assets need to be removed from a finding but are not present
 - the assets need to be added to a finding but are already present
 - any other edge cases not covered above
 
