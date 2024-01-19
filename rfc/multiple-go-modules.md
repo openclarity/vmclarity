@@ -68,6 +68,7 @@ To improve compliance with https://github.com/golang-standards/project-layout, t
 | ------------ | -------------------------------- | ----------------------------- |
 | provider     | example_external_provider_plugin | provider/examples/external    |
 | cli          | scanner_boot_test                | cli/test/boot                 |
+|              | img                              | assets                        |
 
 Makefile, GitHub workflows and other files will need to be updated to point to the new paths.
 
@@ -101,7 +102,7 @@ The VMClarity directory will have the following structure.
 │   │   ├── converter
 │   │   ├── families
 │   │   ├── findingkey
-│   │   ├── job_manager
+│   │   ├── jobmanager
 │   │   ├── presenter
 │   │   ├── scanner
 │   │   ├── state
@@ -117,7 +118,7 @@ The VMClarity directory will have the following structure.
 │       ├── kubernetes
 │       ├── types
 │       └── utils
-├── img
+├── assets
 ├── installation
 │   ├── aws
 │   ├── azure
