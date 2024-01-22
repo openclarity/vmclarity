@@ -12,34 +12,34 @@
 
 ---
 
-This RFC proposes the extension of misconfiguration scanning capabilities to integrate CIS Docker Benchmark and enrich security findings on assets.
+This RFC proposes the extension of misconfiguration scanning logic to integrate CIS Docker Benchmark and enrich security findings on assets.
 
 ## Background
 
 > [!NOTE]
 > The scanning logic relies on using explicit scopes such as vulnerabilities and misconfigurations to categorize security findings on assets.
 Generally, this works well when scanners have a well-defined boundary used to determine a specific scope.
-However, some scanners cannot directly categorize findings by a single scope which can limit integration options.
+However, some scanners cannot directly categorize findings using a single or existing scope which can limit integration options.
 This behavior, along with the lack of dynamic- and multi-scope options, also underlines an important limitation of how findings are being described, categorized, processed, and analyzed.
 Note that this RFC does not intend to resolve this behavior, but rather draw attention to it.
 
 The integration of [CIS Docker Benchmark](https://github.com/goodwithtech/dockle) scanner requires additional changes to address the scope-based categorization limitations.
-In KubeClarity, this scanner defines its own findings' model as described in the [API specifications](https://github.com/openclarity/kubeclarity/blob/5ac3048b7a782c900a9bef846a91a7735ba77e24/api/swagger.yaml#L243C26-L243C26).
-This makes the migration of scanning capabilities to VMClarity problematic for two main reasons:
+In KubeClarity, the scanner defines its own [API model](https://github.com/openclarity/kubeclarity/blob/5ac3048b7a782c900a9bef846a91a7735ba77e24/api/swagger.yaml#L243C26-L243C26) to describe related security findings.
+This makes the migration of scanning logic to VMClarity problematic for two main reasons:
 
-- Logic in the form of a new independent scanner family does not conform to any supported *security scopes*.
-CIS Docker Benchmark provides little benefit on its own due to scope constraints compared to the existing scanners.
+- Logic in the form of a new independent scanner family does not conform to any existing *security scopes*.
+CIS Docker Benchmark provides little benefit on its own due to scope constraints currently defined for the scanning logic.
 
-* Logic is *too specific* to be part of any existing scanner families.
-CIS Docker Benchmark findings cannot be uniformly converted to other findings without some loss of data.
+- Logic is *too specific* and *provider-dependant* to be part of an existing scanner family.
+CIS Docker Benchmark scan results cannot be uniformly converted to other findings without some loss of data.
 
 ## Proposal
 
-The CIS Docker Benchmark scanner can be migrated as part of **misconfiguration scanner family** to enrich the security findings on assets with additional information.
-Contextually, the misconfiguration findings are the best candidate as they require minimal changes while also allowing simple integration.
+The CIS Docker Benchmark scanner can be migrated as part of **misconfiguration scanner family** to enrich the findings on assets with additional security coverage.
+Contextually, the misconfiguration findings serve as a superset of CIS Docker Benchmark results.
 This approach benefits VMClarity in several ways:
 
-* The misconfiguration model can be extended and reused without impacting the existing scopes
+* The misconfiguration findings can be generalized and reused without impacting the existing scopes
 
 The misconfiguration [API model](https://github.com/openclarity/vmclarity/blob/bfc32ec88ee266157aaf7bcae7b17c4b2ee5c868/api/openapi.yaml#L3083) is not abstract enough to enable integration of new scanners.
 Minor API changes are required to make the model more generic and enable direct conversion of CIS Docker Benchmark results.
