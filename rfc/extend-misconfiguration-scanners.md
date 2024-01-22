@@ -16,14 +16,15 @@ This RFC proposes the extension of misconfiguration scanning capabilities to int
 
 ## Background
 
-The scanning logic relies on using explicit scopes such as vulnerabilities and misconfigurations to categorize security findings on assets.
+> [!NOTE]
+> The scanning logic relies on using explicit scopes such as vulnerabilities and misconfigurations to categorize security findings on assets.
 Generally, this works well when scanners have a well-defined boundary used to determine a specific scope.
-However, some scanners cannot directly express a finding by a single scope which can limit integration options.
+However, some scanners cannot directly categorize findings by a single scope which can limit integration options.
 This behavior, along with the lack of dynamic- and multi-scope options, also underlines an important limitation of how findings are being described, categorized, processed, and analyzed.
-Note this RFC does not intend to resolve this behavior, but rather draw attention to it.
+Note that this RFC does not intend to resolve this behavior, but rather draw attention to it.
 
 The integration of [CIS Docker Benchmark](https://github.com/goodwithtech/dockle) scanner requires additional changes to address the scope-based categorization limitations.
-In KubeClarity, the CIS Docker Benchmark scanner defines its own findings as described in the [API specifications](https://github.com/openclarity/kubeclarity/blob/5ac3048b7a782c900a9bef846a91a7735ba77e24/api/swagger.yaml#L243C26-L243C26).
+In KubeClarity, this scanner defines its own findings' model as described in the [API specifications](https://github.com/openclarity/kubeclarity/blob/5ac3048b7a782c900a9bef846a91a7735ba77e24/api/swagger.yaml#L243C26-L243C26).
 This makes the migration of scanning capabilities to VMClarity problematic for two main reasons:
 
 - Logic in the form of a new independent scanner family does not conform to any supported *security scopes*.
@@ -38,7 +39,7 @@ The CIS Docker Benchmark scanner can be migrated as part of **misconfiguration s
 Contextually, the misconfiguration findings are the best candidate as they require minimal changes while also allowing simple integration.
 This approach benefits VMClarity in several ways:
 
-* The misconfiguration model can be reused and respected without impacting the existing scopes
+* The misconfiguration model can be extended and reused without impacting the existing scopes
 
 The misconfiguration [API model](https://github.com/openclarity/vmclarity/blob/bfc32ec88ee266157aaf7bcae7b17c4b2ee5c868/api/openapi.yaml#L3083) is not abstract enough to enable integration of new scanners.
 Minor API changes are required to make the model more generic and enable direct conversion of CIS Docker Benchmark results.
@@ -71,7 +72,7 @@ Misconfiguration:
     location: # replaces `scannedPath`; maps from the underlying data returned by the CIS Docker Benchmark scanner
       type: string
       description: Location within the asset where the misconfiguration was recorded (e.g. filesystem path)
-    category: # replaces `testCategory`; uses static `best-practice` for CIS Docker Benchmark scanner.
+    category: # replaces `testCategory`; uses static `best-practice` to label CIS Docker Benchmark results.
               # Additional categories such as `security` can be extracted/mapped, but not relevant to this RFC.
       type: string
       description: Specifies misconfiguration impact category
@@ -87,8 +88,6 @@ Misconfiguration:
     severity: # preserved; maps CISDockerBenchmarkResultsEX.level
       $ref: '#/components/schemas/MisconfigurationSeverity'
 ```
-
-Additional API changes required to enable compliance scanners are summarized in the table below. Affected components not found in the table should be easy to identify during the actual implementation.
 
 2. Update misconfiguration-related components in the UI to support the API changes
 
