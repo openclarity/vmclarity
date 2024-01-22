@@ -89,9 +89,13 @@ Misconfiguration:
       $ref: '#/components/schemas/MisconfigurationSeverity'
 ```
 
-2. Update misconfiguration-related components in the UI to support the API changes
+2. Update related UI components to support the API changes
 
 3. Migrate CIS Docker Benchmark scanner from KubeClarity as part of misconfiguration scanners
+
+The [scanner code](https://github.com/openclarity/kubeclarity/tree/5f6b411161100c15196c8149c0b1df5537c88a05/cis_docker_benchmark_scanner) defined in KubeClarity can be migrated under the misconfiguration scanner family following the existing patterns.
+Note that minor changes are required to ensure that the results returned by the scanner conform to the new misconfiguration API model.
+**Lynis** misconfiguration scanner can serve as a reference on required code changes for successful integration. 
 
 ## UX
 
@@ -99,4 +103,4 @@ This RFC has no visible impacts on the UX.
 
 ## UI
 
-This RFC changes the `Finding` components related to misconfigurations shown on the UI by using updated models.
+This RFC changes the `Finding` components related to misconfigurations shown on the UI by using updated API models.
