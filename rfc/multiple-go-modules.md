@@ -181,7 +181,21 @@ The VMClarity directory will have the following structure.
 
 Each module will have a tag with the format `prefix/version` where prefix is the directory within the repository where the module is defined, more details [here](https://go.dev/wiki/Modules#publishing-a-release). For now, the same version will be used for each module even if there are no changes, this will simplify managing compatibility between modules across versions.
 
-The release GitHub workflow will be extended with an additional step to create a tag for each module. This step will only be performed after the release is successfully published.
+The release process will be updated to cope with tagging multiple modules. Not all steps will be automated with GitHub actions some will require new scripts in `Makefile` so a new `docs/release.md` file will be created with instructions on how to perform a release.
+
+Example of release instructions for version 0.7.0:
+
+1. [New Makefile Script] Create pull request with version bumps for all modules in repository. E.g. to bump the api module, the require section in `go.mod` files should be updated like
+    ```
+     - github.com/openclarity/vmclarity/api v0.0.0
+     + github.com/openclarity/vmclarity/api v0.7.0
+    ```
+2. [New Makefile Script] Create and push tags with v0.7.0 that points to the commit performed in the previous step. E.g. create tag for the api module with
+    ```
+    git tag -a api/v0.7.0
+    ```
+3. [GitHub Action] Current release process
+4. [Extend GitHub Action] Once a stable release is successfully published, each module will be tagged. E.g. the api module will be tagged with the tag created in step 2, `api/v0.7.0`.
 
 ## UX/UI
 
