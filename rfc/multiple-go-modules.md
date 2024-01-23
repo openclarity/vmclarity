@@ -61,6 +61,8 @@ The scope of this RFC is not to change code logic but to change code structure. 
 | utils            | pkg/shared/manifest           | utils/manifest                   | utils/v0.7.0                            |
 | provider         | pkg/orchestrator/provider     | provider                         | provider/v0.7.0                         |
 | provider         | pkg/containerruntimediscovery | provider/common/runtimediscovery | provider/common/runtimediscovery/v0.7.0 |
+| e2e              | e2e                           | e2e                              | e2e/v0.7.0                              |
+| testenv          | e2e/testenv                   | testenv                          | testenv/v0.7.0                          |
 
 To improve compliance with https://github.com/golang-standards/project-layout, the changes below are also proposed.
 
@@ -112,12 +114,13 @@ The VMClarity directory will have the following structure.
 ├── docs
 ├── e2e
 │   ├── config
-│   ├── go.mod
-│   └── testenv
-│       ├── docker
-│       ├── kubernetes
-│       ├── types
-│       └── utils
+│   └── go.mod
+│── testenv
+│   ├── docker
+│   ├── kubernetes
+│   ├── types
+│   ├── utils
+│   └── go.mod
 ├── assets
 ├── installation
 │   ├── aws
