@@ -25,7 +25,7 @@ import (
 
 	"github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
-	uibackend_models "github.com/openclarity/vmclarity/pkg/uibackend/api/models"
+	uibackend_models "github.com/openclarity/vmclarity/uibackend/models"
 )
 
 var _ = ginkgo.Describe("Running a full scan (exploits, info finder, malware, misconfigurations, rootkits, SBOM, secrets and vulnerabilities)", func() {

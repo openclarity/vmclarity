@@ -26,7 +26,7 @@ import (
 
 	backendmodels "github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
-	"github.com/openclarity/vmclarity/pkg/uibackend/api/models"
+	"github.com/openclarity/vmclarity/uibackend/models"
 )
 
 func Test_getAssetLocation(t *testing.T) {

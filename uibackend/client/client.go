@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/openclarity/vmclarity/pkg/uibackend/api/client"
-	"github.com/openclarity/vmclarity/pkg/uibackend/api/models"
+	"github.com/openclarity/vmclarity/uibackend/client"
+	"github.com/openclarity/vmclarity/uibackend/models"
 )
 
 type UIBackendClient struct {

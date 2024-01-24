@@ -35,7 +35,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
      -X 'github.com/openclarity/vmclarity/utils/version.Version=${VERSION}' \
      -X 'github.com/openclarity/vmclarity/utils/version.CommitHash=${COMMIT_HASH}' \
      -X 'github.com/openclarity/vmclarity/utils/version.BuildTimestamp=${BUILD_TIMESTAMP}'" \
-    -o /bin/vmclarity-ui-backend ./cmd/vmclarity-ui-backend/main.go
+    -o /bin/vmclarity-ui-backend ./uibackend/server/cmd/main.go
 
 RUN xx-verify /bin/vmclarity-ui-backend
 
