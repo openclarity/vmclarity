@@ -13,23 +13,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package uibackendclient
+package client
 
 import (
 	"context"
 	"fmt"
 	"net/http"
 
-	"github.com/openclarity/vmclarity/uibackend/client"
 	"github.com/openclarity/vmclarity/uibackend/models"
 )
 
 type UIBackendClient struct {
-	apiClient client.ClientWithResponsesInterface
+	apiClient ClientWithResponsesInterface
 }
 
 func Create(serverAddress string) (*UIBackendClient, error) {
-	apiClient, err := client.NewClientWithResponses(serverAddress)
+	apiClient, err := NewClientWithResponses(serverAddress)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create VMClarity API client. serverAddress=%v: %w", serverAddress, err)
 	}
