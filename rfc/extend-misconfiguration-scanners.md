@@ -66,9 +66,9 @@ Misconfiguration:
   properties:
     scannerName: # preserved
       type: string
-    code: # replaces `testID`; maps CISDockerBenchmarkResultsEX.code
+    id: # replaces `testID`; maps CISDockerBenchmarkResultsEX.code
       type: string
-      description: Scanner or test code, if applicable (e.g. Lynis TestID, CIS Docker Benchmark checkpoint code, etc)
+      description: Check or test ID, if applicable (e.g. Lynis TestID, CIS Docker Benchmark checkpoint code, etc)
     location: # replaces `scannedPath`; maps from the underlying data returned by the CIS Docker Benchmark scanner
       type: string
       description: Location within the asset where the misconfiguration was recorded (e.g. filesystem path)
@@ -95,7 +95,7 @@ Misconfiguration:
 
 The [scanner code](https://github.com/openclarity/kubeclarity/tree/5f6b411161100c15196c8149c0b1df5537c88a05/cis_docker_benchmark_scanner) defined in KubeClarity can be migrated under the misconfiguration scanner family following the existing patterns.
 Note that minor changes are required to ensure that the results returned by the scanner conform to the new misconfiguration API model.
-**Lynis** misconfiguration scanner can serve as a reference on required code changes for successful integration. 
+_Lynis_ misconfiguration scanner can serve as a reference on required code changes for successful integration. 
 
 ## UX
 
