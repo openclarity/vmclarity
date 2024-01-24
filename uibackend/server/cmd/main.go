@@ -34,7 +34,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
-	"github.com/openclarity/vmclarity/uibackend"
 	"github.com/openclarity/vmclarity/uibackend/server/pkg"
 	"github.com/openclarity/vmclarity/utils/log"
 	"github.com/openclarity/vmclarity/utils/version"
@@ -96,7 +95,7 @@ func runCommand(cmd *cobra.Command, _ []string) {
 
 	ctx, cancel := context.WithCancel(ctx)
 
-	config, err := uibackend.NewConfig()
+	config, err := server.NewConfig()
 	if err != nil {
 		logger.Fatalf("unable to load configuration")
 	}
@@ -109,7 +108,7 @@ func runCommand(cmd *cobra.Command, _ []string) {
 	if err != nil {
 		logger.Fatalf("Failed to create a backend client: %v", err)
 	}
-	handler := rest.CreateServer(backendClient)
+	handler := server.CreateServer(backendClient)
 	handler.StartBackgroundProcessing(ctx)
 
 	swagger, err := server.GetSwagger()

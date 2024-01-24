@@ -10,6 +10,7 @@ require (
 	github.com/openclarity/vmclarity v0.0.0
 	github.com/openclarity/vmclarity/api v0.0.0
 	github.com/openclarity/vmclarity/testenv v0.0.0-00010101000000-000000000000
+	github.com/openclarity/vmclarity/uibackend v0.0.0-00010101000000-000000000000
 	github.com/openclarity/vmclarity/utils v0.0.0-00010101000000-000000000000
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.18.2
@@ -255,6 +256,7 @@ replace (
 	github.com/openclarity/vmclarity => ../
 	github.com/openclarity/vmclarity/api => ../api
 	github.com/openclarity/vmclarity/testenv => ../testenv
+	github.com/openclarity/vmclarity/uibackend => ../uibackend
 	github.com/openclarity/vmclarity/utils => ../utils
 )
 
