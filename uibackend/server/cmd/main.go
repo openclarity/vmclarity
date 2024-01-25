@@ -34,7 +34,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/openclarity/vmclarity/pkg/shared/backendclient"
-	"github.com/openclarity/vmclarity/uibackend/server/pkg"
+	server "github.com/openclarity/vmclarity/uibackend/server/pkg"
 	"github.com/openclarity/vmclarity/utils/log"
 	"github.com/openclarity/vmclarity/utils/version"
 )
