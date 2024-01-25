@@ -2,13 +2,6 @@ module github.com/openclarity/vmclarity/uibackend/server
 
 go 1.21.4
 
-replace (
-	github.com/openclarity/vmclarity => ../../
-	github.com/openclarity/vmclarity/api => ../../api
-	github.com/openclarity/vmclarity/uibackend => ../
-	github.com/openclarity/vmclarity/utils => ../../utils
-)
-
 require (
 	github.com/Portshift/go-utils v0.0.0-20220421083203-89265d8a6487
 	github.com/getkin/kin-openapi v0.123.0
@@ -20,7 +13,7 @@ require (
 	github.com/onsi/gomega v1.31.1
 	github.com/openclarity/vmclarity v0.0.0-00010101000000-000000000000
 	github.com/openclarity/vmclarity/api v0.0.0
-	github.com/openclarity/vmclarity/uibackend v0.0.0-00010101000000-000000000000
+	github.com/openclarity/vmclarity/uibackend/types v0.0.0-00010101000000-000000000000
 	github.com/openclarity/vmclarity/utils v0.0.0-00010101000000-000000000000
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
@@ -68,4 +61,11 @@ require (
 	google.golang.org/grpc v1.61.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+)
+
+replace (
+	github.com/openclarity/vmclarity => ../../
+	github.com/openclarity/vmclarity/api => ../../api
+	github.com/openclarity/vmclarity/uibackend/types => ../types
+	github.com/openclarity/vmclarity/utils => ../../utils
 )
