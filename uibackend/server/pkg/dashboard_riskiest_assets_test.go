@@ -26,7 +26,7 @@ import (
 
 	backendmodels "github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
-	"github.com/openclarity/vmclarity/uibackend/models"
+	"github.com/openclarity/vmclarity/uibackend/types"
 )
 
 func Test_getTotalFindingField(t *testing.T) {
@@ -232,7 +232,7 @@ func Test_getAssetInfo(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *models.AssetInfo
+		want    *types.AssetInfo
 		wantErr bool
 	}{
 		{
@@ -248,10 +248,10 @@ func Test_getAssetInfo(t *testing.T) {
 			args: args{
 				asset: createVMInfo(t, "name", "location"),
 			},
-			want: &models.AssetInfo{
+			want: &types.AssetInfo{
 				Location: utils.PointerTo("location"),
 				Name:     utils.PointerTo("name"),
-				Type:     utils.PointerTo(models.AWSEC2Instance),
+				Type:     utils.PointerTo(types.AWSEC2Instance),
 			},
 			wantErr: false,
 		},
@@ -260,10 +260,10 @@ func Test_getAssetInfo(t *testing.T) {
 			args: args{
 				asset: createContainerInfo(t),
 			},
-			want: &models.AssetInfo{
+			want: &types.AssetInfo{
 				Location: utils.PointerTo("gke-sambetts-dev-clu-sambetts-dev-nod-449204c7-gqx5"),
 				Name:     utils.PointerTo("hungry_mcclintock"),
-				Type:     utils.PointerTo(models.Container),
+				Type:     utils.PointerTo(types.Container),
 			},
 			wantErr: false,
 		},
@@ -272,10 +272,10 @@ func Test_getAssetInfo(t *testing.T) {
 			args: args{
 				asset: createContainerImageInfo(t),
 			},
-			want: &models.AssetInfo{
+			want: &types.AssetInfo{
 				Location: utils.PointerTo("ghcr.io/openclarity/vmclarity-orchestrator@sha256:2ceda8090cfb24eb86c6b723eef4a562e90199f3c2b11120e60e5691f957b07b"),
 				Name:     utils.PointerTo("sha256:b520c72cef1f30a38361cf9e3d686e2db0e718b69af8cb072e93ba9bcf5658ab"),
-				Type:     utils.PointerTo(models.ContainerImage),
+				Type:     utils.PointerTo(types.ContainerImage),
 			},
 			wantErr: false,
 		},
@@ -348,14 +348,14 @@ func Test_toAPIVulnerabilityRiskyAsset(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want []models.VulnerabilityRiskyAsset
+		want []types.VulnerabilityRiskyAsset
 	}{
 		{
 			name: "nil assets",
 			args: args{
 				assets: nil,
 			},
-			want: []models.VulnerabilityRiskyAsset{},
+			want: []types.VulnerabilityRiskyAsset{},
 		},
 		{
 			name: "supported and unsupported asset",
@@ -383,17 +383,17 @@ func Test_toAPIVulnerabilityRiskyAsset(t *testing.T) {
 					},
 				},
 			},
-			want: []models.VulnerabilityRiskyAsset{
+			want: []types.VulnerabilityRiskyAsset{
 				{
 					CriticalVulnerabilitiesCount:   utils.PointerTo(1),
 					HighVulnerabilitiesCount:       utils.PointerTo(2),
 					LowVulnerabilitiesCount:        utils.PointerTo(3),
 					MediumVulnerabilitiesCount:     utils.PointerTo(4),
 					NegligibleVulnerabilitiesCount: utils.PointerTo(5),
-					AssetInfo: &models.AssetInfo{
+					AssetInfo: &types.AssetInfo{
 						Location: utils.PointerTo("vm location"),
 						Name:     utils.PointerTo("vm name"),
-						Type:     utils.PointerTo(models.AWSEC2Instance),
+						Type:     utils.PointerTo(types.AWSEC2Instance),
 					},
 				},
 			},
@@ -416,7 +416,7 @@ func Test_toAPIRiskyAssets(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want []models.RiskyAsset
+		want []types.RiskyAsset
 	}{
 		{
 			name: "nil assets",
@@ -424,7 +424,7 @@ func Test_toAPIRiskyAssets(t *testing.T) {
 				assets:      nil,
 				findingType: "",
 			},
-			want: []models.RiskyAsset{},
+			want: []types.RiskyAsset{},
 		},
 		{
 			name: "supported and unsupported asset",
@@ -445,13 +445,13 @@ func Test_toAPIRiskyAssets(t *testing.T) {
 				},
 				findingType: backendmodels.MALWARE,
 			},
-			want: []models.RiskyAsset{
+			want: []types.RiskyAsset{
 				{
 					Count: utils.PointerTo(1),
-					AssetInfo: &models.AssetInfo{
+					AssetInfo: &types.AssetInfo{
 						Location: utils.PointerTo("vm location"),
 						Name:     utils.PointerTo("vm name"),
-						Type:     utils.PointerTo(models.AWSEC2Instance),
+						Type:     utils.PointerTo(types.AWSEC2Instance),
 					},
 				},
 			},
@@ -479,7 +479,7 @@ func Test_toAPIRiskyAssets(t *testing.T) {
 				},
 				findingType: "unsupported",
 			},
-			want: []models.RiskyAsset{},
+			want: []types.RiskyAsset{},
 		},
 	}
 	for _, tt := range tests {
@@ -567,7 +567,7 @@ func Test_vmInfoToAssetInfo(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *models.AssetInfo
+		want    *types.AssetInfo
 		wantErr bool
 	}{
 		{
@@ -589,10 +589,10 @@ func Test_vmInfoToAssetInfo(t *testing.T) {
 					Location:         "location",
 				},
 			},
-			want: &models.AssetInfo{
+			want: &types.AssetInfo{
 				Location: utils.PointerTo("location"),
 				Name:     utils.PointerTo("name"),
-				Type:     utils.PointerTo(models.AWSEC2Instance),
+				Type:     utils.PointerTo(types.AWSEC2Instance),
 			},
 			wantErr: false,
 		},
@@ -618,7 +618,7 @@ func Test_getVMAssetType(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *models.AssetType
+		want    *types.AssetType
 		wantErr bool
 	}{
 		{
@@ -642,7 +642,7 @@ func Test_getVMAssetType(t *testing.T) {
 			args: args{
 				provider: utils.PointerTo(backendmodels.AWS),
 			},
-			want:    utils.PointerTo(models.AWSEC2Instance),
+			want:    utils.PointerTo(types.AWSEC2Instance),
 			wantErr: false,
 		},
 	}

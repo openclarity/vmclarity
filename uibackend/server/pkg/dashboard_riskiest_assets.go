@@ -26,7 +26,7 @@ import (
 
 	backendmodels "github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
-	"github.com/openclarity/vmclarity/uibackend/models"
+	"github.com/openclarity/vmclarity/uibackend/types"
 )
 
 const (
@@ -90,7 +90,7 @@ func (s *ServerImpl) GetDashboardRiskiestAssets(ctx echo.Context) error {
 			fmt.Sprintf("failed to get riskiest assets for vulnerabilities: %v", err))
 	}
 
-	return sendResponse(ctx, http.StatusOK, models.RiskiestAssets{
+	return sendResponse(ctx, http.StatusOK, types.RiskiestAssets{
 		Exploits:          &exploits,
 		Malware:           &malware,
 		Misconfigurations: &misconfigurations,
@@ -100,7 +100,7 @@ func (s *ServerImpl) GetDashboardRiskiestAssets(ctx echo.Context) error {
 	})
 }
 
-func (s *ServerImpl) getRiskiestAssetsForFindingType(ctx context.Context, findingType backendmodels.ScanType) ([]models.RiskyAsset, error) {
+func (s *ServerImpl) getRiskiestAssetsForFindingType(ctx context.Context, findingType backendmodels.ScanType) ([]types.RiskyAsset, error) {
 	riskiestAssets, err := s.getRiskiestAssetsPerFinding(ctx, findingType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get riskiest assets: %w", err)
@@ -109,7 +109,7 @@ func (s *ServerImpl) getRiskiestAssetsForFindingType(ctx context.Context, findin
 	return toAPIRiskyAssets(*riskiestAssets.Items, findingType), nil
 }
 
-func (s *ServerImpl) getRiskiestAssetsForVulnerabilityType(ctx context.Context) ([]models.VulnerabilityRiskyAsset, error) {
+func (s *ServerImpl) getRiskiestAssetsForVulnerabilityType(ctx context.Context) ([]types.VulnerabilityRiskyAsset, error) {
 	assets, err := s.getRiskiestAssetsPerFinding(ctx, backendmodels.VULNERABILITY)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get riskiest assets: %w", err)
@@ -154,8 +154,8 @@ func getOrderByOdataForVulnerabilities() string {
 	return strings.Join(ret, ",")
 }
 
-func toAPIVulnerabilityRiskyAssets(assets []backendmodels.Asset) []models.VulnerabilityRiskyAsset {
-	ret := make([]models.VulnerabilityRiskyAsset, 0, len(assets))
+func toAPIVulnerabilityRiskyAssets(assets []backendmodels.Asset) []types.VulnerabilityRiskyAsset {
+	ret := make([]types.VulnerabilityRiskyAsset, 0, len(assets))
 
 	for _, asset := range assets {
 		assetInfo, err := getAssetInfo(asset.AssetInfo)
@@ -165,7 +165,7 @@ func toAPIVulnerabilityRiskyAssets(assets []backendmodels.Asset) []models.Vulner
 		}
 
 		summary := asset.Summary.TotalVulnerabilities
-		ret = append(ret, models.VulnerabilityRiskyAsset{
+		ret = append(ret, types.VulnerabilityRiskyAsset{
 			AssetInfo:                      assetInfo,
 			CriticalVulnerabilitiesCount:   summary.TotalCriticalVulnerabilities,
 			HighVulnerabilitiesCount:       summary.TotalHighVulnerabilities,
@@ -178,8 +178,8 @@ func toAPIVulnerabilityRiskyAssets(assets []backendmodels.Asset) []models.Vulner
 	return ret
 }
 
-func toAPIRiskyAssets(assets []backendmodels.Asset, findingType backendmodels.ScanType) []models.RiskyAsset {
-	ret := make([]models.RiskyAsset, 0, len(assets))
+func toAPIRiskyAssets(assets []backendmodels.Asset, findingType backendmodels.ScanType) []types.RiskyAsset {
+	ret := make([]types.RiskyAsset, 0, len(assets))
 
 	for _, asset := range assets {
 		assetInfo, err := getAssetInfo(asset.AssetInfo)
@@ -194,7 +194,7 @@ func toAPIRiskyAssets(assets []backendmodels.Asset, findingType backendmodels.Sc
 			continue
 		}
 
-		ret = append(ret, models.RiskyAsset{
+		ret = append(ret, types.RiskyAsset{
 			AssetInfo: assetInfo,
 			Count:     count,
 		})
@@ -203,7 +203,7 @@ func toAPIRiskyAssets(assets []backendmodels.Asset, findingType backendmodels.Sc
 	return ret
 }
 
-func getAssetInfo(asset *backendmodels.AssetType) (*models.AssetInfo, error) {
+func getAssetInfo(asset *backendmodels.AssetType) (*types.AssetInfo, error) {
 	discriminator, err := asset.ValueByDiscriminator()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get value by discriminator: %w", err)
@@ -221,49 +221,49 @@ func getAssetInfo(asset *backendmodels.AssetType) (*models.AssetInfo, error) {
 	}
 }
 
-func containerInfoToAssetInfo(info backendmodels.ContainerInfo) (*models.AssetInfo, error) {
-	return &models.AssetInfo{
+func containerInfoToAssetInfo(info backendmodels.ContainerInfo) (*types.AssetInfo, error) {
+	return &types.AssetInfo{
 		Name:     info.ContainerName,
 		Location: info.Location,
-		Type:     utils.PointerTo(models.Container),
+		Type:     utils.PointerTo(types.Container),
 	}, nil
 }
 
-func containerImageInfoToAssetInfo(info backendmodels.ContainerImageInfo) (*models.AssetInfo, error) {
+func containerImageInfoToAssetInfo(info backendmodels.ContainerImageInfo) (*types.AssetInfo, error) {
 	location, _ := info.GetFirstRepoDigest()
 
-	return &models.AssetInfo{
+	return &types.AssetInfo{
 		Name:     &info.ImageID,
 		Location: &location,
-		Type:     utils.PointerTo(models.ContainerImage),
+		Type:     utils.PointerTo(types.ContainerImage),
 	}, nil
 }
 
-func vmInfoToAssetInfo(info backendmodels.VMInfo) (*models.AssetInfo, error) {
+func vmInfoToAssetInfo(info backendmodels.VMInfo) (*types.AssetInfo, error) {
 	assetType, err := getVMAssetType(info.InstanceProvider)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get asset type: %w", err)
 	}
-	return &models.AssetInfo{
+	return &types.AssetInfo{
 		Location: &info.Location,
 		Name:     &info.InstanceID,
 		Type:     assetType,
 	}, nil
 }
 
-func getVMAssetType(provider *backendmodels.CloudProvider) (*models.AssetType, error) {
+func getVMAssetType(provider *backendmodels.CloudProvider) (*types.AssetType, error) {
 	if provider == nil {
 		return nil, fmt.Errorf("provider is nil")
 	}
 	switch *provider {
 	case backendmodels.AWS:
-		return utils.PointerTo(models.AWSEC2Instance), nil
+		return utils.PointerTo(types.AWSEC2Instance), nil
 	case backendmodels.Azure:
-		return utils.PointerTo(models.AzureInstance), nil
+		return utils.PointerTo(types.AzureInstance), nil
 	case backendmodels.GCP:
-		return utils.PointerTo(models.GCPInstance), nil
+		return utils.PointerTo(types.GCPInstance), nil
 	case backendmodels.External:
-		return utils.PointerTo(models.ExternalInstance), nil
+		return utils.PointerTo(types.ExternalInstance), nil
 	case backendmodels.Docker, backendmodels.Kubernetes:
 		fallthrough
 	default:

@@ -27,14 +27,14 @@ import (
 
 	backendmodels "github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
-	"github.com/openclarity/vmclarity/uibackend/models"
+	"github.com/openclarity/vmclarity/uibackend/types"
 )
 
 const (
 	numOfTimePoints = 10
 )
 
-func (s *ServerImpl) GetDashboardFindingsTrends(ctx echo.Context, params models.GetDashboardFindingsTrendsParams) error {
+func (s *ServerImpl) GetDashboardFindingsTrends(ctx echo.Context, params types.GetDashboardFindingsTrendsParams) error {
 	reqCtx := ctx.Request().Context()
 	if err := validateParams(params); err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("Request params are not valid: %v", err))
@@ -42,9 +42,9 @@ func (s *ServerImpl) GetDashboardFindingsTrends(ctx echo.Context, params models.
 
 	times := createTimes(params)
 
-	findingTypes := models.GetFindingTypes()
+	findingTypes := types.GetFindingTypes()
 	errs := make(chan error, len(findingTypes))
-	findingsTrendsChan := make(chan models.FindingTrends, len(findingTypes))
+	findingsTrendsChan := make(chan types.FindingTrends, len(findingTypes))
 
 	var wg sync.WaitGroup
 	for _, findingType := range findingTypes {
@@ -74,7 +74,7 @@ func (s *ServerImpl) GetDashboardFindingsTrends(ctx echo.Context, params models.
 		return sendError(ctx, http.StatusInternalServerError, err.Error())
 	}
 
-	var findingsTrends models.FindingsTrends
+	var findingsTrends types.FindingsTrends
 	for findingTrends := range findingsTrendsChan {
 		findingsTrends = append(findingsTrends, findingTrends)
 	}
@@ -82,7 +82,7 @@ func (s *ServerImpl) GetDashboardFindingsTrends(ctx echo.Context, params models.
 	return sendResponse(ctx, http.StatusOK, findingsTrends)
 }
 
-func validateParams(params models.GetDashboardFindingsTrendsParams) error {
+func validateParams(params types.GetDashboardFindingsTrendsParams) error {
 	if !params.StartTime.Before(params.EndTime) {
 		return fmt.Errorf("start time must be before end time")
 	}
@@ -92,7 +92,7 @@ func validateParams(params models.GetDashboardFindingsTrendsParams) error {
 
 // createTimes returns a slice of points in time between endTime and startTime.
 // the finding trends will be reported based on the amount of active findings in each time.
-func createTimes(params models.GetDashboardFindingsTrendsParams) []time.Time {
+func createTimes(params types.GetDashboardFindingsTrendsParams) []time.Time {
 	times := make([]time.Time, numOfTimePoints)
 	timeBetweenPoints := params.EndTime.Sub(params.StartTime) / numOfTimePoints
 	t := params.EndTime
@@ -103,23 +103,23 @@ func createTimes(params models.GetDashboardFindingsTrendsParams) []time.Time {
 	return times
 }
 
-func (s *ServerImpl) getFindingTrendsForFindingType(ctx context.Context, findingType models.FindingType, times []time.Time) (models.FindingTrends, error) {
-	trends := make([]models.FindingTrend, len(times))
+func (s *ServerImpl) getFindingTrendsForFindingType(ctx context.Context, findingType types.FindingType, times []time.Time) (types.FindingTrends, error) {
+	trends := make([]types.FindingTrend, len(times))
 	for i, point := range times {
 		trend, err := s.getFindingTrendPerPoint(ctx, findingType, point)
 		if err != nil {
-			return models.FindingTrends{}, fmt.Errorf("failed to get finding trend: %w", err)
+			return types.FindingTrends{}, fmt.Errorf("failed to get finding trend: %w", err)
 		}
 		trends[i] = trend
 	}
 
-	return models.FindingTrends{
+	return types.FindingTrends{
 		FindingType: &findingType,
 		Trends:      &trends,
 	}, nil
 }
 
-func (s *ServerImpl) getFindingTrendPerPoint(ctx context.Context, findingType models.FindingType, point time.Time) (models.FindingTrend, error) {
+func (s *ServerImpl) getFindingTrendPerPoint(ctx context.Context, findingType types.FindingType, point time.Time) (types.FindingTrend, error) {
 	// Count total findings for the given finding type that was active during the given time point.
 	findings, err := s.BackendClient.GetFindings(ctx, backendmodels.GetFindingsParams{
 		Count: utils.PointerTo(true),
@@ -131,30 +131,30 @@ func (s *ServerImpl) getFindingTrendPerPoint(ctx context.Context, findingType mo
 		Top:    utils.PointerTo(0),
 	})
 	if err != nil {
-		return models.FindingTrend{}, fmt.Errorf("failed to get findings for the given point: %w", err)
+		return types.FindingTrend{}, fmt.Errorf("failed to get findings for the given point: %w", err)
 	}
 
-	return models.FindingTrend{
+	return types.FindingTrend{
 		Count: findings.Count,
 		Time:  &point,
 	}, nil
 }
 
-func getObjectType(findingType models.FindingType) string {
+func getObjectType(findingType types.FindingType) string {
 	switch findingType {
-	case models.EXPLOIT:
+	case types.EXPLOIT:
 		return "Exploit"
-	case models.MALWARE:
+	case types.MALWARE:
 		return "Malware"
-	case models.MISCONFIGURATION:
+	case types.MISCONFIGURATION:
 		return "Misconfiguration"
-	case models.PACKAGE:
+	case types.PACKAGE:
 		return "Package"
-	case models.ROOTKIT:
+	case types.ROOTKIT:
 		return "Rootkit"
-	case models.SECRET:
+	case types.SECRET:
 		return "Secret"
-	case models.VULNERABILITY:
+	case types.VULNERABILITY:
 		return "Vulnerability"
 	}
 

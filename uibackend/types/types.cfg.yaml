@@ -1,6 +1,6 @@
-package: models
+package: types
 generate:
   models: true
-output: models/models.gen.go
+output: types/types.gen.go
 output-options:
   skip-prune: true

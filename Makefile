@@ -84,12 +84,12 @@ bin/vmclarity-cli: $(shell find api) $(shell find cmd/vmclarity-cli) $(shell fin
 		-X 'github.com/openclarity/vmclarity/utils/version.BuildTimestamp=$(BUILD_TIMESTAMP)'" \
 		-o $@ cmd/vmclarity-cli/main.go
 
-bin/vmclarity-ui-backend: $(shell find api) $(shell find uibackend/server/cmd) $(shell find uibackend/server/pkg) go.mod go.sum | $(BIN_DIR)
+bin/vmclarity-ui-backend: $(shell find api) $(shell find uibackend/server/cmd) $(shell find uibackend/server/pkg) uibackend/server/go.mod uibackend/server/go.sum | $(BIN_DIR)
 	cd uibackend/server && go build -race -ldflags="-s -w \
 		-X 'github.com/openclarity/vmclarity/utils/version.Version=$(VERSION)' \
 		-X 'github.com/openclarity/vmclarity/utils/version.CommitHash=$(COMMIT_HASH)' \
 		-X 'github.com/openclarity/vmclarity/utils/version.BuildTimestamp=$(BUILD_TIMESTAMP)'" \
-		-o $@ cmd/main.go
+		-o ../../$@ cmd/main.go
 
 bin/vmclarity-cr-discovery-server: $(shell find api) $(shell find cmd/vmclarity-cr-discovery-server) $(shell find pkg) go.mod go.sum | $(BIN_DIR)
 	go build -race -o bin/vmclarity-cr-discovery-server cmd/vmclarity-cr-discovery-server/main.go

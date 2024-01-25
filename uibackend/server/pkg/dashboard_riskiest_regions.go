@@ -25,7 +25,7 @@ import (
 
 	backendmodels "github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
-	"github.com/openclarity/vmclarity/uibackend/models"
+	"github.com/openclarity/vmclarity/uibackend/types"
 )
 
 func (s *ServerImpl) GetDashboardRiskiestRegions(ctx echo.Context) error {
@@ -37,14 +37,14 @@ func (s *ServerImpl) GetDashboardRiskiestRegions(ctx echo.Context) error {
 	}
 
 	regionFindings := createRegionFindingsFromAssets(assets)
-	return sendResponse(ctx, http.StatusOK, &models.RiskiestRegions{
+	return sendResponse(ctx, http.StatusOK, &types.RiskiestRegions{
 		Regions: &regionFindings,
 	})
 }
 
-func createRegionFindingsFromAssets(assets *backendmodels.Assets) []models.RegionFindings {
+func createRegionFindingsFromAssets(assets *backendmodels.Assets) []types.RegionFindings {
 	// Map regions to findings count per finding type
-	findingsPerRegion := make(map[string]*models.FindingsCount)
+	findingsPerRegion := make(map[string]*types.FindingsCount)
 
 	// Sum all asset findings counts (the latest findings per asset) to the total region findings count.
 	// asset/ScanFindingsSummary should contain the latest results per family.
@@ -55,7 +55,7 @@ func createRegionFindingsFromAssets(assets *backendmodels.Assets) []models.Regio
 			continue
 		}
 		if _, ok := findingsPerRegion[region]; !ok {
-			findingsPerRegion[region] = &models.FindingsCount{
+			findingsPerRegion[region] = &types.FindingsCount{
 				Exploits:          utils.PointerTo(0),
 				Malware:           utils.PointerTo(0),
 				Misconfigurations: utils.PointerTo(0),
@@ -68,10 +68,10 @@ func createRegionFindingsFromAssets(assets *backendmodels.Assets) []models.Regio
 		findingsPerRegion[region] = addAssetSummaryToFindingsCount(regionFindings, asset.Summary)
 	}
 
-	items := []models.RegionFindings{}
+	items := []types.RegionFindings{}
 	for region, findings := range findingsPerRegion {
 		r := region
-		items = append(items, models.RegionFindings{
+		items = append(items, types.RegionFindings{
 			FindingsCount: findings,
 			RegionName:    &r,
 		})
@@ -107,7 +107,7 @@ func getRegionByProvider(info backendmodels.VMInfo) string {
 	return info.Location
 }
 
-func addAssetSummaryToFindingsCount(findingsCount *models.FindingsCount, summary *backendmodels.ScanFindingsSummary) *models.FindingsCount {
+func addAssetSummaryToFindingsCount(findingsCount *types.FindingsCount, summary *backendmodels.ScanFindingsSummary) *types.FindingsCount {
 	if summary == nil {
 		return findingsCount
 	}
@@ -118,7 +118,7 @@ func addAssetSummaryToFindingsCount(findingsCount *models.FindingsCount, summary
 	rootkits := *findingsCount.Rootkits + utils.IntPointerValOrEmpty(summary.TotalRootkits)
 	malware := *findingsCount.Malware + utils.IntPointerValOrEmpty(summary.TotalMalware)
 	misconfigurations := *findingsCount.Misconfigurations + utils.IntPointerValOrEmpty(summary.TotalMisconfigurations)
-	return &models.FindingsCount{
+	return &types.FindingsCount{
 		Exploits:          &exploits,
 		Malware:           &malware,
 		Misconfigurations: &misconfigurations,

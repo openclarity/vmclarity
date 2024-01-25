@@ -28,7 +28,7 @@ ARG COMMIT_HASH
 
 ENV CGO_ENABLED=0
 
-WORKDIR ./uibackend/server
+WORKDIR /build/uibackend/server
 
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \

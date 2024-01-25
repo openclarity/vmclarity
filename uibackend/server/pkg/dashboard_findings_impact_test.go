@@ -26,7 +26,7 @@ import (
 	backendmodels "github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/shared/findingkey"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
-	"github.com/openclarity/vmclarity/uibackend/models"
+	"github.com/openclarity/vmclarity/uibackend/types"
 )
 
 func Test_processFindings(t *testing.T) {
@@ -441,12 +441,12 @@ func Test_getSortedFindingInfoCountSlice(t *testing.T) {
 func Test_createFindingsImpact(t *testing.T) {
 	type args struct {
 		findingInfoCountSlice []findingInfoCount
-		createFunc            func(findingInfo *backendmodels.Finding_FindingInfo, count int) (models.RootkitFindingImpact, error)
+		createFunc            func(findingInfo *backendmodels.Finding_FindingInfo, count int) (types.RootkitFindingImpact, error)
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    []models.RootkitFindingImpact
+		want    []types.RootkitFindingImpact
 		wantErr bool
 	}{
 		{
@@ -468,29 +468,29 @@ func Test_createFindingsImpact(t *testing.T) {
 				},
 				createFunc: createRootkitFindingImpact,
 			},
-			want: []models.RootkitFindingImpact{
+			want: []types.RootkitFindingImpact{
 				{
 					AffectedAssetsCount: utils.PointerTo(19),
-					Rootkit: &models.Rootkit{
+					Rootkit: &types.Rootkit{
 						Message:     utils.PointerTo("path1"),
 						RootkitName: utils.PointerTo("name1"),
-						RootkitType: utils.PointerTo(models.RootkitType("type1")),
+						RootkitType: utils.PointerTo(types.RootkitType("type1")),
 					},
 				},
 				{
 					AffectedAssetsCount: utils.PointerTo(7),
-					Rootkit: &models.Rootkit{
+					Rootkit: &types.Rootkit{
 						Message:     utils.PointerTo("path2"),
 						RootkitName: utils.PointerTo("name2"),
-						RootkitType: utils.PointerTo(models.RootkitType("type2")),
+						RootkitType: utils.PointerTo(types.RootkitType("type2")),
 					},
 				},
 				{
 					AffectedAssetsCount: utils.PointerTo(5),
-					Rootkit: &models.Rootkit{
+					Rootkit: &types.Rootkit{
 						Message:     utils.PointerTo("path3"),
 						RootkitName: utils.PointerTo("name3"),
-						RootkitType: utils.PointerTo(models.RootkitType("type3")),
+						RootkitType: utils.PointerTo(types.RootkitType("type3")),
 					},
 				},
 			},
@@ -531,45 +531,45 @@ func Test_createFindingsImpact(t *testing.T) {
 				},
 				createFunc: createRootkitFindingImpact,
 			},
-			want: []models.RootkitFindingImpact{
+			want: []types.RootkitFindingImpact{
 				{
 					AffectedAssetsCount: utils.PointerTo(19),
-					Rootkit: &models.Rootkit{
+					Rootkit: &types.Rootkit{
 						Message:     utils.PointerTo("path1"),
 						RootkitName: utils.PointerTo("name1"),
-						RootkitType: utils.PointerTo(models.RootkitType("type1")),
+						RootkitType: utils.PointerTo(types.RootkitType("type1")),
 					},
 				},
 				{
 					AffectedAssetsCount: utils.PointerTo(7),
-					Rootkit: &models.Rootkit{
+					Rootkit: &types.Rootkit{
 						Message:     utils.PointerTo("path2"),
 						RootkitName: utils.PointerTo("name2"),
-						RootkitType: utils.PointerTo(models.RootkitType("type2")),
+						RootkitType: utils.PointerTo(types.RootkitType("type2")),
 					},
 				},
 				{
 					AffectedAssetsCount: utils.PointerTo(5),
-					Rootkit: &models.Rootkit{
+					Rootkit: &types.Rootkit{
 						Message:     utils.PointerTo("path3"),
 						RootkitName: utils.PointerTo("name3"),
-						RootkitType: utils.PointerTo(models.RootkitType("type3")),
+						RootkitType: utils.PointerTo(types.RootkitType("type3")),
 					},
 				},
 				{
 					AffectedAssetsCount: utils.PointerTo(4),
-					Rootkit: &models.Rootkit{
+					Rootkit: &types.Rootkit{
 						Message:     utils.PointerTo("path4"),
 						RootkitName: utils.PointerTo("name3"),
-						RootkitType: utils.PointerTo(models.RootkitType("type3")),
+						RootkitType: utils.PointerTo(types.RootkitType("type3")),
 					},
 				},
 				{
 					AffectedAssetsCount: utils.PointerTo(3),
-					Rootkit: &models.Rootkit{
+					Rootkit: &types.Rootkit{
 						Message:     utils.PointerTo("path5"),
 						RootkitName: utils.PointerTo("name3"),
-						RootkitType: utils.PointerTo(models.RootkitType("type3")),
+						RootkitType: utils.PointerTo(types.RootkitType("type3")),
 					},
 				},
 			},

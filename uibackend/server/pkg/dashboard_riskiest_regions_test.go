@@ -26,7 +26,7 @@ import (
 
 	backendmodels "github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
-	"github.com/openclarity/vmclarity/uibackend/models"
+	"github.com/openclarity/vmclarity/uibackend/types"
 )
 
 func Test_getAssetLocation(t *testing.T) {
@@ -86,18 +86,18 @@ func Test_getAssetLocation(t *testing.T) {
 
 func Test_addAssetSummaryToFindingsCount(t *testing.T) {
 	type args struct {
-		findingsCount *models.FindingsCount
+		findingsCount *types.FindingsCount
 		summary       *backendmodels.ScanFindingsSummary
 	}
 	tests := []struct {
 		name string
 		args args
-		want *models.FindingsCount
+		want *types.FindingsCount
 	}{
 		{
 			name: "nil",
 			args: args{
-				findingsCount: &models.FindingsCount{
+				findingsCount: &types.FindingsCount{
 					Exploits:          utils.PointerTo(1),
 					Malware:           utils.PointerTo(2),
 					Misconfigurations: utils.PointerTo(3),
@@ -107,7 +107,7 @@ func Test_addAssetSummaryToFindingsCount(t *testing.T) {
 				},
 				summary: nil,
 			},
-			want: &models.FindingsCount{
+			want: &types.FindingsCount{
 				Exploits:          utils.PointerTo(1),
 				Malware:           utils.PointerTo(2),
 				Misconfigurations: utils.PointerTo(3),
@@ -119,7 +119,7 @@ func Test_addAssetSummaryToFindingsCount(t *testing.T) {
 		{
 			name: "sanity",
 			args: args{
-				findingsCount: &models.FindingsCount{
+				findingsCount: &types.FindingsCount{
 					Exploits:          utils.PointerTo(1),
 					Malware:           utils.PointerTo(2),
 					Misconfigurations: utils.PointerTo(3),
@@ -143,7 +143,7 @@ func Test_addAssetSummaryToFindingsCount(t *testing.T) {
 					},
 				},
 			},
-			want: &models.FindingsCount{
+			want: &types.FindingsCount{
 				Exploits:          utils.PointerTo(3),
 				Malware:           utils.PointerTo(5),
 				Misconfigurations: utils.PointerTo(7),
@@ -225,7 +225,7 @@ func Test_createRegionFindingsFromAssets(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want []models.RegionFindings
+		want []types.RegionFindings
 	}{
 		{
 			name: "Unsupported asset is skipped",
@@ -254,7 +254,7 @@ func Test_createRegionFindingsFromAssets(t *testing.T) {
 					}),
 				},
 			},
-			want: []models.RegionFindings{},
+			want: []types.RegionFindings{},
 		},
 		{
 			name: "sanity",
@@ -319,9 +319,9 @@ func Test_createRegionFindingsFromAssets(t *testing.T) {
 					},
 				},
 			},
-			want: []models.RegionFindings{
+			want: []types.RegionFindings{
 				{
-					FindingsCount: &models.FindingsCount{
+					FindingsCount: &types.FindingsCount{
 						Exploits:          utils.PointerTo(3),
 						Malware:           utils.PointerTo(5),
 						Misconfigurations: utils.PointerTo(7),
@@ -332,7 +332,7 @@ func Test_createRegionFindingsFromAssets(t *testing.T) {
 					RegionName: utils.PointerTo("region1"),
 				},
 				{
-					FindingsCount: &models.FindingsCount{
+					FindingsCount: &types.FindingsCount{
 						Exploits:          utils.PointerTo(3),
 						Malware:           utils.PointerTo(4),
 						Misconfigurations: utils.PointerTo(5),
@@ -348,7 +348,7 @@ func Test_createRegionFindingsFromAssets(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := createRegionFindingsFromAssets(tt.args.assets)
-			if diff := cmp.Diff(tt.want, got, cmpopts.SortSlices(func(a, b models.RegionFindings) bool { return *a.RegionName < *b.RegionName })); diff != "" {
+			if diff := cmp.Diff(tt.want, got, cmpopts.SortSlices(func(a, b types.RegionFindings) bool { return *a.RegionName < *b.RegionName })); diff != "" {
 				t.Errorf("createRegionFindingsFromAssets() mismatch (-want +got):\n%s", diff)
 			}
 		})

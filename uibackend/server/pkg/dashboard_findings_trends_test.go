@@ -22,7 +22,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"gotest.tools/v3/assert"
 
-	"github.com/openclarity/vmclarity/uibackend/models"
+	"github.com/openclarity/vmclarity/uibackend/types"
 )
 
 func Test_createTimes(t *testing.T) {
@@ -75,7 +75,7 @@ func Test_createTimes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			params := models.GetDashboardFindingsTrendsParams{
+			params := types.GetDashboardFindingsTrendsParams{
 				StartTime: mustParse(t, tt.args.startTime),
 				EndTime:   mustParse(t, tt.args.endTime),
 			}
@@ -95,7 +95,7 @@ func mustParse(t *testing.T, timeStr string) time.Time {
 
 func Test_validateParams(t *testing.T) {
 	type args struct {
-		params models.GetDashboardFindingsTrendsParams
+		params types.GetDashboardFindingsTrendsParams
 	}
 	tests := []struct {
 		name    string
@@ -105,7 +105,7 @@ func Test_validateParams(t *testing.T) {
 		{
 			name: "start time before end time",
 			args: args{
-				params: models.GetDashboardFindingsTrendsParams{
+				params: types.GetDashboardFindingsTrendsParams{
 					StartTime: mustParse(t, "2006-01-03T10:32:00Z"),
 					EndTime:   mustParse(t, "2006-01-03T12:56:00Z"),
 				},
@@ -115,7 +115,7 @@ func Test_validateParams(t *testing.T) {
 		{
 			name: "start time and end time are the same",
 			args: args{
-				params: models.GetDashboardFindingsTrendsParams{
+				params: types.GetDashboardFindingsTrendsParams{
 					StartTime: mustParse(t, "2006-01-03T10:32:00Z"),
 					EndTime:   mustParse(t, "2006-01-03T10:32:00Z"),
 				},
@@ -125,7 +125,7 @@ func Test_validateParams(t *testing.T) {
 		{
 			name: "start time after end time",
 			args: args{
-				params: models.GetDashboardFindingsTrendsParams{
+				params: types.GetDashboardFindingsTrendsParams{
 					StartTime: mustParse(t, "2006-01-03T12:56:00Z"),
 					EndTime:   mustParse(t, "2006-01-03T10:32:00Z"),
 				},
@@ -144,7 +144,7 @@ func Test_validateParams(t *testing.T) {
 
 func Test_getObjectType(t *testing.T) {
 	type args struct {
-		findingType models.FindingType
+		findingType types.FindingType
 	}
 	tests := []struct {
 		name string
@@ -154,49 +154,49 @@ func Test_getObjectType(t *testing.T) {
 		{
 			name: "Exploit",
 			args: args{
-				findingType: models.EXPLOIT,
+				findingType: types.EXPLOIT,
 			},
 			want: "Exploit",
 		},
 		{
 			name: "Malware",
 			args: args{
-				findingType: models.MALWARE,
+				findingType: types.MALWARE,
 			},
 			want: "Malware",
 		},
 		{
 			name: "Misconfiguration",
 			args: args{
-				findingType: models.MISCONFIGURATION,
+				findingType: types.MISCONFIGURATION,
 			},
 			want: "Misconfiguration",
 		},
 		{
 			name: "Package",
 			args: args{
-				findingType: models.PACKAGE,
+				findingType: types.PACKAGE,
 			},
 			want: "Package",
 		},
 		{
 			name: "Rootkit",
 			args: args{
-				findingType: models.ROOTKIT,
+				findingType: types.ROOTKIT,
 			},
 			want: "Rootkit",
 		},
 		{
 			name: "Secret",
 			args: args{
-				findingType: models.SECRET,
+				findingType: types.SECRET,
 			},
 			want: "Secret",
 		},
 		{
 			name: "Vulnerability",
 			args: args{
-				findingType: models.VULNERABILITY,
+				findingType: types.VULNERABILITY,
 			},
 			want: "Vulnerability",
 		},

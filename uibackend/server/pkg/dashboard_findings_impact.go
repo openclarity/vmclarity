@@ -28,7 +28,7 @@ import (
 	backendmodels "github.com/openclarity/vmclarity/api/models"
 	"github.com/openclarity/vmclarity/pkg/shared/findingkey"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
-	"github.com/openclarity/vmclarity/uibackend/models"
+	"github.com/openclarity/vmclarity/uibackend/types"
 )
 
 const (
@@ -54,7 +54,7 @@ type findingInfoCount struct {
 }
 
 type findingsImpactData struct {
-	findingsImpact               models.FindingsImpact
+	findingsImpact               types.FindingsImpact
 	findingsImpactFetchedChannel chan struct{}
 	findingsImpactMutex          sync.RWMutex
 	once                         sync.Once
@@ -90,37 +90,37 @@ func (s *ServerImpl) recalculateFindingsImpact(ctx context.Context) {
 	log.Debugf("Done recalculating findings impact...")
 }
 
-func (s *ServerImpl) getFindingsImpact(ctx context.Context) (models.FindingsImpact, error) {
+func (s *ServerImpl) getFindingsImpact(ctx context.Context) (types.FindingsImpact, error) {
 	exploits, err := s.getExploitsFindingImpact(ctx)
 	if err != nil {
-		return models.FindingsImpact{}, fmt.Errorf("failed to get exploits finding impact: %w", err)
+		return types.FindingsImpact{}, fmt.Errorf("failed to get exploits finding impact: %w", err)
 	}
 	malware, err := s.getMalwareFindingImpact(ctx)
 	if err != nil {
-		return models.FindingsImpact{}, fmt.Errorf("failed to get malware finding impact: %w", err)
+		return types.FindingsImpact{}, fmt.Errorf("failed to get malware finding impact: %w", err)
 	}
 	misconfigurations, err := s.getMisconfigurationsFindingImpact(ctx)
 	if err != nil {
-		return models.FindingsImpact{}, fmt.Errorf("failed to get misconfigurations finding impact: %w", err)
+		return types.FindingsImpact{}, fmt.Errorf("failed to get misconfigurations finding impact: %w", err)
 	}
 	rootkits, err := s.getRootkitsFindingImpact(ctx)
 	if err != nil {
-		return models.FindingsImpact{}, fmt.Errorf("failed to get rootkits finding impact: %w", err)
+		return types.FindingsImpact{}, fmt.Errorf("failed to get rootkits finding impact: %w", err)
 	}
 	secrets, err := s.getSecretsFindingImpact(ctx)
 	if err != nil {
-		return models.FindingsImpact{}, fmt.Errorf("failed to get secrets finding impact: %w", err)
+		return types.FindingsImpact{}, fmt.Errorf("failed to get secrets finding impact: %w", err)
 	}
 	vulnerabilities, err := s.getVulnerabilitiesFindingImpact(ctx)
 	if err != nil {
-		return models.FindingsImpact{}, fmt.Errorf("failed to get vulnerabilities finding impact: %w", err)
+		return types.FindingsImpact{}, fmt.Errorf("failed to get vulnerabilities finding impact: %w", err)
 	}
 	packages, err := s.getPackagesFindingImpact(ctx)
 	if err != nil {
-		return models.FindingsImpact{}, fmt.Errorf("failed to get packages finding impact: %w", err)
+		return types.FindingsImpact{}, fmt.Errorf("failed to get packages finding impact: %w", err)
 	}
 
-	return models.FindingsImpact{
+	return types.FindingsImpact{
 		Exploits:          &exploits,
 		Malware:           &malware,
 		Misconfigurations: &misconfigurations,
@@ -131,8 +131,8 @@ func (s *ServerImpl) getFindingsImpact(ctx context.Context) (models.FindingsImpa
 	}, nil
 }
 
-func (s *ServerImpl) getExploitsFindingImpact(ctx context.Context) ([]models.ExploitFindingImpact, error) {
-	var ret []models.ExploitFindingImpact
+func (s *ServerImpl) getExploitsFindingImpact(ctx context.Context) ([]types.ExploitFindingImpact, error) {
+	var ret []types.ExploitFindingImpact
 
 	findingAssetMapCount, err := s.getFindingToAssetCountMap(ctx, "Exploit")
 	if err != nil {
@@ -149,15 +149,15 @@ func (s *ServerImpl) getExploitsFindingImpact(ctx context.Context) ([]models.Exp
 	return ret, nil
 }
 
-func createExploitFindingImpact(findingInfo *backendmodels.Finding_FindingInfo, count int) (models.ExploitFindingImpact, error) {
+func createExploitFindingImpact(findingInfo *backendmodels.Finding_FindingInfo, count int) (types.ExploitFindingImpact, error) {
 	info, err := findingInfo.AsExploitFindingInfo()
 	if err != nil {
-		return models.ExploitFindingImpact{}, fmt.Errorf("failed to convert finding info to exploit info: %w", err)
+		return types.ExploitFindingImpact{}, fmt.Errorf("failed to convert finding info to exploit info: %w", err)
 	}
 
-	return models.ExploitFindingImpact{
+	return types.ExploitFindingImpact{
 		AffectedAssetsCount: &count,
-		Exploit: &models.Exploit{
+		Exploit: &types.Exploit{
 			CveID:       info.CveID,
 			Description: info.Description,
 			Name:        info.Name,
@@ -168,8 +168,8 @@ func createExploitFindingImpact(findingInfo *backendmodels.Finding_FindingInfo, 
 	}, nil
 }
 
-func (s *ServerImpl) getMalwareFindingImpact(ctx context.Context) ([]models.MalwareFindingImpact, error) {
-	var ret []models.MalwareFindingImpact
+func (s *ServerImpl) getMalwareFindingImpact(ctx context.Context) ([]types.MalwareFindingImpact, error) {
+	var ret []types.MalwareFindingImpact
 
 	findingAssetMapCount, err := s.getFindingToAssetCountMap(ctx, "Malware")
 	if err != nil {
@@ -186,15 +186,15 @@ func (s *ServerImpl) getMalwareFindingImpact(ctx context.Context) ([]models.Malw
 	return ret, nil
 }
 
-func createMalwareFindingImpact(findingInfo *backendmodels.Finding_FindingInfo, count int) (models.MalwareFindingImpact, error) {
+func createMalwareFindingImpact(findingInfo *backendmodels.Finding_FindingInfo, count int) (types.MalwareFindingImpact, error) {
 	info, err := findingInfo.AsMalwareFindingInfo()
 	if err != nil {
-		return models.MalwareFindingImpact{}, fmt.Errorf("failed to convert finding info to malware info: %w", err)
+		return types.MalwareFindingImpact{}, fmt.Errorf("failed to convert finding info to malware info: %w", err)
 	}
 
-	return models.MalwareFindingImpact{
+	return types.MalwareFindingImpact{
 		AffectedAssetsCount: &count,
-		Malware: &models.Malware{
+		Malware: &types.Malware{
 			MalwareName: info.MalwareName,
 			MalwareType: info.MalwareType,
 			Path:        info.Path,
@@ -203,8 +203,8 @@ func createMalwareFindingImpact(findingInfo *backendmodels.Finding_FindingInfo, 
 	}, nil
 }
 
-func (s *ServerImpl) getMisconfigurationsFindingImpact(ctx context.Context) ([]models.MisconfigurationFindingImpact, error) {
-	var ret []models.MisconfigurationFindingImpact
+func (s *ServerImpl) getMisconfigurationsFindingImpact(ctx context.Context) ([]types.MisconfigurationFindingImpact, error) {
+	var ret []types.MisconfigurationFindingImpact
 
 	findingAssetMapCount, err := s.getFindingToAssetCountMap(ctx, "Misconfiguration")
 	if err != nil {
@@ -221,15 +221,15 @@ func (s *ServerImpl) getMisconfigurationsFindingImpact(ctx context.Context) ([]m
 	return ret, nil
 }
 
-func createMisconfigurationFindingImpact(findingInfo *backendmodels.Finding_FindingInfo, count int) (models.MisconfigurationFindingImpact, error) {
+func createMisconfigurationFindingImpact(findingInfo *backendmodels.Finding_FindingInfo, count int) (types.MisconfigurationFindingImpact, error) {
 	info, err := findingInfo.AsMisconfigurationFindingInfo()
 	if err != nil {
-		return models.MisconfigurationFindingImpact{}, fmt.Errorf("failed to convert finding info to misconfiguration info: %w", err)
+		return types.MisconfigurationFindingImpact{}, fmt.Errorf("failed to convert finding info to misconfiguration info: %w", err)
 	}
 
-	return models.MisconfigurationFindingImpact{
+	return types.MisconfigurationFindingImpact{
 		AffectedAssetsCount: &count,
-		Misconfiguration: &models.Misconfiguration{
+		Misconfiguration: &types.Misconfiguration{
 			Message:         info.Message,
 			Remediation:     info.Remediation,
 			ScannedPath:     info.ScannedPath,
@@ -242,12 +242,12 @@ func createMisconfigurationFindingImpact(findingInfo *backendmodels.Finding_Find
 	}, nil
 }
 
-func toModelsMisconfigurationSeverity(severity *backendmodels.MisconfigurationSeverity) *models.MisconfigurationSeverity {
-	return utils.PointerTo(models.MisconfigurationSeverity(*severity))
+func toModelsMisconfigurationSeverity(severity *backendmodels.MisconfigurationSeverity) *types.MisconfigurationSeverity {
+	return utils.PointerTo(types.MisconfigurationSeverity(*severity))
 }
 
-func (s *ServerImpl) getRootkitsFindingImpact(ctx context.Context) ([]models.RootkitFindingImpact, error) {
-	var ret []models.RootkitFindingImpact
+func (s *ServerImpl) getRootkitsFindingImpact(ctx context.Context) ([]types.RootkitFindingImpact, error) {
+	var ret []types.RootkitFindingImpact
 
 	findingAssetMapCount, err := s.getFindingToAssetCountMap(ctx, "Rootkit")
 	if err != nil {
@@ -264,15 +264,15 @@ func (s *ServerImpl) getRootkitsFindingImpact(ctx context.Context) ([]models.Roo
 	return ret, nil
 }
 
-func createRootkitFindingImpact(findingInfo *backendmodels.Finding_FindingInfo, count int) (models.RootkitFindingImpact, error) {
+func createRootkitFindingImpact(findingInfo *backendmodels.Finding_FindingInfo, count int) (types.RootkitFindingImpact, error) {
 	info, err := findingInfo.AsRootkitFindingInfo()
 	if err != nil {
-		return models.RootkitFindingImpact{}, fmt.Errorf("failed to convert finding info to rootkit info: %w", err)
+		return types.RootkitFindingImpact{}, fmt.Errorf("failed to convert finding info to rootkit info: %w", err)
 	}
 
-	return models.RootkitFindingImpact{
+	return types.RootkitFindingImpact{
 		AffectedAssetsCount: &count,
-		Rootkit: &models.Rootkit{
+		Rootkit: &types.Rootkit{
 			Message:     info.Message,
 			RootkitName: info.RootkitName,
 			RootkitType: toModelsRootkitType(info.RootkitType),
@@ -280,12 +280,12 @@ func createRootkitFindingImpact(findingInfo *backendmodels.Finding_FindingInfo, 
 	}, nil
 }
 
-func toModelsRootkitType(rootkitType *backendmodels.RootkitType) *models.RootkitType {
-	return utils.PointerTo(models.RootkitType(*rootkitType))
+func toModelsRootkitType(rootkitType *backendmodels.RootkitType) *types.RootkitType {
+	return utils.PointerTo(types.RootkitType(*rootkitType))
 }
 
-func (s *ServerImpl) getSecretsFindingImpact(ctx context.Context) ([]models.SecretFindingImpact, error) {
-	var ret []models.SecretFindingImpact
+func (s *ServerImpl) getSecretsFindingImpact(ctx context.Context) ([]types.SecretFindingImpact, error) {
+	var ret []types.SecretFindingImpact
 
 	findingAssetMapCount, err := s.getFindingToAssetCountMap(ctx, "Secret")
 	if err != nil {
@@ -302,15 +302,15 @@ func (s *ServerImpl) getSecretsFindingImpact(ctx context.Context) ([]models.Secr
 	return ret, nil
 }
 
-func createSecretFindingImpact(findingInfo *backendmodels.Finding_FindingInfo, count int) (models.SecretFindingImpact, error) {
+func createSecretFindingImpact(findingInfo *backendmodels.Finding_FindingInfo, count int) (types.SecretFindingImpact, error) {
 	info, err := findingInfo.AsSecretFindingInfo()
 	if err != nil {
-		return models.SecretFindingImpact{}, fmt.Errorf("failed to convert finding info to secret info: %w", err)
+		return types.SecretFindingImpact{}, fmt.Errorf("failed to convert finding info to secret info: %w", err)
 	}
 
-	return models.SecretFindingImpact{
+	return types.SecretFindingImpact{
 		AffectedAssetsCount: &count,
-		Secret: &models.Secret{
+		Secret: &types.Secret{
 			EndColumn:   info.EndColumn,
 			EndLine:     info.EndLine,
 			FilePath:    info.FilePath,
@@ -321,8 +321,8 @@ func createSecretFindingImpact(findingInfo *backendmodels.Finding_FindingInfo, c
 	}, nil
 }
 
-func (s *ServerImpl) getVulnerabilitiesFindingImpact(ctx context.Context) ([]models.VulnerabilityFindingImpact, error) {
-	var ret []models.VulnerabilityFindingImpact
+func (s *ServerImpl) getVulnerabilitiesFindingImpact(ctx context.Context) ([]types.VulnerabilityFindingImpact, error) {
+	var ret []types.VulnerabilityFindingImpact
 	var findingInfoCountSlice []findingInfoCount
 
 	// We want to get the results ordered by severity first, so we will fetch findings per severity.
@@ -349,15 +349,15 @@ func (s *ServerImpl) getVulnerabilitiesFindingImpact(ctx context.Context) ([]mod
 	return ret, nil
 }
 
-func createVulnerabilityFindingImpact(findingInfo *backendmodels.Finding_FindingInfo, count int) (models.VulnerabilityFindingImpact, error) {
+func createVulnerabilityFindingImpact(findingInfo *backendmodels.Finding_FindingInfo, count int) (types.VulnerabilityFindingImpact, error) {
 	info, err := findingInfo.AsVulnerabilityFindingInfo()
 	if err != nil {
-		return models.VulnerabilityFindingImpact{}, fmt.Errorf("failed to convert finding info to vulnerability info: %w", err)
+		return types.VulnerabilityFindingImpact{}, fmt.Errorf("failed to convert finding info to vulnerability info: %w", err)
 	}
 
-	return models.VulnerabilityFindingImpact{
+	return types.VulnerabilityFindingImpact{
 		AffectedAssetsCount: &count,
-		Vulnerability: &models.Vulnerability{
+		Vulnerability: &types.Vulnerability{
 			Cvss:              toModelsVulnerabilityCVSSArray(info.Cvss),
 			Severity:          toModelsVulnerabilitySeverity(info.Severity),
 			VulnerabilityName: info.VulnerabilityName,
@@ -365,56 +365,56 @@ func createVulnerabilityFindingImpact(findingInfo *backendmodels.Finding_Finding
 	}, nil
 }
 
-func toModelsVulnerabilitySeverity(severity *backendmodels.VulnerabilitySeverity) *models.VulnerabilitySeverity {
+func toModelsVulnerabilitySeverity(severity *backendmodels.VulnerabilitySeverity) *types.VulnerabilitySeverity {
 	switch *severity {
 	case backendmodels.CRITICAL:
-		return utils.PointerTo(models.CRITICAL)
+		return utils.PointerTo(types.CRITICAL)
 	case backendmodels.HIGH:
-		return utils.PointerTo(models.HIGH)
+		return utils.PointerTo(types.HIGH)
 	case backendmodels.MEDIUM:
-		return utils.PointerTo(models.MEDIUM)
+		return utils.PointerTo(types.MEDIUM)
 	case backendmodels.LOW:
-		return utils.PointerTo(models.LOW)
+		return utils.PointerTo(types.LOW)
 	case backendmodels.NEGLIGIBLE:
-		return utils.PointerTo(models.NEGLIGIBLE)
+		return utils.PointerTo(types.NEGLIGIBLE)
 	default:
 		// should not happen in runtime
 		panic("unsupported severity")
 	}
 }
 
-func toModelsVulnerabilityCVSSArray(cvss *[]backendmodels.VulnerabilityCvss) *[]models.VulnerabilityCvss {
+func toModelsVulnerabilityCVSSArray(cvss *[]backendmodels.VulnerabilityCvss) *[]types.VulnerabilityCvss {
 	if cvss == nil {
 		return nil
 	}
-	ret := make([]models.VulnerabilityCvss, len(*cvss))
+	ret := make([]types.VulnerabilityCvss, len(*cvss))
 	for i, vulnerabilityCvss := range *cvss {
 		ret[i] = toModelsVulnerabilityCVSS(vulnerabilityCvss)
 	}
 	return &ret
 }
 
-func toModelsVulnerabilityCVSS(cvss backendmodels.VulnerabilityCvss) models.VulnerabilityCvss {
-	return models.VulnerabilityCvss{
+func toModelsVulnerabilityCVSS(cvss backendmodels.VulnerabilityCvss) types.VulnerabilityCvss {
+	return types.VulnerabilityCvss{
 		Metrics: toModelsVulnerabilityCVSSMetrics(cvss.Metrics),
 		Vector:  cvss.Vector,
 		Version: cvss.Version,
 	}
 }
 
-func toModelsVulnerabilityCVSSMetrics(metrics *backendmodels.VulnerabilityCvssMetrics) *models.VulnerabilityCvssMetrics {
+func toModelsVulnerabilityCVSSMetrics(metrics *backendmodels.VulnerabilityCvssMetrics) *types.VulnerabilityCvssMetrics {
 	if metrics == nil {
 		return nil
 	}
-	return &models.VulnerabilityCvssMetrics{
+	return &types.VulnerabilityCvssMetrics{
 		BaseScore:           metrics.BaseScore,
 		ExploitabilityScore: metrics.ExploitabilityScore,
 		ImpactScore:         metrics.ImpactScore,
 	}
 }
 
-func (s *ServerImpl) getPackagesFindingImpact(ctx context.Context) ([]models.PackageFindingImpact, error) {
-	var ret []models.PackageFindingImpact
+func (s *ServerImpl) getPackagesFindingImpact(ctx context.Context) ([]types.PackageFindingImpact, error) {
+	var ret []types.PackageFindingImpact
 
 	findingAssetMapCount, err := s.getFindingToAssetCountMap(ctx, "Package")
 	if err != nil {
@@ -431,15 +431,15 @@ func (s *ServerImpl) getPackagesFindingImpact(ctx context.Context) ([]models.Pac
 	return ret, nil
 }
 
-func createPackageFindingImpact(findingInfo *backendmodels.Finding_FindingInfo, count int) (models.PackageFindingImpact, error) {
+func createPackageFindingImpact(findingInfo *backendmodels.Finding_FindingInfo, count int) (types.PackageFindingImpact, error) {
 	info, err := findingInfo.AsPackageFindingInfo()
 	if err != nil {
-		return models.PackageFindingImpact{}, fmt.Errorf("failed to convert finding info to package info: %w", err)
+		return types.PackageFindingImpact{}, fmt.Errorf("failed to convert finding info to package info: %w", err)
 	}
 
-	return models.PackageFindingImpact{
+	return types.PackageFindingImpact{
 		AffectedAssetsCount: &count,
-		Package: &models.Package{
+		Package: &types.Package{
 			Name:    info.Name,
 			Purl:    info.Purl,
 			Version: info.Version,
