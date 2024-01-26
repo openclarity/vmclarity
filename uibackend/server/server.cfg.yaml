@@ -1,5 +1,5 @@
 package: server
-output: server/pkg/server.gen.go
+output: server.gen.go
 additional-imports:
   - package: github.com/openclarity/vmclarity/uibackend/types
     alias: .
