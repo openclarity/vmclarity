@@ -26,8 +26,8 @@ import (
 
 	apiclient "github.com/openclarity/vmclarity/api/client"
 	"github.com/openclarity/vmclarity/api/types"
-	"github.com/openclarity/vmclarity/cmd/vmclarity-cli/logutil"
-	cliutils "github.com/openclarity/vmclarity/pkg/cli/utils"
+	"github.com/openclarity/vmclarity/cli/cmd/logutil"
+	cliutils "github.com/openclarity/vmclarity/cli/pkg/utils"
 )
 
 // AssetCreateCmd represents the standalone command.

@@ -30,12 +30,12 @@ import (
 	trivyTypes "github.com/aquasecurity/trivy/pkg/types"
 	trivyFsutils "github.com/aquasecurity/trivy/pkg/utils/fsutils"
 
-	"github.com/openclarity/vmclarity/pkg/shared/analyzer"
-	"github.com/openclarity/vmclarity/pkg/shared/config"
-	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
-	"github.com/openclarity/vmclarity/pkg/shared/utils/image_helper"
-	"github.com/openclarity/vmclarity/pkg/shared/utils/trivy"
+	"github.com/openclarity/vmclarity/cli/pkg/analyzer"
+	"github.com/openclarity/vmclarity/cli/pkg/config"
+	"github.com/openclarity/vmclarity/cli/pkg/job_manager"
+	"github.com/openclarity/vmclarity/cli/pkg/utils"
+	"github.com/openclarity/vmclarity/cli/pkg/utils/image_helper"
+	"github.com/openclarity/vmclarity/cli/pkg/utils/trivy"
 )
 
 const AnalyzerName = "trivy"

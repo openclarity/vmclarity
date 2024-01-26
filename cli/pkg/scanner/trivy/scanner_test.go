@@ -22,7 +22,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
-	"github.com/openclarity/vmclarity/pkg/shared/scanner"
+	"github.com/openclarity/vmclarity/cli/pkg/scanner"
 )
 
 func Test_getTypeFromPurl(t *testing.T) {

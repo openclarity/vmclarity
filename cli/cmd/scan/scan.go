@@ -27,15 +27,15 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/openclarity/vmclarity/cmd/vmclarity-cli/logutil"
-	"github.com/openclarity/vmclarity/pkg/cli"
+	"github.com/openclarity/vmclarity/cli/cmd/logutil"
+	cli "github.com/openclarity/vmclarity/cli/pkg"
 
-	"github.com/openclarity/vmclarity/pkg/cli/state"
+	"github.com/openclarity/vmclarity/cli/pkg/state"
 
-	"github.com/openclarity/vmclarity/pkg/cli/presenter"
+	"github.com/openclarity/vmclarity/cli/pkg/presenter"
 
 	apiclient "github.com/openclarity/vmclarity/api/client"
-	"github.com/openclarity/vmclarity/pkg/shared/families"
+	"github.com/openclarity/vmclarity/cli/pkg/families"
 	"github.com/openclarity/vmclarity/utils/log"
 )
 

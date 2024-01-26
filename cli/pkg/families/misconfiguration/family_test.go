@@ -19,7 +19,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/openclarity/vmclarity/pkg/shared/families/misconfiguration/types"
+	"github.com/openclarity/vmclarity/cli/pkg/families/misconfiguration/types"
 )
 
 func TestStripPathFromResult(t *testing.T) {

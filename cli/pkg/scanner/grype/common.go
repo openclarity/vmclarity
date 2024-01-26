@@ -23,10 +23,10 @@ import (
 	syft_source "github.com/anchore/syft/syft/source"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/openclarity/vmclarity/pkg/shared/config"
-	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
-	"github.com/openclarity/vmclarity/pkg/shared/scanner"
-	"github.com/openclarity/vmclarity/pkg/shared/utils/image_helper"
+	"github.com/openclarity/vmclarity/cli/pkg/config"
+	"github.com/openclarity/vmclarity/cli/pkg/job_manager"
+	"github.com/openclarity/vmclarity/cli/pkg/scanner"
+	"github.com/openclarity/vmclarity/cli/pkg/utils/image_helper"
 )
 
 const (

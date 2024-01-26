@@ -15,7 +15,7 @@
 
 package main
 
-import "github.com/openclarity/vmclarity/cmd/vmclarity-cli/root"
+import "github.com/openclarity/vmclarity/cli/cmd/root"
 
 func main() {
 	root.Execute()

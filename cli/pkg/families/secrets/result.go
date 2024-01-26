@@ -16,7 +16,7 @@
 package secrets
 
 import (
-	"github.com/openclarity/vmclarity/pkg/shared/families/types"
+	"github.com/openclarity/vmclarity/cli/pkg/families/types"
 )
 
 type Results struct {

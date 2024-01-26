@@ -29,10 +29,10 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/openclarity/vmclarity/pkg/shared/families/infofinder/types"
-	familiesutils "github.com/openclarity/vmclarity/pkg/shared/families/utils"
-	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
+	"github.com/openclarity/vmclarity/cli/pkg/families/infofinder/types"
+	familiesutils "github.com/openclarity/vmclarity/cli/pkg/families/utils"
+	"github.com/openclarity/vmclarity/cli/pkg/job_manager"
+	"github.com/openclarity/vmclarity/cli/pkg/utils"
 )
 
 const ScannerName = "sshTopology"

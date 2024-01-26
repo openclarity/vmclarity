@@ -23,11 +23,11 @@ import (
 	"github.com/onsi/gomega/gstruct"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
-	"github.com/openclarity/vmclarity/pkg/shared/config"
-	"github.com/openclarity/vmclarity/pkg/shared/families"
-	"github.com/openclarity/vmclarity/pkg/shared/families/sbom"
-	"github.com/openclarity/vmclarity/pkg/shared/families/types"
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
+	"github.com/openclarity/vmclarity/cli/pkg/config"
+	"github.com/openclarity/vmclarity/cli/pkg/families"
+	"github.com/openclarity/vmclarity/cli/pkg/families/sbom"
+	"github.com/openclarity/vmclarity/cli/pkg/families/types"
+	"github.com/openclarity/vmclarity/cli/pkg/utils"
 )
 
 //go:embed testdata/effective-config.json

@@ -16,7 +16,7 @@
 package common
 
 import (
-	gitleaksconfig "github.com/openclarity/vmclarity/pkg/shared/families/secrets/gitleaks/config"
+	gitleaksconfig "github.com/openclarity/vmclarity/cli/pkg/families/secrets/gitleaks/config"
 )
 
 type ScannersConfig struct {

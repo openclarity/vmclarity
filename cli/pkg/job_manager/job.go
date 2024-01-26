@@ -16,7 +16,7 @@
 package job_manager // nolint:revive,stylecheck
 
 import (
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
+	"github.com/openclarity/vmclarity/cli/pkg/utils"
 )
 
 type Job interface {

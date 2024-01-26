@@ -18,7 +18,7 @@ package analyzer
 import (
 	cdx "github.com/CycloneDX/cyclonedx-go"
 
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
+	"github.com/openclarity/vmclarity/cli/pkg/utils"
 )
 
 type Results struct {

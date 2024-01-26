@@ -23,8 +23,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/openclarity/vmclarity/pkg/shared/families/rootkits/types"
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
+	"github.com/openclarity/vmclarity/cli/pkg/families/rootkits/types"
+	"github.com/openclarity/vmclarity/cli/pkg/utils"
 )
 
 // nolint:nonamedreturns

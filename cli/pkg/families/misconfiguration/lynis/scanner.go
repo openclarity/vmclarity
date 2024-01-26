@@ -26,10 +26,10 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/openclarity/vmclarity/pkg/shared/families/misconfiguration/types"
-	familiesutils "github.com/openclarity/vmclarity/pkg/shared/families/utils"
-	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
+	"github.com/openclarity/vmclarity/cli/pkg/families/misconfiguration/types"
+	familiesutils "github.com/openclarity/vmclarity/cli/pkg/families/utils"
+	"github.com/openclarity/vmclarity/cli/pkg/job_manager"
+	"github.com/openclarity/vmclarity/cli/pkg/utils"
 )
 
 const (

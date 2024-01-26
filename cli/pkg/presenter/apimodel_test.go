@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package utils
+package presenter
 
 import (
 	"reflect"
@@ -25,22 +25,22 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
-	"github.com/openclarity/vmclarity/pkg/shared/families/exploits"
-	common2 "github.com/openclarity/vmclarity/pkg/shared/families/exploits/common"
-	"github.com/openclarity/vmclarity/pkg/shared/families/infofinder"
-	infofinderTypes "github.com/openclarity/vmclarity/pkg/shared/families/infofinder/types"
-	"github.com/openclarity/vmclarity/pkg/shared/families/malware"
-	malwarecommon "github.com/openclarity/vmclarity/pkg/shared/families/malware/common"
-	"github.com/openclarity/vmclarity/pkg/shared/families/misconfiguration"
-	misconfigurationTypes "github.com/openclarity/vmclarity/pkg/shared/families/misconfiguration/types"
-	"github.com/openclarity/vmclarity/pkg/shared/families/sbom"
-	"github.com/openclarity/vmclarity/pkg/shared/families/secrets"
-	"github.com/openclarity/vmclarity/pkg/shared/families/secrets/common"
-	"github.com/openclarity/vmclarity/pkg/shared/families/types"
-	"github.com/openclarity/vmclarity/pkg/shared/families/vulnerabilities"
-	"github.com/openclarity/vmclarity/pkg/shared/scanner"
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
-	"github.com/openclarity/vmclarity/pkg/shared/utils/vulnerability"
+	"github.com/openclarity/vmclarity/cli/pkg/families/exploits"
+	common2 "github.com/openclarity/vmclarity/cli/pkg/families/exploits/common"
+	"github.com/openclarity/vmclarity/cli/pkg/families/infofinder"
+	infofinderTypes "github.com/openclarity/vmclarity/cli/pkg/families/infofinder/types"
+	"github.com/openclarity/vmclarity/cli/pkg/families/malware"
+	malwarecommon "github.com/openclarity/vmclarity/cli/pkg/families/malware/common"
+	"github.com/openclarity/vmclarity/cli/pkg/families/misconfiguration"
+	misconfigurationTypes "github.com/openclarity/vmclarity/cli/pkg/families/misconfiguration/types"
+	"github.com/openclarity/vmclarity/cli/pkg/families/sbom"
+	"github.com/openclarity/vmclarity/cli/pkg/families/secrets"
+	"github.com/openclarity/vmclarity/cli/pkg/families/secrets/common"
+	"github.com/openclarity/vmclarity/cli/pkg/families/types"
+	"github.com/openclarity/vmclarity/cli/pkg/families/vulnerabilities"
+	"github.com/openclarity/vmclarity/cli/pkg/scanner"
+	"github.com/openclarity/vmclarity/cli/pkg/utils"
+	"github.com/openclarity/vmclarity/cli/pkg/utils/vulnerability"
 )
 
 func Test_ConvertSBOMResultToPackages(t *testing.T) {

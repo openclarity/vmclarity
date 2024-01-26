@@ -25,7 +25,7 @@ import (
 	trivyFlag "github.com/aquasecurity/trivy/pkg/flag"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
+	"github.com/openclarity/vmclarity/cli/pkg/utils"
 )
 
 func SourceToTrivySource(sourceType utils.SourceType) (artifact.TargetKind, error) {

@@ -24,9 +24,9 @@ import (
 
 	"github.com/openclarity/vmclarity/api/client"
 	apitypes "github.com/openclarity/vmclarity/api/types"
-	"github.com/openclarity/vmclarity/pkg/shared/families"
-	"github.com/openclarity/vmclarity/pkg/shared/families/types"
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
+	"github.com/openclarity/vmclarity/cli/pkg/families"
+	"github.com/openclarity/vmclarity/cli/pkg/families/types"
+	"github.com/openclarity/vmclarity/cli/pkg/utils"
 	"github.com/openclarity/vmclarity/utils/log"
 )
 

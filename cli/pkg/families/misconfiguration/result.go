@@ -18,8 +18,8 @@ package misconfiguration
 import (
 	"time"
 
-	"github.com/openclarity/vmclarity/pkg/shared/families/misconfiguration/types"
-	familiestypes "github.com/openclarity/vmclarity/pkg/shared/families/types"
+	"github.com/openclarity/vmclarity/cli/pkg/families/misconfiguration/types"
+	familiestypes "github.com/openclarity/vmclarity/cli/pkg/families/types"
 )
 
 type FlattenedMisconfiguration struct {

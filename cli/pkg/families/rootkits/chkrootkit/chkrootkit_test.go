@@ -24,8 +24,8 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"gotest.tools/v3/assert"
 
-	chkrootkitutils "github.com/openclarity/vmclarity/pkg/shared/families/rootkits/chkrootkit/utils"
-	"github.com/openclarity/vmclarity/pkg/shared/families/rootkits/common"
+	chkrootkitutils "github.com/openclarity/vmclarity/cli/pkg/families/rootkits/chkrootkit/utils"
+	"github.com/openclarity/vmclarity/cli/pkg/families/rootkits/common"
 )
 
 func Test_toResultsRootkits(t *testing.T) {

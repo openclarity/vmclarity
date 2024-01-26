@@ -20,14 +20,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/openclarity/vmclarity/pkg/shared/families/infofinder/job"
-	infofinderTypes "github.com/openclarity/vmclarity/pkg/shared/families/infofinder/types"
-	"github.com/openclarity/vmclarity/pkg/shared/families/interfaces"
-	"github.com/openclarity/vmclarity/pkg/shared/families/results"
-	"github.com/openclarity/vmclarity/pkg/shared/families/types"
-	familiesutils "github.com/openclarity/vmclarity/pkg/shared/families/utils"
-	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
+	"github.com/openclarity/vmclarity/cli/pkg/families/infofinder/job"
+	infofinderTypes "github.com/openclarity/vmclarity/cli/pkg/families/infofinder/types"
+	"github.com/openclarity/vmclarity/cli/pkg/families/interfaces"
+	"github.com/openclarity/vmclarity/cli/pkg/families/results"
+	"github.com/openclarity/vmclarity/cli/pkg/families/types"
+	familiesutils "github.com/openclarity/vmclarity/cli/pkg/families/utils"
+	"github.com/openclarity/vmclarity/cli/pkg/job_manager"
+	"github.com/openclarity/vmclarity/cli/pkg/utils"
 	"github.com/openclarity/vmclarity/utils/log"
 )
 

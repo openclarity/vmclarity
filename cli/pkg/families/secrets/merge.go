@@ -16,7 +16,7 @@
 package secrets
 
 import (
-	"github.com/openclarity/vmclarity/pkg/shared/families/secrets/common"
+	"github.com/openclarity/vmclarity/cli/pkg/families/secrets/common"
 )
 
 type MergedResults struct {

@@ -18,9 +18,9 @@ package fake
 import (
 	log "github.com/sirupsen/logrus"
 
-	misconfigurationTypes "github.com/openclarity/vmclarity/pkg/shared/families/misconfiguration/types"
-	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
+	misconfigurationTypes "github.com/openclarity/vmclarity/cli/pkg/families/misconfiguration/types"
+	"github.com/openclarity/vmclarity/cli/pkg/job_manager"
+	"github.com/openclarity/vmclarity/cli/pkg/utils"
 )
 
 const ScannerName = "fake"

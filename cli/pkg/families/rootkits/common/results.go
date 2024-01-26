@@ -15,7 +15,7 @@
 
 package common
 
-import "github.com/openclarity/vmclarity/pkg/shared/families/rootkits/types"
+import "github.com/openclarity/vmclarity/cli/pkg/families/rootkits/types"
 
 type Results struct {
 	Rootkits     []Rootkit

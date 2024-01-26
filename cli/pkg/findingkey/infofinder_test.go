@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	"github.com/openclarity/vmclarity/api/types"
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
+	"github.com/openclarity/vmclarity/cli/pkg/utils"
 )
 
 func TestGenerateInfoFinderKey(t *testing.T) {

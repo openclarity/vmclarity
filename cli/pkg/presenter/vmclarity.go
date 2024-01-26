@@ -22,18 +22,17 @@ import (
 
 	"github.com/openclarity/vmclarity/api/client"
 	apitypes "github.com/openclarity/vmclarity/api/types"
-	cliutils "github.com/openclarity/vmclarity/pkg/cli/utils"
-	"github.com/openclarity/vmclarity/pkg/shared/families"
-	"github.com/openclarity/vmclarity/pkg/shared/families/exploits"
-	"github.com/openclarity/vmclarity/pkg/shared/families/infofinder"
-	"github.com/openclarity/vmclarity/pkg/shared/families/malware"
-	"github.com/openclarity/vmclarity/pkg/shared/families/misconfiguration"
-	"github.com/openclarity/vmclarity/pkg/shared/families/rootkits"
-	"github.com/openclarity/vmclarity/pkg/shared/families/sbom"
-	"github.com/openclarity/vmclarity/pkg/shared/families/secrets"
-	"github.com/openclarity/vmclarity/pkg/shared/families/types"
-	"github.com/openclarity/vmclarity/pkg/shared/families/vulnerabilities"
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
+	"github.com/openclarity/vmclarity/cli/pkg/families"
+	"github.com/openclarity/vmclarity/cli/pkg/families/exploits"
+	"github.com/openclarity/vmclarity/cli/pkg/families/infofinder"
+	"github.com/openclarity/vmclarity/cli/pkg/families/malware"
+	"github.com/openclarity/vmclarity/cli/pkg/families/misconfiguration"
+	"github.com/openclarity/vmclarity/cli/pkg/families/rootkits"
+	"github.com/openclarity/vmclarity/cli/pkg/families/sbom"
+	"github.com/openclarity/vmclarity/cli/pkg/families/secrets"
+	"github.com/openclarity/vmclarity/cli/pkg/families/types"
+	"github.com/openclarity/vmclarity/cli/pkg/families/vulnerabilities"
+	"github.com/openclarity/vmclarity/cli/pkg/utils"
 )
 
 type AssetScanID = apitypes.AssetScanID
@@ -100,7 +99,7 @@ func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res families.
 				utils.PointerTo("failed to convert to sbom results"),
 			)
 		} else {
-			assetScan.Sbom.Packages = utils.PointerTo(cliutils.ConvertSBOMResultToPackages(sbomResults))
+			assetScan.Sbom.Packages = utils.PointerTo(ConvertSBOMResultToPackages(sbomResults))
 			assetScan.Summary.TotalPackages = utils.PointerTo(len(*assetScan.Sbom.Packages))
 			assetScan.Stats.Sbom = getInputScanStats(sbomResults.Metadata.InputScans)
 			assetScan.Sbom.Status = apitypes.NewScannerStatus(
@@ -150,7 +149,7 @@ func (v *VMClarityPresenter) ExportVulResult(ctx context.Context, res families.F
 				utils.PointerTo("failed to convert to vulnerabilities results"),
 			)
 		} else {
-			assetScan.Vulnerabilities.Vulnerabilities = utils.PointerTo(cliutils.ConvertVulnResultToVulnerabilities(vulnerabilitiesResults))
+			assetScan.Vulnerabilities.Vulnerabilities = utils.PointerTo(ConvertVulnResultToVulnerabilities(vulnerabilitiesResults))
 			assetScan.Summary.TotalVulnerabilities = utils.GetVulnerabilityTotalsPerSeverity(assetScan.Vulnerabilities.Vulnerabilities)
 			assetScan.Stats.Vulnerabilities = getInputScanStats(vulnerabilitiesResults.Metadata.InputScans)
 			assetScan.Vulnerabilities.Status = apitypes.NewScannerStatus(
@@ -200,7 +199,7 @@ func (v *VMClarityPresenter) ExportSecretsResult(ctx context.Context, res famili
 				utils.PointerTo("failed to convert to secrets results"),
 			)
 		} else {
-			assetScan.Secrets.Secrets = utils.PointerTo(cliutils.ConvertSecretsResultToSecrets(secretsResults))
+			assetScan.Secrets.Secrets = utils.PointerTo(ConvertSecretsResultToSecrets(secretsResults))
 			assetScan.Summary.TotalSecrets = utils.PointerTo(len(*assetScan.Secrets.Secrets))
 			assetScan.Stats.Secrets = getInputScanStats(secretsResults.Metadata.InputScans)
 			assetScan.Secrets.Status = apitypes.NewScannerStatus(
@@ -272,7 +271,7 @@ func (v *VMClarityPresenter) ExportMalwareResult(ctx context.Context, res famili
 				utils.PointerTo("failed to convert to malware results"),
 			)
 		} else {
-			mware, mdata := cliutils.ConvertMalwareResultToMalwareAndMetadata(malwareResults)
+			mware, mdata := ConvertMalwareResultToMalwareAndMetadata(malwareResults)
 			assetScan.Summary.TotalMalware = utils.PointerTo(len(mware))
 			assetScan.Stats.Malware = getInputScanStats(malwareResults.Metadata.InputScans)
 			assetScan.Malware.Malware = utils.PointerTo(mware)
@@ -323,7 +322,7 @@ func (v *VMClarityPresenter) ExportExploitsResult(ctx context.Context, res famil
 				utils.PointerTo("failed to convert to exploits results"),
 			)
 		} else {
-			assetScan.Exploits.Exploits = utils.PointerTo(cliutils.ConvertExploitsResultToExploits(exploitsResults))
+			assetScan.Exploits.Exploits = utils.PointerTo(ConvertExploitsResultToExploits(exploitsResults))
 			assetScan.Summary.TotalExploits = utils.PointerTo(len(*assetScan.Exploits.Exploits))
 			assetScan.Stats.Exploits = getInputScanStats(exploitsResults.Metadata.InputScans)
 			assetScan.Exploits.Status = apitypes.NewScannerStatus(
@@ -373,7 +372,7 @@ func (v *VMClarityPresenter) ExportMisconfigurationResult(ctx context.Context, r
 				utils.PointerTo("failed to convert to misconfiguration results"),
 			)
 		} else {
-			misconfigurations, scanners, err := cliutils.ConvertMisconfigurationResultToMisconfigurationsAndScanners(misconfigurationResults)
+			misconfigurations, scanners, err := ConvertMisconfigurationResultToMisconfigurationsAndScanners(misconfigurationResults)
 			if err != nil {
 				assetScan.Misconfigurations.Status = apitypes.NewScannerStatus(
 					apitypes.ScannerStatusStateFailed,
@@ -433,7 +432,7 @@ func (v *VMClarityPresenter) ExportInfoFinderResult(ctx context.Context, res fam
 				utils.PointerTo("failed to convert to info finder results"),
 			)
 		} else {
-			apiInfoFinder, scanners, err := cliutils.ConvertInfoFinderResultToInfosAndScanners(results)
+			apiInfoFinder, scanners, err := ConvertInfoFinderResultToInfosAndScanners(results)
 			if err != nil {
 				assetScan.InfoFinder.Status = apitypes.NewScannerStatus(
 					apitypes.ScannerStatusStateFailed,
@@ -493,7 +492,7 @@ func (v *VMClarityPresenter) ExportRootkitResult(ctx context.Context, res famili
 				utils.PointerTo("failed to convert to rootkits results"),
 			)
 		} else {
-			assetScan.Rootkits.Rootkits = utils.PointerTo(cliutils.ConvertRootkitsResultToRootkits(rootkitsResults))
+			assetScan.Rootkits.Rootkits = utils.PointerTo(ConvertRootkitsResultToRootkits(rootkitsResults))
 			assetScan.Summary.TotalRootkits = utils.PointerTo(len(*assetScan.Rootkits.Rootkits))
 			assetScan.Stats.Rootkits = getInputScanStats(rootkitsResults.Metadata.InputScans)
 			assetScan.Rootkits.Status = apitypes.NewScannerStatus(

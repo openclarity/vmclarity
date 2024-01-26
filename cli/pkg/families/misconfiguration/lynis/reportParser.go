@@ -21,7 +21,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/openclarity/vmclarity/pkg/shared/families/misconfiguration/types"
+	"github.com/openclarity/vmclarity/cli/pkg/families/misconfiguration/types"
 )
 
 const (

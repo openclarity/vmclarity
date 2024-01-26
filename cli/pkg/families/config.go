@@ -16,16 +16,16 @@
 package families
 
 import (
-	"github.com/openclarity/vmclarity/pkg/shared/families/exploits"
-	infofinderTypes "github.com/openclarity/vmclarity/pkg/shared/families/infofinder/types"
-	"github.com/openclarity/vmclarity/pkg/shared/families/malware"
-	misconfigurationTypes "github.com/openclarity/vmclarity/pkg/shared/families/misconfiguration/types"
-	"github.com/openclarity/vmclarity/pkg/shared/families/rootkits"
-	"github.com/openclarity/vmclarity/pkg/shared/families/sbom"
-	"github.com/openclarity/vmclarity/pkg/shared/families/secrets"
-	"github.com/openclarity/vmclarity/pkg/shared/families/types"
-	"github.com/openclarity/vmclarity/pkg/shared/families/vulnerabilities"
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
+	"github.com/openclarity/vmclarity/cli/pkg/families/exploits"
+	infofinderTypes "github.com/openclarity/vmclarity/cli/pkg/families/infofinder/types"
+	"github.com/openclarity/vmclarity/cli/pkg/families/malware"
+	misconfigurationTypes "github.com/openclarity/vmclarity/cli/pkg/families/misconfiguration/types"
+	"github.com/openclarity/vmclarity/cli/pkg/families/rootkits"
+	"github.com/openclarity/vmclarity/cli/pkg/families/sbom"
+	"github.com/openclarity/vmclarity/cli/pkg/families/secrets"
+	"github.com/openclarity/vmclarity/cli/pkg/families/types"
+	"github.com/openclarity/vmclarity/cli/pkg/families/vulnerabilities"
+	"github.com/openclarity/vmclarity/cli/pkg/utils"
 )
 
 type Config struct {

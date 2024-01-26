@@ -16,7 +16,7 @@
 package types
 
 import (
-	"github.com/openclarity/vmclarity/pkg/shared/families/types"
+	"github.com/openclarity/vmclarity/cli/pkg/families/types"
 )
 
 type Config struct {

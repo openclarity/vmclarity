@@ -16,9 +16,9 @@
 package job
 
 import (
-	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
-	"github.com/openclarity/vmclarity/pkg/shared/scanner/grype"
-	"github.com/openclarity/vmclarity/pkg/shared/scanner/trivy"
+	"github.com/openclarity/vmclarity/cli/pkg/job_manager"
+	"github.com/openclarity/vmclarity/cli/pkg/scanner/grype"
+	"github.com/openclarity/vmclarity/cli/pkg/scanner/trivy"
 )
 
 var Factory = job_manager.NewJobFactory()

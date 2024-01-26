@@ -20,8 +20,8 @@ import (
 
 	cdx "github.com/CycloneDX/cyclonedx-go"
 
-	"github.com/openclarity/vmclarity/pkg/shared/converter"
-	"github.com/openclarity/vmclarity/pkg/shared/families/types"
+	"github.com/openclarity/vmclarity/cli/pkg/converter"
+	"github.com/openclarity/vmclarity/cli/pkg/families/types"
 )
 
 type Results struct {

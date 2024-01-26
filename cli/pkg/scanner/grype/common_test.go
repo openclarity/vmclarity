@@ -26,7 +26,7 @@ import (
 	"github.com/jinzhu/copier"
 	"gotest.tools/assert"
 
-	"github.com/openclarity/vmclarity/pkg/shared/scanner"
+	"github.com/openclarity/vmclarity/cli/pkg/scanner"
 )
 
 func TestCreateResults(t *testing.T) {

@@ -21,17 +21,17 @@ import (
 	"os"
 	"time"
 
-	"github.com/openclarity/vmclarity/pkg/shared/scanner/job"
+	"github.com/openclarity/vmclarity/cli/pkg/scanner/job"
 
-	"github.com/openclarity/vmclarity/pkg/shared/config"
-	"github.com/openclarity/vmclarity/pkg/shared/families/interfaces"
-	"github.com/openclarity/vmclarity/pkg/shared/families/results"
-	"github.com/openclarity/vmclarity/pkg/shared/families/sbom"
-	"github.com/openclarity/vmclarity/pkg/shared/families/types"
-	familiesutils "github.com/openclarity/vmclarity/pkg/shared/families/utils"
-	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
-	"github.com/openclarity/vmclarity/pkg/shared/scanner"
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
+	"github.com/openclarity/vmclarity/cli/pkg/config"
+	"github.com/openclarity/vmclarity/cli/pkg/families/interfaces"
+	"github.com/openclarity/vmclarity/cli/pkg/families/results"
+	"github.com/openclarity/vmclarity/cli/pkg/families/sbom"
+	"github.com/openclarity/vmclarity/cli/pkg/families/types"
+	familiesutils "github.com/openclarity/vmclarity/cli/pkg/families/utils"
+	"github.com/openclarity/vmclarity/cli/pkg/job_manager"
+	"github.com/openclarity/vmclarity/cli/pkg/scanner"
+	"github.com/openclarity/vmclarity/cli/pkg/utils"
 	"github.com/openclarity/vmclarity/utils/log"
 )
 

@@ -19,7 +19,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/openclarity/vmclarity/pkg/shared/families/rootkits/common"
+	"github.com/openclarity/vmclarity/cli/pkg/families/rootkits/common"
 )
 
 func TestStripPathFromResult(t *testing.T) {

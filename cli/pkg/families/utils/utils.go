@@ -22,9 +22,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/openclarity/vmclarity/pkg/shared/families/types"
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
-	"github.com/openclarity/vmclarity/pkg/shared/utils/containerrootfs"
+	"github.com/openclarity/vmclarity/cli/pkg/families/types"
+	"github.com/openclarity/vmclarity/cli/pkg/utils"
+	"github.com/openclarity/vmclarity/cli/pkg/utils/containerrootfs"
 	"github.com/openclarity/vmclarity/utils/log"
 )
 

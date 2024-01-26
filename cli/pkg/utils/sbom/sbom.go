@@ -18,8 +18,8 @@ package sbom
 import (
 	"fmt"
 
-	"github.com/openclarity/vmclarity/pkg/shared/converter"
-	"github.com/openclarity/vmclarity/pkg/shared/utils/cyclonedx_helper"
+	"github.com/openclarity/vmclarity/cli/pkg/converter"
+	"github.com/openclarity/vmclarity/cli/pkg/utils/cyclonedx_helper"
 )
 
 func GetTargetNameAndHashFromSBOM(inputSBOMFile string) (string, string, error) {

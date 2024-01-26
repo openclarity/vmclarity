@@ -25,10 +25,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/openclarity/vmclarity/pkg/cli/presenter"
-	"github.com/openclarity/vmclarity/pkg/cli/state"
-	"github.com/openclarity/vmclarity/pkg/shared/families"
-	"github.com/openclarity/vmclarity/pkg/shared/families/types"
+	"github.com/openclarity/vmclarity/cli/pkg/families"
+	"github.com/openclarity/vmclarity/cli/pkg/families/types"
+	"github.com/openclarity/vmclarity/cli/pkg/presenter"
+	"github.com/openclarity/vmclarity/cli/pkg/state"
 	"github.com/openclarity/vmclarity/utils/fsutils/blockdevice"
 	"github.com/openclarity/vmclarity/utils/fsutils/filesystem"
 	"github.com/openclarity/vmclarity/utils/fsutils/mount"

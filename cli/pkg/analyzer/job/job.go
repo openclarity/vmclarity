@@ -16,9 +16,9 @@
 package job
 
 import (
-	"github.com/openclarity/vmclarity/pkg/shared/analyzer/syft"
-	"github.com/openclarity/vmclarity/pkg/shared/analyzer/trivy"
-	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
+	"github.com/openclarity/vmclarity/cli/pkg/analyzer/syft"
+	"github.com/openclarity/vmclarity/cli/pkg/analyzer/trivy"
+	"github.com/openclarity/vmclarity/cli/pkg/job_manager"
 )
 
 var Factory = job_manager.NewJobFactory()

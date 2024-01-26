@@ -16,8 +16,8 @@
 package job
 
 import (
-	"github.com/openclarity/vmclarity/pkg/shared/families/rootkits/chkrootkit"
-	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
+	"github.com/openclarity/vmclarity/cli/pkg/families/rootkits/chkrootkit"
+	"github.com/openclarity/vmclarity/cli/pkg/job_manager"
 )
 
 var Factory = job_manager.NewJobFactory()

@@ -21,9 +21,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/openclarity/vmclarity/cmd/vmclarity-cli/asset"
-	"github.com/openclarity/vmclarity/cmd/vmclarity-cli/logutil"
-	"github.com/openclarity/vmclarity/cmd/vmclarity-cli/scan"
+	"github.com/openclarity/vmclarity/cli/cmd/asset"
+	"github.com/openclarity/vmclarity/cli/cmd/logutil"
+	"github.com/openclarity/vmclarity/cli/cmd/scan"
 	"github.com/openclarity/vmclarity/utils/log"
 	"github.com/openclarity/vmclarity/utils/version"
 )

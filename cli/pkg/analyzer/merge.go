@@ -25,8 +25,8 @@ import (
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/openclarity/vmclarity/pkg/shared/converter"
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
+	"github.com/openclarity/vmclarity/cli/pkg/converter"
+	"github.com/openclarity/vmclarity/cli/pkg/utils"
 )
 
 type componentKey string // Unique identification of a package (name and version)

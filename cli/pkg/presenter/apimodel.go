@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package utils
+package presenter
 
 import (
 	"fmt"
@@ -22,21 +22,21 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
-	"github.com/openclarity/vmclarity/pkg/shared/families/exploits"
-	"github.com/openclarity/vmclarity/pkg/shared/families/infofinder"
-	"github.com/openclarity/vmclarity/pkg/shared/families/infofinder/types"
-	"github.com/openclarity/vmclarity/pkg/shared/families/malware"
-	"github.com/openclarity/vmclarity/pkg/shared/families/misconfiguration"
-	misconfigurationTypes "github.com/openclarity/vmclarity/pkg/shared/families/misconfiguration/types"
-	"github.com/openclarity/vmclarity/pkg/shared/families/rootkits"
-	rootkitsTypes "github.com/openclarity/vmclarity/pkg/shared/families/rootkits/types"
-	"github.com/openclarity/vmclarity/pkg/shared/families/sbom"
-	"github.com/openclarity/vmclarity/pkg/shared/families/secrets"
-	"github.com/openclarity/vmclarity/pkg/shared/families/vulnerabilities"
-	"github.com/openclarity/vmclarity/pkg/shared/scanner"
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
-	"github.com/openclarity/vmclarity/pkg/shared/utils/cyclonedx_helper"
-	"github.com/openclarity/vmclarity/pkg/shared/utils/vulnerability"
+	"github.com/openclarity/vmclarity/cli/pkg/families/exploits"
+	"github.com/openclarity/vmclarity/cli/pkg/families/infofinder"
+	"github.com/openclarity/vmclarity/cli/pkg/families/infofinder/types"
+	"github.com/openclarity/vmclarity/cli/pkg/families/malware"
+	"github.com/openclarity/vmclarity/cli/pkg/families/misconfiguration"
+	misconfigurationTypes "github.com/openclarity/vmclarity/cli/pkg/families/misconfiguration/types"
+	"github.com/openclarity/vmclarity/cli/pkg/families/rootkits"
+	rootkitsTypes "github.com/openclarity/vmclarity/cli/pkg/families/rootkits/types"
+	"github.com/openclarity/vmclarity/cli/pkg/families/sbom"
+	"github.com/openclarity/vmclarity/cli/pkg/families/secrets"
+	"github.com/openclarity/vmclarity/cli/pkg/families/vulnerabilities"
+	"github.com/openclarity/vmclarity/cli/pkg/scanner"
+	"github.com/openclarity/vmclarity/cli/pkg/utils"
+	"github.com/openclarity/vmclarity/cli/pkg/utils/cyclonedx_helper"
+	"github.com/openclarity/vmclarity/cli/pkg/utils/vulnerability"
 )
 
 func ConvertSBOMResultToPackages(sbomResults *sbom.Results) []apitypes.Package {

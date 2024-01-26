@@ -20,15 +20,15 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/openclarity/vmclarity/pkg/shared/families"
-	"github.com/openclarity/vmclarity/pkg/shared/families/exploits"
-	"github.com/openclarity/vmclarity/pkg/shared/families/infofinder"
-	"github.com/openclarity/vmclarity/pkg/shared/families/malware"
-	"github.com/openclarity/vmclarity/pkg/shared/families/rootkits"
-	"github.com/openclarity/vmclarity/pkg/shared/families/sbom"
-	"github.com/openclarity/vmclarity/pkg/shared/families/secrets"
-	"github.com/openclarity/vmclarity/pkg/shared/families/types"
-	"github.com/openclarity/vmclarity/pkg/shared/families/vulnerabilities"
+	"github.com/openclarity/vmclarity/cli/pkg/families"
+	"github.com/openclarity/vmclarity/cli/pkg/families/exploits"
+	"github.com/openclarity/vmclarity/cli/pkg/families/infofinder"
+	"github.com/openclarity/vmclarity/cli/pkg/families/malware"
+	"github.com/openclarity/vmclarity/cli/pkg/families/rootkits"
+	"github.com/openclarity/vmclarity/cli/pkg/families/sbom"
+	"github.com/openclarity/vmclarity/cli/pkg/families/secrets"
+	"github.com/openclarity/vmclarity/cli/pkg/families/types"
+	"github.com/openclarity/vmclarity/cli/pkg/families/vulnerabilities"
 )
 
 type DefaultPresenter struct {

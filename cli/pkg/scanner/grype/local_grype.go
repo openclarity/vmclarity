@@ -37,10 +37,10 @@ import (
 	"github.com/anchore/syft/syft/pkg/cataloger"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/openclarity/vmclarity/pkg/shared/config"
-	"github.com/openclarity/vmclarity/pkg/shared/job_manager"
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
-	"github.com/openclarity/vmclarity/pkg/shared/utils/sbom"
+	"github.com/openclarity/vmclarity/cli/pkg/config"
+	"github.com/openclarity/vmclarity/cli/pkg/job_manager"
+	"github.com/openclarity/vmclarity/cli/pkg/utils"
+	"github.com/openclarity/vmclarity/cli/pkg/utils/sbom"
 )
 
 const (

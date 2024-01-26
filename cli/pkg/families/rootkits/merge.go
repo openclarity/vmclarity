@@ -16,7 +16,7 @@
 package rootkits
 
 import (
-	"github.com/openclarity/vmclarity/pkg/shared/families/rootkits/common"
+	"github.com/openclarity/vmclarity/cli/pkg/families/rootkits/common"
 )
 
 type MergedResults struct {

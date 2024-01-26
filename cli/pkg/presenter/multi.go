@@ -19,7 +19,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/openclarity/vmclarity/pkg/shared/families"
+	"github.com/openclarity/vmclarity/cli/pkg/families"
 )
 
 type MultiPresenter struct {
