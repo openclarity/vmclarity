@@ -14,14 +14,6 @@ linters-settings:
     replace-local: true
     # List of allowed `replace` directives. Default is empty.
     replace-allow-list:
-      # Replace these for trivy
-      - github.com/docker/docker
-      - oras.land/oras-go
-      # End-to-end testing
-      - cloud.google.com/go
-      - go.opentelemetry.io/otel
-      - go.opentelemetry.io/otel/metric
-      - go.opentelemetry.io/otel/sdk
       # Viper
       - github.com/mitchellh/mapstructure
       - helm.sh/helm/v3
