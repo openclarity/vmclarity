@@ -25,6 +25,7 @@ linters-settings:
       # Viper
       - github.com/mitchellh/mapstructure
       - helm.sh/helm/v3
+      - golang.org/x/exp
 
   gosec:
     # To specify a set of rules to explicitly exclude.
