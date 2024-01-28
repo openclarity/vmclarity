@@ -1,4 +1,4 @@
-# [RFC] Allow multiple assets in findings
+# [RFC] Extend asset-finding relationship logic
 
 *Note: this RFC template follows HashiCrop RFC format described [here](https://works.hashicorp.com/articles/rfc-template)*
 
@@ -12,51 +12,73 @@
 
 ---
 
-This RFC proposes the API extensions by allowing multiple Assets to be referenced in Findings in order to improve efficiency and achieve parity with the existing features.
+This RFC proposes adding `AssetFinding` API model and its supporting logic to improve efficiency and enable aggregation.
 
 ## Background
 
-The existing [API specifications](https://github.com/openclarity/vmclarity/blob/9aa03a8abe22ebddb841a9c28f7a9629f744ced7/api/openapi.yaml#L3395-L3444) only allow a single `Asset` to be referenced for a given `Finding`.
-In principle, each `Finding` is described using `(findingInfo, AssetRelationship)` pair.
-Additionally, the [database logic](https://github.com/openclarity/vmclarity/blob/9aa03a8abe22ebddb841a9c28f7a9629f744ced7/pkg/apiserver/database/gorm/finding.go#L103-L105) treats every finding that needs to be created as unique.
-Together, this can introduce suboptimal behavior for multiple reasons:
+Each finding defines some specific security details (e.g. vulnerability) discovered on an asset.
+The same finding can be discovered on multiple assets by different asset scans.
+This means that there is many-to-many relationship between findings, assets, and asset scans.
+However, the existing [specifications](https://github.com/openclarity/vmclarity/blob/9aa03a8abe22ebddb841a9c28f7a9629f744ced7/api/openapi.yaml#L3395-L3444) 
+describe findings with one-to-one relationship to assets and asset scans.
+In addition, the [database logic](https://github.com/openclarity/vmclarity/blob/9aa03a8abe22ebddb841a9c28f7a9629f744ced7/pkg/apiserver/database/gorm/finding.go#L103-L105) 
+treats every new finding as unique without performing any checks.
+Together, this can introduce issues for multiple reasons:
 
-- The lack of uniqueness check completely ignores the actual finding contents.
-- The way findings API is structured creates an unwanted dependency against assets.
-  This also leads to data duplication resulting in performance and memory utilization overheads.
-- The lack of aggregation can introduce usage and understanding complexities, e.g. by overloading the data shown on the UI.
+- Each `Finding` is coupled with an `Asset` it was discovered on and the `AssetScan` that discovered it.
+  This leads to unnecessary data duplication as each `Finding` with different association to these models will be treated as unique.
+  In addition, the lack of the actual uniqueness check completely ignores the data already present in the database.
+  Together, this creates performance and memory utilization overheads.
+- The model differs from the existing association patterns between models compared to e.g. `Asset`, `AssetScan`, and `AssetScanEstimation`.
+  This introduces complexities due to lack of proper aggregation by overloading the `Finding` data returned by the API or shown on the UI.
 
 ## Proposal
 
 The finding-related components can be changed in several ways to address the concerns above.
 This has been divided into two categories to more easily understand the scope of proposed changes.
 
-#### Addressing uniqueness
+### Addressing API changes
 
-The finding database logic can **implement uniqueness check** similar to the existing logic as exemplified [here](https://github.com/openclarity/vmclarity/blob/9aa03a8abe22ebddb841a9c28f7a9629f744ced7/pkg/apiserver/database/gorm/asset.go#L289).
-Moreover, the data required for the check can be extracted directly from the underlying object such as `VulnerabilityFindingInfo`.
-In turn, this also enables validation and support for downstream operations such as custom flows within the controller.
+Findings should serve as a collection of all security details discovered so far, irrelevant of the assets they were discovered on or the scans that discovered them.
+This means that _`Asset` relationship can be dropped from the `Finding` model._
 
-The relationship between findings and assets can be fully ignored in checks to avoid creating dependencies.
-However, this creates an issue when trying to create a `Finding` with the same underlying data but a different `Asset`.
-This is addressed in the following section.
+To express the relationship between assets and findings, new `AssetFinding` model can be added. 
+This ensures many-to-many relationship between these two models, i.e. a single finding can be discovered on multiple assets, and an asset can contain multiple findings.
+Therefore, the `AssetFinding` serves as a bridge table between different assets and findings.
+To provide statistical data regarding other models, the `Finding` can be expanded with `summary` property.
 
-#### Addressing API changes
+Similar approach can be used for asset scans and findings, although this is less relevant for this RFC.
+The `AssetScan` relationship in `Finding` can be preserved, but it should be noted that it represents the first scan that discovered this finding.
+If required to keep the track of all asset scans that discovered a specific finding, `AssetScanFinding` bridge table can be used.
 
-Findings can be extended to use a **list of assets** instead of referencing a single one as defined in the [API specs](https://github.com/openclarity/vmclarity/blob/2681efa7b5bd1009e9cf740d430587ef7f06ebb7/api/openapi.yaml#L3412).
-This ensures that the same finding can be discovered on multiple assets without having to duplicate the data.
-Combined, these changes address the performance and memory utilization issues while also enabling aggregation methods.
+#### Analysis
+The reason to have `AssetFinding` and `AssetScanFinding` as separate tables relates to time and space complexity.
+Due to current nature of these models (e.g. creating a new `Finding` or `Asset` for each version, or `AssetScan` on schedule), the size of the tables can grow rapidly.
+For example, to keep track of `#assets = 100`, `#assetScans = 100`, and `#findings = 100` requires:
+```
+Case A: no versioning changes, no additional scheduled scans
+RA_1 = R(asset, assetScan, finding) = #asset * #assetScan * #finding = 100^3 items => unified relationship table
+RA_2 = R(asset, finding) = #asset * #finding = 100^2 items => AssetFinding table
+RA_3 = R(assetScan, finding) = #assetScan * #finding = 100^2 items => AssetScanFinding table
 
-Alternatively, the `Finding` model can also be extended by adding `AssetFinding` and `AssetFindingRelationship`.
-This addresses the issue when many assets contain the same finding.
-The implementation, although slightly more complex, would be more efficient as the number of assets grows for a given finding.
-_This remains an open question on how to address the `Asset-Finding` relationship._
+Case B: 10 new versions, 10 new scans for each asset
+RB_1 = 10^3 * RA_1 = 10^5 * 100^2 => grows too quickly
+RB_2 = 10^2 * RA_2 = 10^2 * 100^2 => depends on assets and findings
+RB_3 = 10^2 * RA_3 = 10^2 * 100^2 => scans can be scheduled to occur more often than the versioning changes on other models
+```
+Therefore, it makes sense to keep track of relationship in a separate tables between these models.
+This is also why the `AssetScanFinding` table is omitted from the implementation.
 
-#### Non-goals
+### Addressing uniqueness
 
-This RFC does not intend to propose changes regarding the relationship of findings to other models like asset scans.
-In the context of this proposal, it is assumed that the `AssetScanRelationship` specified in the `Finding.foundBy` property denotes the first `AssetScan` that discovered a given `Finding`.
-This behavior, if required, can be addressed later.
+The finding database logic can **implement uniqueness check** similar to the existing logic as shown [here](https://github.com/openclarity/vmclarity/blob/9aa03a8abe22ebddb841a9c28f7a9629f744ced7/pkg/apiserver/database/gorm/asset.go#L289).
+The data required for the check can be extracted directly from the actual finding.
+
+### Non-goals
+
+This RFC does not intend to propose changes regarding the relationship of findings to asset scans.
+In the context of this proposal, it is assumed that the asset scan in a given finding represents the first scan that discovered it.
+This behavior, if required, can be addressed as described in [Addressing API changes](#addressing-api-changes) section.
 
 ### Abandoned Ideas (Optional)
 
@@ -66,9 +88,7 @@ Adding the aggregation methods to the `uibackend` API was considered but abandon
 
 ## Implementation
 
-### 1. Update `Finding` API model with the proposed changes
-
-_Option 1_ - simple finding extension
+### 1. Extend Findings-related API and database logic
 
 ```yaml
 Finding:
@@ -79,8 +99,8 @@ Finding:
       properties:
         id:
           type: string
-        assets:
-          type: array
+        assetCount:
+          type: integer
           description: List of assets that contain this finding.
           items:
             $ref: '#/components/schemas/AssetRelationship'
@@ -117,23 +137,14 @@ Finding:
               InfoFinder: '#/components/schemas/InfoFinderFindingInfo'
 ```
 
-_Option 1_ - more verbose models
-
-Alternatively, depending on the selected approach, `AssetFinding` and `AssetFindingRelationship` can be implemented.
-The model should then use a list of `AssetFindingRelationship` to express the relationship of `Assets` for a given `Finding`.
-
-### 2. Handle database-schema changes
-
-The API changes impact the database schema defined in `pkg/apiserver/database/gorm/odata.go` and should be handled accordingly.
+The API changes impact the database schema and should be handled accordingly.
 In addition, the database-related logic such as bootstrapping needs to be updated to reflect these changes.
 
-### 3. Add uniqueness checks and update related logic
+### 2. Add uniqueness checks to Findings
 
 The uniqueness check can be added similarly to the existing implementations. An example is given below.
 
 ```go
-// file: pkg/apiserver/database/gorm/finding.go
-
 func (s *FindingsTableHandler) checkUniqueness(finding models.Finding) (*models.Finding, error) {
   discriminator, err := finding.FindingInfo.ValueByDiscriminator()
   if err != nil {
@@ -166,7 +177,13 @@ Once done, the database and controller logic should also be updated to handle ca
 - the assets need to be added to a finding but are already present
 - any other edge cases not covered above
 
-### 4. Update related `Finding` UI components
+### 3. Update Finding-related UI components
+
+### 4. Add AssetFinding logic
+
+- API logic
+- Database handlers
+- Controllers
 
 ## UX
 
@@ -176,7 +193,7 @@ This RFC has no visible impacts on the UX.
 
 This RFC changes the following UI components:
 - `/findings/{findingType}` table drops the _Asset Name_ and _Asset location_ columns.
-  Instead, they are replaced with a single _Assets_ column that shows the number of assets related to a finding.
+  Instead, they are replaced with a single _Asset Count_ column that shows the number of assets related to a finding.
 - `/findings/{findingType}/{findingID}` removes _Asset details_ menu item.
   It is replaced with _See assets_ button on finding summary.
   The button redirects to the `/assets` page and displays filtered, finding-related assets by using OData queries.
