@@ -101,6 +101,11 @@ func NewConfig() (*Config, error) {
 	v.RegisterAlias("docker.scanner_image", "scanner_image")
 	v.RegisterAlias("kubernetes.scanner_image", "scanner_image")
 
+	_ = v.BindEnv("cr_discovery_server_image")
+	v.SetDefault("cr_discovery_server_image", testenv.DefaultCRDiscoveryServer)
+	v.RegisterAlias("docker.cr_discovery_server_image", "cr_discovery_server_image")
+	v.RegisterAlias("kubernetes.cr_discovery_server_image", "cr_discovery_server_image")
+
 	_ = v.BindEnv("docker.compose_files")
 
 	_ = v.BindEnv("kubernetes.provider")
