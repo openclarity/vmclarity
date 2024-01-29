@@ -22,13 +22,13 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/pkg/apiserver/common"
-	databaseTypes "github.com/openclarity/vmclarity/pkg/apiserver/database/types"
+	"github.com/openclarity/vmclarity/api/server/pkg/common"
+	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
-func (s *ServerImpl) GetScanConfigs(ctx echo.Context, params models.GetScanConfigsParams) error {
+func (s *ServerImpl) GetScanConfigs(ctx echo.Context, params types.GetScanConfigsParams) error {
 	scanConfigs, err := s.dbHandler.ScanConfigsTable().GetScanConfigs(params)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scan configs from db: %v", err))
@@ -36,7 +36,7 @@ func (s *ServerImpl) GetScanConfigs(ctx echo.Context, params models.GetScanConfi
 	return sendResponse(ctx, http.StatusOK, scanConfigs)
 }
 
-func (s *ServerImpl) GetScanConfigsScanConfigID(ctx echo.Context, scanConfigID models.ScanConfigID, params models.GetScanConfigsScanConfigIDParams) error {
+func (s *ServerImpl) GetScanConfigsScanConfigID(ctx echo.Context, scanConfigID types.ScanConfigID, params types.GetScanConfigsScanConfigIDParams) error {
 	sc, err := s.dbHandler.ScanConfigsTable().GetScanConfig(scanConfigID, params)
 	if err != nil {
 		if errors.Is(err, databaseTypes.ErrNotFound) {
@@ -48,7 +48,7 @@ func (s *ServerImpl) GetScanConfigsScanConfigID(ctx echo.Context, scanConfigID m
 }
 
 func (s *ServerImpl) PostScanConfigs(ctx echo.Context) error {
-	var scanConfig models.ScanConfig
+	var scanConfig types.ScanConfig
 	err := ctx.Bind(&scanConfig)
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
@@ -60,7 +60,7 @@ func (s *ServerImpl) PostScanConfigs(ctx echo.Context) error {
 		var validationErr *common.BadRequestError
 		switch true {
 		case errors.As(err, &conflictErr):
-			existResponse := &models.ScanConfigExists{
+			existResponse := &types.ScanConfigExists{
 				Message:    utils.PointerTo(conflictErr.Reason),
 				ScanConfig: &createdScanConfig,
 			}
@@ -75,8 +75,8 @@ func (s *ServerImpl) PostScanConfigs(ctx echo.Context) error {
 	return sendResponse(ctx, http.StatusCreated, createdScanConfig)
 }
 
-func (s *ServerImpl) DeleteScanConfigsScanConfigID(ctx echo.Context, scanConfigID models.ScanConfigID) error {
-	success := models.Success{
+func (s *ServerImpl) DeleteScanConfigsScanConfigID(ctx echo.Context, scanConfigID types.ScanConfigID) error {
+	success := types.Success{
 		Message: utils.PointerTo(fmt.Sprintf("scan config %v deleted", scanConfigID)),
 	}
 
@@ -90,8 +90,8 @@ func (s *ServerImpl) DeleteScanConfigsScanConfigID(ctx echo.Context, scanConfigI
 	return sendResponse(ctx, http.StatusOK, &success)
 }
 
-func (s *ServerImpl) PatchScanConfigsScanConfigID(ctx echo.Context, scanConfigID models.ScanConfigID, params models.PatchScanConfigsScanConfigIDParams) error {
-	var scanConfig models.ScanConfig
+func (s *ServerImpl) PatchScanConfigsScanConfigID(ctx echo.Context, scanConfigID types.ScanConfigID, params types.PatchScanConfigsScanConfigIDParams) error {
+	var scanConfig types.ScanConfig
 	err := ctx.Bind(&scanConfig)
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
@@ -113,7 +113,7 @@ func (s *ServerImpl) PatchScanConfigsScanConfigID(ctx echo.Context, scanConfigID
 		case errors.Is(err, databaseTypes.ErrNotFound):
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("ScanConfig with ID %v not found", scanConfigID))
 		case errors.As(err, &conflictErr):
-			existResponse := &models.ScanConfigExists{
+			existResponse := &types.ScanConfigExists{
 				Message:    utils.PointerTo(conflictErr.Reason),
 				ScanConfig: &updatedScanConfig,
 			}
@@ -130,8 +130,8 @@ func (s *ServerImpl) PatchScanConfigsScanConfigID(ctx echo.Context, scanConfigID
 	return sendResponse(ctx, http.StatusOK, updatedScanConfig)
 }
 
-func (s *ServerImpl) PutScanConfigsScanConfigID(ctx echo.Context, scanConfigID models.ScanConfigID, params models.PutScanConfigsScanConfigIDParams) error {
-	var scanConfig models.ScanConfig
+func (s *ServerImpl) PutScanConfigsScanConfigID(ctx echo.Context, scanConfigID types.ScanConfigID, params types.PutScanConfigsScanConfigIDParams) error {
+	var scanConfig types.ScanConfig
 	err := ctx.Bind(&scanConfig)
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
@@ -153,7 +153,7 @@ func (s *ServerImpl) PutScanConfigsScanConfigID(ctx echo.Context, scanConfigID m
 		case errors.Is(err, databaseTypes.ErrNotFound):
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("ScanConfig with ID %v not found", scanConfigID))
 		case errors.As(err, &conflictErr):
-			existResponse := &models.ScanConfigExists{
+			existResponse := &types.ScanConfigExists{
 				Message:    utils.PointerTo(conflictErr.Reason),
 				ScanConfig: &updatedScanConfig,
 			}

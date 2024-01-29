@@ -22,13 +22,13 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/pkg/apiserver/common"
-	databaseTypes "github.com/openclarity/vmclarity/pkg/apiserver/database/types"
+	"github.com/openclarity/vmclarity/api/server/pkg/common"
+	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
-func (s *ServerImpl) GetAssets(ctx echo.Context, params models.GetAssetsParams) error {
+func (s *ServerImpl) GetAssets(ctx echo.Context, params types.GetAssetsParams) error {
 	dbAssets, err := s.dbHandler.AssetsTable().GetAssets(params)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get assets from db: %v", err))
@@ -39,7 +39,7 @@ func (s *ServerImpl) GetAssets(ctx echo.Context, params models.GetAssetsParams) 
 
 // nolint:cyclop
 func (s *ServerImpl) PostAssets(ctx echo.Context) error {
-	var asset models.Asset
+	var asset types.Asset
 	err := ctx.Bind(&asset)
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
@@ -51,7 +51,7 @@ func (s *ServerImpl) PostAssets(ctx echo.Context) error {
 		var validationErr *common.BadRequestError
 		switch true {
 		case errors.As(err, &conflictErr):
-			existResponse := &models.AssetExists{
+			existResponse := &types.AssetExists{
 				Message: utils.PointerTo(conflictErr.Reason),
 				Asset:   &createdAsset,
 			}
@@ -66,7 +66,7 @@ func (s *ServerImpl) PostAssets(ctx echo.Context) error {
 	return sendResponse(ctx, http.StatusCreated, createdAsset)
 }
 
-func (s *ServerImpl) GetAssetsAssetID(ctx echo.Context, assetID models.AssetID, params models.GetAssetsAssetIDParams) error {
+func (s *ServerImpl) GetAssetsAssetID(ctx echo.Context, assetID types.AssetID, params types.GetAssetsAssetIDParams) error {
 	asset, err := s.dbHandler.AssetsTable().GetAsset(assetID, params)
 	if err != nil {
 		if errors.Is(err, databaseTypes.ErrNotFound) {
@@ -78,8 +78,8 @@ func (s *ServerImpl) GetAssetsAssetID(ctx echo.Context, assetID models.AssetID, 
 	return sendResponse(ctx, http.StatusOK, asset)
 }
 
-func (s *ServerImpl) PutAssetsAssetID(ctx echo.Context, assetID models.AssetID, params models.PutAssetsAssetIDParams) error {
-	var asset models.Asset
+func (s *ServerImpl) PutAssetsAssetID(ctx echo.Context, assetID types.AssetID, params types.PutAssetsAssetIDParams) error {
+	var asset types.Asset
 	err := ctx.Bind(&asset)
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
@@ -101,7 +101,7 @@ func (s *ServerImpl) PutAssetsAssetID(ctx echo.Context, assetID models.AssetID, 
 		case errors.Is(err, databaseTypes.ErrNotFound):
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Asset with ID %v not found", assetID))
 		case errors.As(err, &conflictErr):
-			existResponse := &models.AssetExists{
+			existResponse := &types.AssetExists{
 				Message: utils.PointerTo(conflictErr.Reason),
 				Asset:   &updatedAsset,
 			}
@@ -118,8 +118,8 @@ func (s *ServerImpl) PutAssetsAssetID(ctx echo.Context, assetID models.AssetID, 
 	return sendResponse(ctx, http.StatusOK, updatedAsset)
 }
 
-func (s *ServerImpl) PatchAssetsAssetID(ctx echo.Context, assetID models.AssetID, params models.PatchAssetsAssetIDParams) error {
-	var asset models.Asset
+func (s *ServerImpl) PatchAssetsAssetID(ctx echo.Context, assetID types.AssetID, params types.PatchAssetsAssetIDParams) error {
+	var asset types.Asset
 	err := ctx.Bind(&asset)
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
@@ -140,7 +140,7 @@ func (s *ServerImpl) PatchAssetsAssetID(ctx echo.Context, assetID models.AssetID
 		case errors.Is(err, databaseTypes.ErrNotFound):
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Asset with ID %v not found", assetID))
 		case errors.As(err, &conflictErr):
-			existResponse := &models.AssetExists{
+			existResponse := &types.AssetExists{
 				Message: utils.PointerTo(conflictErr.Reason),
 				Asset:   &updatedAsset,
 			}
@@ -155,8 +155,8 @@ func (s *ServerImpl) PatchAssetsAssetID(ctx echo.Context, assetID models.AssetID
 	return sendResponse(ctx, http.StatusOK, updatedAsset)
 }
 
-func (s *ServerImpl) DeleteAssetsAssetID(ctx echo.Context, assetID models.AssetID) error {
-	success := models.Success{
+func (s *ServerImpl) DeleteAssetsAssetID(ctx echo.Context, assetID types.AssetID) error {
+	success := types.Success{
 		Message: utils.PointerTo(fmt.Sprintf("asset %v deleted", assetID)),
 	}
 

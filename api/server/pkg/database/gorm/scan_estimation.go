@@ -23,9 +23,9 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/pkg/apiserver/common"
-	"github.com/openclarity/vmclarity/pkg/apiserver/database/types"
+	"github.com/openclarity/vmclarity/api/server/pkg/common"
+	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
@@ -41,35 +41,35 @@ type ScanEstimationsTableHandler struct {
 	DB *gorm.DB
 }
 
-func (db *Handler) ScanEstimationsTable() types.ScanEstimationsTable {
+func (db *Handler) ScanEstimationsTable() databaseTypes.ScanEstimationsTable {
 	return &ScanEstimationsTableHandler{
 		DB: db.DB,
 	}
 }
 
-func (s *ScanEstimationsTableHandler) GetScanEstimations(params models.GetScanEstimationsParams) (models.ScanEstimations, error) {
+func (s *ScanEstimationsTableHandler) GetScanEstimations(params types.GetScanEstimationsParams) (types.ScanEstimations, error) {
 	var scanEstimations []ScanEstimation
 	err := ODataQuery(s.DB, scanEstimationSchemaName, params.Filter, params.Select, params.Expand, params.OrderBy, params.Top, params.Skip, true, &scanEstimations)
 	if err != nil {
-		return models.ScanEstimations{}, err
+		return types.ScanEstimations{}, err
 	}
 
-	items := make([]models.ScanEstimation, len(scanEstimations))
+	items := make([]types.ScanEstimation, len(scanEstimations))
 	for i, sc := range scanEstimations {
-		var scanEstimation models.ScanEstimation
+		var scanEstimation types.ScanEstimation
 		err = json.Unmarshal(sc.Data, &scanEstimation)
 		if err != nil {
-			return models.ScanEstimations{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+			return types.ScanEstimations{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 		}
 		items[i] = scanEstimation
 	}
 
-	output := models.ScanEstimations{Items: &items}
+	output := types.ScanEstimations{Items: &items}
 
 	if params.Count != nil && *params.Count {
 		count, err := ODataCount(s.DB, scanEstimationSchemaName, params.Filter)
 		if err != nil {
-			return models.ScanEstimations{}, fmt.Errorf("failed to count records: %w", err)
+			return types.ScanEstimations{}, fmt.Errorf("failed to count records: %w", err)
 		}
 		output.Count = &count
 	}
@@ -77,30 +77,30 @@ func (s *ScanEstimationsTableHandler) GetScanEstimations(params models.GetScanEs
 	return output, nil
 }
 
-func (s *ScanEstimationsTableHandler) GetScanEstimation(scanEstimationID models.ScanEstimationID, params models.GetScanEstimationsScanEstimationIDParams) (models.ScanEstimation, error) {
+func (s *ScanEstimationsTableHandler) GetScanEstimation(scanEstimationID types.ScanEstimationID, params types.GetScanEstimationsScanEstimationIDParams) (types.ScanEstimation, error) {
 	var dbScanEstimation ScanEstimation
 	filter := fmt.Sprintf("id eq '%s'", scanEstimationID)
 	err := ODataQuery(s.DB, scanEstimationSchemaName, &filter, params.Select, params.Expand, nil, nil, nil, false, &dbScanEstimation)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return models.ScanEstimation{}, types.ErrNotFound
+			return types.ScanEstimation{}, databaseTypes.ErrNotFound
 		}
-		return models.ScanEstimation{}, err
+		return types.ScanEstimation{}, err
 	}
 
-	var apiScanEstimation models.ScanEstimation
+	var apiScanEstimation types.ScanEstimation
 	err = json.Unmarshal(dbScanEstimation.Data, &apiScanEstimation)
 	if err != nil {
-		return models.ScanEstimation{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+		return types.ScanEstimation{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
 	return apiScanEstimation, nil
 }
 
-func (s *ScanEstimationsTableHandler) CreateScanEstimation(scanEstimation models.ScanEstimation) (models.ScanEstimation, error) {
+func (s *ScanEstimationsTableHandler) CreateScanEstimation(scanEstimation types.ScanEstimation) (types.ScanEstimation, error) {
 	// Check the user didn't provide an ID
 	if scanEstimation.Id != nil {
-		return models.ScanEstimation{}, &common.BadRequestError{
+		return types.ScanEstimation{}, &common.BadRequestError{
 			Reason: "can not specify id field when creating a new ScanEstimation",
 		}
 	}
@@ -113,88 +113,88 @@ func (s *ScanEstimationsTableHandler) CreateScanEstimation(scanEstimation models
 
 	marshaled, err := json.Marshal(scanEstimation)
 	if err != nil {
-		return models.ScanEstimation{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
+		return types.ScanEstimation{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
 	}
 
 	newScanEstimation := ScanEstimation{}
 	newScanEstimation.Data = marshaled
 
 	if err = s.DB.Create(&newScanEstimation).Error; err != nil {
-		return models.ScanEstimation{}, fmt.Errorf("failed to create scan estimation in db: %w", err)
+		return types.ScanEstimation{}, fmt.Errorf("failed to create scan estimation in db: %w", err)
 	}
 
-	var apiScanEstimation models.ScanEstimation
+	var apiScanEstimation types.ScanEstimation
 	err = json.Unmarshal(newScanEstimation.Data, &apiScanEstimation)
 	if err != nil {
-		return models.ScanEstimation{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+		return types.ScanEstimation{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
 	return apiScanEstimation, nil
 }
 
 // nolint:cyclop
-func (s *ScanEstimationsTableHandler) SaveScanEstimation(scanEstimation models.ScanEstimation, params models.PutScanEstimationsScanEstimationIDParams) (models.ScanEstimation, error) {
+func (s *ScanEstimationsTableHandler) SaveScanEstimation(scanEstimation types.ScanEstimation, params types.PutScanEstimationsScanEstimationIDParams) (types.ScanEstimation, error) {
 	if scanEstimation.Id == nil || *scanEstimation.Id == "" {
-		return models.ScanEstimation{}, &common.BadRequestError{
+		return types.ScanEstimation{}, &common.BadRequestError{
 			Reason: "id is required to save scan estimation",
 		}
 	}
 
 	var dbObj ScanEstimation
 	if err := getExistingObjByID(s.DB, scanEstimationSchemaName, *scanEstimation.Id, &dbObj); err != nil {
-		return models.ScanEstimation{}, fmt.Errorf("failed to get scan estimation from db: %w", err)
+		return types.ScanEstimation{}, fmt.Errorf("failed to get scan estimation from db: %w", err)
 	}
 
-	var dbScanEstimation models.ScanEstimation
+	var dbScanEstimation types.ScanEstimation
 	if err := json.Unmarshal(dbObj.Data, &dbScanEstimation); err != nil {
-		return models.ScanEstimation{}, fmt.Errorf("failed to convert DB object to API model: %w", err)
+		return types.ScanEstimation{}, fmt.Errorf("failed to convert DB object to API model: %w", err)
 	}
 
 	if err := checkRevisionEtag(params.IfMatch, dbScanEstimation.Revision); err != nil {
-		return models.ScanEstimation{}, err
+		return types.ScanEstimation{}, err
 	}
 
 	scanEstimation.Revision = bumpRevision(dbScanEstimation.Revision)
 
 	marshaled, err := json.Marshal(scanEstimation)
 	if err != nil {
-		return models.ScanEstimation{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
+		return types.ScanEstimation{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
 	}
 
 	dbObj.Data = marshaled
 
 	if err = s.DB.Save(&dbObj).Error; err != nil {
-		return models.ScanEstimation{}, fmt.Errorf("failed to save scan estimation in db: %w", err)
+		return types.ScanEstimation{}, fmt.Errorf("failed to save scan estimation in db: %w", err)
 	}
 
-	var apiScanEstimation models.ScanEstimation
+	var apiScanEstimation types.ScanEstimation
 	if err = json.Unmarshal(dbObj.Data, &apiScanEstimation); err != nil {
-		return models.ScanEstimation{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+		return types.ScanEstimation{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
 	return apiScanEstimation, nil
 }
 
 // nolint:cyclop
-func (s *ScanEstimationsTableHandler) UpdateScanEstimation(scanEstimation models.ScanEstimation, params models.PatchScanEstimationsScanEstimationIDParams) (models.ScanEstimation, error) {
+func (s *ScanEstimationsTableHandler) UpdateScanEstimation(scanEstimation types.ScanEstimation, params types.PatchScanEstimationsScanEstimationIDParams) (types.ScanEstimation, error) {
 	if scanEstimation.Id == nil || *scanEstimation.Id == "" {
-		return models.ScanEstimation{}, &common.BadRequestError{
+		return types.ScanEstimation{}, &common.BadRequestError{
 			Reason: "id is required to update scan estimation",
 		}
 	}
 
 	var dbObj ScanEstimation
 	if err := getExistingObjByID(s.DB, scanEstimationSchemaName, *scanEstimation.Id, &dbObj); err != nil {
-		return models.ScanEstimation{}, err
+		return types.ScanEstimation{}, err
 	}
 
-	var dbScanEstimation models.ScanEstimation
+	var dbScanEstimation types.ScanEstimation
 	if err := json.Unmarshal(dbObj.Data, &dbScanEstimation); err != nil {
-		return models.ScanEstimation{}, fmt.Errorf("failed to convert DB object to API model: %w", err)
+		return types.ScanEstimation{}, fmt.Errorf("failed to convert DB object to API model: %w", err)
 	}
 
 	if err := checkRevisionEtag(params.IfMatch, dbScanEstimation.Revision); err != nil {
-		return models.ScanEstimation{}, err
+		return types.ScanEstimation{}, err
 	}
 
 	scanEstimation.Revision = bumpRevision(dbScanEstimation.Revision)
@@ -202,23 +202,23 @@ func (s *ScanEstimationsTableHandler) UpdateScanEstimation(scanEstimation models
 	var err error
 	dbObj.Data, err = patchObject(dbObj.Data, scanEstimation)
 	if err != nil {
-		return models.ScanEstimation{}, fmt.Errorf("failed to apply patch: %w", err)
+		return types.ScanEstimation{}, fmt.Errorf("failed to apply patch: %w", err)
 	}
 
-	var ret models.ScanEstimation
+	var ret types.ScanEstimation
 	err = json.Unmarshal(dbObj.Data, &ret)
 	if err != nil {
-		return models.ScanEstimation{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+		return types.ScanEstimation{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
 	if err := s.DB.Save(&dbObj).Error; err != nil {
-		return models.ScanEstimation{}, fmt.Errorf("failed to save scan estimation in db: %w", err)
+		return types.ScanEstimation{}, fmt.Errorf("failed to save scan estimation in db: %w", err)
 	}
 
 	return ret, nil
 }
 
-func (s *ScanEstimationsTableHandler) DeleteScanEstimation(scanEstimationID models.ScanEstimationID) error {
+func (s *ScanEstimationsTableHandler) DeleteScanEstimation(scanEstimationID types.ScanEstimationID) error {
 	if err := deleteObjByID(s.DB, scanEstimationID, &ScanEstimation{}); err != nil {
 		return fmt.Errorf("failed to delete scan estimation: %w", err)
 	}

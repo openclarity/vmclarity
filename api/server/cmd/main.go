@@ -23,7 +23,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/openclarity/vmclarity/pkg/apiserver"
+	server "github.com/openclarity/vmclarity/api/server/pkg"
 	"github.com/openclarity/vmclarity/utils/log"
 	"github.com/openclarity/vmclarity/utils/version"
 )
@@ -83,12 +83,12 @@ func runCommand(_ *cobra.Command, _ []string) {
 	logger := logrus.WithContext(ctx)
 	ctx = log.SetLoggerForContext(ctx, logger)
 
-	config, err := apiserver.NewConfig()
+	config, err := server.NewConfig()
 	if err != nil {
 		logger.Fatalf("failed to load API server config: %v", err)
 	}
 
-	apiserver.Run(ctx, config)
+	server.Run(ctx, config)
 }
 
 // Command to display the version.

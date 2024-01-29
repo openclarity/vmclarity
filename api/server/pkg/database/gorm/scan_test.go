@@ -18,19 +18,19 @@ package gorm
 import (
 	"testing"
 
-	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/api/types"
 )
 
 func Test_validateScanConfigID(t *testing.T) {
-	dbScan := models.Scan{
-		ScanConfig: &models.ScanConfigRelationship{
+	dbScan := types.Scan{
+		ScanConfig: &types.ScanConfigRelationship{
 			Id: "test",
 		},
 	}
 
 	type args struct {
-		scan   models.Scan
-		dbScan models.Scan
+		scan   types.Scan
+		dbScan types.Scan
 	}
 	tests := []struct {
 		name    string
@@ -40,8 +40,8 @@ func Test_validateScanConfigID(t *testing.T) {
 		{
 			name: "scan config ID not changed",
 			args: args{
-				scan: models.Scan{
-					ScanConfig: &models.ScanConfigRelationship{
+				scan: types.Scan{
+					ScanConfig: &types.ScanConfigRelationship{
 						Id: "test",
 					},
 				},
@@ -52,7 +52,7 @@ func Test_validateScanConfigID(t *testing.T) {
 		{
 			name: "scan config ID is nil",
 			args: args{
-				scan:   models.Scan{},
+				scan:   types.Scan{},
 				dbScan: dbScan,
 			},
 			wantErr: false,
@@ -60,8 +60,8 @@ func Test_validateScanConfigID(t *testing.T) {
 		{
 			name: "scan config ID changed",
 			args: args{
-				scan: models.Scan{
-					ScanConfig: &models.ScanConfigRelationship{
+				scan: types.Scan{
+					ScanConfig: &types.ScanConfigRelationship{
 						Id: "newID",
 					},
 				},

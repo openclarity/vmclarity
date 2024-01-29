@@ -23,9 +23,9 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/pkg/apiserver/common"
-	"github.com/openclarity/vmclarity/pkg/apiserver/database/types"
+	"github.com/openclarity/vmclarity/api/server/pkg/common"
+	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
@@ -41,34 +41,34 @@ type AssetScansTableHandler struct {
 	DB *gorm.DB
 }
 
-func (db *Handler) AssetScansTable() types.AssetScansTable {
+func (db *Handler) AssetScansTable() databaseTypes.AssetScansTable {
 	return &AssetScansTableHandler{
 		DB: db.DB,
 	}
 }
 
-func (s *AssetScansTableHandler) GetAssetScans(params models.GetAssetScansParams) (models.AssetScans, error) {
+func (s *AssetScansTableHandler) GetAssetScans(params types.GetAssetScansParams) (types.AssetScans, error) {
 	var assetScans []AssetScan
 	err := ODataQuery(s.DB, assetScansSchemaName, params.Filter, params.Select, params.Expand, params.OrderBy, params.Top, params.Skip, true, &assetScans)
 	if err != nil {
-		return models.AssetScans{}, err
+		return types.AssetScans{}, err
 	}
 
-	items := make([]models.AssetScan, len(assetScans))
+	items := make([]types.AssetScan, len(assetScans))
 	for i, assetScan := range assetScans {
-		var as models.AssetScan
+		var as types.AssetScan
 		if err = json.Unmarshal(assetScan.Data, &as); err != nil {
-			return models.AssetScans{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+			return types.AssetScans{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 		}
 		items[i] = as
 	}
 
-	output := models.AssetScans{Items: &items}
+	output := types.AssetScans{Items: &items}
 
 	if params.Count != nil && *params.Count {
 		count, err := ODataCount(s.DB, assetScansSchemaName, params.Filter)
 		if err != nil {
-			return models.AssetScans{}, fmt.Errorf("failed to count records: %w", err)
+			return types.AssetScans{}, fmt.Errorf("failed to count records: %w", err)
 		}
 		output.Count = &count
 	}
@@ -76,38 +76,38 @@ func (s *AssetScansTableHandler) GetAssetScans(params models.GetAssetScansParams
 	return output, nil
 }
 
-func (s *AssetScansTableHandler) GetAssetScan(assetScanID models.AssetScanID, params models.GetAssetScansAssetScanIDParams) (models.AssetScan, error) {
+func (s *AssetScansTableHandler) GetAssetScan(assetScanID types.AssetScanID, params types.GetAssetScansAssetScanIDParams) (types.AssetScan, error) {
 	var dbAssetScan AssetScan
 	filter := fmt.Sprintf("id eq '%s'", assetScanID)
 	err := ODataQuery(s.DB, assetScansSchemaName, &filter, params.Select, params.Expand, nil, nil, nil, false, &dbAssetScan)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return models.AssetScan{}, types.ErrNotFound
+			return types.AssetScan{}, databaseTypes.ErrNotFound
 		}
-		return models.AssetScan{}, err
+		return types.AssetScan{}, err
 	}
 
-	var as models.AssetScan
+	var as types.AssetScan
 	err = json.Unmarshal(dbAssetScan.Data, &as)
 	if err != nil {
-		return models.AssetScan{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+		return types.AssetScan{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
 	return as, nil
 }
 
 // nolint:cyclop
-func (s *AssetScansTableHandler) CreateAssetScan(assetScan models.AssetScan) (models.AssetScan, error) {
+func (s *AssetScansTableHandler) CreateAssetScan(assetScan types.AssetScan) (types.AssetScan, error) {
 	// Check the user provided asset id field
 	if assetScan.Asset != nil && assetScan.Asset.Id == "" {
-		return models.AssetScan{}, &common.BadRequestError{
+		return types.AssetScan{}, &common.BadRequestError{
 			Reason: "asset.id is a required field",
 		}
 	}
 
 	// Check the user didn't provide an ID
 	if assetScan.Id != nil {
-		return models.AssetScan{}, &common.BadRequestError{
+		return types.AssetScan{}, &common.BadRequestError{
 			Reason: "can not specify id field when creating a new AssetScan",
 		}
 	}
@@ -137,44 +137,44 @@ func (s *AssetScansTableHandler) CreateAssetScan(assetScan models.AssetScan) (mo
 		if errors.As(err, &conflictErr) {
 			return existingAssetScan, err
 		}
-		return models.AssetScan{}, fmt.Errorf("failed to check existing scan: %w", err)
+		return types.AssetScan{}, fmt.Errorf("failed to check existing scan: %w", err)
 	}
 
 	marshaled, err := json.Marshal(assetScan)
 	if err != nil {
-		return models.AssetScan{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
+		return types.AssetScan{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
 	}
 
 	newAssetScan := AssetScan{}
 	newAssetScan.Data = marshaled
 
 	if err := s.DB.Create(&newAssetScan).Error; err != nil {
-		return models.AssetScan{}, fmt.Errorf("failed to create asset scan in db: %w", err)
+		return types.AssetScan{}, fmt.Errorf("failed to create asset scan in db: %w", err)
 	}
 
 	// TODO(sambetts) Maybe this isn't required now because the DB isn't
 	// creating any of the data (like the ID) so we can just return the
 	// assetScan pre-marshal above.
-	var as models.AssetScan
+	var as types.AssetScan
 	err = json.Unmarshal(newAssetScan.Data, &as)
 	if err != nil {
-		return models.AssetScan{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+		return types.AssetScan{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
 	return as, nil
 }
 
 // nolint:cyclop,gocognit
-func (s *AssetScansTableHandler) SaveAssetScan(assetScan models.AssetScan, params models.PutAssetScansAssetScanIDParams) (models.AssetScan, error) {
+func (s *AssetScansTableHandler) SaveAssetScan(assetScan types.AssetScan, params types.PutAssetScansAssetScanIDParams) (types.AssetScan, error) {
 	if assetScan.Id == nil || *assetScan.Id == "" {
-		return models.AssetScan{}, &common.BadRequestError{
+		return types.AssetScan{}, &common.BadRequestError{
 			Reason: "id is required to save asset scan",
 		}
 	}
 
 	// Check the user provided asset id field
 	if assetScan.Asset != nil && assetScan.Asset.Id == "" {
-		return models.AssetScan{}, &common.BadRequestError{
+		return types.AssetScan{}, &common.BadRequestError{
 			Reason: "asset.id is a required field",
 		}
 	}
@@ -186,84 +186,84 @@ func (s *AssetScansTableHandler) SaveAssetScan(assetScan models.AssetScan, param
 		if errors.As(err, &conflictErr) {
 			return existingAssetScan, err
 		}
-		return models.AssetScan{}, fmt.Errorf("failed to check existing scan: %w", err)
+		return types.AssetScan{}, fmt.Errorf("failed to check existing scan: %w", err)
 	}
 
 	var dbObj AssetScan
 	if err := getExistingObjByID(s.DB, assetScansSchemaName, *assetScan.Id, &dbObj); err != nil {
-		return models.AssetScan{}, err
+		return types.AssetScan{}, err
 	}
 
-	var dbAssetScan models.AssetScan
+	var dbAssetScan types.AssetScan
 	err = json.Unmarshal(dbObj.Data, &dbAssetScan)
 	if err != nil {
-		return models.AssetScan{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+		return types.AssetScan{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
 	if err := checkRevisionEtag(params.IfMatch, dbAssetScan.Revision); err != nil {
-		return models.AssetScan{}, err
+		return types.AssetScan{}, err
 	}
 
 	assetScan.Revision = bumpRevision(dbAssetScan.Revision)
 
 	marshaled, err := json.Marshal(assetScan)
 	if err != nil {
-		return models.AssetScan{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
+		return types.AssetScan{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
 	}
 
 	dbObj.Data = marshaled
 
 	if err := s.DB.Save(&dbObj).Error; err != nil {
-		return models.AssetScan{}, fmt.Errorf("failed to save asset scan in db: %w", err)
+		return types.AssetScan{}, fmt.Errorf("failed to save asset scan in db: %w", err)
 	}
 
 	// TODO(sambetts) Maybe this isn't required now because the DB isn't
 	// creating any of the data (like the ID) so we can just return the
 	// assetScan pre-marshal above.
-	var as models.AssetScan
+	var as types.AssetScan
 	err = json.Unmarshal(dbObj.Data, &as)
 	if err != nil {
-		return models.AssetScan{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+		return types.AssetScan{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
 	return as, nil
 }
 
 // nolint:cyclop
-func (s *AssetScansTableHandler) UpdateAssetScan(assetScan models.AssetScan, params models.PatchAssetScansAssetScanIDParams) (models.AssetScan, error) {
+func (s *AssetScansTableHandler) UpdateAssetScan(assetScan types.AssetScan, params types.PatchAssetScansAssetScanIDParams) (types.AssetScan, error) {
 	if assetScan.Id == nil || *assetScan.Id == "" {
-		return models.AssetScan{}, &common.BadRequestError{
+		return types.AssetScan{}, &common.BadRequestError{
 			Reason: "id is required to update asset scan",
 		}
 	}
 
 	var dbObj AssetScan
 	if err := getExistingObjByID(s.DB, assetScansSchemaName, *assetScan.Id, &dbObj); err != nil {
-		return models.AssetScan{}, err
+		return types.AssetScan{}, err
 	}
 
 	var err error
-	var dbAssetScan models.AssetScan
+	var dbAssetScan types.AssetScan
 	err = json.Unmarshal(dbObj.Data, &dbAssetScan)
 	if err != nil {
-		return models.AssetScan{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+		return types.AssetScan{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
 	if err := checkRevisionEtag(params.IfMatch, dbAssetScan.Revision); err != nil {
-		return models.AssetScan{}, err
+		return types.AssetScan{}, err
 	}
 
 	assetScan.Revision = bumpRevision(dbAssetScan.Revision)
 
 	dbObj.Data, err = patchObject(dbObj.Data, assetScan)
 	if err != nil {
-		return models.AssetScan{}, fmt.Errorf("failed to apply patch: %w", err)
+		return types.AssetScan{}, fmt.Errorf("failed to apply patch: %w", err)
 	}
 
-	var as models.AssetScan
+	var as types.AssetScan
 	err = json.Unmarshal(dbObj.Data, &as)
 	if err != nil {
-		return models.AssetScan{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+		return types.AssetScan{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
 	// Check the existing DB entries to ensure that the scan id and asset id fields are unique
@@ -273,20 +273,20 @@ func (s *AssetScansTableHandler) UpdateAssetScan(assetScan models.AssetScan, par
 		if errors.As(err, &conflictErr) {
 			return existingAssetScan, err
 		}
-		return models.AssetScan{}, fmt.Errorf("failed to check existing scan: %w", err)
+		return types.AssetScan{}, fmt.Errorf("failed to check existing scan: %w", err)
 	}
 
 	if err := s.DB.Save(&dbObj).Error; err != nil {
-		return models.AssetScan{}, fmt.Errorf("failed to save asset scan in db: %w", err)
+		return types.AssetScan{}, fmt.Errorf("failed to save asset scan in db: %w", err)
 	}
 
 	return as, nil
 }
 
-func (s *AssetScansTableHandler) checkUniqueness(assetScan models.AssetScan) (models.AssetScan, error) {
+func (s *AssetScansTableHandler) checkUniqueness(assetScan types.AssetScan) (types.AssetScan, error) {
 	// We only check unique if scan is set, so return early if it's not set.
 	if assetScan.Scan == nil || assetScan.Scan.Id == "" {
-		return models.AssetScan{}, nil
+		return types.AssetScan{}, nil
 	}
 
 	// If Scan is set we need to check if there is another asset scan with
@@ -295,17 +295,17 @@ func (s *AssetScansTableHandler) checkUniqueness(assetScan models.AssetScan) (mo
 	filter := fmt.Sprintf("id ne '%s' and asset/id eq '%s' and scan/id eq '%s'", *assetScan.Id, assetScan.Asset.Id, assetScan.Scan.Id)
 	err := ODataQuery(s.DB, assetScansSchemaName, &filter, nil, nil, nil, nil, nil, true, &assetScans)
 	if err != nil {
-		return models.AssetScan{}, err
+		return types.AssetScan{}, err
 	}
 
 	if len(assetScans) > 0 {
-		var as models.AssetScan
+		var as types.AssetScan
 		if err = json.Unmarshal(assetScans[0].Data, &as); err != nil {
-			return models.AssetScan{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+			return types.AssetScan{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 		}
 		return as, &common.ConflictError{
 			Reason: fmt.Sprintf("AssetScan exists with same asset id=%s and scan id=%s)", assetScan.Asset.Id, assetScan.Scan.Id),
 		}
 	}
-	return models.AssetScan{}, nil
+	return types.AssetScan{}, nil
 }

@@ -19,7 +19,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
@@ -66,7 +66,7 @@ func Test_isEmptyOperationTime(t *testing.T) {
 
 func Test_validateRuntimeScheduleScanConfig(t *testing.T) {
 	type args struct {
-		scheduled *models.RuntimeScheduleScanConfig
+		scheduled *types.RuntimeScheduleScanConfig
 	}
 	tests := []struct {
 		name    string
@@ -83,7 +83,7 @@ func Test_validateRuntimeScheduleScanConfig(t *testing.T) {
 		{
 			name: "both cron and operation time is missing",
 			args: args{
-				scheduled: &models.RuntimeScheduleScanConfig{
+				scheduled: &types.RuntimeScheduleScanConfig{
 					CronLine:      nil,
 					OperationTime: nil,
 				},
@@ -93,7 +93,7 @@ func Test_validateRuntimeScheduleScanConfig(t *testing.T) {
 		{
 			name: "both cron and operation time is missing, time is empty",
 			args: args{
-				scheduled: &models.RuntimeScheduleScanConfig{
+				scheduled: &types.RuntimeScheduleScanConfig{
 					CronLine:      nil,
 					OperationTime: &time.Time{},
 				},
@@ -103,7 +103,7 @@ func Test_validateRuntimeScheduleScanConfig(t *testing.T) {
 		{
 			name: "operation time is missing - not a valid cron expression",
 			args: args{
-				scheduled: &models.RuntimeScheduleScanConfig{
+				scheduled: &types.RuntimeScheduleScanConfig{
 					CronLine: utils.PointerTo("not valid"),
 				},
 			},
@@ -112,7 +112,7 @@ func Test_validateRuntimeScheduleScanConfig(t *testing.T) {
 		{
 			name: "operation time is missing - operation time should be set",
 			args: args{
-				scheduled: &models.RuntimeScheduleScanConfig{
+				scheduled: &types.RuntimeScheduleScanConfig{
 					CronLine: utils.PointerTo("0 */4 * * *"),
 				},
 			},
@@ -121,7 +121,7 @@ func Test_validateRuntimeScheduleScanConfig(t *testing.T) {
 		{
 			name: "cron line is missing - do nothing",
 			args: args{
-				scheduled: &models.RuntimeScheduleScanConfig{
+				scheduled: &types.RuntimeScheduleScanConfig{
 					OperationTime: utils.PointerTo(time.Now()),
 				},
 			},

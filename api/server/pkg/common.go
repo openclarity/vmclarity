@@ -24,13 +24,13 @@ import (
 	"github.com/labstack/echo/v4"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/uibackend/types"
 )
 
 // nolint:wrapcheck
 func sendError(ctx echo.Context, code int, message string) error {
 	log.Error(message)
-	response := &models.ApiResponse{Message: &message}
+	response := &types.ApiResponse{Message: &message}
 	return ctx.JSON(code, response)
 }
 

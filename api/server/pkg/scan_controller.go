@@ -24,13 +24,13 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/pkg/apiserver/common"
-	databaseTypes "github.com/openclarity/vmclarity/pkg/apiserver/database/types"
+	"github.com/openclarity/vmclarity/api/server/pkg/common"
+	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
-func (s *ServerImpl) GetScans(ctx echo.Context, params models.GetScansParams) error {
+func (s *ServerImpl) GetScans(ctx echo.Context, params types.GetScansParams) error {
 	scans, err := s.dbHandler.ScansTable().GetScans(params)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scans from db: %v", err))
@@ -40,7 +40,7 @@ func (s *ServerImpl) GetScans(ctx echo.Context, params models.GetScansParams) er
 }
 
 func (s *ServerImpl) PostScans(ctx echo.Context) error {
-	var scan models.Scan
+	var scan types.Scan
 	err := ctx.Bind(&scan)
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
@@ -50,7 +50,7 @@ func (s *ServerImpl) PostScans(ctx echo.Context) error {
 	switch {
 	case !ok:
 		return sendError(ctx, http.StatusBadRequest, "invalid request: status is missing")
-	case status.State != models.ScanStatusStatePending:
+	case status.State != types.ScanStatusStatePending:
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("invalid request: initial state for scan is invalid: %s", status.State))
 	default:
 	}
@@ -61,7 +61,7 @@ func (s *ServerImpl) PostScans(ctx echo.Context) error {
 		var validationErr *common.BadRequestError
 		switch true {
 		case errors.As(err, &conflictErr):
-			existResponse := &models.ScanExists{
+			existResponse := &types.ScanExists{
 				Message: utils.PointerTo(conflictErr.Reason),
 				Scan:    &createdScan,
 			}
@@ -76,8 +76,8 @@ func (s *ServerImpl) PostScans(ctx echo.Context) error {
 	return sendResponse(ctx, http.StatusCreated, createdScan)
 }
 
-func (s *ServerImpl) DeleteScansScanID(ctx echo.Context, scanID models.ScanID) error {
-	success := models.Success{
+func (s *ServerImpl) DeleteScansScanID(ctx echo.Context, scanID types.ScanID) error {
+	success := types.Success{
 		Message: utils.PointerTo(fmt.Sprintf("scan %v deleted", scanID)),
 	}
 
@@ -91,7 +91,7 @@ func (s *ServerImpl) DeleteScansScanID(ctx echo.Context, scanID models.ScanID) e
 	return sendResponse(ctx, http.StatusOK, &success)
 }
 
-func (s *ServerImpl) GetScansScanID(ctx echo.Context, scanID models.ScanID, params models.GetScansScanIDParams) error {
+func (s *ServerImpl) GetScansScanID(ctx echo.Context, scanID types.ScanID, params types.GetScansScanIDParams) error {
 	scan, err := s.dbHandler.ScansTable().GetScan(scanID, params)
 	if err != nil {
 		if errors.Is(err, databaseTypes.ErrNotFound) {
@@ -102,8 +102,8 @@ func (s *ServerImpl) GetScansScanID(ctx echo.Context, scanID models.ScanID, para
 	return sendResponse(ctx, http.StatusOK, scan)
 }
 
-func (s *ServerImpl) PatchScansScanID(ctx echo.Context, scanID models.ScanID, params models.PatchScansScanIDParams) error {
-	var scan models.Scan
+func (s *ServerImpl) PatchScansScanID(ctx echo.Context, scanID types.ScanID, params types.PatchScansScanIDParams) error {
+	var scan types.Scan
 	err := ctx.Bind(&scan)
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
@@ -117,7 +117,7 @@ func (s *ServerImpl) PatchScansScanID(ctx echo.Context, scanID models.ScanID, pa
 	scan.Id = &scanID
 
 	// check if a scan with id already exists
-	existingScan, err := s.dbHandler.ScansTable().GetScan(scanID, models.GetScansScanIDParams{})
+	existingScan, err := s.dbHandler.ScansTable().GetScan(scanID, types.GetScansScanIDParams{})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("scan was not found: scanID=%v: %v", scanID, err))
@@ -146,7 +146,7 @@ func (s *ServerImpl) PatchScansScanID(ctx echo.Context, scanID models.ScanID, pa
 		case errors.Is(err, databaseTypes.ErrNotFound):
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Scan with ID %v not found", scanID))
 		case errors.As(err, &conflictErr):
-			existResponse := &models.ScanExists{
+			existResponse := &types.ScanExists{
 				Message: utils.PointerTo(conflictErr.Reason),
 				Scan:    &updatedScan,
 			}
@@ -164,8 +164,8 @@ func (s *ServerImpl) PatchScansScanID(ctx echo.Context, scanID models.ScanID, pa
 }
 
 // nolint:cyclop
-func (s *ServerImpl) PutScansScanID(ctx echo.Context, scanID models.ScanID, params models.PutScansScanIDParams) error {
-	var scan models.Scan
+func (s *ServerImpl) PutScansScanID(ctx echo.Context, scanID types.ScanID, params types.PutScansScanIDParams) error {
+	var scan types.Scan
 	err := ctx.Bind(&scan)
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
@@ -179,7 +179,7 @@ func (s *ServerImpl) PutScansScanID(ctx echo.Context, scanID models.ScanID, para
 	scan.Id = &scanID
 
 	// check if a scan with id already exists
-	existingScan, err := s.dbHandler.ScansTable().GetScan(scanID, models.GetScansScanIDParams{})
+	existingScan, err := s.dbHandler.ScansTable().GetScan(scanID, types.GetScansScanIDParams{})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("scan was not found: scanID=%v: %v", scanID, err))
@@ -210,7 +210,7 @@ func (s *ServerImpl) PutScansScanID(ctx echo.Context, scanID models.ScanID, para
 		case errors.Is(err, databaseTypes.ErrNotFound):
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Scan with ID %v not found", scanID))
 		case errors.As(err, &conflictErr):
-			existResponse := &models.ScanExists{
+			existResponse := &types.ScanExists{
 				Message: utils.PointerTo(conflictErr.Reason),
 				Scan:    &updatedScan,
 			}

@@ -24,9 +24,8 @@ import (
 	echomiddleware "github.com/labstack/echo/v4/middleware"
 	middleware "github.com/oapi-codegen/echo-middleware"
 
-	"github.com/openclarity/vmclarity/api/server"
-	"github.com/openclarity/vmclarity/pkg/apiserver/common"
-	databaseTypes "github.com/openclarity/vmclarity/pkg/apiserver/database/types"
+	"github.com/openclarity/vmclarity/api/server/pkg/common"
+	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 	"github.com/openclarity/vmclarity/utils/log"
 )
 

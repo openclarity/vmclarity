@@ -23,9 +23,9 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/pkg/apiserver/common"
-	"github.com/openclarity/vmclarity/pkg/apiserver/database/types"
+	"github.com/openclarity/vmclarity/api/server/pkg/common"
+	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
@@ -41,35 +41,35 @@ type AssetsTableHandler struct {
 	DB *gorm.DB
 }
 
-func (db *Handler) AssetsTable() types.AssetsTable {
+func (db *Handler) AssetsTable() databaseTypes.AssetsTable {
 	return &AssetsTableHandler{
 		DB: db.DB,
 	}
 }
 
-func (t *AssetsTableHandler) GetAssets(params models.GetAssetsParams) (models.Assets, error) {
+func (t *AssetsTableHandler) GetAssets(params types.GetAssetsParams) (types.Assets, error) {
 	var assets []Asset
 	err := ODataQuery(t.DB, assetSchemaName, params.Filter, params.Select, params.Expand, params.OrderBy, params.Top, params.Skip, true, &assets)
 	if err != nil {
-		return models.Assets{}, err
+		return types.Assets{}, err
 	}
 
-	items := make([]models.Asset, len(assets))
+	items := make([]types.Asset, len(assets))
 	for i, tr := range assets {
-		var asset models.Asset
+		var asset types.Asset
 		err = json.Unmarshal(tr.Data, &asset)
 		if err != nil {
-			return models.Assets{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+			return types.Assets{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 		}
 		items[i] = asset
 	}
 
-	output := models.Assets{Items: &items}
+	output := types.Assets{Items: &items}
 
 	if params.Count != nil && *params.Count {
 		count, err := ODataCount(t.DB, assetSchemaName, params.Filter)
 		if err != nil {
-			return models.Assets{}, fmt.Errorf("failed to count records: %w", err)
+			return types.Assets{}, fmt.Errorf("failed to count records: %w", err)
 		}
 		output.Count = &count
 	}
@@ -77,37 +77,37 @@ func (t *AssetsTableHandler) GetAssets(params models.GetAssetsParams) (models.As
 	return output, nil
 }
 
-func (t *AssetsTableHandler) GetAsset(assetID models.AssetID, params models.GetAssetsAssetIDParams) (models.Asset, error) {
+func (t *AssetsTableHandler) GetAsset(assetID types.AssetID, params types.GetAssetsAssetIDParams) (types.Asset, error) {
 	var dbAsset Asset
 	filter := fmt.Sprintf("id eq '%s'", assetID)
 	err := ODataQuery(t.DB, assetSchemaName, &filter, params.Select, params.Expand, nil, nil, nil, false, &dbAsset)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return models.Asset{}, types.ErrNotFound
+			return types.Asset{}, databaseTypes.ErrNotFound
 		}
-		return models.Asset{}, err
+		return types.Asset{}, err
 	}
 
-	var apiAsset models.Asset
+	var apiAsset types.Asset
 	err = json.Unmarshal(dbAsset.Data, &apiAsset)
 	if err != nil {
-		return models.Asset{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+		return types.Asset{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
 	return apiAsset, nil
 }
 
-func (t *AssetsTableHandler) CreateAsset(asset models.Asset) (models.Asset, error) {
+func (t *AssetsTableHandler) CreateAsset(asset types.Asset) (types.Asset, error) {
 	// Check the user didn't provide an ID
 	if asset.Id != nil {
-		return models.Asset{}, &common.BadRequestError{
+		return types.Asset{}, &common.BadRequestError{
 			Reason: "can not specify id field when creating a new Asset",
 		}
 	}
 
 	// Check that assetInfo was provided by the user, it's a required field for an asset.
 	if asset.AssetInfo == nil {
-		return models.Asset{}, &common.BadRequestError{
+		return types.Asset{}, &common.BadRequestError{
 			Reason: "assetInfo is a required field",
 		}
 	}
@@ -136,61 +136,61 @@ func (t *AssetsTableHandler) CreateAsset(asset models.Asset) (models.Asset, erro
 		if errors.As(err, &conflictErr) {
 			return *existingAsset, err
 		}
-		return models.Asset{}, fmt.Errorf("failed to check existing asset: %w", err)
+		return types.Asset{}, fmt.Errorf("failed to check existing asset: %w", err)
 	}
 
 	marshaled, err := json.Marshal(asset)
 	if err != nil {
-		return models.Asset{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
+		return types.Asset{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
 	}
 
 	newAsset := Asset{}
 	newAsset.Data = marshaled
 
 	if err = t.DB.Create(&newAsset).Error; err != nil {
-		return models.Asset{}, fmt.Errorf("failed to create asset in db: %w", err)
+		return types.Asset{}, fmt.Errorf("failed to create asset in db: %w", err)
 	}
 
 	// TODO(sambetts) Maybe this isn't required now because the DB isn't
 	// creating any of the data (like the ID) so we can just return the
 	// asset pre-marshal above.
-	var apiAsset models.Asset
+	var apiAsset types.Asset
 	err = json.Unmarshal(newAsset.Data, &apiAsset)
 	if err != nil {
-		return models.Asset{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+		return types.Asset{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
 	return apiAsset, nil
 }
 
 // nolint:cyclop
-func (t *AssetsTableHandler) SaveAsset(asset models.Asset, params models.PutAssetsAssetIDParams) (models.Asset, error) {
+func (t *AssetsTableHandler) SaveAsset(asset types.Asset, params types.PutAssetsAssetIDParams) (types.Asset, error) {
 	if asset.Id == nil || *asset.Id == "" {
-		return models.Asset{}, &common.BadRequestError{
+		return types.Asset{}, &common.BadRequestError{
 			Reason: "id is required to save asset",
 		}
 	}
 
 	// Check that assetInfo was provided by the user, it's a required field for an asset.
 	if asset.AssetInfo == nil {
-		return models.Asset{}, &common.BadRequestError{
+		return types.Asset{}, &common.BadRequestError{
 			Reason: "assetInfo is a required field",
 		}
 	}
 
 	var dbObj Asset
 	if err := getExistingObjByID(t.DB, assetSchemaName, *asset.Id, &dbObj); err != nil {
-		return models.Asset{}, fmt.Errorf("failed to get asset from db: %w", err)
+		return types.Asset{}, fmt.Errorf("failed to get asset from db: %w", err)
 	}
 
-	var dbAsset models.Asset
+	var dbAsset types.Asset
 	err := json.Unmarshal(dbObj.Data, &dbAsset)
 	if err != nil {
-		return models.Asset{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+		return types.Asset{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
 	if err := checkRevisionEtag(params.IfMatch, dbAsset.Revision); err != nil {
-		return models.Asset{}, err
+		return types.Asset{}, err
 	}
 
 	asset.Revision = bumpRevision(dbAsset.Revision)
@@ -201,64 +201,64 @@ func (t *AssetsTableHandler) SaveAsset(asset models.Asset, params models.PutAsse
 		if errors.As(err, &conflictErr) {
 			return *existingAsset, err
 		}
-		return models.Asset{}, fmt.Errorf("failed to check existing asset: %w", err)
+		return types.Asset{}, fmt.Errorf("failed to check existing asset: %w", err)
 	}
 
 	marshaled, err := json.Marshal(asset)
 	if err != nil {
-		return models.Asset{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
+		return types.Asset{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
 	}
 
 	dbObj.Data = marshaled
 
 	if err = t.DB.Save(&dbObj).Error; err != nil {
-		return models.Asset{}, fmt.Errorf("failed to save asset in db: %w", err)
+		return types.Asset{}, fmt.Errorf("failed to save asset in db: %w", err)
 	}
 
 	// TODO(sambetts) Maybe this isn't required now because the DB isn't
 	// creating any of the data (like the ID) so we can just return the
 	// asset pre-marshal above.
-	var apiAsset models.Asset
+	var apiAsset types.Asset
 	if err = json.Unmarshal(dbObj.Data, &apiAsset); err != nil {
-		return models.Asset{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+		return types.Asset{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
 	return apiAsset, nil
 }
 
 // nolint:cyclop
-func (t *AssetsTableHandler) UpdateAsset(asset models.Asset, params models.PatchAssetsAssetIDParams) (models.Asset, error) {
+func (t *AssetsTableHandler) UpdateAsset(asset types.Asset, params types.PatchAssetsAssetIDParams) (types.Asset, error) {
 	if asset.Id == nil || *asset.Id == "" {
-		return models.Asset{}, fmt.Errorf("ID is required to update asset in DB")
+		return types.Asset{}, fmt.Errorf("ID is required to update asset in DB")
 	}
 
 	var dbObj Asset
 	if err := getExistingObjByID(t.DB, assetSchemaName, *asset.Id, &dbObj); err != nil {
-		return models.Asset{}, err
+		return types.Asset{}, err
 	}
 
 	var err error
-	var dbAsset models.Asset
+	var dbAsset types.Asset
 	err = json.Unmarshal(dbObj.Data, &dbAsset)
 	if err != nil {
-		return models.Asset{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+		return types.Asset{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
 	if err := checkRevisionEtag(params.IfMatch, dbAsset.Revision); err != nil {
-		return models.Asset{}, err
+		return types.Asset{}, err
 	}
 
 	asset.Revision = bumpRevision(dbAsset.Revision)
 
 	dbObj.Data, err = patchObject(dbObj.Data, asset)
 	if err != nil {
-		return models.Asset{}, fmt.Errorf("failed to apply patch: %w", err)
+		return types.Asset{}, fmt.Errorf("failed to apply patch: %w", err)
 	}
 
-	var ret models.Asset
+	var ret types.Asset
 	err = json.Unmarshal(dbObj.Data, &ret)
 	if err != nil {
-		return models.Asset{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+		return types.Asset{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
 	existingAsset, err := t.checkUniqueness(ret)
@@ -267,17 +267,17 @@ func (t *AssetsTableHandler) UpdateAsset(asset models.Asset, params models.Patch
 		if errors.As(err, &conflictErr) {
 			return *existingAsset, err
 		}
-		return models.Asset{}, fmt.Errorf("failed to check existing asset: %w", err)
+		return types.Asset{}, fmt.Errorf("failed to check existing asset: %w", err)
 	}
 
 	if err := t.DB.Save(&dbObj).Error; err != nil {
-		return models.Asset{}, fmt.Errorf("failed to save asset in db: %w", err)
+		return types.Asset{}, fmt.Errorf("failed to save asset in db: %w", err)
 	}
 
 	return ret, nil
 }
 
-func (t *AssetsTableHandler) DeleteAsset(assetID models.AssetID) error {
+func (t *AssetsTableHandler) DeleteAsset(assetID types.AssetID) error {
 	if err := deleteObjByID(t.DB, assetID, &Asset{}); err != nil {
 		return fmt.Errorf("failed to delete asset: %w", err)
 	}
@@ -286,7 +286,7 @@ func (t *AssetsTableHandler) DeleteAsset(assetID models.AssetID) error {
 }
 
 // nolint: cyclop
-func (t *AssetsTableHandler) checkUniqueness(asset models.Asset) (*models.Asset, error) {
+func (t *AssetsTableHandler) checkUniqueness(asset types.Asset) (*types.Asset, error) {
 	discriminator, err := asset.AssetInfo.ValueByDiscriminator()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get value by discriminator: %w", err)
@@ -294,20 +294,20 @@ func (t *AssetsTableHandler) checkUniqueness(asset models.Asset) (*models.Asset,
 
 	var filter string
 	switch info := discriminator.(type) {
-	case models.VMInfo:
+	case types.VMInfo:
 		filter = fmt.Sprintf(
 			"id ne '%s' and assetInfo/instanceID eq '%s' and assetInfo/location eq '%s'",
 			*asset.Id, info.InstanceID, info.Location,
 		)
-	case models.DirInfo:
+	case types.DirInfo:
 		filter = fmt.Sprintf(
 			"id ne '%s' and assetInfo/dirName eq '%s' and assetInfo/location eq '%s'",
 			*asset.Id, *info.DirName, *info.Location,
 		)
-	case models.ContainerInfo:
+	case types.ContainerInfo:
 		filter = fmt.Sprintf("id ne '%s' and assetInfo/containerID eq '%s'", *asset.Id, info.ContainerID)
 
-	case models.ContainerImageInfo:
+	case types.ContainerImageInfo:
 		filter = fmt.Sprintf("id ne '%s' and assetInfo/imageID eq '%s'", *asset.Id, info.ImageID)
 
 	default:
@@ -321,7 +321,7 @@ func (t *AssetsTableHandler) checkUniqueness(asset models.Asset) (*models.Asset,
 		return nil, err
 	}
 	if len(assets) > 0 {
-		var apiAsset models.Asset
+		var apiAsset types.Asset
 		if err := json.Unmarshal(assets[0].Data, &apiAsset); err != nil {
 			return nil, fmt.Errorf("failed to convert DB model to API model: %w", err)
 		}

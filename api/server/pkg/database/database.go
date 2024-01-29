@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/openclarity/vmclarity/pkg/apiserver/database/gorm"
-	"github.com/openclarity/vmclarity/pkg/apiserver/database/types"
+	"github.com/openclarity/vmclarity/api/server/pkg/database/gorm"
+	"github.com/openclarity/vmclarity/api/server/pkg/database/types"
 )
 
 type DBDriver func(config types.DBConfig) (types.Database, error)

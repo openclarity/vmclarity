@@ -23,13 +23,13 @@ import (
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 
-	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/pkg/apiserver/common"
-	databaseTypes "github.com/openclarity/vmclarity/pkg/apiserver/database/types"
+	"github.com/openclarity/vmclarity/api/server/pkg/common"
+	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
-func (s *ServerImpl) GetAssetScanEstimations(ctx echo.Context, params models.GetAssetScanEstimationsParams) error {
+func (s *ServerImpl) GetAssetScanEstimations(ctx echo.Context, params types.GetAssetScanEstimationsParams) error {
 	dbAssetScanEstimations, err := s.dbHandler.AssetScanEstimationsTable().GetAssetScanEstimations(params)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Errorf("failed to get asset scan estimations results from db: %w", err).Error())
@@ -39,7 +39,7 @@ func (s *ServerImpl) GetAssetScanEstimations(ctx echo.Context, params models.Get
 }
 
 func (s *ServerImpl) PostAssetScanEstimations(ctx echo.Context) error {
-	var assetScanEstimation models.AssetScanEstimation
+	var assetScanEstimation types.AssetScanEstimation
 	err := ctx.Bind(&assetScanEstimation)
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
@@ -49,7 +49,7 @@ func (s *ServerImpl) PostAssetScanEstimations(ctx echo.Context) error {
 	switch {
 	case !ok:
 		return sendError(ctx, http.StatusBadRequest, "invalid request: status is missing")
-	case status.State != models.AssetScanEstimationStatusStatePending:
+	case status.State != types.AssetScanEstimationStatusStatePending:
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("invalid request: initial state for asset scan estimation is invalid: %s", status.State))
 	default:
 	}
@@ -58,7 +58,7 @@ func (s *ServerImpl) PostAssetScanEstimations(ctx echo.Context) error {
 	if err != nil {
 		var conflictErr *common.ConflictError
 		if errors.As(err, &conflictErr) {
-			existResponse := &models.AssetScanEstimationExists{
+			existResponse := &types.AssetScanEstimationExists{
 				Message:             utils.PointerTo(conflictErr.Reason),
 				AssetScanEstimation: &createdAssetScanEstimation,
 			}
@@ -70,7 +70,7 @@ func (s *ServerImpl) PostAssetScanEstimations(ctx echo.Context) error {
 	return sendResponse(ctx, http.StatusCreated, createdAssetScanEstimation)
 }
 
-func (s *ServerImpl) GetAssetScanEstimationsAssetScanEstimationID(ctx echo.Context, assetScanEstimationID models.AssetScanEstimationID, params models.GetAssetScanEstimationsAssetScanEstimationIDParams) error {
+func (s *ServerImpl) GetAssetScanEstimationsAssetScanEstimationID(ctx echo.Context, assetScanEstimationID types.AssetScanEstimationID, params types.GetAssetScanEstimationsAssetScanEstimationIDParams) error {
 	dbAssetScanEstimation, err := s.dbHandler.AssetScanEstimationsTable().GetAssetScanEstimation(assetScanEstimationID, params)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -83,8 +83,8 @@ func (s *ServerImpl) GetAssetScanEstimationsAssetScanEstimationID(ctx echo.Conte
 }
 
 // nolint:cyclop
-func (s *ServerImpl) PatchAssetScanEstimationsAssetScanEstimationID(ctx echo.Context, assetScanEstimationID models.AssetScanEstimationID, params models.PatchAssetScanEstimationsAssetScanEstimationIDParams) error {
-	var assetScanEstimation models.AssetScanEstimation
+func (s *ServerImpl) PatchAssetScanEstimationsAssetScanEstimationID(ctx echo.Context, assetScanEstimationID types.AssetScanEstimationID, params types.PatchAssetScanEstimationsAssetScanEstimationIDParams) error {
+	var assetScanEstimation types.AssetScanEstimation
 	err := ctx.Bind(&assetScanEstimation)
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
@@ -98,7 +98,7 @@ func (s *ServerImpl) PatchAssetScanEstimationsAssetScanEstimationID(ctx echo.Con
 	assetScanEstimation.Id = &assetScanEstimationID
 
 	// check that an asset scan estimation with that id exists.
-	existingAssetScanEstimation, err := s.dbHandler.AssetScanEstimationsTable().GetAssetScanEstimation(assetScanEstimationID, models.GetAssetScanEstimationsAssetScanEstimationIDParams{})
+	existingAssetScanEstimation, err := s.dbHandler.AssetScanEstimationsTable().GetAssetScanEstimation(assetScanEstimationID, types.GetAssetScanEstimationsAssetScanEstimationIDParams{})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("asset scan estimation was not found. assetScanEstimationID=%v: %v", assetScanEstimationID, err))
@@ -125,7 +125,7 @@ func (s *ServerImpl) PatchAssetScanEstimationsAssetScanEstimationID(ctx echo.Con
 		var preconditionFailedErr *databaseTypes.PreconditionFailedError
 		switch true {
 		case errors.As(err, &conflictErr):
-			existResponse := &models.AssetScanEstimationExists{
+			existResponse := &types.AssetScanEstimationExists{
 				Message:             utils.PointerTo(conflictErr.Reason),
 				AssetScanEstimation: &updatedAssetScanEstimation,
 			}
@@ -143,8 +143,8 @@ func (s *ServerImpl) PatchAssetScanEstimationsAssetScanEstimationID(ctx echo.Con
 }
 
 // nolint:cyclop
-func (s *ServerImpl) PutAssetScanEstimationsAssetScanEstimationID(ctx echo.Context, assetScanEstimationID models.AssetScanEstimationID, params models.PutAssetScanEstimationsAssetScanEstimationIDParams) error {
-	var assetScanEstimation models.AssetScanEstimation
+func (s *ServerImpl) PutAssetScanEstimationsAssetScanEstimationID(ctx echo.Context, assetScanEstimationID types.AssetScanEstimationID, params types.PutAssetScanEstimationsAssetScanEstimationIDParams) error {
+	var assetScanEstimation types.AssetScanEstimation
 	err := ctx.Bind(&assetScanEstimation)
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
@@ -158,7 +158,7 @@ func (s *ServerImpl) PutAssetScanEstimationsAssetScanEstimationID(ctx echo.Conte
 	assetScanEstimation.Id = &assetScanEstimationID
 
 	// check that an asset scan estimation with that id exists.
-	existingAssetScanEstimation, err := s.dbHandler.AssetScanEstimationsTable().GetAssetScanEstimation(assetScanEstimationID, models.GetAssetScanEstimationsAssetScanEstimationIDParams{})
+	existingAssetScanEstimation, err := s.dbHandler.AssetScanEstimationsTable().GetAssetScanEstimation(assetScanEstimationID, types.GetAssetScanEstimationsAssetScanEstimationIDParams{})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("asset scan estimation was not found. assetScanEstimationID=%v: %v", assetScanEstimationID, err))
@@ -187,7 +187,7 @@ func (s *ServerImpl) PutAssetScanEstimationsAssetScanEstimationID(ctx echo.Conte
 		var preconditionFailedErr *databaseTypes.PreconditionFailedError
 		switch true {
 		case errors.As(err, &conflictErr):
-			existResponse := &models.AssetScanEstimationExists{
+			existResponse := &types.AssetScanEstimationExists{
 				Message:             utils.PointerTo(conflictErr.Reason),
 				AssetScanEstimation: &updatedAssetScanEstimation,
 			}
@@ -204,8 +204,8 @@ func (s *ServerImpl) PutAssetScanEstimationsAssetScanEstimationID(ctx echo.Conte
 	return sendResponse(ctx, http.StatusOK, updatedAssetScanEstimation)
 }
 
-func (s *ServerImpl) DeleteAssetScanEstimationsAssetScanEstimationID(ctx echo.Context, assetScanEstimationID models.AssetScanEstimationID) error {
-	success := models.Success{
+func (s *ServerImpl) DeleteAssetScanEstimationsAssetScanEstimationID(ctx echo.Context, assetScanEstimationID types.AssetScanEstimationID) error {
+	success := types.Success{
 		Message: utils.PointerTo(fmt.Sprintf("asset scan estimation %v deleted", assetScanEstimationID)),
 	}
 

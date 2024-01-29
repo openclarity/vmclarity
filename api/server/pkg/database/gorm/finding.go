@@ -23,9 +23,9 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/pkg/apiserver/common"
-	"github.com/openclarity/vmclarity/pkg/apiserver/database/types"
+	"github.com/openclarity/vmclarity/api/server/pkg/common"
+	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	"github.com/openclarity/vmclarity/api/types"
 )
 
 type Finding struct {
@@ -36,35 +36,35 @@ type FindingsTableHandler struct {
 	DB *gorm.DB
 }
 
-func (db *Handler) FindingsTable() types.FindingsTable {
+func (db *Handler) FindingsTable() databaseTypes.FindingsTable {
 	return &FindingsTableHandler{
 		DB: db.DB,
 	}
 }
 
-func (s *FindingsTableHandler) GetFindings(params models.GetFindingsParams) (models.Findings, error) {
+func (s *FindingsTableHandler) GetFindings(params types.GetFindingsParams) (types.Findings, error) {
 	var findings []Finding
 	err := ODataQuery(s.DB, "Finding", params.Filter, params.Select, params.Expand, params.OrderBy, params.Top, params.Skip, true, &findings)
 	if err != nil {
-		return models.Findings{}, err
+		return types.Findings{}, err
 	}
 
-	items := []models.Finding{}
+	items := []types.Finding{}
 	for _, finding := range findings {
-		var sc models.Finding
+		var sc types.Finding
 		err := json.Unmarshal(finding.Data, &sc)
 		if err != nil {
-			return models.Findings{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+			return types.Findings{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 		}
 		items = append(items, sc)
 	}
 
-	output := models.Findings{Items: &items}
+	output := types.Findings{Items: &items}
 
 	if params.Count != nil && *params.Count {
 		count, err := ODataCount(s.DB, "Finding", params.Filter)
 		if err != nil {
-			return models.Findings{}, fmt.Errorf("failed to count records: %w", err)
+			return types.Findings{}, fmt.Errorf("failed to count records: %w", err)
 		}
 		output.Count = &count
 	}
@@ -72,30 +72,30 @@ func (s *FindingsTableHandler) GetFindings(params models.GetFindingsParams) (mod
 	return output, nil
 }
 
-func (s *FindingsTableHandler) GetFinding(findingID models.FindingID, params models.GetFindingsFindingIDParams) (models.Finding, error) {
+func (s *FindingsTableHandler) GetFinding(findingID types.FindingID, params types.GetFindingsFindingIDParams) (types.Finding, error) {
 	var dbFinding Finding
 	filter := fmt.Sprintf("id eq '%s'", findingID)
 	err := ODataQuery(s.DB, "Finding", &filter, params.Select, params.Expand, nil, nil, nil, false, &dbFinding)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return models.Finding{}, types.ErrNotFound
+			return types.Finding{}, databaseTypes.ErrNotFound
 		}
-		return models.Finding{}, err
+		return types.Finding{}, err
 	}
 
-	var sc models.Finding
+	var sc types.Finding
 	err = json.Unmarshal(dbFinding.Data, &sc)
 	if err != nil {
-		return models.Finding{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+		return types.Finding{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
 	return sc, nil
 }
 
-func (s *FindingsTableHandler) CreateFinding(finding models.Finding) (models.Finding, error) {
+func (s *FindingsTableHandler) CreateFinding(finding types.Finding) (types.Finding, error) {
 	// Check the user didn't provide an ID
 	if finding.Id != nil {
-		return models.Finding{}, &common.BadRequestError{
+		return types.Finding{}, &common.BadRequestError{
 			Reason: "can not specify id field when creating a new Finding",
 		}
 	}
@@ -106,31 +106,31 @@ func (s *FindingsTableHandler) CreateFinding(finding models.Finding) (models.Fin
 
 	marshaled, err := json.Marshal(finding)
 	if err != nil {
-		return models.Finding{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
+		return types.Finding{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
 	}
 
 	newFinding := Finding{}
 	newFinding.Data = marshaled
 
 	if err := s.DB.Create(&newFinding).Error; err != nil {
-		return models.Finding{}, fmt.Errorf("failed to create finding in db: %w", err)
+		return types.Finding{}, fmt.Errorf("failed to create finding in db: %w", err)
 	}
 
 	// TODO(sambetts) Maybe this isn't required now because the DB isn't
 	// creating any of the data (like the ID) so we can just return the
 	// finding pre-marshal above.
-	var sc models.Finding
+	var sc types.Finding
 	err = json.Unmarshal(newFinding.Data, &sc)
 	if err != nil {
-		return models.Finding{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+		return types.Finding{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
 	return sc, nil
 }
 
-func (s *FindingsTableHandler) SaveFinding(finding models.Finding) (models.Finding, error) {
+func (s *FindingsTableHandler) SaveFinding(finding types.Finding) (types.Finding, error) {
 	if finding.Id == nil || *finding.Id == "" {
-		return models.Finding{}, &common.BadRequestError{
+		return types.Finding{}, &common.BadRequestError{
 			Reason: "id is required to save finding",
 		}
 	}
@@ -138,34 +138,34 @@ func (s *FindingsTableHandler) SaveFinding(finding models.Finding) (models.Findi
 	var dbFinding Finding
 	err := getExistingObjByID(s.DB, "Finding", *finding.Id, &dbFinding)
 	if err != nil {
-		return models.Finding{}, err
+		return types.Finding{}, err
 	}
 
 	marshaled, err := json.Marshal(finding)
 	if err != nil {
-		return models.Finding{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
+		return types.Finding{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
 	}
 
 	dbFinding.Data = marshaled
 
 	if err := s.DB.Save(&dbFinding).Error; err != nil {
-		return models.Finding{}, fmt.Errorf("failed to save finding in db: %w", err)
+		return types.Finding{}, fmt.Errorf("failed to save finding in db: %w", err)
 	}
 
 	// TODO(sambetts) Maybe this isn't required now because the DB isn't
 	// creating any of the data (like the ID) so we can just return the
 	// finding pre-marshal above.
-	var sc models.Finding
+	var sc types.Finding
 	err = json.Unmarshal(dbFinding.Data, &sc)
 	if err != nil {
-		return models.Finding{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+		return types.Finding{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 	return sc, nil
 }
 
-func (s *FindingsTableHandler) UpdateFinding(finding models.Finding) (models.Finding, error) {
+func (s *FindingsTableHandler) UpdateFinding(finding types.Finding) (types.Finding, error) {
 	if finding.Id == nil || *finding.Id == "" {
-		return models.Finding{}, &common.BadRequestError{
+		return types.Finding{}, &common.BadRequestError{
 			Reason: "id is required to update finding",
 		}
 	}
@@ -173,30 +173,30 @@ func (s *FindingsTableHandler) UpdateFinding(finding models.Finding) (models.Fin
 	var dbFinding Finding
 	err := getExistingObjByID(s.DB, "Finding", *finding.Id, &dbFinding)
 	if err != nil {
-		return models.Finding{}, err
+		return types.Finding{}, err
 	}
 
 	dbFinding.Data, err = patchObject(dbFinding.Data, finding)
 	if err != nil {
-		return models.Finding{}, fmt.Errorf("failed to apply patch: %w", err)
+		return types.Finding{}, fmt.Errorf("failed to apply patch: %w", err)
 	}
 
 	if err := s.DB.Save(&dbFinding).Error; err != nil {
-		return models.Finding{}, fmt.Errorf("failed to save finding in db: %w", err)
+		return types.Finding{}, fmt.Errorf("failed to save finding in db: %w", err)
 	}
 
 	// TODO(sambetts) Maybe this isn't required now because the DB isn't
 	// creating any of the data (like the ID) so we can just return the
 	// finding pre-marshal above.
-	var sc models.Finding
+	var sc types.Finding
 	err = json.Unmarshal(dbFinding.Data, &sc)
 	if err != nil {
-		return models.Finding{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+		return types.Finding{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 	return sc, nil
 }
 
-func (s *FindingsTableHandler) DeleteFinding(findingID models.FindingID) error {
+func (s *FindingsTableHandler) DeleteFinding(findingID types.FindingID) error {
 	if err := deleteObjByID(s.DB, findingID, &Finding{}); err != nil {
 		return fmt.Errorf("failed to delete asset: %w", err)
 	}

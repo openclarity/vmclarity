@@ -24,7 +24,7 @@ import (
 	"github.com/CiscoM31/godata"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/openclarity/vmclarity/pkg/apiserver/database/odatasql/jsonsql"
+	"github.com/openclarity/vmclarity/api/server/pkg/database/odatasql/jsonsql"
 )
 
 var fixSelectToken sync.Once

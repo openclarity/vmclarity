@@ -23,9 +23,9 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/pkg/apiserver/common"
-	"github.com/openclarity/vmclarity/pkg/apiserver/database/types"
+	"github.com/openclarity/vmclarity/api/server/pkg/common"
+	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
@@ -41,35 +41,35 @@ type ProvidersTableHandler struct {
 	DB *gorm.DB
 }
 
-func (db *Handler) ProvidersTable() types.ProvidersTable {
+func (db *Handler) ProvidersTable() databaseTypes.ProvidersTable {
 	return &ProvidersTableHandler{
 		DB: db.DB,
 	}
 }
 
-func (t *ProvidersTableHandler) GetProviders(params models.GetProvidersParams) (models.Providers, error) {
+func (t *ProvidersTableHandler) GetProviders(params types.GetProvidersParams) (types.Providers, error) {
 	var providers []Provider
 	err := ODataQuery(t.DB, providerSchemaName, params.Filter, params.Select, params.Expand, params.OrderBy, params.Top, params.Skip, true, &providers)
 	if err != nil {
-		return models.Providers{}, err
+		return types.Providers{}, err
 	}
 
-	items := make([]models.Provider, len(providers))
+	items := make([]types.Provider, len(providers))
 	for i, pr := range providers {
-		var provider models.Provider
+		var provider types.Provider
 		err = json.Unmarshal(pr.Data, &provider)
 		if err != nil {
-			return models.Providers{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+			return types.Providers{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 		}
 		items[i] = provider
 	}
 
-	output := models.Providers{Items: &items}
+	output := types.Providers{Items: &items}
 
 	if params.Count != nil && *params.Count {
 		count, err := ODataCount(t.DB, providerSchemaName, params.Filter)
 		if err != nil {
-			return models.Providers{}, fmt.Errorf("failed to count records: %w", err)
+			return types.Providers{}, fmt.Errorf("failed to count records: %w", err)
 		}
 		output.Count = &count
 	}
@@ -77,36 +77,36 @@ func (t *ProvidersTableHandler) GetProviders(params models.GetProvidersParams) (
 	return output, nil
 }
 
-func (t *ProvidersTableHandler) GetProvider(providerID models.ProviderID, params models.GetProvidersProviderIDParams) (models.Provider, error) {
+func (t *ProvidersTableHandler) GetProvider(providerID types.ProviderID, params types.GetProvidersProviderIDParams) (types.Provider, error) {
 	var dbProvider Provider
 	filter := fmt.Sprintf("id eq '%s'", providerID)
 	err := ODataQuery(t.DB, providerSchemaName, &filter, params.Select, params.Expand, nil, nil, nil, false, &dbProvider)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return models.Provider{}, types.ErrNotFound
+			return types.Provider{}, databaseTypes.ErrNotFound
 		}
-		return models.Provider{}, err
+		return types.Provider{}, err
 	}
 
-	var apiProvider models.Provider
+	var apiProvider types.Provider
 	err = json.Unmarshal(dbProvider.Data, &apiProvider)
 	if err != nil {
-		return models.Provider{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+		return types.Provider{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
 	return apiProvider, nil
 }
 
-func (t *ProvidersTableHandler) CreateProvider(provider models.Provider) (models.Provider, error) {
+func (t *ProvidersTableHandler) CreateProvider(provider types.Provider) (types.Provider, error) {
 	// Check the user didn't provide an ID
 	if provider.Id != nil {
-		return models.Provider{}, &common.BadRequestError{
+		return types.Provider{}, &common.BadRequestError{
 			Reason: "can not specify id field when creating a new Provider",
 		}
 	}
 
 	if provider.Status != nil && (provider.Status.State == "" || provider.Status.Reason == "" || provider.Status.LastTransitionTime.IsZero()) {
-		return models.Provider{}, &common.BadRequestError{
+		return types.Provider{}, &common.BadRequestError{
 			Reason: "status state, status reason and status last transition time are required to create provider",
 		}
 	}
@@ -131,113 +131,113 @@ func (t *ProvidersTableHandler) CreateProvider(provider models.Provider) (models
 
 	marshaled, err := json.Marshal(provider)
 	if err != nil {
-		return models.Provider{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
+		return types.Provider{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
 	}
 
 	newProvider := Provider{}
 	newProvider.Data = marshaled
 
 	if err = t.DB.Create(&newProvider).Error; err != nil {
-		return models.Provider{}, fmt.Errorf("failed to create provider in db: %w", err)
+		return types.Provider{}, fmt.Errorf("failed to create provider in db: %w", err)
 	}
 
 	return provider, nil
 }
 
 // nolint:cyclop
-func (t *ProvidersTableHandler) SaveProvider(provider models.Provider, params models.PutProvidersProviderIDParams) (models.Provider, error) {
+func (t *ProvidersTableHandler) SaveProvider(provider types.Provider, params types.PutProvidersProviderIDParams) (types.Provider, error) {
 	if provider.Id == nil || *provider.Id == "" {
-		return models.Provider{}, &common.BadRequestError{
+		return types.Provider{}, &common.BadRequestError{
 			Reason: "id is required to save provider",
 		}
 	}
 
 	if provider.Status.State == "" || provider.Status.Reason == "" || provider.Status.LastTransitionTime.IsZero() {
-		return models.Provider{}, &common.BadRequestError{
+		return types.Provider{}, &common.BadRequestError{
 			Reason: "status state, status reason and status last transition time are required to save provider",
 		}
 	}
 
 	var dbObj Provider
 	if err := getExistingObjByID(t.DB, providerSchemaName, *provider.Id, &dbObj); err != nil {
-		return models.Provider{}, fmt.Errorf("failed to get provider from db: %w", err)
+		return types.Provider{}, fmt.Errorf("failed to get provider from db: %w", err)
 	}
 
-	var dbProvider models.Provider
+	var dbProvider types.Provider
 	err := json.Unmarshal(dbObj.Data, &dbProvider)
 	if err != nil {
-		return models.Provider{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+		return types.Provider{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
 	if err := checkRevisionEtag(params.IfMatch, dbProvider.Revision); err != nil {
-		return models.Provider{}, err
+		return types.Provider{}, err
 	}
 
 	provider.Revision = bumpRevision(dbProvider.Revision)
 
 	marshaled, err := json.Marshal(provider)
 	if err != nil {
-		return models.Provider{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
+		return types.Provider{}, fmt.Errorf("failed to convert API model to DB model: %w", err)
 	}
 
 	dbObj.Data = marshaled
 
 	if err = t.DB.Save(&dbObj).Error; err != nil {
-		return models.Provider{}, fmt.Errorf("failed to save provider in db: %w", err)
+		return types.Provider{}, fmt.Errorf("failed to save provider in db: %w", err)
 	}
 
 	return provider, nil
 }
 
 // nolint:cyclop
-func (t *ProvidersTableHandler) UpdateProvider(provider models.Provider, params models.PatchProvidersProviderIDParams) (models.Provider, error) {
+func (t *ProvidersTableHandler) UpdateProvider(provider types.Provider, params types.PatchProvidersProviderIDParams) (types.Provider, error) {
 	if provider.Id == nil || *provider.Id == "" {
-		return models.Provider{}, fmt.Errorf("ID is required to update provider in DB")
+		return types.Provider{}, fmt.Errorf("ID is required to update provider in DB")
 	}
 
 	if provider.Status.State == "" || provider.Status.Reason == "" || provider.Status.LastTransitionTime.IsZero() {
-		return models.Provider{}, &common.BadRequestError{
+		return types.Provider{}, &common.BadRequestError{
 			Reason: "status state, status reason and status last transition time are required to save provider",
 		}
 	}
 
 	var dbObj Provider
 	if err := getExistingObjByID(t.DB, providerSchemaName, *provider.Id, &dbObj); err != nil {
-		return models.Provider{}, err
+		return types.Provider{}, err
 	}
 
 	var err error
-	var dbProvider models.Provider
+	var dbProvider types.Provider
 	err = json.Unmarshal(dbObj.Data, &dbProvider)
 	if err != nil {
-		return models.Provider{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+		return types.Provider{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
 	if err := checkRevisionEtag(params.IfMatch, dbProvider.Revision); err != nil {
-		return models.Provider{}, err
+		return types.Provider{}, err
 	}
 
 	provider.Revision = bumpRevision(dbProvider.Revision)
 
 	dbObj.Data, err = patchObject(dbObj.Data, provider)
 	if err != nil {
-		return models.Provider{}, fmt.Errorf("failed to apply patch: %w", err)
+		return types.Provider{}, fmt.Errorf("failed to apply patch: %w", err)
 	}
 
-	var ret models.Provider
+	var ret types.Provider
 	err = json.Unmarshal(dbObj.Data, &ret)
 	if err != nil {
-		return models.Provider{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
+		return types.Provider{}, fmt.Errorf("failed to convert DB model to API model: %w", err)
 	}
 
 	if err := t.DB.Save(&dbObj).Error; err != nil {
-		return models.Provider{}, fmt.Errorf("failed to save provider in db: %w", err)
+		return types.Provider{}, fmt.Errorf("failed to save provider in db: %w", err)
 	}
 
 	return ret, nil
 }
 
-func (t *ProvidersTableHandler) DeleteProvider(providerID models.ProviderID) error {
+func (t *ProvidersTableHandler) DeleteProvider(providerID types.ProviderID) error {
 	if err := deleteObjByID(t.DB, providerID, &Provider{}); err != nil {
 		return fmt.Errorf("failed to delete provider: %w", err)
 	}

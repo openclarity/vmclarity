@@ -23,9 +23,8 @@ import (
 
 	"github.com/Portshift/go-utils/healthz"
 
-	"github.com/openclarity/vmclarity/pkg/apiserver/database"
-	databaseTypes "github.com/openclarity/vmclarity/pkg/apiserver/database/types"
-	"github.com/openclarity/vmclarity/pkg/apiserver/rest"
+	"github.com/openclarity/vmclarity/api/server/pkg/database"
+	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 	"github.com/openclarity/vmclarity/utils/log"
 )
 
@@ -69,7 +68,7 @@ func Run(ctx context.Context, config *Config) {
 	}
 
 	// nolint:contextcheck
-	restServer, err := rest.CreateRESTServer(config.ListenAddress, dbHandler)
+	restServer, err := CreateRESTServer(config.ListenAddress, dbHandler)
 	if err != nil {
 		logger.Fatalf("Failed to create REST server: %v", err)
 	}

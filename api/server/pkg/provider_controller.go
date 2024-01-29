@@ -22,13 +22,13 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/pkg/apiserver/common"
-	databaseTypes "github.com/openclarity/vmclarity/pkg/apiserver/database/types"
+	"github.com/openclarity/vmclarity/api/server/pkg/common"
+	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
-func (s *ServerImpl) GetProviders(ctx echo.Context, params models.GetProvidersParams) error {
+func (s *ServerImpl) GetProviders(ctx echo.Context, params types.GetProvidersParams) error {
 	dbProviders, err := s.dbHandler.ProvidersTable().GetProviders(params)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get providers from db: %v", err))
@@ -39,7 +39,7 @@ func (s *ServerImpl) GetProviders(ctx echo.Context, params models.GetProvidersPa
 
 // nolint:cyclop
 func (s *ServerImpl) PostProviders(ctx echo.Context) error {
-	var provider models.Provider
+	var provider types.Provider
 	err := ctx.Bind(&provider)
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
@@ -51,7 +51,7 @@ func (s *ServerImpl) PostProviders(ctx echo.Context) error {
 		var validationErr *common.BadRequestError
 		switch true {
 		case errors.As(err, &conflictErr):
-			existResponse := &models.ProviderExists{
+			existResponse := &types.ProviderExists{
 				Message:  utils.PointerTo(conflictErr.Reason),
 				Provider: &createdProvider,
 			}
@@ -66,7 +66,7 @@ func (s *ServerImpl) PostProviders(ctx echo.Context) error {
 	return sendResponse(ctx, http.StatusCreated, createdProvider)
 }
 
-func (s *ServerImpl) GetProvidersProviderID(ctx echo.Context, providerID models.ProviderID, params models.GetProvidersProviderIDParams) error {
+func (s *ServerImpl) GetProvidersProviderID(ctx echo.Context, providerID types.ProviderID, params types.GetProvidersProviderIDParams) error {
 	provider, err := s.dbHandler.ProvidersTable().GetProvider(providerID, params)
 	if err != nil {
 		if errors.Is(err, databaseTypes.ErrNotFound) {
@@ -78,8 +78,8 @@ func (s *ServerImpl) GetProvidersProviderID(ctx echo.Context, providerID models.
 	return sendResponse(ctx, http.StatusOK, provider)
 }
 
-func (s *ServerImpl) PutProvidersProviderID(ctx echo.Context, providerID models.ProviderID, params models.PutProvidersProviderIDParams) error {
-	var provider models.Provider
+func (s *ServerImpl) PutProvidersProviderID(ctx echo.Context, providerID types.ProviderID, params types.PutProvidersProviderIDParams) error {
+	var provider types.Provider
 	err := ctx.Bind(&provider)
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
@@ -101,7 +101,7 @@ func (s *ServerImpl) PutProvidersProviderID(ctx echo.Context, providerID models.
 		case errors.Is(err, databaseTypes.ErrNotFound):
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Provider with ID %v not found", providerID))
 		case errors.As(err, &conflictErr):
-			existResponse := &models.ProviderExists{
+			existResponse := &types.ProviderExists{
 				Message:  utils.PointerTo(conflictErr.Reason),
 				Provider: &updatedProvider,
 			}
@@ -118,8 +118,8 @@ func (s *ServerImpl) PutProvidersProviderID(ctx echo.Context, providerID models.
 	return sendResponse(ctx, http.StatusOK, updatedProvider)
 }
 
-func (s *ServerImpl) PatchProvidersProviderID(ctx echo.Context, providerID models.ProviderID, params models.PatchProvidersProviderIDParams) error {
-	var provider models.Provider
+func (s *ServerImpl) PatchProvidersProviderID(ctx echo.Context, providerID types.ProviderID, params types.PatchProvidersProviderIDParams) error {
+	var provider types.Provider
 	err := ctx.Bind(&provider)
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
@@ -140,7 +140,7 @@ func (s *ServerImpl) PatchProvidersProviderID(ctx echo.Context, providerID model
 		case errors.Is(err, databaseTypes.ErrNotFound):
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Provider with ID %v not found", providerID))
 		case errors.As(err, &conflictErr):
-			existResponse := &models.ProviderExists{
+			existResponse := &types.ProviderExists{
 				Message:  utils.PointerTo(conflictErr.Reason),
 				Provider: &updatedProvider,
 			}
@@ -155,8 +155,8 @@ func (s *ServerImpl) PatchProvidersProviderID(ctx echo.Context, providerID model
 	return sendResponse(ctx, http.StatusOK, updatedProvider)
 }
 
-func (s *ServerImpl) DeleteProvidersProviderID(ctx echo.Context, providerID models.ProviderID) error {
-	success := models.Success{
+func (s *ServerImpl) DeleteProvidersProviderID(ctx echo.Context, providerID types.ProviderID) error {
+	success := types.Success{
 		Message: utils.PointerTo(fmt.Sprintf("provider %v deleted", providerID)),
 	}
 

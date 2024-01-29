@@ -22,13 +22,13 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/pkg/apiserver/common"
-	databaseTypes "github.com/openclarity/vmclarity/pkg/apiserver/database/types"
+	"github.com/openclarity/vmclarity/api/server/pkg/common"
+	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
-func (s *ServerImpl) GetFindings(ctx echo.Context, params models.GetFindingsParams) error {
+func (s *ServerImpl) GetFindings(ctx echo.Context, params types.GetFindingsParams) error {
 	findings, err := s.dbHandler.FindingsTable().GetFindings(params)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get findings from db: %v", err))
@@ -36,7 +36,7 @@ func (s *ServerImpl) GetFindings(ctx echo.Context, params models.GetFindingsPara
 	return sendResponse(ctx, http.StatusOK, findings)
 }
 
-func (s *ServerImpl) GetFindingsFindingID(ctx echo.Context, findingID models.FindingID, params models.GetFindingsFindingIDParams) error {
+func (s *ServerImpl) GetFindingsFindingID(ctx echo.Context, findingID types.FindingID, params types.GetFindingsFindingIDParams) error {
 	sc, err := s.dbHandler.FindingsTable().GetFinding(findingID, params)
 	if err != nil {
 		if errors.Is(err, databaseTypes.ErrNotFound) {
@@ -48,7 +48,7 @@ func (s *ServerImpl) GetFindingsFindingID(ctx echo.Context, findingID models.Fin
 }
 
 func (s *ServerImpl) PostFindings(ctx echo.Context) error {
-	var finding models.Finding
+	var finding types.Finding
 	err := ctx.Bind(&finding)
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
@@ -60,7 +60,7 @@ func (s *ServerImpl) PostFindings(ctx echo.Context) error {
 		var validationErr *common.BadRequestError
 		switch true {
 		case errors.As(err, &conflictErr):
-			existResponse := &models.FindingExists{
+			existResponse := &types.FindingExists{
 				Message: utils.PointerTo(conflictErr.Reason),
 				Finding: &createdFinding,
 			}
@@ -75,8 +75,8 @@ func (s *ServerImpl) PostFindings(ctx echo.Context) error {
 	return sendResponse(ctx, http.StatusCreated, createdFinding)
 }
 
-func (s *ServerImpl) DeleteFindingsFindingID(ctx echo.Context, findingID models.FindingID) error {
-	success := models.Success{
+func (s *ServerImpl) DeleteFindingsFindingID(ctx echo.Context, findingID types.FindingID) error {
+	success := types.Success{
 		Message: utils.PointerTo(fmt.Sprintf("finding %v deleted", findingID)),
 	}
 
@@ -90,8 +90,8 @@ func (s *ServerImpl) DeleteFindingsFindingID(ctx echo.Context, findingID models.
 	return sendResponse(ctx, http.StatusOK, &success)
 }
 
-func (s *ServerImpl) PatchFindingsFindingID(ctx echo.Context, findingID models.FindingID) error {
-	var finding models.Finding
+func (s *ServerImpl) PatchFindingsFindingID(ctx echo.Context, findingID types.FindingID) error {
+	var finding types.Finding
 	err := ctx.Bind(&finding)
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
@@ -119,8 +119,8 @@ func (s *ServerImpl) PatchFindingsFindingID(ctx echo.Context, findingID models.F
 	return sendResponse(ctx, http.StatusOK, updatedFinding)
 }
 
-func (s *ServerImpl) PutFindingsFindingID(ctx echo.Context, findingID models.FindingID) error {
-	var finding models.Finding
+func (s *ServerImpl) PutFindingsFindingID(ctx echo.Context, findingID types.FindingID) error {
+	var finding types.Finding
 	err := ctx.Bind(&finding)
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))

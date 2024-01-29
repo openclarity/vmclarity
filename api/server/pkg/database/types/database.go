@@ -19,7 +19,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/api/types"
 )
 
 const (
@@ -61,89 +61,89 @@ type Database interface {
 }
 
 type ScansTable interface {
-	GetScans(params models.GetScansParams) (models.Scans, error)
-	GetScan(scanID models.ScanID, params models.GetScansScanIDParams) (models.Scan, error)
+	GetScans(params types.GetScansParams) (types.Scans, error)
+	GetScan(scanID types.ScanID, params types.GetScansScanIDParams) (types.Scan, error)
 
-	CreateScan(scan models.Scan) (models.Scan, error)
-	UpdateScan(scan models.Scan, params models.PatchScansScanIDParams) (models.Scan, error)
-	SaveScan(scan models.Scan, params models.PutScansScanIDParams) (models.Scan, error)
+	CreateScan(scan types.Scan) (types.Scan, error)
+	UpdateScan(scan types.Scan, params types.PatchScansScanIDParams) (types.Scan, error)
+	SaveScan(scan types.Scan, params types.PutScansScanIDParams) (types.Scan, error)
 
-	DeleteScan(scanID models.ScanID) error
+	DeleteScan(scanID types.ScanID) error
 }
 
 type AssetScansTable interface {
-	GetAssetScans(params models.GetAssetScansParams) (models.AssetScans, error)
-	GetAssetScan(assetScanID models.AssetScanID, params models.GetAssetScansAssetScanIDParams) (models.AssetScan, error)
+	GetAssetScans(params types.GetAssetScansParams) (types.AssetScans, error)
+	GetAssetScan(assetScanID types.AssetScanID, params types.GetAssetScansAssetScanIDParams) (types.AssetScan, error)
 
-	CreateAssetScan(assetScans models.AssetScan) (models.AssetScan, error)
-	UpdateAssetScan(assetScans models.AssetScan, params models.PatchAssetScansAssetScanIDParams) (models.AssetScan, error)
-	SaveAssetScan(assetScans models.AssetScan, params models.PutAssetScansAssetScanIDParams) (models.AssetScan, error)
+	CreateAssetScan(assetScans types.AssetScan) (types.AssetScan, error)
+	UpdateAssetScan(assetScans types.AssetScan, params types.PatchAssetScansAssetScanIDParams) (types.AssetScan, error)
+	SaveAssetScan(assetScans types.AssetScan, params types.PutAssetScansAssetScanIDParams) (types.AssetScan, error)
 
-	// DeleteAssetScan(assetScanID models.AssetScanID) error
+	// DeleteAssetScan(assetScanID types.AssetScanID) error
 }
 
 type ScanConfigsTable interface {
-	GetScanConfigs(params models.GetScanConfigsParams) (models.ScanConfigs, error)
-	GetScanConfig(scanConfigID models.ScanConfigID, params models.GetScanConfigsScanConfigIDParams) (models.ScanConfig, error)
+	GetScanConfigs(params types.GetScanConfigsParams) (types.ScanConfigs, error)
+	GetScanConfig(scanConfigID types.ScanConfigID, params types.GetScanConfigsScanConfigIDParams) (types.ScanConfig, error)
 
-	CreateScanConfig(scanConfig models.ScanConfig) (models.ScanConfig, error)
-	UpdateScanConfig(scanConfig models.ScanConfig, params models.PatchScanConfigsScanConfigIDParams) (models.ScanConfig, error)
-	SaveScanConfig(scanConfig models.ScanConfig, params models.PutScanConfigsScanConfigIDParams) (models.ScanConfig, error)
+	CreateScanConfig(scanConfig types.ScanConfig) (types.ScanConfig, error)
+	UpdateScanConfig(scanConfig types.ScanConfig, params types.PatchScanConfigsScanConfigIDParams) (types.ScanConfig, error)
+	SaveScanConfig(scanConfig types.ScanConfig, params types.PutScanConfigsScanConfigIDParams) (types.ScanConfig, error)
 
-	DeleteScanConfig(scanConfigID models.ScanConfigID) error
+	DeleteScanConfig(scanConfigID types.ScanConfigID) error
 }
 
 type AssetsTable interface {
-	GetAssets(params models.GetAssetsParams) (models.Assets, error)
-	GetAsset(assetID models.AssetID, params models.GetAssetsAssetIDParams) (models.Asset, error)
+	GetAssets(params types.GetAssetsParams) (types.Assets, error)
+	GetAsset(assetID types.AssetID, params types.GetAssetsAssetIDParams) (types.Asset, error)
 
-	CreateAsset(asset models.Asset) (models.Asset, error)
-	UpdateAsset(asset models.Asset, params models.PatchAssetsAssetIDParams) (models.Asset, error)
-	SaveAsset(asset models.Asset, params models.PutAssetsAssetIDParams) (models.Asset, error)
+	CreateAsset(asset types.Asset) (types.Asset, error)
+	UpdateAsset(asset types.Asset, params types.PatchAssetsAssetIDParams) (types.Asset, error)
+	SaveAsset(asset types.Asset, params types.PutAssetsAssetIDParams) (types.Asset, error)
 
-	DeleteAsset(assetID models.AssetID) error
+	DeleteAsset(assetID types.AssetID) error
 }
 
 type FindingsTable interface {
-	GetFindings(params models.GetFindingsParams) (models.Findings, error)
-	GetFinding(findingID models.FindingID, params models.GetFindingsFindingIDParams) (models.Finding, error)
+	GetFindings(params types.GetFindingsParams) (types.Findings, error)
+	GetFinding(findingID types.FindingID, params types.GetFindingsFindingIDParams) (types.Finding, error)
 
-	CreateFinding(finding models.Finding) (models.Finding, error)
-	UpdateFinding(finding models.Finding) (models.Finding, error)
-	SaveFinding(finding models.Finding) (models.Finding, error)
+	CreateFinding(finding types.Finding) (types.Finding, error)
+	UpdateFinding(finding types.Finding) (types.Finding, error)
+	SaveFinding(finding types.Finding) (types.Finding, error)
 
-	DeleteFinding(findingID models.FindingID) error
+	DeleteFinding(findingID types.FindingID) error
 }
 
 type ScanEstimationsTable interface {
-	GetScanEstimations(params models.GetScanEstimationsParams) (models.ScanEstimations, error)
-	GetScanEstimation(scanEstimationID models.ScanEstimationID, params models.GetScanEstimationsScanEstimationIDParams) (models.ScanEstimation, error)
+	GetScanEstimations(params types.GetScanEstimationsParams) (types.ScanEstimations, error)
+	GetScanEstimation(scanEstimationID types.ScanEstimationID, params types.GetScanEstimationsScanEstimationIDParams) (types.ScanEstimation, error)
 
-	CreateScanEstimation(scanEstimation models.ScanEstimation) (models.ScanEstimation, error)
-	UpdateScanEstimation(scanEstimation models.ScanEstimation, params models.PatchScanEstimationsScanEstimationIDParams) (models.ScanEstimation, error)
-	SaveScanEstimation(scanEstimation models.ScanEstimation, params models.PutScanEstimationsScanEstimationIDParams) (models.ScanEstimation, error)
+	CreateScanEstimation(scanEstimation types.ScanEstimation) (types.ScanEstimation, error)
+	UpdateScanEstimation(scanEstimation types.ScanEstimation, params types.PatchScanEstimationsScanEstimationIDParams) (types.ScanEstimation, error)
+	SaveScanEstimation(scanEstimation types.ScanEstimation, params types.PutScanEstimationsScanEstimationIDParams) (types.ScanEstimation, error)
 
-	DeleteScanEstimation(scanEstimationID models.ScanEstimationID) error
+	DeleteScanEstimation(scanEstimationID types.ScanEstimationID) error
 }
 
 type AssetScanEstimationsTable interface {
-	GetAssetScanEstimations(params models.GetAssetScanEstimationsParams) (models.AssetScanEstimations, error)
-	GetAssetScanEstimation(assetScanEstimationID models.AssetScanEstimationID, params models.GetAssetScanEstimationsAssetScanEstimationIDParams) (models.AssetScanEstimation, error)
+	GetAssetScanEstimations(params types.GetAssetScanEstimationsParams) (types.AssetScanEstimations, error)
+	GetAssetScanEstimation(assetScanEstimationID types.AssetScanEstimationID, params types.GetAssetScanEstimationsAssetScanEstimationIDParams) (types.AssetScanEstimation, error)
 
-	CreateAssetScanEstimation(assetScanEstimations models.AssetScanEstimation) (models.AssetScanEstimation, error)
-	UpdateAssetScanEstimation(assetScanEstimations models.AssetScanEstimation, params models.PatchAssetScanEstimationsAssetScanEstimationIDParams) (models.AssetScanEstimation, error)
-	SaveAssetScanEstimation(assetScanEstimations models.AssetScanEstimation, params models.PutAssetScanEstimationsAssetScanEstimationIDParams) (models.AssetScanEstimation, error)
+	CreateAssetScanEstimation(assetScanEstimations types.AssetScanEstimation) (types.AssetScanEstimation, error)
+	UpdateAssetScanEstimation(assetScanEstimations types.AssetScanEstimation, params types.PatchAssetScanEstimationsAssetScanEstimationIDParams) (types.AssetScanEstimation, error)
+	SaveAssetScanEstimation(assetScanEstimations types.AssetScanEstimation, params types.PutAssetScanEstimationsAssetScanEstimationIDParams) (types.AssetScanEstimation, error)
 
-	DeleteAssetScanEstimation(assetScanEstimationID models.AssetScanEstimationID) error
+	DeleteAssetScanEstimation(assetScanEstimationID types.AssetScanEstimationID) error
 }
 
 type ProvidersTable interface {
-	GetProviders(params models.GetProvidersParams) (models.Providers, error)
-	GetProvider(providerID models.ProviderID, params models.GetProvidersProviderIDParams) (models.Provider, error)
+	GetProviders(params types.GetProvidersParams) (types.Providers, error)
+	GetProvider(providerID types.ProviderID, params types.GetProvidersProviderIDParams) (types.Provider, error)
 
-	CreateProvider(provider models.Provider) (models.Provider, error)
-	UpdateProvider(provider models.Provider, params models.PatchProvidersProviderIDParams) (models.Provider, error)
-	SaveProvider(provider models.Provider, params models.PutProvidersProviderIDParams) (models.Provider, error)
+	CreateProvider(provider types.Provider) (types.Provider, error)
+	UpdateProvider(provider types.Provider, params types.PatchProvidersProviderIDParams) (types.Provider, error)
+	SaveProvider(provider types.Provider, params types.PutProvidersProviderIDParams) (types.Provider, error)
 
-	DeleteProvider(providerID models.ProviderID) error
+	DeleteProvider(providerID types.ProviderID) error
 }

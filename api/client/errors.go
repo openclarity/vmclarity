@@ -18,11 +18,11 @@ package client
 import (
 	"fmt"
 
-	"github.com/openclarity/vmclarity/api/models"
+	"github.com/openclarity/vmclarity/api/types"
 )
 
 type AssetConflictError struct {
-	ConflictingAsset *models.Asset
+	ConflictingAsset *types.Asset
 	Message          string
 }
 
@@ -31,7 +31,7 @@ func (t AssetConflictError) Error() string {
 }
 
 type ScanConflictError struct {
-	ConflictingScan *models.Scan
+	ConflictingScan *types.Scan
 	Message         string
 }
 
@@ -40,12 +40,12 @@ func (t ScanConflictError) Error() string {
 }
 
 type AssetScanConflictError struct {
-	ConflictingAssetScan *models.AssetScan
+	ConflictingAssetScan *types.AssetScan
 	Message              string
 }
 
 type ScanConfigConflictError struct {
-	ConflictingScanConfig *models.ScanConfig
+	ConflictingScanConfig *types.ScanConfig
 	Message               string
 }
 
@@ -58,7 +58,7 @@ func (t AssetScanConflictError) Error() string {
 }
 
 type FindingConflictError struct {
-	ConflictingFinding *models.Finding
+	ConflictingFinding *types.Finding
 	Message            string
 }
 
@@ -67,7 +67,7 @@ func (t FindingConflictError) Error() string {
 }
 
 type AssetScanEstimationConflictError struct {
-	ConflictingAssetScanEstimation *models.AssetScanEstimation
+	ConflictingAssetScanEstimation *types.AssetScanEstimation
 	Message                        string
 }
 
@@ -76,7 +76,7 @@ func (t AssetScanEstimationConflictError) Error() string {
 }
 
 type ProviderConflictError struct {
-	ConflictingProvider *models.Provider
+	ConflictingProvider *types.Provider
 	Message             string
 }
 

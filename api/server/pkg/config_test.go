@@ -22,7 +22,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
 
-	databaseTypes "github.com/openclarity/vmclarity/pkg/apiserver/database/types"
+	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 )
 
 func TestConfig(t *testing.T) {

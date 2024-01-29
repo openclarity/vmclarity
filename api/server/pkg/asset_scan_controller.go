@@ -23,13 +23,13 @@ import (
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 
-	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/pkg/apiserver/common"
-	databaseTypes "github.com/openclarity/vmclarity/pkg/apiserver/database/types"
+	"github.com/openclarity/vmclarity/api/server/pkg/common"
+	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
-func (s *ServerImpl) GetAssetScans(ctx echo.Context, params models.GetAssetScansParams) error {
+func (s *ServerImpl) GetAssetScans(ctx echo.Context, params types.GetAssetScansParams) error {
 	dbAssetScans, err := s.dbHandler.AssetScansTable().GetAssetScans(params)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scans results from db: %v", err))
@@ -39,7 +39,7 @@ func (s *ServerImpl) GetAssetScans(ctx echo.Context, params models.GetAssetScans
 }
 
 func (s *ServerImpl) PostAssetScans(ctx echo.Context) error {
-	var assetScan models.AssetScan
+	var assetScan types.AssetScan
 	err := ctx.Bind(&assetScan)
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
@@ -49,7 +49,7 @@ func (s *ServerImpl) PostAssetScans(ctx echo.Context) error {
 	switch {
 	case !ok:
 		return sendError(ctx, http.StatusBadRequest, "invalid request: status is missing")
-	case status.State != models.AssetScanStatusStatePending:
+	case status.State != types.AssetScanStatusStatePending:
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("invalid request: initial state for asset scan is invalid: %s", status.State))
 	default:
 	}
@@ -58,9 +58,9 @@ func (s *ServerImpl) PostAssetScans(ctx echo.Context) error {
 	switch {
 	case !ok:
 		return sendError(ctx, http.StatusBadRequest, "invalid request: resource cleanup status is missing")
-	case cleanupStatus.State == models.ResourceCleanupStatusStatePending:
+	case cleanupStatus.State == types.ResourceCleanupStatusStatePending:
 		fallthrough
-	case cleanupStatus.State == models.ResourceCleanupStatusStateSkipped:
+	case cleanupStatus.State == types.ResourceCleanupStatusStateSkipped:
 		break
 	default:
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("invalid request: initial state for resource cleanup status is invalid: %s", cleanupStatus.State))
@@ -70,7 +70,7 @@ func (s *ServerImpl) PostAssetScans(ctx echo.Context) error {
 	if err != nil {
 		var conflictErr *common.ConflictError
 		if errors.As(err, &conflictErr) {
-			existResponse := &models.AssetScanExists{
+			existResponse := &types.AssetScanExists{
 				Message:   utils.PointerTo(conflictErr.Reason),
 				AssetScan: &createdAssetScan,
 			}
@@ -82,7 +82,7 @@ func (s *ServerImpl) PostAssetScans(ctx echo.Context) error {
 	return sendResponse(ctx, http.StatusCreated, createdAssetScan)
 }
 
-func (s *ServerImpl) GetAssetScansAssetScanID(ctx echo.Context, assetScanID models.AssetScanID, params models.GetAssetScansAssetScanIDParams) error {
+func (s *ServerImpl) GetAssetScansAssetScanID(ctx echo.Context, assetScanID types.AssetScanID, params types.GetAssetScansAssetScanIDParams) error {
 	dbAssetScan, err := s.dbHandler.AssetScansTable().GetAssetScan(assetScanID, params)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -95,9 +95,9 @@ func (s *ServerImpl) GetAssetScansAssetScanID(ctx echo.Context, assetScanID mode
 }
 
 // nolint:cyclop
-func (s *ServerImpl) PatchAssetScansAssetScanID(ctx echo.Context, assetScanID models.AssetScanID, params models.PatchAssetScansAssetScanIDParams) error {
+func (s *ServerImpl) PatchAssetScansAssetScanID(ctx echo.Context, assetScanID types.AssetScanID, params types.PatchAssetScansAssetScanIDParams) error {
 	// TODO: check that the provided scan and asset IDs are valid
-	var assetScan models.AssetScan
+	var assetScan types.AssetScan
 	err := ctx.Bind(&assetScan)
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
@@ -111,7 +111,7 @@ func (s *ServerImpl) PatchAssetScansAssetScanID(ctx echo.Context, assetScanID mo
 	assetScan.Id = &assetScanID
 
 	// check that an asset scan with that id exists.
-	existingAssetScan, err := s.dbHandler.AssetScansTable().GetAssetScan(assetScanID, models.GetAssetScansAssetScanIDParams{})
+	existingAssetScan, err := s.dbHandler.AssetScansTable().GetAssetScan(assetScanID, types.GetAssetScansAssetScanIDParams{})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("asset scan was not found. assetScanID=%v: %v", assetScanID, err))
@@ -150,7 +150,7 @@ func (s *ServerImpl) PatchAssetScansAssetScanID(ctx echo.Context, assetScanID mo
 		var preconditionFailedErr *databaseTypes.PreconditionFailedError
 		switch true {
 		case errors.As(err, &conflictErr):
-			existResponse := &models.AssetScanExists{
+			existResponse := &types.AssetScanExists{
 				Message:   utils.PointerTo(conflictErr.Reason),
 				AssetScan: &updatedAssetScan,
 			}
@@ -168,9 +168,9 @@ func (s *ServerImpl) PatchAssetScansAssetScanID(ctx echo.Context, assetScanID mo
 }
 
 // nolint:cyclop
-func (s *ServerImpl) PutAssetScansAssetScanID(ctx echo.Context, assetScanID models.AssetScanID, params models.PutAssetScansAssetScanIDParams) error {
+func (s *ServerImpl) PutAssetScansAssetScanID(ctx echo.Context, assetScanID types.AssetScanID, params types.PutAssetScansAssetScanIDParams) error {
 	// TODO: check that the provided scan and asset IDs are valid
-	var assetScan models.AssetScan
+	var assetScan types.AssetScan
 	err := ctx.Bind(&assetScan)
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
@@ -184,7 +184,7 @@ func (s *ServerImpl) PutAssetScansAssetScanID(ctx echo.Context, assetScanID mode
 	assetScan.Id = &assetScanID
 
 	// check that an asset scan with that id exists.
-	existingAssetScan, err := s.dbHandler.AssetScansTable().GetAssetScan(assetScanID, models.GetAssetScansAssetScanIDParams{})
+	existingAssetScan, err := s.dbHandler.AssetScansTable().GetAssetScan(assetScanID, types.GetAssetScansAssetScanIDParams{})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("asset scan was not found. assetScanID=%v: %v", assetScanID, err))
@@ -227,7 +227,7 @@ func (s *ServerImpl) PutAssetScansAssetScanID(ctx echo.Context, assetScanID mode
 		var preconditionFailedErr *databaseTypes.PreconditionFailedError
 		switch true {
 		case errors.As(err, &conflictErr):
-			existResponse := &models.AssetScanExists{
+			existResponse := &types.AssetScanExists{
 				Message:   utils.PointerTo(conflictErr.Reason),
 				AssetScan: &updatedAssetScan,
 			}

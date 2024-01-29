@@ -23,13 +23,13 @@ import (
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 
-	"github.com/openclarity/vmclarity/api/models"
-	"github.com/openclarity/vmclarity/pkg/apiserver/common"
-	databaseTypes "github.com/openclarity/vmclarity/pkg/apiserver/database/types"
+	"github.com/openclarity/vmclarity/api/server/pkg/common"
+	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
-func (s *ServerImpl) GetScanEstimations(ctx echo.Context, params models.GetScanEstimationsParams) error {
+func (s *ServerImpl) GetScanEstimations(ctx echo.Context, params types.GetScanEstimationsParams) error {
 	scanEstimations, err := s.dbHandler.ScanEstimationsTable().GetScanEstimations(params)
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scan estimations from db: %v", err))
@@ -39,7 +39,7 @@ func (s *ServerImpl) GetScanEstimations(ctx echo.Context, params models.GetScanE
 }
 
 func (s *ServerImpl) PostScanEstimations(ctx echo.Context) error {
-	var scanEstimation models.ScanEstimation
+	var scanEstimation types.ScanEstimation
 	err := ctx.Bind(&scanEstimation)
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
@@ -49,7 +49,7 @@ func (s *ServerImpl) PostScanEstimations(ctx echo.Context) error {
 	switch {
 	case !ok:
 		return sendError(ctx, http.StatusBadRequest, "invalid request: status is missing")
-	case status.State != models.ScanEstimationStatusStatePending:
+	case status.State != types.ScanEstimationStatusStatePending:
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("invalid request: initial state for scan estimation is invalid: %s", status.State))
 	default:
 	}
@@ -68,8 +68,8 @@ func (s *ServerImpl) PostScanEstimations(ctx echo.Context) error {
 	return sendResponse(ctx, http.StatusCreated, createdScanEstimation)
 }
 
-func (s *ServerImpl) DeleteScanEstimationsScanEstimationID(ctx echo.Context, scanEstimationID models.ScanEstimationID) error {
-	success := models.Success{
+func (s *ServerImpl) DeleteScanEstimationsScanEstimationID(ctx echo.Context, scanEstimationID types.ScanEstimationID) error {
+	success := types.Success{
 		Message: utils.PointerTo(fmt.Sprintf("scan estimation %v deleted", scanEstimationID)),
 	}
 
@@ -83,7 +83,7 @@ func (s *ServerImpl) DeleteScanEstimationsScanEstimationID(ctx echo.Context, sca
 	return sendResponse(ctx, http.StatusOK, &success)
 }
 
-func (s *ServerImpl) GetScanEstimationsScanEstimationID(ctx echo.Context, scanEstimationID models.ScanEstimationID, params models.GetScanEstimationsScanEstimationIDParams) error {
+func (s *ServerImpl) GetScanEstimationsScanEstimationID(ctx echo.Context, scanEstimationID types.ScanEstimationID, params types.GetScanEstimationsScanEstimationIDParams) error {
 	scanEstimation, err := s.dbHandler.ScanEstimationsTable().GetScanEstimation(scanEstimationID, params)
 	if err != nil {
 		if errors.Is(err, databaseTypes.ErrNotFound) {
@@ -94,8 +94,8 @@ func (s *ServerImpl) GetScanEstimationsScanEstimationID(ctx echo.Context, scanEs
 	return sendResponse(ctx, http.StatusOK, scanEstimation)
 }
 
-func (s *ServerImpl) PatchScanEstimationsScanEstimationID(ctx echo.Context, scanEstimationID models.ScanEstimationID, params models.PatchScanEstimationsScanEstimationIDParams) error {
-	var scanEstimation models.ScanEstimation
+func (s *ServerImpl) PatchScanEstimationsScanEstimationID(ctx echo.Context, scanEstimationID types.ScanEstimationID, params types.PatchScanEstimationsScanEstimationIDParams) error {
+	var scanEstimation types.ScanEstimation
 	err := ctx.Bind(&scanEstimation)
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
@@ -109,7 +109,7 @@ func (s *ServerImpl) PatchScanEstimationsScanEstimationID(ctx echo.Context, scan
 	scanEstimation.Id = &scanEstimationID
 
 	// check that a scan estimation with that id exists.
-	existingScanEstimation, err := s.dbHandler.ScanEstimationsTable().GetScanEstimation(scanEstimationID, models.GetScanEstimationsScanEstimationIDParams{})
+	existingScanEstimation, err := s.dbHandler.ScanEstimationsTable().GetScanEstimation(scanEstimationID, types.GetScanEstimationsScanEstimationIDParams{})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("scan estimation was not found. scanEstimationID=%v: %v", scanEstimationID, err))
@@ -148,8 +148,8 @@ func (s *ServerImpl) PatchScanEstimationsScanEstimationID(ctx echo.Context, scan
 	return sendResponse(ctx, http.StatusOK, updatedScanEstimation)
 }
 
-func (s *ServerImpl) PutScanEstimationsScanEstimationID(ctx echo.Context, scanEstimationID models.ScanEstimationID, params models.PutScanEstimationsScanEstimationIDParams) error {
-	var scanEstimation models.ScanEstimation
+func (s *ServerImpl) PutScanEstimationsScanEstimationID(ctx echo.Context, scanEstimationID types.ScanEstimationID, params types.PutScanEstimationsScanEstimationIDParams) error {
+	var scanEstimation types.ScanEstimation
 	err := ctx.Bind(&scanEstimation)
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
@@ -163,7 +163,7 @@ func (s *ServerImpl) PutScanEstimationsScanEstimationID(ctx echo.Context, scanEs
 	scanEstimation.Id = &scanEstimationID
 
 	// check that a scan estimation with that id exists.
-	existingScanEstimation, err := s.dbHandler.ScanEstimationsTable().GetScanEstimation(scanEstimationID, models.GetScanEstimationsScanEstimationIDParams{})
+	existingScanEstimation, err := s.dbHandler.ScanEstimationsTable().GetScanEstimation(scanEstimationID, types.GetScanEstimationsScanEstimationIDParams{})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("scan estimation was not found. scanEstimationID=%v: %v", scanEstimationID, err))
