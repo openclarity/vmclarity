@@ -13,8 +13,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package api
+package types
 
-//go:generate go run github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen --config=types/types.cfg.yaml openapi.yaml
-//go:generate go run github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen --config=server/server.cfg.yaml openapi.yaml
-//go:generate go run github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen --config=client/client.cfg.yaml openapi.yaml
+import (
+	"fmt"
+	"strings"
+)
+
+func (p *CloudProvider) UnmarshalText(text []byte) error {
+	var provider CloudProvider
+
+	switch strings.ToLower(string(text)) {
+	case strings.ToLower(string(AWS)):
+		provider = AWS
+	case strings.ToLower(string(Azure)):
+		provider = Azure
+	case strings.ToLower(string(Docker)):
+		provider = Docker
+	case strings.ToLower(string(External)):
+		provider = External
+	case strings.ToLower(string(GCP)):
+		provider = GCP
+	case strings.ToLower(string(Kubernetes)):
+		provider = Kubernetes
+	default:
+		return fmt.Errorf("failed to unmarshal text into Provider: %s", text)
+	}
+
+	*p = provider
+
+	return nil
+}

@@ -13,8 +13,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package api
+package types
 
-//go:generate go run github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen --config=types/types.cfg.yaml openapi.yaml
-//go:generate go run github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen --config=server/server.cfg.yaml openapi.yaml
-//go:generate go run github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen --config=client/client.cfg.yaml openapi.yaml
+import (
+	"encoding/json"
+	"fmt"
+)
+
+func (a *AssetRelationship) ToAsset() (*Asset, error) {
+	if a == nil {
+		return nil, fmt.Errorf("asset relationship is nil")
+	}
+
+	B, err := json.Marshal(a)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal: %w", err)
+	}
+
+	var asset Asset
+	if err := json.Unmarshal(B, &asset); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal: %w", err)
+	}
+
+	return &asset, nil
+}

@@ -13,8 +13,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package api
+package types
 
-//go:generate go run github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen --config=types/types.cfg.yaml openapi.yaml
-//go:generate go run github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen --config=server/server.cfg.yaml openapi.yaml
-//go:generate go run github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen --config=client/client.cfg.yaml openapi.yaml
+func (a *AssetScanTemplate) UseSpotInstances() bool {
+	if a == nil {
+		return false
+	}
+
+	if a.ScannerInstanceCreationConfig != nil && a.ScannerInstanceCreationConfig.UseSpotInstances {
+		return true
+	}
+	return false
+}
