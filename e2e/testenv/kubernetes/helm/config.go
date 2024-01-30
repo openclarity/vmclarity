@@ -56,6 +56,17 @@ func WithNamespace(ns string) ConfigOptFn {
 	}
 }
 
+func WithReleaseName(release string) ConfigOptFn {
+	return func(c *Config) error {
+		if c.ReleaseName != "" {
+			return nil
+		}
+		c.ReleaseName = release
+
+		return nil
+	}
+}
+
 func WithKubeConfigPath(path string) ConfigOptFn {
 	return func(c *Config) error {
 		if c.KubeConfigPath != "" {

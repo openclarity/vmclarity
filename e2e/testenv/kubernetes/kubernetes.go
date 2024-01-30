@@ -294,6 +294,7 @@ func New(config *Config, opts ...ConfigOptFn) (*KubernetesEnv, error) {
 		installer, err = helm.New(config.HelmConfig,
 			helm.WithKubeConfigPath(config.KubeConfigPath),
 			helm.WithValuesOpts(valuesOpts),
+			helm.WithReleaseName(config.EnvName),
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create %s installer: %w", config.Installer, err)

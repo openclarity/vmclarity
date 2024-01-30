@@ -135,6 +135,8 @@ func NewConfig() (*Config, error) {
 	_ = v.BindEnv("kubernetes.helm.namespace")
 	v.SetDefault("kubernetes.helm.namespace", helm.DefaultHelmNamespace)
 
+	_ = v.BindEnv("kubernetes.helm.release_name")
+
 	_ = v.BindEnv("kubernetes.helm.driver")
 	v.SetDefault("kubernetes.helm.driver", helm.DefaultHelmDriver)
 
