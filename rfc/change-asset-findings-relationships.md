@@ -21,7 +21,7 @@ The same finding can be discovered on multiple assets by different asset scans.
 This means that there is many-to-many relationship between findings, assets, and asset scans.
 
 However, the existing [specifications](https://github.com/openclarity/vmclarity/blob/9aa03a8abe22ebddb841a9c28f7a9629f744ced7/api/openapi.yaml#L3395-L3444)
-describe findings with a one-to-one relationship to assets and asset scans.
+describe findings with one-to-one relationship to assets and asset scans.
 In addition, the [database logic](https://github.com/openclarity/vmclarity/blob/9aa03a8abe22ebddb841a9c28f7a9629f744ced7/pkg/apiserver/database/gorm/finding.go#L103-L105)
 treats every new finding as unique without performing any checks.
 Together, this can introduce issues for multiple reasons:
@@ -41,21 +41,21 @@ Instead, to express the relationship between assets and findings, _new `AssetFin
 This ensures many-to-many relationship between the two, i.e. a single finding can be discovered on multiple assets, and an asset can contain multiple findings.
 
 A similar approach can be used for asset scans and findings, although this is less relevant (check [non-goals](#non-goals) section).
-Instead, _the `AssetScan` relationship in `Finding` should be preserved, but it should be noted that it represents the latest scan that discovered a given finding._
+Instead, _the `AssetScan` relationship in `Finding` should be preserved, but it should be noted that it represents the first scan that discovered a given finding._
 
 The database logic should _implement uniqueness check_ similar to the existing logic as shown [here](https://github.com/openclarity/vmclarity/blob/9aa03a8abe22ebddb841a9c28f7a9629f744ced7/pkg/apiserver/database/gorm/asset.go#L289).
 The data required for the check can be extracted directly from the actual object.
 Uniqueness checks are required for both `Finding` and `AssetFinding` models.
 
-To provide statistical data and aggregation capabilities between other models, _`Finding` should be expanded with the `summary` property_.
+To provide statistical data and aggregation capabilities between other models, _`Finding` should be expanded with the `assetsCount` property_.
 Together, these approaches address the API consistency and data duplication issues.
 
 ### Analysis
 
 Take the number of packages that can be discovered on a single production container image as a reference.
-In a real-world scenario, a lot of security findings can be discovered on a given asset.
+In a real-world scenario, many security findings can be discovered on a specific asset.
 Additionally, assets and findings are versioned models where every new version is treated as a completely new object.
-Similarly, asset scans are also versioned in terms of schedule, i.e. new asset scan will be created every week.
+Similarly, asset scans are also versioned in terms of schedule, i.e. new asset scans can be created weekly.
 
 Due to the current nature of these models (e.g. creating a new `Finding` or `Asset` for each version, or `AssetScan` on schedule), the size of the tables can grow rapidly.
 The reason to have `AssetFinding` and `AssetScanFinding` as separate tables relates to time and space complexity.
@@ -79,12 +79,12 @@ R(assetScan, finding, version, schedule)        = 10^2 * 100^2 - Scans can be sc
 ```
 
 Therefore, it makes sense to keep track of associations in separate tables between these models to reduce size and improve efficiency.
-Otherwise, sharding or more complex approaches must be used which are not viable options yet.
+Otherwise, sharding or more complex approaches must be used which are not viable options at this stage.
 
 ### Non-goals
 
 This RFC does not intend to propose changes regarding the relationship between findings and asset scans.
-It is assumed that the asset scan in a given finding represents the latest scan that discovered it.
+It is assumed that the asset scan in a given finding represents the last scan that discovered it, while the timestamps are used for object lifecycle tracking.
 If required to keep track of all asset scans that discovered a specific finding and vice-versa, a new `AssetScanFinding` model can be added.
 
 Apart from statistical analysis, this offers no additional benefit as we usually do not care much about the actual scans but rather their results in terms of discovery of new assets and findings.
@@ -100,6 +100,8 @@ Adding the aggregation methods to the `uibackend` API was considered but abandon
 
 ### 1. Extend Findings API model and the supporting logic
 
+The new models should be described as follows:
+
 ```yaml
 Finding:
   type: object
@@ -109,18 +111,27 @@ Finding:
       properties:
         id:
           type: string
-        summary: # replaces `asset` property
-          $ref: '#/components/schemas/FindingSummary'
-        foundBy: # represents the latest scan that discovered this finding
+        revision: # added in case some of the non-unique identifiers are updated
+          type: integer
+        firstSeen:
+          description: When this finding was first discovered by a scan
+          type: string
+          format: date-time
+        lastSeen:
+          description: When this finding was last discovered by a scan
+          type: string
+          format: date-time
+        lastSeenBy:
+          # represents the last scan that discovered this finding
+          # TODO(ramizpolic): maybe ScanRelationship could be used instead to avoid unnecessary object updates
           $ref: '#/components/schemas/AssetScanRelationship'
-        foundOn: # represents the latest time this finding was discovered on
-          description: When this finding was discovered by a scan
-          type: string
-          format: date-time
-        invalidatedOn:
-          description: When this finding was invalidated by a newer scan
-          type: string
-          format: date-time
+        assetsCount:
+          description: Total number of assets that contain this finding
+          type: integer
+        # invalidatedOn: # removes property and uses `assetsCount > 0` check for validity
+        #  description: When this finding was invalidated by a newer scan
+        #  type: string
+        #  format: date-time
         findingInfo:
           anyOf:
             - $ref: '#/components/schemas/PackageFindingInfo'
@@ -146,17 +157,11 @@ Finding:
 ## FindingRelationship should be added similarly to other read-only models
 # FindingRelationship:
 # ...
-
-FindingSummary:
-  type: object
-  properties:
-    totalAssets: # For now, only Assets are relevant, but this can be expanded later
-      type: integer
 ```
 
 The API changes impact the database schema and should be handled accordingly.
 In addition, the database-related logic such as bootstrapping the demo data needs to be updated to reflect these changes.
-For the current case, assume that the summary is always an empty object.
+For the current case, assume that the `assetsCount` is always zero.
 
 ### 2. Add uniqueness checks to Findings database model
 
@@ -204,7 +209,7 @@ AssetFinding:
           $ref: '#/components/schemas/AssetRelationship'
         finding:
           $ref: '#/components/schemas/FindingRelationship'
-        # `ignored` property can be added to allow users to ignore security findings for a given asset.
+        # `ignored` property can be added to allow users to individually ignore specific security findings on a given asset.
         # This is not relevant for this RFC as it only serves as an extension example.
 ```
 
@@ -215,8 +220,7 @@ The implementation should address the following cases:
   - The filters for `GET /asset-finding` can contain either `findingID` or `assetID` to get the list of related objects for a given filter.
     This allows fetching the objects for a query such as _which assets/findings are associated for given finding/asset_.
     The UI can make use of this data by extracting only the required fields (e.g. `.asset`) from the `[]AssetFinding` response.
-  - When performing CRUD operations, note that the summary field of the related `Finding` can change by decrementing or incrementing the `totalAssets`.
-  - Additional background method `recalculateFindingsSummary` can be added similarly to `recalculateFindingsImpact` to ensure that the summaries are correct.
+  - When performing CRUD operations, note that the `assetsCount` property of the related `Finding` can change either by decrementing or incrementing it.
 
 ### 4. Update related UI components
 
@@ -231,6 +235,7 @@ This RFC has no visible impacts on the UX.
 This RFC changes the following UI components:
 - `/findings/{findingType}` table drops the _Asset Name_ and _Asset location_ columns.
   Instead, they are replaced with a single _Asset Count_ column that shows the number of assets related to a given finding.
+  The `firstSeen` field needs to be used to describe when the asset was discovered. 
 - `/findings/{findingType}/{findingID}` changes _Asset details_ menu item by showing the table instead of a single asset.
   The relevant data is obtained by fetching `[]AssetFinding` from `GET /asset-findings` for a given `findingID`.
   Subsequently, the asset data for the table is extracted from the returned array by extracting the `.asset` key.
