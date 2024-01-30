@@ -259,7 +259,7 @@ func (p *Provider) runScannerJob(ctx context.Context, config *provider.ScanJobCo
 						{
 							Name:            jobName,
 							Image:           config.ScannerImage,
-							ImagePullPolicy: corev1.PullAlways,
+							ImagePullPolicy: corev1.PullIfNotPresent,
 							Args: []string{
 								"scan",
 								"--config",
