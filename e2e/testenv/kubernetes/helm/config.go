@@ -45,7 +45,7 @@ type Config struct {
 // ConfigOptFn defines transformer function for Config.
 type ConfigOptFn func(*Config) error
 
-func WithNamespace(ns string) ConfigOptFn {
+func WithDefaultNamespace(ns string) ConfigOptFn {
 	return func(c *Config) error {
 		if c.Namespace != "" {
 			return nil
@@ -56,7 +56,7 @@ func WithNamespace(ns string) ConfigOptFn {
 	}
 }
 
-func WithReleaseName(release string) ConfigOptFn {
+func WithDefaultReleaseName(release string) ConfigOptFn {
 	return func(c *Config) error {
 		if c.ReleaseName != "" {
 			return nil
@@ -67,7 +67,7 @@ func WithReleaseName(release string) ConfigOptFn {
 	}
 }
 
-func WithKubeConfigPath(path string) ConfigOptFn {
+func WithDefaultKubeConfigPath(path string) ConfigOptFn {
 	return func(c *Config) error {
 		if c.KubeConfigPath != "" {
 			return nil
