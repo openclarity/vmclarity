@@ -25,8 +25,8 @@ import (
 
 	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/cli/pkg/utils"
-	"github.com/openclarity/vmclarity/pkg/orchestrator/provider"
-	provider_service "github.com/openclarity/vmclarity/pkg/orchestrator/provider/external/proto"
+	provider "github.com/openclarity/vmclarity/provider/pkg"
+	provider_service "github.com/openclarity/vmclarity/provider/pkg/external/proto"
 )
 
 func Test_convertAssetToModels(t *testing.T) {

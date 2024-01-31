@@ -21,7 +21,7 @@ import (
 
 	. "github.com/onsi/gomega"
 
-	"github.com/openclarity/vmclarity/pkg/orchestrator/provider"
+	provider "github.com/openclarity/vmclarity/provider/pkg"
 )
 
 //go:embed testdata/cloud-init.yaml

@@ -23,7 +23,7 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 
 	"github.com/openclarity/vmclarity/cli/pkg/utils"
-	"github.com/openclarity/vmclarity/pkg/orchestrator/provider"
+	provider "github.com/openclarity/vmclarity/provider/pkg"
 )
 
 var (

@@ -24,7 +24,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/cli/pkg/utils"
-	"github.com/openclarity/vmclarity/pkg/orchestrator/provider"
+	provider "github.com/openclarity/vmclarity/provider/pkg"
 	"github.com/openclarity/vmclarity/utils/log"
 )
 

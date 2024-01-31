@@ -21,7 +21,7 @@ import (
 
 	"github.com/aws/smithy-go"
 
-	"github.com/openclarity/vmclarity/pkg/orchestrator/provider"
+	provider "github.com/openclarity/vmclarity/provider/pkg"
 )
 
 type (

@@ -27,7 +27,7 @@ import (
 	"github.com/openclarity/vmclarity/api/types"
 	familiestypes "github.com/openclarity/vmclarity/cli/pkg/families/types"
 	"github.com/openclarity/vmclarity/cli/pkg/utils"
-	"github.com/openclarity/vmclarity/pkg/orchestrator/provider/common"
+	"github.com/openclarity/vmclarity/provider/pkg/common"
 )
 
 type MarketOption string

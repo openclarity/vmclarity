@@ -23,7 +23,7 @@ import (
 
 	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/cli/pkg/utils"
-	"github.com/openclarity/vmclarity/pkg/orchestrator/provider"
+	provider "github.com/openclarity/vmclarity/provider/pkg"
 )
 
 type jobConfigInput struct {

@@ -25,13 +25,13 @@ import (
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 
-	"github.com/openclarity/vmclarity/pkg/orchestrator/assetscanestimationwatcher"
-	"github.com/openclarity/vmclarity/pkg/orchestrator/assetscanprocessor"
-	"github.com/openclarity/vmclarity/pkg/orchestrator/assetscanwatcher"
-	"github.com/openclarity/vmclarity/pkg/orchestrator/discovery"
-	"github.com/openclarity/vmclarity/pkg/orchestrator/scanconfigwatcher"
-	"github.com/openclarity/vmclarity/pkg/orchestrator/scanestimationwatcher"
-	"github.com/openclarity/vmclarity/pkg/orchestrator/scanwatcher"
+	"github.com/openclarity/vmclarity/orchestrator/pkg/assetscanestimationwatcher"
+	"github.com/openclarity/vmclarity/orchestrator/pkg/assetscanprocessor"
+	"github.com/openclarity/vmclarity/orchestrator/pkg/assetscanwatcher"
+	"github.com/openclarity/vmclarity/orchestrator/pkg/discovery"
+	"github.com/openclarity/vmclarity/orchestrator/pkg/scanconfigwatcher"
+	"github.com/openclarity/vmclarity/orchestrator/pkg/scanestimationwatcher"
+	"github.com/openclarity/vmclarity/orchestrator/pkg/scanwatcher"
 )
 
 func TestUnmarshalCloudProvider(t *testing.T) {
