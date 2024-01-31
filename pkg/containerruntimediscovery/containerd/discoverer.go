@@ -17,6 +17,7 @@ package containerd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -80,43 +81,43 @@ func New() (types.Discoverer, error) {
 	}, nil
 }
 
-type onFound func(image containerd.Image) (bool, error)
+// StopWalk is used as a return value from ImageIDWalkFunc to indicate that all remaining images are to be skipped.
+//
+//nolint:errname,stylecheck
+var StopWalk = errors.New("stop the walk")
 
-func (d *discoverer) imageIDWalk(ctx context.Context, imageID string, f onFound) (bool, error) {
-	var found bool
+// ImageIDWalkFunc is the type of function which is invoked by the discoverer.imageIDWalk method to visit all container
+// images with the provided image ID.
+type ImageIDWalkFunc func(image containerd.Image) error
 
-	// ContainerD doesn't allow to filter images by config digest, so we
-	// have to walk all the images to find all the images by ID and then
-	// merge them together.
+// imageIDWalk iterates over the list of container images returned by containerd and invokes the provided ImageIDWalkFunc
+// for images which have the ID defined by imageID.
+func (d *discoverer) imageIDWalk(ctx context.Context, imageID string, fn ImageIDWalkFunc) error {
 	images, err := d.client.ListImages(ctx)
 	if err != nil {
-		return found, fmt.Errorf("failed to list images: %w", err)
+		return fmt.Errorf("failed to list images: %w", err)
 	}
 
 	for _, image := range images {
 		configDescriptor, err := image.Config(ctx)
 		if err != nil {
-			return found, fmt.Errorf("failed to load image config descriptor: %w", err)
+			return fmt.Errorf("failed to load image config descriptor: %w", err)
 		}
-		id := configDescriptor.Digest.String()
 
-		if id != imageID {
+		if configDescriptor.Digest.String() != imageID {
 			continue
 		}
 
-		found = true
+		if err = fn(image); err != nil {
+			if errors.Is(err, StopWalk) {
+				break
+			}
 
-		stop, err := f(image)
-		if err != nil {
-			return found, err
-		}
-
-		if stop {
-			break
+			return err
 		}
 	}
 
-	return found, nil
+	return nil
 }
 
 func (d *discoverer) Images(ctx context.Context) ([]models.ContainerImageInfo, error) {
@@ -167,19 +168,27 @@ func (d *discoverer) Images(ctx context.Context) ([]models.ContainerImageInfo, e
 
 func (d *discoverer) Image(ctx context.Context, imageID string) (models.ContainerImageInfo, error) {
 	var result models.ContainerImageInfo
-	found, err := d.imageIDWalk(ctx, imageID, func(image containerd.Image) (bool, error) {
-		cii, err := d.getContainerImageInfo(ctx, image)
+	var found bool
+
+	// Containerd doesn't allow to filter images by config digest (aka image ID), so we have to walk all the images
+	// to find all images with the same ID and then merge them together.
+	walkFn := func(image containerd.Image) error {
+		found = true
+
+		containerImageInfo, err := d.getContainerImageInfo(ctx, image)
 		if err != nil {
-			return false, fmt.Errorf("unable to convert image %s to container image info: %w", image.Name(), err)
+			return fmt.Errorf("unable to convert image %s to container image info: %w", image.Name(), err)
 		}
 
-		result, err = result.Merge(cii)
+		result, err = result.Merge(containerImageInfo)
 		if err != nil {
-			return false, fmt.Errorf("unable to merge image %v with %v: %w", result, cii, err)
+			return fmt.Errorf("unable to merge image %v with %v: %w", result, containerImageInfo, err)
 		}
 
-		return false, nil
-	})
+		return nil
+	}
+
+	err := d.imageIDWalk(ctx, imageID, walkFn)
 	if err != nil {
 		return models.ContainerImageInfo{}, fmt.Errorf("failed to walk all image: %w", err)
 	}
@@ -263,10 +272,17 @@ func (d discoverer) getSnapshotterName(ctx context.Context) string {
 // TODO(sambetts) Support auth config for fetching private images if they are missing.
 func (d *discoverer) ExportImage(ctx context.Context, imageID string) (io.ReadCloser, error) {
 	var img containerd.Image
-	found, err := d.imageIDWalk(ctx, imageID, func(image containerd.Image) (bool, error) {
+	var found bool
+
+	// Find the first container `image` with ID defined by `imageID`.
+	walkFn := func(image containerd.Image) error {
+		found = true
 		img = image
-		return true, nil
-	})
+
+		return StopWalk
+	}
+
+	err := d.imageIDWalk(ctx, imageID, walkFn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to walk all images: %w", err)
 	}
