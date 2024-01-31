@@ -30,10 +30,10 @@ type Config struct {
 	// KubeConfig defines a path to a kubeconfig file to use to connect to the Kubernetes API.
 	KubeConfig string `mapstructure:"kubeconfig"`
 
-	// ContainerRuntimeDiscoveryNamespace defines the name of the namespace where container runtime discovery DaemonSet is deployed.
+	// ContainerRuntimeDiscoveryNamespace defines the namespace where container runtime discovery DaemonSet is deployed.
 	ContainerRuntimeDiscoveryNamespace string `mapstructure:"container_runtime_discovery_namespace"`
 
-	// ScannerNamespace defines the namespace where the scanners are deploying.
+	// ScannerNamespace defines the namespace where the scanners are deployed.
 	ScannerNamespace string `mapstructure:"scanner_namespace"`
 }
 
