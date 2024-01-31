@@ -231,7 +231,6 @@ func (p *Provider) runScannerJob(ctx context.Context, config *provider.ScanJobCo
 		return fmt.Errorf("failed to create config map: %w", err)
 	}
 
-	var backOffLimit int32 = 0
 	jobSpec := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      jobName,
@@ -303,7 +302,7 @@ func (p *Provider) runScannerJob(ctx context.Context, config *provider.ScanJobCo
 					},
 				},
 			},
-			BackoffLimit: &backOffLimit,
+			BackoffLimit: utils.PointerTo[int32](0),
 		},
 	}
 
