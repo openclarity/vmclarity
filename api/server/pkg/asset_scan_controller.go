@@ -24,7 +24,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/openclarity/vmclarity/api/server/pkg/common"
-	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
@@ -147,7 +147,7 @@ func (s *ServerImpl) PatchAssetScansAssetScanID(ctx echo.Context, assetScanID ty
 	if err != nil {
 		var validationErr *common.BadRequestError
 		var conflictErr *common.ConflictError
-		var preconditionFailedErr *databaseTypes.PreconditionFailedError
+		var preconditionFailedErr *dbtypes.PreconditionFailedError
 		switch true {
 		case errors.As(err, &conflictErr):
 			existResponse := &types.AssetScanExists{
@@ -224,7 +224,7 @@ func (s *ServerImpl) PutAssetScansAssetScanID(ctx echo.Context, assetScanID type
 	if err != nil {
 		var validationErr *common.BadRequestError
 		var conflictErr *common.ConflictError
-		var preconditionFailedErr *databaseTypes.PreconditionFailedError
+		var preconditionFailedErr *dbtypes.PreconditionFailedError
 		switch true {
 		case errors.As(err, &conflictErr):
 			existResponse := &types.AssetScanExists{

@@ -24,12 +24,12 @@ import (
 	"github.com/Portshift/go-utils/healthz"
 
 	"github.com/openclarity/vmclarity/api/server/pkg/database"
-	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 	"github.com/openclarity/vmclarity/utils/log"
 )
 
-func createDatabaseConfig(config *Config) databaseTypes.DBConfig {
-	return databaseTypes.DBConfig{
+func createDatabaseConfig(config *Config) dbtypes.DBConfig {
+	return dbtypes.DBConfig{
 		DriverType:     config.DatabaseDriver,
 		EnableInfoLogs: config.EnableDBInfoLogs,
 		DBPassword:     config.DBPassword,

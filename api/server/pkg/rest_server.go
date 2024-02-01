@@ -25,7 +25,7 @@ import (
 	middleware "github.com/oapi-codegen/echo-middleware"
 
 	"github.com/openclarity/vmclarity/api/server/pkg/common"
-	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 	"github.com/openclarity/vmclarity/utils/log"
 )
 
@@ -34,7 +34,7 @@ const (
 )
 
 type ServerImpl struct {
-	dbHandler databaseTypes.Database
+	dbHandler dbtypes.Database
 }
 
 type Server struct {
@@ -42,7 +42,7 @@ type Server struct {
 	echoServer *echo.Echo
 }
 
-func CreateRESTServer(address string, dbHandler databaseTypes.Database) (*Server, error) {
+func CreateRESTServer(address string, dbHandler dbtypes.Database) (*Server, error) {
 	e, err := createEchoServer(dbHandler)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create rest server: %w", err)
@@ -53,7 +53,7 @@ func CreateRESTServer(address string, dbHandler databaseTypes.Database) (*Server
 	}, nil
 }
 
-func createEchoServer(dbHandler databaseTypes.Database) (*echo.Echo, error) {
+func createEchoServer(dbHandler dbtypes.Database) (*echo.Echo, error) {
 	swagger, err := GetSwagger()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load swagger spec: %w", err)

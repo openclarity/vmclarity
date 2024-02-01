@@ -22,7 +22,7 @@ import (
 
 	"golang.org/x/exp/rand"
 
-	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 	"github.com/openclarity/vmclarity/utils/log"
@@ -41,7 +41,7 @@ const (
 )
 
 // nolint:gomnd,maintidx,cyclop
-func CreateDemoData(ctx context.Context, db databaseTypes.Database) {
+func CreateDemoData(ctx context.Context, db dbtypes.Database) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx)
 
 	// Create scan configs:

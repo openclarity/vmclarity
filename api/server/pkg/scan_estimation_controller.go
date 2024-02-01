@@ -24,7 +24,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/openclarity/vmclarity/api/server/pkg/common"
-	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
@@ -74,7 +74,7 @@ func (s *ServerImpl) DeleteScanEstimationsScanEstimationID(ctx echo.Context, sca
 	}
 
 	if err := s.dbHandler.ScanEstimationsTable().DeleteScanEstimation(scanEstimationID); err != nil {
-		if errors.Is(err, databaseTypes.ErrNotFound) {
+		if errors.Is(err, dbtypes.ErrNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("ScanEstimation with ID %v not found", scanEstimationID))
 		}
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to delete scan estimation from db. scanEstimationID=%v: %v", scanEstimationID, err))
@@ -86,7 +86,7 @@ func (s *ServerImpl) DeleteScanEstimationsScanEstimationID(ctx echo.Context, sca
 func (s *ServerImpl) GetScanEstimationsScanEstimationID(ctx echo.Context, scanEstimationID types.ScanEstimationID, params types.GetScanEstimationsScanEstimationIDParams) error {
 	scanEstimation, err := s.dbHandler.ScanEstimationsTable().GetScanEstimation(scanEstimationID, params)
 	if err != nil {
-		if errors.Is(err, databaseTypes.ErrNotFound) {
+		if errors.Is(err, dbtypes.ErrNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("ScanEstimation with ID %v not found", scanEstimationID))
 		}
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scan estimation from db. id=%v: %v", scanEstimationID, err))
@@ -132,9 +132,9 @@ func (s *ServerImpl) PatchScanEstimationsScanEstimationID(ctx echo.Context, scan
 	updatedScanEstimation, err := s.dbHandler.ScanEstimationsTable().UpdateScanEstimation(scanEstimation, params)
 	if err != nil {
 		var validationErr *common.BadRequestError
-		var preconditionFailedErr *databaseTypes.PreconditionFailedError
+		var preconditionFailedErr *dbtypes.PreconditionFailedError
 		switch {
-		case errors.Is(err, databaseTypes.ErrNotFound):
+		case errors.Is(err, dbtypes.ErrNotFound):
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("ScanEstimation with ID %v not found", scanEstimationID))
 		case errors.As(err, &validationErr):
 			return sendError(ctx, http.StatusBadRequest, err.Error())
@@ -188,9 +188,9 @@ func (s *ServerImpl) PutScanEstimationsScanEstimationID(ctx echo.Context, scanEs
 	updatedScanEstimation, err := s.dbHandler.ScanEstimationsTable().SaveScanEstimation(scanEstimation, params)
 	if err != nil {
 		var validationErr *common.BadRequestError
-		var preconditionFailedErr *databaseTypes.PreconditionFailedError
+		var preconditionFailedErr *dbtypes.PreconditionFailedError
 		switch {
-		case errors.Is(err, databaseTypes.ErrNotFound):
+		case errors.Is(err, dbtypes.ErrNotFound):
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("ScanEstimation with ID %v not found", scanEstimationID))
 		case errors.As(err, &validationErr):
 			return sendError(ctx, http.StatusBadRequest, err.Error())

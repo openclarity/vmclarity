@@ -22,7 +22,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
 
-	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 )
 
 func TestConfig(t *testing.T) {
@@ -52,7 +52,7 @@ func TestConfig(t *testing.T) {
 			ExpectedConfig: &Config{
 				ListenAddress:      "example.com:8889",
 				HealthCheckAddress: "example.com:18888",
-				DatabaseDriver:     databaseTypes.DBDriverTypePostgres,
+				DatabaseDriver:     dbtypes.DBDriverTypePostgres,
 				DBName:             "testname",
 				DBUser:             "testuser",
 				DBPassword:         "testpass",

@@ -24,7 +24,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/openclarity/vmclarity/api/server/pkg/common"
-	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 	"github.com/openclarity/vmclarity/api/types"
 )
 
@@ -36,7 +36,7 @@ type FindingsTableHandler struct {
 	DB *gorm.DB
 }
 
-func (db *Handler) FindingsTable() databaseTypes.FindingsTable {
+func (db *Handler) FindingsTable() dbtypes.FindingsTable {
 	return &FindingsTableHandler{
 		DB: db.DB,
 	}
@@ -78,7 +78,7 @@ func (s *FindingsTableHandler) GetFinding(findingID types.FindingID, params type
 	err := ODataQuery(s.DB, "Finding", &filter, params.Select, params.Expand, nil, nil, nil, false, &dbFinding)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return types.Finding{}, databaseTypes.ErrNotFound
+			return types.Finding{}, dbtypes.ErrNotFound
 		}
 		return types.Finding{}, err
 	}

@@ -23,7 +23,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/openclarity/vmclarity/api/server/pkg/common"
-	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
@@ -69,7 +69,7 @@ func (s *ServerImpl) PostAssets(ctx echo.Context) error {
 func (s *ServerImpl) GetAssetsAssetID(ctx echo.Context, assetID types.AssetID, params types.GetAssetsAssetIDParams) error {
 	asset, err := s.dbHandler.AssetsTable().GetAsset(assetID, params)
 	if err != nil {
-		if errors.Is(err, databaseTypes.ErrNotFound) {
+		if errors.Is(err, dbtypes.ErrNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Asset with ID %v not found", assetID))
 		}
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get asset from db. assetID=%v: %v", assetID, err))
@@ -96,9 +96,9 @@ func (s *ServerImpl) PutAssetsAssetID(ctx echo.Context, assetID types.AssetID, p
 	if err != nil {
 		var validationErr *common.BadRequestError
 		var conflictErr *common.ConflictError
-		var preconditionFailedErr *databaseTypes.PreconditionFailedError
+		var preconditionFailedErr *dbtypes.PreconditionFailedError
 		switch true {
-		case errors.Is(err, databaseTypes.ErrNotFound):
+		case errors.Is(err, dbtypes.ErrNotFound):
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Asset with ID %v not found", assetID))
 		case errors.As(err, &conflictErr):
 			existResponse := &types.AssetExists{
@@ -135,9 +135,9 @@ func (s *ServerImpl) PatchAssetsAssetID(ctx echo.Context, assetID types.AssetID,
 	updatedAsset, err := s.dbHandler.AssetsTable().UpdateAsset(asset, params)
 	if err != nil {
 		var conflictErr *common.ConflictError
-		var preconditionFailedErr *databaseTypes.PreconditionFailedError
+		var preconditionFailedErr *dbtypes.PreconditionFailedError
 		switch true {
-		case errors.Is(err, databaseTypes.ErrNotFound):
+		case errors.Is(err, dbtypes.ErrNotFound):
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Asset with ID %v not found", assetID))
 		case errors.As(err, &conflictErr):
 			existResponse := &types.AssetExists{
@@ -161,7 +161,7 @@ func (s *ServerImpl) DeleteAssetsAssetID(ctx echo.Context, assetID types.AssetID
 	}
 
 	if err := s.dbHandler.AssetsTable().DeleteAsset(assetID); err != nil {
-		if errors.Is(err, databaseTypes.ErrNotFound) {
+		if errors.Is(err, dbtypes.ErrNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Asset with ID %v not found", assetID))
 		}
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to delete asset from db. assetID=%v: %v", assetID, err))

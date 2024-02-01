@@ -24,7 +24,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/openclarity/vmclarity/api/server/pkg/common"
-	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
@@ -41,7 +41,7 @@ type ScanEstimationsTableHandler struct {
 	DB *gorm.DB
 }
 
-func (db *Handler) ScanEstimationsTable() databaseTypes.ScanEstimationsTable {
+func (db *Handler) ScanEstimationsTable() dbtypes.ScanEstimationsTable {
 	return &ScanEstimationsTableHandler{
 		DB: db.DB,
 	}
@@ -83,7 +83,7 @@ func (s *ScanEstimationsTableHandler) GetScanEstimation(scanEstimationID types.S
 	err := ODataQuery(s.DB, scanEstimationSchemaName, &filter, params.Select, params.Expand, nil, nil, nil, false, &dbScanEstimation)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return types.ScanEstimation{}, databaseTypes.ErrNotFound
+			return types.ScanEstimation{}, dbtypes.ErrNotFound
 		}
 		return types.ScanEstimation{}, err
 	}

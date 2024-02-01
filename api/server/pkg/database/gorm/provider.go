@@ -24,7 +24,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/openclarity/vmclarity/api/server/pkg/common"
-	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
@@ -41,7 +41,7 @@ type ProvidersTableHandler struct {
 	DB *gorm.DB
 }
 
-func (db *Handler) ProvidersTable() databaseTypes.ProvidersTable {
+func (db *Handler) ProvidersTable() dbtypes.ProvidersTable {
 	return &ProvidersTableHandler{
 		DB: db.DB,
 	}
@@ -83,7 +83,7 @@ func (t *ProvidersTableHandler) GetProvider(providerID types.ProviderID, params 
 	err := ODataQuery(t.DB, providerSchemaName, &filter, params.Select, params.Expand, nil, nil, nil, false, &dbProvider)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return types.Provider{}, databaseTypes.ErrNotFound
+			return types.Provider{}, dbtypes.ErrNotFound
 		}
 		return types.Provider{}, err
 	}

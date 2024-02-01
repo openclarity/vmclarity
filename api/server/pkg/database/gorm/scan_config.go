@@ -26,7 +26,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/openclarity/vmclarity/api/server/pkg/common"
-	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
@@ -39,7 +39,7 @@ type ScanConfigsTableHandler struct {
 	DB *gorm.DB
 }
 
-func (db *Handler) ScanConfigsTable() databaseTypes.ScanConfigsTable {
+func (db *Handler) ScanConfigsTable() dbtypes.ScanConfigsTable {
 	return &ScanConfigsTableHandler{
 		DB: db.DB,
 	}
@@ -81,7 +81,7 @@ func (s *ScanConfigsTableHandler) GetScanConfig(scanConfigID types.ScanConfigID,
 	err := ODataQuery(s.DB, "ScanConfig", &filter, params.Select, params.Expand, nil, nil, nil, false, &dbScanConfig)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return types.ScanConfig{}, databaseTypes.ErrNotFound
+			return types.ScanConfig{}, dbtypes.ErrNotFound
 		}
 		return types.ScanConfig{}, err
 	}

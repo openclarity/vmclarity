@@ -24,7 +24,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/openclarity/vmclarity/api/server/pkg/common"
-	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
@@ -122,7 +122,7 @@ func (s *ServerImpl) PatchAssetScanEstimationsAssetScanEstimationID(ctx echo.Con
 	if err != nil {
 		var validationErr *common.BadRequestError
 		var conflictErr *common.ConflictError
-		var preconditionFailedErr *databaseTypes.PreconditionFailedError
+		var preconditionFailedErr *dbtypes.PreconditionFailedError
 		switch true {
 		case errors.As(err, &conflictErr):
 			existResponse := &types.AssetScanEstimationExists{
@@ -184,7 +184,7 @@ func (s *ServerImpl) PutAssetScanEstimationsAssetScanEstimationID(ctx echo.Conte
 	if err != nil {
 		var validationErr *common.BadRequestError
 		var conflictErr *common.ConflictError
-		var preconditionFailedErr *databaseTypes.PreconditionFailedError
+		var preconditionFailedErr *dbtypes.PreconditionFailedError
 		switch true {
 		case errors.As(err, &conflictErr):
 			existResponse := &types.AssetScanEstimationExists{
@@ -210,7 +210,7 @@ func (s *ServerImpl) DeleteAssetScanEstimationsAssetScanEstimationID(ctx echo.Co
 	}
 
 	if err := s.dbHandler.AssetScanEstimationsTable().DeleteAssetScanEstimation(assetScanEstimationID); err != nil {
-		if errors.Is(err, databaseTypes.ErrNotFound) {
+		if errors.Is(err, dbtypes.ErrNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("AssetScanEstimation with ID %v not found", assetScanEstimationID))
 		}
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to delete asset scan estimation from db. scanEstimationID=%v: %v", assetScanEstimationID, err))

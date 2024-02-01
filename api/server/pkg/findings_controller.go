@@ -23,7 +23,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/openclarity/vmclarity/api/server/pkg/common"
-	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
@@ -39,7 +39,7 @@ func (s *ServerImpl) GetFindings(ctx echo.Context, params types.GetFindingsParam
 func (s *ServerImpl) GetFindingsFindingID(ctx echo.Context, findingID types.FindingID, params types.GetFindingsFindingIDParams) error {
 	sc, err := s.dbHandler.FindingsTable().GetFinding(findingID, params)
 	if err != nil {
-		if errors.Is(err, databaseTypes.ErrNotFound) {
+		if errors.Is(err, dbtypes.ErrNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Finding with ID %v not found", findingID))
 		}
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get finding from db. findingID=%v: %v", findingID, err))
@@ -81,7 +81,7 @@ func (s *ServerImpl) DeleteFindingsFindingID(ctx echo.Context, findingID types.F
 	}
 
 	if err := s.dbHandler.FindingsTable().DeleteFinding(findingID); err != nil {
-		if errors.Is(err, databaseTypes.ErrNotFound) {
+		if errors.Is(err, dbtypes.ErrNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Finding with ID %v not found", findingID))
 		}
 		return sendError(ctx, http.StatusInternalServerError, err.Error())
@@ -107,7 +107,7 @@ func (s *ServerImpl) PatchFindingsFindingID(ctx echo.Context, findingID types.Fi
 	if err != nil {
 		var validationErr *common.BadRequestError
 		switch true {
-		case errors.Is(err, databaseTypes.ErrNotFound):
+		case errors.Is(err, dbtypes.ErrNotFound):
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Finding with ID %v not found", findingID))
 		case errors.As(err, &validationErr):
 			return sendError(ctx, http.StatusBadRequest, err.Error())
@@ -137,7 +137,7 @@ func (s *ServerImpl) PutFindingsFindingID(ctx echo.Context, findingID types.Find
 	if err != nil {
 		var validationErr *common.BadRequestError
 		switch true {
-		case errors.Is(err, databaseTypes.ErrNotFound):
+		case errors.Is(err, dbtypes.ErrNotFound):
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Finding with ID %v not found", findingID))
 		case errors.As(err, &validationErr):
 			return sendError(ctx, http.StatusBadRequest, err.Error())

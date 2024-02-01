@@ -23,7 +23,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/openclarity/vmclarity/api/server/pkg/common"
-	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
@@ -69,7 +69,7 @@ func (s *ServerImpl) PostProviders(ctx echo.Context) error {
 func (s *ServerImpl) GetProvidersProviderID(ctx echo.Context, providerID types.ProviderID, params types.GetProvidersProviderIDParams) error {
 	provider, err := s.dbHandler.ProvidersTable().GetProvider(providerID, params)
 	if err != nil {
-		if errors.Is(err, databaseTypes.ErrNotFound) {
+		if errors.Is(err, dbtypes.ErrNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Provider with ID %v not found", providerID))
 		}
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get provider from db. providerID=%v: %v", providerID, err))
@@ -96,9 +96,9 @@ func (s *ServerImpl) PutProvidersProviderID(ctx echo.Context, providerID types.P
 	if err != nil {
 		var validationErr *common.BadRequestError
 		var conflictErr *common.ConflictError
-		var preconditionFailedErr *databaseTypes.PreconditionFailedError
+		var preconditionFailedErr *dbtypes.PreconditionFailedError
 		switch true {
-		case errors.Is(err, databaseTypes.ErrNotFound):
+		case errors.Is(err, dbtypes.ErrNotFound):
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Provider with ID %v not found", providerID))
 		case errors.As(err, &conflictErr):
 			existResponse := &types.ProviderExists{
@@ -135,9 +135,9 @@ func (s *ServerImpl) PatchProvidersProviderID(ctx echo.Context, providerID types
 	updatedProvider, err := s.dbHandler.ProvidersTable().UpdateProvider(provider, params)
 	if err != nil {
 		var conflictErr *common.ConflictError
-		var preconditionFailedErr *databaseTypes.PreconditionFailedError
+		var preconditionFailedErr *dbtypes.PreconditionFailedError
 		switch true {
-		case errors.Is(err, databaseTypes.ErrNotFound):
+		case errors.Is(err, dbtypes.ErrNotFound):
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Provider with ID %v not found", providerID))
 		case errors.As(err, &conflictErr):
 			existResponse := &types.ProviderExists{
@@ -161,7 +161,7 @@ func (s *ServerImpl) DeleteProvidersProviderID(ctx echo.Context, providerID type
 	}
 
 	if err := s.dbHandler.ProvidersTable().DeleteProvider(providerID); err != nil {
-		if errors.Is(err, databaseTypes.ErrNotFound) {
+		if errors.Is(err, dbtypes.ErrNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Provider with ID %v not found", providerID))
 		}
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to delete provider from db. providerID=%v: %v", providerID, err))

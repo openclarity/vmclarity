@@ -21,7 +21,7 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 
-	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 
 	"github.com/spf13/viper"
 )
@@ -30,7 +30,7 @@ const (
 	DefaultEnvPrefix          = "VMCLARITY_APISERVER"
 	DefaultListenAddress      = "0.0.0.0:8888"
 	DefaultHealthCheckAddress = "0.0.0.0:8081"
-	DefaultDatabaseDriver     = databaseTypes.DBDriverTypeLocal
+	DefaultDatabaseDriver     = dbtypes.DBDriverTypeLocal
 )
 
 type Config struct {

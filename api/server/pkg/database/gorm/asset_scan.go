@@ -24,7 +24,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/openclarity/vmclarity/api/server/pkg/common"
-	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
@@ -41,7 +41,7 @@ type AssetScansTableHandler struct {
 	DB *gorm.DB
 }
 
-func (db *Handler) AssetScansTable() databaseTypes.AssetScansTable {
+func (db *Handler) AssetScansTable() dbtypes.AssetScansTable {
 	return &AssetScansTableHandler{
 		DB: db.DB,
 	}
@@ -82,7 +82,7 @@ func (s *AssetScansTableHandler) GetAssetScan(assetScanID types.AssetScanID, par
 	err := ODataQuery(s.DB, assetScansSchemaName, &filter, params.Select, params.Expand, nil, nil, nil, false, &dbAssetScan)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return types.AssetScan{}, databaseTypes.ErrNotFound
+			return types.AssetScan{}, dbtypes.ErrNotFound
 		}
 		return types.AssetScan{}, err
 	}

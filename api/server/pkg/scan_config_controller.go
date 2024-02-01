@@ -23,7 +23,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/openclarity/vmclarity/api/server/pkg/common"
-	databaseTypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
@@ -39,7 +39,7 @@ func (s *ServerImpl) GetScanConfigs(ctx echo.Context, params types.GetScanConfig
 func (s *ServerImpl) GetScanConfigsScanConfigID(ctx echo.Context, scanConfigID types.ScanConfigID, params types.GetScanConfigsScanConfigIDParams) error {
 	sc, err := s.dbHandler.ScanConfigsTable().GetScanConfig(scanConfigID, params)
 	if err != nil {
-		if errors.Is(err, databaseTypes.ErrNotFound) {
+		if errors.Is(err, dbtypes.ErrNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("ScanConfig with ID %v not found", scanConfigID))
 		}
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get scan config from db. scanConfigID=%v: %v", scanConfigID, err))
@@ -81,7 +81,7 @@ func (s *ServerImpl) DeleteScanConfigsScanConfigID(ctx echo.Context, scanConfigI
 	}
 
 	if err := s.dbHandler.ScanConfigsTable().DeleteScanConfig(scanConfigID); err != nil {
-		if errors.Is(err, databaseTypes.ErrNotFound) {
+		if errors.Is(err, dbtypes.ErrNotFound) {
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("ScanConfig with ID %v not found", scanConfigID))
 		}
 		return sendError(ctx, http.StatusInternalServerError, err.Error())
@@ -108,9 +108,9 @@ func (s *ServerImpl) PatchScanConfigsScanConfigID(ctx echo.Context, scanConfigID
 	if err != nil {
 		var validationErr *common.BadRequestError
 		var conflictErr *common.ConflictError
-		var preconditionFailedErr *databaseTypes.PreconditionFailedError
+		var preconditionFailedErr *dbtypes.PreconditionFailedError
 		switch true {
-		case errors.Is(err, databaseTypes.ErrNotFound):
+		case errors.Is(err, dbtypes.ErrNotFound):
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("ScanConfig with ID %v not found", scanConfigID))
 		case errors.As(err, &conflictErr):
 			existResponse := &types.ScanConfigExists{
@@ -148,9 +148,9 @@ func (s *ServerImpl) PutScanConfigsScanConfigID(ctx echo.Context, scanConfigID t
 	if err != nil {
 		var validationErr *common.BadRequestError
 		var conflictErr *common.ConflictError
-		var preconditionFailedErr *databaseTypes.PreconditionFailedError
+		var preconditionFailedErr *dbtypes.PreconditionFailedError
 		switch true {
-		case errors.Is(err, databaseTypes.ErrNotFound):
+		case errors.Is(err, dbtypes.ErrNotFound):
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("ScanConfig with ID %v not found", scanConfigID))
 		case errors.As(err, &conflictErr):
 			existResponse := &types.ScanConfigExists{
