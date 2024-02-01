@@ -26,7 +26,6 @@ import (
 	"github.com/openclarity/vmclarity/api/server/pkg/common"
 	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 	"github.com/openclarity/vmclarity/api/types"
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
 const (
@@ -113,10 +112,10 @@ func (s *AssetScanEstimationsTableHandler) CreateAssetScanEstimation(assetScanEs
 	}
 
 	// Generate a new UUID
-	assetScanEstimation.Id = utils.PointerTo(uuid.New().String())
+	assetScanEstimation.Id = types.PointerTo(uuid.New().String())
 
 	// Initialise revision
-	assetScanEstimation.Revision = utils.PointerTo(1)
+	assetScanEstimation.Revision = types.PointerTo(1)
 
 	// Check the existing DB entries to ensure that the scan id and asset id fields are unique
 	existingAssetScanEstimation, err := s.checkUniqueness(assetScanEstimation)

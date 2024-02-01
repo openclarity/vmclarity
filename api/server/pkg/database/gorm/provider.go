@@ -26,7 +26,6 @@ import (
 	"github.com/openclarity/vmclarity/api/server/pkg/common"
 	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 	"github.com/openclarity/vmclarity/api/types"
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
 const (
@@ -112,10 +111,10 @@ func (t *ProvidersTableHandler) CreateProvider(provider types.Provider) (types.P
 	}
 
 	// Generate a new UUID
-	provider.Id = utils.PointerTo(uuid.New().String())
+	provider.Id = types.PointerTo(uuid.New().String())
 
 	// Initialise revision
-	provider.Revision = utils.PointerTo(1)
+	provider.Revision = types.PointerTo(1)
 
 	// TODO(sambetts) Lock the table here to prevent race conditions
 	// checking the uniqueness.

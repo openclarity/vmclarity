@@ -26,7 +26,6 @@ import (
 	"github.com/openclarity/vmclarity/api/server/pkg/common"
 	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 	"github.com/openclarity/vmclarity/api/types"
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
 func (s *ServerImpl) GetAssetScans(ctx echo.Context, params types.GetAssetScansParams) error {
@@ -71,7 +70,7 @@ func (s *ServerImpl) PostAssetScans(ctx echo.Context) error {
 		var conflictErr *common.ConflictError
 		if errors.As(err, &conflictErr) {
 			existResponse := &types.AssetScanExists{
-				Message:   utils.PointerTo(conflictErr.Reason),
+				Message:   types.PointerTo(conflictErr.Reason),
 				AssetScan: &createdAssetScan,
 			}
 			return sendResponse(ctx, http.StatusConflict, existResponse)
@@ -151,7 +150,7 @@ func (s *ServerImpl) PatchAssetScansAssetScanID(ctx echo.Context, assetScanID ty
 		switch true {
 		case errors.As(err, &conflictErr):
 			existResponse := &types.AssetScanExists{
-				Message:   utils.PointerTo(conflictErr.Reason),
+				Message:   types.PointerTo(conflictErr.Reason),
 				AssetScan: &updatedAssetScan,
 			}
 			return sendResponse(ctx, http.StatusConflict, existResponse)
@@ -228,7 +227,7 @@ func (s *ServerImpl) PutAssetScansAssetScanID(ctx echo.Context, assetScanID type
 		switch true {
 		case errors.As(err, &conflictErr):
 			existResponse := &types.AssetScanExists{
-				Message:   utils.PointerTo(conflictErr.Reason),
+				Message:   types.PointerTo(conflictErr.Reason),
 				AssetScan: &updatedAssetScan,
 			}
 			return sendResponse(ctx, http.StatusConflict, existResponse)

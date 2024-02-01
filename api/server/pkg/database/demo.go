@@ -106,7 +106,7 @@ func createFindings(ctx context.Context, assetScans []types.AssetScan) []types.F
 			foundOn = assetScan.Scan.StartTime
 		} else {
 			randMin := rand.Intn(59) + 1
-			foundOn = utils.PointerTo(time.Now().Add(time.Duration(-randMin) * time.Minute))
+			foundOn = types.PointerTo(time.Now().Add(time.Duration(-randMin) * time.Minute))
 		}
 		findingBase := types.Finding{
 			Asset: &types.AssetRelationship{
@@ -117,7 +117,7 @@ func createFindings(ctx context.Context, assetScans []types.AssetScan) []types.F
 			},
 			FindingInfo: nil,
 			FoundOn:     foundOn,
-			// InvalidatedOn: utils.PointerTo(foundOn.Add(2 * time.Minute)),
+			// InvalidatedOn: types.PointerTo(foundOn.Add(2 * time.Minute)),
 		}
 		if assetScan.Sbom != nil && assetScan.Sbom.Packages != nil {
 			ret = append(ret, createPackageFindings(ctx, findingBase, *assetScan.Sbom.Packages)...)
@@ -416,66 +416,66 @@ func createVMInfo(instanceID, location, image, instanceType, platform string,
 func createAssets() []types.Asset {
 	return []types.Asset{
 		{
-			ScansCount:   utils.PointerTo(1),
-			FirstSeen:    utils.PointerTo(time.Now()),
-			LastSeen:     utils.PointerTo(time.Now()),
-			TerminatedOn: utils.PointerTo(time.Now()),
+			ScansCount:   types.PointerTo(1),
+			FirstSeen:    types.PointerTo(time.Now()),
+			LastSeen:     types.PointerTo(time.Now()),
+			TerminatedOn: types.PointerTo(time.Now()),
 			Summary: &types.ScanFindingsSummary{
-				TotalExploits:          utils.PointerTo(0),
-				TotalMalware:           utils.PointerTo(0),
-				TotalMisconfigurations: utils.PointerTo(0),
-				TotalPackages:          utils.PointerTo(2),
-				TotalRootkits:          utils.PointerTo(0),
-				TotalSecrets:           utils.PointerTo(3),
+				TotalExploits:          types.PointerTo(0),
+				TotalMalware:           types.PointerTo(0),
+				TotalMisconfigurations: types.PointerTo(0),
+				TotalPackages:          types.PointerTo(2),
+				TotalRootkits:          types.PointerTo(0),
+				TotalSecrets:           types.PointerTo(3),
 				TotalVulnerabilities: &types.VulnerabilityScanSummary{
-					TotalCriticalVulnerabilities:   utils.PointerTo(1),
-					TotalHighVulnerabilities:       utils.PointerTo(1),
-					TotalLowVulnerabilities:        utils.PointerTo(1),
-					TotalMediumVulnerabilities:     utils.PointerTo(0),
-					TotalNegligibleVulnerabilities: utils.PointerTo(0),
+					TotalCriticalVulnerabilities:   types.PointerTo(1),
+					TotalHighVulnerabilities:       types.PointerTo(1),
+					TotalLowVulnerabilities:        types.PointerTo(1),
+					TotalMediumVulnerabilities:     types.PointerTo(0),
+					TotalNegligibleVulnerabilities: types.PointerTo(0),
 				},
 			},
 			AssetInfo: createVMInfo(awsInstanceEUCentral11, awsRegionEUCentral1+"/"+awsVPCEUCentral11+"/"+awsSGEUCentral111,
 				"ami-111", "t2.large", "Linux", []types.Tag{{Key: "Name", Value: "asset1"}}, time.Now(), types.AWS, 8, types.RootVolumeEncryptedNo),
 		},
 		{
-			ScansCount: utils.PointerTo(1),
-			FirstSeen:  utils.PointerTo(time.Now()),
-			LastSeen:   utils.PointerTo(time.Now()),
+			ScansCount: types.PointerTo(1),
+			FirstSeen:  types.PointerTo(time.Now()),
+			LastSeen:   types.PointerTo(time.Now()),
 			Summary: &types.ScanFindingsSummary{
-				TotalExploits:          utils.PointerTo(0),
-				TotalMalware:           utils.PointerTo(0),
-				TotalMisconfigurations: utils.PointerTo(0),
-				TotalPackages:          utils.PointerTo(2),
-				TotalRootkits:          utils.PointerTo(0),
-				TotalSecrets:           utils.PointerTo(3),
+				TotalExploits:          types.PointerTo(0),
+				TotalMalware:           types.PointerTo(0),
+				TotalMisconfigurations: types.PointerTo(0),
+				TotalPackages:          types.PointerTo(2),
+				TotalRootkits:          types.PointerTo(0),
+				TotalSecrets:           types.PointerTo(3),
 				TotalVulnerabilities: &types.VulnerabilityScanSummary{
-					TotalCriticalVulnerabilities:   utils.PointerTo(1),
-					TotalHighVulnerabilities:       utils.PointerTo(1),
-					TotalLowVulnerabilities:        utils.PointerTo(1),
-					TotalMediumVulnerabilities:     utils.PointerTo(0),
-					TotalNegligibleVulnerabilities: utils.PointerTo(0),
+					TotalCriticalVulnerabilities:   types.PointerTo(1),
+					TotalHighVulnerabilities:       types.PointerTo(1),
+					TotalLowVulnerabilities:        types.PointerTo(1),
+					TotalMediumVulnerabilities:     types.PointerTo(0),
+					TotalNegligibleVulnerabilities: types.PointerTo(0),
 				},
 			},
 			AssetInfo: createVMInfo(awsInstanceEUCentral12, awsRegionEUCentral1+"/"+awsVPCEUCentral11+"/"+awsSGEUCentral111,
 				"ami-111", "t2.large", "Linux", []types.Tag{{Key: "Name", Value: "asset2"}}, time.Now(), types.AWS, 25, types.RootVolumeEncryptedYes),
 		},
 		{
-			ScansCount: utils.PointerTo(1),
-			FirstSeen:  utils.PointerTo(time.Now()),
+			ScansCount: types.PointerTo(1),
+			FirstSeen:  types.PointerTo(time.Now()),
 			Summary: &types.ScanFindingsSummary{
-				TotalExploits:          utils.PointerTo(2),
-				TotalMalware:           utils.PointerTo(3),
-				TotalMisconfigurations: utils.PointerTo(3),
-				TotalPackages:          utils.PointerTo(0),
-				TotalRootkits:          utils.PointerTo(3),
-				TotalSecrets:           utils.PointerTo(0),
+				TotalExploits:          types.PointerTo(2),
+				TotalMalware:           types.PointerTo(3),
+				TotalMisconfigurations: types.PointerTo(3),
+				TotalPackages:          types.PointerTo(0),
+				TotalRootkits:          types.PointerTo(3),
+				TotalSecrets:           types.PointerTo(0),
 				TotalVulnerabilities: &types.VulnerabilityScanSummary{
-					TotalCriticalVulnerabilities:   utils.PointerTo(0),
-					TotalHighVulnerabilities:       utils.PointerTo(0),
-					TotalLowVulnerabilities:        utils.PointerTo(0),
-					TotalMediumVulnerabilities:     utils.PointerTo(0),
-					TotalNegligibleVulnerabilities: utils.PointerTo(0),
+					TotalCriticalVulnerabilities:   types.PointerTo(0),
+					TotalHighVulnerabilities:       types.PointerTo(0),
+					TotalLowVulnerabilities:        types.PointerTo(0),
+					TotalMediumVulnerabilities:     types.PointerTo(0),
+					TotalNegligibleVulnerabilities: types.PointerTo(0),
 				},
 			},
 			AssetInfo: createVMInfo(awsInstanceUSEast11, awsRegionUSEast1+"/"+awsVPCUSEast11+"/"+awsSGUSEast111,
@@ -489,89 +489,89 @@ func createScanConfigs(_ context.Context) []types.ScanConfig {
 	// Scan config 1
 	scanFamiliesConfig1 := types.ScanFamiliesConfig{
 		Exploits: &types.ExploitsConfig{
-			Enabled: utils.PointerTo(false),
+			Enabled: types.PointerTo(false),
 		},
 		InfoFinder: &types.InfoFinderConfig{
-			Enabled: utils.PointerTo(false),
+			Enabled: types.PointerTo(false),
 		},
 		Malware: &types.MalwareConfig{
-			Enabled: utils.PointerTo(false),
+			Enabled: types.PointerTo(false),
 		},
 		Misconfigurations: &types.MisconfigurationsConfig{
-			Enabled: utils.PointerTo(false),
+			Enabled: types.PointerTo(false),
 		},
 		Rootkits: &types.RootkitsConfig{
-			Enabled: utils.PointerTo(false),
+			Enabled: types.PointerTo(false),
 		},
 		Sbom: &types.SBOMConfig{
-			Enabled: utils.PointerTo(true),
+			Enabled: types.PointerTo(true),
 		},
 		Secrets: &types.SecretsConfig{
-			Enabled: utils.PointerTo(true),
+			Enabled: types.PointerTo(true),
 		},
 		Vulnerabilities: &types.VulnerabilitiesConfig{
-			Enabled: utils.PointerTo(true),
+			Enabled: types.PointerTo(true),
 		},
 	}
 
 	// Scan config 2
 	scanFamiliesConfig2 := types.ScanFamiliesConfig{
 		Exploits: &types.ExploitsConfig{
-			Enabled: utils.PointerTo(true),
+			Enabled: types.PointerTo(true),
 		},
 		InfoFinder: &types.InfoFinderConfig{
-			Enabled: utils.PointerTo(true),
+			Enabled: types.PointerTo(true),
 		},
 		Malware: &types.MalwareConfig{
-			Enabled: utils.PointerTo(true),
+			Enabled: types.PointerTo(true),
 		},
 		Misconfigurations: &types.MisconfigurationsConfig{
-			Enabled: utils.PointerTo(true),
+			Enabled: types.PointerTo(true),
 		},
 		Rootkits: &types.RootkitsConfig{
-			Enabled: utils.PointerTo(true),
+			Enabled: types.PointerTo(true),
 		},
 		Sbom: &types.SBOMConfig{
-			Enabled: utils.PointerTo(false),
+			Enabled: types.PointerTo(false),
 		},
 		Secrets: &types.SecretsConfig{
-			Enabled: utils.PointerTo(false),
+			Enabled: types.PointerTo(false),
 		},
 		Vulnerabilities: &types.VulnerabilitiesConfig{
-			Enabled: utils.PointerTo(false),
+			Enabled: types.PointerTo(false),
 		},
 	}
 
 	return []types.ScanConfig{
 		{
-			Name: utils.PointerTo("Scan Config 1"),
+			Name: types.PointerTo("Scan Config 1"),
 			ScanTemplate: &types.ScanTemplate{
-				Scope:               utils.PointerTo("startswith(targetInfo.location, 'eu-central-1')"),
-				MaxParallelScanners: utils.PointerTo(2),
+				Scope:               types.PointerTo("startswith(targetInfo.location, 'eu-central-1')"),
+				MaxParallelScanners: types.PointerTo(2),
 				AssetScanTemplate: &types.AssetScanTemplate{
 					ScanFamiliesConfig: &scanFamiliesConfig1,
 				},
 			},
 			Scheduled: &types.RuntimeScheduleScanConfig{
-				OperationTime: utils.PointerTo(time.Now().Add(5 * time.Hour)),
+				OperationTime: types.PointerTo(time.Now().Add(5 * time.Hour)),
 			},
 		},
 		{
-			Name: utils.PointerTo("Scan Config 2"),
+			Name: types.PointerTo("Scan Config 2"),
 			ScanTemplate: &types.ScanTemplate{
-				Scope:               utils.PointerTo("startswith(targetInfo.location, 'us-east-1')"),
-				MaxParallelScanners: utils.PointerTo(3),
+				Scope:               types.PointerTo("startswith(targetInfo.location, 'us-east-1')"),
+				MaxParallelScanners: types.PointerTo(3),
 				AssetScanTemplate: &types.AssetScanTemplate{
 					ScanFamiliesConfig: &scanFamiliesConfig2,
 					ScannerInstanceCreationConfig: &types.ScannerInstanceCreationConfig{
-						MaxPrice:         utils.PointerTo("1000000"),
-						RetryMaxAttempts: utils.PointerTo(4),
+						MaxPrice:         types.PointerTo("1000000"),
+						RetryMaxAttempts: types.PointerTo(4),
 						UseSpotInstances: true,
 					},
 				},
 			},
 			Scheduled: &types.RuntimeScheduleScanConfig{
-				CronLine: utils.PointerTo("0 */4 * * *"),
+				CronLine: types.PointerTo("0 */4 * * *"),
 			},
 		},
 	}
@@ -585,21 +585,21 @@ func createScans(assets []types.Asset, scanConfigs []types.ScanConfig) []types.S
 	scan1Assets := []string{*assets[0].Id, *assets[1].Id}
 
 	scan1Summary := &types.ScanSummary{
-		JobsCompleted:          utils.PointerTo[int](2),
-		JobsLeftToRun:          utils.PointerTo[int](0),
-		TotalExploits:          utils.PointerTo[int](0),
-		TotalInfoFinder:        utils.PointerTo[int](0),
-		TotalMalware:           utils.PointerTo[int](0),
-		TotalMisconfigurations: utils.PointerTo[int](0),
-		TotalPackages:          utils.PointerTo[int](4),
-		TotalRootkits:          utils.PointerTo[int](0),
-		TotalSecrets:           utils.PointerTo[int](6),
+		JobsCompleted:          types.PointerTo[int](2),
+		JobsLeftToRun:          types.PointerTo[int](0),
+		TotalExploits:          types.PointerTo[int](0),
+		TotalInfoFinder:        types.PointerTo[int](0),
+		TotalMalware:           types.PointerTo[int](0),
+		TotalMisconfigurations: types.PointerTo[int](0),
+		TotalPackages:          types.PointerTo[int](4),
+		TotalRootkits:          types.PointerTo[int](0),
+		TotalSecrets:           types.PointerTo[int](6),
 		TotalVulnerabilities: &types.VulnerabilityScanSummary{
-			TotalCriticalVulnerabilities:   utils.PointerTo[int](2),
-			TotalHighVulnerabilities:       utils.PointerTo[int](2),
-			TotalLowVulnerabilities:        utils.PointerTo[int](2),
-			TotalMediumVulnerabilities:     utils.PointerTo[int](0),
-			TotalNegligibleVulnerabilities: utils.PointerTo[int](0),
+			TotalCriticalVulnerabilities:   types.PointerTo[int](2),
+			TotalHighVulnerabilities:       types.PointerTo[int](2),
+			TotalLowVulnerabilities:        types.PointerTo[int](2),
+			TotalMediumVulnerabilities:     types.PointerTo[int](0),
+			TotalNegligibleVulnerabilities: types.PointerTo[int](0),
 		},
 	}
 
@@ -608,21 +608,21 @@ func createScans(assets []types.Asset, scanConfigs []types.ScanConfig) []types.S
 	scan2Assets := []string{*assets[2].Id}
 
 	scan2Summary := &types.ScanSummary{
-		JobsCompleted:          utils.PointerTo[int](1),
-		JobsLeftToRun:          utils.PointerTo[int](1),
-		TotalExploits:          utils.PointerTo[int](2),
-		TotalInfoFinder:        utils.PointerTo[int](2),
-		TotalMalware:           utils.PointerTo[int](3),
-		TotalMisconfigurations: utils.PointerTo[int](3),
-		TotalPackages:          utils.PointerTo[int](0),
-		TotalRootkits:          utils.PointerTo[int](3),
-		TotalSecrets:           utils.PointerTo[int](0),
+		JobsCompleted:          types.PointerTo[int](1),
+		JobsLeftToRun:          types.PointerTo[int](1),
+		TotalExploits:          types.PointerTo[int](2),
+		TotalInfoFinder:        types.PointerTo[int](2),
+		TotalMalware:           types.PointerTo[int](3),
+		TotalMisconfigurations: types.PointerTo[int](3),
+		TotalPackages:          types.PointerTo[int](0),
+		TotalRootkits:          types.PointerTo[int](3),
+		TotalSecrets:           types.PointerTo[int](0),
 		TotalVulnerabilities: &types.VulnerabilityScanSummary{
-			TotalCriticalVulnerabilities:   utils.PointerTo[int](0),
-			TotalHighVulnerabilities:       utils.PointerTo[int](0),
-			TotalLowVulnerabilities:        utils.PointerTo[int](0),
-			TotalMediumVulnerabilities:     utils.PointerTo[int](0),
-			TotalNegligibleVulnerabilities: utils.PointerTo[int](0),
+			TotalCriticalVulnerabilities:   types.PointerTo[int](0),
+			TotalHighVulnerabilities:       types.PointerTo[int](0),
+			TotalLowVulnerabilities:        types.PointerTo[int](0),
+			TotalMediumVulnerabilities:     types.PointerTo[int](0),
+			TotalNegligibleVulnerabilities: types.PointerTo[int](0),
 		},
 	}
 
@@ -635,7 +635,7 @@ func createScans(assets []types.Asset, scanConfigs []types.ScanConfig) []types.S
 			Scope:             scanConfigs[0].ScanTemplate.Scope,
 			AssetScanTemplate: scanConfigs[0].ScanTemplate.AssetScanTemplate,
 			StartTime:         &scan1Start,
-			Status:            types.NewScanStatus(types.ScanStatusStateDone, types.ScanStatusReasonSuccess, utils.PointerTo("Scan was completed successfully")),
+			Status:            types.NewScanStatus(types.ScanStatusStateDone, types.ScanStatusReasonSuccess, types.PointerTo("Scan was completed successfully")),
 			Summary:           scan1Summary,
 			AssetIDs:          &scan1Assets,
 		},
@@ -646,7 +646,7 @@ func createScans(assets []types.Asset, scanConfigs []types.ScanConfig) []types.S
 			Scope:             scanConfigs[1].ScanTemplate.Scope,
 			AssetScanTemplate: scanConfigs[1].ScanTemplate.AssetScanTemplate,
 			StartTime:         &scan2Start,
-			Status:            types.NewScanStatus(types.ScanStatusStateInProgress, types.ScanStatusReasonAssetScansRunning, utils.PointerTo("Scan is in progress")),
+			Status:            types.NewScanStatus(types.ScanStatusStateInProgress, types.ScanStatusReasonAssetScansRunning, types.PointerTo("Scan is in progress")),
 			Summary:           scan2Summary,
 			AssetIDs:          &scan2Assets,
 		},
@@ -676,7 +676,7 @@ func createAssetScans(scans []types.Scan) []types.AssetScan {
 					General: &types.AssetScanGeneralStats{
 						ScanTime: &types.AssetScanScanTime{
 							EndTime:   &timeNow,
-							StartTime: utils.PointerTo(timeNow.Add(-10 * time.Second)),
+							StartTime: types.PointerTo(timeNow.Add(-10 * time.Second)),
 						},
 					},
 				},
@@ -694,31 +694,31 @@ func createAssetScans(scans []types.Scan) []types.AssetScan {
 				}
 				result.Stats.Exploits = &[]types.AssetScanInputScanStats{
 					{
-						Path: utils.PointerTo("/mnt"),
+						Path: types.PointerTo("/mnt"),
 						ScanTime: &types.AssetScanScanTime{
 							EndTime:   &timeNow,
-							StartTime: utils.PointerTo(timeNow.Add(-5 * time.Second)),
+							StartTime: types.PointerTo(timeNow.Add(-5 * time.Second)),
 						},
-						Size: utils.PointerTo(int64(300)),
-						Type: utils.PointerTo("rootfs"),
+						Size: types.PointerTo(int64(300)),
+						Type: types.PointerTo("rootfs"),
 					},
 					{
-						Path: utils.PointerTo("/data"),
+						Path: types.PointerTo("/data"),
 						ScanTime: &types.AssetScanScanTime{
 							EndTime:   &timeNow,
-							StartTime: utils.PointerTo(timeNow.Add(-10 * time.Second)),
+							StartTime: types.PointerTo(timeNow.Add(-10 * time.Second)),
 						},
-						Size: utils.PointerTo(int64(30)),
-						Type: utils.PointerTo("dir"),
+						Size: types.PointerTo(int64(30)),
+						Type: types.PointerTo("dir"),
 					},
 				}
-				result.Summary.TotalExploits = utils.PointerTo(len(*result.Exploits.Exploits))
+				result.Summary.TotalExploits = types.PointerTo(len(*result.Exploits.Exploits))
 			} else {
 				result.Exploits = &types.ExploitScan{
 					Exploits: nil,
 					Status:   types.NewScannerStatus(types.ScannerStatusStateSkipped, types.ScannerStatusReasonNotScheduled, nil),
 				}
-				result.Summary.TotalExploits = utils.PointerTo(0)
+				result.Summary.TotalExploits = types.PointerTo(0)
 			}
 
 			// Create Malware if needed
@@ -729,37 +729,37 @@ func createAssetScans(scans []types.Scan) []types.AssetScan {
 					Status: types.NewScannerStatus(
 						types.ScannerStatusStateFailed,
 						types.ScannerStatusReasonError,
-						utils.PointerTo("failed to scan malware"),
+						types.PointerTo("failed to scan malware"),
 					),
 				}
 				result.Stats.Malware = &[]types.AssetScanInputScanStats{
 					{
-						Path: utils.PointerTo("/mnt"),
+						Path: types.PointerTo("/mnt"),
 						ScanTime: &types.AssetScanScanTime{
 							EndTime:   &timeNow,
-							StartTime: utils.PointerTo(timeNow.Add(-5 * time.Second)),
+							StartTime: types.PointerTo(timeNow.Add(-5 * time.Second)),
 						},
-						Size: utils.PointerTo(int64(300)),
-						Type: utils.PointerTo("rootfs"),
+						Size: types.PointerTo(int64(300)),
+						Type: types.PointerTo("rootfs"),
 					},
 					{
-						Path: utils.PointerTo("/data"),
+						Path: types.PointerTo("/data"),
 						ScanTime: &types.AssetScanScanTime{
 							EndTime:   &timeNow,
-							StartTime: utils.PointerTo(timeNow.Add(-10 * time.Second)),
+							StartTime: types.PointerTo(timeNow.Add(-10 * time.Second)),
 						},
-						Size: utils.PointerTo(int64(30)),
-						Type: utils.PointerTo("dir"),
+						Size: types.PointerTo(int64(30)),
+						Type: types.PointerTo("dir"),
 					},
 				}
-				result.Summary.TotalMalware = utils.PointerTo(len(*result.Malware.Malware))
+				result.Summary.TotalMalware = types.PointerTo(len(*result.Malware.Malware))
 			} else {
 				result.Malware = &types.MalwareScan{
 					Malware:  nil,
 					Metadata: nil,
 					Status:   types.NewScannerStatus(types.ScannerStatusStateSkipped, types.ScannerStatusReasonNotScheduled, nil),
 				}
-				result.Summary.TotalMalware = utils.PointerTo(0)
+				result.Summary.TotalMalware = types.PointerTo(0)
 			}
 
 			// Create Misconfigurations if needed
@@ -771,23 +771,23 @@ func createAssetScans(scans []types.Scan) []types.AssetScan {
 				}
 				result.Stats.Misconfigurations = &[]types.AssetScanInputScanStats{
 					{
-						Path: utils.PointerTo("/mnt"),
+						Path: types.PointerTo("/mnt"),
 						ScanTime: &types.AssetScanScanTime{
 							EndTime:   &timeNow,
-							StartTime: utils.PointerTo(timeNow.Add(-5 * time.Second)),
+							StartTime: types.PointerTo(timeNow.Add(-5 * time.Second)),
 						},
-						Size: utils.PointerTo(int64(300)),
-						Type: utils.PointerTo("rootfs"),
+						Size: types.PointerTo(int64(300)),
+						Type: types.PointerTo("rootfs"),
 					},
 				}
-				result.Summary.TotalMisconfigurations = utils.PointerTo(len(*result.Misconfigurations.Misconfigurations))
+				result.Summary.TotalMisconfigurations = types.PointerTo(len(*result.Misconfigurations.Misconfigurations))
 			} else {
 				result.Misconfigurations = &types.MisconfigurationScan{
 					Misconfigurations: nil,
 					Scanners:          nil,
 					Status:            types.NewScannerStatus(types.ScannerStatusStateSkipped, types.ScannerStatusReasonNotScheduled, nil),
 				}
-				result.Summary.TotalMisconfigurations = utils.PointerTo(0)
+				result.Summary.TotalMisconfigurations = types.PointerTo(0)
 			}
 
 			// Create Packages if needed
@@ -798,22 +798,22 @@ func createAssetScans(scans []types.Scan) []types.AssetScan {
 				}
 				result.Stats.Sbom = &[]types.AssetScanInputScanStats{
 					{
-						Path: utils.PointerTo("/mnt"),
+						Path: types.PointerTo("/mnt"),
 						ScanTime: &types.AssetScanScanTime{
 							EndTime:   &timeNow,
-							StartTime: utils.PointerTo(timeNow.Add(-5 * time.Second)),
+							StartTime: types.PointerTo(timeNow.Add(-5 * time.Second)),
 						},
-						Size: utils.PointerTo(int64(300)),
-						Type: utils.PointerTo("rootfs"),
+						Size: types.PointerTo(int64(300)),
+						Type: types.PointerTo("rootfs"),
 					},
 				}
-				result.Summary.TotalPackages = utils.PointerTo(len(*result.Sbom.Packages))
+				result.Summary.TotalPackages = types.PointerTo(len(*result.Sbom.Packages))
 			} else {
 				result.Sbom = &types.SbomScan{
 					Packages: nil,
 					Status:   types.NewScannerStatus(types.ScannerStatusStateSkipped, types.ScannerStatusReasonNotScheduled, nil),
 				}
-				result.Summary.TotalPackages = utils.PointerTo(0)
+				result.Summary.TotalPackages = types.PointerTo(0)
 			}
 
 			// Create Rootkits if needed
@@ -824,22 +824,22 @@ func createAssetScans(scans []types.Scan) []types.AssetScan {
 				}
 				result.Stats.Rootkits = &[]types.AssetScanInputScanStats{
 					{
-						Path: utils.PointerTo("/mnt"),
+						Path: types.PointerTo("/mnt"),
 						ScanTime: &types.AssetScanScanTime{
 							EndTime:   &timeNow,
-							StartTime: utils.PointerTo(timeNow.Add(-5 * time.Second)),
+							StartTime: types.PointerTo(timeNow.Add(-5 * time.Second)),
 						},
-						Size: utils.PointerTo(int64(300)),
-						Type: utils.PointerTo("rootfs"),
+						Size: types.PointerTo(int64(300)),
+						Type: types.PointerTo("rootfs"),
 					},
 				}
-				result.Summary.TotalRootkits = utils.PointerTo(len(*result.Rootkits.Rootkits))
+				result.Summary.TotalRootkits = types.PointerTo(len(*result.Rootkits.Rootkits))
 			} else {
 				result.Rootkits = &types.RootkitScan{
 					Rootkits: nil,
 					Status:   types.NewScannerStatus(types.ScannerStatusStateSkipped, types.ScannerStatusReasonNotScheduled, nil),
 				}
-				result.Summary.TotalRootkits = utils.PointerTo(0)
+				result.Summary.TotalRootkits = types.PointerTo(0)
 			}
 
 			// Create Secrets if needed
@@ -850,31 +850,31 @@ func createAssetScans(scans []types.Scan) []types.AssetScan {
 				}
 				result.Stats.Secrets = &[]types.AssetScanInputScanStats{
 					{
-						Path: utils.PointerTo("/mnt"),
+						Path: types.PointerTo("/mnt"),
 						ScanTime: &types.AssetScanScanTime{
 							EndTime:   &timeNow,
-							StartTime: utils.PointerTo(timeNow.Add(-5 * time.Second)),
+							StartTime: types.PointerTo(timeNow.Add(-5 * time.Second)),
 						},
-						Size: utils.PointerTo(int64(300)),
-						Type: utils.PointerTo("rootfs"),
+						Size: types.PointerTo(int64(300)),
+						Type: types.PointerTo("rootfs"),
 					},
 					{
-						Path: utils.PointerTo("/data"),
+						Path: types.PointerTo("/data"),
 						ScanTime: &types.AssetScanScanTime{
 							EndTime:   &timeNow,
-							StartTime: utils.PointerTo(timeNow.Add(-10 * time.Second)),
+							StartTime: types.PointerTo(timeNow.Add(-10 * time.Second)),
 						},
-						Size: utils.PointerTo(int64(30)),
-						Type: utils.PointerTo("dir"),
+						Size: types.PointerTo(int64(30)),
+						Type: types.PointerTo("dir"),
 					},
 				}
-				result.Summary.TotalSecrets = utils.PointerTo(len(*result.Secrets.Secrets))
+				result.Summary.TotalSecrets = types.PointerTo(len(*result.Secrets.Secrets))
 			} else {
 				result.Secrets = &types.SecretScan{
 					Secrets: nil,
 					Status:  types.NewScannerStatus(types.ScannerStatusStateSkipped, types.ScannerStatusReasonNotScheduled, nil),
 				}
-				result.Summary.TotalSecrets = utils.PointerTo(0)
+				result.Summary.TotalSecrets = types.PointerTo(0)
 			}
 
 			// Create Vulnerabilities if needed
@@ -889,13 +889,13 @@ func createAssetScans(scans []types.Scan) []types.AssetScan {
 				}
 				result.Stats.Vulnerabilities = &[]types.AssetScanInputScanStats{
 					{
-						Path: utils.PointerTo("/mnt"),
+						Path: types.PointerTo("/mnt"),
 						ScanTime: &types.AssetScanScanTime{
 							EndTime:   &timeNow,
-							StartTime: utils.PointerTo(timeNow.Add(-5 * time.Second)),
+							StartTime: types.PointerTo(timeNow.Add(-5 * time.Second)),
 						},
-						Size: utils.PointerTo(int64(300)),
-						Type: utils.PointerTo("rootfs"),
+						Size: types.PointerTo(int64(300)),
+						Type: types.PointerTo("rootfs"),
 					},
 				}
 				result.Summary.TotalVulnerabilities = utils.GetVulnerabilityTotalsPerSeverity(result.Vulnerabilities.Vulnerabilities)
@@ -916,23 +916,23 @@ func createAssetScans(scans []types.Scan) []types.AssetScan {
 				}
 				result.Stats.InfoFinder = &[]types.AssetScanInputScanStats{
 					{
-						Path: utils.PointerTo("/mnt"),
+						Path: types.PointerTo("/mnt"),
 						ScanTime: &types.AssetScanScanTime{
 							EndTime:   &timeNow,
-							StartTime: utils.PointerTo(timeNow.Add(-5 * time.Second)),
+							StartTime: types.PointerTo(timeNow.Add(-5 * time.Second)),
 						},
-						Size: utils.PointerTo(int64(300)),
-						Type: utils.PointerTo("rootfs"),
+						Size: types.PointerTo(int64(300)),
+						Type: types.PointerTo("rootfs"),
 					},
 				}
-				result.Summary.TotalInfoFinder = utils.PointerTo(len(*result.InfoFinder.Infos))
+				result.Summary.TotalInfoFinder = types.PointerTo(len(*result.InfoFinder.Infos))
 			} else {
 				result.InfoFinder = &types.InfoFinderScan{
 					Infos:    nil,
 					Scanners: nil,
 					Status:   types.NewScannerStatus(types.ScannerStatusStateSkipped, types.ScannerStatusReasonNotScheduled, nil),
 				}
-				result.Summary.TotalInfoFinder = utils.PointerTo(0)
+				result.Summary.TotalInfoFinder = types.PointerTo(0)
 			}
 
 			assetScans = append(assetScans, result)
@@ -944,16 +944,16 @@ func createAssetScans(scans []types.Scan) []types.AssetScan {
 func creatInfoFinderInfos() *[]types.InfoFinderInfo {
 	return &[]types.InfoFinderInfo{
 		{
-			Data:        utils.PointerTo("2048 SHA256:YQuPOM8ld6FOA9HbKCgkCJWHuGt4aTRD7hstjJpRhxc xxxx (RSA)"),
-			Path:        utils.PointerTo("/home/ec2-user/.ssh/authorized_keys"),
-			ScannerName: utils.PointerTo("sshTopology"),
-			Type:        utils.PointerTo(types.InfoTypeSSHAuthorizedKeyFingerprint),
+			Data:        types.PointerTo("2048 SHA256:YQuPOM8ld6FOA9HbKCgkCJWHuGt4aTRD7hstjJpRhxc xxxx (RSA)"),
+			Path:        types.PointerTo("/home/ec2-user/.ssh/authorized_keys"),
+			ScannerName: types.PointerTo("sshTopology"),
+			Type:        types.PointerTo(types.InfoTypeSSHAuthorizedKeyFingerprint),
 		},
 		{
-			Data:        utils.PointerTo("256 SHA256:gv6snCwAl5+6fY2g5VkmETWb9Mv0zLRkMz8aQyQWAVc xxxx (ED25519)"),
-			Path:        utils.PointerTo("/etc/ssh/ssh_host_ed25519_key"),
-			ScannerName: utils.PointerTo("sshTopology"),
-			Type:        utils.PointerTo(types.InfoTypeSSHDaemonKeyFingerprint),
+			Data:        types.PointerTo("256 SHA256:gv6snCwAl5+6fY2g5VkmETWb9Mv0zLRkMz8aQyQWAVc xxxx (ED25519)"),
+			Path:        types.PointerTo("/etc/ssh/ssh_host_ed25519_key"),
+			ScannerName: types.PointerTo("sshTopology"),
+			Type:        types.PointerTo(types.InfoTypeSSHDaemonKeyFingerprint),
 		},
 	}
 }
@@ -962,31 +962,31 @@ func creatInfoFinderInfos() *[]types.InfoFinderInfo {
 func createSecretsResult() *[]types.Secret {
 	return &[]types.Secret{
 		{
-			Description: utils.PointerTo("AWS Credentials"),
-			EndColumn:   utils.PointerTo(8),
-			EndLine:     utils.PointerTo(43),
-			FilePath:    utils.PointerTo("/.aws/credentials"),
-			Fingerprint: utils.PointerTo("credentials:aws-access-token:4"),
-			StartColumn: utils.PointerTo(7),
-			StartLine:   utils.PointerTo(43),
+			Description: types.PointerTo("AWS Credentials"),
+			EndColumn:   types.PointerTo(8),
+			EndLine:     types.PointerTo(43),
+			FilePath:    types.PointerTo("/.aws/credentials"),
+			Fingerprint: types.PointerTo("credentials:aws-access-token:4"),
+			StartColumn: types.PointerTo(7),
+			StartLine:   types.PointerTo(43),
 		},
 		{
-			Description: utils.PointerTo("export BUNDLE_ENTERPRISE__CONTRIBSYS__COM=cafebabe:deadbeef"),
-			EndColumn:   utils.PointerTo(10),
-			EndLine:     utils.PointerTo(26),
-			FilePath:    utils.PointerTo("cmd/generate/config/rules/sidekiq.go"),
-			Fingerprint: utils.PointerTo("cd5226711335c68be1e720b318b7bc3135a30eb2:cmd/generate/config/rules/sidekiq.go:sidekiq-secret:23"),
-			StartColumn: utils.PointerTo(7),
-			StartLine:   utils.PointerTo(23),
+			Description: types.PointerTo("export BUNDLE_ENTERPRISE__CONTRIBSYS__COM=cafebabe:deadbeef"),
+			EndColumn:   types.PointerTo(10),
+			EndLine:     types.PointerTo(26),
+			FilePath:    types.PointerTo("cmd/generate/config/rules/sidekiq.go"),
+			Fingerprint: types.PointerTo("cd5226711335c68be1e720b318b7bc3135a30eb2:cmd/generate/config/rules/sidekiq.go:sidekiq-secret:23"),
+			StartColumn: types.PointerTo(7),
+			StartLine:   types.PointerTo(23),
 		},
 		{
-			Description: utils.PointerTo("GitLab Personal Access Token"),
-			EndColumn:   utils.PointerTo(22),
-			EndLine:     utils.PointerTo(7),
-			FilePath:    utils.PointerTo("Applications/Firefox.app/Contents/Resources/browser/omni.ja"),
-			Fingerprint: utils.PointerTo("Applications/Firefox.app/Contents/Resources/browser/omni.ja:generic-api-key:sfs2"),
-			StartColumn: utils.PointerTo(20),
-			StartLine:   utils.PointerTo(7),
+			Description: types.PointerTo("GitLab Personal Access Token"),
+			EndColumn:   types.PointerTo(22),
+			EndLine:     types.PointerTo(7),
+			FilePath:    types.PointerTo("Applications/Firefox.app/Contents/Resources/browser/omni.ja"),
+			Fingerprint: types.PointerTo("Applications/Firefox.app/Contents/Resources/browser/omni.ja:generic-api-key:sfs2"),
+			StartColumn: types.PointerTo(20),
+			StartLine:   types.PointerTo(7),
 		},
 	}
 }
@@ -994,19 +994,19 @@ func createSecretsResult() *[]types.Secret {
 func createRootkitsResult() *[]types.Rootkit {
 	return &[]types.Rootkit{
 		{
-			Message:     utils.PointerTo("/usr/lwp-request"),
-			RootkitName: utils.PointerTo("Ambient's Rootkit (ARK)"),
-			RootkitType: utils.PointerTo(types.RootkitType("ARK")),
+			Message:     types.PointerTo("/usr/lwp-request"),
+			RootkitName: types.PointerTo("Ambient's Rootkit (ARK)"),
+			RootkitType: types.PointerTo(types.RootkitType("ARK")),
 		},
 		{
-			Message:     utils.PointerTo("Possible Linux/Ebury 1.4 - Operation Windigo installed"),
-			RootkitName: utils.PointerTo("Linux/Ebury - Operation Windigo ssh"),
-			RootkitType: utils.PointerTo(types.RootkitType("Malware")),
+			Message:     types.PointerTo("Possible Linux/Ebury 1.4 - Operation Windigo installed"),
+			RootkitName: types.PointerTo("Linux/Ebury - Operation Windigo ssh"),
+			RootkitType: types.PointerTo(types.RootkitType("Malware")),
 		},
 		{
-			Message:     utils.PointerTo("/var/adm/wtmpx"),
-			RootkitName: utils.PointerTo("Mumblehard backdoor/botnet"),
-			RootkitType: utils.PointerTo(types.RootkitType("Botnet")),
+			Message:     types.PointerTo("/var/adm/wtmpx"),
+			RootkitName: types.PointerTo("Mumblehard backdoor/botnet"),
+			RootkitType: types.PointerTo(types.RootkitType("Botnet")),
 		},
 	}
 }
@@ -1014,22 +1014,22 @@ func createRootkitsResult() *[]types.Rootkit {
 func createPackagesResult() *[]types.Package {
 	return &[]types.Package{
 		{
-			Cpes:     utils.PointerTo([]string{"cpe:2.3:a:curl:curl:7.74.0-1.3+deb11u3:*:*:*:*:*:*:*"}),
-			Language: utils.PointerTo(""),
-			Licenses: utils.PointerTo([]string{"BSD-3-Clause", "BSD-4-Clause"}),
-			Name:     utils.PointerTo("curl"),
-			Purl:     utils.PointerTo("pkg:deb/debian/curl@7.74.0-1.3+deb11u3?arch=amd64&distro=debian-11"),
-			Type:     utils.PointerTo("deb"),
-			Version:  utils.PointerTo("7.74.0-1.3+deb11u3"),
+			Cpes:     types.PointerTo([]string{"cpe:2.3:a:curl:curl:7.74.0-1.3+deb11u3:*:*:*:*:*:*:*"}),
+			Language: types.PointerTo(""),
+			Licenses: types.PointerTo([]string{"BSD-3-Clause", "BSD-4-Clause"}),
+			Name:     types.PointerTo("curl"),
+			Purl:     types.PointerTo("pkg:deb/debian/curl@7.74.0-1.3+deb11u3?arch=amd64&distro=debian-11"),
+			Type:     types.PointerTo("deb"),
+			Version:  types.PointerTo("7.74.0-1.3+deb11u3"),
 		},
 		{
-			Cpes:     utils.PointerTo([]string{"cpe:2.3:a:libtasn1-6:libtasn1-6:4.16.0-2:*:*:*:*:*:*:*", "cpe:2.3:a:libtasn1-6:libtasn1_6:4.16.0-2:*:*:*:*:*:*:*"}),
-			Language: utils.PointerTo("python"),
-			Licenses: utils.PointerTo([]string{"GFDL-1.3-only", "GPL-3.0-only", "LGPL-2.1-only"}),
-			Name:     utils.PointerTo("libtasn1-6"),
-			Purl:     utils.PointerTo("pkg:deb/debian/libtasn1-6@4.16.0-2?arch=amd64&distro=debian-11"),
-			Type:     utils.PointerTo("deb"),
-			Version:  utils.PointerTo("4.16.0-2"),
+			Cpes:     types.PointerTo([]string{"cpe:2.3:a:libtasn1-6:libtasn1-6:4.16.0-2:*:*:*:*:*:*:*", "cpe:2.3:a:libtasn1-6:libtasn1_6:4.16.0-2:*:*:*:*:*:*:*"}),
+			Language: types.PointerTo("python"),
+			Licenses: types.PointerTo([]string{"GFDL-1.3-only", "GPL-3.0-only", "LGPL-2.1-only"}),
+			Name:     types.PointerTo("libtasn1-6"),
+			Purl:     types.PointerTo("pkg:deb/debian/libtasn1-6@4.16.0-2?arch=amd64&distro=debian-11"),
+			Type:     types.PointerTo("deb"),
+			Version:  types.PointerTo("4.16.0-2"),
 		},
 	}
 }
@@ -1037,20 +1037,20 @@ func createPackagesResult() *[]types.Package {
 func createExploitsResult() *[]types.Exploit {
 	return &[]types.Exploit{
 		{
-			CveID:       utils.PointerTo("CVE-2009-4091"),
-			Description: utils.PointerTo("Simplog 0.9.3.2 - Multiple Vulnerabilities"),
-			Name:        utils.PointerTo("10180"),
-			SourceDB:    utils.PointerTo("OffensiveSecurity"),
-			Title:       utils.PointerTo("10180"),
-			Urls:        utils.PointerTo([]string{"https://www.exploit-db.com/exploits/10180"}),
+			CveID:       types.PointerTo("CVE-2009-4091"),
+			Description: types.PointerTo("Simplog 0.9.3.2 - Multiple Vulnerabilities"),
+			Name:        types.PointerTo("10180"),
+			SourceDB:    types.PointerTo("OffensiveSecurity"),
+			Title:       types.PointerTo("10180"),
+			Urls:        types.PointerTo([]string{"https://www.exploit-db.com/exploits/10180"}),
 		},
 		{
-			CveID:       utils.PointerTo("CVE-2006-2896"),
-			Description: utils.PointerTo("FunkBoard CF0.71 - 'profile.php' Remote User Pass Change"),
-			Name:        utils.PointerTo("1875"),
-			SourceDB:    utils.PointerTo("OffensiveSecurity"),
-			Title:       utils.PointerTo("1875"),
-			Urls:        utils.PointerTo([]string{"https://gitlab.com/exploit-database/exploitdb/-/tree/main/exploits/php/webapps/1875.html"}),
+			CveID:       types.PointerTo("CVE-2006-2896"),
+			Description: types.PointerTo("FunkBoard CF0.71 - 'profile.php' Remote User Pass Change"),
+			Name:        types.PointerTo("1875"),
+			SourceDB:    types.PointerTo("OffensiveSecurity"),
+			Title:       types.PointerTo("1875"),
+			Urls:        types.PointerTo([]string{"https://gitlab.com/exploit-database/exploitdb/-/tree/main/exploits/php/webapps/1875.html"}),
 		},
 	}
 }
@@ -1058,19 +1058,19 @@ func createExploitsResult() *[]types.Exploit {
 func createMalwareResult() *[]types.Malware {
 	return &[]types.Malware{
 		{
-			MalwareName: utils.PointerTo("Pdf.Exploit.CVE_2009_4324-1"),
-			MalwareType: utils.PointerTo("WORM"),
-			Path:        utils.PointerTo("/test/metasploit-framework/modules/exploits/windows/browser/asus_net4switch_ipswcom.rb"),
+			MalwareName: types.PointerTo("Pdf.Exploit.CVE_2009_4324-1"),
+			MalwareType: types.PointerTo("WORM"),
+			Path:        types.PointerTo("/test/metasploit-framework/modules/exploits/windows/browser/asus_net4switch_ipswcom.rb"),
 		},
 		{
-			MalwareName: utils.PointerTo("Xml.Malware.Squiblydoo-6728833-0"),
-			MalwareType: utils.PointerTo("SPYWARE"),
-			Path:        utils.PointerTo("/test/metasploit-framework/modules/exploits/windows/fileformat/office_ms17_11882.rb"),
+			MalwareName: types.PointerTo("Xml.Malware.Squiblydoo-6728833-0"),
+			MalwareType: types.PointerTo("SPYWARE"),
+			Path:        types.PointerTo("/test/metasploit-framework/modules/exploits/windows/fileformat/office_ms17_11882.rb"),
 		},
 		{
-			MalwareName: utils.PointerTo("Unix.Trojan.MSShellcode-27"),
-			MalwareType: utils.PointerTo("TROJAN"),
-			Path:        utils.PointerTo("/test/metasploit-framework/documentation/modules/exploit/multi/http/makoserver_cmd_exec.md"),
+			MalwareName: types.PointerTo("Unix.Trojan.MSShellcode-27"),
+			MalwareType: types.PointerTo("TROJAN"),
+			Path:        types.PointerTo("/test/metasploit-framework/documentation/modules/exploit/multi/http/makoserver_cmd_exec.md"),
 		},
 	}
 }
@@ -1078,34 +1078,34 @@ func createMalwareResult() *[]types.Malware {
 func createMisconfigurationsResult() *[]types.Misconfiguration {
 	return &[]types.Misconfiguration{
 		{
-			Message:         utils.PointerTo("Install a PAM module for password strength testing like pam_cracklib or pam_passwdqc. Details: /lib/x86_64-linux-gnu/security/pam_access.so"),
-			Remediation:     utils.PointerTo("remediation2"),
-			ScannedPath:     utils.PointerTo("/home/ubuntu/debian11"),
-			ScannerName:     utils.PointerTo("scanner2"),
-			Severity:        utils.PointerTo(types.MisconfigurationHighSeverity),
-			TestCategory:    utils.PointerTo("AUTH"),
-			TestDescription: utils.PointerTo("Checking presence password strength testing tools (PAM)"),
-			TestID:          utils.PointerTo("AUTH-9262"),
+			Message:         types.PointerTo("Install a PAM module for password strength testing like pam_cracklib or pam_passwdqc. Details: /lib/x86_64-linux-gnu/security/pam_access.so"),
+			Remediation:     types.PointerTo("remediation2"),
+			ScannedPath:     types.PointerTo("/home/ubuntu/debian11"),
+			ScannerName:     types.PointerTo("scanner2"),
+			Severity:        types.PointerTo(types.MisconfigurationHighSeverity),
+			TestCategory:    types.PointerTo("AUTH"),
+			TestDescription: types.PointerTo("Checking presence password strength testing tools (PAM)"),
+			TestID:          types.PointerTo("AUTH-9262"),
 		},
 		{
-			Message:         utils.PointerTo("Set the sticky bit on /home/ubuntu/debian11/tmp, to prevent users deleting (by other owned) files in the /tmp directory. Details: /tmp"),
-			Remediation:     utils.PointerTo("remediation1"),
-			ScannedPath:     utils.PointerTo("/home/ubuntu/debian11"),
-			ScannerName:     utils.PointerTo("scanner1"),
-			Severity:        utils.PointerTo(types.MisconfigurationMediumSeverity),
-			TestCategory:    utils.PointerTo("FILE"),
-			TestDescription: utils.PointerTo("Checking /tmp sticky bit"),
-			TestID:          utils.PointerTo("FILE-6362"),
+			Message:         types.PointerTo("Set the sticky bit on /home/ubuntu/debian11/tmp, to prevent users deleting (by other owned) files in the /tmp directory. Details: /tmp"),
+			Remediation:     types.PointerTo("remediation1"),
+			ScannedPath:     types.PointerTo("/home/ubuntu/debian11"),
+			ScannerName:     types.PointerTo("scanner1"),
+			Severity:        types.PointerTo(types.MisconfigurationMediumSeverity),
+			TestCategory:    types.PointerTo("FILE"),
+			TestDescription: types.PointerTo("Checking /tmp sticky bit"),
+			TestID:          types.PointerTo("FILE-6362"),
 		},
 		{
-			Message:         utils.PointerTo("Disable drivers like USB storage when not used, to prevent unauthorized storage or data theft. Details: /etc/cron.d/e2scrub_all"),
-			Remediation:     utils.PointerTo("remediation1"),
-			ScannedPath:     utils.PointerTo("/home/ubuntu/debian11"),
-			ScannerName:     utils.PointerTo("scanner1"),
-			Severity:        utils.PointerTo(types.MisconfigurationLowSeverity),
-			TestCategory:    utils.PointerTo("USB"),
-			TestDescription: utils.PointerTo("Check if USB storage is disabled"),
-			TestID:          utils.PointerTo("USB-1000"),
+			Message:         types.PointerTo("Disable drivers like USB storage when not used, to prevent unauthorized storage or data theft. Details: /etc/cron.d/e2scrub_all"),
+			Remediation:     types.PointerTo("remediation1"),
+			ScannedPath:     types.PointerTo("/home/ubuntu/debian11"),
+			ScannerName:     types.PointerTo("scanner1"),
+			Severity:        types.PointerTo(types.MisconfigurationLowSeverity),
+			TestCategory:    types.PointerTo("USB"),
+			TestDescription: types.PointerTo("Check if USB storage is disabled"),
+			TestID:          types.PointerTo("USB-1000"),
 		},
 	}
 }
@@ -1114,133 +1114,133 @@ func createMisconfigurationsResult() *[]types.Misconfiguration {
 func createVulnerabilitiesResult() *[]types.Vulnerability {
 	return &[]types.Vulnerability{
 		{
-			Cvss: utils.PointerTo([]types.VulnerabilityCvss{
+			Cvss: types.PointerTo([]types.VulnerabilityCvss{
 				{
 					Metrics: &types.VulnerabilityCvssMetrics{
-						BaseScore:           utils.PointerTo[float32](7.5),
-						ExploitabilityScore: utils.PointerTo[float32](3.9),
-						ImpactScore:         utils.PointerTo[float32](3.6),
+						BaseScore:           types.PointerTo[float32](7.5),
+						ExploitabilityScore: types.PointerTo[float32](3.9),
+						ImpactScore:         types.PointerTo[float32](3.6),
 					},
-					Vector:  utils.PointerTo("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"),
-					Version: utils.PointerTo("3.1"),
+					Vector:  types.PointerTo("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"),
+					Version: types.PointerTo("3.1"),
 				},
 			}),
-			Description: utils.PointerTo("A vulnerability exists in curl <7.87.0 HSTS check that could be bypassed to trick it to keep using HTTP. Using its HSTS support, curl can be instructed to use HTTPS instead of using an insecure clear-text HTTP step even when HTTP is provided in the\nURL. However, the HSTS mechanism could be bypassed if the host name in the given URL first uses IDN characters that get replaced to ASCII counterparts as part of the IDN conversion. Like using the character UTF-8 U+3002 (IDEOGRAPHIC FULL STOP) instead of the common ASCI\nI full stop (U+002E) `.`. Then in a subsequent request, it does not detect the HSTS state and makes a clear text transfer. Because it would store the info IDN encoded but look for it IDN decoded."),
+			Description: types.PointerTo("A vulnerability exists in curl <7.87.0 HSTS check that could be bypassed to trick it to keep using HTTP. Using its HSTS support, curl can be instructed to use HTTPS instead of using an insecure clear-text HTTP step even when HTTP is provided in the\nURL. However, the HSTS mechanism could be bypassed if the host name in the given URL first uses IDN characters that get replaced to ASCII counterparts as part of the IDN conversion. Like using the character UTF-8 U+3002 (IDEOGRAPHIC FULL STOP) instead of the common ASCI\nI full stop (U+002E) `.`. Then in a subsequent request, it does not detect the HSTS state and makes a clear text transfer. Because it would store the info IDN encoded but look for it IDN decoded."),
 			Distro: &types.VulnerabilityDistro{
-				IDLike:  utils.PointerTo([]string{"debian"}),
-				Name:    utils.PointerTo("ubuntu"),
-				Version: utils.PointerTo("11"),
+				IDLike:  types.PointerTo([]string{"debian"}),
+				Name:    types.PointerTo("ubuntu"),
+				Version: types.PointerTo("11"),
 			},
 			Fix: &types.VulnerabilityFix{
-				State:    utils.PointerTo("wont-fix"),
-				Versions: utils.PointerTo([]string{}),
+				State:    types.PointerTo("wont-fix"),
+				Versions: types.PointerTo([]string{}),
 			},
-			LayerId: utils.PointerTo(""),
-			Links:   utils.PointerTo([]string{"https://security-tracker.debian.org/tracker/CVE-2022-43551"}),
+			LayerId: types.PointerTo(""),
+			Links:   types.PointerTo([]string{"https://security-tracker.debian.org/tracker/CVE-2022-43551"}),
 			Package: &types.Package{
-				Cpes:     utils.PointerTo([]string{"cpe:2.3:a:curl:curl:7.74.0-1.3+deb11u3:*:*:*:*:*:*:*"}),
-				Language: utils.PointerTo("pl1"),
-				Licenses: utils.PointerTo([]string{"BSD-3-Clause", "BSD-4-Clause"}),
-				Name:     utils.PointerTo("curl"),
-				Purl:     utils.PointerTo("pkg:deb/debian/curl@7.74.0-1.3+deb11u3?arch=amd64&distro=debian-11"),
-				Type:     utils.PointerTo("deb"),
-				Version:  utils.PointerTo("7.74.0-1.3+deb11u3"),
+				Cpes:     types.PointerTo([]string{"cpe:2.3:a:curl:curl:7.74.0-1.3+deb11u3:*:*:*:*:*:*:*"}),
+				Language: types.PointerTo("pl1"),
+				Licenses: types.PointerTo([]string{"BSD-3-Clause", "BSD-4-Clause"}),
+				Name:     types.PointerTo("curl"),
+				Purl:     types.PointerTo("pkg:deb/debian/curl@7.74.0-1.3+deb11u3?arch=amd64&distro=debian-11"),
+				Type:     types.PointerTo("deb"),
+				Version:  types.PointerTo("7.74.0-1.3+deb11u3"),
 			},
-			Path:              utils.PointerTo("/var/lib/dpkg/status"),
-			Severity:          utils.PointerTo[types.VulnerabilitySeverity](types.HIGH),
-			VulnerabilityName: utils.PointerTo("CVE-2022-43551"),
+			Path:              types.PointerTo("/var/lib/dpkg/status"),
+			Severity:          types.PointerTo[types.VulnerabilitySeverity](types.HIGH),
+			VulnerabilityName: types.PointerTo("CVE-2022-43551"),
 		},
 		{
-			Cvss: utils.PointerTo([]types.VulnerabilityCvss{
+			Cvss: types.PointerTo([]types.VulnerabilityCvss{
 				{
 					Metrics: &types.VulnerabilityCvssMetrics{
-						BaseScore:           utils.PointerTo[float32](9.1),
-						ExploitabilityScore: utils.PointerTo[float32](3.9),
-						ImpactScore:         utils.PointerTo[float32](5.2),
+						BaseScore:           types.PointerTo[float32](9.1),
+						ExploitabilityScore: types.PointerTo[float32](3.9),
+						ImpactScore:         types.PointerTo[float32](5.2),
 					},
-					Vector:  utils.PointerTo("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:H"),
-					Version: utils.PointerTo("3.1"),
+					Vector:  types.PointerTo("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:H"),
+					Version: types.PointerTo("3.1"),
 				},
 				{
 					Metrics: &types.VulnerabilityCvssMetrics{
-						BaseScore:           utils.PointerTo[float32](4),
-						ExploitabilityScore: utils.PointerTo[float32](4.1),
-						ImpactScore:         utils.PointerTo[float32](4.2),
+						BaseScore:           types.PointerTo[float32](4),
+						ExploitabilityScore: types.PointerTo[float32](4.1),
+						ImpactScore:         types.PointerTo[float32](4.2),
 					},
-					Vector:  utils.PointerTo("AV:N/AC:L/Au:N/C:P/I:P/A:P"),
-					Version: utils.PointerTo("2.0"),
+					Vector:  types.PointerTo("AV:N/AC:L/Au:N/C:P/I:P/A:P"),
+					Version: types.PointerTo("2.0"),
 				},
 			}),
-			Description: utils.PointerTo("GNU Libtasn1 before 4.19.0 has an ETYPE_OK off-by-one array size check that affects asn1_encode_simple_der."),
+			Description: types.PointerTo("GNU Libtasn1 before 4.19.0 has an ETYPE_OK off-by-one array size check that affects asn1_encode_simple_der."),
 			Distro: &types.VulnerabilityDistro{
-				IDLike:  utils.PointerTo([]string{"debian"}),
-				Name:    utils.PointerTo("ubuntu"),
-				Version: utils.PointerTo("11"),
+				IDLike:  types.PointerTo([]string{"debian"}),
+				Name:    types.PointerTo("ubuntu"),
+				Version: types.PointerTo("11"),
 			},
 			Fix: &types.VulnerabilityFix{
-				State:    utils.PointerTo("fixed"),
-				Versions: utils.PointerTo([]string{"4.16.0-2+deb11u1"}),
+				State:    types.PointerTo("fixed"),
+				Versions: types.PointerTo([]string{"4.16.0-2+deb11u1"}),
 			},
-			LayerId: utils.PointerTo(""),
-			Links:   utils.PointerTo([]string{"https://security-tracker.debian.org/tracker/CVE-2021-46848", "https://security-tracker.debian.org/tracker/CVE-2021-46848_new"}),
+			LayerId: types.PointerTo(""),
+			Links:   types.PointerTo([]string{"https://security-tracker.debian.org/tracker/CVE-2021-46848", "https://security-tracker.debian.org/tracker/CVE-2021-46848_new"}),
 			Package: &types.Package{
-				Cpes:     utils.PointerTo([]string{"cpe:2.3:a:libtasn1-6:libtasn1-6:4.16.0-2:*:*:*:*:*:*:*", "cpe:2.3:a:libtasn1-6:libtasn1_6:4.16.0-2:*:*:*:*:*:*:*"}),
-				Language: utils.PointerTo(""),
-				Licenses: utils.PointerTo([]string{"GFDL-1.3-only", "GPL-3.0-only", "LGPL-2.1-only"}),
-				Name:     utils.PointerTo("libtasn1-6"),
-				Purl:     utils.PointerTo("pkg:deb/debian/libtasn1-6@4.16.0-2?arch=amd64&distro=debian-11"),
-				Type:     utils.PointerTo("deb"),
-				Version:  utils.PointerTo("4.16.0-2"),
+				Cpes:     types.PointerTo([]string{"cpe:2.3:a:libtasn1-6:libtasn1-6:4.16.0-2:*:*:*:*:*:*:*", "cpe:2.3:a:libtasn1-6:libtasn1_6:4.16.0-2:*:*:*:*:*:*:*"}),
+				Language: types.PointerTo(""),
+				Licenses: types.PointerTo([]string{"GFDL-1.3-only", "GPL-3.0-only", "LGPL-2.1-only"}),
+				Name:     types.PointerTo("libtasn1-6"),
+				Purl:     types.PointerTo("pkg:deb/debian/libtasn1-6@4.16.0-2?arch=amd64&distro=debian-11"),
+				Type:     types.PointerTo("deb"),
+				Version:  types.PointerTo("4.16.0-2"),
 			},
-			Path:              utils.PointerTo("/var/lib/dpkg/status"),
-			Severity:          utils.PointerTo[types.VulnerabilitySeverity](types.CRITICAL),
-			VulnerabilityName: utils.PointerTo("CVE-2021-46848"),
+			Path:              types.PointerTo("/var/lib/dpkg/status"),
+			Severity:          types.PointerTo[types.VulnerabilitySeverity](types.CRITICAL),
+			VulnerabilityName: types.PointerTo("CVE-2021-46848"),
 		},
 		{
-			Cvss: utils.PointerTo([]types.VulnerabilityCvss{
+			Cvss: types.PointerTo([]types.VulnerabilityCvss{
 				{
 					Metrics: &types.VulnerabilityCvssMetrics{
-						BaseScore:           utils.PointerTo[float32](9.8),
-						ExploitabilityScore: utils.PointerTo[float32](3.9),
-						ImpactScore:         utils.PointerTo[float32](5.9),
+						BaseScore:           types.PointerTo[float32](9.8),
+						ExploitabilityScore: types.PointerTo[float32](3.9),
+						ImpactScore:         types.PointerTo[float32](5.9),
 					},
-					Vector:  utils.PointerTo("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"),
-					Version: utils.PointerTo("3.1"),
+					Vector:  types.PointerTo("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"),
+					Version: types.PointerTo("3.1"),
 				},
 				{
 					Metrics: &types.VulnerabilityCvssMetrics{
-						BaseScore:           utils.PointerTo[float32](7.5),
-						ExploitabilityScore: utils.PointerTo[float32](10),
-						ImpactScore:         utils.PointerTo[float32](6.4),
+						BaseScore:           types.PointerTo[float32](7.5),
+						ExploitabilityScore: types.PointerTo[float32](10),
+						ImpactScore:         types.PointerTo[float32](6.4),
 					},
-					Vector:  utils.PointerTo("AV:N/AC:L/Au:N/C:P/I:P/A:P"),
-					Version: utils.PointerTo("2.0"),
+					Vector:  types.PointerTo("AV:N/AC:L/Au:N/C:P/I:P/A:P"),
+					Version: types.PointerTo("2.0"),
 				},
 			}),
-			Description: utils.PointerTo("SQLite3 from 3.6.0 to and including 3.27.2 is vulnerable to heap out-of-bound read in the rtreenode() function when handling invalid rtree tables."),
+			Description: types.PointerTo("SQLite3 from 3.6.0 to and including 3.27.2 is vulnerable to heap out-of-bound read in the rtreenode() function when handling invalid rtree tables."),
 			Distro: &types.VulnerabilityDistro{
-				IDLike:  utils.PointerTo([]string{"debian"}),
-				Name:    utils.PointerTo("ubuntu"),
-				Version: utils.PointerTo("11"),
+				IDLike:  types.PointerTo([]string{"debian"}),
+				Name:    types.PointerTo("ubuntu"),
+				Version: types.PointerTo("11"),
 			},
 			Fix: &types.VulnerabilityFix{
-				State:    utils.PointerTo("wont-fix"),
-				Versions: utils.PointerTo([]string{""}),
+				State:    types.PointerTo("wont-fix"),
+				Versions: types.PointerTo([]string{""}),
 			},
-			LayerId: utils.PointerTo(""),
-			Links:   utils.PointerTo([]string{"https://security-tracker.debian.org/tracker/CVE-2019-8457"}),
+			LayerId: types.PointerTo(""),
+			Links:   types.PointerTo([]string{"https://security-tracker.debian.org/tracker/CVE-2019-8457"}),
 			Package: &types.Package{
-				Cpes:     utils.PointerTo([]string{"cpe:2.3:a:libdb5.3:libdb5.3:5.3.28+dfsg1-0.8:*:*:*:*:*:*:*"}),
-				Language: utils.PointerTo(""),
-				Licenses: utils.PointerTo([]string{}),
-				Name:     utils.PointerTo("libdb5.3"),
-				Purl:     utils.PointerTo("pkg:deb/debian/libdb5.3@5.3.28+dfsg1-0.8?arch=amd64&upstream=db5.3&distro=debian-11"),
-				Type:     utils.PointerTo("deb"),
-				Version:  utils.PointerTo("5.3.28+dfsg1-0.8"),
+				Cpes:     types.PointerTo([]string{"cpe:2.3:a:libdb5.3:libdb5.3:5.3.28+dfsg1-0.8:*:*:*:*:*:*:*"}),
+				Language: types.PointerTo(""),
+				Licenses: types.PointerTo([]string{}),
+				Name:     types.PointerTo("libdb5.3"),
+				Purl:     types.PointerTo("pkg:deb/debian/libdb5.3@5.3.28+dfsg1-0.8?arch=amd64&upstream=db5.3&distro=debian-11"),
+				Type:     types.PointerTo("deb"),
+				Version:  types.PointerTo("5.3.28+dfsg1-0.8"),
 			},
-			Path:              utils.PointerTo("/var/lib/dpkg/status"),
-			Severity:          utils.PointerTo[types.VulnerabilitySeverity](types.LOW),
-			VulnerabilityName: utils.PointerTo("CVE-2019-8457"),
+			Path:              types.PointerTo("/var/lib/dpkg/status"),
+			Severity:          types.PointerTo[types.VulnerabilitySeverity](types.LOW),
+			VulnerabilityName: types.PointerTo("CVE-2019-8457"),
 		},
 	}
 }

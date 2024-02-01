@@ -24,7 +24,7 @@ import (
 
 	"github.com/openclarity/vmclarity/api/server/pkg/database/odatasql"
 	"github.com/openclarity/vmclarity/api/server/pkg/database/odatasql/jsonsql"
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
+	"github.com/openclarity/vmclarity/api/types"
 )
 
 var SQLVariant jsonsql.Variant
@@ -1232,7 +1232,7 @@ func ODataQuery(db *gorm.DB, schema string, filterString, selectString, expandSt
 	// If we're not getting a collection, make sure the result is limited
 	// to 1 item.
 	if !collection {
-		top = utils.PointerTo(1)
+		top = types.PointerTo(1)
 		skip = nil
 	}
 

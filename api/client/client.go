@@ -22,7 +22,6 @@ import (
 	"net/http"
 
 	"github.com/openclarity/vmclarity/api/types"
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
 type BackendClient struct {
@@ -241,7 +240,7 @@ func (b *BackendClient) PatchScan(ctx context.Context, scanID types.ScanID, scan
 
 func (b *BackendClient) GetAssetScanSummary(ctx context.Context, assetScanID string) (*types.ScanFindingsSummary, error) {
 	params := types.GetAssetScansAssetScanIDParams{
-		Select: utils.PointerTo("summary"),
+		Select: types.PointerTo("summary"),
 	}
 	assetScan, err := b.GetAssetScan(ctx, assetScanID, params)
 	if err != nil {
@@ -252,7 +251,7 @@ func (b *BackendClient) GetAssetScanSummary(ctx context.Context, assetScanID str
 
 func (b *BackendClient) GetAssetScanStatus(ctx context.Context, assetScanID string) (*types.AssetScanStatus, error) {
 	params := types.GetAssetScansAssetScanIDParams{
-		Select: utils.PointerTo("status"),
+		Select: types.PointerTo("status"),
 	}
 	assetScan, err := b.GetAssetScan(ctx, assetScanID, params)
 	if err != nil {

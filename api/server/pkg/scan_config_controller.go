@@ -25,7 +25,6 @@ import (
 	"github.com/openclarity/vmclarity/api/server/pkg/common"
 	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 	"github.com/openclarity/vmclarity/api/types"
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
 func (s *ServerImpl) GetScanConfigs(ctx echo.Context, params types.GetScanConfigsParams) error {
@@ -61,7 +60,7 @@ func (s *ServerImpl) PostScanConfigs(ctx echo.Context) error {
 		switch true {
 		case errors.As(err, &conflictErr):
 			existResponse := &types.ScanConfigExists{
-				Message:    utils.PointerTo(conflictErr.Reason),
+				Message:    types.PointerTo(conflictErr.Reason),
 				ScanConfig: &createdScanConfig,
 			}
 			return sendResponse(ctx, http.StatusConflict, existResponse)
@@ -77,7 +76,7 @@ func (s *ServerImpl) PostScanConfigs(ctx echo.Context) error {
 
 func (s *ServerImpl) DeleteScanConfigsScanConfigID(ctx echo.Context, scanConfigID types.ScanConfigID) error {
 	success := types.Success{
-		Message: utils.PointerTo(fmt.Sprintf("scan config %v deleted", scanConfigID)),
+		Message: types.PointerTo(fmt.Sprintf("scan config %v deleted", scanConfigID)),
 	}
 
 	if err := s.dbHandler.ScanConfigsTable().DeleteScanConfig(scanConfigID); err != nil {
@@ -114,7 +113,7 @@ func (s *ServerImpl) PatchScanConfigsScanConfigID(ctx echo.Context, scanConfigID
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("ScanConfig with ID %v not found", scanConfigID))
 		case errors.As(err, &conflictErr):
 			existResponse := &types.ScanConfigExists{
-				Message:    utils.PointerTo(conflictErr.Reason),
+				Message:    types.PointerTo(conflictErr.Reason),
 				ScanConfig: &updatedScanConfig,
 			}
 			return sendResponse(ctx, http.StatusConflict, existResponse)
@@ -154,7 +153,7 @@ func (s *ServerImpl) PutScanConfigsScanConfigID(ctx echo.Context, scanConfigID t
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("ScanConfig with ID %v not found", scanConfigID))
 		case errors.As(err, &conflictErr):
 			existResponse := &types.ScanConfigExists{
-				Message:    utils.PointerTo(conflictErr.Reason),
+				Message:    types.PointerTo(conflictErr.Reason),
 				ScanConfig: &updatedScanConfig,
 			}
 			return sendResponse(ctx, http.StatusConflict, existResponse)

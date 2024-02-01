@@ -26,7 +26,6 @@ import (
 	"github.com/openclarity/vmclarity/api/server/pkg/common"
 	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 	"github.com/openclarity/vmclarity/api/types"
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
 const (
@@ -106,10 +105,10 @@ func (s *ScanEstimationsTableHandler) CreateScanEstimation(scanEstimation types.
 	}
 
 	// Generate a new UUID
-	scanEstimation.Id = utils.PointerTo(uuid.New().String())
+	scanEstimation.Id = types.PointerTo(uuid.New().String())
 
 	// Initialise revision
-	scanEstimation.Revision = utils.PointerTo(1)
+	scanEstimation.Revision = types.PointerTo(1)
 
 	marshaled, err := json.Marshal(scanEstimation)
 	if err != nil {

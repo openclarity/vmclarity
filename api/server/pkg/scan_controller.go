@@ -27,7 +27,6 @@ import (
 	"github.com/openclarity/vmclarity/api/server/pkg/common"
 	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 	"github.com/openclarity/vmclarity/api/types"
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
 func (s *ServerImpl) GetScans(ctx echo.Context, params types.GetScansParams) error {
@@ -62,7 +61,7 @@ func (s *ServerImpl) PostScans(ctx echo.Context) error {
 		switch true {
 		case errors.As(err, &conflictErr):
 			existResponse := &types.ScanExists{
-				Message: utils.PointerTo(conflictErr.Reason),
+				Message: types.PointerTo(conflictErr.Reason),
 				Scan:    &createdScan,
 			}
 			return sendResponse(ctx, http.StatusConflict, existResponse)
@@ -78,7 +77,7 @@ func (s *ServerImpl) PostScans(ctx echo.Context) error {
 
 func (s *ServerImpl) DeleteScansScanID(ctx echo.Context, scanID types.ScanID) error {
 	success := types.Success{
-		Message: utils.PointerTo(fmt.Sprintf("scan %v deleted", scanID)),
+		Message: types.PointerTo(fmt.Sprintf("scan %v deleted", scanID)),
 	}
 
 	if err := s.dbHandler.ScansTable().DeleteScan(scanID); err != nil {
@@ -147,7 +146,7 @@ func (s *ServerImpl) PatchScansScanID(ctx echo.Context, scanID types.ScanID, par
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Scan with ID %v not found", scanID))
 		case errors.As(err, &conflictErr):
 			existResponse := &types.ScanExists{
-				Message: utils.PointerTo(conflictErr.Reason),
+				Message: types.PointerTo(conflictErr.Reason),
 				Scan:    &updatedScan,
 			}
 			return sendResponse(ctx, http.StatusConflict, existResponse)
@@ -211,7 +210,7 @@ func (s *ServerImpl) PutScansScanID(ctx echo.Context, scanID types.ScanID, param
 			return sendError(ctx, http.StatusNotFound, fmt.Sprintf("Scan with ID %v not found", scanID))
 		case errors.As(err, &conflictErr):
 			existResponse := &types.ScanExists{
-				Message: utils.PointerTo(conflictErr.Reason),
+				Message: types.PointerTo(conflictErr.Reason),
 				Scan:    &updatedScan,
 			}
 			return sendResponse(ctx, http.StatusConflict, existResponse)

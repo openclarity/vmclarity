@@ -55,3 +55,7 @@ func ValueOrZero[T any](ptr *T) T {
 	}
 	return t
 }
+
+func PointerTo[T any](value T) *T {
+	return &value
+}

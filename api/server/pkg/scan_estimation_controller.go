@@ -26,7 +26,6 @@ import (
 	"github.com/openclarity/vmclarity/api/server/pkg/common"
 	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
 	"github.com/openclarity/vmclarity/api/types"
-	"github.com/openclarity/vmclarity/pkg/shared/utils"
 )
 
 func (s *ServerImpl) GetScanEstimations(ctx echo.Context, params types.GetScanEstimationsParams) error {
@@ -70,7 +69,7 @@ func (s *ServerImpl) PostScanEstimations(ctx echo.Context) error {
 
 func (s *ServerImpl) DeleteScanEstimationsScanEstimationID(ctx echo.Context, scanEstimationID types.ScanEstimationID) error {
 	success := types.Success{
-		Message: utils.PointerTo(fmt.Sprintf("scan estimation %v deleted", scanEstimationID)),
+		Message: types.PointerTo(fmt.Sprintf("scan estimation %v deleted", scanEstimationID)),
 	}
 
 	if err := s.dbHandler.ScanEstimationsTable().DeleteScanEstimation(scanEstimationID); err != nil {
