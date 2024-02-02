@@ -25,13 +25,13 @@ import (
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 
-	"github.com/openclarity/vmclarity/orchestrator/pkg/assetscanestimationwatcher"
-	"github.com/openclarity/vmclarity/orchestrator/pkg/assetscanprocessor"
-	"github.com/openclarity/vmclarity/orchestrator/pkg/assetscanwatcher"
-	"github.com/openclarity/vmclarity/orchestrator/pkg/discovery"
-	"github.com/openclarity/vmclarity/orchestrator/pkg/scanconfigwatcher"
-	"github.com/openclarity/vmclarity/orchestrator/pkg/scanestimationwatcher"
-	"github.com/openclarity/vmclarity/orchestrator/pkg/scanwatcher"
+	"github.com/openclarity/vmclarity/orchestrator/pkg/discoverer"
+	assetscanprocessor "github.com/openclarity/vmclarity/orchestrator/pkg/processor/assetscan"
+	assetscanwatcher "github.com/openclarity/vmclarity/orchestrator/pkg/watcher/assetscan"
+	assetscanestimationwatcher "github.com/openclarity/vmclarity/orchestrator/pkg/watcher/assetscanestimation"
+	scanwatcher "github.com/openclarity/vmclarity/orchestrator/pkg/watcher/scan"
+	scanconfigwatcher "github.com/openclarity/vmclarity/orchestrator/pkg/watcher/scanconfig"
+	scanestimationwatcher "github.com/openclarity/vmclarity/orchestrator/pkg/watcher/scanestimation"
 )
 
 func TestUnmarshalCloudProvider(t *testing.T) {
@@ -147,7 +147,7 @@ func TestConfig(t *testing.T) {
 				APIServerAddress:       "http://example.com:8484/api",
 				HealthCheckAddress:     "example.com:18888",
 				ControllerStartupDelay: 15 * time.Second,
-				DiscoveryConfig: discovery.Config{
+				DiscoveryConfig: discoverer.Config{
 					DiscoveryInterval: time.Minute,
 				},
 				ScanConfigWatcherConfig: scanconfigwatcher.Config{
@@ -200,8 +200,8 @@ func TestConfig(t *testing.T) {
 				APIServerAddress:       "",
 				HealthCheckAddress:     DefaultHealthCheckAddress,
 				ControllerStartupDelay: DefaultControllerStartupDelay,
-				DiscoveryConfig: discovery.Config{
-					DiscoveryInterval: discovery.DefaultInterval,
+				DiscoveryConfig: discoverer.Config{
+					DiscoveryInterval: discoverer.DefaultInterval,
 				},
 				ScanConfigWatcherConfig: scanconfigwatcher.Config{
 					PollPeriod:       scanconfigwatcher.DefaultPollInterval,

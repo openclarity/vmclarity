@@ -24,13 +24,13 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/openclarity/vmclarity/api/types"
-	"github.com/openclarity/vmclarity/orchestrator/pkg/assetscanestimationwatcher"
-	"github.com/openclarity/vmclarity/orchestrator/pkg/assetscanprocessor"
-	"github.com/openclarity/vmclarity/orchestrator/pkg/assetscanwatcher"
-	"github.com/openclarity/vmclarity/orchestrator/pkg/discovery"
-	"github.com/openclarity/vmclarity/orchestrator/pkg/scanconfigwatcher"
-	"github.com/openclarity/vmclarity/orchestrator/pkg/scanestimationwatcher"
-	"github.com/openclarity/vmclarity/orchestrator/pkg/scanwatcher"
+	discovery "github.com/openclarity/vmclarity/orchestrator/pkg/discoverer"
+	assetscanprocessor "github.com/openclarity/vmclarity/orchestrator/pkg/processor/assetscan"
+	assetscanwatcher "github.com/openclarity/vmclarity/orchestrator/pkg/watcher/assetscan"
+	assetscanestimationwatcher "github.com/openclarity/vmclarity/orchestrator/pkg/watcher/assetscanestimation"
+	scanwatcher "github.com/openclarity/vmclarity/orchestrator/pkg/watcher/scan"
+	scanconfigwatcher "github.com/openclarity/vmclarity/orchestrator/pkg/watcher/scanconfig"
+	scanestimationwatcher "github.com/openclarity/vmclarity/orchestrator/pkg/watcher/scanestimation"
 )
 
 const (
