@@ -86,10 +86,10 @@ func beforeSuite(ctx context.Context) {
 	endpoints, err := testEnv.Endpoints(ctx)
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-	client, err = apiclient.Create(endpoints.API.String())
+	client, err = apiclient.New(endpoints.API.String())
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-	uiClient, err = uibackendclient.Create(endpoints.UIBackend.String())
+	uiClient, err = uibackendclient.New(endpoints.UIBackend.String())
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 }
 

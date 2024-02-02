@@ -104,7 +104,7 @@ func runCommand(cmd *cobra.Command, _ []string) {
 	healthServer.Start()
 	healthServer.SetIsReady(false)
 
-	backendClient, err := client.Create(config.APIServerAddress)
+	backendClient, err := client.New(config.APIServerAddress)
 	if err != nil {
 		logger.Fatalf("Failed to create a backend client: %v", err)
 	}

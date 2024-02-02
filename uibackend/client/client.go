@@ -27,7 +27,7 @@ type UIBackendClient struct {
 	apiClient ClientWithResponsesInterface
 }
 
-func Create(serverAddress string) (*UIBackendClient, error) {
+func New(serverAddress string) (*UIBackendClient, error) {
 	apiClient, err := NewClientWithResponses(serverAddress)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create VMClarity API client. serverAddress=%v: %w", serverAddress, err)

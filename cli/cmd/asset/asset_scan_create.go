@@ -72,7 +72,7 @@ func init() {
 }
 
 func createAssetScan(ctx context.Context, server, assetID string) (*types.AssetScan, error) {
-	client, err := apiclient.Create(server)
+	client, err := apiclient.New(server)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create VMClarity API client: %w", err)
 	}

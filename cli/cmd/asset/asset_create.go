@@ -116,7 +116,7 @@ func getAssetFromJSONFile(filename string) (*types.AssetType, error) {
 }
 
 func createAsset(ctx context.Context, assetType *types.AssetType, server string, updateIfExists bool) (*types.Asset, error) {
-	client, err := apiclient.Create(server)
+	client, err := apiclient.New(server)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create VMClarity API client: %w", err)
 	}

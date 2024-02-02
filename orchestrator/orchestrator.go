@@ -92,7 +92,7 @@ func NewWithProvider(config *Config, p provider.Provider, b *client.BackendClien
 
 // New returns a new Orchestrator initialized using the provided configuration.
 func New(ctx context.Context, config *Config) (*Orchestrator, error) {
-	backendClient, err := client.Create(config.APIServerAddress)
+	backendClient, err := client.New(config.APIServerAddress)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create a backend client: %w", err)
 	}

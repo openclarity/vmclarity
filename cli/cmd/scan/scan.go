@@ -208,7 +208,7 @@ func newCli(config *families.Config, server, assetScanID, output string) (*cli.C
 		var client *apiclient.BackendClient
 		var p presenter.Presenter
 
-		client, err = apiclient.Create(server)
+		client, err = apiclient.New(server)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create VMClarity API client: %w", err)
 		}
