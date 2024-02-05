@@ -1,4 +1,4 @@
-// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2024 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,14 +13,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package registry
+package windows
 
 // TODO(ramizpolic): This is an MVP and will be heavily changed
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -28,12 +30,15 @@ import (
 )
 
 type Registry struct {
+	drivePath    string
 	registryPath string
 	registry     *regparser.Registry
+	logger       *log.Entry
 }
 
-func NewRegistry(path string) (*Registry, error) {
-	regFile, err := os.Open(path)
+func NewRegistry(drivePath string, logger *log.Entry) (*Registry, error) {
+	registryPath := filepath.Join(drivePath, "Windows/System32/config/SOFTWARE")
+	regFile, err := os.Open(registryPath)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open registry file: %w", err)
 	}
@@ -44,31 +49,29 @@ func NewRegistry(path string) (*Registry, error) {
 	}
 
 	return &Registry{
-		registryPath: path,
+		drivePath:    drivePath,
+		registryPath: registryPath,
 		registry:     registry,
+		logger:       logger,
 	}, nil
 }
 
 func (r *Registry) GetPlatform() (map[string]string, error) {
-	osRegistry := r.registry.OpenKey("Microsoft/Windows NT/CurrentVersion")
-	if osRegistry == nil {
-		return nil, fmt.Errorf("key not found")
+	platformKey, err := r.openKey("Microsoft/Windows NT/CurrentVersion")
+	if err != nil {
+		return nil, err
 	}
 
-	data := map[string]string{}
-	for _, prop := range osRegistry.Values() {
-		data[prop.ValueName()] = toString(prop.ValueData())
+	platform := make(map[string]string)
+	for _, prop := range platformKey.Values() {
+		platform[prop.ValueName()] = toString(prop.ValueData())
 	}
 
 	// remove secrets
-	delete(data, "DigitalProductId")
-	delete(data, "DigitalProductId4")
+	delete(platform, "DigitalProductId")
+	delete(platform, "DigitalProductId4")
 
-	// inject identifiers
-	data["Type"] = "Operating System"
-	data["OsType"] = "Windows"
-
-	return data, nil
+	return platform, nil
 }
 
 func (r *Registry) GetUpdates() (map[string]string, error) {
@@ -127,7 +130,7 @@ func (r *Registry) GetUserProfiles() (map[string]string, error) {
 			propValue := toString(prop.ValueData())
 			propValue = strings.ReplaceAll(propValue, "\\", "/")
 			if idx := strings.Index(propValue, "/Users/"); idx >= 0 {
-				propValue = path.Join(r.getMountPath(), propValue[idx:])
+				propValue = path.Join(r.drivePath, propValue[idx:])
 				profiles[propValue] = propValue
 			}
 		}
@@ -240,13 +243,12 @@ func (r *Registry) GetAll() map[string]interface{} {
 	}
 }
 
-func (r *Registry) getMountPath() string {
-	// mountPath + /Windows/System32/config/SOFTWARE
-	// the mount path is everything before system path, i.e. /Windows/System32/
-	if idx := strings.Index(r.registryPath, "/Windows/System32/"); idx >= 0 {
-		return r.registryPath[:idx]
+func (r *Registry) openKey(key string) (*regparser.CM_KEY_NODE, error) {
+	regKey := r.registry.OpenKey(key)
+	if regKey == nil {
+		return nil, fmt.Errorf("cannot open key %s", key)
 	}
-	return "/"
+	return regKey, nil
 }
 
 // toString converts the data to proper go string.
@@ -278,23 +280,5 @@ func toString(data *regparser.ValueData) string {
 
 	default:
 		return ""
-	}
-}
-
-func printKeysForPath(registry *regparser.Registry, keyPath string) {
-	key := registry.OpenKey(keyPath)
-	if key == nil {
-		return
-	}
-
-	fmt.Printf("======= Subkeys:\n\n")
-	for _, subkey := range key.Subkeys() {
-		fmt.Printf("%-120s\n", path.Join(keyPath, subkey.Name()))
-	}
-
-	// print all keys under this path
-	fmt.Printf("\n\n======= Key properties:\n\n")
-	for _, prop := range key.Values() {
-		fmt.Printf("%-120s : %#v\n", path.Join(keyPath, prop.ValueName()), toString(prop.ValueData()))
 	}
 }

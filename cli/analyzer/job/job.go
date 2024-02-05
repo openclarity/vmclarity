@@ -16,9 +16,10 @@
 package job
 
 import (
-	"github.com/openclarity/vmclarity/cli/analyzer/syft"
-	"github.com/openclarity/vmclarity/cli/analyzer/trivy"
-	"github.com/openclarity/vmclarity/cli/job_manager"
+	"github.com/openclarity/vmclarity/cli/pkg/analyzer/syft"
+	"github.com/openclarity/vmclarity/cli/pkg/analyzer/trivy"
+	"github.com/openclarity/vmclarity/cli/pkg/analyzer/windows"
+	"github.com/openclarity/vmclarity/cli/pkg/job_manager"
 )
 
 var Factory = job_manager.NewJobFactory()
@@ -26,4 +27,5 @@ var Factory = job_manager.NewJobFactory()
 func init() {
 	Factory.Register(trivy.AnalyzerName, trivy.New)
 	Factory.Register(syft.AnalyzerName, syft.New)
+	Factory.Register(windows.AnalyzerName, windows.New)
 }

@@ -1,4 +1,4 @@
-// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2024 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package registry
+package windows
 
 import (
 	"encoding/json"
@@ -22,12 +22,12 @@ import (
 )
 
 // TODO(ramizpolic): add this file but strip everything from it
-const regPath = "testdata/Windows/System32/config/SOFTWARE"
+const drivePath = "/media/ramiz-polic/System"
 
 func TestRegistry(t *testing.T) {
-	reg, err := NewRegistry(regPath)
+	reg, err := NewRegistry(drivePath)
 	if err != nil {
-		t.Errorf("should not error")
+		t.Fatalf("should not error")
 	}
 
 	// TODO: add user NT registry with some preinstalled apps
