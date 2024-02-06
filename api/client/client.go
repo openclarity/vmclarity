@@ -21,15 +21,16 @@ import (
 	"fmt"
 	"net/http"
 
+	apiclient "github.com/openclarity/vmclarity/api/client/internal/client"
 	"github.com/openclarity/vmclarity/api/types"
 )
 
 type BackendClient struct {
-	api ClientWithResponsesInterface
+	api apiclient.ClientWithResponsesInterface
 }
 
 func New(serverAddress string) (*BackendClient, error) {
-	api, err := NewClientWithResponses(serverAddress)
+	api, err := apiclient.NewClientWithResponses(serverAddress)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create VMClarity API client. serverAddress=%v: %w", serverAddress, err)
 	}
