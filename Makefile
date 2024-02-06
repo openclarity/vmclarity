@@ -132,16 +132,21 @@ $(FIXGOMODULES):
 .PHONY: fix
 fix: bin/golangci-lint $(FIXGOMODULES) ## Fix linter errors in Go source code
 
+E2E_TARGETS =
+E2E_ENV =
+ifneq ($(CI),true)
+	E2E_TARGETS += docker
+	E2E_ENV += VMCLARITY_E2E_APISERVER_IMAGE=$(DOCKER_REGISTRY)/vmclarity-apiserver:$(DOCKER_TAG)
+	E2E_ENV += VMCLARITY_E2E_ORCHESTRATOR_IMAGE=$(DOCKER_REGISTRY)/vmclarity-orchestrator:$(DOCKER_TAG)
+	E2E_ENV += VMCLARITY_E2E_UI_IMAGE=$(DOCKER_REGISTRY)/vmclarity-ui:$(DOCKER_TAG)
+	E2E_ENV += VMCLARITY_E2E_UIBACKEND_IMAGE=$(DOCKER_REGISTRY)/vmclarity-ui-backend:$(DOCKER_TAG)
+	E2E_ENV += VMCLARITY_E2E_SCANNER_IMAGE=$(DOCKER_REGISTRY)/vmclarity-cli:$(DOCKER_TAG)
+	E2E_ENV += VMCLARITY_E2E_CR_DISCOVERY_SERVER_IMAGE=$(DOCKER_REGISTRY)/vmclarity-cr-discovery-server:$(DOCKER_TAG)
+endif
+
 .PHONY: e2e
-e2e: docker ## Run end-to-end test suite
-	export VMCLARITY_E2E_APISERVER_IMAGE=$(DOCKER_REGISTRY)/vmclarity-apiserver:$(DOCKER_TAG) \
-           VMCLARITY_E2E_ORCHESTRATOR_IMAGE=$(DOCKER_REGISTRY)/vmclarity-orchestrator:$(DOCKER_TAG) \
-           VMCLARITY_E2E_UI_IMAGE=$(DOCKER_REGISTRY)/vmclarity-ui:$(DOCKER_TAG) \
-           VMCLARITY_E2E_UIBACKEND_IMAGE=$(DOCKER_REGISTRY)/vmclarity-ui-backend:$(DOCKER_TAG) \
-           VMCLARITY_E2E_SCANNER_IMAGE=$(DOCKER_REGISTRY)/vmclarity-cli:$(DOCKER_TAG) \
-           VMCLARITY_E2E_CR_DISCOVERY_SERVER_IMAGE=$(DOCKER_REGISTRY)/vmclarity-cr-discovery-server:$(DOCKER_TAG) && \
-	cd e2e && \
-	go test -v -failfast -test.v -test.paniconexit0 -timeout 2h -ginkgo.v .
+e2e: $(E2E_TARGETS) ## Run end-to-end test suite
+	cd e2e && $(E2E_ENV) go test -v -failfast -test.v -test.paniconexit0 -timeout 2h -ginkgo.v .
 
 VENDORMODULES = $(addprefix vendor-, $(GOMODULES))
 
