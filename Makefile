@@ -22,7 +22,7 @@ GO_VERSION ?= $(shell cat $(ROOT_DIR)/.go-version)
 
 ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 BIN_DIR := $(ROOT_DIR)/bin
-GOMODULES := $(shell find $(ROOT_DIR) -name 'go.mod')
+GOMODULES := $(shell find $(ROOT_DIR) -name 'go.mod' -exec dirname {} \;)
 BUILD_TIMESTAMP := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 COMMIT_HASH := $(shell git rev-parse HEAD)
 INSTALLATION_DIR := $(ROOT_DIR)/installation
@@ -93,7 +93,7 @@ clean-ui: ## Clean UI build
 TIDYGOMODULES = $(addprefix tidy-, $(GOMODULES))
 
 $(TIDYGOMODULES):
-	cd $(dir $(@:tidy-%=%)) && go mod tidy -go=$(GO_VERSION)
+	cd $(@:tidy-%=%) && go mod tidy -go=$(GO_VERSION)
 
 .PHONY: gomod-tidy
 gomod-tidy: $(TIDYGOMODULES) ## Run go mod tidy for all go modules
@@ -102,7 +102,7 @@ gomod-tidy: $(TIDYGOMODULES) ## Run go mod tidy for all go modules
 MODLISTGOMODULES = $(addprefix modlist-, $(GOMODULES))
 
 $(MODLISTGOMODULES):
-	cd $(dir $(@:modlist-%=%)) && go list -m -mod=readonly all 1> /dev/null
+	cd $(@:modlist-%=%) && go list -m -mod=readonly all 1> /dev/null
 
 .PHONY: gomod-list
 gomod-list: $(MODLISTGOMODULES)
@@ -123,11 +123,11 @@ FIXGOMODULES = $(addprefix fix-, $(GOMODULES))
 
 .PHONY: $(LINTGOMODULES)
 $(LINTGOMODULES):
-	cd $(dir $(@:lint-%=%)) && "$(GOLANGCI_BIN)" run -c "$(GOLANGCI_CONFIG)"
+	cd $(@:lint-%=%) && "$(GOLANGCI_BIN)" run -c "$(GOLANGCI_CONFIG)"
 
 .PHONY: $(FIXGOMODULES)
 $(FIXGOMODULES):
-	cd $(dir $(@:fix-%=%)) && "$(GOLANGCI_BIN)" run -c "$(GOLANGCI_CONFIG)" --fix
+	cd $(@:fix-%=%) && "$(GOLANGCI_BIN)" run -c "$(GOLANGCI_CONFIG)" --fix
 
 .PHONY: fix
 fix: bin/golangci-lint $(FIXGOMODULES) ## Fix linter errors in Go source code
@@ -146,7 +146,7 @@ e2e: docker ## Run end-to-end test suite
 VENDORMODULES = $(addprefix vendor-, $(GOMODULES))
 
 $(VENDORMODULES):
-	cd $(dir $(@:vendor-%=%)) && go mod vendor
+	cd $(@:vendor-%=%) && go mod vendor
 
 .PHONY: gomod-vendor
 gomod-vendor: $(VENDORMODULES) # Make vendored copy of dependencies for all modules
@@ -154,7 +154,7 @@ gomod-vendor: $(VENDORMODULES) # Make vendored copy of dependencies for all modu
 LICENSECHECKMODULES = $(GOMODULES)
 
 $(LICENSECHECKMODULES):
-	cd $(dir $(@:license-check-%=%)) && "$(LICENSEI_BIN)" check --config "$(LICENSEI_CONFIG)"
+	cd $(@:license-check-%=%) && "$(LICENSEI_BIN)" check --config "$(LICENSEI_CONFIG)"
 
 .PHONY: license-check
 license-check: bin/licensei license-cache $(LICENSECHECKMODULES) ## Check licenses for software components
@@ -162,7 +162,7 @@ license-check: bin/licensei license-cache $(LICENSECHECKMODULES) ## Check licens
 LICENSECACHEMODULES = $(addprefix license-cache-, $(GOMODULES))
 
 $(LICENSECACHEMODULES):
-	cd $(dir $(@:license-cache-%=%)) && "$(LICENSEI_BIN)" cache --config "$(LICENSEI_CONFIG)"
+	cd $(@:license-cache-%=%) && "$(LICENSEI_BIN)" cache --config "$(LICENSEI_CONFIG)"
 
 +.PHONY: license-cache
 license-cache: bin/licensei $(LICENSECACHEMODULES) ## Generate license cache
@@ -197,7 +197,7 @@ endif
 TESTGOMODULES = $(addprefix test-, $(GOMODULES))
 
 $(TESTGOMODULES):
-	cd $(dir $(@:test-%=%)) && go test $(GOTEST_OPTS) ./...
+	cd $(@:test-%=%) && go test $(GOTEST_OPTS) ./...
 
 .PHONY: test
 test: $(TESTGOMODULES) ## Run Go unit tests
