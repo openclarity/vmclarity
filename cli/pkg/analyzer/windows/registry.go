@@ -16,7 +16,10 @@
 package windows
 
 import (
+	"encoding/xml"
 	"fmt"
+	cdx "github.com/CycloneDX/cyclonedx-go"
+	"github.com/google/uuid"
 	"github.com/openclarity/vmclarity/cli/pkg/utils"
 	log "github.com/sirupsen/logrus"
 	"os"
@@ -233,12 +236,78 @@ func (r *Registry) GetSystemApps() ([]map[string]string, error) {
 }
 
 func (r *Registry) GetAll() map[string]interface{} {
-	osData, _ := r.GetPlatform()
+	// Fetch required data from the registry
+	platformData, _ := r.GetPlatform()
 	updateData, _ := r.GetUpdates()
 	usersApps, _ := r.GetUsersApps()
 	systemApps, _ := r.GetSystemApps()
+
+	// Create SBOM
+	// TODO(ramizpolic): Convert to SBOM, check https://github.com/MartinStengard/rust-sbom-windows as reference
+	_ = &cdx.BOM{
+		XMLName:      xml.Name{},
+		XMLNS:        "",
+		JSONSchema:   "",
+		BOMFormat:    cdx.BOMFormat,
+		SpecVersion:  cdx.SpecVersion1_5,
+		SerialNumber: uuid.New().URN(),
+		Version:      1,
+		Metadata: &cdx.Metadata{
+			Timestamp:  "",
+			Lifecycles: nil,
+			Tools:      nil,
+			Authors:    nil,
+			Component: &cdx.Component{
+				BOMRef:             "",
+				MIMEType:           "",
+				Type:               cdx.ComponentTypeOS,
+				Supplier:           nil,
+				Author:             platformData["SoftwareType"],
+				Publisher:          "",
+				Group:              "",
+				Name:               platformData["ProductName"],
+				Version:            "",
+				Description:        "",
+				Scope:              "",
+				Hashes:             nil,
+				Licenses:           nil,
+				Copyright:          "",
+				CPE:                "",
+				PackageURL:         "",
+				SWID:               nil,
+				Modified:           nil,
+				Pedigree:           nil,
+				ExternalReferences: nil,
+				Properties:         nil,
+				Components:         nil,
+				Evidence:           nil,
+				ReleaseNotes:       nil,
+				ModelCard:          nil,
+				Data:               nil,
+			},
+			Manufacture: &cdx.OrganizationalEntity{
+				Name:    "",
+				URL:     nil,
+				Contact: nil,
+			},
+			Supplier:   nil,
+			Licenses:   nil,
+			Properties: &[]cdx.Property{},
+		},
+		Components:         nil,
+		Services:           nil,
+		ExternalReferences: nil,
+		Dependencies:       nil,
+		Compositions:       nil,
+		Properties:         nil,
+		Vulnerabilities:    nil,
+		Annotations:        nil,
+		Formulation:        nil,
+	}
+
+	// TODO: to be replaced
 	return map[string]interface{}{
-		"platform":   osData,
+		"platform":   platformData,
 		"updates":    updateData,
 		"usersApps":  usersApps,
 		"systemApps": systemApps,
