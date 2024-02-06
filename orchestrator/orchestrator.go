@@ -22,8 +22,8 @@ import (
 
 	"github.com/Portshift/go-utils/healthz"
 
-	"github.com/openclarity/vmclarity/api/client"
-	"github.com/openclarity/vmclarity/api/types"
+	apiclient "github.com/openclarity/vmclarity/api/client"
+	apitypes "github.com/openclarity/vmclarity/api/types"
 	discovery "github.com/openclarity/vmclarity/orchestrator/discoverer"
 	assetscanprocessor "github.com/openclarity/vmclarity/orchestrator/processor/assetscan"
 	assetscanwatcher "github.com/openclarity/vmclarity/orchestrator/watcher/assetscan"
@@ -67,7 +67,7 @@ func Run(ctx context.Context, config *Config) error {
 // NewWithProvider returns an Orchestrator initialized using the p provider.Provider.
 // Use this method when Orchestrator needs to rely on custom provider.Provider implementation.
 // E.g. End-to-End testing.
-func NewWithProvider(config *Config, p provider.Provider, c *client.Client) (*Orchestrator, error) {
+func NewWithProvider(config *Config, p provider.Provider, c *apiclient.Client) (*Orchestrator, error) {
 	scanConfigWatcherConfig := config.ScanConfigWatcherConfig.WithBackendClient(c)
 	discoveryConfig := config.DiscoveryConfig.WithBackendClient(c).WithProviderClient(p)
 	scanWatcherConfig := config.ScanWatcherConfig.WithBackendClient(c).WithProviderClient(p)
@@ -92,7 +92,7 @@ func NewWithProvider(config *Config, p provider.Provider, c *client.Client) (*Or
 
 // New returns a new Orchestrator initialized using the provided configuration.
 func New(ctx context.Context, config *Config) (*Orchestrator, error) {
-	client, err := client.New(config.APIServerAddress)
+	client, err := apiclient.New(config.APIServerAddress)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create an API client: %w", err)
 	}
@@ -128,20 +128,20 @@ func (o *Orchestrator) Stop(ctx context.Context) {
 }
 
 // nolint:wrapcheck
-// NewProvider returns an initialized provider.Provider based on the kind types.CloudProvider.
-func NewProvider(ctx context.Context, kind types.CloudProvider) (provider.Provider, error) {
+// NewProvider returns an initialized provider.Provider based on the kind apitypes.CloudProvider.
+func NewProvider(ctx context.Context, kind apitypes.CloudProvider) (provider.Provider, error) {
 	switch kind {
-	case types.Azure:
+	case apitypes.Azure:
 		return azure.New(ctx)
-	case types.Docker:
+	case apitypes.Docker:
 		return docker.New(ctx)
-	case types.AWS:
+	case apitypes.AWS:
 		return aws.New(ctx)
-	case types.GCP:
+	case apitypes.GCP:
 		return gcp.New(ctx)
-	case types.External:
+	case apitypes.External:
 		return external.New(ctx)
-	case types.Kubernetes:
+	case apitypes.Kubernetes:
 		return kubernetes.New(ctx)
 	default:
 		return nil, fmt.Errorf("unsupported provider: %s", kind)

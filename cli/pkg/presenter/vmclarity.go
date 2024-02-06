@@ -20,7 +20,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/openclarity/vmclarity/api/client"
+	apiclient "github.com/openclarity/vmclarity/api/client"
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/cli/pkg/families"
 	"github.com/openclarity/vmclarity/cli/pkg/families/exploits"
@@ -38,7 +38,7 @@ import (
 type AssetScanID = apitypes.AssetScanID
 
 type VMClarityPresenter struct {
-	client *client.Client
+	client *apiclient.Client
 
 	assetScanID apitypes.AssetScanID
 }
@@ -510,7 +510,7 @@ func (v *VMClarityPresenter) ExportRootkitResult(ctx context.Context, res famili
 	return nil
 }
 
-func NewVMClarityPresenter(client *client.Client, id AssetScanID) (*VMClarityPresenter, error) {
+func NewVMClarityPresenter(client *apiclient.Client, id AssetScanID) (*VMClarityPresenter, error) {
 	if client == nil {
 		return nil, errors.New("API client must not be nil")
 	}

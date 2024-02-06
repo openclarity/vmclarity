@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/openclarity/vmclarity/api/client"
+	apiclient "github.com/openclarity/vmclarity/api/client"
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/cli/pkg/families"
 	"github.com/openclarity/vmclarity/cli/pkg/families/types"
@@ -38,7 +38,7 @@ const (
 type AssetScanID = apitypes.AssetScanID
 
 type VMClarityState struct {
-	client *client.Client
+	client *apiclient.Client
 
 	assetScanID apitypes.AssetScanID
 }
@@ -389,7 +389,7 @@ func (v *VMClarityState) IsAborted(ctx context.Context) (bool, error) {
 	return false, nil
 }
 
-func NewVMClarityState(client *client.Client, id AssetScanID) (*VMClarityState, error) {
+func NewVMClarityState(client *apiclient.Client, id AssetScanID) (*VMClarityState, error) {
 	if client == nil {
 		return nil, errors.New("API client must not be nil")
 	}
