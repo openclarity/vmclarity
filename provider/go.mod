@@ -453,6 +453,7 @@ replace helm.sh/helm/v3 => github.com/zregvart/helm/v3 v3.0.0-20240102124916-a62
 
 replace (
 	github.com/openclarity/vmclarity/api/types => ../api/types
+	github.com/openclarity/vmclarity/api/client => ../api/client
 	github.com/openclarity/vmclarity/cli => ../cli
 	github.com/openclarity/vmclarity/containerruntimediscovery/client => ../containerruntimediscovery/client
 	github.com/openclarity/vmclarity/containerruntimediscovery/types => ../containerruntimediscovery/types
