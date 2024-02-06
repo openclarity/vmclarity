@@ -156,13 +156,13 @@ $(VENDORMODULES):
 .PHONY: gomod-vendor
 gomod-vendor: $(VENDORMODULES) # Make vendored copy of dependencies for all modules
 
-LICENSECHECKMODULES = $(GOMODULES)
+LICENSECHECKMODULES = $(addprefix license-check-, $(GOMODULES))
 
 $(LICENSECHECKMODULES):
 	cd $(@:license-check-%=%) && "$(LICENSEI_BIN)" check --config "$(LICENSEI_CONFIG)"
 
 .PHONY: license-check
-license-check: bin/licensei license-cache $(LICENSECHECKMODULES) ## Check licenses for software components
+license-check: bin/licensei $(LICENSECHECKMODULES) ## Check licenses for software components
 
 LICENSECACHEMODULES = $(addprefix license-cache-, $(GOMODULES))
 
