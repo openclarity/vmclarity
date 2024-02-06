@@ -24,22 +24,22 @@ import (
 )
 
 type UIBackendClient struct {
-	apiClient ClientWithResponsesInterface
+	api ClientWithResponsesInterface
 }
 
 func New(serverAddress string) (*UIBackendClient, error) {
-	apiClient, err := NewClientWithResponses(serverAddress)
+	api, err := NewClientWithResponses(serverAddress)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create VMClarity API client. serverAddress=%v: %w", serverAddress, err)
 	}
 
 	return &UIBackendClient{
-		apiClient: apiClient,
+		api: api,
 	}, nil
 }
 
 func (b *UIBackendClient) GetDashboardRiskiestAssets(ctx context.Context) (*types.RiskiestAssets, error) {
-	resp, err := b.apiClient.GetDashboardRiskiestAssetsWithResponse(ctx)
+	resp, err := b.api.GetDashboardRiskiestAssetsWithResponse(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get dashboard riskiest assets: %w", err)
 	}
@@ -59,7 +59,7 @@ func (b *UIBackendClient) GetDashboardRiskiestAssets(ctx context.Context) (*type
 }
 
 func (b *UIBackendClient) GetDashboardRiskiestRegions(ctx context.Context) (*types.RiskiestRegions, error) {
-	resp, err := b.apiClient.GetDashboardRiskiestRegionsWithResponse(ctx)
+	resp, err := b.api.GetDashboardRiskiestRegionsWithResponse(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get dashboard riskiest regions: %w", err)
 	}
@@ -79,7 +79,7 @@ func (b *UIBackendClient) GetDashboardRiskiestRegions(ctx context.Context) (*typ
 }
 
 func (b *UIBackendClient) GetDashboardFindingsImpact(ctx context.Context) (*types.FindingsImpact, error) {
-	resp, err := b.apiClient.GetDashboardFindingsImpactWithResponse(ctx)
+	resp, err := b.api.GetDashboardFindingsImpactWithResponse(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get dashboard findings trends: %w", err)
 	}
@@ -99,7 +99,7 @@ func (b *UIBackendClient) GetDashboardFindingsImpact(ctx context.Context) (*type
 }
 
 func (b *UIBackendClient) GetDashboardFindingsTrends(ctx context.Context, params types.GetDashboardFindingsTrendsParams) (*[]types.FindingTrends, error) {
-	resp, err := b.apiClient.GetDashboardFindingsTrendsWithResponse(ctx, &params)
+	resp, err := b.api.GetDashboardFindingsTrendsWithResponse(ctx, &params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get dashboard findings trends: %w", err)
 	}
