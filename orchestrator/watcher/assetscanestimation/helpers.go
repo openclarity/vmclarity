@@ -40,7 +40,7 @@ func (w *Watcher) getLatestAssetScanStats(ctx context.Context, asset *types.Asse
 			Top:     utils.PointerTo(1), // get the latest asset scan for this family
 			OrderBy: utils.PointerTo("status/lastTransitionTime DESC"),
 		}
-		res, err := w.backend.GetAssetScans(ctx, params)
+		res, err := w.client.GetAssetScans(ctx, params)
 		if err != nil {
 			logrus.Errorf("Failed to get asset scans for %s. Omitting stats: %v", family, err)
 			continue

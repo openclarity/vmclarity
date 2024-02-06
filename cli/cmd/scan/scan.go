@@ -205,7 +205,7 @@ func newCli(config *families.Config, server, assetScanID, output string) (*cli.C
 	}
 
 	if server != "" {
-		var client *apiclient.BackendClient
+		var client *apiclient.Client
 		var p presenter.Presenter
 
 		client, err = apiclient.New(server)

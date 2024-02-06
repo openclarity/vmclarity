@@ -37,7 +37,7 @@ type (
 
 func New(c Config) *Watcher {
 	return &Watcher{
-		backend:          c.Backend,
+		client:           c.Client,
 		provider:         c.Provider,
 		scannerConfig:    c.ScannerConfig,
 		pollPeriod:       c.PollPeriod,
@@ -49,7 +49,7 @@ func New(c Config) *Watcher {
 }
 
 type Watcher struct {
-	backend          *client.BackendClient
+	client           *client.Client
 	provider         provider.Provider
 	scannerConfig    ScannerConfig
 	pollPeriod       time.Duration
@@ -92,7 +92,7 @@ func (w *Watcher) GetAssetScans(ctx context.Context) ([]AssetScanReconcileEvent,
 		Select: &selector,
 		Count:  utils.PointerTo(true),
 	}
-	assetScans, err := w.backend.GetAssetScans(ctx, params)
+	assetScans, err := w.client.GetAssetScans(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get AssetScans: %w", err)
 	}
@@ -139,7 +139,7 @@ func (w *Watcher) Reconcile(ctx context.Context, event AssetScanReconcileEvent) 
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithFields(event.ToFields())
 	ctx = log.SetLoggerForContext(ctx, logger)
 
-	assetScan, err := w.backend.GetAssetScan(ctx, event.AssetScanID, types.GetAssetScansAssetScanIDParams{
+	assetScan, err := w.client.GetAssetScan(ctx, event.AssetScanID, types.GetAssetScansAssetScanIDParams{
 		Expand: utils.PointerTo("scan,asset"),
 	})
 	if err != nil {
@@ -197,7 +197,7 @@ func (w *Watcher) reconcilePending(ctx context.Context, assetScan *types.AssetSc
 		// TODO(chrisgacsal): the number of concurrent scans needs to be part of the provider config and handled there
 		filter := fmt.Sprintf("scan/id eq '%s' and status/state ne '%s' and status/state ne '%s' and status/state ne '%s' and resourceCleanupStatus/state eq '%s'",
 			assetScan.Scan.Id, types.AssetScanStatusStateDone, types.AssetScanStatusStateFailed, types.AssetScanStatusStatePending, types.ResourceCleanupStatusStatePending)
-		assetScans, err := w.backend.GetAssetScans(ctx, types.GetAssetScansParams{
+		assetScans, err := w.client.GetAssetScans(ctx, types.GetAssetScansParams{
 			Filter: utils.PointerTo(filter),
 			Count:  utils.PointerTo(true),
 			Top:    utils.PointerTo(0),
@@ -230,7 +230,7 @@ func (w *Watcher) reconcilePending(ctx context.Context, assetScan *types.AssetSc
 	assetScanPatch := types.AssetScan{
 		Status: assetScan.Status,
 	}
-	err := w.backend.PatchAssetScan(ctx, assetScanPatch, assetScanID)
+	err := w.client.PatchAssetScan(ctx, assetScanPatch, assetScanID)
 	if err != nil {
 		return fmt.Errorf("failed to update AssetScan. AssetScan=%s: %w", assetScanID, err)
 	}
@@ -300,7 +300,7 @@ func (w *Watcher) reconcileScheduled(ctx context.Context, assetScan *types.Asset
 	assetScanPatch := types.AssetScan{
 		Status: assetScan.Status,
 	}
-	err = w.backend.PatchAssetScan(ctx, assetScanPatch, assetScanID)
+	err = w.client.PatchAssetScan(ctx, assetScanPatch, assetScanID)
 	if err != nil {
 		return fmt.Errorf("failed to update AssetScan. AssetScan=%s: %w", assetScanID, err)
 	}
@@ -354,7 +354,7 @@ func (w *Watcher) cleanupResources(ctx context.Context, assetScan *types.AssetSc
 		fallthrough
 	default:
 		// Get Asset
-		asset, err := w.backend.GetAsset(ctx, assetScan.Asset.Id, types.GetAssetsAssetIDParams{
+		asset, err := w.client.GetAsset(ctx, assetScan.Asset.Id, types.GetAssetsAssetIDParams{
 			Select: utils.PointerTo("id,assetInfo"),
 		})
 		if err != nil {
@@ -408,7 +408,7 @@ func (w *Watcher) cleanupResources(ctx context.Context, assetScan *types.AssetSc
 	assetScanPatch := types.AssetScan{
 		ResourceCleanupStatus: assetScan.ResourceCleanupStatus,
 	}
-	if err := w.backend.PatchAssetScan(ctx, assetScanPatch, assetScanID); err != nil {
+	if err := w.client.PatchAssetScan(ctx, assetScanPatch, assetScanID); err != nil {
 		return fmt.Errorf("failed to patch for AssetScan. AssetScanID=%s: %w", assetScanID, err)
 	}
 
@@ -451,7 +451,7 @@ func (w *Watcher) reconcileAborted(ctx context.Context, assetScan *types.AssetSc
 	assetScanPatch := types.AssetScan{
 		Status: assetScan.Status,
 	}
-	err := w.backend.PatchAssetScan(ctx, assetScanPatch, assetScanID)
+	err := w.client.PatchAssetScan(ctx, assetScanPatch, assetScanID)
 	if err != nil {
 		return fmt.Errorf("failed to update AssetScan. AssetScan=%s: %w", assetScanID, err)
 	}

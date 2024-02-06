@@ -36,7 +36,7 @@ type (
 
 func New(c Config) *Watcher {
 	return &Watcher{
-		backend:          c.Backend,
+		client:           c.Client,
 		pollPeriod:       c.PollPeriod,
 		reconcileTimeout: c.ReconcileTimeout,
 		queue:            common.NewQueue[ScanConfigReconcileEvent](),
@@ -44,7 +44,7 @@ func New(c Config) *Watcher {
 }
 
 type Watcher struct {
-	backend          *client.BackendClient
+	client           *client.Client
 	pollPeriod       time.Duration
 	reconcileTimeout time.Duration
 
@@ -78,7 +78,7 @@ func (w *Watcher) GetScanConfigs(ctx context.Context) ([]ScanConfigReconcileEven
 		Filter: utils.PointerTo("disabled eq null or disabled eq false"),
 		Select: utils.PointerTo("id"),
 	}
-	scanConfigs, err := w.backend.GetScanConfigs(ctx, params)
+	scanConfigs, err := w.client.GetScanConfigs(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get enabled ScanConfigs: %w", err)
 	}
@@ -111,7 +111,7 @@ func (w *Watcher) Reconcile(ctx context.Context, event ScanConfigReconcileEvent)
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithFields(event.ToFields())
 	ctx = log.SetLoggerForContext(ctx, logger)
 
-	scanConfig, err := w.backend.GetScanConfig(ctx, event.ScanConfigID, types.GetScanConfigsScanConfigIDParams{})
+	scanConfig, err := w.client.GetScanConfig(ctx, event.ScanConfigID, types.GetScanConfigsScanConfigIDParams{})
 	if err != nil || scanConfig == nil {
 		return fmt.Errorf("failed to fetch ScanConfig. Event=%s: %w", event, err)
 	}
@@ -160,7 +160,7 @@ func (w *Watcher) reconcileUnscheduled(ctx context.Context, scanConfig *types.Sc
 		Disabled: utils.PointerTo(true),
 	}
 
-	if err := w.backend.PatchScanConfig(ctx, *scanConfig.Id, scanConfigPatch); err != nil {
+	if err := w.client.PatchScanConfig(ctx, *scanConfig.Id, scanConfigPatch); err != nil {
 		return fmt.Errorf("failed to patch ScanConfig. ScanConfigID=%s: %w", *scanConfig.Id, err)
 	}
 
@@ -180,7 +180,7 @@ func (w *Watcher) reconcileDue(ctx context.Context, scanConfig *types.ScanConfig
 		},
 	}
 
-	if err := w.backend.PatchScanConfig(ctx, *scanConfig.Id, scanConfigPatch); err != nil {
+	if err := w.client.PatchScanConfig(ctx, *scanConfig.Id, scanConfigPatch); err != nil {
 		return fmt.Errorf("failed to update operation time for ScanConfig. ScanConfigID=%s: %w", *scanConfig.Id, err)
 	}
 
@@ -192,7 +192,7 @@ func (w *Watcher) createScan(ctx context.Context, scanConfig *types.ScanConfig) 
 
 	filter := fmt.Sprintf("scanConfig/id eq '%s' and status/state ne '%s' and status/state ne '%s'", *scanConfig.Id,
 		types.ScanStatusStateDone, types.ScanStatusStateFailed)
-	scans, err := w.backend.GetScans(ctx, types.GetScansParams{
+	scans, err := w.client.GetScans(ctx, types.GetScansParams{
 		Filter: utils.PointerTo(filter),
 		Select: utils.PointerTo("id"),
 		Count:  utils.PointerTo(true),
@@ -216,7 +216,7 @@ func (w *Watcher) createScan(ctx context.Context, scanConfig *types.ScanConfig) 
 	scan := newScanFromScanConfig(scanConfig)
 	scan.StartTime = utils.PointerTo(time.Now())
 
-	_, err = w.backend.PostScan(ctx, *scan)
+	_, err = w.client.PostScan(ctx, *scan)
 	if err != nil {
 		var conflictErr client.ScanConflictError
 		if errors.As(err, &conflictErr) {
@@ -240,7 +240,7 @@ func (w *Watcher) reconcileOverdue(ctx context.Context, scanConfig *types.ScanCo
 		},
 	}
 
-	if err := w.backend.PatchScanConfig(ctx, *scanConfig.Id, scanConfigPatch); err != nil {
+	if err := w.client.PatchScanConfig(ctx, *scanConfig.Id, scanConfigPatch); err != nil {
 		return fmt.Errorf("failed to update operation time for ScanConfig with %s id: %w", *scanConfig.Id, err)
 	}
 

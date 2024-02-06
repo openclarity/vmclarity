@@ -67,14 +67,14 @@ func Run(ctx context.Context, config *Config) error {
 // NewWithProvider returns an Orchestrator initialized using the p provider.Provider.
 // Use this method when Orchestrator needs to rely on custom provider.Provider implementation.
 // E.g. End-to-End testing.
-func NewWithProvider(config *Config, p provider.Provider, b *client.BackendClient) (*Orchestrator, error) {
-	scanConfigWatcherConfig := config.ScanConfigWatcherConfig.WithBackendClient(b)
-	discoveryConfig := config.DiscoveryConfig.WithBackendClient(b).WithProviderClient(p)
-	scanWatcherConfig := config.ScanWatcherConfig.WithBackendClient(b).WithProviderClient(p)
-	assetScanWatcherConfig := config.AssetScanWatcherConfig.WithBackendClient(b).WithProviderClient(p)
-	assetScanProcessorConfig := config.AssetScanProcessorConfig.WithBackendClient(b)
-	assetScanEstimationWatcherConfig := config.AssetScanEstimationWatcherConfig.WithBackendClient(b).WithProviderClient(p)
-	scanEstimationWatcherConfig := config.ScanEstimationWatcherConfig.WithBackendClient(b).WithProviderClient(p)
+func NewWithProvider(config *Config, p provider.Provider, c *client.Client) (*Orchestrator, error) {
+	scanConfigWatcherConfig := config.ScanConfigWatcherConfig.WithBackendClient(c)
+	discoveryConfig := config.DiscoveryConfig.WithBackendClient(c).WithProviderClient(p)
+	scanWatcherConfig := config.ScanWatcherConfig.WithBackendClient(c).WithProviderClient(p)
+	assetScanWatcherConfig := config.AssetScanWatcherConfig.WithBackendClient(c).WithProviderClient(p)
+	assetScanProcessorConfig := config.AssetScanProcessorConfig.WithBackendClient(c)
+	assetScanEstimationWatcherConfig := config.AssetScanEstimationWatcherConfig.WithBackendClient(c).WithProviderClient(p)
+	scanEstimationWatcherConfig := config.ScanEstimationWatcherConfig.WithBackendClient(c).WithProviderClient(p)
 
 	return &Orchestrator{
 		controllers: []Controller{
@@ -92,9 +92,9 @@ func NewWithProvider(config *Config, p provider.Provider, b *client.BackendClien
 
 // New returns a new Orchestrator initialized using the provided configuration.
 func New(ctx context.Context, config *Config) (*Orchestrator, error) {
-	backendClient, err := client.New(config.APIServerAddress)
+	client, err := client.New(config.APIServerAddress)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create a backend client: %w", err)
+		return nil, fmt.Errorf("failed to create an API client: %w", err)
 	}
 
 	p, err := NewProvider(ctx, config.ProviderKind)
@@ -102,7 +102,7 @@ func New(ctx context.Context, config *Config) (*Orchestrator, error) {
 		return nil, fmt.Errorf("failed to initialize provider. Provider=%s: %w", config.ProviderKind, err)
 	}
 
-	return NewWithProvider(config, p, backendClient)
+	return NewWithProvider(config, p, client)
 }
 
 // Start makes the Orchestrator to start all Controller(s).

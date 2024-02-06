@@ -30,14 +30,14 @@ import (
 )
 
 type AssetScanProcessor struct {
-	client           *client.BackendClient
+	client           *client.Client
 	pollPeriod       time.Duration
 	reconcileTimeout time.Duration
 }
 
 func New(config Config) *AssetScanProcessor {
 	return &AssetScanProcessor{
-		client:           config.Backend,
+		client:           config.Client,
 		pollPeriod:       config.PollPeriod,
 		reconcileTimeout: config.ReconcileTimeout,
 	}

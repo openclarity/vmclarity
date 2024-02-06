@@ -36,8 +36,8 @@ var (
 	testEnv types.Environment
 	cfg     *config.Config
 
-	client   *apiclient.BackendClient
-	uiClient *uibackendclient.UIBackendClient
+	client   *apiclient.Client
+	uiClient *uibackendclient.Client
 )
 
 func TestEndToEnd(t *testing.T) {

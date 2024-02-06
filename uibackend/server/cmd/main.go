@@ -105,11 +105,11 @@ func runCommand(cmd *cobra.Command, _ []string) {
 	healthServer.Start()
 	healthServer.SetIsReady(false)
 
-	backendClient, err := client.New(config.APIServerAddress)
+	client, err := client.New(config.APIServerAddress)
 	if err != nil {
-		logger.Fatalf("Failed to create a backend client: %v", err)
+		logger.Fatalf("Failed to create an API client: %v", err)
 	}
-	handler := server.CreateServer(backendClient)
+	handler := server.CreateServer(client)
 	handler.StartBackgroundProcessing(ctx)
 
 	swagger, err := apiserver.GetSwagger()

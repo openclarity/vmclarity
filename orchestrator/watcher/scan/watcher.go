@@ -38,7 +38,7 @@ type (
 
 func New(c Config) *Watcher {
 	return &Watcher{
-		backend:          c.Backend,
+		client:           c.Client,
 		provider:         c.Provider,
 		pollPeriod:       c.PollPeriod,
 		reconcileTimeout: c.ReconcileTimeout,
@@ -48,7 +48,7 @@ func New(c Config) *Watcher {
 }
 
 type Watcher struct {
-	backend          *client.BackendClient
+	client           *client.Client
 	provider         provider.Provider
 	pollPeriod       time.Duration
 	reconcileTimeout time.Duration
@@ -88,7 +88,7 @@ func (w *Watcher) GetRunningScans(ctx context.Context) ([]ScanReconcileEvent, er
 		Select: &selector,
 		Count:  utils.PointerTo(true),
 	}
-	scans, err := w.backend.GetScans(ctx, params)
+	scans, err := w.client.GetScans(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get running scans: %w", err)
 	}
@@ -126,7 +126,7 @@ func (w *Watcher) Reconcile(ctx context.Context, event ScanReconcileEvent) error
 	params := types.GetScansScanIDParams{
 		Expand: utils.PointerTo("scanConfig"),
 	}
-	scan, err := w.backend.GetScan(ctx, event.ScanID, params)
+	scan, err := w.client.GetScan(ctx, event.ScanID, params)
 	if err != nil || scan == nil {
 		return fmt.Errorf("failed to fetch Scan. ScanID=%s: %w", event.ScanID, err)
 	}
@@ -138,7 +138,7 @@ func (w *Watcher) Reconcile(ctx context.Context, event ScanReconcileEvent) error
 			utils.PointerTo("Scan has timed out"),
 		)
 
-		err = w.backend.PatchScan(ctx, *scan.Id, &types.Scan{Status: scan.Status})
+		err = w.client.PatchScan(ctx, *scan.Id, &types.Scan{Status: scan.Status})
 		if err != nil {
 			return fmt.Errorf("failed to patch Scan. ScanID=%s: %w", event.ScanID, err)
 		}
@@ -204,7 +204,7 @@ func (w *Watcher) reconcilePending(ctx context.Context, scan *types.Scan) error 
 		assetFilter = fmt.Sprintf("(%s) and (%s)", assetFilter, scope)
 	}
 
-	assets, err := w.backend.GetAssets(ctx, types.GetAssetsParams{
+	assets, err := w.client.GetAssets(ctx, types.GetAssetsParams{
 		Filter: &assetFilter,
 		Select: utils.PointerTo("id"),
 	})
@@ -239,7 +239,7 @@ func (w *Watcher) reconcilePending(ctx context.Context, scan *types.Scan) error 
 		Status:   scan.Status,
 	}
 
-	if err = w.backend.PatchScan(ctx, scanID, scanPatch); err != nil {
+	if err = w.client.PatchScan(ctx, scanID, scanPatch); err != nil {
 		return fmt.Errorf("failed to patch Scan. ScanID=%s: %w", scanID, err)
 	}
 
@@ -271,7 +271,7 @@ func (w *Watcher) reconcileDiscovered(ctx context.Context, scan *types.Scan) err
 		Summary:  scan.Summary,
 		AssetIDs: scan.AssetIDs,
 	}
-	err := w.backend.PatchScan(ctx, scanID, scanPatch)
+	err := w.client.PatchScan(ctx, scanID, scanPatch)
 	if err != nil {
 		return fmt.Errorf("failed to update Scan. ScanID=%s: %w", scanID, err)
 	}
@@ -332,7 +332,7 @@ func (w *Watcher) createAssetScanForAsset(ctx context.Context, scan *types.Scan,
 		return fmt.Errorf("failed to generate new AssetScan for Scan. ScanID=%s, AssetID=%s: %w", *scan.Id, assetID, err)
 	}
 
-	_, err = w.backend.PostAssetScan(ctx, *assetScanData)
+	_, err = w.client.PostAssetScan(ctx, *assetScanData)
 	if err != nil {
 		var conErr client.AssetScanConflictError
 		if errors.As(err, &conErr) {
@@ -361,7 +361,7 @@ func (w *Watcher) reconcileInProgress(ctx context.Context, scan *types.Scan) err
 	// FIXME(chrisgacsal):a add pagination to API queries in poller/reconciler logic by using Top/Skip
 	filter := fmt.Sprintf("scan/id eq '%s'", scanID)
 	selector := "id,status,summary"
-	assetScans, err := w.backend.GetAssetScans(ctx, types.GetAssetScansParams{
+	assetScans, err := w.client.GetAssetScans(ctx, types.GetAssetScansParams{
 		Filter: &filter,
 		Select: &selector,
 		Count:  utils.PointerTo(true),
@@ -433,7 +433,7 @@ func (w *Watcher) reconcileInProgress(ctx context.Context, scan *types.Scan) err
 		EndTime:  scan.EndTime,
 		AssetIDs: scan.AssetIDs,
 	}
-	err = w.backend.PatchScan(ctx, scanID, scanPatch)
+	err = w.client.PatchScan(ctx, scanID, scanPatch)
 	if err != nil {
 		return fmt.Errorf("failed to patch Scan. ScanID=%s: %w", scanID, err)
 	}
@@ -462,7 +462,7 @@ func (w *Watcher) reconcileAborted(ctx context.Context, scan *types.Scan) error 
 		Select: &selector,
 	}
 
-	assetScans, err := w.backend.GetAssetScans(ctx, params)
+	assetScans, err := w.client.GetAssetScans(ctx, params)
 	if err != nil {
 		return fmt.Errorf("failed to fetch AssetScan(s) for Scan. ScanID=%s: %w", scanID, err)
 	}
@@ -488,7 +488,7 @@ func (w *Watcher) reconcileAborted(ctx context.Context, scan *types.Scan) error 
 					),
 				}
 
-				err = w.backend.PatchAssetScan(ctx, as, assetScanID)
+				err = w.client.PatchAssetScan(ctx, as, assetScanID)
 				if err != nil {
 					logger.WithField("AssetScanID", assetScanID).Error("Failed to patch AssetScan")
 					reconciliationFailed = true
@@ -518,7 +518,7 @@ func (w *Watcher) reconcileAborted(ctx context.Context, scan *types.Scan) error 
 		EndTime:  scan.EndTime,
 		AssetIDs: scan.AssetIDs,
 	}
-	err = w.backend.PatchScan(ctx, scanID, scanPatch)
+	err = w.client.PatchScan(ctx, scanID, scanPatch)
 	if err != nil {
 		return fmt.Errorf("failed to patch Scan. ScanID=%s: %w", scanID, err)
 	}

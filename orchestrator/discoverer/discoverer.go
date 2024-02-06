@@ -34,13 +34,13 @@ const (
 )
 
 type Discoverer struct {
-	backendClient  *client.BackendClient
+	client         *client.Client
 	providerClient provider.Provider
 }
 
 func New(config Config) *Discoverer {
 	return &Discoverer{
-		backendClient:  config.Backend,
+		client:         config.Client,
 		providerClient: config.Provider,
 	}
 }
@@ -110,7 +110,7 @@ func (d *Discoverer) DiscoverAndCreateAssets(ctx context.Context) error {
 			LastSeen:  &discoveryTime,
 			FirstSeen: &discoveryTime,
 		}
-		_, err := d.backendClient.PostAsset(ctx, assetData)
+		_, err := d.client.PostAsset(ctx, assetData)
 		if err == nil {
 			continue
 		}
@@ -142,7 +142,7 @@ func (d *Discoverer) DiscoverAndCreateAssets(ctx context.Context) error {
 			AssetInfo: &handledAssetType,
 			LastSeen:  &discoveryTime,
 		}
-		err = d.backendClient.PatchAsset(ctx, assetData, *conflictError.ConflictingAsset.Id)
+		err = d.client.PatchAsset(ctx, assetData, *conflictError.ConflictingAsset.Id)
 		if err != nil {
 			failedPatchAssets[*conflictError.ConflictingAsset.Id] = struct{}{}
 			errs = append(errs, fmt.Errorf("failed to patch asset: %w", err))
@@ -161,7 +161,7 @@ func (d *Discoverer) DiscoverAndCreateAssets(ctx context.Context) error {
 	// need to filter these assets by provider so that we don't find assets
 	// which don't belong to us. We need to give the provider some kind of
 	// identity in this case.
-	assetResp, err := d.backendClient.GetAssets(ctx, types.GetAssetsParams{
+	assetResp, err := d.client.GetAssets(ctx, types.GetAssetsParams{
 		Filter: utils.PointerTo(fmt.Sprintf("terminatedOn eq null and (lastSeen eq null or lastSeen lt %s)", discoveryTime.Format(time.RFC3339))),
 		Select: utils.PointerTo("id"),
 	})
@@ -181,7 +181,7 @@ func (d *Discoverer) DiscoverAndCreateAssets(ctx context.Context) error {
 			TerminatedOn: &discoveryTime,
 		}
 
-		err := d.backendClient.PatchAsset(ctx, assetData, *asset.Id)
+		err := d.client.PatchAsset(ctx, assetData, *asset.Id)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to patch asset: %w", err))
 		}

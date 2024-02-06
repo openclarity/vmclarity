@@ -38,7 +38,7 @@ import (
 type AssetScanID = apitypes.AssetScanID
 
 type VMClarityPresenter struct {
-	client *client.BackendClient
+	client *client.Client
 
 	assetScanID apitypes.AssetScanID
 }
@@ -510,9 +510,9 @@ func (v *VMClarityPresenter) ExportRootkitResult(ctx context.Context, res famili
 	return nil
 }
 
-func NewVMClarityPresenter(client *client.BackendClient, id AssetScanID) (*VMClarityPresenter, error) {
+func NewVMClarityPresenter(client *client.Client, id AssetScanID) (*VMClarityPresenter, error) {
 	if client == nil {
-		return nil, errors.New("backend client must not be nil")
+		return nil, errors.New("API client must not be nil")
 	}
 	return &VMClarityPresenter{
 		client:      client,

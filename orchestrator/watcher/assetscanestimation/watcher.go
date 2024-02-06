@@ -37,7 +37,7 @@ type (
 
 func New(c Config) *Watcher {
 	return &Watcher{
-		backend:          c.Backend,
+		client:           c.Client,
 		provider:         c.Provider,
 		pollPeriod:       c.PollPeriod,
 		reconcileTimeout: c.ReconcileTimeout,
@@ -46,7 +46,7 @@ func New(c Config) *Watcher {
 }
 
 type Watcher struct {
-	backend          *client.BackendClient
+	client           *client.Client
 	provider         provider.Provider
 	pollPeriod       time.Duration
 	reconcileTimeout time.Duration
@@ -86,7 +86,7 @@ func (w *Watcher) GetAssetScanEstimations(ctx context.Context) ([]AssetScanEstim
 		Select: &selector,
 		Count:  utils.PointerTo(true),
 	}
-	assetScanEstimations, err := w.backend.GetAssetScanEstimations(ctx, params)
+	assetScanEstimations, err := w.client.GetAssetScanEstimations(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get AssetScanEstimations: %w", err)
 	}
@@ -133,7 +133,7 @@ func (w *Watcher) Reconcile(ctx context.Context, event AssetScanEstimationReconc
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithFields(event.ToFields())
 	ctx = log.SetLoggerForContext(ctx, logger)
 
-	assetScanEstimation, err := w.backend.GetAssetScanEstimation(ctx, event.AssetScanEstimationID, types.GetAssetScanEstimationsAssetScanEstimationIDParams{
+	assetScanEstimation, err := w.client.GetAssetScanEstimation(ctx, event.AssetScanEstimationID, types.GetAssetScanEstimationsAssetScanEstimationIDParams{
 		Expand: utils.PointerTo("asset"),
 	})
 	if err != nil {
@@ -196,7 +196,7 @@ func (w *Watcher) reconcileDone(ctx context.Context, assetScanEstimation *types.
 				EndTime:                 assetScanEstimation.EndTime,
 				TTLSecondsAfterFinished: assetScanEstimation.TTLSecondsAfterFinished,
 			}
-			err := w.backend.PatchAssetScanEstimation(ctx, assetScanEstimationPatch, assetScanEstimationID)
+			err := w.client.PatchAssetScanEstimation(ctx, assetScanEstimationPatch, assetScanEstimationID)
 			if err != nil {
 				return fmt.Errorf("failed to patch AssetScanEstimation. AssetScanEstimationID=%v: %w", assetScanEstimationID, err)
 			}
@@ -205,7 +205,7 @@ func (w *Watcher) reconcileDone(ctx context.Context, assetScanEstimation *types.
 	}
 
 	if timeNow.After(*assetScanEstimation.DeleteAfter) {
-		err := w.backend.DeleteAssetScanEstimation(ctx, assetScanEstimationID)
+		err := w.client.DeleteAssetScanEstimation(ctx, assetScanEstimationID)
 		if err != nil {
 			return fmt.Errorf("failed to delete AssetScanEstimation. AssetScanEstimationID=%v: %w", assetScanEstimationID, err)
 		}
@@ -228,7 +228,7 @@ func (w *Watcher) reconcileNoState(ctx context.Context, assetScanEstimation *typ
 		),
 	}
 
-	err := w.backend.PatchAssetScanEstimation(ctx, assetScanEstimationPatch, assetScanEstimationID)
+	err := w.client.PatchAssetScanEstimation(ctx, assetScanEstimationPatch, assetScanEstimationID)
 	if err != nil {
 		return fmt.Errorf("failed to update AssetScanEstimation. AssetScanEstimationID=%v: %w", assetScanEstimationID, err)
 	}
@@ -305,7 +305,7 @@ func (w *Watcher) reconcilePending(ctx context.Context, assetScanEstimation *typ
 		Estimation:              assetScanEstimation.Estimation,
 		TTLSecondsAfterFinished: assetScanEstimation.TTLSecondsAfterFinished,
 	}
-	err = w.backend.PatchAssetScanEstimation(ctx, assetScanEstimationPatch, assetScanEstimationID)
+	err = w.client.PatchAssetScanEstimation(ctx, assetScanEstimationPatch, assetScanEstimationID)
 	if err != nil {
 		return fmt.Errorf("failed to update AssetScanEstimation. AssetScanEstimationID=%v: %w", assetScanEstimationID, err)
 	}
@@ -333,7 +333,7 @@ func (w *Watcher) reconcileAborted(ctx context.Context, assetScanEstimation *typ
 		),
 	}
 
-	err := w.backend.PatchAssetScanEstimation(ctx, assetScanEstimationPatch, assetScanEstimationID)
+	err := w.client.PatchAssetScanEstimation(ctx, assetScanEstimationPatch, assetScanEstimationID)
 	if err != nil {
 		return fmt.Errorf("failed to update AssetScanEstimation. AssetScanEstimation=%s: %w", assetScanEstimationID, err)
 	}

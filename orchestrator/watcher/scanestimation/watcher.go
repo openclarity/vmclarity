@@ -39,7 +39,7 @@ type (
 
 func New(c Config) *Watcher {
 	return &Watcher{
-		backend:               c.Backend,
+		client:                c.Client,
 		provider:              c.Provider,
 		pollPeriod:            c.PollPeriod,
 		reconcileTimeout:      c.ReconcileTimeout,
@@ -49,7 +49,7 @@ func New(c Config) *Watcher {
 }
 
 type Watcher struct {
-	backend               *client.BackendClient
+	client                *client.Client
 	provider              provider.Provider
 	pollPeriod            time.Duration
 	reconcileTimeout      time.Duration
@@ -89,7 +89,7 @@ func (w *Watcher) GetScanEstimations(ctx context.Context) ([]ScanEstimationRecon
 		Select: &selector,
 		Count:  utils.PointerTo(true),
 	}
-	scanEstimations, err := w.backend.GetScanEstimations(ctx, params)
+	scanEstimations, err := w.client.GetScanEstimations(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get running ScanEstimations: %w", err)
 	}
@@ -125,13 +125,13 @@ func (w *Watcher) Reconcile(ctx context.Context, event ScanEstimationReconcileEv
 	ctx = log.SetLoggerForContext(ctx, logger)
 
 	params := types.GetScanEstimationsScanEstimationIDParams{}
-	scanEstimation, err := w.backend.GetScanEstimation(ctx, event.ScanEstimationID, params)
+	scanEstimation, err := w.client.GetScanEstimation(ctx, event.ScanEstimationID, params)
 	if err != nil || scanEstimation == nil {
 		return fmt.Errorf("failed to fetch ScanEstimation. ScanEstimationID=%s: %w", event.ScanEstimationID, err)
 	}
 
 	if scanEstimation.IsTimedOut(w.scanEstimationTimeout) {
-		err = w.backend.PatchScanEstimation(ctx, *scanEstimation.Id, &types.ScanEstimation{
+		err = w.client.PatchScanEstimation(ctx, *scanEstimation.Id, &types.ScanEstimation{
 			Status: types.NewScanEstimationStatus(
 				types.ScanEstimationStatusStateFailed,
 				types.ScanEstimationStatusReasonTimeout,
@@ -208,7 +208,7 @@ func (w *Watcher) reconcileDone(ctx context.Context, scanEstimation *types.ScanE
 				EndTime:                 scanEstimation.EndTime,
 				TTLSecondsAfterFinished: scanEstimation.TTLSecondsAfterFinished,
 			}
-			err := w.backend.PatchScanEstimation(ctx, scanEstimationID, &scanEstimationPatch)
+			err := w.client.PatchScanEstimation(ctx, scanEstimationID, &scanEstimationPatch)
 			if err != nil {
 				return fmt.Errorf("failed to patch ScanEstimation. ScanEstimationID=%v: %w", scanEstimationID, err)
 			}
@@ -217,7 +217,7 @@ func (w *Watcher) reconcileDone(ctx context.Context, scanEstimation *types.ScanE
 	}
 
 	if timeNow.After(*scanEstimation.DeleteAfter) {
-		err := w.backend.DeleteScanEstimation(ctx, scanEstimationID)
+		err := w.client.DeleteScanEstimation(ctx, scanEstimationID)
 		if err != nil {
 			return fmt.Errorf("failed to delete ScanEstimation. ScanEstimationID=%v: %w", scanEstimationID, err)
 		}
@@ -239,7 +239,7 @@ func (w *Watcher) reconcileNoState(ctx context.Context, scanEstimation *types.Sc
 			nil,
 		),
 	}
-	err := w.backend.PatchScanEstimation(ctx, scanEstimationID, &scanEstimationPatch)
+	err := w.client.PatchScanEstimation(ctx, scanEstimationID, &scanEstimationPatch)
 	if err != nil {
 		return fmt.Errorf("failed to update ScanEstimation. ScanEstimationID=%v: %w", scanEstimationID, err)
 	}
@@ -273,7 +273,7 @@ func (w *Watcher) reconcilePending(ctx context.Context, scanEstimation *types.Sc
 		assetFilter = fmt.Sprintf("(%s) and (%s)", assetFilter, scope)
 	}
 
-	assets, err := w.backend.GetAssets(ctx, types.GetAssetsParams{
+	assets, err := w.client.GetAssets(ctx, types.GetAssetsParams{
 		Filter: &assetFilter,
 		Select: utils.PointerTo("id"),
 	})
@@ -319,7 +319,7 @@ func (w *Watcher) reconcilePending(ctx context.Context, scanEstimation *types.Sc
 		},
 	}
 
-	if err = w.backend.PatchScanEstimation(ctx, scanEstimationID, scanEstimationPatch); err != nil {
+	if err = w.client.PatchScanEstimation(ctx, scanEstimationID, scanEstimationPatch); err != nil {
 		return fmt.Errorf("failed to patch Scan estimation. ScanEstimationID=%s: %w", scanEstimationID, err)
 	}
 
@@ -352,7 +352,7 @@ func (w *Watcher) reconcileDiscovered(ctx context.Context, scanEstimation *types
 		AssetIDs:             scanEstimation.AssetIDs,
 		AssetScanEstimations: scanEstimation.AssetScanEstimations,
 	}
-	err := w.backend.PatchScanEstimation(ctx, scanEstimationID, scanEstimationPatch)
+	err := w.client.PatchScanEstimation(ctx, scanEstimationID, scanEstimationPatch)
 	if err != nil {
 		return fmt.Errorf("failed to update Scan estimation. ScanEstimationID=%s: %w", scanEstimationID, err)
 	}
@@ -442,7 +442,7 @@ func (w *Watcher) createAssetScanEstimationForAsset(ctx context.Context, scanEst
 		return fmt.Errorf("failed to generate new AssetScanEstimation for ScanEstimation. ScanEstimationID=%s, AssetID=%s: %w", *scanEstimation.Id, assetID, err)
 	}
 
-	ret, err := w.backend.PostAssetScanEstimation(ctx, assetScanEstimationData)
+	ret, err := w.client.PostAssetScanEstimation(ctx, assetScanEstimationData)
 	if err != nil {
 		var conErr client.AssetScanEstimationConflictError
 		if errors.As(err, &conErr) {
@@ -508,7 +508,7 @@ func (w *Watcher) reconcileInProgress(ctx context.Context, scanEstimation *types
 
 	filter := fmt.Sprintf("scanEstimation/id eq '%s'", scanEstimationID)
 	selector := "id,status,estimation"
-	assetScanEstimations, err := w.backend.GetAssetScanEstimations(ctx, types.GetAssetScanEstimationsParams{
+	assetScanEstimations, err := w.client.GetAssetScanEstimations(ctx, types.GetAssetScanEstimationsParams{
 		Filter: &filter,
 		Select: &selector,
 		Count:  utils.PointerTo(true),
@@ -587,7 +587,7 @@ func (w *Watcher) reconcileInProgress(ctx context.Context, scanEstimation *types
 		EndTime:     scanEstimation.EndTime,
 		AssetIDs:    scanEstimation.AssetIDs,
 	}
-	err = w.backend.PatchScanEstimation(ctx, scanEstimationID, scanEstimationPatch)
+	err = w.client.PatchScanEstimation(ctx, scanEstimationID, scanEstimationPatch)
 	if err != nil {
 		return fmt.Errorf("failed to patch ScanEstimation. ScanEstimationID=%s: %w", scanEstimationID, err)
 	}
@@ -651,7 +651,7 @@ func (w *Watcher) reconcileAborted(ctx context.Context, scanEstimation *types.Sc
 		Select: &selector,
 	}
 
-	assetScanEstimations, err := w.backend.GetAssetScanEstimations(ctx, params)
+	assetScanEstimations, err := w.client.GetAssetScanEstimations(ctx, params)
 	if err != nil {
 		return fmt.Errorf("failed to fetch AssetScanEstimation(s) for ScanEstimation. ScanEstimationID=%s: %w", scanEstimationID, err)
 	}
@@ -677,7 +677,7 @@ func (w *Watcher) reconcileAborted(ctx context.Context, scanEstimation *types.Sc
 					),
 				}
 
-				err = w.backend.PatchAssetScanEstimation(ctx, ase, assetScanEstimationID)
+				err = w.client.PatchAssetScanEstimation(ctx, ase, assetScanEstimationID)
 				if err != nil {
 					logger.WithField("AssetScanEstimationID", assetScanEstimationID).Error("Failed to patch AssetScanEstimation")
 					reconciliationFailed = true
@@ -706,7 +706,7 @@ func (w *Watcher) reconcileAborted(ctx context.Context, scanEstimation *types.Sc
 		),
 		AssetIDs: scanEstimation.AssetIDs,
 	}
-	err = w.backend.PatchScanEstimation(ctx, scanEstimationID, scanEstimationPatch)
+	err = w.client.PatchScanEstimation(ctx, scanEstimationID, scanEstimationPatch)
 	if err != nil {
 		return fmt.Errorf("failed to patch ScanEstimation. ScanEstimationID=%s: %w", scanEstimationID, err)
 	}
