@@ -205,12 +205,13 @@ test: $(TESTGOMODULES) ## Run Go unit tests
 ##@ Docker
 
 # Export params required in Docker Bake
+BAKE_ENV = DOCKER_REGISTRY=$(DOCKER_REGISTRY)
+BAKE_ENV += DOCKER_TAG=$(DOCKER_TAG)
+BAKE_ENV += VERSION=$(VERSION)
+BAKE_ENV += BUILD_TIMESTAMP=$(BUILD_TIMESTAMP)
+BAKE_ENV += COMMIT_HASH=$(COMMIT_HASH)
+
 BAKE_OPTS =
-BAKE_OPTS += --set *.args.DOCKER_REGISTRY=$(DOCKER_REGISTRY)
-BAKE_OPTS += --set *.args.DOCKER_TAG=$(DOCKER_TAG)
-BAKE_OPTS += --set *.args.VERSION=$(VERSION)
-BAKE_OPTS += --set *.args.BUILD_TIMESTAMP=$(BUILD_TIMESTAMP)
-BAKE_OPTS += --set *.args.COMMIT_HASH=$(COMMIT_HASH)
 ifneq ($(strip $(VMCLARITY_TOOLS_BASE)),)
 	BAKE_OPTS += --set vmclarity-cli.args.VMCLARITY_TOOLS_BASE=$(VMCLARITY_TOOLS_BASE)
 endif
@@ -218,79 +219,79 @@ endif
 .PHONY: docker
 docker: ## Build All Docker images
 	$(info Building all docker images ...)
-	docker buildx bake $(BAKE_OPTS)
+	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS)
 
 .PHONY: docker-apiserver
 docker-apiserver: ## Build API Server container image
 	$(info Building apiserver docker image ...)
-	docker buildx bake $(BAKE_OPTS) vmclarity-apiserver
+	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) vmclarity-apiserver
 
 .PHONY: docker-cli
 docker-cli: ## Build CLI container image
 	$(info Building cli docker image ...)
-	docker buildx bake $(BAKE_OPTS) vmclarity-cli
+	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) vmclarity-cli
 
 .PHONY: docker-orchestrator
 docker-orchestrator: ## Build Orchestrator container image
 	$(info Building orchestrator docker image ...)
-	docker buildx bake $(BAKE_OPTS) vmclarity-orchestrator
+	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) vmclarity-orchestrator
 
 .PHONY: docker-ui
 docker-ui: ## Build UI container image
 	$(info Building ui docker image ...)
-	docker buildx bake $(BAKE_OPTS) vmclarity-ui
+	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) vmclarity-ui
 
 .PHONY: docker-ui-backend
 docker-ui-backend: ## Build UI Backend container image
 	$(info Building ui-backend docker image ...)
-	docker buildx bake $(BAKE_OPTS) vmclarity-ui-backend
+	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) vmclarity-ui-backend
 
 .PHONY: docker-cr-discovery-server
 docker-cr-discovery-server: ## Build K8S Image Resolver Docker image
 	$(info Building cr-discovery-server docker image ...)
-	docker buildx bake $(BAKE_OPTS) vmclarity-cr-discovery-server
+	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) vmclarity-cr-discovery-server
 
 .PHONY: push-docker
 push-docker: BAKE_OPTS += --set *.output=type=registry
 push-docker: ## Build and Push All Docker images
 	$(info Publishing all docker images ...)
-	docker buildx bake $(BAKE_OPTS)
+	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS)
 
 .PHONY: push-docker-apiserver
 push-docker-apiserver: BAKE_OPTS += --set *.output=type=registry
 push-docker-apiserver: ## Build and push API Server container image
 	$(info Publishing apiserver docker image ...)
-	docker buildx bake $(BAKE_OPTS) vmclarity-apiserver
+	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) vmclarity-apiserver
 
 .PHONY: push-docker-cli
 push-docker-cli: BAKE_OPTS += --set *.output=type=registry
 push-docker-cli: ## Build and push CLI Docker image
 	$(info Publishing cli docker image ...)
-	docker buildx bake $(BAKE_OPTS) vmclarity-cli
+	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) vmclarity-cli
 
 .PHONY: push-docker-orchestrator
 push-docker-orchestrator: BAKE_OPTS += --set *.output=type=registry
 push-docker-orchestrator: ## Build and push Orchestrator container image
 	$(info Publishing orchestrator docker image ...)
-	docker buildx bake $(BAKE_OPTS) vmclarity-orchestrator
+	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) vmclarity-orchestrator
 
 .PHONY: push-docker-ui
 push-docker-ui: BAKE_OPTS += --set *.output=type=registry
 push-docker-ui: ## Build and Push UI container image
 	$(info Publishing ui docker image ...)
-	docker buildx bake $(BAKE_OPTS) vmclarity-ui
+	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) vmclarity-ui
 
 .PHONY: push-docker-ui-backend
 push-docker-ui-backend: BAKE_OPTS += --set *.output=type=registry
 push-docker-ui-backend: ## Build and push UI Backend container image
 	$(info Publishing ui-backend docker image ...)
-	docker buildx bake $(BAKE_OPTS) vmclarity-ui-backend
+	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) vmclarity-ui-backend
 
 .PHONY: push-docker-cr-discovery-server
 push-docker-cr-discovery-server: BAKE_OPTS += --set *.output=type=registry
 push-docker-cr-discovery-server: ## Build and Push K8S Image Resolver Docker image
 	@echo "Publishing cr-discovery-server docker image ..."
-	docker buildx bake $(BAKE_OPTS) vmclarity-cr-discovery-server
+	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) vmclarity-cr-discovery-server
 
 ##@ Code generation
 
