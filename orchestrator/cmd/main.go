@@ -25,7 +25,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	orchestrator "github.com/openclarity/vmclarity/orchestrator/pkg"
+	"github.com/openclarity/vmclarity/orchestrator"
 	"github.com/openclarity/vmclarity/utils/log"
 	"github.com/openclarity/vmclarity/utils/version"
 )
