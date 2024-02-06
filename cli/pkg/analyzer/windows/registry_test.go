@@ -18,6 +18,7 @@ package windows
 import (
 	"encoding/json"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"testing"
 )
 
@@ -25,7 +26,7 @@ import (
 const drivePath = "/media/ramiz-polic/System"
 
 func TestRegistry(t *testing.T) {
-	reg, err := NewRegistry(drivePath)
+	reg, err := NewRegistry(drivePath, log.NewEntry(log.New()))
 	if err != nil {
 		t.Fatalf("should not error")
 	}

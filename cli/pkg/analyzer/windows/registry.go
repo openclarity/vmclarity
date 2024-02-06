@@ -15,212 +15,216 @@
 
 package windows
 
-// TODO(ramizpolic): This is an MVP and will be heavily changed
-
 import (
 	"fmt"
+	"github.com/openclarity/vmclarity/cli/pkg/utils"
 	log "github.com/sirupsen/logrus"
 	"os"
 	"path"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 	"www.velocidex.com/golang/regparser"
 )
 
+// Documentation about registries, its structure and further details can be found at:
+// - https://en.wikipedia.org/wiki/Windows_Registry
+// - https://techdirectarchive.com/2020/02/07/how-to-check-if-windows-updates-were-installed-on-your-device-via-the-registry-editor/
+// - https://jgmes.com/webstart/library/qr_windowsxp.htm#:~:text=In%20Windows%20XP%2C%20the%20registry,corresponding%20location%20of%20each%20hive.
+
 type Registry struct {
-	drivePath    string
-	registryPath string
-	registry     *regparser.Registry
-	logger       *log.Entry
+	drivePath   string              // root path to Windows drive
+	softwareReg *regparser.Registry // HKEY_LOCAL_MACHINE/SOFTWARE registry
+	cleanup     func() error
+	logger      *log.Entry
 }
 
 func NewRegistry(drivePath string, logger *log.Entry) (*Registry, error) {
-	registryPath := filepath.Join(drivePath, "Windows/System32/config/SOFTWARE")
-	regFile, err := os.Open(registryPath)
+	// Windows XP has a different location for the registries "/Windows/system32/config/",
+	// while Vista and upwards share the same location at "/Windows/System32/config/".
+	// The registry key structure is almost identical for all Windows NT distributions.
+	// Check: https://en.wikipedia.org/wiki/Windows_Registry#File_locations
+	//
+	// TODO(ramizpolic): We can check which registry file to open via loop.
+	//  If needed to run on Windows, convert to valid path.
+	registryPath := path.Join(drivePath, "/Windows/System32/config/SOFTWARE")
+	registryFile, err := os.Open(registryPath)
 	if err != nil {
-		return nil, fmt.Errorf("cannot open registry file: %w", err)
+		return nil, fmt.Errorf("cannot open registry file %s: %w", registryPath, err)
 	}
 
-	registry, err := regparser.NewRegistry(regFile)
+	// Registry file must remain open as it is read on-the-fly
+	softwareReg, err := regparser.NewRegistry(registryFile)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create registry reader: %w", err)
 	}
 
 	return &Registry{
-		drivePath:    drivePath,
-		registryPath: registryPath,
-		registry:     registry,
-		logger:       logger,
+		drivePath:   drivePath,
+		softwareReg: softwareReg,
+		cleanup:     registryFile.Close,
+		logger:      logger,
 	}, nil
 }
 
+// Close needs to be called when done to free up resources. Registry is not
+// usable once closed.
+func (r *Registry) Close() error {
+	if err := r.cleanup(); err != nil {
+		return fmt.Errorf("failed to close registry: %w", err)
+	}
+	return nil
+}
+
+// GetPlatform returns OS-specific data from the registry.
 func (r *Registry) GetPlatform() (map[string]string, error) {
-	platformKey, err := r.openKey("Microsoft/Windows NT/CurrentVersion")
+	// Open key to fetch operating system version and configuration data
+	platformKey, err := openKey(r.softwareReg, "Microsoft/Windows NT/CurrentVersion")
 	if err != nil {
 		return nil, err
 	}
 
-	platform := make(map[string]string)
-	for _, prop := range platformKey.Values() {
-		platform[prop.ValueName()] = toString(prop.ValueData())
-	}
-
-	// remove secrets
+	// Extract all platform data from the registry and strip all secrets
+	platform := getValuesMap(platformKey)
 	delete(platform, "DigitalProductId")
 	delete(platform, "DigitalProductId4")
 
 	return platform, nil
 }
 
-func (r *Registry) GetUpdates() (map[string]string, error) {
-	packageReg := r.registry.OpenKey("Microsoft/Windows/CurrentVersion/Component Based Servicing/Packages")
-	if packageReg == nil {
-		return nil, fmt.Errorf("key not found")
-	}
-
-	updateKeys := map[string]*regparser.CM_KEY_NODE{}
-	for _, pkgKey := range packageReg.Subkeys() {
-		for _, prop := range pkgKey.Values() {
-			switch propName := prop.ValueName(); propName {
-			case "InstallClient", "UpdateAgentLCU":
-				updateKeys[pkgKey.Name()] = pkgKey
-			}
-		}
-	}
-
-	updates := map[string]string{}
-	kbRegex := regexp.MustCompile("KB[0-9]{7,}")
-	for _, updateKey := range updateKeys {
-		for _, prop := range updateKey.Values() {
-			propName := prop.ValueName()
-			propValue := toString(prop.ValueData())
-
-			if propName == "InstallLocation" {
-				if kb := kbRegex.FindString(propValue); kb != "" {
-					updates[kb] = kb
-				}
-			}
-			if propName == "CurrentState" && propValue == "112" {
-				if kb := kbRegex.FindString(updateKey.Name()); kb != "" {
-					updates[kb] = kb
-				}
-			}
-		}
-	}
-
-	return updates, nil
-}
-
-func (r *Registry) GetUserProfiles() (map[string]string, error) {
-	profileReg := r.registry.OpenKey("Microsoft/Windows NT/CurrentVersion/ProfileList")
-	if profileReg == nil {
-		return nil, fmt.Errorf("key not found")
-	}
-
-	profiles := map[string]string{}
-	for _, profileKey := range profileReg.Subkeys() {
-		for _, prop := range profileKey.Values() {
-			propName := prop.ValueName()
-			if propName != "ProfileImagePath" { // only interested in this key
-				continue
-			}
-
-			propValue := toString(prop.ValueData())
-			propValue = strings.ReplaceAll(propValue, "\\", "/")
-			if idx := strings.Index(propValue, "/Users/"); idx >= 0 {
-				propValue = path.Join(r.drivePath, propValue[idx:])
-				profiles[propValue] = propValue
-			}
-		}
-	}
-
-	return profiles, nil
-}
-
-// TODO: simplify the key insertions
-
-func (r *Registry) GetUserApps() ([]map[string]string, error) {
-	profiles, err := r.GetUserProfiles()
+// GetUpdates returns a slice of all installed system updates from the registry.
+func (r *Registry) GetUpdates() ([]string, error) {
+	// Open key to fetch CBS data about packages (updates and components)
+	packagesKey, err := openKey(r.softwareReg, "Microsoft/Windows/CurrentVersion/Component Based Servicing/Packages")
 	if err != nil {
 		return nil, err
 	}
 
+	// Extract all updates from installed packages
+	updates := make(map[string]struct{})
+	updateRegex := regexp.MustCompile("KB[0-9]{7,}")
+	for _, pkgKey := range packagesKey.Subkeys() {
+		pkgName := pkgKey.Name()
+		pkgValues := getValuesMap(pkgKey)
+
+		// Ignore packages that were not installed as system components or via updates
+		_, isComponent := pkgValues["InstallClient"]
+		_, isUpdate := pkgValues["UpdateAgentLCU"]
+		if !isComponent && !isUpdate {
+			continue
+		}
+
+		// Install location value for a given package can contain update identifier such
+		// as "C:\Windows\CbsTemp\31075171_2144217839\Windows10.0-KB5032189-x64.cab\"
+		if location, ok := pkgValues["InstallLocation"]; ok {
+			if kb := updateRegex.FindString(location); kb != "" {
+				updates[kb] = struct{}{}
+			}
+		}
+
+		// If the installed package contains state value, it indicates a potential system
+		// update. We are only curious about "112" state code which translates to
+		// successful package installation. When this is the case, package registry key
+		// contains update identifier such as "Package_10_for_KB5011048..."
+		if state, ok := pkgValues["CurrentState"]; ok && state == "112" {
+			if kb := updateRegex.FindString(pkgName); kb != "" {
+				updates[kb] = struct{}{}
+			}
+		}
+	}
+
+	return utils.GetMapKeys(updates), nil
+}
+
+// GetUsersApps returns installed apps from all users
+func (r *Registry) GetUsersApps() ([]map[string]string, error) {
+	// Open key to fetch system user profiles in order to get their mount paths
+	profilesKey, err := openKey(r.softwareReg, "Microsoft/Windows NT/CurrentVersion/ProfileList")
+	if err != nil {
+		return nil, err
+	}
+
+	// Extract all installed applications for each user
 	apps := []map[string]string{}
-	for profile := range profiles {
-		profileRegPath := path.Join(profile, "NTUSER.DAT")
+	for _, profileKey := range profilesKey.Subkeys() {
+		// Run in a function to allow cleanup
+		func(profileValues map[string]string) {
+			// Extract profile path from the registry key values. The path is
+			// Windows-specific, but the mount path must be Unix-specific.
+			// TODO(ramizpolic): If needed to run on Windows, convert to valid path.
+			profileLocation, ok := profileValues["ProfileImagePath"]
+			if !ok {
+				return // silent skip, not a user profile
+			}
+			profileLocation = strings.ReplaceAll(profileLocation, "\\", "/")
 
-		profileFile, err := os.Open(profileRegPath)
-		if err != nil {
-			// check and log error
-			continue
-		}
+			// The actual user location in the registry is specified as "C:/Users/...".
+			// However, due to the actual mount location, the actual path could be
+			// "/var/mounts/Users/...". Strip everything before the "/Users/" to construct a
+			// valid mount path.
+			if prefixIdx := strings.Index(profileLocation, "/Users/"); prefixIdx >= 0 {
+				baseProfileLocation := profileLocation[prefixIdx:]
+				profileLocation = path.Join(r.drivePath, baseProfileLocation)
+			} else {
+				return // silent skip, not a user profile
+			}
 
-		profileReg, err := regparser.NewRegistry(profileFile)
-		if err != nil {
-			// check and log error
-			continue
-		}
+			// Open profile registry file to access profile-specific registry
+			profileRegPath := path.Join(profileLocation, "NTUSER.DAT")
+			profileRegFile, err := os.Open(profileRegPath)
+			if err != nil {
+				r.logger.Warnf("failed to open user profile: %v", err)
+				return
+			}
+			defer profileRegFile.Close()
 
-		appReg := profileReg.OpenKey("SOFTWARE/Microsoft/Windows/CurrentVersion/Uninstall")
-		if appReg == nil {
-			// reg key does not exist, log
-			continue
-		}
+			profileReg, err := regparser.NewRegistry(profileRegFile)
+			if err != nil {
+				r.logger.Warnf("failed to create user registry reader: %v", err)
+				return
+			}
 
-		for _, appKey := range appReg.Subkeys() {
-			currApp := map[string]string{}
-			for _, prop := range appKey.Values() {
-				propName := prop.ValueName()
-				propValue := toString(prop.ValueData())
+			// Open key to fetch installed profile apps
+			profileAppsKey, err := openKey(profileReg, "SOFTWARE/Microsoft/Windows/CurrentVersion/Uninstall")
+			if err != nil {
+				r.logger.Warnf("failed to open key: %v", err)
+				return
+			}
 
-				switch propName {
-				case "DisplayName", "DisplayVersion", "VersionMajor", "VersionMinor":
-					currApp[propName] = propValue
+			// Extract all apps from user registry key. When the application registry key
+			// values contain application name, add them to the result.
+			for _, appKey := range profileAppsKey.Subkeys() {
+				appValues := getValuesMap(appKey)
+				if _, ok := appValues["DisplayName"]; ok {
+					apps = append(apps, appValues)
 				}
 			}
-
-			// add to output
-			// TODO: clean this up
-			if _, ok := currApp["DisplayName"]; ok {
-				apps = append(apps, currApp)
-			}
-		}
+		}(getValuesMap(profileKey))
 	}
 
 	return apps, nil
 }
 
 func (r *Registry) GetSystemApps() ([]map[string]string, error) {
+	// Try multiple keys to fetch installed system apps
 	apps := []map[string]string{}
-	for _, regKey := range []string{
-		"Microsoft/Windows/CurrentVersion/Uninstall",
-		"Wow6432Node/Microsoft/Windows/CurrentVersion/Uninstall", // case sensitive, OS dependant
-		"WOW6432Node/Microsoft/Windows/CurrentVersion/Uninstall", // case sensitive, OS dependant
+	for _, appsKey := range []string{
+		"Microsoft/Windows/CurrentVersion/Uninstall",             // for newer Windows NT
+		"Wow6432Node/Microsoft/Windows/CurrentVersion/Uninstall", // store for 32-bit apps on 64-bit systems
+		"WOW6432Node/Microsoft/Windows/CurrentVersion/Uninstall", // same as before, resolves compatibility issues
 	} {
-		appReg := r.registry.OpenKey(regKey)
-		if appReg == nil {
-			// reg key does not exist, log
+		appsKey, err := openKey(r.softwareReg, appsKey)
+		if err != nil {
+			r.logger.Warnf("failed to get installed system apps: %v", err)
 			continue
 		}
 
-		for _, appKey := range appReg.Subkeys() {
-			currApp := map[string]string{}
-			for _, prop := range appKey.Values() {
-				propName := prop.ValueName()
-				propValue := toString(prop.ValueData())
-
-				switch propName {
-				case "DisplayName", "DisplayVersion", "VersionMajor", "VersionMinor":
-					currApp[propName] = propValue
-				}
-			}
-
-			// add to output
-			// TODO: clean this up
-			if _, ok := currApp["DisplayName"]; ok {
-				apps = append(apps, currApp)
+		// Extract all apps from system registry. When the application registry key
+		// values contain application name, add them to the result.
+		for _, appKey := range appsKey.Subkeys() {
+			appValues := getValuesMap(appKey)
+			if _, ok := appValues["DisplayName"]; ok {
+				apps = append(apps, appValues)
 			}
 		}
 	}
@@ -231,51 +235,60 @@ func (r *Registry) GetSystemApps() ([]map[string]string, error) {
 func (r *Registry) GetAll() map[string]interface{} {
 	osData, _ := r.GetPlatform()
 	updateData, _ := r.GetUpdates()
-	profileData, _ := r.GetUserProfiles()
-	userApps, _ := r.GetUserApps()
+	usersApps, _ := r.GetUsersApps()
 	systemApps, _ := r.GetSystemApps()
 	return map[string]interface{}{
 		"platform":   osData,
-		"kbs":        updateData,
-		"users":      profileData,
-		"userApps":   userApps,
+		"updates":    updateData,
+		"usersApps":  usersApps,
 		"systemApps": systemApps,
 	}
 }
 
-func (r *Registry) openKey(key string) (*regparser.CM_KEY_NODE, error) {
-	regKey := r.registry.OpenKey(key)
-	if regKey == nil {
+// openKey opens a given registry key from the given registry or returns an error.
+// Returned key can have multiple sub-keys and values specified.
+func openKey(registry *regparser.Registry, key string) (*regparser.CM_KEY_NODE, error) {
+	keyNode := registry.OpenKey(key)
+	if keyNode == nil {
 		return nil, fmt.Errorf("cannot open key %s", key)
 	}
-	return regKey, nil
+	return keyNode, nil
 }
 
-// toString converts the data to proper go string.
-// TODO: Handle UTF values
-func toString(data *regparser.ValueData) string {
-	switch data.Type {
-	case regparser.REG_SZ, regparser.REG_EXPAND_SZ:
-		return strings.TrimRightFunc(data.String, func(r rune) bool {
-			return r == 0 // remove null terminator
+// getValuesMap returns all registry key values for a given registry key as a map
+// of value name and its data.
+func getValuesMap(key *regparser.CM_KEY_NODE) map[string]string {
+	valuesMap := make(map[string]string)
+	for _, keyValue := range key.Values() {
+		valuesMap[keyValue.ValueName()] = convertKVData(keyValue.ValueData())
+	}
+	return valuesMap
+}
+
+// convertKVData returns the registry key value data as a valid string
+func convertKVData(value *regparser.ValueData) string {
+	switch value.Type {
+	case regparser.REG_SZ, regparser.REG_EXPAND_SZ: // null-terminated string
+		return strings.TrimRightFunc(value.String, func(r rune) bool {
+			return r == 0
 		})
 
-	case regparser.REG_MULTI_SZ:
-		return strings.Join(data.MultiSz, " ")
+	case regparser.REG_MULTI_SZ: // multi-part string
+		return strings.Join(value.MultiSz, " ")
 
-	case regparser.REG_DWORD, regparser.REG_DWORD_BIG_ENDIAN, regparser.REG_QWORD:
-		return strconv.FormatUint(data.Uint64, 10)
+	case regparser.REG_DWORD, regparser.REG_DWORD_BIG_ENDIAN, regparser.REG_QWORD: // unsigned 32/64-bit value
+		return strconv.FormatUint(value.Uint64, 10)
 
-	case regparser.REG_BINARY:
+	case regparser.REG_BINARY: // non-stringable binary value
 		// Return as hex to preserve buffer; we don't really care about this value
-		return fmt.Sprintf("%X", data.Data)
+		return fmt.Sprintf("%X", value.Data)
 
 	case
-		regparser.REG_LINK,                       // Unicode symbolic link
+		regparser.REG_LINK,                       // unicode symbolic link
 		regparser.REG_RESOURCE_LIST,              // device-driver resource list
 		regparser.REG_FULL_RESOURCE_DESCRIPTOR,   // hardware setting
 		regparser.REG_RESOURCE_REQUIREMENTS_LIST, // hardware resource list
-		regparser.REG_UNKNOWN:                    // unhandled
+		regparser.REG_UNKNOWN:                    // no-type
 		fallthrough
 
 	default:
