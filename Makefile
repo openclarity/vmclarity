@@ -56,40 +56,25 @@ build: ui build-all-go ## Build all components
 .PHONY: build-all-go
 build-all-go: bin/vmclarity-apiserver bin/vmclarity-cli bin/vmclarity-orchestrator bin/vmclarity-ui-backend bin/vmclarity-cr-discovery-server ## Build all go components
 
-bin/vmclarity-orchestrator: $(shell find api) $(shell find orchestrator/cmd) $(shell find orchestrator/pkg) go.mod go.sum | $(BIN_DIR)
-	cd orchestrator && go build -race -ldflags="-s -w \
-		-X 'github.com/openclarity/vmclarity/utils/version.Version=$(VERSION)' \
-		-X 'github.com/openclarity/vmclarity/utils/version.CommitHash=$(COMMIT_HASH)' \
-		-X 'github.com/openclarity/vmclarity/utils/version.BuildTimestamp=$(BUILD_TIMESTAMP)'" \
-		-o ../$@ cmd/main.go
+LDFLAGS = -s -w
+LDFLAGS += -X 'github.com/openclarity/vmclarity/utils/version.Version=$(VERSION)'
+LDFLAGS += -X 'github.com/openclarity/vmclarity/utils/version.CommitHash=$(COMMIT_HASH)'
+LDFLAGS += -X 'github.com/openclarity/vmclarity/utils/version.BuildTimestamp=$(BUILD_TIMESTAMP)'
 
-bin/vmclarity-apiserver: $(shell find api) $(shell find api/server/cmd) $(shell find api/server/pkg) api/server/go.mod api/server/go.sum | $(BIN_DIR)
-	cd api/server && go build -race -ldflags="-s -w \
-		-X 'github.com/openclarity/vmclarity/utils/version.Version=$(VERSION)' \
-		-X 'github.com/openclarity/vmclarity/utils/version.CommitHash=$(COMMIT_HASH)' \
-		-X 'github.com/openclarity/vmclarity/utils/version.BuildTimestamp=$(BUILD_TIMESTAMP)'" \
-		-o ../../$@ cmd/main.go
+bin/vmclarity-orchestrator: $(shell find api provider orchestrator utils) | $(BIN_DIR)
+	cd orchestrator && go build -race -ldflags="$(LDFLAGS)" -o $(ROOT_DIR)/$@ cmd/main.go
 
-bin/vmclarity-cli: $(shell find api) $(shell find cli/cmd) $(shell find cli/pkg) cli/go.mod cli/go.sum | $(BIN_DIR)
-	cd cli && go build -race -ldflags="-s -w  \
-		-X 'github.com/openclarity/vmclarity/utils/version.Version=$(VERSION)' \
-		-X 'github.com/openclarity/vmclarity/utils/version.CommitHash=$(COMMIT_HASH)' \
-		-X 'github.com/openclarity/vmclarity/utils/version.BuildTimestamp=$(BUILD_TIMESTAMP)'" \
-		-o ../$@ cmd/main.go
+bin/vmclarity-apiserver: $(shell find api api/server) | $(BIN_DIR)
+	cd api/server && go build -race -ldflags="$(LDFLAGS)" -o $(ROOT_DIR)/$@ cmd/main.go
 
-bin/vmclarity-ui-backend: $(shell find api) $(shell find uibackend/server/cmd) $(shell find uibackend/server/pkg) uibackend/server/go.mod uibackend/server/go.sum | $(BIN_DIR)
-	cd uibackend/server && go build -race -ldflags="-s -w \
-		-X 'github.com/openclarity/vmclarity/utils/version.Version=$(VERSION)' \
-		-X 'github.com/openclarity/vmclarity/utils/version.CommitHash=$(COMMIT_HASH)' \
-		-X 'github.com/openclarity/vmclarity/utils/version.BuildTimestamp=$(BUILD_TIMESTAMP)'" \
-		-o ../../$@ cmd/main.go
+bin/vmclarity-cli: $(shell find api cli utils) | $(BIN_DIR)
+	cd cli && go build -race -ldflags="$(LDFLAGS)" -o $(ROOT_DIR)/$@ cmd/main.go
 
-bin/vmclarity-cr-discovery-server: $(shell find api) $(shell find containerruntimediscovery/server/cmd) $(shell find containerruntimediscovery/server/pkg) containerruntimediscovery/server/go.mod containerruntimediscovery/server/go.sum | $(BIN_DIR)
-	cd containerruntimediscovery/server && go build -race -ldflags="-s -w \
-		-X 'github.com/openclarity/vmclarity/utils/version.Version=$(VERSION)' \
-		-X 'github.com/openclarity/vmclarity/utils/version.CommitHash=$(COMMIT_HASH)' \
-		-X 'github.com/openclarity/vmclarity/utils/version.BuildTimestamp=$(BUILD_TIMESTAMP)'" \
-		-o ../../$@ cmd/main.go
+bin/vmclarity-ui-backend: $(shell find api uibackend/server)  | $(BIN_DIR)
+	cd uibackend/server && go build -race -ldflags="$(LDFLAGS)" -o $(ROOT_DIR)/$@ cmd/main.go
+
+bin/vmclarity-cr-discovery-server: $(shell find api containerruntimediscovery/server utils) | $(BIN_DIR)
+	cd containerruntimediscovery/server && go build -race -ldflags="$(LDFLAGS)" -o $(ROOT_DIR)/$@ cmd/main.go
 
 .PHONY: clean
 clean: clean-ui clean-go ## Clean all build artifacts
@@ -362,16 +347,12 @@ $(DIST_DIR)/vmclarity-cli-$(VERSION)-%.tar.gz: $(DIST_DIR)/%/vmclarity-cli $(DIS
 	$(info --- Bundling $(dir $<) into $(notdir $@))
 	tar cv -f $@ -C $(dir $<) --use-compress-program='gzip -9' $(notdir $^)
 
-$(DIST_DIR)/%/vmclarity-cli: $(shell find api) $(shell find cli/cmd) $(shell find cli/pkg) cli/go.mod cli/go.sum
+$(DIST_DIR)/%/vmclarity-cli: $(shell find api cli utils)
 	$(info --- Building $(notdir $@) for $*)
 	GOOS=$(firstword $(subst -, ,$*)) \
 	GOARCH=$(lastword $(subst -, ,$*)) \
 	CGO_ENABLED=0 \
-	go build -ldflags="-s -w \
-		-X 'github.com/openclarity/vmclarity/utils/version.Version=$(VERSION)' \
-		-X 'github.com/openclarity/vmclarity/utils/version.CommitHash=$(COMMIT_HASH)' \
-		-X 'github.com/openclarity/vmclarity/utils/version.BuildTimestamp=$(BUILD_TIMESTAMP)'" \
-		-o $@ cmd/$(notdir $@)/main.go
+	go build -ldflags="$(LDFLAGS)" -o $@ cmd/$(notdir $@)/main.go
 
 $(DIST_DIR)/%/LICENSE: $(ROOT_DIR)/LICENSE
 	cp -v $< $@
