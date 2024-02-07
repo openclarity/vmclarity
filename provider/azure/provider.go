@@ -30,6 +30,7 @@ import (
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/cli/pkg/utils"
 	"github.com/openclarity/vmclarity/core/log"
+	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/provider"
 )
 
@@ -271,7 +272,7 @@ func getVMInfoFromVirtualMachine(vm *armcompute.VirtualMachine, rootVol *apitype
 	assetType := apitypes.AssetType{}
 	err := assetType.FromVMInfo(apitypes.VMInfo{
 		ObjectType:       "VMInfo",
-		InstanceProvider: utils.PointerTo(apitypes.Azure),
+		InstanceProvider: to.Ptr(apitypes.Azure),
 		InstanceID:       *vm.ID,
 		Image:            createImageURN(vm.Properties.StorageProfile.ImageReference),
 		InstanceType:     *vm.Type,

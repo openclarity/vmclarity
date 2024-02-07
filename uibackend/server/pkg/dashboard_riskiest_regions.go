@@ -25,12 +25,13 @@ import (
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/cli/pkg/utils"
+	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/uibackend/types"
 )
 
 func (s *ServerImpl) GetDashboardRiskiestRegions(ctx echo.Context) error {
 	assets, err := s.Client.GetAssets(ctx.Request().Context(), apitypes.GetAssetsParams{
-		Filter: utils.PointerTo("terminatedOn eq null and assetInfo/objectType eq 'VMInfo'"),
+		Filter: to.Ptr("terminatedOn eq null and assetInfo/objectType eq 'VMInfo'"),
 	})
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, fmt.Sprintf("failed to get assets: %v", err))
@@ -56,12 +57,12 @@ func createRegionFindingsFromAssets(assets *apitypes.Assets) []types.RegionFindi
 		}
 		if _, ok := findingsPerRegion[region]; !ok {
 			findingsPerRegion[region] = &types.FindingsCount{
-				Exploits:          utils.PointerTo(0),
-				Malware:           utils.PointerTo(0),
-				Misconfigurations: utils.PointerTo(0),
-				Rootkits:          utils.PointerTo(0),
-				Secrets:           utils.PointerTo(0),
-				Vulnerabilities:   utils.PointerTo(0),
+				Exploits:          to.Ptr(0),
+				Malware:           to.Ptr(0),
+				Misconfigurations: to.Ptr(0),
+				Rootkits:          to.Ptr(0),
+				Secrets:           to.Ptr(0),
+				Vulnerabilities:   to.Ptr(0),
 			}
 		}
 		regionFindings := findingsPerRegion[region]

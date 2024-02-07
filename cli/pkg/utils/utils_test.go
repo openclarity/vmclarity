@@ -24,6 +24,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
+	"github.com/openclarity/vmclarity/core/to"
 )
 
 func TestGetVulnerabilityTotalsPerSeverity(t *testing.T) {
@@ -41,69 +42,69 @@ func TestGetVulnerabilityTotalsPerSeverity(t *testing.T) {
 				vulnerabilities: nil,
 			},
 			want: &apitypes.VulnerabilityScanSummary{
-				TotalCriticalVulnerabilities:   PointerTo(0),
-				TotalHighVulnerabilities:       PointerTo(0),
-				TotalMediumVulnerabilities:     PointerTo(0),
-				TotalLowVulnerabilities:        PointerTo(0),
-				TotalNegligibleVulnerabilities: PointerTo(0),
+				TotalCriticalVulnerabilities:   to.Ptr(0),
+				TotalHighVulnerabilities:       to.Ptr(0),
+				TotalMediumVulnerabilities:     to.Ptr(0),
+				TotalLowVulnerabilities:        to.Ptr(0),
+				TotalNegligibleVulnerabilities: to.Ptr(0),
 			},
 		},
 		{
 			name: "check one type",
 			args: args{
-				vulnerabilities: PointerTo([]apitypes.Vulnerability{
+				vulnerabilities: to.Ptr([]apitypes.Vulnerability{
 					{
-						Description:       PointerTo("desc1"),
-						Severity:          PointerTo(apitypes.CRITICAL),
-						VulnerabilityName: PointerTo("CVE-1"),
+						Description:       to.Ptr("desc1"),
+						Severity:          to.Ptr(apitypes.CRITICAL),
+						VulnerabilityName: to.Ptr("CVE-1"),
 					},
 				}),
 			},
 			want: &apitypes.VulnerabilityScanSummary{
-				TotalCriticalVulnerabilities:   PointerTo(1),
-				TotalHighVulnerabilities:       PointerTo(0),
-				TotalMediumVulnerabilities:     PointerTo(0),
-				TotalLowVulnerabilities:        PointerTo(0),
-				TotalNegligibleVulnerabilities: PointerTo(0),
+				TotalCriticalVulnerabilities:   to.Ptr(1),
+				TotalHighVulnerabilities:       to.Ptr(0),
+				TotalMediumVulnerabilities:     to.Ptr(0),
+				TotalLowVulnerabilities:        to.Ptr(0),
+				TotalNegligibleVulnerabilities: to.Ptr(0),
 			},
 		},
 		{
 			name: "check all severity types",
 			args: args{
-				vulnerabilities: PointerTo([]apitypes.Vulnerability{
+				vulnerabilities: to.Ptr([]apitypes.Vulnerability{
 					{
-						Description:       PointerTo("desc1"),
-						Severity:          PointerTo(apitypes.CRITICAL),
-						VulnerabilityName: PointerTo("CVE-1"),
+						Description:       to.Ptr("desc1"),
+						Severity:          to.Ptr(apitypes.CRITICAL),
+						VulnerabilityName: to.Ptr("CVE-1"),
 					},
 					{
-						Description:       PointerTo("desc2"),
-						Severity:          PointerTo(apitypes.HIGH),
-						VulnerabilityName: PointerTo("CVE-2"),
+						Description:       to.Ptr("desc2"),
+						Severity:          to.Ptr(apitypes.HIGH),
+						VulnerabilityName: to.Ptr("CVE-2"),
 					},
 					{
-						Description:       PointerTo("desc3"),
-						Severity:          PointerTo(apitypes.MEDIUM),
-						VulnerabilityName: PointerTo("CVE-3"),
+						Description:       to.Ptr("desc3"),
+						Severity:          to.Ptr(apitypes.MEDIUM),
+						VulnerabilityName: to.Ptr("CVE-3"),
 					},
 					{
-						Description:       PointerTo("desc4"),
-						Severity:          PointerTo(apitypes.LOW),
-						VulnerabilityName: PointerTo("CVE-4"),
+						Description:       to.Ptr("desc4"),
+						Severity:          to.Ptr(apitypes.LOW),
+						VulnerabilityName: to.Ptr("CVE-4"),
 					},
 					{
-						Description:       PointerTo("desc5"),
-						Severity:          PointerTo(apitypes.NEGLIGIBLE),
-						VulnerabilityName: PointerTo("CVE-5"),
+						Description:       to.Ptr("desc5"),
+						Severity:          to.Ptr(apitypes.NEGLIGIBLE),
+						VulnerabilityName: to.Ptr("CVE-5"),
 					},
 				}),
 			},
 			want: &apitypes.VulnerabilityScanSummary{
-				TotalCriticalVulnerabilities:   PointerTo(1),
-				TotalHighVulnerabilities:       PointerTo(1),
-				TotalMediumVulnerabilities:     PointerTo(1),
-				TotalLowVulnerabilities:        PointerTo(1),
-				TotalNegligibleVulnerabilities: PointerTo(1),
+				TotalCriticalVulnerabilities:   to.Ptr(1),
+				TotalHighVulnerabilities:       to.Ptr(1),
+				TotalMediumVulnerabilities:     to.Ptr(1),
+				TotalLowVulnerabilities:        to.Ptr(1),
+				TotalNegligibleVulnerabilities: to.Ptr(1),
 			},
 		},
 	}
@@ -163,17 +164,17 @@ func TestStringKeyMapToArray(t *testing.T) {
 					"a": TestObject{
 						TestInt:     1,
 						TestStr:     "1",
-						TestPointer: PointerTo(true),
+						TestPointer: to.Ptr(true),
 					},
 					"b": TestObject{
 						TestInt:     2,
 						TestStr:     "2",
-						TestPointer: PointerTo(true),
+						TestPointer: to.Ptr(true),
 					},
 					"c": TestObject{
 						TestInt:     3,
 						TestStr:     "3",
-						TestPointer: PointerTo(false),
+						TestPointer: to.Ptr(false),
 					},
 				},
 			},
@@ -181,17 +182,17 @@ func TestStringKeyMapToArray(t *testing.T) {
 				TestObject{
 					TestInt:     1,
 					TestStr:     "1",
-					TestPointer: PointerTo(true),
+					TestPointer: to.Ptr(true),
 				},
 				TestObject{
 					TestInt:     2,
 					TestStr:     "2",
-					TestPointer: PointerTo(true),
+					TestPointer: to.Ptr(true),
 				},
 				TestObject{
 					TestInt:     3,
 					TestStr:     "3",
-					TestPointer: PointerTo(false),
+					TestPointer: to.Ptr(false),
 				},
 			},
 		},
@@ -238,14 +239,14 @@ func Test_IntPointerValOrEmpty(t *testing.T) {
 		{
 			name: "not nil",
 			args: args{
-				val: PointerTo(5),
+				val: to.Ptr(5),
 			},
 			want: 5,
 		},
 		{
 			name: "not nil 0",
 			args: args{
-				val: PointerTo(0),
+				val: to.Ptr(0),
 			},
 			want: 0,
 		},

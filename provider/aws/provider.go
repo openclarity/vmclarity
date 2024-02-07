@@ -32,6 +32,7 @@ import (
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/cli/pkg/utils"
 	"github.com/openclarity/vmclarity/core/log"
+	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/provider"
 	"github.com/openclarity/vmclarity/provider/aws/scanestimation"
 	"github.com/openclarity/vmclarity/provider/cloudinit"
@@ -224,9 +225,9 @@ func (p *Provider) createInstance(ctx context.Context, region string, config *pr
 	userDataBase64 := base64.StdEncoding.EncodeToString([]byte(userData))
 
 	runParams := &ec2.RunInstancesInput{
-		MaxCount:     utils.PointerTo[int32](1),
-		MinCount:     utils.PointerTo[int32](1),
-		ImageId:      utils.PointerTo(p.config.ScannerImage),
+		MaxCount:     to.Ptr[int32](1),
+		MinCount:     to.Ptr[int32](1),
+		ImageId:      to.Ptr(p.config.ScannerImage),
 		InstanceType: ec2types.InstanceType(p.config.ScannerInstanceType),
 		TagSpecifications: []ec2types.TagSpecification{
 			{
@@ -248,9 +249,9 @@ func (p *Provider) createInstance(ctx context.Context, region string, config *pr
 	// Create network interface in the scanner subnet with the scanner security group.
 	runParams.NetworkInterfaces = []ec2types.InstanceNetworkInterfaceSpecification{
 		{
-			AssociatePublicIpAddress: utils.PointerTo(false),
-			DeleteOnTermination:      utils.PointerTo(true),
-			DeviceIndex:              utils.PointerTo[int32](0),
+			AssociatePublicIpAddress: to.Ptr(false),
+			DeleteOnTermination:      to.Ptr(true),
+			DeviceIndex:              to.Ptr[int32](0),
 			Groups:                   []string{p.config.SecurityGroupID},
 			SubnetId:                 &p.config.SubnetID,
 		},
@@ -605,7 +606,7 @@ func (p *Provider) deleteVolumes(ctx context.Context, filters []ec2types.Filter,
 	if len(volumes) > 0 {
 		for _, vol := range volumes {
 			terminateParams := &ec2.DeleteVolumeInput{
-				VolumeId: utils.PointerTo(vol),
+				VolumeId: to.Ptr(vol),
 			}
 			_, err = p.ec2Client.DeleteVolume(ctx, terminateParams, options)
 			if err != nil {
@@ -643,7 +644,7 @@ func (p *Provider) deleteVolumeSnapshots(ctx context.Context, filters []ec2types
 
 	for _, snap := range snapshots {
 		deleteParams := &ec2.DeleteSnapshotInput{
-			SnapshotId: utils.PointerTo(snap),
+			SnapshotId: to.Ptr(snap),
 		}
 		_, err = p.ec2Client.DeleteSnapshot(ctx, deleteParams, options)
 		if err != nil {
@@ -783,7 +784,7 @@ func (p *Provider) GetInstances(ctx context.Context, filters []ec2types.Filter, 
 	ret := make([]Instance, 0)
 
 	input := &ec2.DescribeInstancesInput{
-		MaxResults: utils.PointerTo[int32](maxResults), // TODO what will be a good number?
+		MaxResults: to.Ptr[int32](maxResults), // TODO what will be a good number?
 	}
 	if len(filters) > 0 {
 		input.Filters = filters
@@ -801,7 +802,7 @@ func (p *Provider) GetInstances(ctx context.Context, filters []ec2types.Filter, 
 	// TODO we can make it better by not saving all results in memory. See https://github.com/openclarity/vmclarity/pull/3#discussion_r1021656861
 	for out.NextToken != nil {
 		input := &ec2.DescribeInstancesInput{
-			MaxResults: utils.PointerTo[int32](maxResults), // TODO what will be a good number?
+			MaxResults: to.Ptr[int32](maxResults), // TODO what will be a good number?
 			NextToken:  out.NextToken,
 		}
 		if len(filters) > 0 {
