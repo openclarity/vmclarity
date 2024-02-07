@@ -5,7 +5,6 @@ go 1.21.4
 require (
 	github.com/openclarity/vmclarity/api/types v0.0.0-00010101000000-000000000000
 	github.com/openclarity/vmclarity/containerruntimediscovery/types v0.0.0-00010101000000-000000000000
-	github.com/openclarity/vmclarity/utils v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -14,6 +13,7 @@ require (
 	github.com/containers/image/v5 v5.29.2
 	github.com/docker/docker v25.0.2+incompatible
 	github.com/labstack/echo/v4 v4.11.4
+	github.com/openclarity/vmclarity/core v0.0.0-00010101000000-000000000000
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
@@ -137,5 +137,6 @@ require (
 replace (
 	github.com/openclarity/vmclarity/api/types => ../../api/types
 	github.com/openclarity/vmclarity/containerruntimediscovery/types => ../types
+	github.com/openclarity/vmclarity/core => ../../core
 	github.com/openclarity/vmclarity/utils => ../../utils
 )

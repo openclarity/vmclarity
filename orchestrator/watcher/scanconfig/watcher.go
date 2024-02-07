@@ -24,8 +24,8 @@ import (
 	apiclient "github.com/openclarity/vmclarity/api/client"
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/cli/pkg/utils"
+	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/orchestrator/common"
-	"github.com/openclarity/vmclarity/utils/log"
 )
 
 type (

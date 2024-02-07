@@ -10,10 +10,10 @@ require (
 	github.com/openclarity/vmclarity/api/client v0.0.0-00010101000000-000000000000
 	github.com/openclarity/vmclarity/api/types v0.0.0-00010101000000-000000000000
 	github.com/openclarity/vmclarity/cli v0.0.0-00010101000000-000000000000
+	github.com/openclarity/vmclarity/core v0.0.0-00010101000000-000000000000
 	github.com/openclarity/vmclarity/testenv v0.0.0-00010101000000-000000000000
 	github.com/openclarity/vmclarity/uibackend/client v0.0.0-00010101000000-000000000000
 	github.com/openclarity/vmclarity/uibackend/types v0.0.0-00010101000000-000000000000
-	github.com/openclarity/vmclarity/utils v0.0.0-20240202114539-0b2edd72c17d
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.18.2
 )
@@ -162,6 +162,7 @@ require (
 	github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f // indirect
 	github.com/oapi-codegen/runtime v1.1.1 // indirect
 	github.com/openclarity/vmclarity/installation v0.0.0-00010101000000-000000000000 // indirect
+	github.com/openclarity/vmclarity/utils v0.0.0-20240202114539-0b2edd72c17d // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc5 // indirect
 	github.com/oras-project/oras-credentials-go v0.3.1 // indirect
@@ -268,6 +269,7 @@ replace (
 	github.com/openclarity/vmclarity/cli => ../cli
 	github.com/openclarity/vmclarity/containerruntimediscovery/client => ../containerruntimediscovery/client
 	github.com/openclarity/vmclarity/containerruntimediscovery/types => ../containerruntimediscovery/types
+	github.com/openclarity/vmclarity/core => ../core
 	github.com/openclarity/vmclarity/installation => ../installation
 	github.com/openclarity/vmclarity/testenv => ../testenv
 	github.com/openclarity/vmclarity/uibackend/client => ../uibackend/client

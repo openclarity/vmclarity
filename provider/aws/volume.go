@@ -25,8 +25,8 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/cli/pkg/utils"
+	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/provider"
-	"github.com/openclarity/vmclarity/utils/log"
 )
 
 type Volume struct {

@@ -26,8 +26,8 @@ import (
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/cli/pkg/utils"
+	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/provider"
-	"github.com/openclarity/vmclarity/utils/log"
 )
 
 type Instance struct {

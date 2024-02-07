@@ -22,7 +22,7 @@ import (
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/cli/pkg/findingkey"
 	"github.com/openclarity/vmclarity/cli/pkg/utils"
-	"github.com/openclarity/vmclarity/utils/log"
+	"github.com/openclarity/vmclarity/core/log"
 )
 
 func (asp *AssetScanProcessor) getExistingInfoFinderFindingsForScan(ctx context.Context, assetScan apitypes.AssetScan) (map[findingkey.InfoFinderKey]string, error) {

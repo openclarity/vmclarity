@@ -22,7 +22,7 @@ import (
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/cli/pkg/findingkey"
 	"github.com/openclarity/vmclarity/cli/pkg/utils"
-	logutils "github.com/openclarity/vmclarity/utils/log"
+	logutils "github.com/openclarity/vmclarity/core/log"
 )
 
 func (asp *AssetScanProcessor) getExistingPackageFindingsForScan(ctx context.Context, assetScan apitypes.AssetScan) (map[findingkey.PackageKey]string, error) {
