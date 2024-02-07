@@ -25,7 +25,6 @@ import (
 
 	apiclient "github.com/openclarity/vmclarity/api/client"
 	apitypes "github.com/openclarity/vmclarity/api/types"
-	"github.com/openclarity/vmclarity/cli/pkg/utils"
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/orchestrator/common"
@@ -483,9 +482,9 @@ func updateScanEstimationSummaryFromAssetScanEstimation(scanEstimation *apitypes
 		if s.TotalScanCost == nil {
 			s.TotalScanCost = to.Ptr(float32(0))
 		}
-		*(s.TotalScanTime) += utils.ValueOrZero(assetScanEstimation.Estimation.Duration)
-		*(s.TotalScanSize) += utils.ValueOrZero(assetScanEstimation.Estimation.Size)
-		*(s.TotalScanCost) += utils.ValueOrZero(assetScanEstimation.Estimation.Cost)
+		*(s.TotalScanTime) += to.ValueOrZero(assetScanEstimation.Estimation.Duration)
+		*(s.TotalScanSize) += to.ValueOrZero(assetScanEstimation.Estimation.Size)
+		*(s.TotalScanCost) += to.ValueOrZero(assetScanEstimation.Estimation.Cost)
 		fallthrough
 	case apitypes.AssetScanEstimationStatusStateAborted, apitypes.AssetScanEstimationStatusStateFailed:
 		s.JobsCompleted = to.Ptr(*s.JobsCompleted + 1)
@@ -617,7 +616,7 @@ func updateTotalScanTimeWithParallelScans(scanEstimation *apitypes.ScanEstimatio
 		return fmt.Errorf("0 completed jobs in summary")
 	}
 
-	maxParallelScanners := utils.ValueOrZero(scanEstimation.ScanTemplate.MaxParallelScanners)
+	maxParallelScanners := to.ValueOrZero(scanEstimation.ScanTemplate.MaxParallelScanners)
 
 	if maxParallelScanners > 1 {
 		numberOfJobs := *scanEstimation.Summary.JobsCompleted

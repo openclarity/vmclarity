@@ -30,7 +30,6 @@ import (
 	"github.com/sirupsen/logrus"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
-	"github.com/openclarity/vmclarity/cli/pkg/utils"
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/provider"
@@ -834,12 +833,12 @@ func (p *Provider) getInstancesFromDescribeInstancesOutput(ctx context.Context, 
 			}
 
 			if err := validateInstanceFields(instance); err != nil {
-				logger.Errorf("Instance validation failed. instance id=%v: %v", utils.StringPointerValOrEmpty(instance.InstanceId), err)
+				logger.Errorf("Instance validation failed. instance id=%v: %v", to.ValueOrZero(instance.InstanceId), err)
 				continue
 			}
 			rootVol, err := getRootVolumeInfo(ctx, p.ec2Client, instance, regionID)
 			if err != nil {
-				logger.Warnf("Couldn't get root volume info. instance id=%v: %v", utils.StringPointerValOrEmpty(instance.InstanceId), err)
+				logger.Warnf("Couldn't get root volume info. instance id=%v: %v", to.ValueOrZero(instance.InstanceId), err)
 				rootVol = &apitypes.RootVolume{
 					SizeGB:    0,
 					Encrypted: apitypes.RootVolumeEncryptedUnknown,
@@ -857,7 +856,7 @@ func (p *Provider) getInstancesFromDescribeInstancesOutput(ctx context.Context, 
 				LaunchTime:          *instance.LaunchTime,
 				VpcID:               *instance.VpcId,
 				SecurityGroups:      getSecurityGroupsIDs(instance.SecurityGroups),
-				RootDeviceName:      utils.StringPointerValOrEmpty(instance.RootDeviceName),
+				RootDeviceName:      to.ValueOrZero(instance.RootDeviceName),
 				RootVolumeSizeGB:    int32(rootVol.SizeGB),
 				RootVolumeEncrypted: rootVol.Encrypted,
 
@@ -874,7 +873,7 @@ func getRootVolumeInfo(ctx context.Context, client *ec2.Client, i ec2types.Insta
 	}
 	logger := log.GetLoggerFromContextOrDiscard(ctx)
 	for _, mapping := range i.BlockDeviceMappings {
-		if utils.StringPointerValOrEmpty(mapping.DeviceName) == utils.StringPointerValOrEmpty(i.RootDeviceName) {
+		if to.ValueOrZero(mapping.DeviceName) == to.ValueOrZero(i.RootDeviceName) {
 			if mapping.Ebs == nil {
 				return nil, fmt.Errorf("EBS of the root volume is nil")
 			}
@@ -903,7 +902,7 @@ func getRootVolumeInfo(ctx context.Context, client *ec2.Client, i ec2types.Insta
 			}
 
 			return &apitypes.RootVolume{
-				SizeGB:    int(utils.Int32PointerValOrEmpty(describeOut.Volumes[0].Size)),
+				SizeGB:    int(to.ValueOrZero(describeOut.Volumes[0].Size)),
 				Encrypted: encryptedToAPI(describeOut.Volumes[0].Encrypted),
 			}, nil
 		}

@@ -27,7 +27,6 @@ import (
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/cli/pkg/findingkey"
-	"github.com/openclarity/vmclarity/cli/pkg/utils"
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/uibackend/types"
 )
@@ -535,7 +534,7 @@ func processFindings(findings []apitypes.Finding, findingAssetMap map[findingAss
 
 // getSortedFindingInfoCountSlice will return a slice of findingInfoCount desc sorted by AssetCount.
 func getSortedFindingInfoCountSlice(findingAssetMapCount map[string]findingInfoCount) []findingInfoCount {
-	findingInfoCountSlice := utils.StringKeyMapToArray(findingAssetMapCount)
+	findingInfoCountSlice := to.ValuesSlice(findingAssetMapCount)
 	sort.Slice(findingInfoCountSlice, func(i, j int) bool {
 		return findingInfoCountSlice[i].AssetCount > findingInfoCountSlice[j].AssetCount
 	})

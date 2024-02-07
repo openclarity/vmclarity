@@ -18,3 +18,32 @@ package to
 func Ptr[T any](value T) *T {
 	return &value
 }
+
+func OmitEmpty[T comparable](t T) *T {
+	var empty T
+	if t == empty {
+		return nil
+	}
+
+	return &t
+}
+
+// ValueOrZero returns the value that the pointer ptr pointers to. It returns
+// the zero value if ptr is nil.
+func ValueOrZero[T any](ptr *T) T {
+	var t T
+	if ptr != nil {
+		t = *ptr
+	}
+
+	return t
+}
+
+func ValuesSlice[K comparable, V any](m map[K]V) []V {
+	s := make([]V, 0, len(m))
+	for _, v := range m {
+		s = append(s, v)
+	}
+
+	return s
+}

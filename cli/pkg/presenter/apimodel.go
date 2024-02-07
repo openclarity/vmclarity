@@ -34,7 +34,6 @@ import (
 	"github.com/openclarity/vmclarity/cli/pkg/families/secrets"
 	"github.com/openclarity/vmclarity/cli/pkg/families/vulnerabilities"
 	"github.com/openclarity/vmclarity/cli/pkg/scanner"
-	"github.com/openclarity/vmclarity/cli/pkg/utils"
 	"github.com/openclarity/vmclarity/cli/pkg/utils/cyclonedx_helper"
 	"github.com/openclarity/vmclarity/cli/pkg/utils/vulnerability"
 	"github.com/openclarity/vmclarity/core/to"
@@ -179,10 +178,10 @@ func ConvertMalwareResultToMalwareAndMetadata(malwareResults *malware.MergedResu
 	for _, m := range malwareResults.DetectedMalware {
 		mal := m // Prevent loop variable pointer export
 		malwareList = append(malwareList, apitypes.Malware{
-			MalwareName: utils.OmitEmpty(mal.MalwareName),
-			MalwareType: utils.OmitEmpty(mal.MalwareType),
-			Path:        utils.OmitEmpty(mal.Path),
-			RuleName:    utils.OmitEmpty(mal.RuleName),
+			MalwareName: to.OmitEmpty(mal.MalwareName),
+			MalwareType: to.OmitEmpty(mal.MalwareType),
+			Path:        to.OmitEmpty(mal.Path),
+			RuleName:    to.OmitEmpty(mal.RuleName),
 		})
 	}
 
