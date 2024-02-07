@@ -23,7 +23,7 @@ import (
 	jsonpatch "github.com/evanphx/json-patch"
 	"gorm.io/gorm"
 
-	"github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	"github.com/openclarity/vmclarity/api/server/database/types"
 	"github.com/openclarity/vmclarity/core/to"
 )
 

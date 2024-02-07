@@ -23,8 +23,8 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	"github.com/openclarity/vmclarity/api/server/pkg/common"
-	"github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	"github.com/openclarity/vmclarity/api/server/common"
+	"github.com/openclarity/vmclarity/api/server/database/types"
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/to"
 )

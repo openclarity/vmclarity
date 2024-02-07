@@ -23,8 +23,8 @@ import (
 
 	"github.com/Portshift/go-utils/healthz"
 
-	"github.com/openclarity/vmclarity/api/server/pkg/database"
-	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	"github.com/openclarity/vmclarity/api/server/database"
+	dbtypes "github.com/openclarity/vmclarity/api/server/database/types"
 	"github.com/openclarity/vmclarity/core/log"
 )
 

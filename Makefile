@@ -311,7 +311,7 @@ gen-apiserver-api: ## Generating Go library for API specification
 	$(info Generating API for backend code ...)
 	@(cd api/types && go generate)
 	@(cd api/client && go generate)
-	@(cd api/server/pkg && go generate)
+	@(cd api/server && go generate)
 
 .PHONY: gen-uibackend-api
 gen-uibackend-api: ## Generating Go library for UI Backend API specification

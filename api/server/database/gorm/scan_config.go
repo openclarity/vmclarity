@@ -25,8 +25,8 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	"github.com/openclarity/vmclarity/api/server/pkg/common"
-	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	"github.com/openclarity/vmclarity/api/server/common"
+	dbtypes "github.com/openclarity/vmclarity/api/server/database/types"
 	"github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/to"
 )

@@ -21,7 +21,7 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 
-	dbtypes "github.com/openclarity/vmclarity/api/server/pkg/database/types"
+	dbtypes "github.com/openclarity/vmclarity/api/server/database/types"
 
 	"github.com/spf13/viper"
 )
