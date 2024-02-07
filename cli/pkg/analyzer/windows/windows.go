@@ -18,6 +18,7 @@ package windows
 import (
 	"fmt"
 	"github.com/openclarity/vmclarity/cli/pkg/analyzer"
+	"github.com/openclarity/vmclarity/cli/pkg/analyzer/windows/registry"
 	"github.com/openclarity/vmclarity/cli/pkg/job_manager"
 	"github.com/openclarity/vmclarity/cli/pkg/utils"
 	log "github.com/sirupsen/logrus"
@@ -58,7 +59,7 @@ func (a *Analyzer) Run(sourceType utils.SourceType, userInput string) error {
 
 		// Open registry from windows mount/dir. We expect a mount to the system drive
 		// such as /mnt/c/
-		registry, err := NewRegistry(userInput, a.logger)
+		registry, err := registry.NewRegistry(userInput, a.logger)
 		if err != nil {
 			a.setError(res, fmt.Errorf("failed to access registry: %w", err))
 			return

@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package windows
+package registry
 
 import (
 	"fmt"
@@ -47,12 +47,21 @@ func NewRegistry(drivePath string, logger *log.Entry) (*Registry, error) {
 	// The registry key structure is almost identical for all Windows NT distributions.
 	// Check: https://en.wikipedia.org/wiki/Windows_Registry#File_locations
 	//
-	// TODO(ramizpolic): We can check which registry file to open via loop.
-	//  If needed to run on Windows, convert to valid path.
-	registryPath := path.Join(drivePath, "/Windows/System32/config/SOFTWARE")
-	registryFile, err := os.Open(registryPath)
-	if err != nil {
-		return nil, fmt.Errorf("cannot open registry file %s: %w", registryPath, err)
+	// TODO(ramizpolic): If needed to run on Windows, convert to valid path.
+	var registryFile *os.File
+	for _, registryPath := range []string{
+		"/Windows/System32/config/SOFTWARE", // Windows Vista and newer
+		"/WINDOWS/system32/config/software", // Windows XP and older
+	} {
+		registryPath := path.Join(drivePath, registryPath)
+		file, err := os.Open(registryPath)
+		if err == nil {
+			registryFile = file
+			break
+		}
+	}
+	if registryFile == nil {
+		return nil, fmt.Errorf("cannot find registry")
 	}
 
 	// Registry file must remain open as it is read on-the-fly
@@ -319,18 +328,22 @@ func (r *Registry) GetBOM() (*cdx.BOM, error) {
 			})
 		}
 
-		// Add updates to cyclonedx components
+		// Add updates to cyclonedx components. This is optional since Windows XP stores
+		// update data in the system package registry.
+		//
+		// TODO(ramizpolic): Error skip should only happen when we know it is XP,
+		// otherwise this should continue regularly.
 		systemUpdates, err := r.GetUpdates()
-		if err != nil {
-			return nil, fmt.Errorf("unable to get updates: %w", err)
-		}
-
-		for _, update := range systemUpdates {
-			components = append(components, cdx.Component{
-				Type:      cdx.ComponentTypeApplication,
-				Publisher: "Microsoft Corporation",
-				Name:      update,
-			})
+		if err == nil {
+			for _, update := range systemUpdates {
+				components = append(components, cdx.Component{
+					Type:      cdx.ComponentTypeApplication,
+					Publisher: "Microsoft Corporation",
+					Name:      update,
+				})
+			}
+		} else {
+			r.logger.Warnf("could not fetch updates from registry: %v", err)
 		}
 
 		// Set BOM components
