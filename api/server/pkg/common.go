@@ -25,7 +25,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	apiserver "github.com/openclarity/vmclarity/api/server/internal/server"
-	"github.com/openclarity/vmclarity/uibackend/types"
+	"github.com/openclarity/vmclarity/api/types"
 )
 
 // nolint:wrapcheck
