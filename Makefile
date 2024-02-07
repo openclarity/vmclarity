@@ -318,7 +318,7 @@ gen-uibackend-api: ## Generating Go library for UI Backend API specification
 	$(info Generating API for UI backend code ...)
 	@(cd uibackend/types && go generate)
 	@(cd uibackend/client && go generate)
-	@(cd uibackend/server/pkg && go generate)
+	@(cd uibackend/server && go generate)
 
 .PHONY: gen-bicep
 gen-bicep: bin/bicep ## Generating Azure Bicep template(s)
