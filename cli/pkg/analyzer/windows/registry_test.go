@@ -23,16 +23,21 @@ import (
 )
 
 // TODO(ramizpolic): add this file but strip everything from it
+// TODO(ramizpolic): add user NT registry with some preinstalled apps
 const drivePath = "/media/ramiz-polic/System"
 
 func TestRegistry(t *testing.T) {
 	reg, err := NewRegistry(drivePath, log.NewEntry(log.New()))
 	if err != nil {
-		t.Fatalf("should not error")
+		t.Fatalf("should not error %v", err)
 	}
 
-	// TODO: add user NT registry with some preinstalled apps
-	prettyPrint(reg.GetAll())
+	bom, err := reg.GetBOM()
+	if err != nil {
+		t.Fatalf("should not error %v", err)
+	}
+
+	prettyPrint(bom)
 }
 
 func prettyPrint(data interface{}) {

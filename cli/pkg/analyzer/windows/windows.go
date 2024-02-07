@@ -56,15 +56,23 @@ func (a *Analyzer) Run(sourceType utils.SourceType, userInput string) error {
 			return
 		}
 
-		// Extract relevant details from windows mount/dir. We expect a mount to the system drive (i.e. C:/)
+		// Open registry from windows mount/dir. We expect a mount to the system drive
+		// such as /mnt/c/
 		registry, err := NewRegistry(userInput, a.logger)
 		if err != nil {
 			a.setError(res, fmt.Errorf("failed to access registry: %w", err))
 			return
 		}
-		_ = registry.GetAll()
+		defer registry.Close()
 
-		// Convert to SBOM
+		// Fetch BOM from registry details
+		bom, err := registry.GetBOM()
+		if err != nil {
+			a.setError(res, fmt.Errorf("failed to get bom from registry: %w", err))
+			return
+		}
+
+		res = analyzer.CreateResults(bom, a.name, userInput, sourceType)
 
 		a.logger.Infof("Sending successful results")
 		a.resultChan <- res

@@ -16,7 +16,6 @@
 package windows
 
 import (
-	"encoding/xml"
 	"fmt"
 	cdx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/google/uuid"
@@ -74,7 +73,7 @@ func NewRegistry(drivePath string, logger *log.Entry) (*Registry, error) {
 // usable once closed.
 func (r *Registry) Close() error {
 	if err := r.cleanup(); err != nil {
-		return fmt.Errorf("failed to close registry: %w", err)
+		return fmt.Errorf("unable to close registry: %w", err)
 	}
 	return nil
 }
@@ -87,8 +86,10 @@ func (r *Registry) GetPlatform() (map[string]string, error) {
 		return nil, err
 	}
 
-	// Extract all platform data from the registry and strip all secrets
+	// Extract all platform data from the registry
 	platform := getValuesMap(platformKey)
+
+	// Strip information about the product key
 	delete(platform, "DigitalProductId")
 	delete(platform, "DigitalProductId4")
 
@@ -104,7 +105,7 @@ func (r *Registry) GetUpdates() ([]string, error) {
 	}
 
 	// Extract all updates from installed packages
-	updates := make(map[string]struct{})
+	updates := map[string]string{}
 	updateRegex := regexp.MustCompile("KB[0-9]{7,}")
 	for _, pkgKey := range packagesKey.Subkeys() {
 		pkgName := pkgKey.Name()
@@ -121,7 +122,7 @@ func (r *Registry) GetUpdates() ([]string, error) {
 		// as "C:\Windows\CbsTemp\31075171_2144217839\Windows10.0-KB5032189-x64.cab\"
 		if location, ok := pkgValues["InstallLocation"]; ok {
 			if kb := updateRegex.FindString(location); kb != "" {
-				updates[kb] = struct{}{}
+				updates[kb] = kb
 			}
 		}
 
@@ -131,15 +132,15 @@ func (r *Registry) GetUpdates() ([]string, error) {
 		// contains update identifier such as "Package_10_for_KB5011048..."
 		if state, ok := pkgValues["CurrentState"]; ok && state == "112" {
 			if kb := updateRegex.FindString(pkgName); kb != "" {
-				updates[kb] = struct{}{}
+				updates[kb] = kb
 			}
 		}
 	}
 
-	return utils.GetMapKeys(updates), nil
+	return utils.StringKeyMapToArray(updates), nil
 }
 
-// GetUsersApps returns installed apps from all users
+// GetUsersApps returns installed apps from the registry for all users.
 func (r *Registry) GetUsersApps() ([]map[string]string, error) {
 	// Open key to fetch system user profiles in order to get their mount paths
 	profilesKey, err := openKey(r.softwareReg, "Microsoft/Windows NT/CurrentVersion/ProfileList")
@@ -208,6 +209,7 @@ func (r *Registry) GetUsersApps() ([]map[string]string, error) {
 	return apps, nil
 }
 
+// GetSystemApps returns installed system-wide apps from the registry.
 func (r *Registry) GetSystemApps() ([]map[string]string, error) {
 	// Try multiple keys to fetch installed system apps
 	apps := []map[string]string{}
@@ -235,83 +237,107 @@ func (r *Registry) GetSystemApps() ([]map[string]string, error) {
 	return apps, nil
 }
 
-func (r *Registry) GetAll() map[string]interface{} {
-	// Fetch required data from the registry
-	platformData, _ := r.GetPlatform()
-	updateData, _ := r.GetUpdates()
-	usersApps, _ := r.GetUsersApps()
-	systemApps, _ := r.GetSystemApps()
+// GetBOM returns cyclone database from the registry data.
+// TODO(ramizpolic): Make other registry fetch methods return a struct rather than maps.
+func (r *Registry) GetBOM() (*cdx.BOM, error) {
+	bom := cdx.NewBOM()
 
-	// Create SBOM
-	// TODO(ramizpolic): Convert to SBOM, check https://github.com/MartinStengard/rust-sbom-windows as reference
-	_ = &cdx.BOM{
-		XMLName:      xml.Name{},
-		XMLNS:        "",
-		JSONSchema:   "",
-		BOMFormat:    cdx.BOMFormat,
-		SpecVersion:  cdx.SpecVersion1_5,
-		SerialNumber: uuid.New().URN(),
-		Version:      1,
-		Metadata: &cdx.Metadata{
-			Timestamp:  "",
-			Lifecycles: nil,
-			Tools:      nil,
-			Authors:    nil,
+	// Inject platform data to BOM
+	{
+		// Get platform registry data
+		platformData, err := r.GetPlatform()
+		if err != nil {
+			return nil, fmt.Errorf("unable to get platfrom data: %w", err)
+		}
+
+		// Convert platform registry data to a list of cyclonedx properties. This
+		// provides additional details in case some of the metadata fields are missing.
+		properties := []cdx.Property{}
+		for key, value := range platformData {
+			if key == "" || value == "" { // skip empty
+				continue
+			}
+			properties = append(properties, cdx.Property{
+				Name:  fmt.Sprintf("windows:registry:%s", key),
+				Value: value,
+			})
+		}
+
+		// Extract manufacturer if available
+		var manufacturer *cdx.OrganizationalEntity
+		if name, ok := platformData["SystemManufacturer"]; ok {
+			manufacturer = &cdx.OrganizationalEntity{
+				Name: name,
+			}
+		}
+
+		// Set immutable serial number from the unique installation ID
+		bom.SerialNumber = uuid.NewSHA1(uuid.Nil, []byte(platformData["ProductId"])).URN()
+
+		// Set BOM metadata
+		bom.Metadata = &cdx.Metadata{
+			Timestamp: platformData["InstallDate"],
 			Component: &cdx.Component{
-				BOMRef:             "",
-				MIMEType:           "",
-				Type:               cdx.ComponentTypeOS,
-				Supplier:           nil,
-				Author:             platformData["SoftwareType"],
-				Publisher:          "",
-				Group:              "",
-				Name:               platformData["ProductName"],
-				Version:            "",
-				Description:        "",
-				Scope:              "",
-				Hashes:             nil,
-				Licenses:           nil,
-				Copyright:          "",
-				CPE:                "",
-				PackageURL:         "",
-				SWID:               nil,
-				Modified:           nil,
-				Pedigree:           nil,
-				ExternalReferences: nil,
-				Properties:         nil,
-				Components:         nil,
-				Evidence:           nil,
-				ReleaseNotes:       nil,
-				ModelCard:          nil,
-				Data:               nil,
+				Type: cdx.ComponentTypeOS,
+				Name: platformData["ProductName"], // Windows 10 Pro
+				Version: fmt.Sprintf("%s.%s.%s", // 10.0.22000
+					platformData["CurrentMajorVersionNumber"],
+					platformData["CurrentMinorVersionNumber"],
+					platformData["CurrentBuildNumber"],
+				),
 			},
-			Manufacture: &cdx.OrganizationalEntity{
-				Name:    "",
-				URL:     nil,
-				Contact: nil,
+			Manufacture: manufacturer,
+			Supplier: &cdx.OrganizationalEntity{
+				Name: "Microsoft Corporation",
 			},
-			Supplier:   nil,
-			Licenses:   nil,
-			Properties: &[]cdx.Property{},
-		},
-		Components:         nil,
-		Services:           nil,
-		ExternalReferences: nil,
-		Dependencies:       nil,
-		Compositions:       nil,
-		Properties:         nil,
-		Vulnerabilities:    nil,
-		Annotations:        nil,
-		Formulation:        nil,
+			Properties: &properties,
+		}
 	}
 
-	// TODO: to be replaced
-	return map[string]interface{}{
-		"platform":   platformData,
-		"updates":    updateData,
-		"usersApps":  usersApps,
-		"systemApps": systemApps,
+	// Inject system apps, user apps, and updates to BOM
+	{
+		var components []cdx.Component
+
+		// Add applications to cyclonedx components
+		systemApps, err := r.GetSystemApps()
+		if err != nil {
+			return nil, fmt.Errorf("unable to get system apps: %w", err)
+		}
+
+		usersApps, err := r.GetUsersApps()
+		if err != nil {
+			return nil, fmt.Errorf("unable to get users apps: %w", err)
+		}
+
+		apps := append(systemApps, usersApps...)
+		for _, app := range apps {
+			components = append(components, cdx.Component{
+				Type:      cdx.ComponentTypeApplication,
+				Publisher: app["Publisher"],
+				Name:      app["DisplayName"],
+				Version:   app["DisplayVersion"],
+			})
+		}
+
+		// Add updates to cyclonedx components
+		systemUpdates, err := r.GetUpdates()
+		if err != nil {
+			return nil, fmt.Errorf("unable to get updates: %w", err)
+		}
+
+		for _, update := range systemUpdates {
+			components = append(components, cdx.Component{
+				Type:      cdx.ComponentTypeApplication,
+				Publisher: "Microsoft Corporation",
+				Name:      update,
+			})
+		}
+
+		// Set BOM components
+		bom.Components = &components
 	}
+
+	return bom, nil
 }
 
 // openKey opens a given registry key from the given registry or returns an error.
@@ -327,7 +353,7 @@ func openKey(registry *regparser.Registry, key string) (*regparser.CM_KEY_NODE, 
 // getValuesMap returns all registry key values for a given registry key as a map
 // of value name and its data.
 func getValuesMap(key *regparser.CM_KEY_NODE) map[string]string {
-	valuesMap := make(map[string]string)
+	valuesMap := map[string]string{}
 	for _, keyValue := range key.Values() {
 		valuesMap[keyValue.ValueName()] = convertKVData(keyValue.ValueData())
 	}

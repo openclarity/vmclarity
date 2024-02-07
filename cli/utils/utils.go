@@ -174,14 +174,6 @@ func StringKeyMapToArray[T any](m map[string]T) []T {
 	return ret
 }
 
-func GetMapKeys[KT comparable, VT any](m map[KT]VT) []KT {
-	ret := make([]KT, 0, len(m))
-	for key := range m {
-		ret = append(ret, key)
-	}
-	return ret
-}
-
 func GetVulnerabilityTotalsPerSeverity(vulnerabilities *[]types.Vulnerability) *types.VulnerabilityScanSummary {
 	ret := &types.VulnerabilityScanSummary{
 		TotalCriticalVulnerabilities:   PointerTo(0),
