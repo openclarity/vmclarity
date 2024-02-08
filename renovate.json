@@ -13,34 +13,9 @@
         "^makefile.d/.*.mk$"
       ],
       "matchStrings": [
-        "LICENSEI_VERSION\\s*=\\s*(?<currentValue>.*?)\\n"
+        "# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?( registryUrl=(?<registryUrl>.*?))?\\s.*?_VERSION\\s?:?=\\s?(?<currentValue>.*)\\s"
       ],
-      "depNameTemplate": "github.com/goph/licensei",
-      "datasourceTemplate": "go"
-    },
-    {
-      "customType": "regex",
-      "fileMatch": [
-        "^Makefile$",
-        "^makefile.d/.*.mk$"
-      ],
-      "matchStrings": [
-        "ACTIONLINT_VERSION\\s*=\\s*(?<currentValue>.*?)\\n"
-      ],
-      "depNameTemplate": "github.com/rhysd/actionlint",
-      "datasourceTemplate": "go"
-    },
-    {
-      "customType": "regex",
-      "fileMatch": [
-        "^Makefile$",
-        "^makefile.d/.*.mk$"
-      ],
-      "matchStrings": [
-        "GOLANGCI_VERSION\\s*=\\s*(?<currentValue>.*?)\\n"
-      ],
-      "depNameTemplate": "github.com/golangci/golangci-lint",
-      "datasourceTemplate": "go"
+      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}"
     }
   ],
   "dependencyDashboardAutoclose": true,
@@ -91,12 +66,14 @@
       ]
     },
     {
-      "matchDatasources": [
-        "custom.regex"
+      "matchFileNames": [
+        "Makefile",
+        "makefile.d/*.mk"
       ],
       "addLabels": [
         "build"
       ],
+      "extractVersion": "^v(?<version>.*)$",
       "semanticCommitType": "build"
     },
     {
@@ -129,7 +106,7 @@
       ]
     },
     {
-      "groupName": "grom.io",
+      "groupName": "gorm.io",
       "matchDatasources": [
         "go"
       ],
@@ -193,9 +170,10 @@
   "printConfig": false,
   "reviewersFromCodeOwners": true,
   "schedule": [
-    "after 10pm every weekday",
-    "before 6am every weekday"
+    "after 6am every weekday",
+    "before 12pm every weekday"
   ],
+  "semanticCommits": "enabled",
   "timezone": "Etc/UTC",
   "vulnerabilityAlerts": {
     "enabled": false,
