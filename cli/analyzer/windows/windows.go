@@ -49,36 +49,36 @@ func (a *Analyzer) Run(sourceType utils.SourceType, userInput string) error {
 	go func() {
 		res := &analyzer.Results{}
 
-		// Skip this analyser for input types we don't support
+		// Create Windows registry based on supported input types
+		var err error
+		var reg *registry.Registry
 		switch sourceType {
-		case utils.ROOTFS, utils.DIR:
-			// These are all supported for SBOM analysis
-		case utils.SBOM, utils.IMAGE, utils.DOCKERARCHIVE, utils.OCIARCHIVE, utils.OCIDIR, utils.FILE: // unsupported
+		case utils.FILE: // Use file location to the registry
+			reg, err = registry.NewRegistry(userInput, a.logger)
+		case utils.ROOTFS, utils.DIR: // Use mount drive as input
+			reg, err = registry.NewRegistryForMount(userInput, a.logger)
+		case utils.SBOM, utils.IMAGE, utils.DOCKERARCHIVE, utils.OCIARCHIVE, utils.OCIDIR: // Unsupported
 			fallthrough
 		default:
 			a.logger.Infof("Skipping analyzing unsupported source type: %s", sourceType)
 			a.resultChan <- res
 			return
 		}
-
-		// Open registry from windows mount/dir. We expect a mount to the system drive
-		// such as /mnt/c/
-		registry, err := registry.NewRegistry(userInput, a.logger)
 		if err != nil {
-			a.setError(res, fmt.Errorf("failed to access registry: %w", err))
+			a.setError(res, fmt.Errorf("failed to open registry: %w", err))
 			return
 		}
-		defer registry.Close()
+		defer reg.Close()
 
 		// Fetch BOM from registry details
-		bom, err := registry.GetBOM()
+		bom, err := reg.GetBOM()
 		if err != nil {
 			a.setError(res, fmt.Errorf("failed to get bom from registry: %w", err))
 			return
 		}
 
+		// Return sbom
 		res = analyzer.CreateResults(bom, a.name, userInput, sourceType)
-
 		a.logger.Infof("Sending successful results")
 		a.resultChan <- res
 	}()

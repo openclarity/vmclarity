@@ -50,31 +50,37 @@ import (
 // User NTUSER.DAT registry keys accessed:
 //	- user apps: 		SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall
 
+var defaultRegistryRootPaths = []string{
+	"/Windows/System32/config/SOFTWARE", // Windows Vista and newer
+	"/WINDOWS/system32/config/software", // Windows XP and older
+}
+
 type Registry struct {
-	drivePath   string              // root path to Windows drive
+	mountPath   string              // root path to Windows drive
 	softwareReg *regparser.Registry // HKEY_LOCAL_MACHINE/SOFTWARE registry
 	cleanup     func() error
 	logger      *log.Entry
 }
 
-func NewRegistry(drivePath string, logger *log.Entry) (*Registry, error) {
-	// Windows XP registry is defined under different path compared to Vista and
-	// newer which share the same location. The registry key structure is identical
-	// for all Windows NT distributions, so try to access to the proper registry.
-	var registryFile *os.File
-	for _, registryPath := range []string{
-		"/Windows/System32/config/SOFTWARE", // Windows Vista and newer
-		"/WINDOWS/system32/config/software", // Windows XP and older
-	} {
-		registryPath := path.Join(drivePath, registryPath)
-		file, err := os.Open(filepath.Clean(registryPath))
+func NewRegistryForMount(mountPath string, logger *log.Entry) (*Registry, error) {
+	// The registry key structure is identical for all Windows NT distributions, so
+	// try all registry combinations. If the registry is not under found under the
+	// default path, it might be a custom system installation or unsupported version.
+	for _, defaultRootPath := range defaultRegistryRootPaths {
+		registryFilePath := path.Join(mountPath, defaultRootPath)
+		registry, err := NewRegistry(registryFilePath, logger)
 		if err == nil {
-			registryFile = file
-			break
+			return registry, nil // found, return
 		}
 	}
-	if registryFile == nil {
-		return nil, fmt.Errorf("cannot find registry")
+
+	return nil, fmt.Errorf("cannot find registry for mount %s", mountPath)
+}
+
+func NewRegistry(registryFilePath string, logger *log.Entry) (*Registry, error) {
+	registryFile, err := os.Open(filepath.Clean(registryFilePath))
+	if err != nil {
+		return nil, fmt.Errorf("cannot open registry file: %w", err)
 	}
 
 	// Registry file must remain open as it is read on-the-fly
@@ -83,8 +89,16 @@ func NewRegistry(drivePath string, logger *log.Entry) (*Registry, error) {
 		return nil, fmt.Errorf("cannot create registry reader: %w", err)
 	}
 
+	// Extract mount path from registry path by removing the default root paths. For
+	// registry under /var/snapshot/Windows/System32/config/SOFTWARE, this should
+	// extract /var/snapshot mount path
+	mountPath := registryFilePath
+	for _, defaultRootPath := range defaultRegistryRootPaths {
+		mountPath = strings.TrimSuffix(mountPath, defaultRootPath)
+	}
+
 	return &Registry{
-		drivePath:   drivePath,
+		mountPath:   mountPath,
 		softwareReg: softwareReg,
 		cleanup:     registryFile.Close,
 		logger:      logger,
@@ -162,9 +176,11 @@ func (r *Registry) GetUpdates() ([]string, error) {
 	return utils.StringKeyMapToArray(updates), nil
 }
 
-// GetUsersApps returns installed apps from the registry for all users.
+// GetUsersApps returns installed apps from the registry for all users. This
+// method will not error in case user profile cannot be loaded. It only errors if
+// the system registry cannot be accessed to get the list of user profiles.
 func (r *Registry) GetUsersApps() ([]map[string]string, error) {
-	// Open key to fetch system user profiles in order to get their mount paths
+	// Open key to fetch system user profiles in order to get profile dir paths
 	profilesKey, err := openKey(r.softwareReg, "Microsoft/Windows NT/CurrentVersion/ProfileList")
 	if err != nil {
 		return nil, err
@@ -189,7 +205,7 @@ func (r *Registry) GetUsersApps() ([]map[string]string, error) {
 			// valid mount path.
 			if prefixIdx := strings.Index(profileLocation, "/Users/"); prefixIdx >= 0 {
 				baseProfileLocation := profileLocation[prefixIdx:]
-				profileLocation = path.Join(r.drivePath, baseProfileLocation)
+				profileLocation = path.Join(r.mountPath, baseProfileLocation)
 			} else {
 				return // silent skip, not a user profile
 			}
