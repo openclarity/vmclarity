@@ -17,16 +17,19 @@ package registry
 
 import (
 	"fmt"
-	cdx "github.com/CycloneDX/cyclonedx-go"
-	"github.com/google/uuid"
-	"github.com/openclarity/vmclarity/cli/pkg/utils"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"path"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
+
+	cdx "github.com/CycloneDX/cyclonedx-go"
+	"github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/openclarity/vmclarity/cli/utils"
+
 	"www.velocidex.com/golang/regparser"
 )
 
@@ -265,7 +268,7 @@ func (r *Registry) GetBOM() (*cdx.BOM, error) {
 		// Get platform registry data
 		platformData, err := r.GetPlatform()
 		if err != nil {
-			return nil, fmt.Errorf("unable to get platfrom data: %w", err)
+			return nil, fmt.Errorf("unable to get platform data: %w", err)
 		}
 
 		// Convert platform registry data to a list of cyclonedx properties. This

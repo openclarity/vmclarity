@@ -17,10 +17,11 @@ package registry
 
 import (
 	"fmt"
+	"testing"
+
 	log "github.com/sirupsen/logrus"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/assert/cmp"
-	"testing"
 )
 
 // Windows 10 registry data was obtained from

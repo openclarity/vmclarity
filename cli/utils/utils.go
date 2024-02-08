@@ -23,7 +23,6 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/openclarity/vmclarity/api/types"
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/to"
 )
@@ -116,56 +115,6 @@ func RunCommandAndParseOutputLineByLine(cmd *exec.Cmd, pfn, ecFn processFn) erro
 	return nil
 }
 
-func PointerTo[T any](value T) *T {
-	return &value
-}
-
-func OmitEmpty[T comparable](t T) *T {
-	var empty T
-	if t == empty {
-		return nil
-	}
-	return &t
-}
-
-// ValueOrZero returns the value that the pointer ptr pointers to. It returns
-// the zero value if ptr is nil.
-func ValueOrZero[T any](ptr *T) T {
-	var t T
-	if ptr != nil {
-		t = *ptr
-	}
-	return t
-}
-
-func StringPointerValOrEmpty(val *string) string {
-	if val == nil {
-		return ""
-	}
-	return *val
-}
-
-func Int32PointerValOrEmpty(val *int32) int32 {
-	if val == nil {
-		return 0
-	}
-	return *val
-}
-
-func IntPointerValOrEmpty(val *int) int {
-	if val == nil {
-		return 0
-	}
-	return *val
-}
-
-func BoolPointerValOrFalse(val *bool) bool {
-	if val == nil {
-		return false
-	}
-	return *val
-}
-
 func StringKeyMapToArray[T any](m map[string]T) []T {
 	ret := make([]T, 0, len(m))
 	for _, t := range m {
@@ -174,13 +123,13 @@ func StringKeyMapToArray[T any](m map[string]T) []T {
 	return ret
 }
 
-func GetVulnerabilityTotalsPerSeverity(vulnerabilities *[]types.Vulnerability) *types.VulnerabilityScanSummary {
-	ret := &types.VulnerabilityScanSummary{
-		TotalCriticalVulnerabilities:   PointerTo(0),
-		TotalHighVulnerabilities:       PointerTo(0),
-		TotalMediumVulnerabilities:     PointerTo(0),
-		TotalLowVulnerabilities:        PointerTo(0),
-		TotalNegligibleVulnerabilities: PointerTo(0),
+func GetVulnerabilityTotalsPerSeverity(vulnerabilities *[]apitypes.Vulnerability) *apitypes.VulnerabilityScanSummary {
+	ret := &apitypes.VulnerabilityScanSummary{
+		TotalCriticalVulnerabilities:   to.Ptr(0),
+		TotalHighVulnerabilities:       to.Ptr(0),
+		TotalMediumVulnerabilities:     to.Ptr(0),
+		TotalLowVulnerabilities:        to.Ptr(0),
+		TotalNegligibleVulnerabilities: to.Ptr(0),
 	}
 	if vulnerabilities == nil {
 		return ret

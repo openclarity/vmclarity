@@ -16,10 +16,10 @@
 package job
 
 import (
-	"github.com/openclarity/vmclarity/cli/pkg/analyzer/syft"
-	"github.com/openclarity/vmclarity/cli/pkg/analyzer/trivy"
-	"github.com/openclarity/vmclarity/cli/pkg/analyzer/windows"
-	"github.com/openclarity/vmclarity/cli/pkg/job_manager"
+	"github.com/openclarity/vmclarity/cli/analyzer/syft"
+	"github.com/openclarity/vmclarity/cli/analyzer/trivy"
+	"github.com/openclarity/vmclarity/cli/analyzer/windows"
+	"github.com/openclarity/vmclarity/cli/job_manager"
 )
 
 var Factory = job_manager.NewJobFactory()

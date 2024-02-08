@@ -17,11 +17,13 @@ package windows
 
 import (
 	"fmt"
-	"github.com/openclarity/vmclarity/cli/pkg/analyzer"
-	"github.com/openclarity/vmclarity/cli/pkg/analyzer/windows/registry"
-	"github.com/openclarity/vmclarity/cli/pkg/job_manager"
-	"github.com/openclarity/vmclarity/cli/pkg/utils"
+
 	log "github.com/sirupsen/logrus"
+
+	"github.com/openclarity/vmclarity/cli/analyzer"
+	"github.com/openclarity/vmclarity/cli/analyzer/windows/registry"
+	"github.com/openclarity/vmclarity/cli/job_manager"
+	"github.com/openclarity/vmclarity/cli/utils"
 )
 
 const AnalyzerName = "windows"
@@ -50,7 +52,9 @@ func (a *Analyzer) Run(sourceType utils.SourceType, userInput string) error {
 		// Skip this analyser for input types we don't support
 		switch sourceType {
 		case utils.ROOTFS, utils.DIR:
-			// supported types for windows analysis
+			// These are all supported for SBOM analysis
+		case utils.SBOM, utils.IMAGE, utils.DOCKERARCHIVE, utils.OCIARCHIVE, utils.OCIDIR, utils.FILE: // unsupported
+			fallthrough
 		default:
 			a.logger.Infof("Skipping analyzing unsupported source type: %s", sourceType)
 			a.resultChan <- res
