@@ -137,7 +137,7 @@ orchestrator:
     # -- Scanner Container image repository
     repository: openclarity/vmclarity-cli
     # -- Scanner Container image tag (immutable tags are recommended)
-    tag: latest@sha256:7afdf17aacdc7835d468b8e90e24efc39ad33f0e645d787e4b9ab635e6b68b0b
+    tag: latest@sha256:af302b033387b6cc0090ba12503eecaa0d0ea121d08dc3c13eee8c67bd97a4e5
     # -- Scanner Container image digest. If set will override the tag.
     digest: ""
 
