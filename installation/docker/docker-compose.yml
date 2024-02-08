@@ -57,7 +57,7 @@ services:
         condition: on-failure
 
   uibackend:
-    image: ${VMCLARITY_UIBACKEND_CONTAINER_IMAGE:-ghcr.io/openclarity/vmclarity-ui-backend:latest@sha256:044b1c821bfb6f77bf96f276eaddcb0197d6093e247852428c5e4384df375b71}
+    image: ${VMCLARITY_UIBACKEND_CONTAINER_IMAGE:-ghcr.io/openclarity/vmclarity-ui-backend:latest@sha256:52caa2358062a18cd69ef14cf5d2721bedc88bf0f5eaa8dcb14b97bb60b8ebc8}
     command:
       - run
       - --log-level

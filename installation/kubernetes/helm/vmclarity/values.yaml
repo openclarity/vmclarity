@@ -293,7 +293,7 @@ uibackend:
     # -- UI Backend image repository
     repository: openclarity/vmclarity-ui-backend
     # -- UI Backend image tag
-    tag: latest@sha256:044b1c821bfb6f77bf96f276eaddcb0197d6093e247852428c5e4384df375b71
+    tag: latest@sha256:52caa2358062a18cd69ef14cf5d2721bedc88bf0f5eaa8dcb14b97bb60b8ebc8
     # -- UI Backend image digest. If set will override the tag.
     digest: ""
     # -- UI Backend image pull policy
