@@ -23,6 +23,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -30,9 +31,21 @@ import (
 )
 
 // Documentation about registries, its structure and further details can be found at:
-// - https://en.wikipedia.org/wiki/Windows_Registry
-// - https://techdirectarchive.com/2020/02/07/how-to-check-if-windows-updates-were-installed-on-your-device-via-the-registry-editor/
-// - https://jgmes.com/webstart/library/qr_windowsxp.htm#:~:text=In%20Windows%20XP%2C%20the%20registry,corresponding%20location%20of%20each%20hive.
+//	- https://en.wikipedia.org/wiki/Windows_Registry
+//	- https://github.com/msuhanov/regf/blob/master/Windows%20registry%20file%20format%20specification.md
+//	- https://techdirectarchive.com/2020/02/07/how-to-check-if-windows-updates-were-installed-on-your-device-via-the-registry-editor/
+//	- https://jgmes.com/webstart/library/qr_windowsxp.htm#:~:text=In%20Windows%20XP%2C%20the%20registry,corresponding%20location%20of%20each%20hive.
+//
+// System SOFTWARE registry keys accessed:
+//	- system info: 		Microsoft\Windows NT\CurrentVersion
+//	- updates: 			Microsoft\Windows\CurrentVersion\Component Based Servicing\Packages\*
+//	- profiles: 		Microsoft\Windows NT\CurrentVersion\ProfileList\*
+//	- system apps: 		Microsoft\Windows\CurrentVersion\Uninstall\*
+//	- system apps:		Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*
+//	- system apps:		WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*
+//
+// User NTUSER.DAT registry keys accessed:
+//	- user apps: 		SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall
 
 type Registry struct {
 	drivePath   string              // root path to Windows drive
@@ -42,19 +55,16 @@ type Registry struct {
 }
 
 func NewRegistry(drivePath string, logger *log.Entry) (*Registry, error) {
-	// Windows XP has a different location for the registries "/Windows/system32/config/",
-	// while Vista and upwards share the same location at "/Windows/System32/config/".
-	// The registry key structure is almost identical for all Windows NT distributions.
-	// Check: https://en.wikipedia.org/wiki/Windows_Registry#File_locations
-	//
-	// TODO(ramizpolic): If needed to run on Windows, convert to valid path.
+	// Windows XP registry is defined under different path compared to Vista and
+	// newer which share the same location. The registry key structure is identical
+	// for all Windows NT distributions, so try to access to the proper registry.
 	var registryFile *os.File
 	for _, registryPath := range []string{
 		"/Windows/System32/config/SOFTWARE", // Windows Vista and newer
 		"/WINDOWS/system32/config/software", // Windows XP and older
 	} {
 		registryPath := path.Join(drivePath, registryPath)
-		file, err := os.Open(registryPath)
+		file, err := os.Open(filepath.Clean(registryPath))
 		if err == nil {
 			registryFile = file
 			break
@@ -164,15 +174,14 @@ func (r *Registry) GetUsersApps() ([]map[string]string, error) {
 		func(profileValues map[string]string) {
 			// Extract profile path from the registry key values. The path is
 			// Windows-specific, but the mount path must be Unix-specific.
-			// TODO(ramizpolic): If needed to run on Windows, convert to valid path.
 			profileLocation, ok := profileValues["ProfileImagePath"]
 			if !ok {
 				return // silent skip, not a user profile
 			}
 			profileLocation = strings.ReplaceAll(profileLocation, "\\", "/")
 
-			// The actual user location in the registry is specified as "C:/Users/...".
-			// However, due to the actual mount location, the actual path could be
+			// The actual user location in the registry is specified as "C:\Users\...".
+			// However, due to the mount location, the actual path could be
 			// "/var/mounts/Users/...". Strip everything before the "/Users/" to construct a
 			// valid mount path.
 			if prefixIdx := strings.Index(profileLocation, "/Users/"); prefixIdx >= 0 {
@@ -184,7 +193,7 @@ func (r *Registry) GetUsersApps() ([]map[string]string, error) {
 
 			// Open profile registry file to access profile-specific registry
 			profileRegPath := path.Join(profileLocation, "NTUSER.DAT")
-			profileRegFile, err := os.Open(profileRegPath)
+			profileRegFile, err := os.Open(filepath.Clean(profileRegPath))
 			if err != nil {
 				r.logger.Warnf("failed to open user profile: %v", err)
 				return
@@ -247,7 +256,7 @@ func (r *Registry) GetSystemApps() ([]map[string]string, error) {
 }
 
 // GetBOM returns cyclone database from the registry data.
-// TODO(ramizpolic): Make other registry fetch methods return a struct rather than maps.
+// TODO(ramizpolic): Other registry fetch methods should return a struct instead of maps.
 func (r *Registry) GetBOM() (*cdx.BOM, error) {
 	bom := cdx.NewBOM()
 
@@ -303,7 +312,7 @@ func (r *Registry) GetBOM() (*cdx.BOM, error) {
 		}
 	}
 
-	// Inject system apps, user apps, and updates to BOM
+	// Inject updates, system and user apps to BOM
 	{
 		var components []cdx.Component
 
@@ -373,7 +382,7 @@ func getValuesMap(key *regparser.CM_KEY_NODE) map[string]string {
 	return valuesMap
 }
 
-// convertKVData returns the registry key value data as a valid string
+// convertKVData returns the registry key value data as a valid string.
 func convertKVData(value *regparser.ValueData) string {
 	switch value.Type {
 	case regparser.REG_SZ, regparser.REG_EXPAND_SZ: // null-terminated string

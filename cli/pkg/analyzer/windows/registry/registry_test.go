@@ -16,31 +16,50 @@
 package registry
 
 import (
-	"encoding/json"
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"gotest.tools/v3/assert"
+	"gotest.tools/v3/assert/cmp"
 	"testing"
 )
 
-// TODO(ramizpolic): add this file but strip everything from it
-// TODO(ramizpolic): add user NT registry with some preinstalled apps
-const drivePath = "/media/ramiz-polic/System"
+// Windows 10 registry data was obtained from
+// https://github.com/AndrewRathbun/VanillaWindowsRegistryHives. Older Windows
+// distributions were tested locally and their registries not uploaded due to
+// security reasons.
+//
+// TODO(ramizpolic): Add more test cases for other Windows versions. The testdata
+// size will grow, so finding another way to fake the registry data could be
+// useful to avoid size issues and manual per-distro registry creation/testing.
 
 func TestRegistry(t *testing.T) {
-	reg, err := NewRegistry(drivePath, log.NewEntry(log.New()))
-	if err != nil {
-		t.Fatalf("should not error %v", err)
-	}
+	// from https://github.com/AndrewRathbun/VanillaWindowsRegistryHives/tree/d12ba60d8dd283a4a17b1a02295356a6bed093cf/Windows10/21H2/W10_21H2_Pro_20211012_19044.1288
+	drivePath := "testdata/W10_21H2_Pro"
+
+	// when
+	reg, err := NewRegistry(drivePath, log.NewEntry(&log.Logger{}))
+	assert.NilError(t, err)
 
 	bom, err := reg.GetBOM()
-	if err != nil {
-		t.Fatalf("should not error %v", err)
+	assert.NilError(t, err)
+
+	// check basic details
+	assert.Equal(t, bom.SerialNumber, "urn:uuid:ec61c342-9f62-593b-8589-824ecc574a26")
+	assert.Equal(t, bom.Metadata.Component.Name, "Windows 10 Pro")
+	assert.Equal(t, bom.Metadata.Component.Version, "10.0.19044")
+
+	// check apps and updates details
+	hasApp := func(reqAppName string) cmp.Comparison {
+		return func() cmp.Result {
+			for _, app := range *bom.Components {
+				if reqAppName == app.Name {
+					return cmp.ResultSuccess
+				}
+			}
+			return cmp.ResultFailure(fmt.Sprintf("BOM components do not contain app %q", reqAppName))
+		}
 	}
 
-	prettyPrint(bom)
-}
-
-func prettyPrint(data interface{}) {
-	b, _ := json.MarshalIndent(data, "", "  ")
-	fmt.Println(string(b))
+	assert.Assert(t, hasApp("KB5003242"))
+	assert.Assert(t, hasApp("Microsoft Edge"))
 }
