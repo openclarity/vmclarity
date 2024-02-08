@@ -847,7 +847,7 @@ crDiscoveryServer:
     # -- Container Runtime Discovery Server container repository
     repository: openclarity/vmclarity-cr-discovery-server
     # -- Container Runtime Discovery Server container tag
-    tag: latest@sha256:384258670bfa3a1791e28775d0b9997a54a671581d76500c9b6ce40ed786320d
+    tag: latest@sha256:8296470b14dfb6b68313b58c0ee13f96ab3291ef936f1356145877bc42ada0de
     # -- Container Runtime Discovery Server image digest. If set will override the tag.
     digest: ""
     # -- Container Runtime Discovery Server image pull policy
