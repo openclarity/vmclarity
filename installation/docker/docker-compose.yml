@@ -49,7 +49,7 @@ services:
       retries: 60
 
   ui:
-    image: ${VMCLARITY_UI_CONTAINER_IMAGE:-ghcr.io/openclarity/vmclarity-ui:latest@sha256:dfbcaf17897f8a086b59e1023602b1c3b408fb6a675357344e890b7346720d2e}
+    image: ${VMCLARITY_UI_CONTAINER_IMAGE:-ghcr.io/openclarity/vmclarity-ui:latest@sha256:f57157eee9d814d0c84c5927de90d8d0f86e860e6c927a254dac5adba396918b}
     deploy:
       mode: replicated
       replicas: 1
