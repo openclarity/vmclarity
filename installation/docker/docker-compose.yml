@@ -26,7 +26,7 @@ services:
       retries: 60
 
   orchestrator:
-    image: ${VMCLARITY_ORCHESTRATOR_CONTAINER_IMAGE:-ghcr.io/openclarity/vmclarity-orchestrator:latest@sha256:daf0110581b74efb17098f0912b6b13f6a1752c358dbd013cd65727bec07fb72}
+    image: ${VMCLARITY_ORCHESTRATOR_CONTAINER_IMAGE:-ghcr.io/openclarity/vmclarity-orchestrator:latest@sha256:3e23ead83f3d7d29d4e4ad0d6d46e5330bf4e782faedc449ba929c88832060f6}
     command:
       - run
       - --log-level
