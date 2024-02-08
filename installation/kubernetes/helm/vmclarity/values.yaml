@@ -11,7 +11,7 @@ apiserver:
     # -- API Server image repository
     repository: openclarity/vmclarity-apiserver
     # -- API Server image tag (immutable tags are recommended)
-    tag: latest@sha256:715b667e71ae7bafc16e531529748a378b168697945fbd88ee964842aa468ee3
+    tag: latest@sha256:0e83404d29418f4ceeeafa742c8e88bc7d4db699bc0b6961fb003dbcc7bc114b
     # -- API Server image digest. If set will override the tag.
     digest: ""
     # -- API Server image pull policy

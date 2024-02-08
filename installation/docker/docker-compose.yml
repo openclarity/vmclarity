@@ -2,7 +2,7 @@ version: '3.5'
 
 services:
   apiserver:
-    image: ${VMCLARITY_APISERVER_CONTAINER_IMAGE:-ghcr.io/openclarity/vmclarity-apiserver:latest@sha256:715b667e71ae7bafc16e531529748a378b168697945fbd88ee964842aa468ee3}
+    image: ${VMCLARITY_APISERVER_CONTAINER_IMAGE:-ghcr.io/openclarity/vmclarity-apiserver:latest@sha256:0e83404d29418f4ceeeafa742c8e88bc7d4db699bc0b6961fb003dbcc7bc114b}
     command:
       - run
       - --log-level
