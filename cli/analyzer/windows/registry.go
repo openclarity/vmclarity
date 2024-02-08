@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package registry
+package windows
 
 import (
 	"fmt"
@@ -287,19 +287,6 @@ func (r *Registry) GetBOM() (*cdx.BOM, error) {
 			return nil, fmt.Errorf("unable to get platform data: %w", err)
 		}
 
-		// Convert platform registry data to a list of cyclonedx properties. This
-		// provides additional details in case some of the metadata fields are missing.
-		properties := []cdx.Property{}
-		for key, value := range platformData {
-			if key == "" || value == "" { // skip empty
-				continue
-			}
-			properties = append(properties, cdx.Property{
-				Name:  fmt.Sprintf("windows:registry:%s", key),
-				Value: value,
-			})
-		}
-
 		// Extract manufacturer if available
 		var manufacturer *cdx.OrganizationalEntity
 		if name, ok := platformData["SystemManufacturer"]; ok {
@@ -327,7 +314,12 @@ func (r *Registry) GetBOM() (*cdx.BOM, error) {
 			Supplier: &cdx.OrganizationalEntity{
 				Name: "Microsoft Corporation",
 			},
-			Properties: &properties,
+			Properties: &[]cdx.Property{
+				{
+					Name:  "analyzers",
+					Value: AnalyzerName,
+				},
+			},
 		}
 	}
 

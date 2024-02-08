@@ -21,7 +21,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/cli/analyzer"
-	"github.com/openclarity/vmclarity/cli/analyzer/windows/registry"
 	"github.com/openclarity/vmclarity/cli/job_manager"
 	"github.com/openclarity/vmclarity/cli/utils"
 )
@@ -51,12 +50,12 @@ func (a *Analyzer) Run(sourceType utils.SourceType, userInput string) error {
 
 		// Create Windows registry based on supported input types
 		var err error
-		var reg *registry.Registry
+		var registry *Registry
 		switch sourceType {
 		case utils.FILE: // Use file location to the registry
-			reg, err = registry.NewRegistry(userInput, a.logger)
+			registry, err = NewRegistry(userInput, a.logger)
 		case utils.ROOTFS, utils.DIR: // Use mount drive as input
-			reg, err = registry.NewRegistryForMount(userInput, a.logger)
+			registry, err = NewRegistryForMount(userInput, a.logger)
 		case utils.SBOM, utils.IMAGE, utils.DOCKERARCHIVE, utils.OCIARCHIVE, utils.OCIDIR: // Unsupported
 			fallthrough
 		default:
@@ -68,10 +67,10 @@ func (a *Analyzer) Run(sourceType utils.SourceType, userInput string) error {
 			a.setError(res, fmt.Errorf("failed to open registry: %w", err))
 			return
 		}
-		defer reg.Close()
+		defer registry.Close()
 
 		// Fetch BOM from registry details
-		bom, err := reg.GetBOM()
+		bom, err := registry.GetBOM()
 		if err != nil {
 			a.setError(res, fmt.Errorf("failed to get bom from registry: %w", err))
 			return
