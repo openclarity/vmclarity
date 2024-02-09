@@ -2,7 +2,7 @@ version: '3.5'
 
 services:
   apiserver:
-    image: ${VMCLARITY_APISERVER_CONTAINER_IMAGE:-ghcr.io/openclarity/vmclarity-apiserver:latest}
+    image: ${VMCLARITY_APISERVER_CONTAINER_IMAGE:-ghcr.io/openclarity/vmclarity-apiserver:latest@sha256:7400ac1a7de909b65af3a226465e2c6f42deef58e480f0ac5a1fa02b55fa0ed4}
     command:
       - run
       - --log-level
@@ -26,7 +26,7 @@ services:
       retries: 60
 
   orchestrator:
-    image: ${VMCLARITY_ORCHESTRATOR_CONTAINER_IMAGE:-ghcr.io/openclarity/vmclarity-orchestrator:latest}
+    image: ${VMCLARITY_ORCHESTRATOR_CONTAINER_IMAGE:-ghcr.io/openclarity/vmclarity-orchestrator:latest@sha256:3812503730ac3b7a89236aeed956f6704ec5497f0dac00b961987a5ca9dfb744}
     command:
       - run
       - --log-level
@@ -49,7 +49,7 @@ services:
       retries: 60
 
   ui:
-    image: ${VMCLARITY_UI_CONTAINER_IMAGE:-ghcr.io/openclarity/vmclarity-ui:latest}
+    image: ${VMCLARITY_UI_CONTAINER_IMAGE:-ghcr.io/openclarity/vmclarity-ui:latest@sha256:9d823a125f422e6212bd7296ba4eb910a28c123e77eecf898b534fbd217eef9b}
     deploy:
       mode: replicated
       replicas: 1
@@ -57,7 +57,7 @@ services:
         condition: on-failure
 
   uibackend:
-    image: ${VMCLARITY_UIBACKEND_CONTAINER_IMAGE:-ghcr.io/openclarity/vmclarity-ui-backend:latest}
+    image: ${VMCLARITY_UIBACKEND_CONTAINER_IMAGE:-ghcr.io/openclarity/vmclarity-ui-backend:latest@sha256:ccfffd4bae4b9d773644b346712b3801a19855d90471c9b6e50669cda62dfb3a}
     command:
       - run
       - --log-level
