@@ -18,9 +18,12 @@ Commit this change and verify the versioning with `make multimod-verify`.
 
 ## 2. Bump all dependencies to new release version
 
-To update all `go.mod` files with the new release version, run `make multimod-prerelease` and review the changes in the last commit.
+To update all `go.mod` files with the new release version, run `make multimod-prerelease` and review the changes in the last commit. Then, create a pull request.
 
-## 3. Tag the new release commit
+## 3. Create and push tags
+
+Once the previous changes have been approved and merged, pull the latest changes in the `main` branch. Then, create the tags for the last commit and push them with `make multimod-push-tags`.
 
 ## 4. Release
 
+Finally, create a Release on GitHub.
