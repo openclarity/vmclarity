@@ -5,7 +5,7 @@ go 1.21.4
 require (
 	github.com/CycloneDX/cyclonedx-go v0.8.0
 	github.com/anchore/clio v0.0.0-20240208153717-378d8c0180f9
-	github.com/anchore/grype v0.74.0
+	github.com/anchore/grype v0.74.5
 	github.com/anchore/stereoscope v0.0.1
 	github.com/anchore/syft v0.100.0
 	github.com/aquasecurity/go-dep-parser v0.0.0-20240208080026-8cc7d408bce4
