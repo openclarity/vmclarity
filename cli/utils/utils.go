@@ -115,14 +115,6 @@ func RunCommandAndParseOutputLineByLine(cmd *exec.Cmd, pfn, ecFn processFn) erro
 	return nil
 }
 
-func StringKeyMapToArray[T any](m map[string]T) []T {
-	ret := make([]T, 0, len(m))
-	for _, t := range m {
-		ret = append(ret, t)
-	}
-	return ret
-}
-
 func GetVulnerabilityTotalsPerSeverity(vulnerabilities *[]apitypes.Vulnerability) *apitypes.VulnerabilityScanSummary {
 	ret := &apitypes.VulnerabilityScanSummary{
 		TotalCriticalVulnerabilities:   to.Ptr(0),

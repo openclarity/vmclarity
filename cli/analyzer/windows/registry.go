@@ -25,11 +25,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/openclarity/vmclarity/core/to"
+
 	cdx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
-
-	"github.com/openclarity/vmclarity/cli/utils"
 
 	"www.velocidex.com/golang/regparser"
 )
@@ -177,7 +177,7 @@ func (r *Registry) GetUpdates() ([]string, error) {
 		}
 	}
 
-	return utils.StringKeyMapToArray(updates), nil
+	return to.Keys(updates), nil
 }
 
 // GetUsersApps returns installed apps from the registry for all users. This
