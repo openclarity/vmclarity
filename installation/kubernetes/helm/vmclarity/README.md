@@ -261,7 +261,7 @@ secrets.
 | swaggerUI.image.pullPolicy | string | `"IfNotPresent"` | Swagger UI image pull policy |
 | swaggerUI.image.registry | string | `"docker.io"` | Swagger UI container registry |
 | swaggerUI.image.repository | string | `"swaggerapi/swagger-ui"` | Swagger UI container repository |
-| swaggerUI.image.tag | string | `"v5.3.1@sha256:ed97fba3dc40c61fbf8346f0f0fdf494bea36ac6b55d3fb4446e9255965a46d9"` | Swagger UI container tag |
+| swaggerUI.image.tag | string | `"v5.11.3@sha256:4d342e0b0d06d026254b023db54106825e59877dfbca860914242f02fe3f1300"` | Swagger UI container tag |
 | swaggerUI.podSecurityContext.enabled | bool | `false` | Pod security context enabled |
 | swaggerUI.podSecurityContext.fsGroup | int | `101` | Pod security context fsGroup |
 | swaggerUI.replicas | int | `1` | Number of replicas for the swagger-ui service |
