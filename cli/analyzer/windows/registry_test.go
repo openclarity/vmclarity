@@ -35,7 +35,7 @@ import (
 
 func TestRegistry(t *testing.T) {
 	// from https://github.com/AndrewRathbun/VanillaWindowsRegistryHives/tree/d12ba60d8dd283a4a17b1a02295356a6bed093cf/Windows10/21H2/W10_21H2_Pro_20211012_19044.1288
-	registryFilePath := "testdata/W10_21H2_Pro/SOFTWARE"
+	registryFilePath := "testdata/W10_21H2_Pro_20211012_19044.SOFTWARE"
 
 	// when
 	reg, err := NewRegistry(registryFilePath, log.NewEntry(&log.Logger{}))

@@ -16,6 +16,7 @@
 package windows
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -48,7 +49,7 @@ import (
 //	- system apps:		WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*
 //
 // User NTUSER.DAT registry keys accessed:
-//	- user apps: 		SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall
+//	- user apps: 		SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*
 
 var defaultRegistryRootPaths = []string{
 	"/Windows/System32/config/SOFTWARE", // Windows Vista and newer
@@ -64,20 +65,23 @@ type Registry struct {
 
 func NewRegistryForMount(mountPath string, logger *log.Entry) (*Registry, error) {
 	// The registry key structure is identical for all Windows NT distributions, so
-	// try all registry combinations. If the registry is not under found under the
-	// default path, it might be a custom system installation or unsupported version.
+	// try all registry combinations. If the registry is not found under any default
+	// paths, it might be a custom system installation or unsupported version.
+	var errs error
 	for _, defaultRootPath := range defaultRegistryRootPaths {
 		registryFilePath := path.Join(mountPath, defaultRootPath)
 		registry, err := NewRegistry(registryFilePath, logger)
 		if err == nil {
 			return registry, nil // found, return
 		}
+		errs = errors.Join(errs, err) // collect errors, might be file-related
 	}
 
-	return nil, fmt.Errorf("cannot find registry for mount %s", mountPath)
+	return nil, fmt.Errorf("cannot find registry in mount %s: %w", mountPath, errs)
 }
 
 func NewRegistry(registryFilePath string, logger *log.Entry) (*Registry, error) {
+	// Use filepath clean to ensure path is platform-independent
 	registryFile, err := os.Open(filepath.Clean(registryFilePath))
 	if err != nil {
 		return nil, fmt.Errorf("cannot open registry file: %w", err)
@@ -125,7 +129,7 @@ func (r *Registry) GetPlatform() (map[string]string, error) {
 	// Extract all platform data from the registry
 	platform := getValuesMap(platformKey)
 
-	// Strip information about the product key
+	// Strip information about the product key hash
 	delete(platform, "DigitalProductId")
 	delete(platform, "DigitalProductId4")
 
@@ -210,7 +214,8 @@ func (r *Registry) GetUsersApps() ([]map[string]string, error) {
 				return // silent skip, not a user profile
 			}
 
-			// Open profile registry file to access profile-specific registry
+			// Open profile registry file to access profile-specific registry.
+			// Use filepath clean to ensure path is platform-independent.
 			profileRegPath := path.Join(profileLocation, "NTUSER.DAT")
 			profileRegFile, err := os.Open(filepath.Clean(profileRegPath))
 			if err != nil {
