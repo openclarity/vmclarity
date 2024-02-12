@@ -1,29 +1,61 @@
 # Release
 
-VMClarity adopted the [Go MultiMod Releaser](https://github.com/open-telemetry/opentelemetry-go-build-tools/tree/main/multimod) to create a new release for each module.
+This document outlines the process for creating a new release for VMClarity using the [Go MultiMod Releaser](https://github.com/open-telemetry/opentelemetry-go-build-tools/tree/main/multimod). All code block examples provided below correspond to an update to version `v0.7.0`, please update accordingly.
 
-Find below the steps to create a release.
+## 1. Update the New Release Version
 
-## 1. Update the new release version
+* Create a new branch for the release version update.
+```sh
+git checkout -b release/v0.7.0
+```
 
-Checkout to a new branch and update the version defined for VMClarity's module-set in `versions.yaml`. Please note that currently the same version is used for all methods. E.g.
-
+* Modify the `versions.yaml` file to update the version for VMClarity's module-set. Keep in mind that the same version is applied to all modules.
 ```
   vmclarity:
 -    version: v0.6.0
 +    version: v0.7.0
 ```
 
-Commit this change and verify the versioning with `make multimod-verify`.
+* Commit the changes with a suitable message.
+```sh
+git add versions.yaml
+git commit -m "release: update module set to version v0.7.0"
+```
 
-## 2. Bump all dependencies to new release version
+* Run the version verification command to check for any issues.
+```sh
+make multimod-verify
+```
 
-To update all `go.mod` files with the new release version, run `make multimod-prerelease` and review the changes in the last commit. Then, create a pull request.
+## 2. Bump All Dependencies to the New Release Version
 
-## 3. Create and push tags
+* Run the following command to update all `go.mod` files to the new release version.
+```sh
+make multimod-prerelease
+```
 
-Once the previous changes have been approved and merged, pull the latest changes in the `main` branch. Then, create the tags for the last commit and push them with `make multimod-push-tags`.
+* Review the changes made in the last commit to ensure correctness.
 
-## 4. Release
+* Push the branch to the GitHub repository.
+```sh
+git push origin release/v0.7.0
+```
 
-Finally, create a Release on GitHub.
+* Create a pull request with the changes.
+
+## 3. Create and Push Tags
+
+* After the pull request is approved and merged, update your local main branch.
+```sh
+git checkout main
+git pull origin main
+```
+
+* Create and push the tags for the last commit to the repository.
+```sh
+make multimod-push-tags
+```
+
+## Post-release Checks
+Verify that the `Release` workflow was completed successfully in the GitHub Actions section.
+Ensure that the release is visible in the GitHub releases page. Additionally, check that the release description is correct and all assets are listed.
