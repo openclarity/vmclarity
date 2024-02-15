@@ -10,7 +10,7 @@ git checkout -b release/v0.7.0
 ```
 
 * Modify the `versions.yaml` file to update the version for VMClarity's module-set. Keep in mind that the same version is applied to all modules.
-```
+```diff
   vmclarity:
 -    version: v0.6.0
 +    version: v0.7.0

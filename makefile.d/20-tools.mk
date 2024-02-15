@@ -238,7 +238,6 @@ bin/typos-$(TYPOS_VERSION): | $(BIN_DIR)
 
 MULTIMOD_BIN := $(BIN_DIR)/multimod
 MULTIMOD_REPO_DIR := $(BIN_DIR)/opentelemetry-go-build-tools
-MULTIMOD := $(BIN_DIR)/multimod
 
 bin/multimod:
 	@if [ ! -d $(MULTIMOD_REPO_DIR) ]; then git clone git@github.com:open-telemetry/opentelemetry-go-build-tools.git $(MULTIMOD_REPO_DIR); fi
