@@ -21,13 +21,11 @@ import (
 
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/pricing"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/provider"
 	"github.com/openclarity/vmclarity/provider/v2/aws/discoverer"
 	"github.com/openclarity/vmclarity/provider/v2/aws/estimator"
-	"github.com/openclarity/vmclarity/provider/v2/aws/estimator/scanestimation"
 	"github.com/openclarity/vmclarity/provider/v2/aws/scanner"
 	"github.com/openclarity/vmclarity/provider/v2/aws/utils"
 )
@@ -71,8 +69,8 @@ func New(ctx context.Context) (provider.Provider, error) {
 			Ec2Client: ec2Client,
 		},
 		Estimator: &estimator.Estimator{
-			Config:        config,
-			ScanEstimator: scanestimation.New(pricing.NewFromConfig(cfg), ec2Client),
+			Config:    config,
+			Ec2Client: ec2Client,
 		},
 	}, nil
 }

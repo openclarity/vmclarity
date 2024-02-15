@@ -19,7 +19,10 @@ import (
 	"context"
 	"fmt"
 
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go-v2/service/pricing"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/provider"
@@ -30,12 +33,18 @@ import (
 var _ provider.Estimator = &Estimator{}
 
 type Estimator struct {
-	Config        *utils.Config
-	ScanEstimator *scanestimation.ScanEstimator
+	Config    *utils.Config
+	Ec2Client *ec2.Client
 }
 
 func (e *Estimator) Estimate(ctx context.Context, stats apitypes.AssetScanStats, asset *apitypes.Asset, template *apitypes.AssetScanTemplate) (*apitypes.Estimation, error) {
-	var err error
+	cfg, err := awsconfig.LoadDefaultConfig(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load aws config: %w", err)
+	}
+
+	scanEstimator := scanestimation.New(pricing.NewFromConfig(cfg), e.Ec2Client)
+
 	const jobCreationTimeConst = 2
 
 	vminfo, err := asset.AssetInfo.AsVMInfo()
@@ -69,7 +78,7 @@ func (e *Estimator) Estimate(ctx context.Context, stats apitypes.AssetScanStats,
 		Asset:                   asset,
 		AssetScanTemplate:       template,
 	}
-	ret, err := e.ScanEstimator.EstimateAssetScan(ctx, params)
+	ret, err := scanEstimator.EstimateAssetScan(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to estimate asset scan: %w", err)
 	}
