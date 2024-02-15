@@ -23,14 +23,14 @@ import (
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/provider"
-	"github.com/openclarity/vmclarity/provider/v2/aws"
-	"github.com/openclarity/vmclarity/provider/v2/aws/scanestimation"
+	"github.com/openclarity/vmclarity/provider/v2/aws/estimator/scanestimation"
+	"github.com/openclarity/vmclarity/provider/v2/aws/utils"
 )
 
 var _ provider.Estimator = &Estimator{}
 
 type Estimator struct {
-	Config        *provider.Config
+	Config        *utils.Config
 	ScanEstimator *scanestimation.ScanEstimator
 }
 
@@ -43,7 +43,7 @@ func (e *Estimator) Estimate(ctx context.Context, stats apitypes.AssetScanStats,
 		return nil, fmt.Errorf("failed to use asset info as vminfo: %w", err)
 	}
 
-	location, err := aws.NewLocation(vminfo.Location)
+	location, err := utils.NewLocation(vminfo.Location)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse location %v: %w", vminfo.Location, err)
 	}

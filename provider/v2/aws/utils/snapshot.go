@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package aws
+package utils
 
 import (
 	"context"
@@ -202,7 +202,7 @@ func (s *Snapshot) CreateVolume(ctx context.Context, az string) (*Volume, error)
 			}
 		case ec2types.VolumeStateAvailable, ec2types.VolumeStateCreating, ec2types.VolumeStateInUse:
 			return &Volume{
-				ec2Client: s.ec2Client,
+				Ec2Client: s.ec2Client,
 				ID:        *vol.VolumeId,
 				Region:    s.Region,
 				Metadata:  s.Metadata,
@@ -227,7 +227,7 @@ func (s *Snapshot) CreateVolume(ctx context.Context, az string) (*Volume, error)
 	}
 
 	return &Volume{
-		ec2Client: s.ec2Client,
+		Ec2Client: s.ec2Client,
 		ID:        *out.VolumeId,
 		Region:    s.Region,
 		Metadata:  s.Metadata,

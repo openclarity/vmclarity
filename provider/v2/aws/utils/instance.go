@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package aws
+package utils
 
 import (
 	"context"
@@ -48,7 +48,7 @@ type Instance struct {
 
 	Metadata provider.ScanMetadata
 
-	ec2Client *ec2.Client
+	Ec2Client *ec2.Client
 }
 
 func (i *Instance) Location() string {
@@ -71,7 +71,7 @@ func (i *Instance) RootVolume() *Volume {
 func (i *Instance) IsReady(ctx context.Context) (bool, error) {
 	var ready bool
 
-	out, err := i.ec2Client.DescribeInstances(ctx, &ec2.DescribeInstancesInput{
+	out, err := i.Ec2Client.DescribeInstances(ctx, &ec2.DescribeInstancesInput{
 		InstanceIds: []string{i.ID},
 	}, func(options *ec2.Options) {
 		options.Region = i.Region
@@ -93,7 +93,7 @@ func (i *Instance) Delete(ctx context.Context) error {
 		return nil
 	}
 
-	_, err := i.ec2Client.TerminateInstances(ctx, &ec2.TerminateInstancesInput{
+	_, err := i.Ec2Client.TerminateInstances(ctx, &ec2.TerminateInstancesInput{
 		InstanceIds: []string{i.ID},
 	}, func(options *ec2.Options) {
 		options.Region = i.Region
@@ -121,7 +121,7 @@ func (i *Instance) AttachVolume(ctx context.Context, volume *Volume, deviceName 
 		VolumeIds: []string{volume.ID},
 	}
 
-	describeOut, err := i.ec2Client.DescribeVolumes(ctx, descParams, options)
+	describeOut, err := i.Ec2Client.DescribeVolumes(ctx, descParams, options)
 	if err != nil {
 		return fmt.Errorf("failed to fetch volume. VolumeID=%s: %w", volume.ID, err)
 	}
@@ -149,7 +149,7 @@ func (i *Instance) AttachVolume(ctx context.Context, volume *Volume, deviceName 
 				InstanceId: to.Ptr(i.ID),
 				VolumeId:   to.Ptr(volume.ID),
 			}
-			_, err := i.ec2Client.AttachVolume(ctx, attachVolParams, options)
+			_, err := i.Ec2Client.AttachVolume(ctx, attachVolParams, options)
 			if err != nil {
 				return fmt.Errorf("failed to attach volume: %w", err)
 			}

@@ -28,7 +28,7 @@ import (
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/provider"
-	"github.com/openclarity/vmclarity/provider/v2/aws"
+	"github.com/openclarity/vmclarity/provider/v2/aws/utils"
 )
 
 var _ provider.Discoverer = &Discoverer{}
@@ -61,7 +61,7 @@ func (d *Discoverer) DiscoverAssets(ctx context.Context) provider.AssetDiscovere
 			for _, instance := range instances {
 				asset, err := getVMInfoFromInstance(instance)
 				if err != nil {
-					assetDiscoverer.Error = aws.FatalError{
+					assetDiscoverer.Error = utils.FatalError{
 						Err: fmt.Errorf("failed convert EC2 Instance to AssetType: %w", err),
 					}
 					return
@@ -79,8 +79,8 @@ func (d *Discoverer) DiscoverAssets(ctx context.Context) provider.AssetDiscovere
 	return assetDiscoverer
 }
 
-func (d *Discoverer) ListAllRegions(ctx context.Context) ([]aws.Region, error) {
-	ret := make([]aws.Region, 0)
+func (d *Discoverer) ListAllRegions(ctx context.Context) ([]utils.Region, error) {
+	ret := make([]utils.Region, 0)
 	out, err := d.Ec2Client.DescribeRegions(ctx, &ec2.DescribeRegionsInput{
 		AllRegions: nil, // display also disabled regions?
 	})
@@ -89,7 +89,7 @@ func (d *Discoverer) ListAllRegions(ctx context.Context) ([]aws.Region, error) {
 	}
 
 	for _, region := range out.Regions {
-		ret = append(ret, aws.Region{
+		ret = append(ret, utils.Region{
 			Name: *region.RegionName,
 		})
 	}
@@ -97,11 +97,11 @@ func (d *Discoverer) ListAllRegions(ctx context.Context) ([]aws.Region, error) {
 	return ret, nil
 }
 
-func (d *Discoverer) GetInstances(ctx context.Context, filters []ec2types.Filter, regionID string) ([]aws.Instance, error) {
-	ret := make([]aws.Instance, 0)
+func (d *Discoverer) GetInstances(ctx context.Context, filters []ec2types.Filter, regionID string) ([]utils.Instance, error) {
+	ret := make([]utils.Instance, 0)
 
 	input := &ec2.DescribeInstancesInput{
-		MaxResults: to.Ptr[int32](aws.MaxResults), // TODO what will be a good number?
+		MaxResults: to.Ptr[int32](utils.MaxResults), // TODO what will be a good number?
 	}
 	if len(filters) > 0 {
 		input.Filters = filters
@@ -119,7 +119,7 @@ func (d *Discoverer) GetInstances(ctx context.Context, filters []ec2types.Filter
 	// TODO we can make it better by not saving all results in memory. See https://github.com/openclarity/vmclarity/pull/3#discussion_r1021656861
 	for out.NextToken != nil {
 		input := &ec2.DescribeInstancesInput{
-			MaxResults: to.Ptr[int32](aws.MaxResults), // TODO what will be a good number?
+			MaxResults: to.Ptr[int32](utils.MaxResults), // TODO what will be a good number?
 			NextToken:  out.NextToken,
 		}
 		if len(filters) > 0 {
@@ -138,7 +138,7 @@ func (d *Discoverer) GetInstances(ctx context.Context, filters []ec2types.Filter
 	return ret, nil
 }
 
-func getVMInfoFromInstance(i aws.Instance) (apitypes.AssetType, error) {
+func getVMInfoFromInstance(i utils.Instance) (apitypes.AssetType, error) {
 	assetType := apitypes.AssetType{}
 	err := assetType.FromVMInfo(apitypes.VMInfo{
 		Image:            i.Image,
@@ -163,10 +163,10 @@ func getVMInfoFromInstance(i aws.Instance) (apitypes.AssetType, error) {
 	return assetType, err
 }
 
-func (d *Discoverer) getInstancesFromDescribeInstancesOutput(ctx context.Context, result *ec2.DescribeInstancesOutput, regionID string) []aws.Instance {
+func (d *Discoverer) getInstancesFromDescribeInstancesOutput(ctx context.Context, result *ec2.DescribeInstancesOutput, regionID string) []utils.Instance {
 	logger := log.GetLoggerFromContextOrDiscard(ctx)
 
-	var ret []aws.Instance
+	var ret []utils.Instance
 	for _, reservation := range result.Reservations {
 		for _, instance := range reservation.Instances {
 			// Ignore terminated instances they are destroyed and
@@ -188,14 +188,14 @@ func (d *Discoverer) getInstancesFromDescribeInstancesOutput(ctx context.Context
 				}
 			}
 
-			ret = append(ret, aws.Instance{
+			ret = append(ret, utils.Instance{
 				ID:                  *instance.InstanceId,
 				Region:              regionID,
 				AvailabilityZone:    *instance.Placement.AvailabilityZone,
 				Image:               *instance.ImageId,
 				InstanceType:        string(instance.InstanceType),
 				Platform:            *instance.PlatformDetails,
-				Tags:                aws.GetTagsFromECTags(instance.Tags),
+				Tags:                utils.GetTagsFromECTags(instance.Tags),
 				LaunchTime:          *instance.LaunchTime,
 				VpcID:               *instance.VpcId,
 				SecurityGroups:      getSecurityGroupsIDs(instance.SecurityGroups),

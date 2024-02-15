@@ -32,21 +32,21 @@ import (
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/provider"
 	"github.com/openclarity/vmclarity/provider/cloudinit"
-	"github.com/openclarity/vmclarity/provider/v2/aws"
+	"github.com/openclarity/vmclarity/provider/v2/aws/utils"
 )
 
 var _ provider.Scanner = &Scanner{}
 
 type Scanner struct {
 	Kind      apitypes.CloudProvider
-	Config    *aws.Config
+	Config    *utils.Config
 	Ec2Client *ec2.Client
 }
 
 func (s *Scanner) RunAssetScan(ctx context.Context, t *provider.ScanJobConfig) error {
 	vmInfo, err := t.AssetInfo.AsVMInfo()
 	if err != nil {
-		return aws.FatalError{Err: err}
+		return utils.FatalError{Err: err}
 	}
 
 	logger := log.GetLoggerFromContextOrDefault(ctx).WithFields(logrus.Fields{
@@ -62,7 +62,7 @@ func (s *Scanner) RunAssetScan(ctx context.Context, t *provider.ScanJobConfig) e
 	// Create scanner instance
 	numOfGoroutines := 2
 	errs := make(chan error, numOfGoroutines)
-	var scannnerInstance *aws.Instance
+	var scannnerInstance *utils.Instance
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
@@ -73,22 +73,22 @@ func (s *Scanner) RunAssetScan(ctx context.Context, t *provider.ScanJobConfig) e
 		var err error
 		scannnerInstance, err = s.createInstance(ctx, s.Config.ScannerRegion, t)
 		if err != nil {
-			errs <- aws.WrapError(fmt.Errorf("failed to create scanner VM instance: %w", err))
+			errs <- utils.WrapError(fmt.Errorf("failed to create scanner VM instance: %w", err))
 			return
 		}
 
 		ready, err := scannnerInstance.IsReady(ctx)
 		if err != nil {
-			errs <- aws.WrapError(fmt.Errorf("failed to get scanner VM instance state: %w", err))
+			errs <- utils.WrapError(fmt.Errorf("failed to get scanner VM instance state: %w", err))
 			return
 		}
 		logger.WithFields(logrus.Fields{
 			"ScannerInstanceID": scannnerInstance.ID,
 		}).Debugf("Scanner instance is ready: %t", ready)
 		if !ready {
-			errs <- aws.RetryableError{
+			errs <- utils.RetryableError{
 				Err:   errors.New("scanner instance is not ready"),
-				After: aws.InstanceReadynessAfter,
+				After: utils.InstanceReadynessAfter,
 			}
 		}
 	}()
@@ -97,16 +97,16 @@ func (s *Scanner) RunAssetScan(ctx context.Context, t *provider.ScanJobConfig) e
 	// * fetching the Asset Instance from provider
 	// * creating a volume snapshot from the root volume of the Asset Instance
 	// * copying the volume snapshot to the region/location of the scanner instance if they are deployed in separate locations
-	var destVolSnapshot *aws.Snapshot
+	var destVolSnapshot *utils.Snapshot
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 
 		logger.Debug("Getting asset VM instance")
 
-		assetVMLocation, err := aws.NewLocation(vmInfo.Location)
+		assetVMLocation, err := utils.NewLocation(vmInfo.Location)
 		if err != nil {
-			errs <- aws.FatalError{
+			errs <- utils.FatalError{
 				Err: fmt.Errorf("failed to parse Location for asset VM instance: %w", err),
 			}
 			return
@@ -115,11 +115,11 @@ func (s *Scanner) RunAssetScan(ctx context.Context, t *provider.ScanJobConfig) e
 		var SrcEC2Instance *ec2types.Instance
 		SrcEC2Instance, err = s.getInstanceWithID(ctx, vmInfo.InstanceID, assetVMLocation.Region)
 		if err != nil {
-			errs <- aws.WrapError(fmt.Errorf("failed to fetch asset VM instance: %w", err))
+			errs <- utils.WrapError(fmt.Errorf("failed to fetch asset VM instance: %w", err))
 			return
 		}
 		if SrcEC2Instance == nil {
-			errs <- aws.FatalError{
+			errs <- utils.FatalError{
 				Err: fmt.Errorf("failed to find asset VM instance. InstanceID=%s", vmInfo.InstanceID),
 			}
 			return
@@ -131,7 +131,7 @@ func (s *Scanner) RunAssetScan(ctx context.Context, t *provider.ScanJobConfig) e
 
 		srcVol := srcInstance.RootVolume()
 		if srcVol == nil {
-			errs <- aws.FatalError{
+			errs <- utils.FatalError{
 				Err: errors.New("failed to get root block device for asset VM instance"),
 			}
 			return
@@ -140,7 +140,7 @@ func (s *Scanner) RunAssetScan(ctx context.Context, t *provider.ScanJobConfig) e
 		logger.WithField("AssetVolumeID", srcVol.ID).Debug("Creating asset volume snapshot for asset VM instance")
 		srcVolSnapshot, err := srcVol.CreateSnapshot(ctx)
 		if err != nil {
-			errs <- aws.WrapError(fmt.Errorf("failed to create volume snapshot from asset volume. AssetVolumeID=%s: %w",
+			errs <- utils.WrapError(fmt.Errorf("failed to create volume snapshot from asset volume. AssetVolumeID=%s: %w",
 				srcVol.ID, err))
 			return
 		}
@@ -149,7 +149,7 @@ func (s *Scanner) RunAssetScan(ctx context.Context, t *provider.ScanJobConfig) e
 		if err != nil {
 			err = fmt.Errorf("failed to get volume snapshot state. AssetVolumeSnapshotID=%s: %w",
 				srcVolSnapshot.ID, err)
-			errs <- aws.WrapError(err)
+			errs <- utils.WrapError(err)
 			return
 		}
 
@@ -158,9 +158,9 @@ func (s *Scanner) RunAssetScan(ctx context.Context, t *provider.ScanJobConfig) e
 			"AssetVolumeSnapshotID": srcVolSnapshot.ID,
 		}).Debugf("Asset volume snapshot is ready: %t", ready)
 		if !ready {
-			errs <- aws.RetryableError{
+			errs <- utils.RetryableError{
 				Err:   errors.New("asset volume snapshot is not ready"),
-				After: aws.SnapshotReadynessAfter,
+				After: utils.SnapshotReadynessAfter,
 			}
 			return
 		}
@@ -173,7 +173,7 @@ func (s *Scanner) RunAssetScan(ctx context.Context, t *provider.ScanJobConfig) e
 		if err != nil {
 			err = fmt.Errorf("failed to copy asset volume snapshot to location. AssetVolumeSnapshotID=%s Location=%s: %w",
 				srcVolSnapshot.ID, s.Config.ScannerRegion, err)
-			errs <- aws.WrapError(err)
+			errs <- utils.WrapError(err)
 			return
 		}
 
@@ -181,7 +181,7 @@ func (s *Scanner) RunAssetScan(ctx context.Context, t *provider.ScanJobConfig) e
 		if err != nil {
 			err = fmt.Errorf("failed to get volume snapshot state. ScannerVolumeSnapshotID=%s: %w",
 				srcVolSnapshot.ID, err)
-			errs <- aws.WrapError(err)
+			errs <- utils.WrapError(err)
 			return
 		}
 
@@ -192,9 +192,9 @@ func (s *Scanner) RunAssetScan(ctx context.Context, t *provider.ScanJobConfig) e
 		}).Debugf("Scanner volume snapshot is ready: %t", ready)
 
 		if !ready {
-			errs <- aws.RetryableError{
+			errs <- utils.RetryableError{
 				Err:   errors.New("scanner volume snapshot is not ready"),
-				After: aws.SnapshotReadynessAfter,
+				After: utils.SnapshotReadynessAfter,
 			}
 			return
 		}
@@ -223,13 +223,13 @@ func (s *Scanner) RunAssetScan(ctx context.Context, t *provider.ScanJobConfig) e
 	scannerVol, err := destVolSnapshot.CreateVolume(ctx, scannerInstanceAZ)
 	if err != nil {
 		err = fmt.Errorf("failed to create volume from snapshot. SnapshotID=%s: %w", destVolSnapshot.ID, err)
-		return aws.WrapError(err)
+		return utils.WrapError(err)
 	}
 
 	ready, err := scannerVol.IsReady(ctx)
 	if err != nil {
 		err = fmt.Errorf("failed to check if scanner volume is ready. ScannerVolumeID=%s: %w", scannerVol.ID, err)
-		return aws.WrapError(err)
+		return utils.WrapError(err)
 	}
 	logger.WithFields(logrus.Fields{
 		"ScannerAvailabilityZone": scannerInstanceAZ,
@@ -237,9 +237,9 @@ func (s *Scanner) RunAssetScan(ctx context.Context, t *provider.ScanJobConfig) e
 		"ScannerVolumeID":         scannerVol.ID,
 	}).Debugf("Scanner volume is ready: %t", ready)
 	if !ready {
-		return aws.RetryableError{
+		return utils.RetryableError{
 			Err:   fmt.Errorf("scanner volume is not ready. ScannerVolumeID=%s", scannerVol.ID),
-			After: aws.VolumeReadynessAfter,
+			After: utils.VolumeReadynessAfter,
 		}
 	}
 
@@ -254,7 +254,7 @@ func (s *Scanner) RunAssetScan(ctx context.Context, t *provider.ScanJobConfig) e
 	if err != nil {
 		err = fmt.Errorf("failed to attach volume to scanner instance. ScannerVolumeID=%s ScannerInstanceID=%s: %w",
 			scannerVol.ID, scannnerInstance.ID, err)
-		return aws.WrapError(err)
+		return utils.WrapError(err)
 	}
 
 	// Wait until the volume is attached to the scanner instance
@@ -268,12 +268,12 @@ func (s *Scanner) RunAssetScan(ctx context.Context, t *provider.ScanJobConfig) e
 	if err != nil {
 		err = fmt.Errorf("failed to check if volume is attached to scanner instance. ScannerVolumeID=%s ScannerInstanceID=%s: %w",
 			scannerVol.ID, scannnerInstance.ID, err)
-		return aws.WrapError(err)
+		return utils.WrapError(err)
 	}
 	if !ready {
-		return aws.RetryableError{
+		return utils.RetryableError{
 			Err:   fmt.Errorf("scanner volume is not attached yet. ScannerVolumeID=%s", scannerVol.ID),
-			After: aws.VolumeAttachmentReadynessAfter,
+			After: utils.VolumeAttachmentReadynessAfter,
 		}
 	}
 
@@ -285,7 +285,7 @@ func (s *Scanner) RunAssetScan(ctx context.Context, t *provider.ScanJobConfig) e
 func (s *Scanner) RemoveAssetScan(ctx context.Context, t *provider.ScanJobConfig) error {
 	vmInfo, err := t.AssetInfo.AsVMInfo()
 	if err != nil {
-		return aws.FatalError{Err: err}
+		return utils.FatalError{Err: err}
 	}
 
 	logger := log.GetLoggerFromContextOrDefault(ctx).WithFields(logrus.Fields{
@@ -293,8 +293,8 @@ func (s *Scanner) RemoveAssetScan(ctx context.Context, t *provider.ScanJobConfig
 		"Provider":        string(s.Kind),
 	})
 
-	ec2Tags := aws.EC2TagsFromScanMetadata(t.ScanMetadata)
-	ec2Filters := aws.EC2FiltersFromEC2Tags(ec2Tags)
+	ec2Tags := utils.EC2TagsFromScanMetadata(t.ScanMetadata)
+	ec2Filters := utils.EC2FiltersFromEC2Tags(ec2Tags)
 
 	numOfGoroutines := 3
 	errs := make(chan error, numOfGoroutines)
@@ -308,14 +308,14 @@ func (s *Scanner) RemoveAssetScan(ctx context.Context, t *provider.ScanJobConfig
 		logger.Debug("Deleting scanner VM Instance.")
 		done, err := s.deleteInstances(ctx, ec2Filters, s.Config.ScannerRegion)
 		if err != nil {
-			errs <- aws.WrapError(fmt.Errorf("failed to delete scanner VM instance: %w", err))
+			errs <- utils.WrapError(fmt.Errorf("failed to delete scanner VM instance: %w", err))
 			return
 		}
 		// Deleting scanner VM instance is in-progress, thus cannot proceed with deleting the scanner volume.
 		if !done {
-			errs <- aws.RetryableError{
+			errs <- utils.RetryableError{
 				Err:   errors.New("deleting Scanner VM instance is in-progress"),
-				After: aws.InstanceReadynessAfter,
+				After: utils.InstanceReadynessAfter,
 			}
 			return
 		}
@@ -324,14 +324,14 @@ func (s *Scanner) RemoveAssetScan(ctx context.Context, t *provider.ScanJobConfig
 		logger.Debug("Deleting scanner volume.")
 		done, err = s.deleteVolumes(ctx, ec2Filters, s.Config.ScannerRegion)
 		if err != nil {
-			errs <- aws.WrapError(fmt.Errorf("failed to delete scanner volume: %w", err))
+			errs <- utils.WrapError(fmt.Errorf("failed to delete scanner volume: %w", err))
 			return
 		}
 
 		if !done {
-			errs <- aws.RetryableError{
+			errs <- utils.RetryableError{
 				Err:   errors.New("deleting Scanner volume is in-progress"),
-				After: aws.VolumeReadynessAfter,
+				After: utils.VolumeReadynessAfter,
 			}
 			return
 		}
@@ -345,13 +345,13 @@ func (s *Scanner) RemoveAssetScan(ctx context.Context, t *provider.ScanJobConfig
 		logger.Debug("Deleting scanner volume snapshot.")
 		done, err := s.deleteVolumeSnapshots(ctx, ec2Filters, s.Config.ScannerRegion)
 		if err != nil {
-			errs <- aws.WrapError(fmt.Errorf("failed to delete scanner volume snapshot: %w", err))
+			errs <- utils.WrapError(fmt.Errorf("failed to delete scanner volume snapshot: %w", err))
 			return
 		}
 		if !done {
-			errs <- aws.RetryableError{
+			errs <- utils.RetryableError{
 				Err:   errors.New("deleting Scanner volume snapshot is in-progress"),
-				After: aws.SnapshotReadynessAfter,
+				After: utils.SnapshotReadynessAfter,
 			}
 			return
 		}
@@ -362,9 +362,9 @@ func (s *Scanner) RemoveAssetScan(ctx context.Context, t *provider.ScanJobConfig
 	go func() {
 		defer wg.Done()
 
-		location, err := aws.NewLocation(vmInfo.Location)
+		location, err := utils.NewLocation(vmInfo.Location)
 		if err != nil {
-			errs <- aws.FatalError{
+			errs <- utils.FatalError{
 				Err: fmt.Errorf("failed to parse Location string. Location=%s: %w", vmInfo.Location, err),
 			}
 			return
@@ -382,9 +382,9 @@ func (s *Scanner) RemoveAssetScan(ctx context.Context, t *provider.ScanJobConfig
 		}
 
 		if !done {
-			errs <- aws.RetryableError{
+			errs <- utils.RetryableError{
 				Err:   errors.New("deleting Asset volume snapshot is in-progress"),
-				After: aws.SnapshotReadynessAfter,
+				After: utils.SnapshotReadynessAfter,
 			}
 			return
 		}
@@ -430,13 +430,13 @@ func (s *Scanner) getInstanceWithID(ctx context.Context, id string, region strin
 }
 
 // nolint:cyclop
-func (s *Scanner) createInstance(ctx context.Context, region string, config *provider.ScanJobConfig) (*aws.Instance, error) {
+func (s *Scanner) createInstance(ctx context.Context, region string, config *provider.ScanJobConfig) (*utils.Instance, error) {
 	options := func(options *ec2.Options) {
 		options.Region = region
 	}
 
-	ec2TagsForInstance := aws.EC2TagsFromScanMetadata(config.ScanMetadata)
-	ec2Filters := aws.EC2FiltersFromEC2Tags(ec2TagsForInstance)
+	ec2TagsForInstance := utils.EC2TagsFromScanMetadata(config.ScanMetadata)
+	ec2Filters := utils.EC2FiltersFromEC2Tags(ec2TagsForInstance)
 
 	describeParams := &ec2.DescribeInstancesInput{
 		Filters: ec2Filters,
@@ -463,7 +463,7 @@ func (s *Scanner) createInstance(ctx context.Context, region string, config *pro
 
 	userData, err := cloudinit.New(config)
 	if err != nil {
-		return nil, aws.FatalError{
+		return nil, utils.FatalError{
 			Err: fmt.Errorf("failed to generate cloud-init: %w", err),
 		}
 	}
@@ -662,11 +662,11 @@ func (s *Scanner) deleteVolumeSnapshots(ctx context.Context, filters []ec2types.
 	return true, nil
 }
 
-func instanceFromEC2Instance(i *ec2types.Instance, client *ec2.Client, region string, config *provider.ScanJobConfig) *aws.Instance {
+func instanceFromEC2Instance(i *ec2types.Instance, client *ec2.Client, region string, config *provider.ScanJobConfig) *utils.Instance {
 	securityGroups := getSecurityGroupsFromEC2GroupIdentifiers(i.SecurityGroups)
-	tags := aws.GetTagsFromECTags(i.Tags)
+	tags := utils.GetTagsFromECTags(i.Tags)
 
-	volumes := make([]aws.Volume, len(i.BlockDeviceMappings))
+	volumes := make([]utils.Volume, len(i.BlockDeviceMappings))
 	for idx, blkDevice := range i.BlockDeviceMappings {
 		var blockDeviceName string
 
@@ -674,8 +674,8 @@ func instanceFromEC2Instance(i *ec2types.Instance, client *ec2.Client, region st
 			blockDeviceName = *blkDevice.DeviceName
 		}
 
-		volumes[idx] = aws.Volume{
-			ec2Client:       client,
+		volumes[idx] = utils.Volume{
+			Ec2Client:       client,
 			ID:              *blkDevice.Ebs.VolumeId,
 			Region:          region,
 			BlockDeviceName: blockDeviceName,
@@ -683,7 +683,7 @@ func instanceFromEC2Instance(i *ec2types.Instance, client *ec2.Client, region st
 		}
 	}
 
-	return &aws.Instance{
+	return &utils.Instance{
 		ID:               *i.InstanceId,
 		Region:           region,
 		VpcID:            *i.VpcId,
@@ -698,7 +698,7 @@ func instanceFromEC2Instance(i *ec2types.Instance, client *ec2.Client, region st
 		Volumes:          volumes,
 		Metadata:         config.ScanMetadata,
 
-		ec2Client: client,
+		Ec2Client: client,
 	}
 }
 

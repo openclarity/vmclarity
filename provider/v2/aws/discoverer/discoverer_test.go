@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package aws
+package discoverer
 
 import (
 	"context"
@@ -27,126 +27,8 @@ import (
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/to"
+	"github.com/openclarity/vmclarity/provider/v2/aws/utils"
 )
-
-func Test_getInstanceState(t *testing.T) {
-	type args struct {
-		result     *ec2.DescribeInstancesOutput
-		instanceID string
-	}
-	tests := []struct {
-		name string
-		args args
-		want ec2types.InstanceStateName
-	}{
-		{
-			name: "state running",
-			args: args{
-				result: &ec2.DescribeInstancesOutput{
-					Reservations: []ec2types.Reservation{
-						{
-							Instances: []ec2types.Instance{
-								{
-									InstanceId: to.Ptr("instance-1"),
-								},
-								{
-									InstanceId: to.Ptr("instance-2"),
-								},
-							},
-						},
-						{
-							Instances: []ec2types.Instance{
-								{
-									InstanceId: to.Ptr("instance-3"),
-									State: &ec2types.InstanceState{
-										Name: ec2types.InstanceStateNameRunning,
-									},
-								},
-							},
-						},
-					},
-				},
-				instanceID: "instance-3",
-			},
-			want: ec2types.InstanceStateNameRunning,
-		},
-		{
-			name: "state pending",
-			args: args{
-				result: &ec2.DescribeInstancesOutput{
-					Reservations: []ec2types.Reservation{
-						{
-							Instances: []ec2types.Instance{
-								{
-									InstanceId: to.Ptr("instance-1"),
-								},
-								{
-									InstanceId: to.Ptr("instance-2"),
-									State: &ec2types.InstanceState{
-										Name: ec2types.InstanceStateNamePending,
-									},
-								},
-							},
-						},
-						{
-							Instances: []ec2types.Instance{
-								{
-									InstanceId: to.Ptr("instance-3"),
-									State: &ec2types.InstanceState{
-										Name: ec2types.InstanceStateNameRunning,
-									},
-								},
-							},
-						},
-					},
-				},
-				instanceID: "instance-2",
-			},
-			want: ec2types.InstanceStateNamePending,
-		},
-		{
-			name: "instance id not found",
-			args: args{
-				result: &ec2.DescribeInstancesOutput{
-					Reservations: []ec2types.Reservation{
-						{
-							Instances: []ec2types.Instance{
-								{
-									InstanceId: to.Ptr("instance-1"),
-								},
-								{
-									InstanceId: to.Ptr("instance-2"),
-									State: &ec2types.InstanceState{
-										Name: ec2types.InstanceStateNamePending,
-									},
-								},
-							},
-						},
-						{
-							Instances: []ec2types.Instance{
-								{
-									InstanceId: to.Ptr("instance-3"),
-									State: &ec2types.InstanceState{
-										Name: ec2types.InstanceStateNameRunning,
-									},
-								},
-							},
-						},
-					},
-				},
-				instanceID: "instance-4",
-			},
-			want: ec2types.InstanceStateNamePending,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := getInstanceState(tt.args.result, tt.args.instanceID); got != tt.want {
-				t.Errorf("getInstanceState() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
 // nolint: maintidx
 func TestProvider_getInstancesFromDescribeInstancesOutput(t *testing.T) {
@@ -161,7 +43,7 @@ func TestProvider_getInstancesFromDescribeInstancesOutput(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		want   []Instance
+		want   []utils.Instance
 	}{
 		{
 			name: "no reservations found",
@@ -259,7 +141,7 @@ func TestProvider_getInstancesFromDescribeInstancesOutput(t *testing.T) {
 				},
 				regionID: "region-1",
 			},
-			want: []Instance{
+			want: []utils.Instance{
 				{
 					ID:     "instance-1",
 					Region: "region-1",
@@ -323,12 +205,12 @@ func TestProvider_getInstancesFromDescribeInstancesOutput(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := &Provider{}
-			got := p.getInstancesFromDescribeInstancesOutput(ctx, tt.args.result, tt.args.regionID)
+			d := &Discoverer{}
+			got := d.getInstancesFromDescribeInstancesOutput(ctx, tt.args.result, tt.args.regionID)
 
-			var gotInstances []Instance
+			var gotInstances []utils.Instance
 			for _, instance := range got {
-				instance.ec2Client = nil
+				instance.Ec2Client = nil
 				gotInstances = append(gotInstances, instance)
 			}
 			sort.Slice(gotInstances, func(i, j int) bool {

@@ -27,8 +27,9 @@ import (
 	"github.com/openclarity/vmclarity/provider"
 	"github.com/openclarity/vmclarity/provider/v2/aws/discoverer"
 	"github.com/openclarity/vmclarity/provider/v2/aws/estimator"
-	"github.com/openclarity/vmclarity/provider/v2/aws/scanestimation"
+	"github.com/openclarity/vmclarity/provider/v2/aws/estimator/scanestimation"
 	"github.com/openclarity/vmclarity/provider/v2/aws/scanner"
+	"github.com/openclarity/vmclarity/provider/v2/aws/utils"
 )
 
 var _ provider.Provider = &Provider{}
@@ -44,7 +45,7 @@ func (p *Provider) Kind() apitypes.CloudProvider {
 }
 
 func New(ctx context.Context) (provider.Provider, error) {
-	config, err := NewConfig()
+	config, err := utils.NewConfig()
 	if err != nil {
 		return nil, fmt.Errorf("invalid configuration. Provider=AWS: %w", err)
 	}

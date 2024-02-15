@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package aws
+package utils
 
 import (
 	"context"
@@ -36,7 +36,7 @@ type Volume struct {
 	BlockDeviceName string
 	Metadata        provider.ScanMetadata
 
-	ec2Client *ec2.Client
+	Ec2Client *ec2.Client
 }
 
 func (v *Volume) CreateSnapshot(ctx context.Context) (*Snapshot, error) {
@@ -60,7 +60,7 @@ func (v *Volume) CreateSnapshot(ctx context.Context) (*Snapshot, error) {
 	describeParams := &ec2.DescribeSnapshotsInput{
 		Filters: ec2Filters,
 	}
-	describeOut, err := v.ec2Client.DescribeSnapshots(ctx, describeParams, options)
+	describeOut, err := v.Ec2Client.DescribeSnapshots(ctx, describeParams, options)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch snapshots for volume. VolumeID=%s: %w", v.ID, err)
 	}
@@ -78,7 +78,7 @@ func (v *Volume) CreateSnapshot(ctx context.Context) (*Snapshot, error) {
 			fallthrough
 		default:
 			return &Snapshot{
-				ec2Client: v.ec2Client,
+				ec2Client: v.Ec2Client,
 				ID:        *snap.SnapshotId,
 				Region:    v.Region,
 				Metadata:  v.Metadata,
@@ -97,13 +97,13 @@ func (v *Volume) CreateSnapshot(ctx context.Context) (*Snapshot, error) {
 			},
 		},
 	}
-	createOut, err := v.ec2Client.CreateSnapshot(ctx, &createParams, options)
+	createOut, err := v.Ec2Client.CreateSnapshot(ctx, &createParams, options)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create snapshot for volume. VolumeID=%s: %w", v.ID, err)
 	}
 
 	return &Snapshot{
-		ec2Client: v.ec2Client,
+		ec2Client: v.Ec2Client,
 		ID:        *createOut.SnapshotId,
 		Region:    v.Region,
 		Metadata:  v.Metadata,
@@ -135,7 +135,7 @@ func (v *Volume) WaitForReady(ctx context.Context, timeout time.Duration, interv
 }
 
 func (v *Volume) IsReady(ctx context.Context) (bool, error) {
-	out, err := v.ec2Client.DescribeVolumes(ctx, &ec2.DescribeVolumesInput{
+	out, err := v.Ec2Client.DescribeVolumes(ctx, &ec2.DescribeVolumesInput{
 		VolumeIds: []string{v.ID},
 	}, func(options *ec2.Options) {
 		options.Region = v.Region
@@ -166,7 +166,7 @@ func (v *Volume) IsReady(ctx context.Context) (bool, error) {
 }
 
 func (v *Volume) IsAttached(ctx context.Context) (bool, error) {
-	out, err := v.ec2Client.DescribeVolumes(ctx, &ec2.DescribeVolumesInput{
+	out, err := v.Ec2Client.DescribeVolumes(ctx, &ec2.DescribeVolumesInput{
 		VolumeIds: []string{v.ID},
 	}, func(options *ec2.Options) {
 		options.Region = v.Region
@@ -194,7 +194,7 @@ func (v *Volume) Delete(ctx context.Context) error {
 		return nil
 	}
 
-	_, err := v.ec2Client.DeleteVolume(ctx, &ec2.DeleteVolumeInput{
+	_, err := v.Ec2Client.DeleteVolume(ctx, &ec2.DeleteVolumeInput{
 		VolumeId: &v.ID,
 	}, func(options *ec2.Options) {
 		options.Region = v.Region
