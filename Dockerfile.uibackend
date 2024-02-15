@@ -44,6 +44,10 @@ FROM alpine:3.19@sha256:c5b1261d6d3e43071626931fc004f70149baeba2c8ec672bd4f27761
 
 COPY --from=builder ["/bin/vmclarity-ui-backend", "/bin/vmclarity-ui-backend"]
 
+RUN apk add --update --no-cache \
+    ca-certificates \
+    libc6-compat
+
 ENTRYPOINT ["/bin/vmclarity-ui-backend"]
 
 CMD ["--help"]

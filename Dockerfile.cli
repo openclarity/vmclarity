@@ -45,7 +45,8 @@ RUN apk upgrade --quiet --no-cache
 
 RUN apk add --update --no-cache \
     util-linux \
-    ca-certificates
+    ca-certificates \
+    libc6-compat
 
 COPY --from=builder /bin/vmclarity-cli /bin/vmclarity-cli
 
