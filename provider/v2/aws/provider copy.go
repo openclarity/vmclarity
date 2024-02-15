@@ -23,53 +23,23 @@ import (
 	"sync"
 
 	awstype "github.com/aws/aws-sdk-go-v2/aws"
-	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go-v2/service/pricing"
 	"github.com/sirupsen/logrus"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/provider"
-	"github.com/openclarity/vmclarity/provider/aws/scanestimation"
-	"github.com/openclarity/vmclarity/provider/cloudinit"
+	"github.com/openclarity/vmclarity/provider/v2/aws/scanestimation"
+	"github.com/openclarity/vmclarity/provider/v2/cloudinit"
 )
 
-type Provider struct {
-	ec2Client     *ec2.Client
-	scanEstimator *scanestimation.ScanEstimator
-	config        *Config
-}
-
-func New(ctx context.Context) (*Provider, error) {
-	config, err := NewConfig()
-	if err != nil {
-		return nil, fmt.Errorf("invalid configuration. Provider=AWS: %w", err)
-	}
-
-	if err = config.Validate(); err != nil {
-		return nil, fmt.Errorf("failed to validate provider configuration. Provider=AWS: %w", err)
-	}
-
-	cfg, err := awsconfig.LoadDefaultConfig(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load aws config: %w", err)
-	}
-
-	ec2Client := ec2.NewFromConfig(cfg)
-
-	return &Provider{
-		ec2Client:     ec2Client,
-		scanEstimator: scanestimation.New(pricing.NewFromConfig(cfg), ec2Client),
-		config:        config,
-	}, nil
-}
-
-func (p *Provider) Kind() apitypes.CloudProvider {
-	return apitypes.AWS
-}
+// type Provider struct {
+// 	ec2Client     *ec2.Client
+// 	scanEstimator *scanestimation.ScanEstimator
+// 	config        *Config
+// }
 
 func (p *Provider) Estimate(ctx context.Context, assetScanStats apitypes.AssetScanStats, asset *apitypes.Asset, assetScanTemplate *apitypes.AssetScanTemplate) (*apitypes.Estimation, error) {
 	var err error

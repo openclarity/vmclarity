@@ -17,6 +17,10 @@ package aws
 
 import (
 	"context"
+	"fmt"
+
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/provider"
@@ -34,11 +38,26 @@ type Provider struct {
 }
 
 func (p *Provider) Kind() apitypes.CloudProvider {
-	// TODO implement me
-	panic("implement me")
+	return apitypes.AWS
 }
 
-func New(_ context.Context) (provider.Provider, error) {
+func New(ctx context.Context) (provider.Provider, error) {
+	config, err := NewConfig()
+	if err != nil {
+		return nil, fmt.Errorf("invalid configuration. Provider=AWS: %w", err)
+	}
+
+	if err = config.Validate(); err != nil {
+		return nil, fmt.Errorf("failed to validate provider configuration. Provider=AWS: %w", err)
+	}
+
+	cfg, err := awsconfig.LoadDefaultConfig(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load aws config: %w", err)
+	}
+
+	ec2Client := ec2.NewFromConfig(cfg)
+
 	return &Provider{
 		Discoverer: &discoverer.Discoverer{},
 		Scanner:    &scanner.Scanner{},
