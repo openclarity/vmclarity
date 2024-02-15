@@ -58,9 +58,17 @@ func New(ctx context.Context) (provider.Provider, error) {
 
 	ec2Client := ec2.NewFromConfig(cfg)
 
+	// return &Provider{
+	// 	ec2Client:     ec2Client,
+	// 	scanEstimator: scanestimation.New(pricing.NewFromConfig(cfg), ec2Client),
+	// 	config:        config,
+	// }, nil
+
 	return &Provider{
-		Discoverer: &discoverer.Discoverer{},
-		Scanner:    &scanner.Scanner{},
-		Estimator:  &estimator.Estimator{},
+		Discoverer: &discoverer.Discoverer{
+			Ec2Client: ec2Client,
+		},
+		Scanner:   &scanner.Scanner{},
+		Estimator: &estimator.Estimator{},
 	}, nil
 }

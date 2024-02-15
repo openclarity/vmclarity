@@ -103,7 +103,7 @@ func EC2FiltersFromTags(tags []apitypes.Tag) []ec2types.Filter {
 
 func instanceFromEC2Instance(i *ec2types.Instance, client *ec2.Client, region string, config *provider.ScanJobConfig) *Instance {
 	securityGroups := getSecurityGroupsFromEC2GroupIdentifiers(i.SecurityGroups)
-	tags := getTagsFromECTags(i.Tags)
+	tags := GetTagsFromECTags(i.Tags)
 
 	volumes := make([]Volume, len(i.BlockDeviceMappings))
 	for idx, blkDevice := range i.BlockDeviceMappings {
@@ -141,7 +141,7 @@ func instanceFromEC2Instance(i *ec2types.Instance, client *ec2.Client, region st
 	}
 }
 
-func getTagsFromECTags(tags []ec2types.Tag) []apitypes.Tag {
+func GetTagsFromECTags(tags []ec2types.Tag) []apitypes.Tag {
 	if len(tags) == 0 {
 		return nil
 	}
@@ -169,45 +169,6 @@ func getInstanceState(result *ec2.DescribeInstancesOutput, instanceID string) ec
 	return ec2types.InstanceStateNamePending
 }
 
-func validateInstanceFields(instance ec2types.Instance) error {
-	if instance.InstanceId == nil {
-		return errors.New("instance id does not exist")
-	}
-	if instance.Placement == nil {
-		return errors.New("insatnce Placement does not exist")
-	}
-	if instance.Placement.AvailabilityZone == nil {
-		return errors.New("insatnce AvailabilityZone does not exist")
-	}
-	if instance.ImageId == nil {
-		return errors.New("instance ImageId does not exist")
-	}
-	if instance.PlatformDetails == nil {
-		return errors.New("instance PlatformDetails does not exist")
-	}
-	if instance.LaunchTime == nil {
-		return errors.New("instance LaunchTime does not exist")
-	}
-	if instance.VpcId == nil {
-		return errors.New("instance VpcId does not exist")
-	}
-	return nil
-}
-
-func getSecurityGroupsIDs(sg []ec2types.GroupIdentifier) []apitypes.SecurityGroup {
-	securityGroups := make([]apitypes.SecurityGroup, 0, len(sg))
-	for _, s := range sg {
-		if s.GroupId == nil {
-			continue
-		}
-		securityGroups = append(securityGroups, apitypes.SecurityGroup{
-			Id: *s.GroupId,
-		})
-	}
-
-	return securityGroups
-}
-
 func getSecurityGroupsFromEC2GroupIdentifiers(identifiers []ec2types.GroupIdentifier) []apitypes.SecurityGroup {
 	var ret []apitypes.SecurityGroup
 
@@ -220,29 +181,4 @@ func getSecurityGroupsFromEC2GroupIdentifiers(identifiers []ec2types.GroupIdenti
 	}
 
 	return ret
-}
-
-func getVMInfoFromInstance(i Instance) (apitypes.AssetType, error) {
-	assetType := apitypes.AssetType{}
-	err := assetType.FromVMInfo(apitypes.VMInfo{
-		Image:            i.Image,
-		InstanceID:       i.ID,
-		InstanceProvider: to.Ptr(apitypes.AWS),
-		InstanceType:     i.InstanceType,
-		LaunchTime:       i.LaunchTime,
-		Location:         i.Location(),
-		ObjectType:       "VMInfo",
-		Platform:         i.Platform,
-		RootVolume: apitypes.RootVolume{
-			Encrypted: i.RootVolumeEncrypted,
-			SizeGB:    int(i.RootVolumeSizeGB),
-		},
-		SecurityGroups: to.Ptr(i.SecurityGroups),
-		Tags:           to.Ptr(i.Tags),
-	})
-	if err != nil {
-		err = fmt.Errorf("failed to create AssetType from VMInfo: %w", err)
-	}
-
-	return assetType, err
 }

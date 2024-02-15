@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	maxResults = 500
+	MaxResults = 500
 )
 
 const (
