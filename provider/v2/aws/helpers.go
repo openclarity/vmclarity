@@ -101,46 +101,6 @@ func EC2FiltersFromTags(tags []apitypes.Tag) []ec2types.Filter {
 	return filters
 }
 
-func instanceFromEC2Instance(i *ec2types.Instance, client *ec2.Client, region string, config *provider.ScanJobConfig) *Instance {
-	securityGroups := getSecurityGroupsFromEC2GroupIdentifiers(i.SecurityGroups)
-	tags := GetTagsFromECTags(i.Tags)
-
-	volumes := make([]Volume, len(i.BlockDeviceMappings))
-	for idx, blkDevice := range i.BlockDeviceMappings {
-		var blockDeviceName string
-
-		if blkDevice.DeviceName != nil {
-			blockDeviceName = *blkDevice.DeviceName
-		}
-
-		volumes[idx] = Volume{
-			ec2Client:       client,
-			ID:              *blkDevice.Ebs.VolumeId,
-			Region:          region,
-			BlockDeviceName: blockDeviceName,
-			Metadata:        config.ScanMetadata,
-		}
-	}
-
-	return &Instance{
-		ID:               *i.InstanceId,
-		Region:           region,
-		VpcID:            *i.VpcId,
-		SecurityGroups:   securityGroups,
-		AvailabilityZone: *i.Placement.AvailabilityZone,
-		Image:            *i.ImageId,
-		InstanceType:     string(i.InstanceType),
-		Platform:         string(i.Platform),
-		Tags:             tags,
-		LaunchTime:       *i.LaunchTime,
-		RootDeviceName:   *i.RootDeviceName,
-		Volumes:          volumes,
-		Metadata:         config.ScanMetadata,
-
-		ec2Client: client,
-	}
-}
-
 func GetTagsFromECTags(tags []ec2types.Tag) []apitypes.Tag {
 	if len(tags) == 0 {
 		return nil
@@ -167,18 +127,4 @@ func getInstanceState(result *ec2.DescribeInstancesOutput, instanceID string) ec
 		}
 	}
 	return ec2types.InstanceStateNamePending
-}
-
-func getSecurityGroupsFromEC2GroupIdentifiers(identifiers []ec2types.GroupIdentifier) []apitypes.SecurityGroup {
-	var ret []apitypes.SecurityGroup
-
-	for _, identifier := range identifiers {
-		if identifier.GroupId != nil {
-			ret = append(ret, apitypes.SecurityGroup{
-				Id: *identifier.GroupId,
-			})
-		}
-	}
-
-	return ret
 }

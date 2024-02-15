@@ -64,7 +64,11 @@ func New(ctx context.Context) (provider.Provider, error) {
 		Discoverer: &discoverer.Discoverer{
 			Ec2Client: ec2Client,
 		},
-		Scanner: &scanner.Scanner{},
+		Scanner: &scanner.Scanner{
+			Kind:      apitypes.AWS,
+			Config:    config,
+			Ec2Client: ec2Client,
+		},
 		Estimator: &estimator.Estimator{
 			Config:        config,
 			ScanEstimator: scanestimation.New(pricing.NewFromConfig(cfg), ec2Client),
