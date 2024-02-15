@@ -35,55 +35,6 @@ import (
 	"github.com/openclarity/vmclarity/provider/v2/cloudinit"
 )
 
-// type Provider struct {
-// 	ec2Client     *ec2.Client
-// 	scanEstimator *scanestimation.ScanEstimator
-// 	config        *Config
-// }
-
-func (p *Provider) Estimate(ctx context.Context, assetScanStats apitypes.AssetScanStats, asset *apitypes.Asset, assetScanTemplate *apitypes.AssetScanTemplate) (*apitypes.Estimation, error) {
-	var err error
-	const jobCreationTimeConst = 2
-
-	vminfo, err := asset.AssetInfo.AsVMInfo()
-	if err != nil {
-		return nil, fmt.Errorf("failed to use asset info as vminfo: %w", err)
-	}
-
-	location, err := NewLocation(vminfo.Location)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse location %v: %w", vminfo.Location, err)
-	}
-
-	sourceRegion := location.Region
-	destRegion := p.config.ScannerRegion
-	scannerInstanceType := p.config.ScannerInstanceType
-
-	scannerRootVolumeSizeGB := vminfo.RootVolume.SizeGB
-	scannerVolumeType := ec2types.VolumeTypeGp2                          // TODO this should come from configuration once we support more than one volume type.
-	fromSnapshotVolumeType := ec2types.VolumeTypeGp2                     // TODO this should come from configuration once we support more than one volume type.
-	jobCreationTimeSec := jobCreationTimeConst * scannerRootVolumeSizeGB // TODO create a formula to calculate this per GB
-
-	params := scanestimation.EstimateAssetScanParams{
-		SourceRegion:            sourceRegion,
-		DestRegion:              destRegion,
-		ScannerVolumeType:       scannerVolumeType,
-		FromSnapshotVolumeType:  fromSnapshotVolumeType,
-		ScannerInstanceType:     ec2types.InstanceType(scannerInstanceType),
-		JobCreationTimeSec:      int64(jobCreationTimeSec),
-		ScannerRootVolumeSizeGB: int64(scannerRootVolumeSizeGB),
-		Stats:                   assetScanStats,
-		Asset:                   asset,
-		AssetScanTemplate:       assetScanTemplate,
-	}
-	ret, err := p.scanEstimator.EstimateAssetScan(ctx, params)
-	if err != nil {
-		return nil, fmt.Errorf("failed to estimate asset scan: %w", err)
-	}
-
-	return ret, nil
-}
-
 // nolint:nilnil
 func (p *Provider) getInstanceWithID(ctx context.Context, id string, region string) (*ec2types.Instance, error) {
 	out, err := p.ec2Client.DescribeInstances(ctx, &ec2.DescribeInstancesInput{
