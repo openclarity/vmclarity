@@ -32,17 +32,25 @@ import (
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/provider"
 	"github.com/openclarity/vmclarity/provider/cloudinit"
+	"github.com/openclarity/vmclarity/provider/v2/aws/types"
 	"github.com/openclarity/vmclarity/provider/v2/aws/utils"
 )
 
 var _ provider.Scanner = &Scanner{}
 
 type Scanner struct {
-	Kind      apitypes.CloudProvider
-	Config    *utils.Config
-	Ec2Client *ec2.Client
+	Kind                apitypes.CloudProvider
+	ScannerRegion       string
+	BlockDeviceName     string
+	ScannerImage        string
+	ScannerInstanceType string
+	SecurityGroupID     string
+	SubnetID            string
+	KeyPairName         string
+	Ec2Client           *ec2.Client
 }
 
+// nolint:cyclop,gocognit,maintidx,wrapcheck
 func (s *Scanner) RunAssetScan(ctx context.Context, t *provider.ScanJobConfig) error {
 	vmInfo, err := t.AssetInfo.AsVMInfo()
 	if err != nil {
@@ -52,7 +60,7 @@ func (s *Scanner) RunAssetScan(ctx context.Context, t *provider.ScanJobConfig) e
 	logger := log.GetLoggerFromContextOrDefault(ctx).WithFields(logrus.Fields{
 		"AssetInstanceID": vmInfo.InstanceID,
 		"AssetLocation":   vmInfo.Location,
-		"ScannerLocation": s.Config.ScannerRegion,
+		"ScannerLocation": s.ScannerRegion,
 		"Provider":        string(s.Kind),
 	})
 
@@ -62,7 +70,7 @@ func (s *Scanner) RunAssetScan(ctx context.Context, t *provider.ScanJobConfig) e
 	// Create scanner instance
 	numOfGoroutines := 2
 	errs := make(chan error, numOfGoroutines)
-	var scannnerInstance *utils.Instance
+	var scannnerInstance *types.Instance
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
@@ -71,7 +79,7 @@ func (s *Scanner) RunAssetScan(ctx context.Context, t *provider.ScanJobConfig) e
 		logger.Trace("Creating scanner VM instance")
 
 		var err error
-		scannnerInstance, err = s.createInstance(ctx, s.Config.ScannerRegion, t)
+		scannnerInstance, err = s.createInstance(ctx, s.ScannerRegion, t)
 		if err != nil {
 			errs <- utils.WrapError(fmt.Errorf("failed to create scanner VM instance: %w", err))
 			return
@@ -97,14 +105,14 @@ func (s *Scanner) RunAssetScan(ctx context.Context, t *provider.ScanJobConfig) e
 	// * fetching the Asset Instance from provider
 	// * creating a volume snapshot from the root volume of the Asset Instance
 	// * copying the volume snapshot to the region/location of the scanner instance if they are deployed in separate locations
-	var destVolSnapshot *utils.Snapshot
+	var destVolSnapshot *types.Snapshot
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 
 		logger.Debug("Getting asset VM instance")
 
-		assetVMLocation, err := utils.NewLocation(vmInfo.Location)
+		assetVMLocation, err := types.NewLocation(vmInfo.Location)
 		if err != nil {
 			errs <- utils.FatalError{
 				Err: fmt.Errorf("failed to parse Location for asset VM instance: %w", err),
@@ -169,10 +177,10 @@ func (s *Scanner) RunAssetScan(ctx context.Context, t *provider.ScanJobConfig) e
 			"AssetVolumeID":         srcVol.ID,
 			"AssetVolumeSnapshotID": srcVolSnapshot.ID,
 		}).Debug("Copying asset volume snapshot to scanner location")
-		destVolSnapshot, err = srcVolSnapshot.Copy(ctx, s.Config.ScannerRegion)
+		destVolSnapshot, err = srcVolSnapshot.Copy(ctx, s.ScannerRegion)
 		if err != nil {
 			err = fmt.Errorf("failed to copy asset volume snapshot to location. AssetVolumeSnapshotID=%s Location=%s: %w",
-				srcVolSnapshot.ID, s.Config.ScannerRegion, err)
+				srcVolSnapshot.ID, s.ScannerRegion, err)
 			errs <- utils.WrapError(err)
 			return
 		}
@@ -250,7 +258,7 @@ func (s *Scanner) RunAssetScan(ctx context.Context, t *provider.ScanJobConfig) e
 		"ScannerVolumeID":         scannerVol.ID,
 		"ScannerIntanceID":        scannnerInstance.ID,
 	}).Debug("Attaching scanner volume to scanner VM instance")
-	err = scannnerInstance.AttachVolume(ctx, scannerVol, s.Config.BlockDeviceName)
+	err = scannnerInstance.AttachVolume(ctx, scannerVol, s.BlockDeviceName)
 	if err != nil {
 		err = fmt.Errorf("failed to attach volume to scanner instance. ScannerVolumeID=%s ScannerInstanceID=%s: %w",
 			scannerVol.ID, scannnerInstance.ID, err)
@@ -289,11 +297,11 @@ func (s *Scanner) RemoveAssetScan(ctx context.Context, t *provider.ScanJobConfig
 	}
 
 	logger := log.GetLoggerFromContextOrDefault(ctx).WithFields(logrus.Fields{
-		"ScannerLocation": s.Config.ScannerRegion,
+		"ScannerLocation": s.ScannerRegion,
 		"Provider":        string(s.Kind),
 	})
 
-	ec2Tags := utils.EC2TagsFromScanMetadata(t.ScanMetadata)
+	ec2Tags := types.EC2TagsFromScanMetadata(t.ScanMetadata)
 	ec2Filters := utils.EC2FiltersFromEC2Tags(ec2Tags)
 
 	numOfGoroutines := 3
@@ -306,7 +314,7 @@ func (s *Scanner) RemoveAssetScan(ctx context.Context, t *provider.ScanJobConfig
 
 		// Delete scanner instance
 		logger.Debug("Deleting scanner VM Instance.")
-		done, err := s.deleteInstances(ctx, ec2Filters, s.Config.ScannerRegion)
+		done, err := s.deleteInstances(ctx, ec2Filters, s.ScannerRegion)
 		if err != nil {
 			errs <- utils.WrapError(fmt.Errorf("failed to delete scanner VM instance: %w", err))
 			return
@@ -322,7 +330,7 @@ func (s *Scanner) RemoveAssetScan(ctx context.Context, t *provider.ScanJobConfig
 
 		// Delete scanner volume
 		logger.Debug("Deleting scanner volume.")
-		done, err = s.deleteVolumes(ctx, ec2Filters, s.Config.ScannerRegion)
+		done, err = s.deleteVolumes(ctx, ec2Filters, s.ScannerRegion)
 		if err != nil {
 			errs <- utils.WrapError(fmt.Errorf("failed to delete scanner volume: %w", err))
 			return
@@ -343,7 +351,7 @@ func (s *Scanner) RemoveAssetScan(ctx context.Context, t *provider.ScanJobConfig
 		defer wg.Done()
 
 		logger.Debug("Deleting scanner volume snapshot.")
-		done, err := s.deleteVolumeSnapshots(ctx, ec2Filters, s.Config.ScannerRegion)
+		done, err := s.deleteVolumeSnapshots(ctx, ec2Filters, s.ScannerRegion)
 		if err != nil {
 			errs <- utils.WrapError(fmt.Errorf("failed to delete scanner volume snapshot: %w", err))
 			return
@@ -362,7 +370,7 @@ func (s *Scanner) RemoveAssetScan(ctx context.Context, t *provider.ScanJobConfig
 	go func() {
 		defer wg.Done()
 
-		location, err := utils.NewLocation(vmInfo.Location)
+		location, err := types.NewLocation(vmInfo.Location)
 		if err != nil {
 			errs <- utils.FatalError{
 				Err: fmt.Errorf("failed to parse Location string. Location=%s: %w", vmInfo.Location, err),
@@ -370,7 +378,7 @@ func (s *Scanner) RemoveAssetScan(ctx context.Context, t *provider.ScanJobConfig
 			return
 		}
 
-		if location.Region == s.Config.ScannerRegion {
+		if location.Region == s.ScannerRegion {
 			return
 		}
 
@@ -430,12 +438,12 @@ func (s *Scanner) getInstanceWithID(ctx context.Context, id string, region strin
 }
 
 // nolint:cyclop
-func (s *Scanner) createInstance(ctx context.Context, region string, config *provider.ScanJobConfig) (*utils.Instance, error) {
+func (s *Scanner) createInstance(ctx context.Context, region string, config *provider.ScanJobConfig) (*types.Instance, error) {
 	options := func(options *ec2.Options) {
 		options.Region = region
 	}
 
-	ec2TagsForInstance := utils.EC2TagsFromScanMetadata(config.ScanMetadata)
+	ec2TagsForInstance := types.EC2TagsFromScanMetadata(config.ScanMetadata)
 	ec2Filters := utils.EC2FiltersFromEC2Tags(ec2TagsForInstance)
 
 	describeParams := &ec2.DescribeInstancesInput{
@@ -472,8 +480,8 @@ func (s *Scanner) createInstance(ctx context.Context, region string, config *pro
 	runParams := &ec2.RunInstancesInput{
 		MaxCount:     to.Ptr[int32](1),
 		MinCount:     to.Ptr[int32](1),
-		ImageId:      to.Ptr(s.Config.ScannerImage),
-		InstanceType: ec2types.InstanceType(s.Config.ScannerInstanceType),
+		ImageId:      to.Ptr(s.ScannerImage),
+		InstanceType: ec2types.InstanceType(s.ScannerInstanceType),
 		TagSpecifications: []ec2types.TagSpecification{
 			{
 				ResourceType: ec2types.ResourceTypeInstance,
@@ -497,8 +505,8 @@ func (s *Scanner) createInstance(ctx context.Context, region string, config *pro
 			AssociatePublicIpAddress: to.Ptr(false),
 			DeleteOnTermination:      to.Ptr(true),
 			DeviceIndex:              to.Ptr[int32](0),
-			Groups:                   []string{s.Config.SecurityGroupID},
-			SubnetId:                 &s.Config.SubnetID,
+			Groups:                   []string{s.SecurityGroupID},
+			SubnetId:                 &s.SubnetID,
 		},
 	}
 
@@ -520,9 +528,9 @@ func (s *Scanner) createInstance(ctx context.Context, region string, config *pro
 		retryMaxAttempts = *config.ScannerInstanceCreationConfig.RetryMaxAttempts
 	}
 
-	if s.Config.KeyPairName != "" {
+	if s.KeyPairName != "" {
 		// Set a key-pair to the instance.
-		runParams.KeyName = &s.Config.KeyPairName
+		runParams.KeyName = &s.KeyPairName
 	}
 
 	// if retryMaxAttempts value is 0 it will be ignored
@@ -662,11 +670,11 @@ func (s *Scanner) deleteVolumeSnapshots(ctx context.Context, filters []ec2types.
 	return true, nil
 }
 
-func instanceFromEC2Instance(i *ec2types.Instance, client *ec2.Client, region string, config *provider.ScanJobConfig) *utils.Instance {
+func instanceFromEC2Instance(i *ec2types.Instance, client *ec2.Client, region string, config *provider.ScanJobConfig) *types.Instance {
 	securityGroups := getSecurityGroupsFromEC2GroupIdentifiers(i.SecurityGroups)
 	tags := utils.GetTagsFromECTags(i.Tags)
 
-	volumes := make([]utils.Volume, len(i.BlockDeviceMappings))
+	volumes := make([]types.Volume, len(i.BlockDeviceMappings))
 	for idx, blkDevice := range i.BlockDeviceMappings {
 		var blockDeviceName string
 
@@ -674,7 +682,7 @@ func instanceFromEC2Instance(i *ec2types.Instance, client *ec2.Client, region st
 			blockDeviceName = *blkDevice.DeviceName
 		}
 
-		volumes[idx] = utils.Volume{
+		volumes[idx] = types.Volume{
 			Ec2Client:       client,
 			ID:              *blkDevice.Ebs.VolumeId,
 			Region:          region,
@@ -683,7 +691,7 @@ func instanceFromEC2Instance(i *ec2types.Instance, client *ec2.Client, region st
 		}
 	}
 
-	return &utils.Instance{
+	return &types.Instance{
 		ID:               *i.InstanceId,
 		Region:           region,
 		VpcID:            *i.VpcId,

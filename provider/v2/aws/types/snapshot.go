@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package utils
+package types
 
 import (
 	"context"
@@ -26,6 +26,7 @@ import (
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/provider"
+	"github.com/openclarity/vmclarity/provider/v2/aws/utils"
 )
 
 type Snapshot struct {
@@ -58,7 +59,7 @@ func (s *Snapshot) Copy(ctx context.Context, region string) (*Snapshot, error) {
 		Key:   to.Ptr(EC2TagKeyAssetVolumeID),
 		Value: to.Ptr(s.VolumeID),
 	})
-	ec2Filters := EC2FiltersFromEC2Tags(ec2TagsForSnapshot)
+	ec2Filters := utils.EC2FiltersFromEC2Tags(ec2TagsForSnapshot)
 
 	describeParams := &ec2.DescribeSnapshotsInput{
 		Filters: ec2Filters,
@@ -76,7 +77,7 @@ func (s *Snapshot) Copy(ctx context.Context, region string) (*Snapshot, error) {
 	for _, snap := range describeOut.Snapshots {
 		switch snap.State {
 		case ec2types.SnapshotStateError, ec2types.SnapshotStateRecoverable:
-			return nil, FatalError{
+			return nil, utils.FatalError{
 				Err: fmt.Errorf("failed to copy volume snapshot with state: %s", snap.State),
 			}
 		case ec2types.SnapshotStateRecovering, ec2types.SnapshotStatePending, ec2types.SnapshotStateCompleted:
@@ -175,7 +176,7 @@ func (s *Snapshot) CreateVolume(ctx context.Context, az string) (*Volume, error)
 		Value: to.Ptr(s.VolumeID),
 	})
 
-	ec2Filters := EC2FiltersFromEC2Tags(ec2TagsForVolume)
+	ec2Filters := utils.EC2FiltersFromEC2Tags(ec2TagsForVolume)
 	ec2Filters = append(ec2Filters, ec2types.Filter{
 		Name:   to.Ptr(SnapshotIDFilterName),
 		Values: []string{s.ID},
@@ -197,7 +198,7 @@ func (s *Snapshot) CreateVolume(ctx context.Context, az string) (*Volume, error)
 	for _, vol := range describeOut.Volumes {
 		switch vol.State {
 		case ec2types.VolumeStateDeleted, ec2types.VolumeStateDeleting, ec2types.VolumeStateError:
-			return nil, FatalError{
+			return nil, utils.FatalError{
 				Err: fmt.Errorf("found volume in unexpected state. VolumeID=%s: %s", *vol.VolumeId, vol.State),
 			}
 		case ec2types.VolumeStateAvailable, ec2types.VolumeStateCreating, ec2types.VolumeStateInUse:

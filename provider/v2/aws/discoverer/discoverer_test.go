@@ -27,7 +27,7 @@ import (
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/to"
-	"github.com/openclarity/vmclarity/provider/v2/aws/utils"
+	"github.com/openclarity/vmclarity/provider/v2/aws/types"
 )
 
 // nolint: maintidx
@@ -43,7 +43,7 @@ func TestProvider_getInstancesFromDescribeInstancesOutput(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		want   []utils.Instance
+		want   []types.Instance
 	}{
 		{
 			name: "no reservations found",
@@ -141,7 +141,7 @@ func TestProvider_getInstancesFromDescribeInstancesOutput(t *testing.T) {
 				},
 				regionID: "region-1",
 			},
-			want: []utils.Instance{
+			want: []types.Instance{
 				{
 					ID:     "instance-1",
 					Region: "region-1",
@@ -208,7 +208,7 @@ func TestProvider_getInstancesFromDescribeInstancesOutput(t *testing.T) {
 			d := &Discoverer{}
 			got := d.getInstancesFromDescribeInstancesOutput(ctx, tt.args.result, tt.args.regionID)
 
-			var gotInstances []utils.Instance
+			var gotInstances []types.Instance
 			for _, instance := range got {
 				instance.Ec2Client = nil
 				gotInstances = append(gotInstances, instance)

@@ -13,10 +13,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package utils
+package types
 
 import (
+	"fmt"
+
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+
 	apitypes "github.com/openclarity/vmclarity/api/types"
+	"github.com/openclarity/vmclarity/core/to"
+	"github.com/openclarity/vmclarity/provider"
 )
 
 const (
@@ -63,4 +69,29 @@ type VPC struct {
 type Region struct {
 	Name string
 	VPCs []VPC
+}
+
+func EC2TagsFromScanMetadata(meta provider.ScanMetadata) []ec2types.Tag {
+	return []ec2types.Tag{
+		{
+			Key:   to.Ptr(EC2TagKeyOwner),
+			Value: to.Ptr(EC2TagValueOwner),
+		},
+		{
+			Key:   to.Ptr(EC2TagKeyName),
+			Value: to.Ptr(fmt.Sprintf(EC2TagValueNamePattern, meta.AssetScanID)),
+		},
+		{
+			Key:   to.Ptr(EC2TagKeyScanID),
+			Value: to.Ptr(meta.ScanID),
+		},
+		{
+			Key:   to.Ptr(EC2TagKeyAssetScanID),
+			Value: to.Ptr(meta.AssetScanID),
+		},
+		{
+			Key:   to.Ptr(EC2TagKeyAssetID),
+			Value: to.Ptr(meta.AssetID),
+		},
+	}
 }

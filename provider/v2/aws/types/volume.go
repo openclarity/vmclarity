@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package utils
+package types
 
 import (
 	"context"
@@ -27,6 +27,7 @@ import (
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/provider"
+	"github.com/openclarity/vmclarity/provider/v2/aws/utils"
 )
 
 type Volume struct {
@@ -55,7 +56,7 @@ func (v *Volume) CreateSnapshot(ctx context.Context) (*Snapshot, error) {
 		Value: to.Ptr(v.ID),
 	})
 
-	ec2Filters := EC2FiltersFromEC2Tags(ec2TagsForSnapshot)
+	ec2Filters := utils.EC2FiltersFromEC2Tags(ec2TagsForSnapshot)
 
 	describeParams := &ec2.DescribeSnapshotsInput{
 		Filters: ec2Filters,
@@ -156,7 +157,7 @@ func (v *Volume) IsReady(ctx context.Context) (bool, error) {
 	case ec2types.VolumeStateCreating:
 		return false, nil
 	case ec2types.VolumeStateDeleted, ec2types.VolumeStateDeleting, ec2types.VolumeStateError:
-		return false, FatalError{
+		return false, utils.FatalError{
 			Err: fmt.Errorf("volume is not ready due to its state: %s", volState),
 		}
 	default:

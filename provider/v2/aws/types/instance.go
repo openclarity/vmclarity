@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package utils
+package types
 
 import (
 	"context"
@@ -28,6 +28,7 @@ import (
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/provider"
+	"github.com/openclarity/vmclarity/provider/v2/aws/utils"
 )
 
 type Instance struct {
@@ -80,7 +81,7 @@ func (i *Instance) IsReady(ctx context.Context) (bool, error) {
 		return ready, fmt.Errorf("failed to get VM instance. InstanceID=%s: %w", i.ID, err)
 	}
 
-	state := getInstanceState(out, i.ID)
+	state := utils.GetInstanceState(out, i.ID)
 	if state == ec2types.InstanceStateNameRunning {
 		ready = true
 	}
@@ -155,18 +156,18 @@ func (i *Instance) AttachVolume(ctx context.Context, volume *Volume, deviceName 
 			}
 			return nil
 		case ec2types.VolumeStateDeleted, ec2types.VolumeStateDeleting, ec2types.VolumeStateError:
-			return FatalError{
+			return utils.FatalError{
 				Err: fmt.Errorf("cannot attach volume with state: %s", vol.State),
 			}
 		case ec2types.VolumeStateCreating:
-			return RetryableError{
+			return utils.RetryableError{
 				Err:   fmt.Errorf("cannot attach volume with state: %s", vol.State),
-				After: VolumeReadynessAfter,
+				After: utils.VolumeReadynessAfter,
 			}
 		}
 	}
 
-	return FatalError{
+	return utils.FatalError{
 		Err: fmt.Errorf("failed to find volume. VolumeID=%s", volume.ID),
 	}
 }

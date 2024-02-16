@@ -16,7 +16,6 @@
 package utils
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -24,33 +23,7 @@ import (
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/to"
-	"github.com/openclarity/vmclarity/provider"
 )
-
-func EC2TagsFromScanMetadata(meta provider.ScanMetadata) []ec2types.Tag {
-	return []ec2types.Tag{
-		{
-			Key:   to.Ptr(EC2TagKeyOwner),
-			Value: to.Ptr(EC2TagValueOwner),
-		},
-		{
-			Key:   to.Ptr(EC2TagKeyName),
-			Value: to.Ptr(fmt.Sprintf(EC2TagValueNamePattern, meta.AssetScanID)),
-		},
-		{
-			Key:   to.Ptr(EC2TagKeyScanID),
-			Value: to.Ptr(meta.ScanID),
-		},
-		{
-			Key:   to.Ptr(EC2TagKeyAssetScanID),
-			Value: to.Ptr(meta.AssetScanID),
-		},
-		{
-			Key:   to.Ptr(EC2TagKeyAssetID),
-			Value: to.Ptr(meta.AssetID),
-		},
-	}
-}
 
 func EC2FiltersFromEC2Tags(tags []ec2types.Tag) []ec2types.Filter {
 	filters := make([]ec2types.Filter, 0, len(tags))
@@ -115,7 +88,7 @@ func GetTagsFromECTags(tags []ec2types.Tag) []apitypes.Tag {
 	return ret
 }
 
-func getInstanceState(result *ec2.DescribeInstancesOutput, instanceID string) ec2types.InstanceStateName {
+func GetInstanceState(result *ec2.DescribeInstancesOutput, instanceID string) ec2types.InstanceStateName {
 	for _, reservation := range result.Reservations {
 		for _, instance := range reservation.Instances {
 			if strings.Compare(*instance.InstanceId, instanceID) == 0 {

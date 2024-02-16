@@ -27,14 +27,15 @@ import (
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/provider"
 	"github.com/openclarity/vmclarity/provider/v2/aws/estimator/scanestimation"
-	"github.com/openclarity/vmclarity/provider/v2/aws/utils"
+	"github.com/openclarity/vmclarity/provider/v2/aws/types"
 )
 
 var _ provider.Estimator = &Estimator{}
 
 type Estimator struct {
-	Config    *utils.Config
-	Ec2Client *ec2.Client
+	ScannerRegion       string
+	ScannerInstanceType string
+	Ec2Client           *ec2.Client
 }
 
 func (e *Estimator) Estimate(ctx context.Context, stats apitypes.AssetScanStats, asset *apitypes.Asset, template *apitypes.AssetScanTemplate) (*apitypes.Estimation, error) {
@@ -52,14 +53,14 @@ func (e *Estimator) Estimate(ctx context.Context, stats apitypes.AssetScanStats,
 		return nil, fmt.Errorf("failed to use asset info as vminfo: %w", err)
 	}
 
-	location, err := utils.NewLocation(vminfo.Location)
+	location, err := types.NewLocation(vminfo.Location)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse location %v: %w", vminfo.Location, err)
 	}
 
 	sourceRegion := location.Region
-	destRegion := e.Config.ScannerRegion
-	scannerInstanceType := e.Config.ScannerInstanceType
+	destRegion := e.ScannerRegion
+	scannerInstanceType := e.ScannerInstanceType
 
 	scannerRootVolumeSizeGB := vminfo.RootVolume.SizeGB
 	scannerVolumeType := ec2types.VolumeTypeGp2                          // TODO this should come from configuration once we support more than one volume type.

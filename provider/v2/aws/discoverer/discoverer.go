@@ -28,6 +28,7 @@ import (
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/provider"
+	"github.com/openclarity/vmclarity/provider/v2/aws/types"
 	"github.com/openclarity/vmclarity/provider/v2/aws/utils"
 )
 
@@ -79,8 +80,8 @@ func (d *Discoverer) DiscoverAssets(ctx context.Context) provider.AssetDiscovere
 	return assetDiscoverer
 }
 
-func (d *Discoverer) ListAllRegions(ctx context.Context) ([]utils.Region, error) {
-	ret := make([]utils.Region, 0)
+func (d *Discoverer) ListAllRegions(ctx context.Context) ([]types.Region, error) {
+	ret := make([]types.Region, 0)
 	out, err := d.Ec2Client.DescribeRegions(ctx, &ec2.DescribeRegionsInput{
 		AllRegions: nil, // display also disabled regions?
 	})
@@ -89,7 +90,7 @@ func (d *Discoverer) ListAllRegions(ctx context.Context) ([]utils.Region, error)
 	}
 
 	for _, region := range out.Regions {
-		ret = append(ret, utils.Region{
+		ret = append(ret, types.Region{
 			Name: *region.RegionName,
 		})
 	}
@@ -97,11 +98,11 @@ func (d *Discoverer) ListAllRegions(ctx context.Context) ([]utils.Region, error)
 	return ret, nil
 }
 
-func (d *Discoverer) GetInstances(ctx context.Context, filters []ec2types.Filter, regionID string) ([]utils.Instance, error) {
-	ret := make([]utils.Instance, 0)
+func (d *Discoverer) GetInstances(ctx context.Context, filters []ec2types.Filter, regionID string) ([]types.Instance, error) {
+	ret := make([]types.Instance, 0)
 
 	input := &ec2.DescribeInstancesInput{
-		MaxResults: to.Ptr[int32](utils.MaxResults), // TODO what will be a good number?
+		MaxResults: to.Ptr[int32](types.MaxResults), // TODO what will be a good number?
 	}
 	if len(filters) > 0 {
 		input.Filters = filters
@@ -119,7 +120,7 @@ func (d *Discoverer) GetInstances(ctx context.Context, filters []ec2types.Filter
 	// TODO we can make it better by not saving all results in memory. See https://github.com/openclarity/vmclarity/pull/3#discussion_r1021656861
 	for out.NextToken != nil {
 		input := &ec2.DescribeInstancesInput{
-			MaxResults: to.Ptr[int32](utils.MaxResults), // TODO what will be a good number?
+			MaxResults: to.Ptr[int32](types.MaxResults), // TODO what will be a good number?
 			NextToken:  out.NextToken,
 		}
 		if len(filters) > 0 {
@@ -138,7 +139,7 @@ func (d *Discoverer) GetInstances(ctx context.Context, filters []ec2types.Filter
 	return ret, nil
 }
 
-func getVMInfoFromInstance(i utils.Instance) (apitypes.AssetType, error) {
+func getVMInfoFromInstance(i types.Instance) (apitypes.AssetType, error) {
 	assetType := apitypes.AssetType{}
 	err := assetType.FromVMInfo(apitypes.VMInfo{
 		Image:            i.Image,
@@ -163,10 +164,10 @@ func getVMInfoFromInstance(i utils.Instance) (apitypes.AssetType, error) {
 	return assetType, err
 }
 
-func (d *Discoverer) getInstancesFromDescribeInstancesOutput(ctx context.Context, result *ec2.DescribeInstancesOutput, regionID string) []utils.Instance {
+func (d *Discoverer) getInstancesFromDescribeInstancesOutput(ctx context.Context, result *ec2.DescribeInstancesOutput, regionID string) []types.Instance {
 	logger := log.GetLoggerFromContextOrDiscard(ctx)
 
-	var ret []utils.Instance
+	var ret []types.Instance
 	for _, reservation := range result.Reservations {
 		for _, instance := range reservation.Instances {
 			// Ignore terminated instances they are destroyed and
@@ -188,7 +189,7 @@ func (d *Discoverer) getInstancesFromDescribeInstancesOutput(ctx context.Context
 				}
 			}
 
-			ret = append(ret, utils.Instance{
+			ret = append(ret, types.Instance{
 				ID:                  *instance.InstanceId,
 				Region:              regionID,
 				AvailabilityZone:    *instance.Placement.AvailabilityZone,

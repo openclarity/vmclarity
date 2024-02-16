@@ -136,8 +136,8 @@ func Test_getInstanceState(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getInstanceState(tt.args.result, tt.args.instanceID); got != tt.want {
-				t.Errorf("getInstanceState() = %v, want %v", got, tt.want)
+			if got := GetInstanceState(tt.args.result, tt.args.instanceID); got != tt.want {
+				t.Errorf("GetInstanceState() = %v, want %v", got, tt.want)
 			}
 		})
 	}

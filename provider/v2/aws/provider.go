@@ -27,7 +27,6 @@ import (
 	"github.com/openclarity/vmclarity/provider/v2/aws/discoverer"
 	"github.com/openclarity/vmclarity/provider/v2/aws/estimator"
 	"github.com/openclarity/vmclarity/provider/v2/aws/scanner"
-	"github.com/openclarity/vmclarity/provider/v2/aws/utils"
 )
 
 var _ provider.Provider = &Provider{}
@@ -43,7 +42,7 @@ func (p *Provider) Kind() apitypes.CloudProvider {
 }
 
 func New(ctx context.Context) (provider.Provider, error) {
-	config, err := utils.NewConfig()
+	config, err := NewConfig()
 	if err != nil {
 		return nil, fmt.Errorf("invalid configuration. Provider=AWS: %w", err)
 	}
@@ -64,13 +63,20 @@ func New(ctx context.Context) (provider.Provider, error) {
 			Ec2Client: ec2Client,
 		},
 		Scanner: &scanner.Scanner{
-			Kind:      apitypes.AWS,
-			Config:    config,
-			Ec2Client: ec2Client,
+			Kind:                apitypes.AWS,
+			ScannerRegion:       config.ScannerRegion,
+			BlockDeviceName:     config.BlockDeviceName,
+			ScannerImage:        config.ScannerImage,
+			ScannerInstanceType: config.ScannerInstanceType,
+			SecurityGroupID:     config.SecurityGroupID,
+			SubnetID:            config.SubnetID,
+			KeyPairName:         config.KeyPairName,
+			Ec2Client:           ec2Client,
 		},
 		Estimator: &estimator.Estimator{
-			Config:    config,
-			Ec2Client: ec2Client,
+			ScannerRegion:       config.ScannerRegion,
+			ScannerInstanceType: config.ScannerInstanceType,
+			Ec2Client:           ec2Client,
 		},
 	}, nil
 }
