@@ -17,7 +17,7 @@
       ],
       "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}",
       "description": [
-        "Custom dependency manager for updating tools defined in Makefiles"
+        "Custom dependency manager for updating tools defined in Makefiles."
       ]
     }
   ],
@@ -62,7 +62,7 @@
         "go"
       ],
       "description": [
-        "Add go label to PRs which bumps go dependencies"
+        "Add go label to PRs which bumps go dependencies."
       ]
     },
     {
@@ -71,7 +71,7 @@
         "kubernetes"
       ],
       "description": [
-        "Add kubernetes label to PRs which bumps kubernetes dependencies"
+        "Add kubernetes label to PRs which bumps kubernetes dependencies."
       ]
     },
     {
@@ -210,6 +210,20 @@
       "allowedVersions": "!/^v1/",
       "description": [
         "Ignore versions starting with v1 for trivy-db as v1 is deprecated."
+      ]
+    },
+    {
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackagePrefixes": [
+        "ghcr.io/openclarity/vmclarity-"
+      ],
+      "allowedVersions": "/^latest$/",
+      "pinDigests": false,
+      "description": [
+        "Always use latest version for VMClarity container images.",
+        "Do not pin by digest."
       ]
     }
   ],
