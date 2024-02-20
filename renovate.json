@@ -217,7 +217,7 @@
   "semanticCommits": "enabled",
   "timezone": "Etc/UTC",
   "vulnerabilityAlerts": {
-    "enabled": false,
+    "enabled": true,
     "labels": ["security"]
   }
 }
