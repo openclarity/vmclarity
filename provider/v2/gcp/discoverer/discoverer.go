@@ -17,15 +17,233 @@ package discoverer
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"time"
 
+	compute "cloud.google.com/go/compute/apiv1"
+	"cloud.google.com/go/compute/apiv1/computepb"
+	"github.com/sirupsen/logrus"
+	"google.golang.org/api/iterator"
+
+	apitypes "github.com/openclarity/vmclarity/api/types"
+	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/provider"
+	"github.com/openclarity/vmclarity/provider/v2/gcp/common"
 )
 
-var _ provider.Discoverer = &Discoverer{}
+const (
+	maxResults = 500
+)
 
-type Discoverer struct{}
+type Discoverer struct {
+	disksClient     *compute.DisksClient
+	instancesClient *compute.InstancesClient
+	regionsClient   *compute.RegionsClient
+	config          *Config
+}
 
+func New(ctx context.Context) (*Discoverer, error) {
+	config, err := NewConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load configuration: %w", err)
+	}
+
+	err = config.Validate()
+	if err != nil {
+		return nil, fmt.Errorf("failed to validate configuration: %w", err)
+	}
+
+	regionsClient, err := compute.NewRegionsRESTClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create regions client: %w", err)
+	}
+
+	instancesClient, err := compute.NewInstancesRESTClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create instance client: %w", err)
+	}
+
+	disksClient, err := compute.NewDisksRESTClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create disks client: %w", err)
+	}
+
+	return &Discoverer{
+		regionsClient:   regionsClient,
+		instancesClient: instancesClient,
+		disksClient:     disksClient,
+		config:          config,
+	}, nil
+}
+
+// nolint: cyclop
 func (d *Discoverer) DiscoverAssets(ctx context.Context) provider.AssetDiscoverer {
-	// TODO implement me
-	panic("implement me")
+	assetDiscoverer := provider.NewSimpleAssetDiscoverer()
+
+	go func() {
+		defer close(assetDiscoverer.OutputChan)
+
+		regions, err := d.listAllRegions(ctx)
+		if err != nil {
+			assetDiscoverer.Error = fmt.Errorf("failed to list all regions: %w", err)
+			return
+		}
+
+		var zones []string
+		for _, region := range regions {
+			zones = append(zones, getZonesLastPart(region.Zones)...)
+		}
+
+		for _, zone := range zones {
+			assets, err := d.listInstances(ctx, nil, zone)
+			if err != nil {
+				assetDiscoverer.Error = fmt.Errorf("failed to list instances: %w", err)
+				return
+			}
+
+			for _, asset := range assets {
+				select {
+				case assetDiscoverer.OutputChan <- asset:
+				case <-ctx.Done():
+					assetDiscoverer.Error = ctx.Err()
+					return
+				}
+			}
+		}
+	}()
+
+	return assetDiscoverer
+}
+
+func (d *Discoverer) listInstances(ctx context.Context, filter *string, zone string) ([]apitypes.AssetType, error) {
+	var ret []apitypes.AssetType
+
+	it := d.instancesClient.List(ctx, &computepb.ListInstancesRequest{
+		Filter:     filter,
+		MaxResults: to.Ptr[uint32](maxResults),
+		Project:    d.config.ProjectID,
+		Zone:       zone,
+	})
+	for {
+		resp, err := it.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			_, err = common.HandleGcpRequestError(err, "listing instances for project %s zone %s", d.config.ProjectID, zone)
+			return nil, err
+		}
+
+		info, err := d.getVMInfoFromVirtualMachine(ctx, resp)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get vminfo from virtual machine: %w", err)
+		}
+		ret = append(ret, info)
+	}
+
+	return ret, nil
+}
+
+func (d *Discoverer) listAllRegions(ctx context.Context) ([]*computepb.Region, error) {
+	var ret []*computepb.Region
+
+	it := d.regionsClient.List(ctx, &computepb.ListRegionsRequest{
+		MaxResults: to.Ptr[uint32](maxResults),
+		Project:    d.config.ProjectID,
+	})
+	for {
+		resp, err := it.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			_, err := common.HandleGcpRequestError(err, "list regions")
+			return nil, err
+		}
+
+		ret = append(ret, resp)
+	}
+	return ret, nil
+}
+
+func (d *Discoverer) getVMInfoFromVirtualMachine(ctx context.Context, vm *computepb.Instance) (apitypes.AssetType, error) {
+	assetType := apitypes.AssetType{}
+	launchTime, err := time.Parse(time.RFC3339, *vm.CreationTimestamp)
+	if err != nil {
+		return apitypes.AssetType{}, fmt.Errorf("failed to parse time: %v", *vm.CreationTimestamp)
+	}
+	// get boot disk name
+	diskName := common.GetLastURLPart(vm.Disks[0].Source)
+
+	var platform string
+	var image string
+
+	// get disk from gcp
+	disk, err := d.disksClient.Get(ctx, &computepb.GetDiskRequest{
+		Disk:    diskName,
+		Project: d.config.ProjectID,
+		Zone:    common.GetLastURLPart(vm.Zone),
+	})
+	if err != nil {
+		logrus.Warnf("failed to get disk %v: %v", diskName, err)
+	} else {
+		if disk.Architecture != nil {
+			platform = *disk.Architecture
+		}
+		image = common.GetLastURLPart(disk.SourceImage)
+	}
+
+	err = assetType.FromVMInfo(apitypes.VMInfo{
+		InstanceProvider: to.Ptr(apitypes.GCP),
+		InstanceID:       *vm.Name,
+		Image:            image,
+		InstanceType:     common.GetLastURLPart(vm.MachineType),
+		LaunchTime:       launchTime,
+		Location:         common.GetLastURLPart(vm.Zone),
+		Platform:         platform,
+		SecurityGroups:   &[]apitypes.SecurityGroup{},
+		Tags:             to.Ptr(convertLabelsToTags(vm.Labels)),
+	})
+	if err != nil {
+		return apitypes.AssetType{}, provider.FatalErrorf("failed to create AssetType from VMInfo: %w", err)
+	}
+
+	return assetType, nil
+}
+
+// getZonesLastPart converts a list of zone URLs into a list of zone IDs.
+// For example input:
+//
+// [
+//
+//	https://www.googleapis.com/compute/v1/projects/gcp-etigcp-nprd-12855/zones/us-central1-c,
+//	https://www.googleapis.com/compute/v1/projects/gcp-etigcp-nprd-12855/zones/us-central1-a
+//
+// ]
+//
+// returns [us-central1-c, us-central1-a].
+func getZonesLastPart(zones []string) []string {
+	ret := make([]string, 0, len(zones))
+	for _, zone := range zones {
+		z := zone
+		ret = append(ret, common.GetLastURLPart(&z))
+	}
+	return ret
+}
+
+func convertLabelsToTags(labels map[string]string) []apitypes.Tag {
+	tags := make([]apitypes.Tag, 0, len(labels))
+
+	for k, v := range labels {
+		tags = append(
+			tags,
+			apitypes.Tag{
+				Key:   k,
+				Value: v,
+			},
+		)
+	}
+
+	return tags
 }
