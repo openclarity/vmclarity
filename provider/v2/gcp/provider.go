@@ -17,6 +17,9 @@ package gcp
 
 import (
 	"context"
+	"fmt"
+
+	compute "cloud.google.com/go/compute/apiv1"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/provider/v2/gcp/discoverer"
@@ -31,13 +34,48 @@ type Provider struct {
 }
 
 func (p *Provider) Kind() apitypes.CloudProvider {
-  return apitypes.GCP
+	return apitypes.GCP
 }
 
-func New(_ context.Context) (*Provider, error) {
+func New(ctx context.Context) (*Provider, error) {
+	config, err := NewConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load configuration: %w", err)
+	}
+
+	err = config.Validate()
+	if err != nil {
+		return nil, fmt.Errorf("failed to validate configuration: %w", err)
+	}
+
+	regionsClient, err := compute.NewRegionsRESTClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create regions client: %w", err)
+	}
+
+	instancesClient, err := compute.NewInstancesRESTClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create instance client: %w", err)
+	}
+
+	snapshotsClient, err := compute.NewSnapshotsRESTClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create snapshot client: %w", err)
+	}
+
+	disksClient, err := compute.NewDisksRESTClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create disks client: %w", err)
+	}
+
 	return &Provider{
-		Discoverer: &discoverer.Discoverer{},
-		Scanner:    &scanner.Scanner{},
-		Estimator:  &estimator.Estimator{},
+		Discoverer: &discoverer.Discoverer{
+			DisksClient:     disksClient,
+			InstancesClient: instancesClient,
+			RegionsClient:   regionsClient,
+			ProjectID:       config.ProjectID,
+		},
+		Scanner:   &scanner.Scanner{},
+		Estimator: &estimator.Estimator{},
 	}, nil
 }

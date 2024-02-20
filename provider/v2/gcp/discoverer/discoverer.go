@@ -37,44 +37,11 @@ const (
 )
 
 type Discoverer struct {
-	disksClient     *compute.DisksClient
-	instancesClient *compute.InstancesClient
-	regionsClient   *compute.RegionsClient
-	config          *Config
-}
+	DisksClient     *compute.DisksClient
+	InstancesClient *compute.InstancesClient
+	RegionsClient   *compute.RegionsClient
 
-func New(ctx context.Context) (*Discoverer, error) {
-	config, err := NewConfig()
-	if err != nil {
-		return nil, fmt.Errorf("failed to load configuration: %w", err)
-	}
-
-	err = config.Validate()
-	if err != nil {
-		return nil, fmt.Errorf("failed to validate configuration: %w", err)
-	}
-
-	regionsClient, err := compute.NewRegionsRESTClient(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create regions client: %w", err)
-	}
-
-	instancesClient, err := compute.NewInstancesRESTClient(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create instance client: %w", err)
-	}
-
-	disksClient, err := compute.NewDisksRESTClient(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create disks client: %w", err)
-	}
-
-	return &Discoverer{
-		regionsClient:   regionsClient,
-		instancesClient: instancesClient,
-		disksClient:     disksClient,
-		config:          config,
-	}, nil
+  ProjectID string
 }
 
 // nolint: cyclop
@@ -119,10 +86,10 @@ func (d *Discoverer) DiscoverAssets(ctx context.Context) provider.AssetDiscovere
 func (d *Discoverer) listInstances(ctx context.Context, filter *string, zone string) ([]apitypes.AssetType, error) {
 	var ret []apitypes.AssetType
 
-	it := d.instancesClient.List(ctx, &computepb.ListInstancesRequest{
+	it := d.InstancesClient.List(ctx, &computepb.ListInstancesRequest{
 		Filter:     filter,
 		MaxResults: to.Ptr[uint32](maxResults),
-		Project:    d.config.ProjectID,
+		Project:    d.ProjectID,
 		Zone:       zone,
 	})
 	for {
@@ -131,7 +98,7 @@ func (d *Discoverer) listInstances(ctx context.Context, filter *string, zone str
 			break
 		}
 		if err != nil {
-			_, err = common.HandleGcpRequestError(err, "listing instances for project %s zone %s", d.config.ProjectID, zone)
+			_, err = common.HandleGcpRequestError(err, "listing instances for project %s zone %s", d.ProjectID, zone)
 			return nil, err
 		}
 
@@ -148,9 +115,9 @@ func (d *Discoverer) listInstances(ctx context.Context, filter *string, zone str
 func (d *Discoverer) listAllRegions(ctx context.Context) ([]*computepb.Region, error) {
 	var ret []*computepb.Region
 
-	it := d.regionsClient.List(ctx, &computepb.ListRegionsRequest{
+	it := d.RegionsClient.List(ctx, &computepb.ListRegionsRequest{
 		MaxResults: to.Ptr[uint32](maxResults),
-		Project:    d.config.ProjectID,
+		Project:    d.ProjectID,
 	})
 	for {
 		resp, err := it.Next()
@@ -180,9 +147,9 @@ func (d *Discoverer) getVMInfoFromVirtualMachine(ctx context.Context, vm *comput
 	var image string
 
 	// get disk from gcp
-	disk, err := d.disksClient.Get(ctx, &computepb.GetDiskRequest{
+	disk, err := d.DisksClient.Get(ctx, &computepb.GetDiskRequest{
 		Disk:    diskName,
-		Project: d.config.ProjectID,
+		Project: d.ProjectID,
 		Zone:    common.GetLastURLPart(vm.Zone),
 	})
 	if err != nil {
