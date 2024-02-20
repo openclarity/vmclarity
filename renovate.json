@@ -199,6 +199,18 @@
       "description": [
         "Group Azure Bicep dependency updates in single PR."
       ]
+    },
+    {
+      "matchDatasources": [
+        "go"
+      ],
+      "matchPackageNames": [
+        "github.com/aquasecurity/trivy-db"
+      ],
+      "allowedVersions": "!/^v1/",
+      "description": [
+        "Ignore versions starting with v1 for trivy-db as v1 is deprecated."
+      ]
     }
   ],
   "postUpdateOptions": [
