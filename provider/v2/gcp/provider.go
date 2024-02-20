@@ -19,13 +19,10 @@ import (
 	"context"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
-	"github.com/openclarity/vmclarity/provider"
-	"github.com/openclarity/vmclarity/provider/v2/aws/discoverer"
-	"github.com/openclarity/vmclarity/provider/v2/aws/estimator"
-	"github.com/openclarity/vmclarity/provider/v2/aws/scanner"
+	"github.com/openclarity/vmclarity/provider/v2/gcp/discoverer"
+	"github.com/openclarity/vmclarity/provider/v2/gcp/estimator"
+	"github.com/openclarity/vmclarity/provider/v2/gcp/scanner"
 )
-
-var _ provider.Provider = &Provider{}
 
 type Provider struct {
 	*discoverer.Discoverer
@@ -34,8 +31,7 @@ type Provider struct {
 }
 
 func (p *Provider) Kind() apitypes.CloudProvider {
-	// TODO implement me
-	panic("implement me")
+  return apitypes.GCP
 }
 
 func New(_ context.Context) (*Provider, error) {
