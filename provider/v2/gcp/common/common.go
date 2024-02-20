@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+  "time"
 	
   log "github.com/sirupsen/logrus"
 	"google.golang.org/api/googleapi"
@@ -35,6 +36,27 @@ func HandleGcpRequestError(err error, actionTmpl string, parts ...interface{}) (
 		// Error should be a googleapi.Error
 		return false, provider.FatalErrorf("unexpected error from gcp while %s: %w", action, err)
 	}
+}
+
+func EnsureDeleted(resourceType string, getFunc func() error, deleteFunc func() error, estimateTime time.Duration) error {
+	err := getFunc()
+	if err != nil {
+		notFound, err := HandleGcpRequestError(err, "getting %s", resourceType)
+		// NotFound means that the resource has been deleted
+		// successfully, all other errors are raised.
+		if notFound {
+			return nil
+		}
+		return err
+	}
+
+	err = deleteFunc()
+	if err != nil {
+		_, err := HandleGcpRequestError(err, "deleting %s", resourceType)
+		return err
+	}
+
+	return provider.RetryableErrorf(estimateTime, "%s delete issued", resourceType)
 }
 
 // example: https://www.googleapis.com/compute/v1/projects/gcp-etigcp-nprd-12855/zones/us-central1-c/machineTypes/e2-medium -> returns e2-medium

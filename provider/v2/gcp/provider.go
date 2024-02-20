@@ -73,9 +73,21 @@ func New(ctx context.Context) (*Provider, error) {
 			DisksClient:     disksClient,
 			InstancesClient: instancesClient,
 			RegionsClient:   regionsClient,
-			ProjectID:       config.ProjectID,
+
+			ProjectID: config.ProjectID,
 		},
-		Scanner:   &scanner.Scanner{},
+		Scanner: &scanner.Scanner{
+			InstancesClient: instancesClient,
+			SnapshotsClient: snapshotsClient,
+			DisksClient:     disksClient,
+
+			ScannerZone:         config.ScannerZone,
+			ProjectID:           config.ProjectID,
+			ScannerSourceImage:  config.ScannerSourceImage,
+			ScannerMachineType:  config.ScannerMachineType,
+			ScannerSubnetwork:   config.ScannerSubnetwork,
+			ScannerSSHPublicKey: config.ScannerSSHPublicKey,
+		},
 		Estimator: &estimator.Estimator{},
 	}, nil
 }
