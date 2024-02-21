@@ -71,7 +71,7 @@ func (s *Scanner) RunAssetScan(ctx context.Context, config *provider.ScanJobConf
 	})
 	if err != nil {
 		_, err := common.HandleGcpRequestError(err, "getting target virtual machine %v", targetName)
-		return err
+		return err // nolint: wrapcheck
 	}
 	logger.Debugf("Got target VM: %v", targetVM.Name)
 

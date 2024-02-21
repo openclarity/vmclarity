@@ -55,7 +55,7 @@ func (s *Scanner) ensureDiskFromSnapshot(ctx context.Context, config *provider.S
 
 	notFound, err := common.HandleGcpRequestError(err, "getting disk %s", diskName)
 	if !notFound {
-		return nil, err
+		return nil, err // nolint: wrapcheck
 	}
 
 	// create the disk if not exists
@@ -74,7 +74,7 @@ func (s *Scanner) ensureDiskFromSnapshot(ctx context.Context, config *provider.S
 	_, err = s.DisksClient.Insert(ctx, req)
 	if err != nil {
 		_, err := common.HandleGcpRequestError(err, "create disk")
-		return nil, err
+		return nil, err // nolint: wrapcheck
 	}
 
 	return nil, provider.RetryableErrorf(DiskEstimateProvisionTime, "disk creating")
@@ -83,7 +83,7 @@ func (s *Scanner) ensureDiskFromSnapshot(ctx context.Context, config *provider.S
 func (s *Scanner) ensureTargetDiskDeleted(ctx context.Context, config *provider.ScanJobConfig) error {
 	diskName := diskNameFromJobConfig(config)
 
-	return common.EnsureDeleted(
+	return common.EnsureDeleted( // nolint: wrapcheck
 		"disk",
 		func() error {
 			_, err := s.DisksClient.Get(ctx, &computepb.GetDiskRequest{

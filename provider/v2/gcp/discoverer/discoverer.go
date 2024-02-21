@@ -99,7 +99,7 @@ func (d *Discoverer) listInstances(ctx context.Context, filter *string, zone str
 		}
 		if err != nil {
 			_, err = common.HandleGcpRequestError(err, "listing instances for project %s zone %s", d.ProjectID, zone)
-			return nil, err
+			return nil, err // nolint: wrapcheck
 		}
 
 		info, err := d.getVMInfoFromVirtualMachine(ctx, resp)
@@ -126,7 +126,7 @@ func (d *Discoverer) listAllRegions(ctx context.Context) ([]*computepb.Region, e
 		}
 		if err != nil {
 			_, err := common.HandleGcpRequestError(err, "list regions")
-			return nil, err
+			return nil, err // nolint: wrapcheck
 		}
 
 		ret = append(ret, resp)

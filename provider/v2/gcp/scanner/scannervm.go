@@ -62,7 +62,7 @@ func (s *Scanner) ensureScannerVirtualMachine(ctx context.Context, config *provi
 	notFound, err := common.HandleGcpRequestError(err, "getting scanner virtual machine: %v", vmName)
 	// ignore not found error as it is expected
 	if !notFound {
-		return nil, err
+		return nil, err // nolint: wrapcheck
 	}
 
 	// create the instance if not exists
@@ -122,7 +122,7 @@ func (s *Scanner) ensureScannerVirtualMachine(ctx context.Context, config *provi
 	_, err = s.InstancesClient.Insert(ctx, req)
 	if err != nil {
 		_, err := common.HandleGcpRequestError(err, "unable to create instance %v", vmName)
-		return nil, err
+		return nil, err // nolint: wrapcheck
 	}
 
 	return nil, provider.RetryableErrorf(VMCreateEstimateProvisionTime, "vm creating")
@@ -131,7 +131,7 @@ func (s *Scanner) ensureScannerVirtualMachine(ctx context.Context, config *provi
 func (s *Scanner) ensureScannerVirtualMachineDeleted(ctx context.Context, config *provider.ScanJobConfig) error {
 	vmName := scannerVMNameFromJobConfig(config)
 
-	return common.EnsureDeleted(
+	return common.EnsureDeleted( // nolint: wrapcheck
 		"VirtualMachine",
 		func() error {
 			_, err := s.InstancesClient.Get(ctx, &computepb.GetInstanceRequest{
@@ -174,7 +174,7 @@ func (s *Scanner) ensureDiskAttachedToScannerVM(ctx context.Context, vm *compute
 		_, err := s.InstancesClient.AttachDisk(ctx, req)
 		if err != nil {
 			_, err = common.HandleGcpRequestError(err, "attach disk %v to VM %v", *disk.Name, *vm.Name)
-			return err
+			return err // nolint: wrapcheck
 		}
 	}
 
@@ -185,7 +185,7 @@ func (s *Scanner) ensureDiskAttachedToScannerVM(ctx context.Context, vm *compute
 	})
 	if err != nil {
 		_, err = common.HandleGcpRequestError(err, "get disk %v", *disk.Name)
-		return err
+		return err // nolint: wrapcheck
 	}
 
 	if *diskResp.Status != ProvisioningStateReady {
