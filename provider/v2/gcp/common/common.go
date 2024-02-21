@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-  "time"
-	
-  log "github.com/sirupsen/logrus"
+	"time"
+
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/api/googleapi"
 
 	"github.com/openclarity/vmclarity/provider"

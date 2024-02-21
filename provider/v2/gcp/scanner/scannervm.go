@@ -15,8 +15,8 @@ import (
 
 var (
 	VMCreateEstimateProvisionTime = 2 * time.Minute
-  VMDiskAttachEstimateTime      = 2 * time.Minute
-  VMDeleteEstimateTime          = 2 * time.Minute
+	VMDiskAttachEstimateTime      = 2 * time.Minute
+	VMDeleteEstimateTime          = 2 * time.Minute
 )
 
 const (

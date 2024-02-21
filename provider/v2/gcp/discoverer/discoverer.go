@@ -41,7 +41,7 @@ type Discoverer struct {
 	InstancesClient *compute.InstancesClient
 	RegionsClient   *compute.RegionsClient
 
-  ProjectID string
+	ProjectID string
 }
 
 // nolint: cyclop

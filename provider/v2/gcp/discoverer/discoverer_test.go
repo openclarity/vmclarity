@@ -1,11 +1,12 @@
 package discoverer
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+
 	apitypes "github.com/openclarity/vmclarity/api/types"
-	"reflect"
 )
 
 func Test_getZonesLastPart(t *testing.T) {
