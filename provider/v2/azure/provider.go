@@ -21,6 +21,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v5"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/provider/v2/azure/common"
@@ -55,6 +56,11 @@ func New(_ context.Context) (*Provider, error) {
 		return nil, fmt.Errorf("failed create managed identity credential: %w", err)
 	}
 
+	networkClientFactory, err := armnetwork.NewClientFactory(config.SubscriptionID, cred, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create network client factory: %w", err)
+	}
+
 	computeClientFactory, err := armcompute.NewClientFactory(config.SubscriptionID, cred, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create compute client factory: %w", err)
@@ -65,7 +71,15 @@ func New(_ context.Context) (*Provider, error) {
 			VMClient:    computeClientFactory.NewVirtualMachinesClient(),
 			DisksClient: computeClientFactory.NewDisksClient(),
 		},
-		Scanner:   &scanner.Scanner{},
+		Scanner: &scanner.Scanner{
+			Cred:             cred,
+			VMClient:         computeClientFactory.NewVirtualMachinesClient(),
+			SnapshotsClient:  computeClientFactory.NewSnapshotsClient(),
+			DisksClient:      computeClientFactory.NewDisksClient(),
+			InterfacesClient: networkClientFactory.NewInterfacesClient(),
+
+			Config: config,
+		},
 		Estimator: &estimator.Estimator{},
 	}, nil
 }
