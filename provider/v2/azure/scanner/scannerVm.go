@@ -33,6 +33,7 @@ import (
 var (
 	VMCreateEstimateProvisionTime = 2 * time.Minute
 	VMDiskAttachEstimateTime      = 2 * time.Minute
+	VMDeleteEstimateTime          = 2 * time.Minute
 )
 
 func scannerVMNameFromJobConfig(config *provider.ScanJobConfig) string {
@@ -127,6 +128,23 @@ func (s *Scanner) ensureScannerVirtualMachine(ctx context.Context, config *provi
 	}
 
 	return armcompute.VirtualMachine{}, provider.RetryableErrorf(VMCreateEstimateProvisionTime, "vm created")
+}
+
+func (s *Scanner) ensureScannerVirtualMachineDeleted(ctx context.Context, config *provider.ScanJobConfig) error {
+	vmName := scannerVMNameFromJobConfig(config)
+
+	return common.EnsureDeleted(
+		"virtual machine",
+		func() error {
+			_, err := s.VMClient.Get(ctx, s.Config.ScannerResourceGroup, vmName, nil)
+			return err // nolint: wrapcheck
+		},
+		func() error {
+			_, err := s.VMClient.BeginDelete(ctx, s.Config.ScannerResourceGroup, vmName, nil)
+			return err // nolint: wrapcheck
+		},
+		VMDeleteEstimateTime,
+	)
 }
 
 func (s *Scanner) ensureDiskAttachedToScannerVM(ctx context.Context, vm armcompute.VirtualMachine, disk armcompute.Disk) error {

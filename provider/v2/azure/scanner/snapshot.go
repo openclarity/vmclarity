@@ -28,6 +28,7 @@ import (
 
 var (
 	SnapshotCreateEstimateProvisionTime = 2 * time.Minute
+	SnapshotDeleteEstimateTime          = 2 * time.Minute
 )
 
 func snapshotNameFromJobConfig(config *provider.ScanJobConfig) string {
@@ -67,4 +68,21 @@ func (s *Scanner) ensureSnapshotForVMRootVolume(ctx context.Context, config *pro
 	}
 
 	return armcompute.Snapshot{}, provider.RetryableErrorf(SnapshotCreateEstimateProvisionTime, "snapshot creating")
+}
+
+func (s *Scanner) ensureSnapshotDeleted(ctx context.Context, config *provider.ScanJobConfig) error {
+	snapshotName := snapshotNameFromJobConfig(config)
+
+	return common.EnsureDeleted(
+		"snapshot",
+		func() error {
+			_, err := s.SnapshotsClient.Get(ctx, s.Config.ScannerResourceGroup, snapshotName, nil)
+			return err // nolint: wrapcheck
+		},
+		func() error {
+			_, err := s.SnapshotsClient.BeginDelete(ctx, s.Config.ScannerResourceGroup, snapshotName, nil)
+			return err // nolint: wrapcheck
+		},
+		SnapshotDeleteEstimateTime,
+	)
 }

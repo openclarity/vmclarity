@@ -28,6 +28,7 @@ import (
 
 var (
 	NetworkInterfaceEstimateProvisionTime = 10 * time.Second
+	NetworkInterfaceDeleteEstimateTime    = 10 * time.Second
 )
 
 func networkInterfaceNameFromJobConfig(config *provider.ScanJobConfig) string {
@@ -78,4 +79,21 @@ func (s *Scanner) ensureNetworkInterface(ctx context.Context, config *provider.S
 	}
 
 	return armnetwork.Interface{}, provider.RetryableErrorf(NetworkInterfaceEstimateProvisionTime, "interface creating")
+}
+
+func (s *Scanner) ensureNetworkInterfaceDeleted(ctx context.Context, config *provider.ScanJobConfig) error {
+	nicName := networkInterfaceNameFromJobConfig(config)
+
+	return common.EnsureDeleted(
+		"interface",
+		func() error {
+			_, err := s.InterfacesClient.Get(ctx, s.Config.ScannerResourceGroup, nicName, nil)
+			return err // nolint: wrapcheck
+		},
+		func() error {
+			_, err := s.InterfacesClient.BeginDelete(ctx, s.Config.ScannerResourceGroup, nicName, nil)
+			return err // nolint: wrapcheck
+		},
+		NetworkInterfaceDeleteEstimateTime,
+	)
 }

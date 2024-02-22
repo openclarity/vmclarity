@@ -29,6 +29,7 @@ import (
 
 var (
 	DiskEstimateProvisionTime = 2 * time.Minute
+	DiskDeleteEstimateTime    = 2 * time.Minute
 )
 
 func volumeNameFromJobConfig(config *provider.ScanJobConfig) string {
@@ -112,4 +113,21 @@ func (s *Scanner) ensureManagedDiskFromSnapshotInDifferentRegion(ctx context.Con
 		return armcompute.Disk{}, err
 	}
 	return armcompute.Disk{}, provider.RetryableErrorf(DiskEstimateProvisionTime, "disk creating")
+}
+
+func (s *Scanner) ensureTargetDiskDeleted(ctx context.Context, config *provider.ScanJobConfig) error {
+	volumeName := volumeNameFromJobConfig(config)
+
+	return common.EnsureDeleted(
+		"target disk",
+		func() error {
+			_, err := s.DisksClient.Get(ctx, s.Config.ScannerResourceGroup, volumeName, nil)
+			return err // nolint: wrapcheck
+		},
+		func() error {
+			_, err := s.DisksClient.BeginDelete(ctx, s.Config.ScannerResourceGroup, volumeName, nil)
+			return err // nolint: wrapcheck
+		},
+		DiskDeleteEstimateTime,
+	)
 }

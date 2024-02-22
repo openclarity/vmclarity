@@ -30,7 +30,9 @@ import (
 )
 
 var (
-	estimatedBlobCopyTime = 2 * time.Minute
+	estimatedBlobCopyTime    = 2 * time.Minute
+	estimatedBlobAbortTime   = 2 * time.Minute
+	estimatedBlobDeleteTime  = 2 * time.Minute
 	snapshotSASAccessSeconds = 3600
 )
 
@@ -105,4 +107,40 @@ func (s *Scanner) ensureBlobFromSnapshot(ctx context.Context, config *provider.S
 	}
 
 	return blobURL, provider.RetryableErrorf(estimatedBlobCopyTime, "blob copy from url started")
+}
+
+func (s *Scanner) ensureBlobDeleted(ctx context.Context, config *provider.ScanJobConfig) error {
+	blobName := blobNameFromJobConfig(config)
+	blobURL := s.blobURLFromBlobName(blobName)
+	blobClient, err := blob.NewClient(blobURL, s.Cred, nil)
+	if err != nil {
+		return provider.FatalErrorf("failed to init blob client: %w", err)
+	}
+
+	getMetadata, err := blobClient.GetProperties(ctx, nil)
+	if err != nil {
+		notFound, err := common.HandleAzureRequestError(err, "getting blob %s", blobName)
+		if notFound {
+			return nil
+		}
+		return err
+	}
+
+	copyStatus := *getMetadata.CopyStatus
+	if copyStatus == blob.CopyStatusTypePending {
+		_, err = blobClient.AbortCopyFromURL(ctx, *getMetadata.CopyID, nil)
+		if err != nil {
+			_, err := common.HandleAzureRequestError(err, "aborting copy from url for blob %s", blobName)
+			return err
+		}
+		return provider.RetryableErrorf(estimatedBlobAbortTime, "blob copy aborting")
+	}
+
+	_, err = blobClient.Delete(ctx, nil)
+	if err != nil {
+		_, err := common.HandleAzureRequestError(err, "deleting blob %s", blobName)
+		return err
+	}
+
+	return provider.RetryableErrorf(estimatedBlobDeleteTime, "blob %s delete started", blobName)
 }

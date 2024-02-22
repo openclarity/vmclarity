@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 
@@ -48,4 +49,25 @@ func HandleAzureRequestError(err error, actionTmpl string, parts ...interface{})
 		// again on the next loop.
 		return false, fmt.Errorf("error from azure while %s: %w", action, err)
 	}
+}
+
+func EnsureDeleted(resourceType string, getFunc func() error, deleteFunc func() error, estimateTime time.Duration) error {
+	err := getFunc()
+	if err != nil {
+		notFound, err := HandleAzureRequestError(err, "getting %s", resourceType)
+		// NotFound means that the resource has been deleted
+		// successfully, all other errors are raised.
+		if notFound {
+			return nil
+		}
+		return err
+	}
+
+	err = deleteFunc()
+	if err != nil {
+		_, err := HandleAzureRequestError(err, "deleting %s", resourceType)
+		return err
+	}
+
+	return provider.RetryableErrorf(estimateTime, "%s delete issued", resourceType)
 }

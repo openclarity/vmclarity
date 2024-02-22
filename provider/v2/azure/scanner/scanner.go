@@ -99,9 +99,33 @@ func (s *Scanner) RunAssetScan(ctx context.Context, config *provider.ScanJobConf
 	return nil
 }
 
-func (s *Scanner) RemoveAssetScan(ctx context.Context, t *provider.ScanJobConfig) error {
-	// TODO implement me
-	panic("implement me")
+func (s *Scanner) RemoveAssetScan(ctx context.Context, config *provider.ScanJobConfig) error {
+	err := s.ensureScannerVirtualMachineDeleted(ctx, config)
+	if err != nil {
+		return fmt.Errorf("failed to ensure scanner virtual machine deleted: %w", err)
+	}
+
+	err = s.ensureNetworkInterfaceDeleted(ctx, config)
+	if err != nil {
+		return fmt.Errorf("failed to ensure network interface deleted: %w", err)
+	}
+
+	err = s.ensureTargetDiskDeleted(ctx, config)
+	if err != nil {
+		return fmt.Errorf("failed to ensure asset disk deleted: %w", err)
+	}
+
+	err = s.ensureBlobDeleted(ctx, config)
+	if err != nil {
+		return fmt.Errorf("failed to ensure snapshot copy blob deleted: %w", err)
+	}
+
+	err = s.ensureSnapshotDeleted(ctx, config)
+	if err != nil {
+		return fmt.Errorf("failed to ensure snapshot deleted: %w", err)
+	}
+
+	return nil
 }
 
 // Example Instance ID:
