@@ -69,19 +69,19 @@ LDFLAGS += -X 'github.com/openclarity/vmclarity/core/version.CommitHash=$(COMMIT
 LDFLAGS += -X 'github.com/openclarity/vmclarity/core/version.BuildTimestamp=$(BUILD_TIMESTAMP)'
 
 bin/vmclarity-orchestrator: $(shell find api provider orchestrator utils core) | $(BIN_DIR)
-	cd orchestrator && go build $(BUILD_OPTS) -ldflags="$(LDFLAGS)" -o $(ROOT_DIR)/$@ cmd/main.go
+	go build -C orchestrator $(BUILD_OPTS) -ldflags="$(LDFLAGS)" -o $(ROOT_DIR)/$@ cmd/main.go
 
 bin/vmclarity-apiserver: $(shell find api api/server) | $(BIN_DIR)
-	cd api/server && go build $(BUILD_OPTS) -ldflags="$(LDFLAGS)" -o $(ROOT_DIR)/$@ cmd/main.go
+	go build -C api/server $(BUILD_OPTS) -ldflags="$(LDFLAGS)" -o $(ROOT_DIR)/$@ cmd/main.go
 
 bin/vmclarity-cli: $(shell find api cli utils core) | $(BIN_DIR)
-	cd cli && go build $(BUILD_OPTS) -ldflags="$(LDFLAGS)" -o $(ROOT_DIR)/$@ cmd/main.go
+	go build -C cli $(BUILD_OPTS) -ldflags="$(LDFLAGS)" -o $(ROOT_DIR)/$@ cmd/main.go
 
 bin/vmclarity-ui-backend: $(shell find api uibackend/server)  | $(BIN_DIR)
-	cd uibackend/server && go build $(BUILD_OPTS) -ldflags="$(LDFLAGS)" -o $(ROOT_DIR)/$@ cmd/main.go
+	go build -C uibackend/server $(BUILD_OPTS) -ldflags="$(LDFLAGS)" -o $(ROOT_DIR)/$@ cmd/main.go
 
 bin/vmclarity-cr-discovery-server: $(shell find api containerruntimediscovery/server utils core) | $(BIN_DIR)
-	cd containerruntimediscovery/server && go build $(BUILD_OPTS) -ldflags="$(LDFLAGS)" -o $(ROOT_DIR)/$@ cmd/main.go
+	go build -C containerruntimediscovery/server $(BUILD_OPTS) -ldflags="$(LDFLAGS)" -o $(ROOT_DIR)/$@ cmd/main.go
 
 .PHONY: clean
 clean: clean-ui clean-go ## Clean all build artifacts
@@ -153,7 +153,7 @@ endif
 
 .PHONY: e2e
 e2e: $(E2E_TARGETS) ## Run end-to-end test suite
-	cd e2e && $(E2E_ENV) go test -v -failfast -test.v -test.paniconexit0 -timeout 2h -ginkgo.v .
+	$(E2E_ENV) go test -C e2e -v -failfast -test.v -test.paniconexit0 -timeout 2h -ginkgo.v .
 
 VENDORMODULES = $(addprefix vendor-, $(GOMODULES))
 
@@ -209,7 +209,7 @@ endif
 TESTGOMODULES = $(addprefix test-, $(GOMODULES))
 
 $(TESTGOMODULES):
-	cd $(@:test-%=%) && go test $(GOTEST_OPTS) ./...
+	go test -C $(@:test-%=%) $(GOTEST_OPTS) ./...
 
 .PHONY: test
 test: $(TESTGOMODULES) ## Run Go unit tests
@@ -288,16 +288,16 @@ gen-api: gen-apiserver-api gen-uibackend-api ## Generating API code
 .PHONY: gen-apiserver-api
 gen-apiserver-api: ## Generating Go library for API specification
 	$(info Generating API for backend code ...)
-	@(cd api/types && go generate)
-	@(cd api/client && go generate)
-	@(cd api/server && go generate)
+	@go generate -C api/types
+	@go generate -C api/client
+	@go generate -C api/server
 
 .PHONY: gen-uibackend-api
 gen-uibackend-api: ## Generating Go library for UI Backend API specification
 	$(info Generating API for UI backend code ...)
-	@(cd uibackend/types && go generate)
-	@(cd uibackend/client && go generate)
-	@(cd uibackend/server && go generate)
+	@go generate -C uibackend/types
+	@go generate -C uibackend/client
+	@go generate -C uibackend/server
 
 .PHONY: gen-bicep
 gen-bicep: bin/bicep ## Generating Azure Bicep template(s)
@@ -337,7 +337,7 @@ $(DIST_DIR)/%/vmclarity-cli: $(shell find api cli utils core)
 	GOOS=$(firstword $(subst -, ,$*)) \
 	GOARCH=$(lastword $(subst -, ,$*)) \
 	CGO_ENABLED=0 \
-	go build -ldflags="$(LDFLAGS)" -o $@ cmd/$(notdir $@)/main.go
+	go build -C cli/cmd -ldflags="$(LDFLAGS)" -o $@ main.go
 
 $(DIST_DIR)/%/LICENSE: $(ROOT_DIR)/LICENSE
 	cp -v $< $@
