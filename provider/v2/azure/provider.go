@@ -17,8 +17,13 @@ package azure
 
 import (
 	"context"
+	"fmt"
+
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v5"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
+	"github.com/openclarity/vmclarity/provider/v2/azure/common"
 	"github.com/openclarity/vmclarity/provider/v2/azure/discoverer"
 	"github.com/openclarity/vmclarity/provider/v2/azure/estimator"
 	"github.com/openclarity/vmclarity/provider/v2/azure/scanner"
@@ -35,9 +40,32 @@ func (p *Provider) Kind() apitypes.CloudProvider {
 }
 
 func New(_ context.Context) (*Provider, error) {
+	config, err := common.NewConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load configuration: %w", err)
+	}
+
+	err = config.Validate()
+	if err != nil {
+		return nil, fmt.Errorf("failed to validate configuration: %w", err)
+	}
+
+	cred, err := azidentity.NewManagedIdentityCredential(nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed create managed identity credential: %w", err)
+	}
+
+	computeClientFactory, err := armcompute.NewClientFactory(config.SubscriptionID, cred, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create compute client factory: %w", err)
+	}
+
 	return &Provider{
-		Discoverer: &discoverer.Discoverer{},
-		Scanner:    &scanner.Scanner{},
-		Estimator:  &estimator.Estimator{},
+		Discoverer: &discoverer.Discoverer{
+			VMClient:    computeClientFactory.NewVirtualMachinesClient(),
+			DisksClient: computeClientFactory.NewDisksClient(),
+		},
+		Scanner:   &scanner.Scanner{},
+		Estimator: &estimator.Estimator{},
 	}, nil
 }
