@@ -18,13 +18,13 @@ package scanner
 import (
 	"context"
 	"fmt"
-	"github.com/openclarity/vmclarity/provider/v2/gcp/utils"
 	"time"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/provider"
+	"github.com/openclarity/vmclarity/provider/v2/gcp/utils"
 )
 
 var (

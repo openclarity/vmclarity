@@ -19,7 +19,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/openclarity/vmclarity/provider/v2/gcp/utils"
 	"time"
 
 	compute "cloud.google.com/go/compute/apiv1"
@@ -30,6 +29,7 @@ import (
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/provider"
+	"github.com/openclarity/vmclarity/provider/v2/gcp/utils"
 )
 
 const (
