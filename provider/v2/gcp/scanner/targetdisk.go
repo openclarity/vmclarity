@@ -18,13 +18,13 @@ package scanner
 import (
 	"context"
 	"fmt"
+	"github.com/openclarity/vmclarity/provider/v2/gcp/utils"
 	"time"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/provider"
-	"github.com/openclarity/vmclarity/provider/v2/gcp/common"
 )
 
 var (
@@ -53,7 +53,7 @@ func (s *Scanner) ensureDiskFromSnapshot(ctx context.Context, config *provider.S
 		return diskRes, nil
 	}
 
-	notFound, err := common.HandleGcpRequestError(err, "getting disk %s", diskName)
+	notFound, err := utils.HandleGcpRequestError(err, "getting disk %s", diskName)
 	if !notFound {
 		return nil, err // nolint: wrapcheck
 	}
@@ -73,7 +73,7 @@ func (s *Scanner) ensureDiskFromSnapshot(ctx context.Context, config *provider.S
 
 	_, err = s.DisksClient.Insert(ctx, req)
 	if err != nil {
-		_, err := common.HandleGcpRequestError(err, "create disk")
+		_, err := utils.HandleGcpRequestError(err, "create disk")
 		return nil, err // nolint: wrapcheck
 	}
 
@@ -83,7 +83,7 @@ func (s *Scanner) ensureDiskFromSnapshot(ctx context.Context, config *provider.S
 func (s *Scanner) ensureTargetDiskDeleted(ctx context.Context, config *provider.ScanJobConfig) error {
 	diskName := diskNameFromJobConfig(config)
 
-	return common.EnsureDeleted( // nolint: wrapcheck
+	return utils.EnsureDeleted( // nolint: wrapcheck
 		"disk",
 		func() error {
 			_, err := s.DisksClient.Get(ctx, &computepb.GetDiskRequest{

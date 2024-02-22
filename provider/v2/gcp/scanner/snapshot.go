@@ -17,12 +17,12 @@ package scanner
 
 import (
 	"context"
+	"github.com/openclarity/vmclarity/provider/v2/gcp/utils"
 	"time"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 
 	"github.com/openclarity/vmclarity/provider"
-	"github.com/openclarity/vmclarity/provider/v2/gcp/common"
 )
 
 var (
@@ -50,7 +50,7 @@ func (s *Scanner) ensureSnapshotFromAttachedDisk(ctx context.Context, config *pr
 		return snapshotRes, nil
 	}
 
-	notFound, err := common.HandleGcpRequestError(err, "getting snapshot %s", snapshotName)
+	notFound, err := utils.HandleGcpRequestError(err, "getting snapshot %s", snapshotName)
 	if !notFound {
 		return nil, err // nolint: wrapcheck
 	}
@@ -66,7 +66,7 @@ func (s *Scanner) ensureSnapshotFromAttachedDisk(ctx context.Context, config *pr
 
 	_, err = s.SnapshotsClient.Insert(ctx, req)
 	if err != nil {
-		_, err := common.HandleGcpRequestError(err, "create snapshot %s", snapshotName)
+		_, err := utils.HandleGcpRequestError(err, "create snapshot %s", snapshotName)
 		return nil, err // nolint: wrapcheck
 	}
 
@@ -76,7 +76,7 @@ func (s *Scanner) ensureSnapshotFromAttachedDisk(ctx context.Context, config *pr
 func (s *Scanner) ensureSnapshotDeleted(ctx context.Context, config *provider.ScanJobConfig) error {
 	snapshotName := snapshotNameFromJobConfig(config)
 
-	return common.EnsureDeleted( // nolint: wrapcheck
+	return utils.EnsureDeleted( // nolint: wrapcheck
 		"snapshot",
 		func() error {
 			_, err := s.SnapshotsClient.Get(ctx, &computepb.GetSnapshotRequest{

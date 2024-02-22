@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/openclarity/vmclarity/provider/v2/gcp/utils"
 	"time"
 
 	compute "cloud.google.com/go/compute/apiv1"
@@ -29,7 +30,6 @@ import (
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/provider"
-	"github.com/openclarity/vmclarity/provider/v2/gcp/common"
 )
 
 const (
@@ -98,7 +98,7 @@ func (d *Discoverer) listInstances(ctx context.Context, filter *string, zone str
 			break
 		}
 		if err != nil {
-			_, err = common.HandleGcpRequestError(err, "listing instances for project %s zone %s", d.ProjectID, zone)
+			_, err = utils.HandleGcpRequestError(err, "listing instances for project %s zone %s", d.ProjectID, zone)
 			return nil, err // nolint: wrapcheck
 		}
 
@@ -125,7 +125,7 @@ func (d *Discoverer) listAllRegions(ctx context.Context) ([]*computepb.Region, e
 			break
 		}
 		if err != nil {
-			_, err := common.HandleGcpRequestError(err, "list regions")
+			_, err := utils.HandleGcpRequestError(err, "list regions")
 			return nil, err // nolint: wrapcheck
 		}
 
@@ -141,7 +141,7 @@ func (d *Discoverer) getVMInfoFromVirtualMachine(ctx context.Context, vm *comput
 		return apitypes.AssetType{}, fmt.Errorf("failed to parse time: %v", *vm.CreationTimestamp)
 	}
 	// get boot disk name
-	diskName := common.GetLastURLPart(vm.Disks[0].Source)
+	diskName := utils.GetLastURLPart(vm.Disks[0].Source)
 
 	var platform string
 	var image string
@@ -150,7 +150,7 @@ func (d *Discoverer) getVMInfoFromVirtualMachine(ctx context.Context, vm *comput
 	disk, err := d.DisksClient.Get(ctx, &computepb.GetDiskRequest{
 		Disk:    diskName,
 		Project: d.ProjectID,
-		Zone:    common.GetLastURLPart(vm.Zone),
+		Zone:    utils.GetLastURLPart(vm.Zone),
 	})
 	if err != nil {
 		logrus.Warnf("failed to get disk %v: %v", diskName, err)
@@ -158,16 +158,16 @@ func (d *Discoverer) getVMInfoFromVirtualMachine(ctx context.Context, vm *comput
 		if disk.Architecture != nil {
 			platform = *disk.Architecture
 		}
-		image = common.GetLastURLPart(disk.SourceImage)
+		image = utils.GetLastURLPart(disk.SourceImage)
 	}
 
 	err = assetType.FromVMInfo(apitypes.VMInfo{
 		InstanceProvider: to.Ptr(apitypes.GCP),
 		InstanceID:       *vm.Name,
 		Image:            image,
-		InstanceType:     common.GetLastURLPart(vm.MachineType),
+		InstanceType:     utils.GetLastURLPart(vm.MachineType),
 		LaunchTime:       launchTime,
-		Location:         common.GetLastURLPart(vm.Zone),
+		Location:         utils.GetLastURLPart(vm.Zone),
 		Platform:         platform,
 		SecurityGroups:   &[]apitypes.SecurityGroup{},
 		Tags:             to.Ptr(convertLabelsToTags(vm.Labels)),
@@ -194,7 +194,7 @@ func getZonesLastPart(zones []string) []string {
 	ret := make([]string, 0, len(zones))
 	for _, zone := range zones {
 		z := zone
-		ret = append(ret, common.GetLastURLPart(&z))
+		ret = append(ret, utils.GetLastURLPart(&z))
 	}
 	return ret
 }

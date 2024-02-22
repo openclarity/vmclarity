@@ -18,6 +18,7 @@ package scanner
 import (
 	"context"
 	"fmt"
+	"github.com/openclarity/vmclarity/provider/v2/gcp/utils"
 	"time"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
@@ -25,7 +26,6 @@ import (
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/provider"
 	"github.com/openclarity/vmclarity/provider/cloudinit"
-	"github.com/openclarity/vmclarity/provider/v2/gcp/common"
 )
 
 var (
@@ -59,7 +59,7 @@ func (s *Scanner) ensureScannerVirtualMachine(ctx context.Context, config *provi
 		return instanceRes, nil
 	}
 
-	notFound, err := common.HandleGcpRequestError(err, "getting scanner virtual machine: %v", vmName)
+	notFound, err := utils.HandleGcpRequestError(err, "getting scanner virtual machine: %v", vmName)
 	// ignore not found error as it is expected
 	if !notFound {
 		return nil, err // nolint: wrapcheck
@@ -121,7 +121,7 @@ func (s *Scanner) ensureScannerVirtualMachine(ctx context.Context, config *provi
 
 	_, err = s.InstancesClient.Insert(ctx, req)
 	if err != nil {
-		_, err := common.HandleGcpRequestError(err, "unable to create instance %v", vmName)
+		_, err := utils.HandleGcpRequestError(err, "unable to create instance %v", vmName)
 		return nil, err // nolint: wrapcheck
 	}
 
@@ -131,7 +131,7 @@ func (s *Scanner) ensureScannerVirtualMachine(ctx context.Context, config *provi
 func (s *Scanner) ensureScannerVirtualMachineDeleted(ctx context.Context, config *provider.ScanJobConfig) error {
 	vmName := scannerVMNameFromJobConfig(config)
 
-	return common.EnsureDeleted( // nolint: wrapcheck
+	return utils.EnsureDeleted( // nolint: wrapcheck
 		"VirtualMachine",
 		func() error {
 			_, err := s.InstancesClient.Get(ctx, &computepb.GetInstanceRequest{
@@ -156,7 +156,7 @@ func (s *Scanner) ensureScannerVirtualMachineDeleted(ctx context.Context, config
 func (s *Scanner) ensureDiskAttachedToScannerVM(ctx context.Context, vm *computepb.Instance, disk *computepb.Disk) error {
 	var diskAttached bool
 	for _, attachedDisk := range vm.Disks {
-		diskName := common.GetLastURLPart(attachedDisk.Source)
+		diskName := utils.GetLastURLPart(attachedDisk.Source)
 		if diskName == *disk.Name {
 			diskAttached = true
 			break
@@ -173,7 +173,7 @@ func (s *Scanner) ensureDiskAttachedToScannerVM(ctx context.Context, vm *compute
 
 		_, err := s.InstancesClient.AttachDisk(ctx, req)
 		if err != nil {
-			_, err = common.HandleGcpRequestError(err, "attach disk %v to VM %v", *disk.Name, *vm.Name)
+			_, err = utils.HandleGcpRequestError(err, "attach disk %v to VM %v", *disk.Name, *vm.Name)
 			return err // nolint: wrapcheck
 		}
 	}
@@ -184,7 +184,7 @@ func (s *Scanner) ensureDiskAttachedToScannerVM(ctx context.Context, vm *compute
 		Zone:    s.ScannerZone,
 	})
 	if err != nil {
-		_, err = common.HandleGcpRequestError(err, "get disk %v", *disk.Name)
+		_, err = utils.HandleGcpRequestError(err, "get disk %v", *disk.Name)
 		return err // nolint: wrapcheck
 	}
 
