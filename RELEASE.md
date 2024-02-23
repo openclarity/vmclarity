@@ -43,7 +43,7 @@ git push origin release/v0.7.0
 
 * Create a pull request with the changes.
 
-## 3. Create and Push Tags
+## 3. Create and Push Tag
 
 * After the pull request is approved and merged, update your local main branch.
 ```sh
@@ -51,9 +51,10 @@ git checkout main
 git pull origin main
 ```
 
-* Create and push the tags for the last commit to the repository.
+* Create and push a new tag in order to trigger the `Release` workflow.
 ```sh
-make multimod-push-tags
+git tag -a v0.7.0
+git push origin v0.7.0
 ```
 
 ## Post-release Checks
