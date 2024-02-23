@@ -231,3 +231,15 @@ bin/typos-$(TYPOS_VERSION): | $(BIN_DIR)
 	@curl -sSfL 'https://github.com/crate-ci/typos/releases/download/v$(TYPOS_VERSION)/typos-v$(TYPOS_VERSION)-$(TYPOS_ARCH)-$(TYPOS_OSTYPE).tar.gz' --output - \
 	| tar xzvOf - './typos' > $@
 	@chmod +x $@
+
+####
+##  Go MultiMod Releaser
+####
+
+MULTIMOD_BIN := $(BIN_DIR)/multimod
+MULTIMOD_REPO_DIR := $(BIN_DIR)/opentelemetry-go-build-tools
+
+bin/multimod:
+	@if [ ! -d $(MULTIMOD_REPO_DIR) ]; then git clone git@github.com:open-telemetry/opentelemetry-go-build-tools.git $(MULTIMOD_REPO_DIR); fi
+	@cd $(MULTIMOD_REPO_DIR)/multimod && go build -o $(MULTIMOD_BIN) main.go
+	@rm -rf $(MULTIMOD_REPO_DIR)
