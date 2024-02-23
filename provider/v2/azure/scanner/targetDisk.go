@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// nolint: wrapcheck
 package scanner
 
 import (
@@ -122,11 +123,11 @@ func (s *Scanner) ensureTargetDiskDeleted(ctx context.Context, config *provider.
 		"target disk",
 		func() error {
 			_, err := s.DisksClient.Get(ctx, s.Config.ScannerResourceGroup, volumeName, nil)
-			return err // nolint: wrapcheck
+			return err
 		},
 		func() error {
 			_, err := s.DisksClient.BeginDelete(ctx, s.Config.ScannerResourceGroup, volumeName, nil)
-			return err // nolint: wrapcheck
+			return err
 		},
 		DiskDeleteEstimateTime,
 	)

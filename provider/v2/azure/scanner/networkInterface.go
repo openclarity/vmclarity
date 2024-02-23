@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// nolint: wrapcheck
 package scanner
 
 import (
@@ -88,11 +89,11 @@ func (s *Scanner) ensureNetworkInterfaceDeleted(ctx context.Context, config *pro
 		"interface",
 		func() error {
 			_, err := s.InterfacesClient.Get(ctx, s.Config.ScannerResourceGroup, nicName, nil)
-			return err // nolint: wrapcheck
+			return err
 		},
 		func() error {
 			_, err := s.InterfacesClient.BeginDelete(ctx, s.Config.ScannerResourceGroup, nicName, nil)
-			return err // nolint: wrapcheck
+			return err
 		},
 		NetworkInterfaceDeleteEstimateTime,
 	)

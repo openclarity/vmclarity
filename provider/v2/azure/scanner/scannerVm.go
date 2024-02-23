@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// nolint:wrapcheck
 package scanner
 
 import (
@@ -137,11 +138,11 @@ func (s *Scanner) ensureScannerVirtualMachineDeleted(ctx context.Context, config
 		"virtual machine",
 		func() error {
 			_, err := s.VMClient.Get(ctx, s.Config.ScannerResourceGroup, vmName, nil)
-			return err // nolint: wrapcheck
+			return err
 		},
 		func() error {
 			_, err := s.VMClient.BeginDelete(ctx, s.Config.ScannerResourceGroup, vmName, nil)
-			return err // nolint: wrapcheck
+			return err
 		},
 		VMDeleteEstimateTime,
 	)

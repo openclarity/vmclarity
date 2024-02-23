@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// nolint:wrapcheck
 package scanner
 
 import (
@@ -73,15 +74,16 @@ func (s *Scanner) ensureSnapshotForVMRootVolume(ctx context.Context, config *pro
 func (s *Scanner) ensureSnapshotDeleted(ctx context.Context, config *provider.ScanJobConfig) error {
 	snapshotName := snapshotNameFromJobConfig(config)
 
+	// nolint:wrapcheck
 	return common.EnsureDeleted(
 		"snapshot",
 		func() error {
 			_, err := s.SnapshotsClient.Get(ctx, s.Config.ScannerResourceGroup, snapshotName, nil)
-			return err // nolint: wrapcheck
+			return err
 		},
 		func() error {
 			_, err := s.SnapshotsClient.BeginDelete(ctx, s.Config.ScannerResourceGroup, snapshotName, nil)
-			return err // nolint: wrapcheck
+			return err
 		},
 		SnapshotDeleteEstimateTime,
 	)
