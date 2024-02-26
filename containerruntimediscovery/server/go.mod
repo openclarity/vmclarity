@@ -3,8 +3,8 @@ module github.com/openclarity/vmclarity/containerruntimediscovery/server
 go 1.21.4
 
 require (
-	github.com/openclarity/vmclarity/api/types v0.0.0-00010101000000-000000000000
-	github.com/openclarity/vmclarity/containerruntimediscovery/types v0.0.0-00010101000000-000000000000
+	github.com/openclarity/vmclarity/api/types v0.7.0-rc0
+	github.com/openclarity/vmclarity/containerruntimediscovery/types v0.7.0-rc0
 )
 
 require (
@@ -13,7 +13,7 @@ require (
 	github.com/containers/image/v5 v5.29.2
 	github.com/docker/docker v25.0.3+incompatible
 	github.com/labstack/echo/v4 v4.11.4
-	github.com/openclarity/vmclarity/core v0.0.0-00010101000000-000000000000
+	github.com/openclarity/vmclarity/core v0.7.0-rc0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
