@@ -40,12 +40,12 @@ func (p *Provider) Kind() apitypes.CloudProvider {
 }
 
 func New(_ context.Context) (*Provider, error) {
-	scannerConfig, err := scanner.NewConfig()
+	config, err := NewConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load configuration: %w", err)
 	}
 
-	err = scannerConfig.Validate()
+	err = config.Validate()
 	if err != nil {
 		return nil, fmt.Errorf("failed to validate configuration: %w", err)
 	}
@@ -55,12 +55,12 @@ func New(_ context.Context) (*Provider, error) {
 		return nil, fmt.Errorf("failed create managed identity credential: %w", err)
 	}
 
-	networkClientFactory, err := armnetwork.NewClientFactory(scannerConfig.SubscriptionID, cred, nil)
+	networkClientFactory, err := armnetwork.NewClientFactory(config.SubscriptionID, cred, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create network client factory: %w", err)
 	}
 
-	computeClientFactory, err := armcompute.NewClientFactory(scannerConfig.SubscriptionID, cred, nil)
+	computeClientFactory, err := armcompute.NewClientFactory(config.SubscriptionID, cred, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create compute client factory: %w", err)
 	}
@@ -77,7 +77,19 @@ func New(_ context.Context) (*Provider, error) {
 			DisksClient:      computeClientFactory.NewDisksClient(),
 			InterfacesClient: networkClientFactory.NewInterfacesClient(),
 
-			Config: scannerConfig,
+			SubscriptionID:              config.SubscriptionID,
+			ScannerLocation:             config.ScannerLocation,
+			ScannerResourceGroup:        config.ScannerResourceGroup,
+			ScannerSubnet:               config.ScannerSubnet,
+			ScannerPublicKey:            string(config.ScannerPublicKey),
+			ScannerVMSize:               config.ScannerVMSize,
+			ScannerImagePublisher:       config.ScannerImagePublisher,
+			ScannerImageOffer:           config.ScannerImageOffer,
+			ScannerImageSKU:             config.ScannerImageSKU,
+			ScannerImageVersion:         config.ScannerImageVersion,
+			ScannerSecurityGroup:        config.ScannerSecurityGroup,
+			ScannerStorageAccountName:   config.ScannerStorageAccountName,
+			ScannerStorageContainerName: config.ScannerStorageContainerName,
 		},
 		Estimator: &estimator.Estimator{},
 	}, nil

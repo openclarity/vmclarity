@@ -39,7 +39,7 @@ func networkInterfaceNameFromJobConfig(config *provider.ScanJobConfig) string {
 func (s *Scanner) ensureNetworkInterface(ctx context.Context, config *provider.ScanJobConfig) (armnetwork.Interface, error) {
 	nicName := networkInterfaceNameFromJobConfig(config)
 
-	nicResp, err := s.InterfacesClient.Get(ctx, s.Config.ScannerResourceGroup, nicName, nil)
+	nicResp, err := s.InterfacesClient.Get(ctx, s.ScannerResourceGroup, nicName, nil)
 	if err == nil {
 		if *nicResp.Interface.Properties.ProvisioningState != provisioningStateSucceeded {
 			return nicResp.Interface, provider.RetryableErrorf(NetworkInterfaceEstimateProvisionTime, "interface is not ready yet, provisioning state: %s", *nicResp.Interface.Properties.ProvisioningState)
@@ -54,7 +54,7 @@ func (s *Scanner) ensureNetworkInterface(ctx context.Context, config *provider.S
 	}
 
 	parameters := armnetwork.Interface{
-		Location: to.Ptr(s.Config.ScannerLocation),
+		Location: to.Ptr(s.ScannerLocation),
 		Properties: &armnetwork.InterfacePropertiesFormat{
 			IPConfigurations: []*armnetwork.InterfaceIPConfiguration{
 				{
@@ -62,18 +62,18 @@ func (s *Scanner) ensureNetworkInterface(ctx context.Context, config *provider.S
 					Properties: &armnetwork.InterfaceIPConfigurationPropertiesFormat{
 						PrivateIPAllocationMethod: to.Ptr(armnetwork.IPAllocationMethodDynamic),
 						Subnet: &armnetwork.Subnet{
-							ID: to.Ptr(s.Config.ScannerSubnet),
+							ID: to.Ptr(s.ScannerSubnet),
 						},
 					},
 				},
 			},
 			NetworkSecurityGroup: &armnetwork.SecurityGroup{
-				ID: to.Ptr(s.Config.ScannerSecurityGroup),
+				ID: to.Ptr(s.ScannerSecurityGroup),
 			},
 		},
 	}
 
-	_, err = s.InterfacesClient.BeginCreateOrUpdate(ctx, s.Config.ScannerResourceGroup, nicName, parameters, nil)
+	_, err = s.InterfacesClient.BeginCreateOrUpdate(ctx, s.ScannerResourceGroup, nicName, parameters, nil)
 	if err != nil {
 		_, err := utils.HandleAzureRequestError(err, "creating interface %s", nicName)
 		return armnetwork.Interface{}, err
@@ -88,11 +88,11 @@ func (s *Scanner) ensureNetworkInterfaceDeleted(ctx context.Context, config *pro
 	return utils.EnsureDeleted(
 		"interface",
 		func() error {
-			_, err := s.InterfacesClient.Get(ctx, s.Config.ScannerResourceGroup, nicName, nil)
+			_, err := s.InterfacesClient.Get(ctx, s.ScannerResourceGroup, nicName, nil)
 			return err
 		},
 		func() error {
-			_, err := s.InterfacesClient.BeginDelete(ctx, s.Config.ScannerResourceGroup, nicName, nil)
+			_, err := s.InterfacesClient.BeginDelete(ctx, s.ScannerResourceGroup, nicName, nil)
 			return err
 		},
 		NetworkInterfaceDeleteEstimateTime,

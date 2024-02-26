@@ -43,7 +43,19 @@ type Scanner struct {
 	DisksClient      *armcompute.DisksClient
 	InterfacesClient *armnetwork.InterfacesClient
 
-	Config *Config
+	SubscriptionID              string
+	ScannerLocation             string
+	ScannerResourceGroup        string
+	ScannerSubnet               string
+	ScannerPublicKey            string
+	ScannerVMSize               string
+	ScannerImagePublisher       string
+	ScannerImageOffer           string
+	ScannerImageSKU             string
+	ScannerImageVersion         string
+	ScannerSecurityGroup        string
+	ScannerStorageAccountName   string
+	ScannerStorageContainerName string
 }
 
 // nolint:cyclop
@@ -70,7 +82,7 @@ func (s *Scanner) RunAssetScan(ctx context.Context, config *provider.ScanJobConf
 	}
 
 	var disk armcompute.Disk
-	if *assetVM.Location == s.Config.ScannerLocation {
+	if *assetVM.Location == s.ScannerLocation {
 		disk, err = s.ensureManagedDiskFromSnapshot(ctx, config, snapshot)
 		if err != nil {
 			return fmt.Errorf("failed to ensure managed disk created from snapshot: %w", err)

@@ -39,7 +39,7 @@ func snapshotNameFromJobConfig(config *provider.ScanJobConfig) string {
 func (s *Scanner) ensureSnapshotForVMRootVolume(ctx context.Context, config *provider.ScanJobConfig, vm armcompute.VirtualMachine) (armcompute.Snapshot, error) {
 	snapshotName := snapshotNameFromJobConfig(config)
 
-	snapshotRes, err := s.SnapshotsClient.Get(ctx, s.Config.ScannerResourceGroup, snapshotName, nil)
+	snapshotRes, err := s.SnapshotsClient.Get(ctx, s.ScannerResourceGroup, snapshotName, nil)
 	if err == nil {
 		if *snapshotRes.Properties.ProvisioningState != provisioningStateSucceeded {
 			return snapshotRes.Snapshot, provider.RetryableErrorf(SnapshotCreateEstimateProvisionTime, "snapshot is not ready yet")
@@ -54,7 +54,7 @@ func (s *Scanner) ensureSnapshotForVMRootVolume(ctx context.Context, config *pro
 		return armcompute.Snapshot{}, err
 	}
 
-	_, err = s.SnapshotsClient.BeginCreateOrUpdate(ctx, s.Config.ScannerResourceGroup, snapshotName, armcompute.Snapshot{
+	_, err = s.SnapshotsClient.BeginCreateOrUpdate(ctx, s.ScannerResourceGroup, snapshotName, armcompute.Snapshot{
 		Location: vm.Location,
 		Properties: &armcompute.SnapshotProperties{
 			CreationData: &armcompute.CreationData{
@@ -78,11 +78,11 @@ func (s *Scanner) ensureSnapshotDeleted(ctx context.Context, config *provider.Sc
 	return utils.EnsureDeleted(
 		"snapshot",
 		func() error {
-			_, err := s.SnapshotsClient.Get(ctx, s.Config.ScannerResourceGroup, snapshotName, nil)
+			_, err := s.SnapshotsClient.Get(ctx, s.ScannerResourceGroup, snapshotName, nil)
 			return err
 		},
 		func() error {
-			_, err := s.SnapshotsClient.BeginDelete(ctx, s.Config.ScannerResourceGroup, snapshotName, nil)
+			_, err := s.SnapshotsClient.BeginDelete(ctx, s.ScannerResourceGroup, snapshotName, nil)
 			return err
 		},
 		SnapshotDeleteEstimateTime,
