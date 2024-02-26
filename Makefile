@@ -11,7 +11,7 @@ SHELL = /usr/bin/env bash -o pipefail
 ####
 
 VERSION ?= $(shell git rev-parse --short HEAD)
-DOCKER_REGISTRY ?= ghcr.io/openclarity
+DOCKER_REGISTRY ?= ghcr.io/paralta
 DOCKER_PUSH ?= false
 DOCKER_TAG ?= $(VERSION)
 VMCLARITY_TOOLS_BASE ?=
@@ -29,7 +29,7 @@ BUILD_TIMESTAMP := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 COMMIT_HASH := $(shell git rev-parse HEAD)
 INSTALLATION_DIR := $(ROOT_DIR)/installation
 HELM_CHART_DIR := $(INSTALLATION_DIR)/kubernetes/helm
-HELM_OCI_REPOSITORY := ghcr.io/openclarity/charts
+HELM_OCI_REPOSITORY := ghcr.io/paralta/charts
 DIST_DIR ?= $(ROOT_DIR)/dist
 
 ####

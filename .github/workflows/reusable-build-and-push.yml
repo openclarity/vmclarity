@@ -6,8 +6,8 @@ on:
       registry_name:
         required: false
         type: string
-        description: 'Registry name used for container image names. Default is `ghcr.io/openclarity`.'
-        default: ghcr.io/openclarity
+        description: 'Registry name used for container image names. Default is `ghcr.io/paralta`.'
+        default: ghcr.io/paralta
       image_tag:
         required: true
         type: string

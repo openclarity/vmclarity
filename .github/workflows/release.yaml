@@ -10,16 +10,7 @@ permissions:
   contents: write
 
 jobs:
-  verification:
-    name: Verification
-    uses: ./.github/workflows/reusable-verification.yml
-    secrets: inherit
-
   build_and_push:
-    needs:
-      - verification
-      - artifacts
-      - publish_helm
     name: Build & Push
     uses: ./.github/workflows/reusable-build-and-push.yml
     with:
@@ -27,101 +18,9 @@ jobs:
       push: true
       use_release_repository: true
 
-  publish_helm:
-    needs: verification
-    name: Publish Helm Chart
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-
-      - name: Create Helm Chart package
-        env:
-          VERSION: ${{ github.ref_name }}
-        run: make dist-helm-chart
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Package and Publish Helm Chart
-        env:
-          VERSION: ${{ github.ref_name }}
-        run: make publish-helm-chart
-
-  artifacts:
-    name: Create artifacts
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-
-      - name: Set up Go
-        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5
-        with:
-          # NOTE(chrisgacsal): Use actions/cache for caching Go dependency and build caches
-          # as if provides better flexibility like setting the cache key which reduces cache misses significantly.
-          cache: false
-          go-version-file: '.go-version'
-
-      - name: Setup Go caching
-        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ github.ref_name }}-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-${{ github.ref_name }}-
-            ${{ runner.os }}-go-${{ github.event.repository.default_branch }}-
-
-      - name: Create vmclarity-cli manifest(s)
-        env:
-          VERSION: ${{ github.ref_name }}
-        run: make dist-vmclarity-cli
-
-      - name: Create Cloudformation manifest(s)
-        env:
-          VERSION: ${{ github.ref_name }}
-        run: make dist-cloudformation
-
-      - name: Create Azure Bicep manifest(s)
-        env:
-          VERSION: ${{ github.ref_name }}
-        run: make dist-bicep
-
-      - name: Create Docker Compose manifest(s)
-        env:
-          VERSION: ${{ github.ref_name }}
-        run: make dist-docker-compose
-
-      - name: Create Google Cloud Deployment manifest(s)
-        env:
-          VERSION: ${{ github.ref_name }}
-        run: make dist-gcp-deployment
-
-      - name: Upload
-        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
-        with:
-          name: artifacts
-          path: |
-            dist/*.tar.gz
-            dist/*.tgz
-            dist/*.sha256sum
-            dist/bicep/vmclarity.json
-            dist/bicep/vmclarity-UI.json
-          if-no-files-found: error
-          compression-level: 0
-
   prerelease:
     needs:
-      - verification
       - build_and_push
-      - publish_helm
-      - artifacts
     name: Release
     runs-on: ubuntu-latest
     steps:
@@ -156,7 +55,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        tags: ["uibackend/types", "uibackend/server", "uibackend/client", "core", "provider", "utils", "installation", "cli", "testenv", "api/types", "api/server", "api/client", "e2e", "containerruntimediscovery/types", "containerruntimediscovery/server", "containerruntimediscovery/client", "orchestrator"]
+        tags:
+          - "containerruntimediscovery/types"
+          - "containerruntimediscovery/server"
+          - "containerruntimediscovery/client"
     steps:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
