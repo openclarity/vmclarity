@@ -24,7 +24,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
-	"github.com/openclarity/vmclarity/provider/v2/azure/common"
 	"github.com/openclarity/vmclarity/provider/v2/azure/discoverer"
 	"github.com/openclarity/vmclarity/provider/v2/azure/estimator"
 	"github.com/openclarity/vmclarity/provider/v2/azure/scanner"
@@ -41,12 +40,12 @@ func (p *Provider) Kind() apitypes.CloudProvider {
 }
 
 func New(_ context.Context) (*Provider, error) {
-	config, err := common.NewConfig()
+	scannerConfig, err := scanner.NewConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load configuration: %w", err)
 	}
 
-	err = config.Validate()
+	err = scannerConfig.Validate()
 	if err != nil {
 		return nil, fmt.Errorf("failed to validate configuration: %w", err)
 	}
@@ -56,12 +55,12 @@ func New(_ context.Context) (*Provider, error) {
 		return nil, fmt.Errorf("failed create managed identity credential: %w", err)
 	}
 
-	networkClientFactory, err := armnetwork.NewClientFactory(config.SubscriptionID, cred, nil)
+	networkClientFactory, err := armnetwork.NewClientFactory(scannerConfig.SubscriptionID, cred, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create network client factory: %w", err)
 	}
 
-	computeClientFactory, err := armcompute.NewClientFactory(config.SubscriptionID, cred, nil)
+	computeClientFactory, err := armcompute.NewClientFactory(scannerConfig.SubscriptionID, cred, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create compute client factory: %w", err)
 	}
@@ -78,7 +77,7 @@ func New(_ context.Context) (*Provider, error) {
 			DisksClient:      computeClientFactory.NewDisksClient(),
 			InterfacesClient: networkClientFactory.NewInterfacesClient(),
 
-			Config: config,
+			Config: scannerConfig,
 		},
 		Estimator: &estimator.Estimator{},
 	}, nil

@@ -28,7 +28,7 @@ import (
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/provider"
 	"github.com/openclarity/vmclarity/provider/cloudinit"
-	"github.com/openclarity/vmclarity/provider/v2/azure/common"
+	"github.com/openclarity/vmclarity/provider/v2/azure/utils"
 )
 
 var (
@@ -52,7 +52,7 @@ func (s *Scanner) ensureScannerVirtualMachine(ctx context.Context, config *provi
 		return vmResp.VirtualMachine, nil
 	}
 
-	notFound, err := common.HandleAzureRequestError(err, "getting scanner virtual machine: %s", vmName)
+	notFound, err := utils.HandleAzureRequestError(err, "getting scanner virtual machine: %s", vmName)
 	if !notFound {
 		return armcompute.VirtualMachine{}, err
 	}
@@ -124,7 +124,7 @@ func (s *Scanner) ensureScannerVirtualMachine(ctx context.Context, config *provi
 
 	_, err = s.VMClient.BeginCreateOrUpdate(ctx, s.Config.ScannerResourceGroup, vmName, parameters, nil)
 	if err != nil {
-		_, err = common.HandleAzureRequestError(err, "creating virtual machine")
+		_, err = utils.HandleAzureRequestError(err, "creating virtual machine")
 		return armcompute.VirtualMachine{}, err
 	}
 
@@ -134,7 +134,7 @@ func (s *Scanner) ensureScannerVirtualMachine(ctx context.Context, config *provi
 func (s *Scanner) ensureScannerVirtualMachineDeleted(ctx context.Context, config *provider.ScanJobConfig) error {
 	vmName := scannerVMNameFromJobConfig(config)
 
-	return common.EnsureDeleted(
+	return utils.EnsureDeleted(
 		"virtual machine",
 		func() error {
 			_, err := s.VMClient.Get(ctx, s.Config.ScannerResourceGroup, vmName, nil)
@@ -171,14 +171,14 @@ func (s *Scanner) ensureDiskAttachedToScannerVM(ctx context.Context, vm armcompu
 
 		_, err := s.VMClient.BeginCreateOrUpdate(ctx, s.Config.ScannerResourceGroup, *vm.Name, vm, nil)
 		if err != nil {
-			_, err := common.HandleAzureRequestError(err, "attaching disk %s to VM %s", *disk.Name, *vm.Name)
+			_, err := utils.HandleAzureRequestError(err, "attaching disk %s to VM %s", *disk.Name, *vm.Name)
 			return err
 		}
 	}
 
 	diskResp, err := s.DisksClient.Get(ctx, s.Config.ScannerResourceGroup, *disk.Name, nil)
 	if err != nil {
-		_, err := common.HandleAzureRequestError(err, "getting disk %s", *disk.Name)
+		_, err := utils.HandleAzureRequestError(err, "getting disk %s", *disk.Name)
 		return err
 	}
 

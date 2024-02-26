@@ -24,7 +24,7 @@ import (
 
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/provider"
-	"github.com/openclarity/vmclarity/provider/v2/azure/common"
+	"github.com/openclarity/vmclarity/provider/v2/azure/utils"
 )
 
 var (
@@ -48,7 +48,7 @@ func (s *Scanner) ensureNetworkInterface(ctx context.Context, config *provider.S
 		return nicResp.Interface, nil
 	}
 
-	notFound, err := common.HandleAzureRequestError(err, "getting interface %s", nicName)
+	notFound, err := utils.HandleAzureRequestError(err, "getting interface %s", nicName)
 	if !notFound {
 		return armnetwork.Interface{}, err
 	}
@@ -75,7 +75,7 @@ func (s *Scanner) ensureNetworkInterface(ctx context.Context, config *provider.S
 
 	_, err = s.InterfacesClient.BeginCreateOrUpdate(ctx, s.Config.ScannerResourceGroup, nicName, parameters, nil)
 	if err != nil {
-		_, err := common.HandleAzureRequestError(err, "creating interface %s", nicName)
+		_, err := utils.HandleAzureRequestError(err, "creating interface %s", nicName)
 		return armnetwork.Interface{}, err
 	}
 
@@ -85,7 +85,7 @@ func (s *Scanner) ensureNetworkInterface(ctx context.Context, config *provider.S
 func (s *Scanner) ensureNetworkInterfaceDeleted(ctx context.Context, config *provider.ScanJobConfig) error {
 	nicName := networkInterfaceNameFromJobConfig(config)
 
-	return common.EnsureDeleted(
+	return utils.EnsureDeleted(
 		"interface",
 		func() error {
 			_, err := s.InterfacesClient.Get(ctx, s.Config.ScannerResourceGroup, nicName, nil)

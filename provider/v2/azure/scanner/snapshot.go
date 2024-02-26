@@ -24,7 +24,7 @@ import (
 
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/provider"
-	"github.com/openclarity/vmclarity/provider/v2/azure/common"
+	"github.com/openclarity/vmclarity/provider/v2/azure/utils"
 )
 
 var (
@@ -49,7 +49,7 @@ func (s *Scanner) ensureSnapshotForVMRootVolume(ctx context.Context, config *pro
 		return snapshotRes.Snapshot, nil
 	}
 
-	notFound, err := common.HandleAzureRequestError(err, "getting snapshot %s", snapshotName)
+	notFound, err := utils.HandleAzureRequestError(err, "getting snapshot %s", snapshotName)
 	if !notFound {
 		return armcompute.Snapshot{}, err
 	}
@@ -64,7 +64,7 @@ func (s *Scanner) ensureSnapshotForVMRootVolume(ctx context.Context, config *pro
 		},
 	}, nil)
 	if err != nil {
-		_, err := common.HandleAzureRequestError(err, "creating snapshot %s", snapshotName)
+		_, err := utils.HandleAzureRequestError(err, "creating snapshot %s", snapshotName)
 		return armcompute.Snapshot{}, err
 	}
 
@@ -75,7 +75,7 @@ func (s *Scanner) ensureSnapshotDeleted(ctx context.Context, config *provider.Sc
 	snapshotName := snapshotNameFromJobConfig(config)
 
 	// nolint:wrapcheck
-	return common.EnsureDeleted(
+	return utils.EnsureDeleted(
 		"snapshot",
 		func() error {
 			_, err := s.SnapshotsClient.Get(ctx, s.Config.ScannerResourceGroup, snapshotName, nil)

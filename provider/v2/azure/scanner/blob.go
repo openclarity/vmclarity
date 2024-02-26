@@ -27,7 +27,7 @@ import (
 
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/provider"
-	"github.com/openclarity/vmclarity/provider/v2/azure/common"
+	"github.com/openclarity/vmclarity/provider/v2/azure/utils"
 )
 
 var (
@@ -63,19 +63,19 @@ func (s *Scanner) ensureBlobFromSnapshot(ctx context.Context, config *provider.S
 
 		revokepoller, err := s.SnapshotsClient.BeginRevokeAccess(ctx, s.Config.ScannerResourceGroup, *snapshot.Name, nil)
 		if err != nil {
-			_, err := common.HandleAzureRequestError(err, "revoking SAS access for snapshot %s", *snapshot.Name)
+			_, err := utils.HandleAzureRequestError(err, "revoking SAS access for snapshot %s", *snapshot.Name)
 			return blobURL, err
 		}
 		_, err = revokepoller.PollUntilDone(ctx, nil)
 		if err != nil {
-			_, err := common.HandleAzureRequestError(err, "waiting for SAS access to be revoked for snapshot %s", *snapshot.Name)
+			_, err := utils.HandleAzureRequestError(err, "waiting for SAS access to be revoked for snapshot %s", *snapshot.Name)
 			return blobURL, err
 		}
 
 		return blobURL, nil
 	}
 
-	notFound, err := common.HandleAzureRequestError(err, "getting blob %s", blobName)
+	notFound, err := utils.HandleAzureRequestError(err, "getting blob %s", blobName)
 	if !notFound {
 		return blobURL, err
 	}
@@ -89,13 +89,13 @@ func (s *Scanner) ensureBlobFromSnapshot(ctx context.Context, config *provider.S
 		DurationInSeconds: to.Ptr[int32](int32(snapshotSASAccessSeconds)),
 	}, nil)
 	if err != nil {
-		_, err := common.HandleAzureRequestError(err, "granting SAS access to snapshot %s", *snapshot.Name)
+		_, err := utils.HandleAzureRequestError(err, "granting SAS access to snapshot %s", *snapshot.Name)
 		return blobURL, err
 	}
 
 	res, err := poller.PollUntilDone(ctx, nil)
 	if err != nil {
-		_, err := common.HandleAzureRequestError(err, "waiting for SAS access to snapshot %s be granted", *snapshot.Name)
+		_, err := utils.HandleAzureRequestError(err, "waiting for SAS access to snapshot %s be granted", *snapshot.Name)
 		return blobURL, err
 	}
 
@@ -103,7 +103,7 @@ func (s *Scanner) ensureBlobFromSnapshot(ctx context.Context, config *provider.S
 
 	_, err = blobClient.StartCopyFromURL(ctx, accessURL, nil)
 	if err != nil {
-		_, err := common.HandleAzureRequestError(err, "starting copy from URL operation for blob %s", blobName)
+		_, err := utils.HandleAzureRequestError(err, "starting copy from URL operation for blob %s", blobName)
 		return blobURL, err
 	}
 
@@ -120,7 +120,7 @@ func (s *Scanner) ensureBlobDeleted(ctx context.Context, config *provider.ScanJo
 
 	getMetadata, err := blobClient.GetProperties(ctx, nil)
 	if err != nil {
-		notFound, err := common.HandleAzureRequestError(err, "getting blob %s", blobName)
+		notFound, err := utils.HandleAzureRequestError(err, "getting blob %s", blobName)
 		if notFound {
 			return nil
 		}
@@ -131,7 +131,7 @@ func (s *Scanner) ensureBlobDeleted(ctx context.Context, config *provider.ScanJo
 	if copyStatus == blob.CopyStatusTypePending {
 		_, err = blobClient.AbortCopyFromURL(ctx, *getMetadata.CopyID, nil)
 		if err != nil {
-			_, err := common.HandleAzureRequestError(err, "aborting copy from url for blob %s", blobName)
+			_, err := utils.HandleAzureRequestError(err, "aborting copy from url for blob %s", blobName)
 			return err
 		}
 		return provider.RetryableErrorf(estimatedBlobAbortTime, "blob copy aborting")
@@ -139,7 +139,7 @@ func (s *Scanner) ensureBlobDeleted(ctx context.Context, config *provider.ScanJo
 
 	_, err = blobClient.Delete(ctx, nil)
 	if err != nil {
-		_, err := common.HandleAzureRequestError(err, "deleting blob %s", blobName)
+		_, err := utils.HandleAzureRequestError(err, "deleting blob %s", blobName)
 		return err
 	}
 

@@ -26,7 +26,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 
 	"github.com/openclarity/vmclarity/provider"
-	"github.com/openclarity/vmclarity/provider/v2/azure/common"
+	"github.com/openclarity/vmclarity/provider/v2/azure/utils"
 )
 
 const (
@@ -43,7 +43,7 @@ type Scanner struct {
 	DisksClient      *armcompute.DisksClient
 	InterfacesClient *armnetwork.InterfacesClient
 
-	Config *common.Config
+	Config *Config
 }
 
 // nolint:cyclop
@@ -60,7 +60,7 @@ func (s *Scanner) RunAssetScan(ctx context.Context, config *provider.ScanJobConf
 
 	assetVM, err := s.VMClient.Get(ctx, resourceGroup, vmName, nil)
 	if err != nil {
-		_, err = common.HandleAzureRequestError(err, "getting asset virtual machine %s", vmName)
+		_, err = utils.HandleAzureRequestError(err, "getting asset virtual machine %s", vmName)
 		return err
 	}
 

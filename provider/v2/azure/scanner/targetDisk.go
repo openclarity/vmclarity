@@ -25,7 +25,7 @@ import (
 
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/provider"
-	"github.com/openclarity/vmclarity/provider/v2/azure/common"
+	"github.com/openclarity/vmclarity/provider/v2/azure/utils"
 )
 
 var (
@@ -49,7 +49,7 @@ func (s *Scanner) ensureManagedDiskFromSnapshot(ctx context.Context, config *pro
 		return volumeRes.Disk, nil
 	}
 
-	notFound, err := common.HandleAzureRequestError(err, "getting volume %s", volumeName)
+	notFound, err := utils.HandleAzureRequestError(err, "getting volume %s", volumeName)
 	if !notFound {
 		return armcompute.Disk{}, err
 	}
@@ -67,7 +67,7 @@ func (s *Scanner) ensureManagedDiskFromSnapshot(ctx context.Context, config *pro
 		},
 	}, nil)
 	if err != nil {
-		_, err := common.HandleAzureRequestError(err, "creating disk %s", volumeName)
+		_, err := utils.HandleAzureRequestError(err, "creating disk %s", volumeName)
 		return armcompute.Disk{}, err
 	}
 
@@ -91,7 +91,7 @@ func (s *Scanner) ensureManagedDiskFromSnapshotInDifferentRegion(ctx context.Con
 		return volumeRes.Disk, nil
 	}
 
-	notFound, err := common.HandleAzureRequestError(err, "getting volume %s", volumeName)
+	notFound, err := utils.HandleAzureRequestError(err, "getting volume %s", volumeName)
 	if !notFound {
 		return armcompute.Disk{}, err
 	}
@@ -110,7 +110,7 @@ func (s *Scanner) ensureManagedDiskFromSnapshotInDifferentRegion(ctx context.Con
 		},
 	}, nil)
 	if err != nil {
-		_, err := common.HandleAzureRequestError(err, "creating disk %s", volumeName)
+		_, err := utils.HandleAzureRequestError(err, "creating disk %s", volumeName)
 		return armcompute.Disk{}, err
 	}
 	return armcompute.Disk{}, provider.RetryableErrorf(DiskEstimateProvisionTime, "disk creating")
@@ -119,7 +119,7 @@ func (s *Scanner) ensureManagedDiskFromSnapshotInDifferentRegion(ctx context.Con
 func (s *Scanner) ensureTargetDiskDeleted(ctx context.Context, config *provider.ScanJobConfig) error {
 	volumeName := volumeNameFromJobConfig(config)
 
-	return common.EnsureDeleted(
+	return utils.EnsureDeleted(
 		"target disk",
 		func() error {
 			_, err := s.DisksClient.Get(ctx, s.Config.ScannerResourceGroup, volumeName, nil)
