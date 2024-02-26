@@ -26,6 +26,7 @@ import (
 
 	cliconfig "github.com/openclarity/vmclarity/cli/config"
 	"github.com/openclarity/vmclarity/cli/families/misconfiguration/types"
+	"github.com/openclarity/vmclarity/cli/utils"
 )
 
 func TestCreateDockleConfig(t *testing.T) {
@@ -50,13 +51,14 @@ func TestCreateDockleConfig(t *testing.T) {
 			config: types.CISDockerConfig{},
 			input:  "node:slim",
 			want: &dockle_config.Config{
-				Debug:     true,
-				Timeout:   2 * time.Minute,
-				Username:  "",
-				Password:  "",
-				Insecure:  false,
-				NonSSL:    false,
-				ImageName: "node:slim",
+				Debug:      true,
+				Timeout:    2 * time.Minute,
+				Username:   "",
+				Password:   "",
+				Insecure:   false,
+				NonSSL:     false,
+				ImageName:  "node:slim",
+				LocalImage: true,
 			},
 		},
 		{
@@ -75,19 +77,20 @@ func TestCreateDockleConfig(t *testing.T) {
 			},
 			input: "node:latest",
 			want: &dockle_config.Config{
-				Debug:     false,
-				Timeout:   1 * time.Minute,
-				Username:  "testuser",
-				Password:  "testpassword",
-				Insecure:  true,
-				NonSSL:    true,
-				ImageName: "node:latest",
+				Debug:      false,
+				Timeout:    1 * time.Minute,
+				Username:   "testuser",
+				Password:   "testpassword",
+				Insecure:   true,
+				NonSSL:     true,
+				ImageName:  "node:latest",
+				LocalImage: false,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := createDockleConfig(tt.logger, tt.input, tt.config)
+			got := createDockleConfig(tt.logger, utils.IMAGE, tt.input, tt.config)
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("NewReportParser() mismatch (-want +got):\n%s", diff)
 			}

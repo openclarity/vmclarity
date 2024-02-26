@@ -22,35 +22,43 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/cli/families/misconfiguration/types"
+	"github.com/openclarity/vmclarity/cli/utils"
 )
 
 const (
 	DefaultCISDockerTimeout = 2 * time.Minute
 )
 
-func createDockleConfig(logger *logrus.Entry, imageName string, config types.CISDockerConfig) *dockle_config.Config {
-	var username, password string
-	var insecure, nonSSL bool
+func createDockleConfig(logger *logrus.Entry, sourceType utils.SourceType, name string, config types.CISDockerConfig) *dockle_config.Config {
+	dockleConfig := &dockle_config.Config{
+		Debug:      logger.Logger.Level == logrus.DebugLevel,
+		Timeout:    DefaultCISDockerTimeout,
+		LocalImage: true,
+	}
+
 	if config.Registry != nil {
-		insecure = config.Registry.SkipVerifyTLS
-		nonSSL = config.Registry.UseHTTP
+		dockleConfig.LocalImage = false
+		dockleConfig.Insecure = config.Registry.SkipVerifyTLS
+		dockleConfig.NonSSL = config.Registry.UseHTTP
 		if len(config.Registry.Auths) > 0 {
-			username = config.Registry.Auths[0].Username
-			password = config.Registry.Auths[0].Password
+			dockleConfig.AuthURL = config.Registry.Auths[0].Authority
+			dockleConfig.Username = config.Registry.Auths[0].Username
+			dockleConfig.Password = config.Registry.Auths[0].Password
+			dockleConfig.Token = config.Registry.Auths[0].Token
 		}
 	}
 
-	if config.Timeout == 0 {
-		config.Timeout = DefaultCISDockerTimeout
+	if config.Timeout != 0 {
+		dockleConfig.Timeout = config.Timeout
 	}
 
-	return &dockle_config.Config{
-		Debug:     logger.Logger.Level == logrus.DebugLevel,
-		Timeout:   config.Timeout,
-		Username:  username,
-		Password:  password,
-		Insecure:  insecure,
-		NonSSL:    nonSSL,
-		ImageName: imageName,
+	// nolint:exhaustive
+	switch sourceType {
+	case utils.DOCKERARCHIVE:
+		dockleConfig.FilePath = name
+	default:
+		dockleConfig.ImageName = name
 	}
+
+	return dockleConfig
 }

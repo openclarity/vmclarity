@@ -61,7 +61,7 @@ func (a *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 		}
 
 		a.logger.Infof("Running %s scan...", a.name)
-		assessmentMap, err := dockle_run.RunFromConfig(createDockleConfig(a.logger, userInput, a.config))
+		assessmentMap, err := dockle_run.RunFromConfig(createDockleConfig(a.logger, sourceType, userInput, a.config))
 		if err != nil {
 			a.sendResults(retResults, fmt.Errorf("failed to run %s scan: %w", a.name, err))
 			return
