@@ -41,7 +41,7 @@ make multimod-prerelease
 git push origin release/v0.7.0
 ```
 
-* Create a pull request with the changes.
+* Create a pull request for these changes with a title like "release: prepare version v0.7.0".
 
 ## 3. Create and Push Tags
 
@@ -51,10 +51,13 @@ git checkout main
 git pull origin main
 ```
 
-* Create and push the tags for the last commit to the repository.
+* To trigger the release workflow, create and push to the repository a release tag for the last commit.
 ```sh
-make multimod-push-tags
+git tag -a v0.7.0
+git push origin v0.7.0
 ```
+
+Please note that the release tag is not necessarily associated with the "release: prepare version v0.7.0" commit. For example, if any bug fixes were required after this commit, they can be merged and included in the release.
 
 ## Post-release Checks
 Verify that the `Release` workflow was completed successfully in the GitHub Actions section.

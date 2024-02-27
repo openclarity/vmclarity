@@ -500,10 +500,3 @@ multimod-verify: bin/multimod
 .PHONY: multimod-prerelease
 multimod-prerelease: bin/multimod
 	$(MULTIMOD_BIN) prerelease --all-module-sets --skip-go-mod-tidy=true --commit-to-different-branch=false
-
-.PHONY: multimod-push-tags
-multimod-push-tags: bin/multimod
-	set -e; for tag in `$(MULTIMOD_BIN) tag --module-set-name vmclarity --commit-hash HEAD --print-tags | grep -v "Using" `; do \
-		echo "pushing tag $${tag}"; \
-		git push origin $${tag}; \
-	done;
