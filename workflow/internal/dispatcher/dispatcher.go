@@ -73,11 +73,6 @@ func (d *Dispatcher[S, R]) update(ctx context.Context, status TaskStatus) {
 }
 
 func (d *Dispatcher[S, R]) stop() {
-	select {
-	case d.exitChan <- struct{}{}:
-	default:
-	}
-
 	close(d.exitChan)
 	close(d.nextChan)
 }
