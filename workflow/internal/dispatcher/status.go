@@ -44,7 +44,6 @@ func (s TaskState) String() string {
 }
 
 type TaskStatus struct {
-	id    string
 	State TaskState
 	Err   error
 }
@@ -77,5 +76,5 @@ func (s TaskStatus) String() string {
 		err = s.Err.Error()
 	}
 
-	return fmt.Sprintf("ID %s State: %s Error: %s", s.id, s.State, err)
+	return fmt.Sprintf("State: %s Error: %s", s.State, err)
 }

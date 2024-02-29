@@ -46,20 +46,20 @@ func (d *Dispatcher[S, R]) get(id string) (TaskStatus, error) {
 	return s, nil
 }
 
-func (d *Dispatcher[S, R]) set(status *TaskStatus) {
+func (d *Dispatcher[S, R]) set(id string, status *TaskStatus) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	d.m[status.id] = *status
+	d.m[id] = *status
 	d.stats.Update(status)
 }
 
-func (d *Dispatcher[S, R]) update(ctx context.Context, status TaskStatus) {
+func (d *Dispatcher[S, R]) update(ctx context.Context, id string, status TaskStatus) {
 	select {
 	case <-ctx.Done():
 		return
 	default:
-		d.set(&status)
+		d.set(id, &status)
 		if status.Finished() {
 			select {
 			case <-d.exitChan:
@@ -104,11 +104,11 @@ func (d *Dispatcher[S, R]) Dispatch(ctx context.Context, task R, state S) (bool,
 	}
 
 	taskStatus.State = RUNNING
-	d.update(ctx, taskStatus)
+	d.update(ctx, id, taskStatus)
 
 	go func() {
 		err = task.Run(ctx, state)
-		d.update(ctx, taskStatus.FromError(err))
+		d.update(ctx, id, taskStatus.FromError(err))
 	}()
 
 	return true, nil
@@ -154,9 +154,7 @@ func New[S any, R types.Runnable[S]](order []string) (*Dispatcher[S, R], func())
 	stats := &Stats{}
 
 	for _, id := range order {
-		status := TaskStatus{
-			id: id,
-		}
+		status := TaskStatus{}
 		m[id] = status
 		stats.Update(&status)
 	}
