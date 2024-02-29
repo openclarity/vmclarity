@@ -150,21 +150,18 @@ func (d *Dispatcher[S, R]) String() string {
 }
 
 func New[S any, R types.Runnable[S]](order []string) (*Dispatcher[S, R], func()) {
-	m := make(map[string]TaskStatus, len(order))
-	stats := &Stats{}
+	d := &Dispatcher[S, R]{
+		m:        make(map[string]TaskStatus, len(order)),
+		mu:       &sync.RWMutex{},
+		stats:    &Stats{},
+		exitChan: make(chan struct{}),
+		nextChan: make(chan struct{}, 1),
+	}
 
 	for _, id := range order {
 		status := TaskStatus{}
-		m[id] = status
-		stats.Update(&status)
-	}
-
-	d := &Dispatcher[S, R]{
-		m:        m,
-		mu:       &sync.RWMutex{},
-		stats:    stats,
-		exitChan: make(chan struct{}),
-		nextChan: make(chan struct{}, 1),
+		d.m[id] = status
+		d.stats.Update(&status)
 	}
 
 	return d, d.stop
