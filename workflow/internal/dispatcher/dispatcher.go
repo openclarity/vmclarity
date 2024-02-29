@@ -93,19 +93,14 @@ func (d *Dispatcher[S, R]) Dispatch(ctx context.Context, task R, state S) (bool,
 		return true, nil
 	}
 
-	ok := true
 	for _, depID := range task.Dependencies() {
 		depStatus, err := d.get(depID)
 		if err != nil {
 			return false, fmt.Errorf("failed to get status for task with ID: %s", id)
 		}
 		if !depStatus.Finished() {
-			ok = false
+			return false, nil
 		}
-	}
-
-	if !ok {
-		return false, nil
 	}
 
 	taskStatus.State = RUNNING
