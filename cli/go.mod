@@ -6,7 +6,7 @@ require (
 	github.com/CycloneDX/cyclonedx-go v0.8.0
 	github.com/anchore/clio v0.0.0-20240209204744-cb94e40a4f65
 	github.com/anchore/grype v0.74.7
-	github.com/anchore/stereoscope v0.0.2-0.20240216182029-6171ee21e1d5
+	github.com/anchore/stereoscope v0.0.2-0.20240229175558-fe426d1b1c84
 	github.com/anchore/syft v0.105.1
 	github.com/aquasecurity/go-dep-parser v0.0.0-20240213093706-423cd04548a5
 	github.com/aquasecurity/trivy v0.49.1
@@ -85,6 +85,7 @@ require (
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/alecthomas/chroma v0.10.0 // indirect
 	github.com/anchore/fangs v0.0.0-20231201140849-5075d28d6d8b // indirect
+	github.com/anchore/go-collections v0.0.0-20240216171411-9321230ce537 // indirect
 	github.com/anchore/go-logger v0.0.0-20230725134548-c21dafa1ec5a // indirect
 	github.com/anchore/go-macholibre v0.0.0-20220308212642-53e6d0aaf6fb // indirect
 	github.com/anchore/go-struct-converter v0.0.0-20221118182256-c68fdcfa2092 // indirect
