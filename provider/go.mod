@@ -25,6 +25,7 @@ require (
 	github.com/openclarity/vmclarity/containerruntimediscovery/client v0.0.0-00010101000000-000000000000
 	github.com/openclarity/vmclarity/containerruntimediscovery/types v0.0.0-00010101000000-000000000000
 	github.com/openclarity/vmclarity/core v0.0.0-00010101000000-000000000000
+	github.com/openclarity/vmclarity/workflow v0.0.0-20240304103735-574ac2a62ece
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.18.2
 	golang.org/x/sync v0.6.0
@@ -241,6 +242,7 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.19.1 // indirect
+	github.com/heimdalr/dag v1.4.0 // indirect
 	github.com/huandu/xstrings v1.4.0 // indirect
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect

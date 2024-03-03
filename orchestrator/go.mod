@@ -238,6 +238,7 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.19.1 // indirect
+	github.com/heimdalr/dag v1.4.0 // indirect
 	github.com/huandu/xstrings v1.4.0 // indirect
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
@@ -317,6 +318,7 @@ require (
 	github.com/openclarity/grype-server/api v0.0.0-20240201133700-ad5e6432b894 // indirect
 	github.com/openclarity/vmclarity/containerruntimediscovery/client v0.0.0-00010101000000-000000000000 // indirect
 	github.com/openclarity/vmclarity/containerruntimediscovery/types v0.0.0-00010101000000-000000000000 // indirect
+	github.com/openclarity/vmclarity/workflow v0.0.0-20240304103735-574ac2a62ece // indirect
 	github.com/openclarity/yara-rule-server v0.3.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
