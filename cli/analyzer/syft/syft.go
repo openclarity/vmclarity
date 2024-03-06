@@ -60,13 +60,10 @@ func (a *Analyzer) Run(sourceType utils.SourceType, userInput string) error {
 	a.logger.Infof("Called %s analyzer on source %s", a.name, src)
 	// TODO platform can be defined
 	// https://github.com/anchore/syft/blob/b20310eaf847c259beb4fe5128c842bd8aa4d4fc/cmd/syft/cli/options/packages.go#L48
-	detection, err := syftsrc.Detect(src, syftsrc.DefaultDetectConfig())
-	if err != nil {
-		return fmt.Errorf("failed to create input from source analyzer=%s: %w", a.name, err)
-	}
-	source, err := detection.NewSource(syftsrc.DetectionSourceConfig{
-		RegistryOptions: a.config.RegistryOptions,
-	})
+
+	cfg := syft.DefaultGetSourceConfig().WithRegistryOptions(a.config.RegistryOptions)
+
+	source, err := syft.GetSource(context.TODO(), src, cfg)
 	if err != nil {
 		return fmt.Errorf("failed to create source analyzer=%s: %w", a.name, err)
 	}
@@ -117,7 +114,7 @@ func (a *Analyzer) setError(res *analyzer.Results, err error) {
 
 func getImageHash(s *syftsbom.SBOM, src string) (string, error) {
 	switch metadata := s.Source.Metadata.(type) {
-	case syftsrc.StereoscopeImageSourceMetadata:
+	case syftsrc.ImageMetadata:
 		hash, err := image_helper.GetHashFromRepoDigestsOrImageID(metadata.RepoDigests, metadata.ID, src)
 		if err != nil {
 			return "", fmt.Errorf("failed to get image hash from repo digests or image id: %w", err)
