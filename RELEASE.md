@@ -59,6 +59,10 @@ git push origin v0.7.0
 
 Please note that the release tag is not necessarily associated with the "release: prepare version v0.7.0" commit. For example, if any bug fixes were required after this commit, they can be merged and included in the release.
 
-## Post-release Checks
-Verify that the `Release` workflow was completed successfully in the GitHub Actions section.
-Ensure that the release is visible in the GitHub releases page. Additionally, check that the release description is correct and all assets are listed.
+## 4. Publish release
+
+* Wait until the release workflow is completed successfully.
+
+* Navigate to the [Releases page](https://github.com/openclarity/vmclarity/releases) and verify the draft release description as well as the assets listed.
+
+* Once the draft release has been verified, click on `Edit` release and then on `Publish Release`.
