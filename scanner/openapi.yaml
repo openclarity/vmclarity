@@ -1,0 +1,56 @@
+openapi: 3.0.1
+
+info:
+  title: VMClarity Scanner API
+  version: 1.0.0
+
+paths:
+  /openapi.json:
+    get:
+      summary: Get this OpenAPI spec
+      operationId: GetOpenAPISpec
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: string
+                format: json
+        default:
+          $ref: '#/components/responses/UnknownError'
+
+components:
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          readOnly: true
+      description: An object that is returned in all cases of failures.
+
+    SuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          readOnly: true
+      description: An object that is returned in cases of success that returns nothing.
+
+  responses:
+    Success:
+      description: Success message
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SuccessResponse'
+
+    UnknownError:
+      description: Unknown error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponse'
+
+  parameters: {}
