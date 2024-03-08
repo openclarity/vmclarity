@@ -236,10 +236,11 @@ bin/typos-$(TYPOS_VERSION): | $(BIN_DIR)
 ##  Go MultiMod Releaser
 ####
 
+MULTIMOD_VERSION := 0.13.0
 MULTIMOD_BIN := $(BIN_DIR)/multimod
 MULTIMOD_REPO_DIR := $(BIN_DIR)/opentelemetry-go-build-tools
 
 bin/multimod:
-	@if [ ! -d $(MULTIMOD_REPO_DIR) ]; then git clone git@github.com:open-telemetry/opentelemetry-go-build-tools.git --branch multimod/v0.13.0 $(MULTIMOD_REPO_DIR); fi
+	@if [ ! -d $(MULTIMOD_REPO_DIR) ]; then git clone https://github.com/open-telemetry/opentelemetry-go-build-tools --branch multimod/v$(MULTIMOD_VERSION) $(MULTIMOD_REPO_DIR); fi
 	@go build -C $(MULTIMOD_REPO_DIR)/multimod -o $(MULTIMOD_BIN) main.go
 	@rm -rf $(MULTIMOD_REPO_DIR)
