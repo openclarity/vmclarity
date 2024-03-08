@@ -5,6 +5,7 @@ go 1.21.4
 require (
 	github.com/aws/aws-sdk-go-v2/config v1.26.6
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.47.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.150.0
 	github.com/compose-spec/compose-go/v2 v2.0.2
 	github.com/distribution/reference v0.5.0
 	github.com/docker/cli v26.0.0+incompatible
@@ -49,8 +50,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.3 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.3 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.7.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.10.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.10.10 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.18.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.21.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.26.7 // indirect

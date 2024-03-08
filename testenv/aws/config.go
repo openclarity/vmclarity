@@ -21,6 +21,8 @@ import (
 	envtypes "github.com/openclarity/vmclarity/testenv/types"
 )
 
+const DefaultAWSRegion = "eu-central-1"
+
 // Config defines configuration for AWS environment.
 //
 //nolint:containedctx
@@ -29,6 +31,8 @@ type Config struct {
 	WorkDir string `mapstructure:"work_dir"`
 	// EnvName the name of the stack to be created
 	EnvName string `mapstructure:"env_name"`
+	// Region the AWS region to be used
+	Region string `mapstructure:"region"`
 
 	// ctx used during project initialization
 	ctx context.Context
