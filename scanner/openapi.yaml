@@ -1,3 +1,4 @@
+---
 openapi: 3.0.1
 
 info:
@@ -20,15 +21,644 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
 
+  /scan/start:
+    post:
+      summary: Start a scan
+      operationId: StartScan
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScanTemplate'
+        required: true
+      responses:
+        201:
+          description: Scan was successfully started.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scan'
+        400:
+          description: Invalid scan template supplied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        409:
+          description: Scan already started.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      x-codegen-request-body-name: body
+
+  /scan/status:
+    get:
+      summary: Get current scan details
+      operationId: GetScan
+      responses:
+        200:
+          description: Scan fetched successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scan'
+        404:
+          description: Scan not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+
+  /scan/result:
+    get:
+      summary: Get current scan result
+      operationId: GetScanResult
+      responses:
+        200:
+          description: Scan results fetched successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanResult'
+        400:
+          description: Scan is still in progress.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: Scan not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+
+  /scan/stop:
+    delete:
+      summary: Stop a scan
+      operationId: StopScan
+      parameters:
+        - $ref: '#/components/parameters/force'
+      responses:
+        200:
+          description: Scan was successfully deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        404:
+          description: Scan not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+
+  /livez:
+    get:
+      summary: Check if the API is alive and responsive
+      operationId: IsAlive
+      responses:
+        200:
+          description: API is alive and responsive.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+
+  /readyz:
+    get:
+      summary: Check if the API is ready to receive traffic
+      operationId: IsReady
+      responses:
+        200:
+          description: API is ready to handle requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+
+  /shutdown:
+    post:
+      summary: Shutdown scanner
+      operationId: Shutdown
+      parameters:
+        - $ref: '#/components/parameters/force'
+      responses:
+        200:
+          description: Scanner termination successfully initiated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+
 components:
   schemas:
-    ApiResponse:
+    Metadata:
       type: object
       properties:
+        annotations:
+          type: array
+          description: Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              value:
+                type: string
+
+    ScanStatus:
+      type: object
+      description: Describes status of a multi-asset scan.
+      required:
+        - state
+        - lastTransitionTime
+      properties:
+        state:
+          description: |
+            Describes the state of Scan.
+
+            | State      | Description                                |
+            | ---------- | -------------------------------------------|
+            | Pending    | The initial state when the scan is created |
+            | InProgress | The scanner is scanning provided assets    |
+            | Aborted    | The scan has been aborted                  |
+            | Failed     | Scanner could not scan given assets        |
+            | Done       | All assets have been scanned successfully  |
+          type: string
+          enum:
+            - Pending
+            - InProgress
+            - Aborted
+            - Failed
+            - Done
+          x-enum-varnames:
+            - ScanStatusStatePending
+            - ScanStatusStateInProgress
+            - ScanStatusStateAborted
+            - ScanStatusStateFailed
+            - ScanStatusStateDone
+        message:
+          description: Human readable message.
+          type: string
+        lastTransitionTime:
+          description: Last date time when the status has changed.
+          type: string
+          format: date-time
+
+    ScanSummary:
+      description: A summary of the progress of a scan for informational purposes.
+      allOf:
+        - type: object
+          properties:
+            jobsLeftToRun:
+              type: integer
+            jobsCompleted:
+              type: integer
+
+    Scan:
+      type: object
+      description: Describes a multi-asset scan.
+      allOf:
+        - $ref: '#/components/schemas/Metadata'
+        - type: object
+          properties:
+            startTime:
+              type: string
+              format: date-time
+            endTime:
+              type: string
+              format: date-time
+            status:
+              $ref: '#/components/schemas/ScanStatus'
+            template:
+              $ref: '#/components/schemas/ScanTemplate'
+            summary:
+              $ref: '#/components/schemas/ScanSummary'
+
+    ScanTemplate:
+      type: object
+      properties:
+        timeoutSeconds:
+          type: integer
+          minimum: 0
+          description: |
+            The maximum time in seconds that a scan should
+            run for before being automatically aborted.
+        assetScanInputs:
+          type: array
+          description: List of assets to scan.
+          items:
+            $ref: '#/components/schemas/AssetScanInput'
+
+    ScanResult:
+      type: object
+      description: Describes the result of multi-asset scan.
+      allOf:
+        - type: object
+          properties:
+            scan:
+              $ref: '#/components/schemas/Scan'
+            findings:
+              type: array
+              items:
+                $ref: '#/components/schemas/Finding'
+
+    Package:
+      type: object
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        type:
+          type: string
+        language:
+          type: string
+        licenses:
+          type: array
+          items:
+            type: string
+          nullable: true
+        cpes:
+          type: array
+          items:
+            type: string
+          nullable: true
+        purl:
+          type: string
+
+    PackageFindingInfo:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Package'
+        - type: object
+          properties:
+            objectType:
+              type: string
+          required: [objectType]
+
+    VulnerabilityFix:
+      type: object
+      properties:
+        versions:
+          type: array
+          items:
+            type: string
+          nullable: true
+        state:
+          type: string
+
+    VulnerabilityCvss:
+      type: object
+      properties:
+        version:
+          type: string
+        vector:
+          type: string
+        metrics:
+          $ref: '#/components/schemas/VulnerabilityCvssMetrics'
+
+    VulnerabilityCvssMetrics:
+      type: object
+      properties:
+        baseScore:
+          type: number
+        exploitabilityScore:
+          type: number
+        impactScore:
+          type: number
+
+    VulnerabilityDistro:
+      type: object
+      description: Distro provides information about a detected OS distribution.
+      properties:
+        name:
+          description: Name of the OS distribution
+          type: string
+        version:
+          description: Version of the OS distribution (major or major.minor version)
+          type: string
+        IDLike:
+          description: the ID_LIKE field found within Linux OS /etc/os-release file
+          type: array
+          items:
+            type: string
+          nullable: true
+
+    VulnerabilitySeverity:
+      type: string
+      enum:
+        - CRITICAL
+        - HIGH
+        - MEDIUM
+        - LOW
+        - NEGLIGIBLE
+
+    Vulnerability:
+      type: object
+      properties:
+        vulnerabilityName:
+          type: string
+        description:
+          type: string
+        severity:
+          $ref: '#/components/schemas/VulnerabilitySeverity'
+        links:
+          type: array
+          items:
+            type: string
+          nullable: true
+        distro:
+          $ref: '#/components/schemas/VulnerabilityDistro'
+        cvss:
+          type: array
+          items:
+            $ref: '#/components/schemas/VulnerabilityCvss'
+          nullable: true
+        package:
+          $ref: '#/components/schemas/Package'
+        fix:
+          $ref: '#/components/schemas/VulnerabilityFix'
+        layerId:
+          type: string
+        path:
+          type: string
+
+    VulnerabilityFindingInfo:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Vulnerability'
+        - type: object
+          properties:
+            objectType:
+              type: string
+          required: [objectType]
+
+    MalwareType:
+      type: string
+
+    Malware:
+      type: object
+      properties:
+        malwareName:
+          type: string
+        malwareType:
+          $ref: '#/components/schemas/MalwareType'
+        ruleName:
+          type: string
+        path:
+          type: string
+          description: Path of the file that contains malware
+
+    MalwareFindingInfo:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Malware'
+        - type: object
+          properties:
+            objectType:
+              type: string
+          required: [objectType]
+
+    Secret:
+      type: object
+      properties:
+        description:
+          type: string
+        filePath:
+          description: "Name of the file containing the secret"
+          type: string
+        startLine:
+          type: integer
+        endLine:
+          type: integer
+        startColumn:
+          type: integer
+        endColumn:
+          type: integer
+        fingerprint:
+          description: "Note: this is not unique"
+          type: string
+
+    SecretFindingInfo:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Secret'
+        - type: object
+          properties:
+            objectType:
+              type: string
+          required: [objectType]
+
+    MisconfigurationSeverity:
+      type: string
+      enum:
+        - MisconfigurationHighSeverity
+        - MisconfigurationMediumSeverity
+        - MisconfigurationLowSeverity
+
+    Misconfiguration:
+      type: object
+      properties:
+        scannerName:
+          type: string
+        id:
+          type: string
+          description: Check or test ID, if applicable (e.g. Lynis TestID, CIS Docker Benchmark checkpoint code, etc)
+        location:
+          type: string
+          description: Location within the asset where the misconfiguration was recorded (e.g. filesystem path)
+        category:
+          type: string
+          description: Specifies misconfiguration impact category
         message:
           type: string
-          readOnly: true
-      description: An object that is returned in all cases of failures.
+          description: Short info about the misconfiguration
+        description:
+          type: string
+          description: Additional context such as the potential impact
+        remediation:
+          type: string
+          description: Possible fix for the misconfiguration
+        severity:
+          $ref: '#/components/schemas/MisconfigurationSeverity'
+
+    MisconfigurationFindingInfo:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Misconfiguration'
+        - type: object
+          properties:
+            objectType:
+              type: string
+          required: [objectType]
+
+    RootkitType:
+      type: string
+      enum:
+        - MEMORY
+        - KERNEL
+        - APPLICATION
+        - FIRMWARE
+        - UNKNOWN
+
+    Rootkit:
+      type: object
+      properties:
+        rootkitName:
+          type: string
+        rootkitType:
+          $ref: '#/components/schemas/RootkitType'
+        message:
+          type: string
+
+    RootkitFindingInfo:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Rootkit'
+        - type: object
+          properties:
+            objectType:
+              type: string
+          required: [objectType]
+
+    Exploit:
+      type: object
+      properties:
+        name:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        cveID:
+          type: string
+        sourceDB:
+          type: string
+        urls:
+          type: array
+          items:
+            type: string
+          nullable: true
+
+    ExploitFindingInfo:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Exploit'
+        - type: object
+          properties:
+            objectType:
+              type: string
+          required: [objectType]
+
+    InfoType:
+      type: string
+      enum:
+        - SSHKnownHostFingerprint
+        - SSHAuthorizedKeyFingerprint
+        - SSHPrivateKeyFingerprint
+        - SSHDaemonKeyFingerprint
+        - UNKNOWN
+
+    InfoFinderInfo:
+      type: object
+      properties:
+        scannerName:
+          type: string
+        type:
+          $ref: '#/components/schemas/InfoType'
+        path:
+          type: string
+          description: "File path containing the info"
+        data:
+          type: string
+          description: "The data found by the scanner in the specific path for a specific type. See example for SSHKnownHostFingerprint info type"
+          example: "2048 SHA256:YQuPOM8ld6FOA9HbKCgkCJWHuGt4aTRD7hstjJpRhxc xxxx (RSA)"
+
+    InfoFinderFindingInfo:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/InfoFinderInfo'
+        - type: object
+          properties:
+            objectType:
+              type: string
+          required: [objectType]
+
+    Finding:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Metadata'
+        - type: object
+          properties:
+            input:
+              $ref: '#/components/schemas/AssetScanInput'
+            findingInfo:
+              anyOf:
+                - $ref: '#/components/schemas/PackageFindingInfo'
+                - $ref: '#/components/schemas/VulnerabilityFindingInfo'
+                - $ref: '#/components/schemas/MalwareFindingInfo'
+                - $ref: '#/components/schemas/SecretFindingInfo'
+                - $ref: '#/components/schemas/MisconfigurationFindingInfo'
+                - $ref: '#/components/schemas/RootkitFindingInfo'
+                - $ref: '#/components/schemas/ExploitFindingInfo'
+                - $ref: '#/components/schemas/InfoFinderFindingInfo'
+              discriminator:
+                propertyName: objectType
+                mapping:
+                  Package: '#/components/schemas/PackageFindingInfo'
+                  Vulnerability: '#/components/schemas/VulnerabilityFindingInfo'
+                  Malware: '#/components/schemas/MalwareFindingInfo'
+                  Secret: '#/components/schemas/SecretFindingInfo'
+                  Misconfiguration: '#/components/schemas/MisconfigurationFindingInfo'
+                  Rootkit: '#/components/schemas/RootkitFindingInfo'
+                  Exploit: '#/components/schemas/ExploitFindingInfo'
+                  InfoFinder: '#/components/schemas/InfoFinderFindingInfo'
+
+    AssetScanInput:
+      type: object
+      description: Input data of an asset to scan.
+      properties:
+        type:
+          description: The input type (ROOTFS, DIR, IMAGE etc.)
+          type: string
+          enum:
+            - SBOM
+            - IMAGE
+            - DOCKERARCHIVE
+            - OCIARCHIVE
+            - OCIDIR
+            - DIR
+            - ROOTFS
+            - FILE
+          x-enum-varnames:
+            - AssetScanInputSBOM
+            - AssetScanInputImage
+            - AssetScanInputDockerArchive
+            - AssetScanInputOCIArchive
+            - AssetScanInputOCIDir
+            - AssetScanInputDir
+            - AssetScanInputRootFS
+            - AssetScanInputFile
+        path:
+          description: The input path (/mnt/snapshot for ex.)
+          type: string
 
     SuccessResponse:
       type: object
@@ -36,21 +666,27 @@ components:
         message:
           type: string
           readOnly: true
-      description: An object that is returned in cases of success that returns nothing.
+      description: An object that is returned for a successful API request that returns nothing.
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          readOnly: true
+      description: An object that is returned for a failed API request.
 
   responses:
-    Success:
-      description: Success message
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/SuccessResponse'
-
     UnknownError:
       description: Unknown error
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ApiResponse'
+            $ref: '#/components/schemas/ErrorResponse'
 
-  parameters: {}
+  parameters:
+    force:
+      in: query
+      name: force
+      schema:
+        type: boolean
