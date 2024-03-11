@@ -27,9 +27,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	cloudformationtypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 
+	"github.com/openclarity/vmclarity/testenv/aws/asset"
 	"github.com/openclarity/vmclarity/testenv/types"
 )
 
@@ -42,14 +44,16 @@ type AWSEnv struct {
 	client    *cloudformation.Client
 	ec2Client *ec2.Client
 	s3Client  *s3.Client
+	testAsset *asset.Asset
 	StackName string
 	Region    string
 	meta      map[string]interface{}
 }
 
 // Setup AWS test environment from cloud formation template.
-// Create a new CloudFormation stack from template.
-// Upload template file to S3 is required since the template is larger than 51,200 bytes.
+// * Create a new CloudFormation stack from template
+// (upload template file to S3 is required since the template is larger than 51,200 bytes).
+// * Create test asset.
 func (e *AWSEnv) SetUp(ctx context.Context) error {
 	// Create a new S3 bucket
 	_, err := e.s3Client.CreateBucket(ctx, &s3.CreateBucketInput{
@@ -92,6 +96,12 @@ func (e *AWSEnv) SetUp(ctx context.Context) error {
 		return fmt.Errorf("failed to create stack: %w", err)
 	}
 
+	// Create a new test asset
+	err = e.testAsset.Create(ctx, e.ec2Client)
+	if err != nil {
+		return fmt.Errorf("failed to create test asset: %w", err)
+	}
+
 	return nil
 }
 
@@ -124,6 +134,12 @@ func (e *AWSEnv) TearDown(ctx context.Context) error {
 		return fmt.Errorf("failed to delete bucket: %w", err)
 	}
 
+	// Delete the test asset
+	err = e.testAsset.Delete(ctx, e.ec2Client)
+	if err != nil {
+		return fmt.Errorf("failed to delete test asset: %w", err)
+	}
+
 	return nil
 }
 
@@ -144,12 +160,34 @@ func (e *AWSEnv) ServicesReady(ctx context.Context) (bool, error) {
 		return false, errors.New("failed to find stack")
 	}
 
-	// If the stack status is CREATE_COMPLETE, then the services are ready
-	if stacks.Stacks[0].StackStatus == "CREATE_COMPLETE" {
-		return true, nil
+	// If the stack status is not CREATE_COMPLETE, then the services are not ready
+	if stacks.Stacks[0].StackStatus != "CREATE_COMPLETE" {
+		return false, nil
 	}
 
-	return false, nil
+	// Get test EC2 instance status
+	instanceStatus, err := e.ec2Client.DescribeInstanceStatus(
+		ctx,
+		&ec2.DescribeInstanceStatusInput{
+			InstanceIds: []string{e.testAsset.InstanceID},
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("failed to describe instance status: %w", err)
+	}
+
+	if len(instanceStatus.InstanceStatuses) != 1 {
+		return false, errors.New("failed to find instance status")
+	}
+
+	// If the instance status is not running, then the services are not ready
+	if instanceStatus.InstanceStatuses[0].InstanceState.Name != ec2types.InstanceStateNameRunning {
+		return false, nil
+	}
+
+	// If the stack status is CREATE_COMPLETE and the test instance status is Running,
+	// then the services are ready
+	return true, nil
 }
 
 func (e *AWSEnv) ServiceLogs(ctx context.Context, services []string, startTime time.Time, stdout, stderr io.Writer) error {
@@ -175,7 +213,7 @@ func (e *AWSEnv) Services(ctx context.Context) (types.Services, error) {
 				&Service{
 					ID:          *resource.PhysicalResourceId,
 					Namespace:   e.StackName,
-					Application: "vmclarity",
+					Application: "VMClarity Server",
 					Component:   "server",
 					State:       convertStateFromAWS(resource.ResourceStatus),
 				},
@@ -252,6 +290,7 @@ func New(config *Config, opts ...ConfigOptFn) (*AWSEnv, error) {
 		s3Client:  s3Client,
 		StackName: config.EnvName,
 		Region:    config.Region,
+		testAsset: &asset.Asset{},
 		meta: map[string]interface{}{
 			"environment": "aws",
 			"name":        config.EnvName,
