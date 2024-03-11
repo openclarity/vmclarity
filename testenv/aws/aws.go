@@ -26,6 +26,8 @@ import (
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 
 	"github.com/openclarity/vmclarity/testenv/types"
 )
@@ -38,27 +40,50 @@ const AWSClientContextKey ContextKeyType = "AWSClient"
 type AWSEnv struct {
 	client    *cloudformation.Client
 	ec2Client *ec2.Client
+	s3Client  *s3.Client
 	StackName string
+	Region    string
 	meta      map[string]interface{}
 }
 
 // Setup AWS test environment from cloud formation template.
+// Create a new CloudFormation stack from template.
+// Upload template file to S3 is required since the template is larger than 51,200 bytes.
 func (e *AWSEnv) SetUp(ctx context.Context) error {
+	// Create a new S3 bucket
+	_, err := e.s3Client.CreateBucket(ctx, &s3.CreateBucketInput{
+		Bucket: &e.StackName,
+		CreateBucketConfiguration: &s3types.CreateBucketConfiguration{
+			LocationConstraint: s3types.BucketLocationConstraint(e.Region),
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create bucket: %w", err)
+	}
+
 	// Read template file
-	template, err := os.ReadFile("../installation/aws/VmClarity.cfn")
+	f, err := os.Open("../installation/aws/VmClarity.cfn")
 	if err != nil {
 		return fmt.Errorf("failed to read template file: %w", err)
 	}
 
-	// Get template body
-	templateBody := string(template)
+	// Upload template file to S3 bucket
+	_, err = e.s3Client.PutObject(ctx, &s3.PutObjectInput{
+		Bucket: &e.StackName,
+		Key:    &e.StackName,
+		Body:   f,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to put object: %w", err)
+	}
+	templateURL := "https://" + e.StackName + ".s3.amazonaws.com/" + e.StackName
 
 	// Create a new CloudFormation stack from template
 	_, err = e.client.CreateStack(
 		ctx,
 		&cloudformation.CreateStackInput{
-			StackName:    &e.StackName,
-			TemplateBody: &templateBody,
+			StackName:   &e.StackName,
+			TemplateURL: &templateURL,
 		},
 	)
 	if err != nil {
@@ -78,6 +103,23 @@ func (e *AWSEnv) TearDown(ctx context.Context) error {
 	)
 	if err != nil {
 		return fmt.Errorf("failed to delete stack: %w", err)
+	}
+
+	// Delete template file from S3 bucket
+	_, err = e.s3Client.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: &e.StackName,
+		Key:    &e.StackName,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to delete object: %w", err)
+	}
+
+	// Delete the S3 bucket
+	_, err = e.s3Client.DeleteBucket(ctx, &s3.DeleteBucketInput{
+		Bucket: &e.StackName,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to delete bucket: %w", err)
 	}
 
 	return nil
@@ -199,10 +241,15 @@ func New(config *Config, opts ...ConfigOptFn) (*AWSEnv, error) {
 	// Create AWS EC2 client
 	ec2Client := ec2.NewFromConfig(cfg)
 
+	// Create AWS S3 client
+	s3Client := s3.NewFromConfig(cfg)
+
 	return &AWSEnv{
 		client:    client,
 		ec2Client: ec2Client,
+		s3Client:  s3Client,
 		StackName: config.EnvName,
+		Region:    config.Region,
 		meta: map[string]interface{}{
 			"environment": "aws",
 			"name":        config.EnvName,
