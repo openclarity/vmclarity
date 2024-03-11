@@ -25,6 +25,7 @@ import (
 
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
+	cloudformationtypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
@@ -82,8 +83,9 @@ func (e *AWSEnv) SetUp(ctx context.Context) error {
 	_, err = e.client.CreateStack(
 		ctx,
 		&cloudformation.CreateStackInput{
-			StackName:   &e.StackName,
-			TemplateURL: &templateURL,
+			StackName:    &e.StackName,
+			Capabilities: []cloudformationtypes.Capability{cloudformationtypes.CapabilityCapabilityIam},
+			TemplateURL:  &templateURL,
 		},
 	)
 	if err != nil {
