@@ -13,6 +13,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package types
+package main
 
-//go:generate go run github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen --config=types.cfg.yaml ../openapi.yaml
+import (
+	"github.com/labstack/echo/v4"
+	"github.com/openclarity/vmclarity/scanner/types"
+)
+
+// nolint:wrapcheck
+func sendError(ctx echo.Context, code int, message string) error {
+	response := &types.ErrorResponse{Message: &message}
+	return ctx.JSON(code, response)
+}
+
+// nolint:wrapcheck,unparam
+func sendResponse(ctx echo.Context, code int, object interface{}) error {
+	return ctx.JSON(code, object)
+}

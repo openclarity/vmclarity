@@ -1,0 +1,11 @@
+---
+package: server
+output: server/server.gen.go
+additional-imports:
+  - package: github.com/openclarity/vmclarity/scanner/types
+    alias: .
+generate:
+  echo-server: true
+  embedded-spec: true
+output-options:
+  skip-prune: true
