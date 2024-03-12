@@ -23,6 +23,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	cloudformationtypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
@@ -37,7 +38,10 @@ import (
 
 type ContextKeyType string
 
-const AWSClientContextKey ContextKeyType = "AWSClient"
+const (
+	AWSClientContextKey ContextKeyType = "AWSClient"
+	AWSKeyName          string         = "vmclarity-testenv-key"
+)
 
 // AWS Environment.
 type AWSEnv struct {
@@ -47,6 +51,7 @@ type AWSEnv struct {
 	testAsset *asset.Asset
 	StackName string
 	Region    string
+	PublicKey string
 	meta      map[string]interface{}
 }
 
@@ -55,8 +60,18 @@ type AWSEnv struct {
 // (upload template file to S3 is required since the template is larger than 51,200 bytes).
 // * Create test asset.
 func (e *AWSEnv) SetUp(ctx context.Context) error {
+	// Create a new key pair
+	_, err := e.ec2Client.ImportKeyPair(ctx, &ec2.ImportKeyPairInput{
+		KeyName:           aws.String(AWSKeyName),
+		PublicKeyMaterial: []byte(e.PublicKey),
+	},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to import key pair: %w", err)
+	}
+
 	// Create a new S3 bucket
-	_, err := e.s3Client.CreateBucket(ctx, &s3.CreateBucketInput{
+	_, err = e.s3Client.CreateBucket(ctx, &s3.CreateBucketInput{
 		Bucket: &e.StackName,
 		CreateBucketConfiguration: &s3types.CreateBucketConfiguration{
 			LocationConstraint: s3types.BucketLocationConstraint(e.Region),
@@ -90,6 +105,9 @@ func (e *AWSEnv) SetUp(ctx context.Context) error {
 			StackName:    &e.StackName,
 			Capabilities: []cloudformationtypes.Capability{cloudformationtypes.CapabilityCapabilityIam},
 			TemplateURL:  &templateURL,
+			Parameters: []cloudformationtypes.Parameter{
+				{ParameterKey: aws.String("KeyName"), ParameterValue: aws.String(AWSKeyName)},
+			},
 		},
 	)
 	if err != nil {
@@ -138,6 +156,14 @@ func (e *AWSEnv) TearDown(ctx context.Context) error {
 	err = e.testAsset.Delete(ctx, e.ec2Client)
 	if err != nil {
 		return fmt.Errorf("failed to delete test asset: %w", err)
+	}
+
+	// Delete the key pair
+	_, err = e.ec2Client.DeleteKeyPair(ctx, &ec2.DeleteKeyPairInput{
+		KeyName: aws.String(AWSKeyName),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to delete key pair: %w", err)
 	}
 
 	return nil
@@ -268,6 +294,11 @@ func New(config *Config, opts ...ConfigOptFn) (*AWSEnv, error) {
 		return nil, fmt.Errorf("failed to apply config options: %w", err)
 	}
 
+	// Validate configuration
+	if err := config.Validate(); err != nil {
+		return nil, fmt.Errorf("failed to validate configuration: %w", err)
+	}
+
 	// Load default AWS configuration and set region
 	cfg, err := awsconfig.LoadDefaultConfig(context.Background())
 	if err != nil {
@@ -290,6 +321,7 @@ func New(config *Config, opts ...ConfigOptFn) (*AWSEnv, error) {
 		s3Client:  s3Client,
 		StackName: config.EnvName,
 		Region:    config.Region,
+		PublicKey: config.PublicKey,
 		testAsset: &asset.Asset{},
 		meta: map[string]interface{}{
 			"environment": "aws",
