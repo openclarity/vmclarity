@@ -62,30 +62,34 @@ func (s *Scanner) StartScan(template types.ScanTemplate) (*types.Scan, error) {
 
 	// create scan
 	s.result = &types.ScanResult{
-		Findings: Ptr([]types.Finding{}),
-		Scan: &types.Scan{
-			JobsCompleted: Ptr(0),
-			JobsLeftToRun: Ptr(len(template.AssetScanInputs)),
-			StartTime:     Ptr(time.Now()),
-			Template:      &template,
+		Findings: []types.ScanFinding{},
+		Scan: types.Scan{
+			JobsCompleted: 0,
+			JobsLeftToRun: len(template.ScanObjectInputs),
+			StartTime:     time.Now(),
+			Status: types.ScanStatus{
+				LastTransitionTime: time.Now(),
+				State:              types.ScanStatusStatePending,
+			},
+			Template: template,
 		},
 	}
 
 	// start scan
-	go s.scan(template.AssetScanInputs)
+	go s.scan(template.ScanObjectInputs)
 
 	// return
-	return s.result.Scan, nil
+	return &s.result.Scan, nil
 }
 
 func (s *Scanner) GetScan() (*types.Scan, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	if s.result == nil || s.result.Scan == nil {
+	if s.result == nil {
 		return nil, fmt.Errorf("scan not started")
 	}
-	return s.result.Scan, nil
+	return &s.result.Scan, nil
 }
 
 func (s *Scanner) StopScan() error {
@@ -99,7 +103,7 @@ func (s *Scanner) StopScan() error {
 	return nil
 }
 
-func (s *Scanner) scan(inputs []types.AssetScanInput) {
+func (s *Scanner) scan(inputs []types.ScanObjectInput) {
 	ctx, cancel := context.WithCancel(context.Background())
 	s.mu.Lock()
 	s.cancel = cancel
@@ -122,7 +126,7 @@ func (s *Scanner) scan(inputs []types.AssetScanInput) {
 			findings := parseDockleReport(input, assessmentMap)
 
 			s.mu.Lock()
-			*s.result.Findings = append(*s.result.Findings, findings...)
+			s.result.Findings = append(s.result.Findings, findings...)
 			s.mu.Unlock()
 
 			return nil
@@ -139,9 +143,9 @@ func (s *Scanner) scan(inputs []types.AssetScanInput) {
 	}()
 }
 
-func (s *Scanner) isValidInputType(sourceType types.AssetScanInputType) error {
+func (s *Scanner) isValidInputType(sourceType types.ScanObjectInputType) error {
 	switch sourceType {
-	case types.AssetScanInputImage, types.AssetScanInputDockerArchive:
+	case types.InputTypeImage, types.InputTypeDockerArchive:
 		return nil
 	default:
 		return fmt.Errorf("unsupported input type %v", sourceType)

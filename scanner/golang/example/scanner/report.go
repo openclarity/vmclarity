@@ -23,8 +23,8 @@ import (
 
 var CISDockerImpactCategory = "best-practice"
 
-func parseDockleReport(input types.AssetScanInput, assessmentMap dockle_types.AssessmentMap) []types.Finding {
-	ret := make([]types.Finding, 0, len(assessmentMap))
+func parseDockleReport(input types.ScanObjectInput, assessmentMap dockle_types.AssessmentMap) []types.ScanFinding {
+	ret := make([]types.ScanFinding, 0, len(assessmentMap))
 
 	for _, codeInfo := range assessmentMap {
 		severity := convertDockleSeverity(codeInfo.Level)
@@ -39,8 +39,8 @@ func parseDockleReport(input types.AssetScanInput, assessmentMap dockle_types.As
 		}
 		message := dockle_types.TitleMap[codeInfo.Code]
 
-		findingInfo := new(types.Finding_FindingInfo)
-		_ = findingInfo.FromMisconfiguration(types.Misconfiguration{
+		findingInfo := new(types.ScanFinding_FindingInfo)
+		_ = findingInfo.FromMisconfigurationFindingInfo(types.MisconfigurationFindingInfo{
 			Category:    &CISDockerImpactCategory,
 			Description: &description,
 			Id:          &codeInfo.Code,
@@ -49,9 +49,9 @@ func parseDockleReport(input types.AssetScanInput, assessmentMap dockle_types.As
 			Severity:    &severity,
 		})
 
-		ret = append(ret, types.Finding{
-			FindingInfo: findingInfo,
-			Input:       &input,
+		ret = append(ret, types.ScanFinding{
+			FindingInfo: *findingInfo,
+			Input:       input,
 		})
 	}
 

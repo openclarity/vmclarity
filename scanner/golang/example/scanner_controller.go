@@ -26,3 +26,8 @@ func (s *Server) IsAlive(ctx echo.Context) error {
 func (s *Server) IsReady(ctx echo.Context) error {
 	return sendResponse(ctx, 200, nil)
 }
+
+func (s *Server) GetScannerInfo(ctx echo.Context) error {
+	//TODO implement me
+	panic("implement me")
+}

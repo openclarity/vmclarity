@@ -107,6 +107,20 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
 
+  /scanner:
+    get:
+      summary: Fetches runtime scanner details
+      operationId: GetScannerInfo
+      responses:
+        200:
+          description: Scanner details fetched successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scanner'
+        default:
+          $ref: '#/components/responses/UnknownError'
+
   /livez:
     get:
       summary: Check if the API is alive and responsive
@@ -151,20 +165,94 @@ components:
               value:
                 type: string
 
-    Scan:
+    ScanFamily:
+      type: string
+      enum:
+        - Package
+        - Vulnerability
+        - Malware
+        - Secret
+        - Misconfiguration
+        - Rootkit
+        - Exploit
+        - InfoFinder
+
+    Scanner:
       type: object
-      description: Describes a multi-asset scan.
-      required:
-        - template
-        - startTime
-        - jobsLeftToRun
-        - jobsCompleted
+      description: Describes scanner runtime details.
       allOf:
         - $ref: '#/components/schemas/Metadata'
         - type: object
+          required:
+            - name
+            - version
+            - families
           properties:
-            template:
-              $ref: '#/components/schemas/ScanTemplate'
+            name:
+              type: string
+              description: Scanner name.
+            version:
+              type: string
+              description: Scanner runtime version.
+            families:
+              type: array
+              description: Supported scan families by the scanner.
+              items:
+                $ref: '#/components/schemas/ScanFamily'
+
+    ScanStatus:
+      type: object
+      required:
+        - state
+        - lastTransitionTime
+      properties:
+        state:
+          description: |
+            Describes the state of scan.
+
+            | State      | Description                    |
+            | ---------- | ------------------------------ |
+            | Pending    | Initial state for Scan         |
+            | InProgress | Scan is in progress            |
+            | Aborted    | Scan has been aborted          |
+            | Failed     | Scan has failed                |
+            | Done       | Scan has finished successfully |
+          type: string
+          enum:
+            - Pending
+            - InProgress
+            - Aborted
+            - Failed
+            - Done
+          x-enum-varnames:
+            - ScanStatusStatePending
+            - ScanStatusStateInProgress
+            - ScanStatusStateAborted
+            - ScanStatusStateFailed
+            - ScanStatusStateDone
+        message:
+          description: Human readable message.
+          type: string
+        lastTransitionTime:
+          description: Last date time when the status has changed.
+          type: string
+          format: date-time
+
+    Scan:
+      type: object
+      description: Describes a multi-object scan.
+      allOf:
+        - $ref: '#/components/schemas/Metadata'
+        - type: object
+          required:
+            - status
+            - startTime
+            - jobsLeftToRun
+            - jobsCompleted
+            - template
+          properties:
+            status:
+              $ref: '#/components/schemas/ScanStatus'
             startTime:
               type: string
               format: date-time
@@ -175,11 +263,14 @@ components:
               type: integer
             jobsCompleted:
               type: integer
+            template:
+              $ref: '#/components/schemas/ScanTemplate'
 
     ScanTemplate:
       type: object
       required:
-        - assetScanInputs
+        - scanObjectInputs
+        - families
       properties:
         timeoutSeconds:
           type: integer
@@ -187,27 +278,35 @@ components:
           description: |
             The maximum time in seconds that a scan should
             run for before being automatically aborted.
-        assetScanInputs:
+        scanObjectInputs:
           type: array
-          description: List of assets to scan.
+          description: List of objects to scan.
           items:
-            $ref: '#/components/schemas/AssetScanInput'
+            $ref: '#/components/schemas/ScanObjectInput'
+        families:
+          type: array
+          description: List of scan families to use for scanning.
+          items:
+            $ref: '#/components/schemas/ScanFamily'
 
     ScanResult:
       type: object
-      description: Describes the result of multi-asset scan.
-      required:
-        - scan
-        - findings
+      description: Describes the result of multi-object scan.
       allOf:
+        - $ref: '#/components/schemas/Metadata'
         - type: object
+          required:
+            - scan
+            - findings
           properties:
             scan:
               $ref: '#/components/schemas/Scan'
             findings:
               type: array
               items:
-                $ref: '#/components/schemas/Finding'
+                $ref: '#/components/schemas/ScanFinding'
+            summary:
+              $ref: '#/components/schemas/ScanSummary'
 
     Package:
       type: object
@@ -232,6 +331,16 @@ components:
           nullable: true
         purl:
           type: string
+
+    PackageFindingInfo:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Package'
+        - type: object
+          properties:
+            objectType:
+              type: string
+          required: [objectType]
 
     VulnerabilityFix:
       type: object
@@ -320,6 +429,16 @@ components:
         path:
           type: string
 
+    VulnerabilityFindingInfo:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Vulnerability'
+        - type: object
+          properties:
+            objectType:
+              type: string
+          required: [objectType]
+
     MalwareType:
       type: string
 
@@ -335,6 +454,16 @@ components:
         path:
           type: string
           description: Path of the file that contains malware
+
+    MalwareFindingInfo:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Malware'
+        - type: object
+          properties:
+            objectType:
+              type: string
+          required: [objectType]
 
     Secret:
       type: object
@@ -356,6 +485,16 @@ components:
           description: "Note: this is not unique"
           type: string
 
+    SecretFindingInfo:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Secret'
+        - type: object
+          properties:
+            objectType:
+              type: string
+          required: [objectType]
+
     MisconfigurationSeverity:
       type: string
       enum:
@@ -366,14 +505,12 @@ components:
     Misconfiguration:
       type: object
       properties:
-        scannerName:
-          type: string
         id:
           type: string
           description: Check or test ID, if applicable (e.g. Lynis TestID, CIS Docker Benchmark checkpoint code, etc)
         location:
           type: string
-          description: Location within the asset where the misconfiguration was recorded (e.g. filesystem path)
+          description: Location within the input object where the misconfiguration was recorded (e.g. filesystem path)
         category:
           type: string
           description: Specifies misconfiguration impact category
@@ -388,6 +525,16 @@ components:
           description: Possible fix for the misconfiguration
         severity:
           $ref: '#/components/schemas/MisconfigurationSeverity'
+
+    MisconfigurationFindingInfo:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Misconfiguration'
+        - type: object
+          properties:
+            objectType:
+              type: string
+          required: [objectType]
 
     RootkitType:
       type: string
@@ -408,6 +555,16 @@ components:
         message:
           type: string
 
+    RootkitFindingInfo:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Rootkit'
+        - type: object
+          properties:
+            objectType:
+              type: string
+          required: [objectType]
+
     Exploit:
       type: object
       properties:
@@ -427,6 +584,16 @@ components:
             type: string
           nullable: true
 
+    ExploitFindingInfo:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Exploit'
+        - type: object
+          properties:
+            objectType:
+              type: string
+          required: [objectType]
+
     InfoType:
       type: string
       enum:
@@ -439,8 +606,6 @@ components:
     InfoFinder:
       type: object
       properties:
-        scannerName:
-          type: string
         type:
           $ref: '#/components/schemas/InfoType'
         path:
@@ -451,30 +616,71 @@ components:
           description: "The data found by the scanner in the specific path for a specific type. See example for SSHKnownHostFingerprint info type"
           example: "2048 SHA256:YQuPOM8ld6FOA9HbKCgkCJWHuGt4aTRD7hstjJpRhxc xxxx (RSA)"
 
-    Finding:
+    InfoFinderFindingInfo:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/InfoFinder'
+        - type: object
+          properties:
+            objectType:
+              type: string
+          required: [objectType]
+
+    ScanSummary:
+      type: object
+      properties:
+        KnownViruses:
+          type: integer
+        EngineVersion:
+          type: string
+        ScannedDirectories:
+          type: integer
+        ScannedFiles:
+          type: integer
+        InfectedFiles:
+          type: integer
+        SuspectedFiles:
+          type: integer
+        DataScanned:
+          type: string
+        DataRead:
+          type: string
+        TimeTaken:
+          type: string
+
+    ScanFinding:
       type: object
       required:
         - input
-      allOf:
-        - $ref: '#/components/schemas/Metadata'
-        - type: object
-          properties:
-            input:
-              $ref: '#/components/schemas/AssetScanInput'
-            findingInfo:
-              anyOf:
-                - $ref: '#/components/schemas/Package'
-                - $ref: '#/components/schemas/Vulnerability'
-                - $ref: '#/components/schemas/Malware'
-                - $ref: '#/components/schemas/Secret'
-                - $ref: '#/components/schemas/Misconfiguration'
-                - $ref: '#/components/schemas/Rootkit'
-                - $ref: '#/components/schemas/Exploit'
-                - $ref: '#/components/schemas/InfoFinder'
+        - findingInfo
+      properties:
+        input:
+          $ref: '#/components/schemas/ScanObjectInput'
+        findingInfo:
+          anyOf:
+            - $ref: '#/components/schemas/PackageFindingInfo'
+            - $ref: '#/components/schemas/VulnerabilityFindingInfo'
+            - $ref: '#/components/schemas/MalwareFindingInfo'
+            - $ref: '#/components/schemas/SecretFindingInfo'
+            - $ref: '#/components/schemas/MisconfigurationFindingInfo'
+            - $ref: '#/components/schemas/RootkitFindingInfo'
+            - $ref: '#/components/schemas/ExploitFindingInfo'
+            - $ref: '#/components/schemas/InfoFinderFindingInfo'
+          discriminator:
+            propertyName: objectType
+            mapping:
+              Package: '#/components/schemas/PackageFindingInfo'
+              Vulnerability: '#/components/schemas/VulnerabilityFindingInfo'
+              Malware: '#/components/schemas/MalwareFindingInfo'
+              Secret: '#/components/schemas/SecretFindingInfo'
+              Misconfiguration: '#/components/schemas/MisconfigurationFindingInfo'
+              Rootkit: '#/components/schemas/RootkitFindingInfo'
+              Exploit: '#/components/schemas/ExploitFindingInfo'
+              InfoFinder: '#/components/schemas/InfoFinderFindingInfo'
 
-    AssetScanInput:
+    ScanObjectInput:
       type: object
-      description: Input data of an asset to scan.
+      description: Input data of an object to scan.
       required:
         - type
         - path
@@ -492,14 +698,14 @@ components:
             - ROOTFS
             - FILE
           x-enum-varnames:
-            - AssetScanInputSBOM
-            - AssetScanInputImage
-            - AssetScanInputDockerArchive
-            - AssetScanInputOCIArchive
-            - AssetScanInputOCIDir
-            - AssetScanInputDir
-            - AssetScanInputRootFS
-            - AssetScanInputFile
+            - InputTypeSBOM
+            - InputTypeImage
+            - InputTypeDockerArchive
+            - InputTypeOCIArchive
+            - InputTypeOCIDir
+            - InputTypeDir
+            - InputTypeRootFS
+            - InputTypeFile
         path:
           description: The input path (/mnt/snapshot for ex.)
           type: string

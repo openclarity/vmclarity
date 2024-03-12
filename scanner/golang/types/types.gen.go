@@ -5,21 +5,10 @@ package types
 
 import (
 	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/oapi-codegen/runtime"
-)
-
-// Defines values for AssetScanInputType.
-const (
-	AssetScanInputDir           AssetScanInputType = "DIR"
-	AssetScanInputDockerArchive AssetScanInputType = "DOCKERARCHIVE"
-	AssetScanInputFile          AssetScanInputType = "FILE"
-	AssetScanInputImage         AssetScanInputType = "IMAGE"
-	AssetScanInputOCIArchive    AssetScanInputType = "OCIARCHIVE"
-	AssetScanInputOCIDir        AssetScanInputType = "OCIDIR"
-	AssetScanInputRootFS        AssetScanInputType = "ROOTFS"
-	AssetScanInputSBOM          AssetScanInputType = "SBOM"
 )
 
 // Defines values for InfoType.
@@ -47,6 +36,39 @@ const (
 	RootkitTypeUNKNOWN     RootkitType = "UNKNOWN"
 )
 
+// Defines values for ScanFamily.
+const (
+	ScanFamilyExploit          ScanFamily = "Exploit"
+	ScanFamilyInfoFinder       ScanFamily = "InfoFinder"
+	ScanFamilyMalware          ScanFamily = "Malware"
+	ScanFamilyMisconfiguration ScanFamily = "Misconfiguration"
+	ScanFamilyPackage          ScanFamily = "Package"
+	ScanFamilyRootkit          ScanFamily = "Rootkit"
+	ScanFamilySecret           ScanFamily = "Secret"
+	ScanFamilyVulnerability    ScanFamily = "Vulnerability"
+)
+
+// Defines values for ScanObjectInputType.
+const (
+	InputTypeDir           ScanObjectInputType = "DIR"
+	InputTypeDockerArchive ScanObjectInputType = "DOCKERARCHIVE"
+	InputTypeFile          ScanObjectInputType = "FILE"
+	InputTypeImage         ScanObjectInputType = "IMAGE"
+	InputTypeOCIArchive    ScanObjectInputType = "OCIARCHIVE"
+	InputTypeOCIDir        ScanObjectInputType = "OCIDIR"
+	InputTypeRootFS        ScanObjectInputType = "ROOTFS"
+	InputTypeSBOM          ScanObjectInputType = "SBOM"
+)
+
+// Defines values for ScanStatusState.
+const (
+	ScanStatusStateAborted    ScanStatusState = "Aborted"
+	ScanStatusStateDone       ScanStatusState = "Done"
+	ScanStatusStateFailed     ScanStatusState = "Failed"
+	ScanStatusStateInProgress ScanStatusState = "InProgress"
+	ScanStatusStatePending    ScanStatusState = "Pending"
+)
+
 // Defines values for VulnerabilitySeverity.
 const (
 	CRITICAL   VulnerabilitySeverity = "CRITICAL"
@@ -55,18 +77,6 @@ const (
 	MEDIUM     VulnerabilitySeverity = "MEDIUM"
 	NEGLIGIBLE VulnerabilitySeverity = "NEGLIGIBLE"
 )
-
-// AssetScanInput Input data of an asset to scan.
-type AssetScanInput struct {
-	// Path The input path (/mnt/snapshot for ex.)
-	Path string `json:"path"`
-
-	// Type The input type (ROOTFS, DIR, IMAGE etc.)
-	Type AssetScanInputType `json:"type"`
-}
-
-// AssetScanInputType The input type (ROOTFS, DIR, IMAGE etc.)
-type AssetScanInputType string
 
 // ErrorResponse An object that is returned for a failed API request.
 type ErrorResponse struct {
@@ -83,22 +93,15 @@ type Exploit struct {
 	Urls        *[]string `json:"urls"`
 }
 
-// Finding defines model for Finding.
-type Finding struct {
-	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
-	Annotations *[]struct {
-		Key   *string `json:"key,omitempty"`
-		Value *string `json:"value,omitempty"`
-	} `json:"annotations,omitempty"`
-	FindingInfo *Finding_FindingInfo `json:"findingInfo,omitempty"`
-
-	// Input Input data of an asset to scan.
-	Input *AssetScanInput `json:"input,omitempty"`
-}
-
-// Finding_FindingInfo defines model for Finding.FindingInfo.
-type Finding_FindingInfo struct {
-	union json.RawMessage
+// ExploitFindingInfo defines model for ExploitFindingInfo.
+type ExploitFindingInfo struct {
+	CveID       *string   `json:"cveID,omitempty"`
+	Description *string   `json:"description,omitempty"`
+	Name        *string   `json:"name,omitempty"`
+	ObjectType  string    `json:"objectType"`
+	SourceDB    *string   `json:"sourceDB,omitempty"`
+	Title       *string   `json:"title,omitempty"`
+	Urls        *[]string `json:"urls"`
 }
 
 // InfoFinder defines model for InfoFinder.
@@ -107,9 +110,19 @@ type InfoFinder struct {
 	Data *string `json:"data,omitempty"`
 
 	// Path File path containing the info
-	Path        *string   `json:"path,omitempty"`
-	ScannerName *string   `json:"scannerName,omitempty"`
-	Type        *InfoType `json:"type,omitempty"`
+	Path *string   `json:"path,omitempty"`
+	Type *InfoType `json:"type,omitempty"`
+}
+
+// InfoFinderFindingInfo defines model for InfoFinderFindingInfo.
+type InfoFinderFindingInfo struct {
+	// Data The data found by the scanner in the specific path for a specific type. See example for SSHKnownHostFingerprint info type
+	Data       *string `json:"data,omitempty"`
+	ObjectType string  `json:"objectType"`
+
+	// Path File path containing the info
+	Path *string   `json:"path,omitempty"`
+	Type *InfoType `json:"type,omitempty"`
 }
 
 // InfoType defines model for InfoType.
@@ -119,6 +132,17 @@ type InfoType string
 type Malware struct {
 	MalwareName *string      `json:"malwareName,omitempty"`
 	MalwareType *MalwareType `json:"malwareType,omitempty"`
+
+	// Path Path of the file that contains malware
+	Path     *string `json:"path,omitempty"`
+	RuleName *string `json:"ruleName,omitempty"`
+}
+
+// MalwareFindingInfo defines model for MalwareFindingInfo.
+type MalwareFindingInfo struct {
+	MalwareName *string      `json:"malwareName,omitempty"`
+	MalwareType *MalwareType `json:"malwareType,omitempty"`
+	ObjectType  string       `json:"objectType"`
 
 	// Path Path of the file that contains malware
 	Path     *string `json:"path,omitempty"`
@@ -148,7 +172,7 @@ type Misconfiguration struct {
 	// Id Check or test ID, if applicable (e.g. Lynis TestID, CIS Docker Benchmark checkpoint code, etc)
 	Id *string `json:"id,omitempty"`
 
-	// Location Location within the asset where the misconfiguration was recorded (e.g. filesystem path)
+	// Location Location within the input object where the misconfiguration was recorded (e.g. filesystem path)
 	Location *string `json:"location,omitempty"`
 
 	// Message Short info about the misconfiguration
@@ -156,7 +180,29 @@ type Misconfiguration struct {
 
 	// Remediation Possible fix for the misconfiguration
 	Remediation *string                   `json:"remediation,omitempty"`
-	ScannerName *string                   `json:"scannerName,omitempty"`
+	Severity    *MisconfigurationSeverity `json:"severity,omitempty"`
+}
+
+// MisconfigurationFindingInfo defines model for MisconfigurationFindingInfo.
+type MisconfigurationFindingInfo struct {
+	// Category Specifies misconfiguration impact category
+	Category *string `json:"category,omitempty"`
+
+	// Description Additional context such as the potential impact
+	Description *string `json:"description,omitempty"`
+
+	// Id Check or test ID, if applicable (e.g. Lynis TestID, CIS Docker Benchmark checkpoint code, etc)
+	Id *string `json:"id,omitempty"`
+
+	// Location Location within the input object where the misconfiguration was recorded (e.g. filesystem path)
+	Location *string `json:"location,omitempty"`
+
+	// Message Short info about the misconfiguration
+	Message    *string `json:"message,omitempty"`
+	ObjectType string  `json:"objectType"`
+
+	// Remediation Possible fix for the misconfiguration
+	Remediation *string                   `json:"remediation,omitempty"`
 	Severity    *MisconfigurationSeverity `json:"severity,omitempty"`
 }
 
@@ -174,9 +220,29 @@ type Package struct {
 	Version  *string   `json:"version,omitempty"`
 }
 
+// PackageFindingInfo defines model for PackageFindingInfo.
+type PackageFindingInfo struct {
+	Cpes       *[]string `json:"cpes"`
+	Language   *string   `json:"language,omitempty"`
+	Licenses   *[]string `json:"licenses"`
+	Name       *string   `json:"name,omitempty"`
+	ObjectType string    `json:"objectType"`
+	Purl       *string   `json:"purl,omitempty"`
+	Type       *string   `json:"type,omitempty"`
+	Version    *string   `json:"version,omitempty"`
+}
+
 // Rootkit defines model for Rootkit.
 type Rootkit struct {
 	Message     *string      `json:"message,omitempty"`
+	RootkitName *string      `json:"rootkitName,omitempty"`
+	RootkitType *RootkitType `json:"rootkitType,omitempty"`
+}
+
+// RootkitFindingInfo defines model for RootkitFindingInfo.
+type RootkitFindingInfo struct {
+	Message     *string      `json:"message,omitempty"`
+	ObjectType  string       `json:"objectType"`
 	RootkitName *string      `json:"rootkitName,omitempty"`
 	RootkitType *RootkitType `json:"rootkitType,omitempty"`
 }
@@ -191,29 +257,129 @@ type Scan struct {
 		Key   *string `json:"key,omitempty"`
 		Value *string `json:"value,omitempty"`
 	} `json:"annotations,omitempty"`
-	EndTime       *time.Time    `json:"endTime,omitempty"`
-	JobsCompleted *int          `json:"jobsCompleted,omitempty"`
-	JobsLeftToRun *int          `json:"jobsLeftToRun,omitempty"`
-	StartTime     *time.Time    `json:"startTime,omitempty"`
-	Template      *ScanTemplate `json:"template,omitempty"`
+	EndTime       *time.Time   `json:"endTime,omitempty"`
+	JobsCompleted int          `json:"jobsCompleted"`
+	JobsLeftToRun int          `json:"jobsLeftToRun"`
+	StartTime     time.Time    `json:"startTime"`
+	Status        ScanStatus   `json:"status"`
+	Template      ScanTemplate `json:"template"`
 }
+
+// ScanFamily defines model for ScanFamily.
+type ScanFamily string
+
+// ScanFinding defines model for ScanFinding.
+type ScanFinding struct {
+	FindingInfo ScanFinding_FindingInfo `json:"findingInfo"`
+
+	// Input Input data of an object to scan.
+	Input ScanObjectInput `json:"input"`
+}
+
+// ScanFinding_FindingInfo defines model for ScanFinding.FindingInfo.
+type ScanFinding_FindingInfo struct {
+	union json.RawMessage
+}
+
+// ScanObjectInput Input data of an object to scan.
+type ScanObjectInput struct {
+	// Path The input path (/mnt/snapshot for ex.)
+	Path string `json:"path"`
+
+	// Type The input type (ROOTFS, DIR, IMAGE etc.)
+	Type ScanObjectInputType `json:"type"`
+}
+
+// ScanObjectInputType The input type (ROOTFS, DIR, IMAGE etc.)
+type ScanObjectInputType string
 
 // ScanResult defines model for ScanResult.
 type ScanResult struct {
-	Findings *[]Finding `json:"findings,omitempty"`
+	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+	Annotations *[]struct {
+		Key   *string `json:"key,omitempty"`
+		Value *string `json:"value,omitempty"`
+	} `json:"annotations,omitempty"`
+	Findings []ScanFinding `json:"findings"`
 
-	// Scan Describes a multi-asset scan.
-	Scan *Scan `json:"scan,omitempty"`
+	// Scan Describes a multi-object scan.
+	Scan    Scan         `json:"scan"`
+	Summary *ScanSummary `json:"summary,omitempty"`
+}
+
+// ScanStatus defines model for ScanStatus.
+type ScanStatus struct {
+	// LastTransitionTime Last date time when the status has changed.
+	LastTransitionTime time.Time `json:"lastTransitionTime"`
+
+	// Message Human readable message.
+	Message *string `json:"message,omitempty"`
+
+	// State Describes the state of scan.
+	//
+	// | State      | Description                    |
+	// | ---------- | ------------------------------ |
+	// | Pending    | Initial state for Scan         |
+	// | InProgress | Scan is in progress            |
+	// | Aborted    | Scan has been aborted          |
+	// | Failed     | Scan has failed                |
+	// | Done       | Scan has finished successfully |
+	State ScanStatusState `json:"state"`
+}
+
+// ScanStatusState Describes the state of scan.
+//
+// | State      | Description                    |
+// | ---------- | ------------------------------ |
+// | Pending    | Initial state for Scan         |
+// | InProgress | Scan is in progress            |
+// | Aborted    | Scan has been aborted          |
+// | Failed     | Scan has failed                |
+// | Done       | Scan has finished successfully |
+type ScanStatusState string
+
+// ScanSummary defines model for ScanSummary.
+type ScanSummary struct {
+	DataRead           *string `json:"DataRead,omitempty"`
+	DataScanned        *string `json:"DataScanned,omitempty"`
+	EngineVersion      *string `json:"EngineVersion,omitempty"`
+	InfectedFiles      *int    `json:"InfectedFiles,omitempty"`
+	KnownViruses       *int    `json:"KnownViruses,omitempty"`
+	ScannedDirectories *int    `json:"ScannedDirectories,omitempty"`
+	ScannedFiles       *int    `json:"ScannedFiles,omitempty"`
+	SuspectedFiles     *int    `json:"SuspectedFiles,omitempty"`
+	TimeTaken          *string `json:"TimeTaken,omitempty"`
 }
 
 // ScanTemplate defines model for ScanTemplate.
 type ScanTemplate struct {
-	// AssetScanInputs List of assets to scan.
-	AssetScanInputs []AssetScanInput `json:"assetScanInputs"`
+	// Families List of scan families to use for scanning.
+	Families []ScanFamily `json:"families"`
+
+	// ScanObjectInputs List of objects to scan.
+	ScanObjectInputs []ScanObjectInput `json:"scanObjectInputs"`
 
 	// TimeoutSeconds The maximum time in seconds that a scan should
 	// run for before being automatically aborted.
 	TimeoutSeconds *int `json:"timeoutSeconds,omitempty"`
+}
+
+// Scanner defines model for Scanner.
+type Scanner struct {
+	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+	Annotations *[]struct {
+		Key   *string `json:"key,omitempty"`
+		Value *string `json:"value,omitempty"`
+	} `json:"annotations,omitempty"`
+
+	// Families Supported scan families by the scanner.
+	Families []ScanFamily `json:"families"`
+
+	// Name Scanner name.
+	Name string `json:"name"`
+
+	// Version Scanner runtime version.
+	Version string `json:"version"`
 }
 
 // Secret defines model for Secret.
@@ -227,6 +393,22 @@ type Secret struct {
 
 	// Fingerprint Note: this is not unique
 	Fingerprint *string `json:"fingerprint,omitempty"`
+	StartColumn *int    `json:"startColumn,omitempty"`
+	StartLine   *int    `json:"startLine,omitempty"`
+}
+
+// SecretFindingInfo defines model for SecretFindingInfo.
+type SecretFindingInfo struct {
+	Description *string `json:"description,omitempty"`
+	EndColumn   *int    `json:"endColumn,omitempty"`
+	EndLine     *int    `json:"endLine,omitempty"`
+
+	// FilePath Name of the file containing the secret
+	FilePath *string `json:"filePath,omitempty"`
+
+	// Fingerprint Note: this is not unique
+	Fingerprint *string `json:"fingerprint,omitempty"`
+	ObjectType  string  `json:"objectType"`
 	StartColumn *int    `json:"startColumn,omitempty"`
 	StartLine   *int    `json:"startLine,omitempty"`
 }
@@ -278,6 +460,23 @@ type VulnerabilityDistro struct {
 	Version *string `json:"version,omitempty"`
 }
 
+// VulnerabilityFindingInfo defines model for VulnerabilityFindingInfo.
+type VulnerabilityFindingInfo struct {
+	Cvss        *[]VulnerabilityCvss `json:"cvss"`
+	Description *string              `json:"description,omitempty"`
+
+	// Distro Distro provides information about a detected OS distribution.
+	Distro            *VulnerabilityDistro   `json:"distro,omitempty"`
+	Fix               *VulnerabilityFix      `json:"fix,omitempty"`
+	LayerId           *string                `json:"layerId,omitempty"`
+	Links             *[]string              `json:"links"`
+	ObjectType        string                 `json:"objectType"`
+	Package           *Package               `json:"package,omitempty"`
+	Path              *string                `json:"path,omitempty"`
+	Severity          *VulnerabilitySeverity `json:"severity,omitempty"`
+	VulnerabilityName *string                `json:"vulnerabilityName,omitempty"`
+}
+
 // VulnerabilityFix defines model for VulnerabilityFix.
 type VulnerabilityFix struct {
 	State    *string   `json:"state,omitempty"`
@@ -301,22 +500,24 @@ type StopScanParams struct {
 // StartScanJSONRequestBody defines body for StartScan for application/json ContentType.
 type StartScanJSONRequestBody = ScanTemplate
 
-// AsPackage returns the union data inside the Finding_FindingInfo as a Package
-func (t Finding_FindingInfo) AsPackage() (Package, error) {
-	var body Package
+// AsPackageFindingInfo returns the union data inside the ScanFinding_FindingInfo as a PackageFindingInfo
+func (t ScanFinding_FindingInfo) AsPackageFindingInfo() (PackageFindingInfo, error) {
+	var body PackageFindingInfo
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromPackage overwrites any union data inside the Finding_FindingInfo as the provided Package
-func (t *Finding_FindingInfo) FromPackage(v Package) error {
+// FromPackageFindingInfo overwrites any union data inside the ScanFinding_FindingInfo as the provided PackageFindingInfo
+func (t *ScanFinding_FindingInfo) FromPackageFindingInfo(v PackageFindingInfo) error {
+	v.ObjectType = "Package"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergePackage performs a merge with any union data inside the Finding_FindingInfo, using the provided Package
-func (t *Finding_FindingInfo) MergePackage(v Package) error {
+// MergePackageFindingInfo performs a merge with any union data inside the ScanFinding_FindingInfo, using the provided PackageFindingInfo
+func (t *ScanFinding_FindingInfo) MergePackageFindingInfo(v PackageFindingInfo) error {
+	v.ObjectType = "Package"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -327,22 +528,24 @@ func (t *Finding_FindingInfo) MergePackage(v Package) error {
 	return err
 }
 
-// AsVulnerability returns the union data inside the Finding_FindingInfo as a Vulnerability
-func (t Finding_FindingInfo) AsVulnerability() (Vulnerability, error) {
-	var body Vulnerability
+// AsVulnerabilityFindingInfo returns the union data inside the ScanFinding_FindingInfo as a VulnerabilityFindingInfo
+func (t ScanFinding_FindingInfo) AsVulnerabilityFindingInfo() (VulnerabilityFindingInfo, error) {
+	var body VulnerabilityFindingInfo
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromVulnerability overwrites any union data inside the Finding_FindingInfo as the provided Vulnerability
-func (t *Finding_FindingInfo) FromVulnerability(v Vulnerability) error {
+// FromVulnerabilityFindingInfo overwrites any union data inside the ScanFinding_FindingInfo as the provided VulnerabilityFindingInfo
+func (t *ScanFinding_FindingInfo) FromVulnerabilityFindingInfo(v VulnerabilityFindingInfo) error {
+	v.ObjectType = "Vulnerability"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeVulnerability performs a merge with any union data inside the Finding_FindingInfo, using the provided Vulnerability
-func (t *Finding_FindingInfo) MergeVulnerability(v Vulnerability) error {
+// MergeVulnerabilityFindingInfo performs a merge with any union data inside the ScanFinding_FindingInfo, using the provided VulnerabilityFindingInfo
+func (t *ScanFinding_FindingInfo) MergeVulnerabilityFindingInfo(v VulnerabilityFindingInfo) error {
+	v.ObjectType = "Vulnerability"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -353,22 +556,24 @@ func (t *Finding_FindingInfo) MergeVulnerability(v Vulnerability) error {
 	return err
 }
 
-// AsMalware returns the union data inside the Finding_FindingInfo as a Malware
-func (t Finding_FindingInfo) AsMalware() (Malware, error) {
-	var body Malware
+// AsMalwareFindingInfo returns the union data inside the ScanFinding_FindingInfo as a MalwareFindingInfo
+func (t ScanFinding_FindingInfo) AsMalwareFindingInfo() (MalwareFindingInfo, error) {
+	var body MalwareFindingInfo
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromMalware overwrites any union data inside the Finding_FindingInfo as the provided Malware
-func (t *Finding_FindingInfo) FromMalware(v Malware) error {
+// FromMalwareFindingInfo overwrites any union data inside the ScanFinding_FindingInfo as the provided MalwareFindingInfo
+func (t *ScanFinding_FindingInfo) FromMalwareFindingInfo(v MalwareFindingInfo) error {
+	v.ObjectType = "Malware"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeMalware performs a merge with any union data inside the Finding_FindingInfo, using the provided Malware
-func (t *Finding_FindingInfo) MergeMalware(v Malware) error {
+// MergeMalwareFindingInfo performs a merge with any union data inside the ScanFinding_FindingInfo, using the provided MalwareFindingInfo
+func (t *ScanFinding_FindingInfo) MergeMalwareFindingInfo(v MalwareFindingInfo) error {
+	v.ObjectType = "Malware"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -379,22 +584,24 @@ func (t *Finding_FindingInfo) MergeMalware(v Malware) error {
 	return err
 }
 
-// AsSecret returns the union data inside the Finding_FindingInfo as a Secret
-func (t Finding_FindingInfo) AsSecret() (Secret, error) {
-	var body Secret
+// AsSecretFindingInfo returns the union data inside the ScanFinding_FindingInfo as a SecretFindingInfo
+func (t ScanFinding_FindingInfo) AsSecretFindingInfo() (SecretFindingInfo, error) {
+	var body SecretFindingInfo
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromSecret overwrites any union data inside the Finding_FindingInfo as the provided Secret
-func (t *Finding_FindingInfo) FromSecret(v Secret) error {
+// FromSecretFindingInfo overwrites any union data inside the ScanFinding_FindingInfo as the provided SecretFindingInfo
+func (t *ScanFinding_FindingInfo) FromSecretFindingInfo(v SecretFindingInfo) error {
+	v.ObjectType = "Secret"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeSecret performs a merge with any union data inside the Finding_FindingInfo, using the provided Secret
-func (t *Finding_FindingInfo) MergeSecret(v Secret) error {
+// MergeSecretFindingInfo performs a merge with any union data inside the ScanFinding_FindingInfo, using the provided SecretFindingInfo
+func (t *ScanFinding_FindingInfo) MergeSecretFindingInfo(v SecretFindingInfo) error {
+	v.ObjectType = "Secret"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -405,22 +612,24 @@ func (t *Finding_FindingInfo) MergeSecret(v Secret) error {
 	return err
 }
 
-// AsMisconfiguration returns the union data inside the Finding_FindingInfo as a Misconfiguration
-func (t Finding_FindingInfo) AsMisconfiguration() (Misconfiguration, error) {
-	var body Misconfiguration
+// AsMisconfigurationFindingInfo returns the union data inside the ScanFinding_FindingInfo as a MisconfigurationFindingInfo
+func (t ScanFinding_FindingInfo) AsMisconfigurationFindingInfo() (MisconfigurationFindingInfo, error) {
+	var body MisconfigurationFindingInfo
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromMisconfiguration overwrites any union data inside the Finding_FindingInfo as the provided Misconfiguration
-func (t *Finding_FindingInfo) FromMisconfiguration(v Misconfiguration) error {
+// FromMisconfigurationFindingInfo overwrites any union data inside the ScanFinding_FindingInfo as the provided MisconfigurationFindingInfo
+func (t *ScanFinding_FindingInfo) FromMisconfigurationFindingInfo(v MisconfigurationFindingInfo) error {
+	v.ObjectType = "Misconfiguration"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeMisconfiguration performs a merge with any union data inside the Finding_FindingInfo, using the provided Misconfiguration
-func (t *Finding_FindingInfo) MergeMisconfiguration(v Misconfiguration) error {
+// MergeMisconfigurationFindingInfo performs a merge with any union data inside the ScanFinding_FindingInfo, using the provided MisconfigurationFindingInfo
+func (t *ScanFinding_FindingInfo) MergeMisconfigurationFindingInfo(v MisconfigurationFindingInfo) error {
+	v.ObjectType = "Misconfiguration"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -431,22 +640,24 @@ func (t *Finding_FindingInfo) MergeMisconfiguration(v Misconfiguration) error {
 	return err
 }
 
-// AsRootkit returns the union data inside the Finding_FindingInfo as a Rootkit
-func (t Finding_FindingInfo) AsRootkit() (Rootkit, error) {
-	var body Rootkit
+// AsRootkitFindingInfo returns the union data inside the ScanFinding_FindingInfo as a RootkitFindingInfo
+func (t ScanFinding_FindingInfo) AsRootkitFindingInfo() (RootkitFindingInfo, error) {
+	var body RootkitFindingInfo
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromRootkit overwrites any union data inside the Finding_FindingInfo as the provided Rootkit
-func (t *Finding_FindingInfo) FromRootkit(v Rootkit) error {
+// FromRootkitFindingInfo overwrites any union data inside the ScanFinding_FindingInfo as the provided RootkitFindingInfo
+func (t *ScanFinding_FindingInfo) FromRootkitFindingInfo(v RootkitFindingInfo) error {
+	v.ObjectType = "Rootkit"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeRootkit performs a merge with any union data inside the Finding_FindingInfo, using the provided Rootkit
-func (t *Finding_FindingInfo) MergeRootkit(v Rootkit) error {
+// MergeRootkitFindingInfo performs a merge with any union data inside the ScanFinding_FindingInfo, using the provided RootkitFindingInfo
+func (t *ScanFinding_FindingInfo) MergeRootkitFindingInfo(v RootkitFindingInfo) error {
+	v.ObjectType = "Rootkit"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -457,22 +668,24 @@ func (t *Finding_FindingInfo) MergeRootkit(v Rootkit) error {
 	return err
 }
 
-// AsExploit returns the union data inside the Finding_FindingInfo as a Exploit
-func (t Finding_FindingInfo) AsExploit() (Exploit, error) {
-	var body Exploit
+// AsExploitFindingInfo returns the union data inside the ScanFinding_FindingInfo as a ExploitFindingInfo
+func (t ScanFinding_FindingInfo) AsExploitFindingInfo() (ExploitFindingInfo, error) {
+	var body ExploitFindingInfo
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromExploit overwrites any union data inside the Finding_FindingInfo as the provided Exploit
-func (t *Finding_FindingInfo) FromExploit(v Exploit) error {
+// FromExploitFindingInfo overwrites any union data inside the ScanFinding_FindingInfo as the provided ExploitFindingInfo
+func (t *ScanFinding_FindingInfo) FromExploitFindingInfo(v ExploitFindingInfo) error {
+	v.ObjectType = "Exploit"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeExploit performs a merge with any union data inside the Finding_FindingInfo, using the provided Exploit
-func (t *Finding_FindingInfo) MergeExploit(v Exploit) error {
+// MergeExploitFindingInfo performs a merge with any union data inside the ScanFinding_FindingInfo, using the provided ExploitFindingInfo
+func (t *ScanFinding_FindingInfo) MergeExploitFindingInfo(v ExploitFindingInfo) error {
+	v.ObjectType = "Exploit"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -483,22 +696,24 @@ func (t *Finding_FindingInfo) MergeExploit(v Exploit) error {
 	return err
 }
 
-// AsInfoFinder returns the union data inside the Finding_FindingInfo as a InfoFinder
-func (t Finding_FindingInfo) AsInfoFinder() (InfoFinder, error) {
-	var body InfoFinder
+// AsInfoFinderFindingInfo returns the union data inside the ScanFinding_FindingInfo as a InfoFinderFindingInfo
+func (t ScanFinding_FindingInfo) AsInfoFinderFindingInfo() (InfoFinderFindingInfo, error) {
+	var body InfoFinderFindingInfo
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromInfoFinder overwrites any union data inside the Finding_FindingInfo as the provided InfoFinder
-func (t *Finding_FindingInfo) FromInfoFinder(v InfoFinder) error {
+// FromInfoFinderFindingInfo overwrites any union data inside the ScanFinding_FindingInfo as the provided InfoFinderFindingInfo
+func (t *ScanFinding_FindingInfo) FromInfoFinderFindingInfo(v InfoFinderFindingInfo) error {
+	v.ObjectType = "InfoFinder"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeInfoFinder performs a merge with any union data inside the Finding_FindingInfo, using the provided InfoFinder
-func (t *Finding_FindingInfo) MergeInfoFinder(v InfoFinder) error {
+// MergeInfoFinderFindingInfo performs a merge with any union data inside the ScanFinding_FindingInfo, using the provided InfoFinderFindingInfo
+func (t *ScanFinding_FindingInfo) MergeInfoFinderFindingInfo(v InfoFinderFindingInfo) error {
+	v.ObjectType = "InfoFinder"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -509,12 +724,47 @@ func (t *Finding_FindingInfo) MergeInfoFinder(v InfoFinder) error {
 	return err
 }
 
-func (t Finding_FindingInfo) MarshalJSON() ([]byte, error) {
+func (t ScanFinding_FindingInfo) Discriminator() (string, error) {
+	var discriminator struct {
+		Discriminator string `json:"objectType"`
+	}
+	err := json.Unmarshal(t.union, &discriminator)
+	return discriminator.Discriminator, err
+}
+
+func (t ScanFinding_FindingInfo) ValueByDiscriminator() (interface{}, error) {
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return nil, err
+	}
+	switch discriminator {
+	case "Exploit":
+		return t.AsExploitFindingInfo()
+	case "InfoFinder":
+		return t.AsInfoFinderFindingInfo()
+	case "Malware":
+		return t.AsMalwareFindingInfo()
+	case "Misconfiguration":
+		return t.AsMisconfigurationFindingInfo()
+	case "Package":
+		return t.AsPackageFindingInfo()
+	case "Rootkit":
+		return t.AsRootkitFindingInfo()
+	case "Secret":
+		return t.AsSecretFindingInfo()
+	case "Vulnerability":
+		return t.AsVulnerabilityFindingInfo()
+	default:
+		return nil, errors.New("unknown discriminator value: " + discriminator)
+	}
+}
+
+func (t ScanFinding_FindingInfo) MarshalJSON() ([]byte, error) {
 	b, err := t.union.MarshalJSON()
 	return b, err
 }
 
-func (t *Finding_FindingInfo) UnmarshalJSON(b []byte) error {
+func (t *ScanFinding_FindingInfo) UnmarshalJSON(b []byte) error {
 	err := t.union.UnmarshalJSON(b)
 	return err
 }

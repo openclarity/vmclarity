@@ -22,7 +22,7 @@ import (
 	"github.com/openclarity/vmclarity/scanner/types"
 )
 
-func createDockleConfig(sourceType types.AssetScanInputType, input string) *dockle_config.Config {
+func createDockleConfig(sourceType types.ScanObjectInputType, input string) *dockle_config.Config {
 	dockleConfig := &dockle_config.Config{
 		Debug:      true,
 		Timeout:    2 * time.Minute,
@@ -31,7 +31,7 @@ func createDockleConfig(sourceType types.AssetScanInputType, input string) *dock
 
 	// nolint:exhaustive
 	switch sourceType {
-	case types.AssetScanInputDockerArchive:
+	case types.InputTypeDockerArchive:
 		dockleConfig.FilePath = input
 	default:
 		dockleConfig.ImageName = input
