@@ -17,6 +17,7 @@ package aws
 
 import (
 	"context"
+	"errors"
 
 	envtypes "github.com/openclarity/vmclarity/testenv/types"
 )
@@ -33,9 +34,24 @@ type Config struct {
 	EnvName string `mapstructure:"env_name"`
 	// Region the AWS region to be used
 	Region string `mapstructure:"region"`
+	// PublicKey the public key to be used for the key pair
+	PublicKey string `mapstructure:"public_key"`
 
 	// ctx used during project initialization
 	ctx context.Context
+}
+
+// Validate validates the configuration.
+func (c *Config) Validate() error {
+	if c.Region == "" {
+		return errors.New("parameter region must be provided")
+	}
+
+	if c.PublicKey == "" {
+		return errors.New("parameter public_key must be provided")
+	}
+
+	return nil
 }
 
 // ConfigOptFn defines transformer function for Config.

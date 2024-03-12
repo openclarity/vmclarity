@@ -24,7 +24,6 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/openclarity/vmclarity/testenv"
-	"github.com/openclarity/vmclarity/testenv/aws"
 	k8senv "github.com/openclarity/vmclarity/testenv/kubernetes"
 	"github.com/openclarity/vmclarity/testenv/kubernetes/helm"
 	k8senvtypes "github.com/openclarity/vmclarity/testenv/kubernetes/types"
@@ -142,9 +141,9 @@ func NewConfig() (*Config, error) {
 	_ = v.BindEnv("kubernetes.helm.driver")
 	v.SetDefault("kubernetes.helm.driver", helm.DefaultHelmDriver)
 
-	_ = v.BindEnv("region")
-	v.SetDefault("region", aws.DefaultAWSRegion)
-	v.RegisterAlias("aws.region", "region")
+	_ = v.BindEnv("aws.region")
+
+	_ = v.BindEnv("aws.public_key")
 
 	decodeHooks := mapstructure.ComposeDecodeHookFunc(
 		// TextUnmarshallerHookFunc is needed to decode custom types
