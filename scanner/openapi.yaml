@@ -6,9 +6,29 @@ info:
   version: 1.0.0
 
 paths:
+  /scan:
+    get:
+      summary: Get current scan details
+      operationId: GetScan
+      responses:
+        200:
+          description: Scan fetched successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scan'
+        404:
+          description: Scan not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+
   /scan/start:
     post:
-      summary: Start a scan
+      summary: Start a new scan
       operationId: StartScan
       requestBody:
         content:
@@ -39,26 +59,6 @@ paths:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
 
-  /scan/status:
-    get:
-      summary: Get current scan details
-      operationId: GetScan
-      responses:
-        200:
-          description: Scan fetched successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Scan'
-        404:
-          description: Scan not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        default:
-          $ref: '#/components/responses/UnknownError'
-
   /scan/result:
     get:
       summary: Get current scan result
@@ -70,14 +70,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ScanResult'
-        400:
-          description: Scan is still in progress.
+        102:
+          description: Scan still in progress.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         404:
-          description: Scan not found.
+          description: Scan does not exist.
           content:
             application/json:
               schema:
@@ -89,17 +89,15 @@ paths:
     delete:
       summary: Stop a scan
       operationId: StopScan
-      parameters:
-        - $ref: '#/components/parameters/force'
       responses:
         200:
-          description: Scan was successfully deleted.
+          description: Scan was successfully stopped.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuccessResponse'
         404:
-          description: Scan not found.
+          description: Scan does not exist.
           content:
             application/json:
               schema:
@@ -117,7 +115,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Scanner'
+                $ref: '#/components/schemas/ScannerInfo'
         default:
           $ref: '#/components/responses/UnknownError'
 
@@ -151,19 +149,22 @@ paths:
 
 components:
   schemas:
+    Annotations:
+      type: array
+      description: Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+      items:
+        type: object
+        properties:
+          key:
+            type: string
+          value:
+            type: string
+
     Metadata:
       type: object
       properties:
         annotations:
-          type: array
-          description: Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
-          items:
-            type: object
-            properties:
-              key:
-                type: string
-              value:
-                type: string
+          $ref: '#/components/schemas/Annotations'
 
     ScanFamily:
       type: string
@@ -177,7 +178,7 @@ components:
         - Exploit
         - InfoFinder
 
-    Scanner:
+    ScannerInfo:
       type: object
       description: Describes scanner runtime details.
       allOf:
@@ -186,7 +187,6 @@ components:
           required:
             - name
             - version
-            - families
           properties:
             name:
               type: string
@@ -194,11 +194,6 @@ components:
             version:
               type: string
               description: Scanner runtime version.
-            families:
-              type: array
-              description: Supported scan families by the scanner.
-              items:
-                $ref: '#/components/schemas/ScanFamily'
 
     ScanStatus:
       type: object
@@ -296,11 +291,8 @@ components:
         - $ref: '#/components/schemas/Metadata'
         - type: object
           required:
-            - scan
             - findings
           properties:
-            scan:
-              $ref: '#/components/schemas/Scan'
             findings:
               type: array
               items:
@@ -656,6 +648,8 @@ components:
       properties:
         input:
           $ref: '#/components/schemas/ScanObjectInput'
+        family:
+          $ref: '#/components/schemas/ScanFamily'
         findingInfo:
           anyOf:
             - $ref: '#/components/schemas/PackageFindingInfo'
@@ -683,6 +677,7 @@ components:
       description: Input data of an object to scan.
       required:
         - type
+        - family
         - path
       properties:
         type:
@@ -709,6 +704,8 @@ components:
         path:
           description: The input path (/mnt/snapshot for ex.)
           type: string
+        family:
+          $ref: '#/components/schemas/ScanFamily'
 
     SuccessResponse:
       type: object
@@ -733,10 +730,3 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
-
-  parameters:
-    force:
-      in: query
-      name: force
-      schema:
-        type: boolean

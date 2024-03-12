@@ -13,29 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package scanner
+package types
 
-import (
-	"time"
+import "fmt"
 
-	dockle_config "github.com/Portshift/dockle/config"
-	"github.com/openclarity/vmclarity/scanner/types"
+var (
+	ErrScanInProgress    = fmt.Errorf("scan in progress")
+	ErrScanAlreadyExists = fmt.Errorf("scan already exists")
+	ErrScanNotFound      = fmt.Errorf("scan not found")
 )
-
-func createDockleConfig(input types.ScanObjectInput) *dockle_config.Config {
-	dockleConfig := &dockle_config.Config{
-		Debug:      true,
-		Timeout:    2 * time.Minute,
-		LocalImage: true,
-	}
-
-	// nolint:exhaustive
-	switch input.Type {
-	case types.InputTypeDockerArchive:
-		dockleConfig.FilePath = input.Path
-	default:
-		dockleConfig.ImageName = input.Path
-	}
-
-	return dockleConfig
-}

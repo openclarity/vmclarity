@@ -20,126 +20,40 @@ import (
 	"fmt"
 	dockle_run "github.com/Portshift/dockle/pkg"
 	"github.com/openclarity/vmclarity/scanner/types"
-	"golang.org/x/sync/errgroup"
-	"sync"
-	"time"
 )
 
-type scanner interface {
-	GetScanResult() (*types.ScanResult, error)
-	StartScan(template types.ScanTemplate) (*types.Scan, error)
-	GetScan() (*types.Scan, error)
-	StopScan() error
-}
+var _ types.Scanner = &Scanner{}
 
-type Scanner struct {
-	mu        sync.RWMutex
-	result    *types.ScanResult
-	resultErr error
-	cancel    func()
-}
+type Scanner struct{}
 
-func (s *Scanner) GetScanResult() (*types.ScanResult, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	if s.result == nil {
-		return nil, fmt.Errorf("scan not started")
-	}
-	if s.resultErr != nil {
-		return nil, s.resultErr
-	}
-	return s.result, nil
-}
-
-func (s *Scanner) StartScan(template types.ScanTemplate) (*types.Scan, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if s.result != nil {
-		return nil, fmt.Errorf("scan already running")
-	}
-
-	// create scan
-	s.result = &types.ScanResult{
-		Findings: []types.ScanFinding{},
-		Scan: types.Scan{
-			JobsCompleted: 0,
-			JobsLeftToRun: len(template.ScanObjectInputs),
-			StartTime:     time.Now(),
-			Status: types.ScanStatus{
-				LastTransitionTime: time.Now(),
-				State:              types.ScanStatusStatePending,
-			},
-			Template: template,
+func (s *Scanner) GetInfo() (*types.ScannerInfo, error) {
+	return &types.ScannerInfo{
+		Name:    "cisdocker",
+		Version: "1.23",
+		Families: []types.ScanFamily{
+			types.ScanFamilyMisconfiguration,
 		},
-	}
-
-	// start scan
-	go s.scan(template.ScanObjectInputs)
-
-	// return
-	return &s.result.Scan, nil
+	}, nil
 }
 
-func (s *Scanner) GetScan() (*types.Scan, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	if s.result == nil {
-		return nil, fmt.Errorf("scan not started")
-	}
-	return &s.result.Scan, nil
-}
-
-func (s *Scanner) StopScan() error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if s.result == nil {
-		return fmt.Errorf("scan not started")
-	}
-	s.cancel()
-	return nil
-}
-
-func (s *Scanner) scan(inputs []types.ScanObjectInput) {
-	ctx, cancel := context.WithCancel(context.Background())
-	s.mu.Lock()
-	s.cancel = cancel
-	s.mu.Unlock()
-	procGroup, _ := errgroup.WithContext(ctx)
-
-	for _, input := range inputs {
-		input := input
-		procGroup.Go(func() error {
-			// Validate this is an input type supported by the scanner,
-			// otherwise return skipped.
-			if err := s.isValidInputType(input.Type); err != nil {
-				return err
-			}
-
-			assessmentMap, err := dockle_run.RunFromConfig(createDockleConfig(input.Type, input.Path))
-			if err != nil {
-				return err
-			}
-			findings := parseDockleReport(input, assessmentMap)
-
-			s.mu.Lock()
-			s.result.Findings = append(s.result.Findings, findings...)
-			s.mu.Unlock()
-
-			return nil
-		})
-	}
-
+func (s *Scanner) Scan(ctx context.Context, input types.ScanObjectInput, resultCh chan<- types.Result) {
 	go func() {
-		err := procGroup.Wait()
-		if err != nil {
-			s.mu.Lock()
-			s.resultErr = err
-			s.mu.Unlock()
+		// Validate this is an input type supported by the scanner,
+		// otherwise return skipped.
+		if err := s.isValidInputType(input.Type); err != nil {
+			resultCh <- types.Result{Error: err}
+			return
 		}
+
+		dockleCfg := createDockleConfig(input)
+		assessmentMap, err := dockle_run.RunFromConfig(dockleCfg)
+		if err != nil {
+			resultCh <- types.Result{Error: err}
+			return
+		}
+
+		findings := parseDockleReport(input, assessmentMap)
+		resultCh <- types.Result{Findings: findings}
 	}()
 }
 

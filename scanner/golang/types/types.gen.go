@@ -78,6 +78,12 @@ const (
 	NEGLIGIBLE VulnerabilitySeverity = "NEGLIGIBLE"
 )
 
+// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+type Annotations = []struct {
+	Key   *string `json:"key,omitempty"`
+	Value *string `json:"value,omitempty"`
+}
+
 // ErrorResponse An object that is returned for a failed API request.
 type ErrorResponse struct {
 	Message *string `json:"message,omitempty"`
@@ -155,10 +161,7 @@ type MalwareType = string
 // Metadata defines model for Metadata.
 type Metadata struct {
 	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
-	Annotations *[]struct {
-		Key   *string `json:"key,omitempty"`
-		Value *string `json:"value,omitempty"`
-	} `json:"annotations,omitempty"`
+	Annotations *Annotations `json:"annotations,omitempty"`
 }
 
 // Misconfiguration defines model for Misconfiguration.
@@ -253,10 +256,7 @@ type RootkitType string
 // Scan defines model for Scan.
 type Scan struct {
 	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
-	Annotations *[]struct {
-		Key   *string `json:"key,omitempty"`
-		Value *string `json:"value,omitempty"`
-	} `json:"annotations,omitempty"`
+	Annotations   *Annotations `json:"annotations,omitempty"`
 	EndTime       *time.Time   `json:"endTime,omitempty"`
 	JobsCompleted int          `json:"jobsCompleted"`
 	JobsLeftToRun int          `json:"jobsLeftToRun"`
@@ -270,6 +270,7 @@ type ScanFamily string
 
 // ScanFinding defines model for ScanFinding.
 type ScanFinding struct {
+	Family      *ScanFamily             `json:"family,omitempty"`
 	FindingInfo ScanFinding_FindingInfo `json:"findingInfo"`
 
 	// Input Input data of an object to scan.
@@ -283,6 +284,8 @@ type ScanFinding_FindingInfo struct {
 
 // ScanObjectInput Input data of an object to scan.
 type ScanObjectInput struct {
+	Family ScanFamily `json:"family"`
+
 	// Path The input path (/mnt/snapshot for ex.)
 	Path string `json:"path"`
 
@@ -296,15 +299,9 @@ type ScanObjectInputType string
 // ScanResult defines model for ScanResult.
 type ScanResult struct {
 	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
-	Annotations *[]struct {
-		Key   *string `json:"key,omitempty"`
-		Value *string `json:"value,omitempty"`
-	} `json:"annotations,omitempty"`
-	Findings []ScanFinding `json:"findings"`
-
-	// Scan Describes a multi-object scan.
-	Scan    Scan         `json:"scan"`
-	Summary *ScanSummary `json:"summary,omitempty"`
+	Annotations *Annotations  `json:"annotations,omitempty"`
+	Findings    []ScanFinding `json:"findings"`
+	Summary     *ScanSummary  `json:"summary,omitempty"`
 }
 
 // ScanStatus defines model for ScanStatus.
@@ -364,16 +361,10 @@ type ScanTemplate struct {
 	TimeoutSeconds *int `json:"timeoutSeconds,omitempty"`
 }
 
-// Scanner defines model for Scanner.
-type Scanner struct {
+// ScannerInfo defines model for ScannerInfo.
+type ScannerInfo struct {
 	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
-	Annotations *[]struct {
-		Key   *string `json:"key,omitempty"`
-		Value *string `json:"value,omitempty"`
-	} `json:"annotations,omitempty"`
-
-	// Families Supported scan families by the scanner.
-	Families []ScanFamily `json:"families"`
+	Annotations *Annotations `json:"annotations,omitempty"`
 
 	// Name Scanner name.
 	Name string `json:"name"`
@@ -486,16 +477,8 @@ type VulnerabilityFix struct {
 // VulnerabilitySeverity defines model for VulnerabilitySeverity.
 type VulnerabilitySeverity string
 
-// Force defines model for force.
-type Force = bool
-
 // UnknownError An object that is returned for a failed API request.
 type UnknownError = ErrorResponse
-
-// StopScanParams defines parameters for StopScan.
-type StopScanParams struct {
-	Force *Force `form:"force,omitempty" json:"force,omitempty"`
-}
 
 // StartScanJSONRequestBody defines body for StartScan for application/json ContentType.
 type StartScanJSONRequestBody = ScanTemplate

@@ -39,19 +39,16 @@ func parseDockleReport(input types.ScanObjectInput, assessmentMap dockle_types.A
 		}
 		message := dockle_types.TitleMap[codeInfo.Code]
 
-		findingInfo := new(types.ScanFinding_FindingInfo)
-		_ = findingInfo.FromMisconfigurationFindingInfo(types.MisconfigurationFindingInfo{
-			Category:    &CISDockerImpactCategory,
-			Description: &description,
-			Id:          &codeInfo.Code,
-			Location:    &input.Path,
-			Message:     &message,
-			Severity:    &severity,
-		})
-
 		ret = append(ret, types.ScanFinding{
-			FindingInfo: *findingInfo,
-			Input:       input,
+			FindingInfo: (&types.Misconfiguration{
+				Category:    &CISDockerImpactCategory,
+				Description: &description,
+				Id:          &codeInfo.Code,
+				Location:    &input.Path,
+				Message:     &message,
+				Severity:    &severity,
+			}).AsScanFindingInfo(),
+			Input: input,
 		})
 	}
 

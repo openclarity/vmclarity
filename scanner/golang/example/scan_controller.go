@@ -16,50 +16,70 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/openclarity/vmclarity/scanner/types"
 	"net/http"
-	"scanner/scanner"
 )
 
-var sknr = scanner.Scanner{}
-
-func (s *Server) GetScanResult(ctx echo.Context) error {
-	result, err := sknr.GetScanResult()
-	if err != nil {
-		return sendError(ctx, 400, err.Error())
-	}
-	return sendResponse(ctx, 200, result)
-}
-
 func (s *Server) StartScan(ctx echo.Context) error {
-	// TODO: check that the provided scan and asset IDs are valid
+	// Load and validate scan template
 	var scanTemplate types.ScanTemplate
-	err := ctx.Bind(&scanTemplate)
-	if err != nil {
+	if err := ctx.Bind(&scanTemplate); err != nil {
 		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
 	}
-
-	result, err := sknr.StartScan(scanTemplate)
-	if err != nil {
-		return sendError(ctx, 400, err.Error())
+	if err := scanTemplate.Validate(); err != nil {
+		return sendError(ctx, http.StatusBadRequest, err.Error())
 	}
-	return sendResponse(ctx, 200, result)
+
+	// Start scan
+	scan, err := s.Scanner.StartScan(scanTemplate)
+	if err != nil {
+		if errors.Is(err, types.ErrScanAlreadyExists) {
+			return sendError(ctx, http.StatusConflict, err.Error())
+		}
+		return sendError(ctx, http.StatusInternalServerError, err.Error())
+	}
+
+	return sendResponse(ctx, http.StatusCreated, scan)
 }
 
 func (s *Server) GetScan(ctx echo.Context) error {
-	result, err := sknr.GetScan()
+	result, err := s.Scanner.GetScan()
 	if err != nil {
-		return sendError(ctx, 400, err.Error())
+		if errors.Is(err, types.ErrScanNotFound) {
+			return sendError(ctx, http.StatusNotFound, err.Error())
+		}
+		return sendError(ctx, http.StatusInternalServerError, err.Error())
 	}
-	return sendResponse(ctx, 200, result)
+
+	return sendResponse(ctx, http.StatusOK, result)
 }
 
-func (s *Server) StopScan(ctx echo.Context, params types.StopScanParams) error {
-	err := sknr.StopScan()
+func (s *Server) StopScan(ctx echo.Context) error {
+	err := s.Scanner.StopScan()
 	if err != nil {
-		return sendError(ctx, 400, err.Error())
+		if errors.Is(err, types.ErrScanNotFound) {
+			return sendError(ctx, http.StatusNotFound, err.Error())
+		}
+		return sendError(ctx, http.StatusInternalServerError, err.Error())
 	}
-	return sendResponse(ctx, 200, "")
+
+	return sendResponse(ctx, http.StatusOK, "")
+}
+
+func (s *Server) GetScanResult(ctx echo.Context) error {
+	scanResult, err := s.Scanner.GetScanResult()
+	if err != nil {
+		if errors.Is(err, types.ErrScanInProgress) {
+			return sendError(ctx, http.StatusProcessing, err.Error())
+		}
+		if errors.Is(err, types.ErrScanNotFound) {
+			return sendError(ctx, http.StatusNotFound, err.Error())
+		}
+		return sendError(ctx, http.StatusInternalServerError, err.Error())
+	}
+
+	return sendResponse(ctx, http.StatusOK, scanResult)
 }
