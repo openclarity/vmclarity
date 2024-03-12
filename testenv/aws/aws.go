@@ -20,7 +20,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -30,7 +29,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 
 	"github.com/openclarity/vmclarity/testenv/aws/asset"
 	"github.com/openclarity/vmclarity/testenv/types"
@@ -45,14 +43,15 @@ const (
 
 // AWS Environment.
 type AWSEnv struct {
-	client    *cloudformation.Client
-	ec2Client *ec2.Client
-	s3Client  *s3.Client
-	testAsset *asset.Asset
-	StackName string
-	Region    string
-	PublicKey string
-	meta      map[string]interface{}
+	client      *cloudformation.Client
+	ec2Client   *ec2.Client
+	s3Client    *s3.Client
+	testAsset   *asset.Asset
+	stackName   string
+	templateURL string
+	region      string
+	publicKey   string
+	meta        map[string]interface{}
 }
 
 // Setup AWS test environment from cloud formation template.
@@ -60,51 +59,19 @@ type AWSEnv struct {
 // (upload template file to S3 is required since the template is larger than 51,200 bytes).
 // * Create test asset.
 func (e *AWSEnv) SetUp(ctx context.Context) error {
-	// Create a new key pair
-	_, err := e.ec2Client.ImportKeyPair(ctx, &ec2.ImportKeyPairInput{
-		KeyName:           aws.String(AWSKeyName),
-		PublicKeyMaterial: []byte(e.PublicKey),
-	},
-	)
+	// Prepare stack
+	err := e.prepareStack(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to import key pair: %w", err)
+		return fmt.Errorf("failed to prepare stack: %w", err)
 	}
-
-	// Create a new S3 bucket
-	_, err = e.s3Client.CreateBucket(ctx, &s3.CreateBucketInput{
-		Bucket: &e.StackName,
-		CreateBucketConfiguration: &s3types.CreateBucketConfiguration{
-			LocationConstraint: s3types.BucketLocationConstraint(e.Region),
-		},
-	})
-	if err != nil {
-		return fmt.Errorf("failed to create bucket: %w", err)
-	}
-
-	// Read template file
-	f, err := os.Open("../installation/aws/VmClarity.cfn")
-	if err != nil {
-		return fmt.Errorf("failed to read template file: %w", err)
-	}
-
-	// Upload template file to S3 bucket
-	_, err = e.s3Client.PutObject(ctx, &s3.PutObjectInput{
-		Bucket: &e.StackName,
-		Key:    &e.StackName,
-		Body:   f,
-	})
-	if err != nil {
-		return fmt.Errorf("failed to put object: %w", err)
-	}
-	templateURL := "https://" + e.StackName + ".s3.amazonaws.com/" + e.StackName
 
 	// Create a new CloudFormation stack from template
 	_, err = e.client.CreateStack(
 		ctx,
 		&cloudformation.CreateStackInput{
-			StackName:    &e.StackName,
+			StackName:    &e.stackName,
 			Capabilities: []cloudformationtypes.Capability{cloudformationtypes.CapabilityCapabilityIam},
-			TemplateURL:  &templateURL,
+			TemplateURL:  &e.templateURL,
 			Parameters: []cloudformationtypes.Parameter{
 				{ParameterKey: aws.String("KeyName"), ParameterValue: aws.String(AWSKeyName)},
 			},
@@ -128,28 +95,17 @@ func (e *AWSEnv) TearDown(ctx context.Context) error {
 	_, err := e.client.DeleteStack(
 		ctx,
 		&cloudformation.DeleteStackInput{
-			StackName: &e.StackName,
+			StackName: &e.stackName,
 		},
 	)
 	if err != nil {
 		return fmt.Errorf("failed to delete stack: %w", err)
 	}
 
-	// Delete template file from S3 bucket
-	_, err = e.s3Client.DeleteObject(ctx, &s3.DeleteObjectInput{
-		Bucket: &e.StackName,
-		Key:    &e.StackName,
-	})
+	// Cleanup stack
+	err = e.cleanupStack(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to delete object: %w", err)
-	}
-
-	// Delete the S3 bucket
-	_, err = e.s3Client.DeleteBucket(ctx, &s3.DeleteBucketInput{
-		Bucket: &e.StackName,
-	})
-	if err != nil {
-		return fmt.Errorf("failed to delete bucket: %w", err)
+		return fmt.Errorf("failed to cleanup stack: %w", err)
 	}
 
 	// Delete the test asset
@@ -158,56 +114,29 @@ func (e *AWSEnv) TearDown(ctx context.Context) error {
 		return fmt.Errorf("failed to delete test asset: %w", err)
 	}
 
-	// Delete the key pair
-	_, err = e.ec2Client.DeleteKeyPair(ctx, &ec2.DeleteKeyPairInput{
-		KeyName: aws.String(AWSKeyName),
-	})
-	if err != nil {
-		return fmt.Errorf("failed to delete key pair: %w", err)
-	}
-
 	return nil
 }
 
 func (e *AWSEnv) ServicesReady(ctx context.Context) (bool, error) {
-	// Get the description of the CloudFormation stack
-	stacks, err := e.client.DescribeStacks(
-		ctx,
-		&cloudformation.DescribeStacksInput{
-			StackName: &e.StackName,
-		},
-	)
+	// Get stack status
+	stackStatus, err := e.getStackStatus(ctx)
 	if err != nil {
-		return false, fmt.Errorf("failed to describe stack: %w", err)
-	}
-
-	// Check if one stack found
-	if len(stacks.Stacks) != 1 {
-		return false, errors.New("failed to find stack")
+		return false, fmt.Errorf("failed to get stack status: %w", err)
 	}
 
 	// If the stack status is not CREATE_COMPLETE, then the services are not ready
-	if stacks.Stacks[0].StackStatus != "CREATE_COMPLETE" {
+	if stackStatus != cloudformationtypes.StackStatusCreateComplete {
 		return false, nil
 	}
 
-	// Get test EC2 instance status
-	instanceStatus, err := e.ec2Client.DescribeInstanceStatus(
-		ctx,
-		&ec2.DescribeInstanceStatusInput{
-			InstanceIds: []string{e.testAsset.InstanceID},
-		},
-	)
+	// Get test asset status
+	testAssetStatus, err := e.getEC2InstanceStatus(ctx, e.testAsset.InstanceID)
 	if err != nil {
-		return false, fmt.Errorf("failed to describe instance status: %w", err)
-	}
-
-	if len(instanceStatus.InstanceStatuses) != 1 {
-		return false, errors.New("failed to find instance status")
+		return false, fmt.Errorf("failed to get instance status: %w", err)
 	}
 
 	// If the instance status is not running, then the services are not ready
-	if instanceStatus.InstanceStatuses[0].InstanceState.Name != ec2types.InstanceStateNameRunning {
+	if testAssetStatus != ec2types.InstanceStateNameRunning {
 		return false, nil
 	}
 
@@ -225,7 +154,7 @@ func (e *AWSEnv) Services(ctx context.Context) (types.Services, error) {
 	resources, err := e.client.ListStackResources(
 		ctx,
 		&cloudformation.ListStackResourcesInput{
-			StackName: &e.StackName,
+			StackName: &e.stackName,
 		},
 	)
 	if err != nil {
@@ -238,7 +167,7 @@ func (e *AWSEnv) Services(ctx context.Context) (types.Services, error) {
 			return types.Services{
 				&Service{
 					ID:          *resource.PhysicalResourceId,
-					Namespace:   e.StackName,
+					Namespace:   e.stackName,
 					Application: "VMClarity Server",
 					Component:   "server",
 					State:       convertStateFromAWS(resource.ResourceStatus),
@@ -319,9 +248,9 @@ func New(config *Config, opts ...ConfigOptFn) (*AWSEnv, error) {
 		client:    client,
 		ec2Client: ec2Client,
 		s3Client:  s3Client,
-		StackName: config.EnvName,
-		Region:    config.Region,
-		PublicKey: config.PublicKey,
+		stackName: config.EnvName,
+		region:    config.Region,
+		publicKey: config.PublicKey,
 		testAsset: &asset.Asset{},
 		meta: map[string]interface{}{
 			"environment": "aws",
