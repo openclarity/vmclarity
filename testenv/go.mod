@@ -1,6 +1,6 @@
 module github.com/openclarity/vmclarity/testenv
 
-go 1.21.4
+go 1.22.1
 
 require (
 	github.com/compose-spec/compose-go/v2 v2.0.0-rc.8.0.20240228111658-a0507e98fe60
