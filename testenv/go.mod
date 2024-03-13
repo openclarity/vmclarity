@@ -8,6 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.47.1
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.150.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.48.1
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.49.3
 	github.com/compose-spec/compose-go/v2 v2.0.2
 	github.com/distribution/reference v0.5.0
 	github.com/docker/cli v26.0.0+incompatible
