@@ -13,11 +13,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package types
+package server
 
-import "context"
+import (
+	"context"
+	"github.com/labstack/echo/v4"
+	"net/http"
+)
 
-type Scanner interface {
-	GetInfo(ctx context.Context) (*ScannerInfo, error)
-	Scan(ctx context.Context, input ScanInput) (*ScanResult, error)
+func (s *Server) IsAlive(ctx echo.Context) error {
+	return sendResponse(ctx, 200, nil)
+}
+
+func (s *Server) IsReady(ctx echo.Context) error {
+	return sendResponse(ctx, 200, nil)
+}
+
+func (s *Server) GetScannerInfo(ctx echo.Context) error {
+	info, err := s.manager.Scanner().GetInfo(context.Background())
+	if err != nil {
+		return sendError(ctx, http.StatusInternalServerError, err.Error())
+	}
+	return sendResponse(ctx, http.StatusOK, info)
 }

@@ -13,9 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package server
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/labstack/echo/v4"
@@ -34,9 +35,9 @@ func (s *Server) StartScan(ctx echo.Context) error {
 	}
 
 	// Start scan
-	scan, err := s.Scanner.StartScan(scanTemplate)
+	scan, err := s.manager.Run(context.Background(), scanTemplate)
 	if err != nil {
-		if errors.Is(err, types.ErrScanAlreadyExists) {
+		if errors.Is(err, ErrScanAlreadyExists) {
 			return sendError(ctx, http.StatusConflict, err.Error())
 		}
 		return sendError(ctx, http.StatusInternalServerError, err.Error())
@@ -45,10 +46,10 @@ func (s *Server) StartScan(ctx echo.Context) error {
 	return sendResponse(ctx, http.StatusCreated, scan)
 }
 
-func (s *Server) GetScan(ctx echo.Context) error {
-	result, err := s.Scanner.GetScan()
+func (s *Server) GetScan(ctx echo.Context, scanID types.ScanID) error {
+	result, err := s.manager.GetScan()
 	if err != nil {
-		if errors.Is(err, types.ErrScanNotFound) {
+		if errors.Is(err, ErrScanNotFound) {
 			return sendError(ctx, http.StatusNotFound, err.Error())
 		}
 		return sendError(ctx, http.StatusInternalServerError, err.Error())
@@ -57,10 +58,10 @@ func (s *Server) GetScan(ctx echo.Context) error {
 	return sendResponse(ctx, http.StatusOK, result)
 }
 
-func (s *Server) StopScan(ctx echo.Context) error {
-	err := s.Scanner.StopScan()
+func (s *Server) StopScan(ctx echo.Context, scanID types.ScanID) error {
+	err := s.manager.Stop()
 	if err != nil {
-		if errors.Is(err, types.ErrScanNotFound) {
+		if errors.Is(err, ErrScanNotFound) {
 			return sendError(ctx, http.StatusNotFound, err.Error())
 		}
 		return sendError(ctx, http.StatusInternalServerError, err.Error())
@@ -69,13 +70,13 @@ func (s *Server) StopScan(ctx echo.Context) error {
 	return sendResponse(ctx, http.StatusOK, "")
 }
 
-func (s *Server) GetScanResult(ctx echo.Context) error {
-	scanResult, err := s.Scanner.GetScanResult()
+func (s *Server) GetScanResult(ctx echo.Context, scanID types.ScanID) error {
+	scanResult, err := s.manager.GetResult()
 	if err != nil {
-		if errors.Is(err, types.ErrScanInProgress) {
-			return sendError(ctx, http.StatusProcessing, err.Error())
+		if errors.Is(err, ErrScanInProgress) {
+			return sendError(ctx, http.StatusAccepted, err.Error())
 		}
-		if errors.Is(err, types.ErrScanNotFound) {
+		if errors.Is(err, ErrScanNotFound) {
 			return sendError(ctx, http.StatusNotFound, err.Error())
 		}
 		return sendError(ctx, http.StatusInternalServerError, err.Error())

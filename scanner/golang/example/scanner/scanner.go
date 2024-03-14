@@ -17,51 +17,42 @@ package scanner
 
 import (
 	"context"
-	"fmt"
 	dockle_run "github.com/Portshift/dockle/pkg"
 	"github.com/openclarity/vmclarity/scanner/types"
 )
 
-var _ types.Scanner = &Scanner{}
-
 type Scanner struct{}
 
-func (s *Scanner) GetInfo() (*types.ScannerInfo, error) {
+func (s *Scanner) GetInfo(ctx context.Context) (*types.ScannerInfo, error) {
 	return &types.ScannerInfo{
 		Name:    "cisdocker",
 		Version: "1.23",
-		Families: []types.ScanFamily{
-			types.ScanFamilyMisconfiguration,
-		},
 	}, nil
 }
 
-func (s *Scanner) Scan(ctx context.Context, input types.ScanObjectInput, resultCh chan<- types.Result) {
-	go func() {
-		// Validate this is an input type supported by the scanner,
-		// otherwise return skipped.
-		if err := s.isValidInputType(input.Type); err != nil {
-			resultCh <- types.Result{Error: err}
-			return
-		}
+func (s *Scanner) Scan(ctx context.Context, family types.ScanFamily, input types.ScanObjectInput) (*types.ScanResult, error) {
+	// Validate this is an input type supported by the scanner,
+	// otherwise return skipped.
+	if !s.isValidInputType(input.Type) {
+		return nil, nil // skip
+	}
 
-		dockleCfg := createDockleConfig(input)
-		assessmentMap, err := dockle_run.RunFromConfig(dockleCfg)
-		if err != nil {
-			resultCh <- types.Result{Error: err}
-			return
-		}
+	dockleCfg := createDockleConfig(input)
+	assessmentMap, err := dockle_run.RunFromConfig(dockleCfg)
+	if err != nil {
+		return nil, err
+	}
 
-		findings := parseDockleReport(input, assessmentMap)
-		resultCh <- types.Result{Findings: findings}
-	}()
+	findings := parseDockleReport(input, assessmentMap)
+
+	return &findings, nil
 }
 
-func (s *Scanner) isValidInputType(sourceType types.ScanObjectInputType) error {
+func (s *Scanner) isValidInputType(sourceType types.ScanObjectInputType) bool {
 	switch sourceType {
 	case types.InputTypeImage, types.InputTypeDockerArchive:
-		return nil
+		return true
 	default:
-		return fmt.Errorf("unsupported input type %v", sourceType)
+		return false
 	}
 }

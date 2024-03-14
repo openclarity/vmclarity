@@ -13,12 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package types
+package main
 
-import "fmt"
-
-var (
-	ErrScanInProgress    = fmt.Errorf("scan in progress")
-	ErrScanAlreadyExists = fmt.Errorf("scan already exists")
-	ErrScanNotFound      = fmt.Errorf("scan not found")
-)
+//go:generate go run github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen --config=types/types.cfg.yaml ../openapi.yaml

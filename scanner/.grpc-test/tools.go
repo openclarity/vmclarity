@@ -13,21 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build tools
+// +build tools
+
 package main
 
 import (
-	"github.com/labstack/echo/v4"
+	_ "github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen"
 )
-
-func (s *Server) IsAlive(ctx echo.Context) error {
-	return sendResponse(ctx, 200, nil)
-}
-
-func (s *Server) IsReady(ctx echo.Context) error {
-	return sendResponse(ctx, 200, nil)
-}
-
-func (s *Server) GetScannerInfo(ctx echo.Context) error {
-	//TODO implement me
-	panic("implement me")
-}

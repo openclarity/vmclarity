@@ -36,28 +36,16 @@ const (
 	RootkitTypeUNKNOWN     RootkitType = "UNKNOWN"
 )
 
-// Defines values for ScanFamily.
+// Defines values for ScanInputType.
 const (
-	ScanFamilyExploit          ScanFamily = "Exploit"
-	ScanFamilyInfoFinder       ScanFamily = "InfoFinder"
-	ScanFamilyMalware          ScanFamily = "Malware"
-	ScanFamilyMisconfiguration ScanFamily = "Misconfiguration"
-	ScanFamilyPackage          ScanFamily = "Package"
-	ScanFamilyRootkit          ScanFamily = "Rootkit"
-	ScanFamilySecret           ScanFamily = "Secret"
-	ScanFamilyVulnerability    ScanFamily = "Vulnerability"
-)
-
-// Defines values for ScanObjectInputType.
-const (
-	InputTypeDir           ScanObjectInputType = "DIR"
-	InputTypeDockerArchive ScanObjectInputType = "DOCKERARCHIVE"
-	InputTypeFile          ScanObjectInputType = "FILE"
-	InputTypeImage         ScanObjectInputType = "IMAGE"
-	InputTypeOCIArchive    ScanObjectInputType = "OCIARCHIVE"
-	InputTypeOCIDir        ScanObjectInputType = "OCIDIR"
-	InputTypeRootFS        ScanObjectInputType = "ROOTFS"
-	InputTypeSBOM          ScanObjectInputType = "SBOM"
+	InputTypeDir           ScanInputType = "DIR"
+	InputTypeDockerArchive ScanInputType = "DOCKERARCHIVE"
+	InputTypeFile          ScanInputType = "FILE"
+	InputTypeImage         ScanInputType = "IMAGE"
+	InputTypeOCIArchive    ScanInputType = "OCIARCHIVE"
+	InputTypeOCIDir        ScanInputType = "OCIDIR"
+	InputTypeRootFS        ScanInputType = "ROOTFS"
+	InputTypeSBOM          ScanInputType = "SBOM"
 )
 
 // Defines values for ScanStatusState.
@@ -258,6 +246,7 @@ type Scan struct {
 	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
 	Annotations   *Annotations `json:"annotations,omitempty"`
 	EndTime       *time.Time   `json:"endTime,omitempty"`
+	Id            string       `json:"id"`
 	JobsCompleted int          `json:"jobsCompleted"`
 	JobsLeftToRun int          `json:"jobsLeftToRun"`
 	StartTime     time.Time    `json:"startTime"`
@@ -265,16 +254,14 @@ type Scan struct {
 	Template      ScanTemplate `json:"template"`
 }
 
-// ScanFamily defines model for ScanFamily.
-type ScanFamily string
-
 // ScanFinding defines model for ScanFinding.
 type ScanFinding struct {
-	Family      *ScanFamily             `json:"family,omitempty"`
+	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+	Annotations *Annotations            `json:"annotations,omitempty"`
 	FindingInfo ScanFinding_FindingInfo `json:"findingInfo"`
 
 	// Input Input data of an object to scan.
-	Input ScanObjectInput `json:"input"`
+	Input ScanInput `json:"input"`
 }
 
 // ScanFinding_FindingInfo defines model for ScanFinding.FindingInfo.
@@ -282,26 +269,28 @@ type ScanFinding_FindingInfo struct {
 	union json.RawMessage
 }
 
-// ScanObjectInput Input data of an object to scan.
-type ScanObjectInput struct {
-	Family ScanFamily `json:"family"`
+// ScanFindings defines model for ScanFindings.
+type ScanFindings struct {
+	Count *int    `json:"count,omitempty"`
+	Items *[]Scan `json:"items,omitempty"`
+}
 
+// ScanInput Input data of an object to scan.
+type ScanInput struct {
 	// Path The input path (/mnt/snapshot for ex.)
 	Path string `json:"path"`
 
 	// Type The input type (ROOTFS, DIR, IMAGE etc.)
-	Type ScanObjectInputType `json:"type"`
+	Type ScanInputType `json:"type"`
 }
 
-// ScanObjectInputType The input type (ROOTFS, DIR, IMAGE etc.)
-type ScanObjectInputType string
+// ScanInputType The input type (ROOTFS, DIR, IMAGE etc.)
+type ScanInputType string
 
-// ScanResult defines model for ScanResult.
+// ScanResult Describes the result of a scan.
 type ScanResult struct {
-	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
-	Annotations *Annotations  `json:"annotations,omitempty"`
-	Findings    []ScanFinding `json:"findings"`
-	Summary     *ScanSummary  `json:"summary,omitempty"`
+	Findings []ScanFinding `json:"findings"`
+	Summary  *ScanSummary  `json:"summary,omitempty"`
 }
 
 // ScanStatus defines model for ScanStatus.
@@ -350,11 +339,8 @@ type ScanSummary struct {
 
 // ScanTemplate defines model for ScanTemplate.
 type ScanTemplate struct {
-	// Families List of scan families to use for scanning.
-	Families []ScanFamily `json:"families"`
-
-	// ScanObjectInputs List of objects to scan.
-	ScanObjectInputs []ScanObjectInput `json:"scanObjectInputs"`
+	// Inputs List of inputs to scan.
+	Inputs []ScanInput `json:"inputs"`
 
 	// TimeoutSeconds The maximum time in seconds that a scan should
 	// run for before being automatically aborted.
@@ -371,6 +357,15 @@ type ScannerInfo struct {
 
 	// Version Scanner runtime version.
 	Version string `json:"version"`
+}
+
+// Scans defines model for Scans.
+type Scans struct {
+	// Count Total scans count according the given request data
+	Count *int `json:"count,omitempty"`
+
+	// Items List of assets in the given filters and page. List length must be lower or equal to pageSize.
+	Items *[]Scan `json:"items,omitempty"`
 }
 
 // Secret defines model for Secret.
@@ -477,11 +472,26 @@ type VulnerabilityFix struct {
 // VulnerabilitySeverity defines model for VulnerabilitySeverity.
 type VulnerabilitySeverity string
 
+// Page defines model for page.
+type Page = int
+
+// PageSize defines model for pageSize.
+type PageSize = int
+
+// ScanID defines model for scanID.
+type ScanID = string
+
 // UnknownError An object that is returned for a failed API request.
 type UnknownError = ErrorResponse
 
-// StartScanJSONRequestBody defines body for StartScan for application/json ContentType.
-type StartScanJSONRequestBody = ScanTemplate
+// ListScansParams defines parameters for ListScans.
+type ListScansParams struct {
+	Page     *Page     `form:"page,omitempty" json:"page,omitempty"`
+	PageSize *PageSize `form:"page_size,omitempty" json:"page_size,omitempty"`
+}
+
+// CreateScanJSONRequestBody defines body for CreateScan for application/json ContentType.
+type CreateScanJSONRequestBody = ScanTemplate
 
 // AsPackageFindingInfo returns the union data inside the ScanFinding_FindingInfo as a PackageFindingInfo
 func (t ScanFinding_FindingInfo) AsPackageFindingInfo() (PackageFindingInfo, error) {

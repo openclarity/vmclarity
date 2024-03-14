@@ -121,3 +121,21 @@ rootkits:
   scanners_config:
     chkrootkit:
       binary_path: chkrootkit
+
+plugins:
+  - name: binary-plugin
+    type: binary
+    path: path-to-binary
+    # config
+    # Note: communicates via CLI
+  - name: container-plugin
+    type: container
+    # version: v1
+    path: image-repo
+    # config
+    # Note: communicates via HTTP endpoint/socket
+  - name: grpc-plugin
+    type: grpc
+    path: http://localhost:1234
+    # config
+    # Note: this works by interacting with the HTTP server

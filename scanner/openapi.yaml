@@ -7,29 +7,9 @@ info:
 
 paths:
   /scan:
-    get:
-      summary: Get current scan details
-      operationId: GetScan
-      responses:
-        200:
-          description: Scan fetched successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Scan'
-        404:
-          description: Scan not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        default:
-          $ref: '#/components/responses/UnknownError'
-
-  /scan/start:
     post:
-      summary: Start a new scan
-      operationId: StartScan
+      summary: Create a scan
+      operationId: CreateScan
       requestBody:
         content:
           application/json:
@@ -49,20 +29,59 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        409:
-          description: Scan already started.
+        default:
+          $ref: '#/components/responses/UnknownError'
+      x-codegen-request-body-name: body
+
+  /scan/{scanID}:
+    get:
+      summary: Get scan details
+      operationId: GetScan
+      parameters:
+        - $ref: '#/components/parameters/scanID'
+      responses:
+        200:
+          description: Scan fetched successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scan'
+        404:
+          description: Scan not found.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         default:
           $ref: '#/components/responses/UnknownError'
-      x-codegen-request-body-name: body
 
-  /scan/result:
+    delete:
+      summary: Stop a scan
+      operationId: StopScan
+      parameters:
+        - $ref: '#/components/parameters/scanID'
+      responses:
+        200:
+          description: Scan was successfully stopped.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        404:
+          description: Scan does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+
+  /scan/{scanID}/result:
     get:
-      summary: Get current scan result
+      summary: Get scan result
       operationId: GetScanResult
+      parameters:
+        - $ref: '#/components/parameters/scanID'
       responses:
         200:
           description: Scan results fetched successfully.
@@ -70,7 +89,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ScanResult'
-        102:
+        202:
           description: Scan still in progress.
           content:
             application/json:
@@ -85,23 +104,20 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
 
-  /scan/stop:
-    delete:
-      summary: Stop a scan
-      operationId: StopScan
+  /scans:
+    get:
+      summary: List all scans
+      operationId: ListScans
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/pageSize'
       responses:
         200:
-          description: Scan was successfully stopped.
+          description: Scan fetched successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
-        404:
-          description: Scan does not exist.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/Scans'
         default:
           $ref: '#/components/responses/UnknownError'
 
@@ -166,18 +182,6 @@ components:
         annotations:
           $ref: '#/components/schemas/Annotations'
 
-    ScanFamily:
-      type: string
-      enum:
-        - Package
-        - Vulnerability
-        - Malware
-        - Secret
-        - Misconfiguration
-        - Rootkit
-        - Exploit
-        - InfoFinder
-
     ScannerInfo:
       type: object
       description: Describes scanner runtime details.
@@ -233,19 +237,34 @@ components:
           type: string
           format: date-time
 
+    Scans:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total scans count according the given request data
+        items:
+          type: array
+          description: List of assets in the given filters and page.
+            List length must be lower or equal to pageSize.
+          items:
+            $ref: '#/components/schemas/Scan'
+
     Scan:
       type: object
-      description: Describes a multi-object scan.
       allOf:
         - $ref: '#/components/schemas/Metadata'
         - type: object
           required:
+            - id
             - status
             - startTime
             - jobsLeftToRun
             - jobsCompleted
             - template
           properties:
+            id:
+              type: string
             status:
               $ref: '#/components/schemas/ScanStatus'
             startTime:
@@ -264,41 +283,19 @@ components:
     ScanTemplate:
       type: object
       required:
-        - scanObjectInputs
-        - families
+        - inputs
       properties:
+        inputs:
+          type: array
+          description: List of inputs to scan.
+          items:
+            $ref: '#/components/schemas/ScanInput'
         timeoutSeconds:
           type: integer
           minimum: 0
           description: |
             The maximum time in seconds that a scan should
             run for before being automatically aborted.
-        scanObjectInputs:
-          type: array
-          description: List of objects to scan.
-          items:
-            $ref: '#/components/schemas/ScanObjectInput'
-        families:
-          type: array
-          description: List of scan families to use for scanning.
-          items:
-            $ref: '#/components/schemas/ScanFamily'
-
-    ScanResult:
-      type: object
-      description: Describes the result of multi-object scan.
-      allOf:
-        - $ref: '#/components/schemas/Metadata'
-        - type: object
-          required:
-            - findings
-          properties:
-            findings:
-              type: array
-              items:
-                $ref: '#/components/schemas/ScanFinding'
-            summary:
-              $ref: '#/components/schemas/ScanSummary'
 
     Package:
       type: object
@@ -640,44 +637,67 @@ components:
         TimeTaken:
           type: string
 
+    ScanFindings:
+      type: object
+      properties:
+        count:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Scan'
+
+    ScanResult:
+      type: object
+      description: Describes the result of a scan.
+      required:
+        - findings
+      properties:
+        findings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScanFinding'
+        summary:
+          $ref: '#/components/schemas/ScanSummary'
+
     ScanFinding:
       type: object
-      required:
-        - input
-        - findingInfo
-      properties:
-        input:
-          $ref: '#/components/schemas/ScanObjectInput'
-        family:
-          $ref: '#/components/schemas/ScanFamily'
-        findingInfo:
-          anyOf:
-            - $ref: '#/components/schemas/PackageFindingInfo'
-            - $ref: '#/components/schemas/VulnerabilityFindingInfo'
-            - $ref: '#/components/schemas/MalwareFindingInfo'
-            - $ref: '#/components/schemas/SecretFindingInfo'
-            - $ref: '#/components/schemas/MisconfigurationFindingInfo'
-            - $ref: '#/components/schemas/RootkitFindingInfo'
-            - $ref: '#/components/schemas/ExploitFindingInfo'
-            - $ref: '#/components/schemas/InfoFinderFindingInfo'
-          discriminator:
-            propertyName: objectType
-            mapping:
-              Package: '#/components/schemas/PackageFindingInfo'
-              Vulnerability: '#/components/schemas/VulnerabilityFindingInfo'
-              Malware: '#/components/schemas/MalwareFindingInfo'
-              Secret: '#/components/schemas/SecretFindingInfo'
-              Misconfiguration: '#/components/schemas/MisconfigurationFindingInfo'
-              Rootkit: '#/components/schemas/RootkitFindingInfo'
-              Exploit: '#/components/schemas/ExploitFindingInfo'
-              InfoFinder: '#/components/schemas/InfoFinderFindingInfo'
+      allOf:
+        - $ref: '#/components/schemas/Metadata'
+        - type: object
+          required:
+            - input
+            - findingInfo
+          properties:
+            input:
+              $ref: '#/components/schemas/ScanInput'
+            findingInfo:
+              anyOf:
+                - $ref: '#/components/schemas/PackageFindingInfo'
+                - $ref: '#/components/schemas/VulnerabilityFindingInfo'
+                - $ref: '#/components/schemas/MalwareFindingInfo'
+                - $ref: '#/components/schemas/SecretFindingInfo'
+                - $ref: '#/components/schemas/MisconfigurationFindingInfo'
+                - $ref: '#/components/schemas/RootkitFindingInfo'
+                - $ref: '#/components/schemas/ExploitFindingInfo'
+                - $ref: '#/components/schemas/InfoFinderFindingInfo'
+              discriminator:
+                propertyName: objectType
+                mapping:
+                  Package: '#/components/schemas/PackageFindingInfo'
+                  Vulnerability: '#/components/schemas/VulnerabilityFindingInfo'
+                  Malware: '#/components/schemas/MalwareFindingInfo'
+                  Secret: '#/components/schemas/SecretFindingInfo'
+                  Misconfiguration: '#/components/schemas/MisconfigurationFindingInfo'
+                  Rootkit: '#/components/schemas/RootkitFindingInfo'
+                  Exploit: '#/components/schemas/ExploitFindingInfo'
+                  InfoFinder: '#/components/schemas/InfoFinderFindingInfo'
 
-    ScanObjectInput:
+    ScanInput:
       type: object
       description: Input data of an object to scan.
       required:
         - type
-        - family
         - path
       properties:
         type:
@@ -704,15 +724,12 @@ components:
         path:
           description: The input path (/mnt/snapshot for ex.)
           type: string
-        family:
-          $ref: '#/components/schemas/ScanFamily'
 
     SuccessResponse:
       type: object
       properties:
         message:
           type: string
-          readOnly: true
       description: An object that is returned for a successful API request that returns nothing.
 
     ErrorResponse:
@@ -720,7 +737,6 @@ components:
       properties:
         message:
           type: string
-          readOnly: true
       description: An object that is returned for a failed API request.
 
   responses:
@@ -730,3 +746,23 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
+
+  parameters:
+    scanID:
+      name: scanID
+      in: path
+      required: true
+      schema:
+        type: string
+
+    page:
+      name: page
+      in: query
+      schema:
+        type: integer
+
+    pageSize:
+      name: page_size
+      in: query
+      schema:
+        type: integer
