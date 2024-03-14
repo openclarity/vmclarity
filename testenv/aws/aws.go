@@ -29,10 +29,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/ssm"
 
 	"github.com/openclarity/vmclarity/testenv/aws/asset"
 	"github.com/openclarity/vmclarity/testenv/types"
+	"github.com/openclarity/vmclarity/testenv/utils"
 )
 
 type ContextKeyType string
@@ -44,16 +44,16 @@ const (
 
 // AWS Environment.
 type AWSEnv struct {
-	client      *cloudformation.Client
-	ec2Client   *ec2.Client
-	s3Client    *s3.Client
-	ssmClient   *ssm.Client
-	testAsset   *asset.Asset
-	stackName   string
-	templateURL string
-	region      string
-	publicKey   string
-	meta        map[string]interface{}
+	client         *cloudformation.Client
+	ec2Client      *ec2.Client
+	s3Client       *s3.Client
+	testAsset      *asset.Asset
+	stackName      string
+	templateURL    string
+	region         string
+	publicKeyFile  string
+	privateKeyFile string
+	meta           map[string]interface{}
 }
 
 // Setup AWS test environment from cloud formation template.
@@ -152,7 +152,6 @@ func (e *AWSEnv) ServiceLogs(ctx context.Context, services []string, startTime t
 }
 
 func (e *AWSEnv) Services(ctx context.Context) (types.Services, error) {
-	// List all services in the stack
 	resources, err := e.client.ListStackResources(
 		ctx,
 		&cloudformation.ListStackResourcesInput{
@@ -163,7 +162,7 @@ func (e *AWSEnv) Services(ctx context.Context) (types.Services, error) {
 		return nil, fmt.Errorf("failed to list stack resources: %w", err)
 	}
 
-	// Get VMClarity Server service
+	// Assume that there is only one service in the stack, the VMClarity Server.
 	for _, resource := range resources.StackResourceSummaries {
 		if *resource.ResourceType == "AWS::EC2::Instance" {
 			return types.Services{
@@ -192,25 +191,33 @@ func (e *AWSEnv) Endpoints(ctx context.Context) (*types.Endpoints, error) {
 		return nil, errors.New("failed to get VMClarity Server instance")
 	}
 
-	// Set up port forwarding for EC2 instance with AWS SSM
-	_, err = e.ssmClient.StartSession(
+	// Describe VMClarity Server EC2 instance
+	output, err := e.ec2Client.DescribeInstances(
 		ctx,
-		&ssm.StartSessionInput{
-			Target:       aws.String(instances[0].GetID()),
-			DocumentName: aws.String("AWS-StartPortForwardingSession"),
-			Parameters: map[string][]string{
-				"portNumber":      {"80"},
-				"localPortNumber": {"8080"},
-			},
+		&ec2.DescribeInstancesInput{
+			InstanceIds: []string{instances[0].GetID()},
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to start ssm session: %w", err)
+		return nil, fmt.Errorf("failed to describe instance: %w", err)
 	}
 
+	// Get Public IP of VMClarity Server
+	remoteHost := *output.Reservations[0].Instances[0].PublicIpAddress
+	remotePort := "80"
+
+	localHost := "localhost"
+	localPort := "8080"
+
+	// Run SSH tunnel to remote VMClarity server
+	go utils.RunSSHTunnel(ctx, e.privateKeyFile, remoteHost, remotePort, localPort)
+
+	// Wait for SSH tunnel to be ready
+	time.Sleep(10 * time.Second) // nolint:gomnd
+
 	endpoints := new(types.Endpoints)
-	endpoints.SetAPI("http", "localhost", "8080", "/api")
-	endpoints.SetUIBackend("http", "localhost", "8080", "/ui/api")
+	endpoints.SetAPI("http", localHost, localPort, "/api")
+	endpoints.SetUIBackend("http", localHost, localPort, "/ui/api")
 
 	return endpoints, nil
 }
@@ -245,18 +252,15 @@ func New(config *Config, opts ...ConfigOptFn) (*AWSEnv, error) {
 	// Create AWS S3 client
 	s3Client := s3.NewFromConfig(cfg)
 
-	// Create AWS SSM client
-	ssmClient := ssm.NewFromConfig(cfg)
-
 	return &AWSEnv{
-		client:    client,
-		ec2Client: ec2Client,
-		s3Client:  s3Client,
-		ssmClient: ssmClient,
-		stackName: config.EnvName,
-		region:    config.Region,
-		publicKey: config.PublicKey,
-		testAsset: &asset.Asset{},
+		client:         client,
+		ec2Client:      ec2Client,
+		s3Client:       s3Client,
+		stackName:      config.EnvName,
+		region:         config.Region,
+		publicKeyFile:  config.PublicKeyFile,
+		privateKeyFile: config.PrivateKeyFile,
+		testAsset:      &asset.Asset{},
 		meta: map[string]interface{}{
 			"environment": "aws",
 			"name":        config.EnvName,
