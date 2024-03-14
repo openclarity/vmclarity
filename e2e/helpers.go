@@ -16,18 +16,42 @@
 package e2e
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/to"
+	"github.com/openclarity/vmclarity/e2e/config"
+	"github.com/openclarity/vmclarity/testenv/types"
 )
 
-const (
-	DefaultScope   string = "assetInfo/labels/any(t: t/key eq 'scanconfig' and t/value eq 'test')"
-	DefaultTimeout        = 60 * time.Second
-)
+const DefaultTimeout = 60 * time.Second
+
+func getDefaultScope(cfg *config.Config) string {
+	scope := "assetInfo/%s/any(t: t/key eq 'scanconfig' and t/value eq 'test')"
+	switch cfg.TestEnvConfig.Platform {
+	case types.EnvironmentTypeAWS, types.EnvironmentTypeGCP, types.EnvironmentTypeAzure:
+		return fmt.Sprintf(scope, "tags")
+	case types.EnvironmentTypeDocker, types.EnvironmentTypeKubernetes:
+		return fmt.Sprintf(scope, "labels")
+	default:
+		return ""
+	}
+}
+
+// nolint:gomnd
+func getDefaultScanTimeout(cfg *config.Config) time.Duration {
+	switch cfg.TestEnvConfig.Platform {
+	case types.EnvironmentTypeAWS, types.EnvironmentTypeGCP, types.EnvironmentTypeAzure:
+		return 20 * time.Minute
+	case types.EnvironmentTypeDocker, types.EnvironmentTypeKubernetes:
+		return 2 * time.Minute
+	default:
+		return time.Minute
+	}
+}
 
 var FullScanFamiliesConfig = apitypes.ScanFamiliesConfig{
 	Exploits: &apitypes.ExploitsConfig{
@@ -36,8 +60,9 @@ var FullScanFamiliesConfig = apitypes.ScanFamiliesConfig{
 	InfoFinder: &apitypes.InfoFinderConfig{
 		Enabled: to.Ptr(true),
 	},
+	// NOTE(paralta) Disabling the malware families to speed up the test
 	Malware: &apitypes.MalwareConfig{
-		Enabled: to.Ptr(true),
+		Enabled: to.Ptr(false),
 	},
 	Misconfigurations: &apitypes.MisconfigurationsConfig{
 		Enabled: to.Ptr(true),
@@ -56,11 +81,11 @@ var FullScanFamiliesConfig = apitypes.ScanFamiliesConfig{
 	},
 }
 
-func GetFullScanConfig() apitypes.ScanConfig {
+func GetFullScanConfig(scope string, timeout time.Duration) apitypes.ScanConfig {
 	return GetCustomScanConfig(
 		&FullScanFamiliesConfig,
-		DefaultScope,
-		600, // nolint:gomnd
+		scope,
+		int(timeout.Seconds()),
 	)
 }
 
