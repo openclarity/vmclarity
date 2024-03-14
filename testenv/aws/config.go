@@ -34,8 +34,10 @@ type Config struct {
 	EnvName string `mapstructure:"env_name"`
 	// Region the AWS region to be used
 	Region string `mapstructure:"region"`
-	// PublicKey the public key to be used for the key pair
-	PublicKey string `mapstructure:"public_key"`
+	// PublicKeyFile the public key file to be used for the key pair
+	PublicKeyFile string `mapstructure:"public_key_file"`
+	// PrivateKeyFile the private key file to be used for the key pair
+	PrivateKeyFile string `mapstructure:"private_key_file"`
 
 	// ctx used during project initialization
 	ctx context.Context
@@ -47,8 +49,12 @@ func (c *Config) Validate() error {
 		return errors.New("parameter region must be provided")
 	}
 
-	if c.PublicKey == "" {
-		return errors.New("parameter public_key must be provided")
+	if c.PublicKeyFile == "" {
+		return errors.New("parameter public_key_file must be provided")
+	}
+
+	if c.PrivateKeyFile == "" {
+		return errors.New("parameter private_key_file must be provided")
 	}
 
 	return nil

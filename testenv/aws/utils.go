@@ -31,12 +31,17 @@ import (
 )
 
 func (e *AWSEnv) prepareStack(ctx context.Context) error {
+	//	Read the public key file.
+	key, err := os.ReadFile(e.publicKeyFile)
+	if err != nil {
+		return fmt.Errorf("failed to read public key: %w", err)
+	}
+
 	// Create a new key pair
-	_, err := e.ec2Client.ImportKeyPair(ctx, &ec2.ImportKeyPairInput{
+	_, err = e.ec2Client.ImportKeyPair(ctx, &ec2.ImportKeyPairInput{
 		KeyName:           aws.String(AWSKeyName),
-		PublicKeyMaterial: []byte(e.publicKey),
-	},
-	)
+		PublicKeyMaterial: key,
+	})
 	if err != nil {
 		return fmt.Errorf("failed to import key pair: %w", err)
 	}

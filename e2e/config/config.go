@@ -143,7 +143,8 @@ func NewConfig() (*Config, error) {
 
 	_ = v.BindEnv("aws.region")
 
-	_ = v.BindEnv("aws.public_key")
+	_ = v.BindEnv("aws.public_key_file")
+	_ = v.BindEnv("aws.private_key_file")
 
 	decodeHooks := mapstructure.ComposeDecodeHookFunc(
 		// TextUnmarshallerHookFunc is needed to decode custom types
