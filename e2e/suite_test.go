@@ -62,7 +62,7 @@ func beforeSuite(ctx context.Context) {
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 	// Create new testenv from configuration
-	testEnv, err = testenv.New(&cfg.TestEnvConfig, testenv.WithContext(ctx), testenv.WithLogger(logger))
+	testEnv, err = testenv.New(&cfg.TestEnvConfig, testenv.WithContext(ctx), testenv.WithLogger(logger)) // nolint:contextcheck
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 	if !cfg.ReuseEnv {
@@ -76,12 +76,24 @@ func beforeSuite(ctx context.Context) {
 		ginkgo.By("re-using test environment")
 	}
 
+	// Set timeout for services to become ready
+	var servicesReadyTimeout time.Duration
+	switch cfg.TestEnvConfig.Platform {
+	case types.EnvironmentTypeDocker:
+		servicesReadyTimeout = 5 * time.Second
+	case types.EnvironmentTypeAWS:
+		servicesReadyTimeout = 10 * time.Minute
+	case types.EnvironmentTypeGCP, types.EnvironmentTypeAzure, types.EnvironmentTypeKubernetes:
+	default:
+		servicesReadyTimeout = time.Minute
+	}
+
 	ginkgo.By("waiting for services to become ready")
 	gomega.Eventually(func() bool {
 		ready, err := testEnv.ServicesReady(ctx)
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
 		return ready
-	}, time.Second*5).Should(gomega.BeTrue())
+	}, servicesReadyTimeout).Should(gomega.BeTrue())
 
 	endpoints, err := testEnv.Endpoints(ctx)
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())

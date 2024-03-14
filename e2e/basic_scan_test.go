@@ -24,24 +24,26 @@ import (
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/to"
+	"github.com/openclarity/vmclarity/testenv/types"
 )
 
 var _ = ginkgo.Describe("Running a basic scan (only SBOM)", func() {
 	reportFailedConfig := ReportFailedConfig{}
 	var imageID string
+	var assets *apitypes.Assets
 
-	ginkgo.Context("which scans a docker container", func() {
+	ginkgo.Context("which scans an asset", func() {
 		ginkgo.It("should finish successfully", func(ctx ginkgo.SpecContext) {
-			var assets *apitypes.Assets
 			var err error
+			scope := getDefaultScope(cfg)
 
 			ginkgo.By("waiting until test asset is found")
 			reportFailedConfig.objects = append(
 				reportFailedConfig.objects,
-				APIObject{"asset", DefaultScope},
+				APIObject{"asset", scope},
 			)
 			assetsParams := apitypes.GetAssetsParams{
-				Filter: to.Ptr(DefaultScope),
+				Filter: to.Ptr(scope),
 			}
 			gomega.Eventually(func() bool {
 				assets, err = client.GetAssets(ctx, assetsParams)
@@ -49,11 +51,7 @@ var _ = ginkgo.Describe("Running a basic scan (only SBOM)", func() {
 				return len(*assets.Items) == 1
 			}, DefaultTimeout, time.Second).Should(gomega.BeTrue())
 
-			containerInfo, err := (*assets.Items)[0].AssetInfo.AsContainerInfo()
-			gomega.Expect(err).NotTo(gomega.HaveOccurred())
-			imageID = containerInfo.Image.ImageID
-
-			RunSuccessfulScan(ctx, &reportFailedConfig, DefaultScope)
+			RunSuccessfulScan(ctx, &reportFailedConfig, scope)
 		})
 	})
 
@@ -61,6 +59,15 @@ var _ = ginkgo.Describe("Running a basic scan (only SBOM)", func() {
 
 	ginkgo.Context("which scans a docker image", func() {
 		ginkgo.It("should finish successfully", func(ctx ginkgo.SpecContext) {
+			if cfg.TestEnvConfig.Platform != types.EnvironmentTypeDocker {
+				ginkgo.By("skipping test because it's not running on docker")
+				return
+			}
+
+			containerInfo, err := (*assets.Items)[0].AssetInfo.AsContainerInfo()
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			imageID = containerInfo.Image.ImageID
+
 			ginkgo.By("waiting until test asset is found")
 			filter := fmt.Sprintf("assetInfo/objectType eq 'ContainerImageInfo' and assetInfo/imageID eq '%s'", imageID)
 			reportFailedConfig.objects = append(
@@ -89,6 +96,8 @@ var _ = ginkgo.Describe("Running a basic scan (only SBOM)", func() {
 
 // nolint:gomnd
 func RunSuccessfulScan(ctx ginkgo.SpecContext, report *ReportFailedConfig, filter string) {
+	scanTimeout := getDefaultScanTimeout(cfg)
+
 	ginkgo.By("applying a scan configuration")
 	apiScanConfig, err := client.PostScanConfig(
 		ctx,
@@ -99,7 +108,7 @@ func RunSuccessfulScan(ctx ginkgo.SpecContext, report *ReportFailedConfig, filte
 				},
 			},
 			filter,
-			600,
+			int(scanTimeout.Seconds()),
 		))
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
@@ -149,5 +158,5 @@ func RunSuccessfulScan(ctx ginkgo.SpecContext, report *ReportFailedConfig, filte
 		scans, err = client.GetScans(ctx, scanParams)
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
 		return len(*scans.Items) == 1
-	}, time.Second*120, time.Second).Should(gomega.BeTrue())
+	}, scanTimeout, time.Second).Should(gomega.BeTrue())
 }
