@@ -24,6 +24,7 @@ import (
 	"github.com/onsi/gomega/types"
 
 	"github.com/openclarity/vmclarity/testenv"
+	awsenv "github.com/openclarity/vmclarity/testenv/aws"
 	dockerenv "github.com/openclarity/vmclarity/testenv/docker"
 	k8senv "github.com/openclarity/vmclarity/testenv/kubernetes"
 	"github.com/openclarity/vmclarity/testenv/kubernetes/helm"
@@ -63,6 +64,10 @@ func TestConfig(t *testing.T) {
 				"VMCLARITY_E2E_KUBERNETES_CLUSTER_CREATION_TIMEOUT": "1h",
 				"VMCLARITY_E2E_KUBERNETES_VERSION":                  "1.28",
 				"VMCLARITY_E2E_KUBERNETES_KUBECONFIG":               "kubeconfig/default.yaml",
+				// testenv.aws
+				"VMCLARITY_E2E_AWS_REGION":           "us-west-2",
+				"VMCLARITY_E2E_AWS_PRIVATE_KEY_FILE": "/home/vmclarity/.ssh/id_rsa",
+				"VMCLARITY_E2E_AWS_PUBLIC_KEY_FILE":  "/home/vmclarity/.ssh/id_rsa.pub",
 			},
 			ExpectedNewErrorMatcher: Not(HaveOccurred()),
 			ExpectedConfig: &Config{
@@ -120,6 +125,12 @@ func TestConfig(t *testing.T) {
 							Scanner:           testenvtypes.NewImageRef("docker.io/openclarity/vmclarity-cli", "docker.io", "openclarity/vmclarity-cli", "test", ""),
 							CRDiscoveryServer: testenvtypes.NewImageRef("docker.io/openclarity/vmclarity-cr-discovery-server", "docker.io", "openclarity/vmclarity-cr-discovery-server", "test", ""),
 						},
+					},
+					AWS: &awsenv.Config{
+						EnvName:        "vmclarity-e2e-test",
+						Region:         "us-west-2",
+						PrivateKeyFile: "/home/vmclarity/.ssh/id_rsa",
+						PublicKeyFile:  "/home/vmclarity/.ssh/id_rsa.pub",
 					},
 				},
 			},
@@ -182,6 +193,12 @@ func TestConfig(t *testing.T) {
 							Scanner:           testenvtypes.NewImageRef("ghcr.io/openclarity/vmclarity-cli", "ghcr.io", "openclarity/vmclarity-cli", "latest", ""),
 							CRDiscoveryServer: testenvtypes.NewImageRef("ghcr.io/openclarity/vmclarity-cr-discovery-server", "ghcr.io", "openclarity/vmclarity-cr-discovery-server", "latest", ""),
 						},
+					},
+					AWS: &awsenv.Config{
+						EnvName:        "vmclarity-testenv",
+						Region:         "",
+						PrivateKeyFile: "",
+						PublicKeyFile:  "",
 					},
 				},
 			},

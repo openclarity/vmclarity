@@ -142,7 +142,6 @@ func NewConfig() (*Config, error) {
 	v.SetDefault("kubernetes.helm.driver", helm.DefaultHelmDriver)
 
 	_ = v.BindEnv("aws.region")
-
 	_ = v.BindEnv("aws.public_key_file")
 	_ = v.BindEnv("aws.private_key_file")
 
