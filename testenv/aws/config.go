@@ -49,14 +49,6 @@ func (c *Config) Validate() error {
 		return errors.New("parameter region must be provided")
 	}
 
-	if c.PublicKeyFile == "" {
-		return errors.New("parameter public_key_file must be provided")
-	}
-
-	if c.PrivateKeyFile == "" {
-		return errors.New("parameter private_key_file must be provided")
-	}
-
 	return nil
 }
 

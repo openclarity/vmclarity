@@ -28,11 +28,22 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/openclarity/vmclarity/testenv/utils"
 )
 
 func (e *AWSEnv) prepareStack(ctx context.Context) error {
+	var err error
+
+	// If the private and public key files are not provided, then generate a temporary key pair
+	if e.sshKeyPair.PublicKeyFile == "" || e.sshKeyPair.PrivateKeyFile == "" {
+		e.sshKeyPair, err = utils.GenerateSSHKeyPair()
+		if err != nil {
+			return fmt.Errorf("failed to generate ssh key pair: %w", err)
+		}
+	}
+
 	//	Read the public key file.
-	key, err := os.ReadFile(e.publicKeyFile)
+	key, err := os.ReadFile(e.sshKeyPair.PublicKeyFile)
 	if err != nil {
 		return fmt.Errorf("failed to read public key: %w", err)
 	}
@@ -84,6 +95,19 @@ func (e *AWSEnv) cleanupStack(ctx context.Context) error {
 	})
 	if err != nil {
 		return fmt.Errorf("failed to delete key pair: %w", err)
+	}
+
+	// Delete temporary SSH key pair files
+	if e.sshKeyPair.Temporary {
+		err = os.Remove(e.sshKeyPair.PublicKeyFile)
+		if err != nil {
+			return fmt.Errorf("failed to remove public key file: %w", err)
+		}
+
+		err = os.Remove(e.sshKeyPair.PrivateKeyFile)
+		if err != nil {
+			return fmt.Errorf("failed to remove private key file: %w", err)
+		}
 	}
 
 	// Delete template file from S3 bucket

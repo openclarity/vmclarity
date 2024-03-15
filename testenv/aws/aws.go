@@ -44,16 +44,15 @@ const (
 
 // AWS Environment.
 type AWSEnv struct {
-	client         *cloudformation.Client
-	ec2Client      *ec2.Client
-	s3Client       *s3.Client
-	testAsset      *asset.Asset
-	stackName      string
-	templateURL    string
-	region         string
-	publicKeyFile  string
-	privateKeyFile string
-	meta           map[string]interface{}
+	client      *cloudformation.Client
+	ec2Client   *ec2.Client
+	s3Client    *s3.Client
+	testAsset   *asset.Asset
+	stackName   string
+	templateURL string
+	region      string
+	sshKeyPair  *utils.SSHKeyPair
+	meta        map[string]interface{}
 }
 
 // Setup AWS test environment from cloud formation template.
@@ -210,7 +209,7 @@ func (e *AWSEnv) Endpoints(ctx context.Context) (*types.Endpoints, error) {
 	localPort := "8080"
 
 	// Run SSH tunnel to remote VMClarity server
-	go utils.RunSSHTunnel(ctx, e.privateKeyFile, remoteHost, remotePort, localPort)
+	go utils.RunSSHTunnel(ctx, e.sshKeyPair.PrivateKeyFile, remoteHost, remotePort, localPort)
 
 	// Wait for SSH tunnel to be ready
 	time.Sleep(10 * time.Second) // nolint:gomnd
@@ -253,14 +252,17 @@ func New(config *Config, opts ...ConfigOptFn) (*AWSEnv, error) {
 	s3Client := s3.NewFromConfig(cfg)
 
 	return &AWSEnv{
-		client:         client,
-		ec2Client:      ec2Client,
-		s3Client:       s3Client,
-		stackName:      config.EnvName,
-		region:         config.Region,
-		publicKeyFile:  config.PublicKeyFile,
-		privateKeyFile: config.PrivateKeyFile,
-		testAsset:      &asset.Asset{},
+		client:    client,
+		ec2Client: ec2Client,
+		s3Client:  s3Client,
+		stackName: config.EnvName,
+		region:    config.Region,
+		sshKeyPair: &utils.SSHKeyPair{
+			PublicKeyFile:  config.PublicKeyFile,
+			PrivateKeyFile: config.PrivateKeyFile,
+			Temporary:      false,
+		},
+		testAsset: &asset.Asset{},
 		meta: map[string]interface{}{
 			"environment": "aws",
 			"name":        config.EnvName,
