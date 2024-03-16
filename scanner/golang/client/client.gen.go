@@ -113,8 +113,8 @@ type ClientInterface interface {
 	// GetScannerInfo request
 	GetScannerInfo(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// ListScans request
-	ListScans(ctx context.Context, params *ListScansParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetScans request
+	GetScans(ctx context.Context, params *GetScansParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) IsAlive(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -213,8 +213,8 @@ func (c *Client) GetScannerInfo(ctx context.Context, reqEditors ...RequestEditor
 	return c.Client.Do(req)
 }
 
-func (c *Client) ListScans(ctx context.Context, params *ListScansParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewListScansRequest(c.Server, params)
+func (c *Client) GetScans(ctx context.Context, params *GetScansParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetScansRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -430,7 +430,7 @@ func NewGetScannerInfoRequest(server string) (*http.Request, error) {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/scanner")
+	operationPath := fmt.Sprintf("/scanner-info")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -448,8 +448,8 @@ func NewGetScannerInfoRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewListScansRequest generates requests for ListScans
-func NewListScansRequest(server string, params *ListScansParams) (*http.Request, error) {
+// NewGetScansRequest generates requests for GetScans
+func NewGetScansRequest(server string, params *GetScansParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -489,6 +489,22 @@ func NewListScansRequest(server string, params *ListScansParams) (*http.Request,
 		if params.PageSize != nil {
 
 			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page_size", runtime.ParamLocationQuery, *params.PageSize); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.State != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "state", runtime.ParamLocationQuery, *params.State); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -579,8 +595,8 @@ type ClientWithResponsesInterface interface {
 	// GetScannerInfoWithResponse request
 	GetScannerInfoWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetScannerInfoResponse, error)
 
-	// ListScansWithResponse request
-	ListScansWithResponse(ctx context.Context, params *ListScansParams, reqEditors ...RequestEditorFn) (*ListScansResponse, error)
+	// GetScansWithResponse request
+	GetScansWithResponse(ctx context.Context, params *GetScansParams, reqEditors ...RequestEditorFn) (*GetScansResponse, error)
 }
 
 type IsAliveResponse struct {
@@ -749,7 +765,7 @@ func (r GetScannerInfoResponse) StatusCode() int {
 	return 0
 }
 
-type ListScansResponse struct {
+type GetScansResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *Scans
@@ -757,7 +773,7 @@ type ListScansResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r ListScansResponse) Status() string {
+func (r GetScansResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -765,7 +781,7 @@ func (r ListScansResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r ListScansResponse) StatusCode() int {
+func (r GetScansResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -843,13 +859,13 @@ func (c *ClientWithResponses) GetScannerInfoWithResponse(ctx context.Context, re
 	return ParseGetScannerInfoResponse(rsp)
 }
 
-// ListScansWithResponse request returning *ListScansResponse
-func (c *ClientWithResponses) ListScansWithResponse(ctx context.Context, params *ListScansParams, reqEditors ...RequestEditorFn) (*ListScansResponse, error) {
-	rsp, err := c.ListScans(ctx, params, reqEditors...)
+// GetScansWithResponse request returning *GetScansResponse
+func (c *ClientWithResponses) GetScansWithResponse(ctx context.Context, params *GetScansParams, reqEditors ...RequestEditorFn) (*GetScansResponse, error) {
+	rsp, err := c.GetScans(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseListScansResponse(rsp)
+	return ParseGetScansResponse(rsp)
 }
 
 // ParseIsAliveResponse parses an HTTP response from a IsAliveWithResponse call
@@ -1118,15 +1134,15 @@ func ParseGetScannerInfoResponse(rsp *http.Response) (*GetScannerInfoResponse, e
 	return response, nil
 }
 
-// ParseListScansResponse parses an HTTP response from a ListScansWithResponse call
-func ParseListScansResponse(rsp *http.Response) (*ListScansResponse, error) {
+// ParseGetScansResponse parses an HTTP response from a GetScansWithResponse call
+func ParseGetScansResponse(rsp *http.Response) (*GetScansResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &ListScansResponse{
+	response := &GetScansResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

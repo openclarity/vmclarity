@@ -16,7 +16,7 @@
 package main
 
 import (
-	scannerserver "github.com/openclarity/vmclarity/scanner/server"
+	scannerserver "github.com/openclarity/vmclarity/scanner/server/default"
 	log "github.com/sirupsen/logrus"
 	"os"
 	"os/signal"

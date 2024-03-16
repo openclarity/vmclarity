@@ -243,15 +243,19 @@ type RootkitType string
 
 // Scan defines model for Scan.
 type Scan struct {
-	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
-	Annotations   *Annotations `json:"annotations,omitempty"`
-	EndTime       *time.Time   `json:"endTime,omitempty"`
-	Id            string       `json:"id"`
-	JobsCompleted int          `json:"jobsCompleted"`
-	JobsLeftToRun int          `json:"jobsLeftToRun"`
-	StartTime     time.Time    `json:"startTime"`
-	Status        ScanStatus   `json:"status"`
-	Template      ScanTemplate `json:"template"`
+	EndTime *time.Time `json:"endTime,omitempty"`
+	Id      *string    `json:"id,omitempty"`
+
+	// Inputs List of inputs to scan (some rational amount, e.g. 100).
+	Inputs        []ScanInput `json:"inputs"`
+	JobsCompleted *int        `json:"jobsCompleted,omitempty"`
+	JobsLeftToRun *int        `json:"jobsLeftToRun,omitempty"`
+	StartTime     *time.Time  `json:"startTime,omitempty"`
+	Status        *ScanStatus `json:"status,omitempty"`
+
+	// TimeoutSeconds The maximum time in seconds that a scan should
+	// run for before being automatically aborted.
+	TimeoutSeconds *int `json:"timeoutSeconds,omitempty"`
 }
 
 // ScanFinding defines model for ScanFinding.
@@ -261,18 +265,14 @@ type ScanFinding struct {
 	FindingInfo ScanFinding_FindingInfo `json:"findingInfo"`
 
 	// Input Input data of an object to scan.
-	Input ScanInput `json:"input"`
+	Input   ScanInput    `json:"input"`
+	ScanID  string       `json:"scanID"`
+	Summary *ScanSummary `json:"summary,omitempty"`
 }
 
 // ScanFinding_FindingInfo defines model for ScanFinding.FindingInfo.
 type ScanFinding_FindingInfo struct {
 	union json.RawMessage
-}
-
-// ScanFindings defines model for ScanFindings.
-type ScanFindings struct {
-	Count *int    `json:"count,omitempty"`
-	Items *[]Scan `json:"items,omitempty"`
 }
 
 // ScanInput Input data of an object to scan.
@@ -290,6 +290,7 @@ type ScanInputType string
 // ScanResult Describes the result of a scan.
 type ScanResult struct {
 	Findings []ScanFinding `json:"findings"`
+	ScanID   string        `json:"scanID"`
 	Summary  *ScanSummary  `json:"summary,omitempty"`
 }
 
@@ -337,16 +338,6 @@ type ScanSummary struct {
 	TimeTaken          *string `json:"TimeTaken,omitempty"`
 }
 
-// ScanTemplate defines model for ScanTemplate.
-type ScanTemplate struct {
-	// Inputs List of inputs to scan.
-	Inputs []ScanInput `json:"inputs"`
-
-	// TimeoutSeconds The maximum time in seconds that a scan should
-	// run for before being automatically aborted.
-	TimeoutSeconds *int `json:"timeoutSeconds,omitempty"`
-}
-
 // ScannerInfo defines model for ScannerInfo.
 type ScannerInfo struct {
 	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
@@ -362,10 +353,10 @@ type ScannerInfo struct {
 // Scans defines model for Scans.
 type Scans struct {
 	// Count Total scans count according the given request data
-	Count *int `json:"count,omitempty"`
+	Count int `json:"count"`
 
 	// Items List of assets in the given filters and page. List length must be lower or equal to pageSize.
-	Items *[]Scan `json:"items,omitempty"`
+	Items []Scan `json:"items"`
 }
 
 // Secret defines model for Secret.
@@ -481,17 +472,21 @@ type PageSize = int
 // ScanID defines model for scanID.
 type ScanID = string
 
+// ScanState defines model for scanState.
+type ScanState = string
+
 // UnknownError An object that is returned for a failed API request.
 type UnknownError = ErrorResponse
 
-// ListScansParams defines parameters for ListScans.
-type ListScansParams struct {
-	Page     *Page     `form:"page,omitempty" json:"page,omitempty"`
-	PageSize *PageSize `form:"page_size,omitempty" json:"page_size,omitempty"`
+// GetScansParams defines parameters for GetScans.
+type GetScansParams struct {
+	Page     *Page      `form:"page,omitempty" json:"page,omitempty"`
+	PageSize *PageSize  `form:"page_size,omitempty" json:"page_size,omitempty"`
+	State    *ScanState `form:"state,omitempty" json:"state,omitempty"`
 }
 
 // CreateScanJSONRequestBody defines body for CreateScan for application/json ContentType.
-type CreateScanJSONRequestBody = ScanTemplate
+type CreateScanJSONRequestBody = Scan
 
 // AsPackageFindingInfo returns the union data inside the ScanFinding_FindingInfo as a PackageFindingInfo
 func (t ScanFinding_FindingInfo) AsPackageFindingInfo() (PackageFindingInfo, error) {

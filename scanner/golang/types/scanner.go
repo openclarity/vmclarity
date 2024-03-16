@@ -19,5 +19,5 @@ import "context"
 
 type Scanner interface {
 	GetInfo(ctx context.Context) (*ScannerInfo, error)
-	Scan(ctx context.Context, input ScanInput) (*ScanResult, error)
+	Scan(ctx context.Context, scanID ScanID, input ScanInput) ([]ScanFinding, error)
 }
