@@ -117,13 +117,12 @@ func (m *manager) StartScan(scanID string) error {
 
 		// Set scan state to in progress. It's okay to return here as the job will be
 		// re-queued by the orchestrator.
-		if err := m.updateScan(scanID, types.Scan{
-			Status: &types.ScanStatus{
-				LastTransitionTime: time.Now(),
-				Message:            toPtr("scan started"),
-				State:              types.ScanStatusStateInProgress,
-			},
-		}); err != nil {
+		scan.Status = &types.ScanStatus{
+			LastTransitionTime: time.Now(),
+			Message:            toPtr("scan started"),
+			State:              types.ScanStatusStateInProgress,
+		}
+		if err := m.updateScan(scanID, &scan); err != nil {
 			log.Errorf("Worker failed to set scan %s in progress, reason: %v", scanID, err)
 			return
 		}
@@ -178,10 +177,9 @@ func (m *manager) StartScan(scanID string) error {
 				// Update scan completion once every 1/5th of inputs
 				// processed to not overwork the DB
 				if len(jobResults)%updateStep == 1 {
-					_ = m.updateScan(scanID, types.Scan{
-						JobsCompleted: toPtr(len(jobResults)),
-						JobsLeftToRun: toPtr(len(scan.Inputs) - len(jobResults)),
-					})
+					scan.JobsCompleted = toPtr(len(jobResults))
+					scan.JobsLeftToRun = toPtr(len(scan.Inputs) - len(jobResults))
+					_ = m.updateScan(scanID, &scan)
 				}
 			}
 		}
@@ -206,17 +204,19 @@ func (m *manager) StartScan(scanID string) error {
 		}
 
 		// Update scan data from the result
-		if err := m.updateScan(scanID, types.Scan{
-			Id: &scanID,
+		if err := m.updateScan(scanID, &types.Scan{
+			EndTime:       &endTime,
+			Id:            &scanID,
+			Inputs:        scan.Inputs,
+			JobsCompleted: toPtr(len(jobResults)),
+			JobsLeftToRun: toPtr(len(scan.Inputs) - len(jobResults)),
+			StartTime:     &startTime,
 			Status: &types.ScanStatus{
 				LastTransitionTime: time.Now(),
 				Message:            &stateMsg,
 				State:              state,
 			},
-			JobsCompleted: toPtr(len(jobResults)),
-			JobsLeftToRun: toPtr(len(scan.Inputs) - len(jobResults)),
-			StartTime:     &startTime,
-			EndTime:       &endTime,
+			TimeoutSeconds: scan.TimeoutSeconds,
 		}); err != nil {
 			log.Errorf("Scan %s completed but its state could not be updated: %v", scanID, err)
 			return
@@ -313,11 +313,13 @@ func (m *manager) Stop() error {
 	return nil
 }
 
-func (m *manager) updateScan(scanID string, scan types.Scan) error {
+func (m *manager) updateScan(scanID string, scan *types.Scan) error {
 	scan.Id = &scanID // set scan ID before update
-	if _, err := m.store.Scans().Update(scanID, scan); err != nil {
+	newScan, err := m.store.Scans().Update(scanID, *scan)
+	if err != nil {
 		return fmt.Errorf("failed to update scan %s: %w", scanID, err)
 	}
+	*scan = newScan
 	return nil
 }
 

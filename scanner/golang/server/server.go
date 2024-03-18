@@ -23,7 +23,7 @@ import (
 	echomiddleware "github.com/labstack/echo/v4/middleware"
 	middleware "github.com/oapi-codegen/echo-middleware"
 	"github.com/openclarity/vmclarity/scanner/server/orchestrator"
-	"github.com/openclarity/vmclarity/scanner/server/store/local"
+	"github.com/openclarity/vmclarity/scanner/server/store"
 	"github.com/openclarity/vmclarity/scanner/types"
 	"net/http"
 	"time"
@@ -45,7 +45,7 @@ func NewServer(scanner types.Scanner) (*Server, error) {
 	}
 
 	// Create DB store
-	store, err := local.NewStore()
+	store, err := store.NewStore()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create store: %w", err)
 	}

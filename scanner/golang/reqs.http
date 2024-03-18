@@ -25,7 +25,7 @@ GET http://localhost:8765/scans?state=pending
 GET http://localhost:8765/scan/b87741ca-ec90-4fa5-b76e-fabc007d5f8b
 
 ### get specific scan result
-GET http://localhost:8765/scan/8d60d55c-bbd3-4120-b346-27524fb60c23/result
+GET http://localhost:8765/scan/014222b8-7b95-440e-beb6-69397ad42eb2/result
 
 ### stop specific scan
 POST http://localhost:8765/scan/b87741ca-ec90-4fa5-b76e-fabc007d5f8b/stop

@@ -17,6 +17,8 @@ package types
 
 import "context"
 
+// Scanner defines the actual scanner implementation. This should be implemented
+// on the example side.
 type Scanner interface {
 	GetInfo(ctx context.Context) (*ScannerInfo, error)
 	Scan(ctx context.Context, scanID string, input ScanInput) ([]ScanFinding, error)
