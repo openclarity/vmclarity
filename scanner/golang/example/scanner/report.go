@@ -23,10 +23,8 @@ import (
 
 var CISDockerImpactCategory = "best-practice"
 
-func parseDockleReport(input types.ScanObjectInput, assessmentMap dockle_types.AssessmentMap) types.ScanResult {
-	result := types.ScanResult{
-		Findings: []types.ScanFinding{},
-	}
+func parseDockleReport(input types.ScanInput, assessmentMap dockle_types.AssessmentMap) []types.ScanResult {
+	var results []types.ScanResult
 
 	for _, codeInfo := range assessmentMap {
 		severity := convertDockleSeverity(codeInfo.Level)
@@ -41,20 +39,23 @@ func parseDockleReport(input types.ScanObjectInput, assessmentMap dockle_types.A
 		}
 		message := dockle_types.TitleMap[codeInfo.Code]
 
-		result.Findings = append(result.Findings, types.ScanFinding{
-			FindingInfo: (&types.Misconfiguration{
-				Category:    &CISDockerImpactCategory,
-				Description: &description,
-				Id:          &codeInfo.Code,
-				Location:    &input.Path,
-				Message:     &message,
-				Severity:    &severity,
-			}).AsScanFindingInfo(),
-			Input: input,
+		findingInfo := &types.ScanFinding_FindingInfo{}
+		_ = findingInfo.FromMisconfigurationFindingInfo(types.MisconfigurationFindingInfo{
+			Category:    &CISDockerImpactCategory,
+			Description: &description,
+			Id:          &codeInfo.Code,
+			Location:    &input.Path,
+			Message:     &message,
+			ObjectType:  "Misconfiguration",
+			Severity:    &severity,
+		})
+
+		results = append(results, types.ScanResult{
+			Finding: *findingInfo,
 		})
 	}
 
-	return result
+	return results
 }
 
 func convertDockleSeverity(level int) types.MisconfigurationSeverity {

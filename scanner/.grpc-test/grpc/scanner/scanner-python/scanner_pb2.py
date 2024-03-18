@@ -1641,9 +1641,6 @@ class BetaScannerStub(object):
 
 def beta_create_Scanner_server(servicer, pool=None, pool_size=None, default_timeout=None, maximum_timeout=None):
   import scanner_pb2
-  import scanner_pb2
-  import scanner_pb2
-  import scanner_pb2
   request_deserializers = {
     ('proto.Scanner', 'GetInfo'): scanner_pb2.Empty.FromString,
     ('proto.Scanner', 'Scan'): scanner_pb2.ScanRequest.FromString,
@@ -1660,9 +1657,6 @@ def beta_create_Scanner_server(servicer, pool=None, pool_size=None, default_time
   return beta_implementations.server(method_implementations, options=server_options)
 
 def beta_create_Scanner_stub(channel, host=None, metadata_transformer=None, pool=None, pool_size=None):
-  import scanner_pb2
-  import scanner_pb2
-  import scanner_pb2
   import scanner_pb2
   request_serializers = {
     ('proto.Scanner', 'GetInfo'): scanner_pb2.Empty.SerializeToString,

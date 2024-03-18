@@ -6,9 +6,38 @@ info:
   version: 1.0.0
 
 paths:
-  /scan:
+  /scanner:
+    get:
+      summary: Fetches runtime scanner details.
+      operationId: GetScannerInfo
+      responses:
+        200:
+          description: Scanner details fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScannerInfo'
+        default:
+          $ref: '#/components/responses/UnknownError'
+
+  /scans:
+    get:
+      summary: Get all scans.
+      operationId: GetScans
+      parameters:
+        - $ref: '#/components/parameters/scanState'
+      responses:
+        200:
+          description: Scans fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scans'
+        default:
+          $ref: '#/components/responses/UnknownError'
+
     post:
-      summary: Create a scan
+      summary: Create a new scan.
       operationId: CreateScan
       requestBody:
         content:
@@ -18,13 +47,13 @@ paths:
         required: true
       responses:
         201:
-          description: Scan was successfully started.
+          description: Scan created successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Scan'
         400:
-          description: Invalid scan template supplied.
+          description: Invalid scan supplied
           content:
             application/json:
               schema:
@@ -35,19 +64,19 @@ paths:
 
   /scan/{scanID}:
     get:
-      summary: Get scan details
+      summary: Get scan details.
       operationId: GetScan
       parameters:
         - $ref: '#/components/parameters/scanID'
       responses:
         200:
-          description: Scan fetched successfully.
+          description: Scan fetched successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Scan'
         404:
-          description: Scan not found.
+          description: Scan not found
           content:
             application/json:
               schema:
@@ -56,25 +85,48 @@ paths:
           $ref: '#/components/responses/UnknownError'
 
     delete:
-      summary: Stop a scan
-      operationId: StopScan
+      summary: Delete a scan.
+      operationId: DeleteScan
       parameters:
         - $ref: '#/components/parameters/scanID'
       responses:
         200:
-          description: Scan was successfully stopped.
+          description: Scan deleted successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuccessResponse'
         404:
-          description: Scan does not exist.
+          description: Scan does not exist
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         default:
           $ref: '#/components/responses/UnknownError'
+
+  /scan/{scanID}/stop:
+    post:
+      summary: Stop currently running scan.
+      operationId: StopScan
+      parameters:
+        - $ref: '#/components/parameters/scanID'
+      responses:
+        200:
+          description: Scan stopped successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scan'
+        404:
+          description: Scan not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+
 
   /scan/{scanID}/result:
     get:
@@ -84,19 +136,19 @@ paths:
         - $ref: '#/components/parameters/scanID'
       responses:
         200:
-          description: Scan results fetched successfully.
+          description: Scan result fetched successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ScanResult'
+                $ref: '#/components/schemas/ScanFindings'
         202:
-          description: Scan still in progress.
+          description: Scan still in progress
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         404:
-          description: Scan does not exist.
+          description: Scan does not exist
           content:
             application/json:
               schema:
@@ -104,45 +156,13 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
 
-  /scans:
-    get:
-      summary: Get all scans based on the filter
-      operationId: GetScans
-      parameters:
-        - $ref: '#/components/parameters/page'
-        - $ref: '#/components/parameters/pageSize'
-        - $ref: '#/components/parameters/scanState'
-      responses:
-        200:
-          description: Scan fetched successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Scans'
-        default:
-          $ref: '#/components/responses/UnknownError'
-
-  /scanner-info:
-    get:
-      summary: Fetches runtime scanner details
-      operationId: GetScannerInfo
-      responses:
-        200:
-          description: Scanner details fetched successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ScannerInfo'
-        default:
-          $ref: '#/components/responses/UnknownError'
-
   /livez:
     get:
-      summary: Check if the API is alive and responsive
+      summary: Check if the API is alive and responsive.
       operationId: IsAlive
       responses:
         200:
-          description: API is alive and responsive.
+          description: API is alive and responsive
           content:
             application/json:
               schema:
@@ -152,11 +172,11 @@ paths:
 
   /readyz:
     get:
-      summary: Check if the API is ready to receive traffic
+      summary: Check if the API is ready to receive traffic.
       operationId: IsReady
       responses:
         200:
-          description: API is ready to handle requests.
+          description: API is ready to handle requests
           content:
             application/json:
               schema:
@@ -189,9 +209,6 @@ components:
       allOf:
         - $ref: '#/components/schemas/Metadata'
         - type: object
-          required:
-            - name
-            - version
           properties:
             name:
               type: string
@@ -240,17 +257,11 @@ components:
 
     Scans:
       type: object
-      required:
-        - count
-        - items
       properties:
         count:
           type: integer
-          description: Total scans count according the given request data
         items:
           type: array
-          description: List of assets in the given filters and page.
-            List length must be lower or equal to pageSize.
           items:
             $ref: '#/components/schemas/Scan'
 
@@ -263,7 +274,8 @@ components:
           type: string
           readOnly: true
         status:
-          $ref: '#/components/schemas/ScanStatus'
+          allOf:
+            - $ref: '#/components/schemas/ScanStatus'
           readOnly: true
         startTime:
           type: string
@@ -290,6 +302,7 @@ components:
           description: |
             The maximum time in seconds that a scan should
             run for before being automatically aborted.
+          writeOnly: true
 
     Package:
       type: object
@@ -609,7 +622,7 @@ components:
               type: string
           required: [objectType]
 
-    ScanSummary:
+    FindingSummary:
       type: object
       properties:
         KnownViruses:
@@ -631,21 +644,16 @@ components:
         TimeTaken:
           type: string
 
-    ScanResult:
+    ScanFindings:
       type: object
       description: Describes the result of a scan.
-      required:
-        - scanID
-        - findings
       properties:
-        scanID:
-          type: string
-        findings:
+        count:
+          type: integer
+        items:
           type: array
           items:
             $ref: '#/components/schemas/ScanFinding'
-        summary:
-          $ref: '#/components/schemas/ScanSummary'
 
     ScanFinding:
       type: object
@@ -653,12 +661,14 @@ components:
         - $ref: '#/components/schemas/Metadata'
         - type: object
           required:
-            - scanID
             - input
             - findingInfo
           properties:
+            id:
+              type: string
             scanID:
               type: string
+              readOnly: true
             input:
               $ref: '#/components/schemas/ScanInput'
             findingInfo:
@@ -683,7 +693,7 @@ components:
                   Exploit: '#/components/schemas/ExploitFindingInfo'
                   InfoFinder: '#/components/schemas/InfoFinderFindingInfo'
             summary:
-              $ref: '#/components/schemas/ScanSummary'
+              $ref: '#/components/schemas/FindingSummary'
 
     ScanInput:
       type: object
@@ -747,20 +757,9 @@ components:
       schema:
         type: string
 
-    page:
-      name: page
-      in: query
-      schema:
-        type: integer
-
-    pageSize:
-      name: page_size
-      in: query
-      schema:
-        type: integer
-
     scanState:
-      name: state
+      description: 'scan state, e.g. pending'
       in: query
+      name: state
       schema:
         type: string

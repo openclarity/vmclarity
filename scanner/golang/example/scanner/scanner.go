@@ -21,16 +21,22 @@ import (
 	"github.com/openclarity/vmclarity/scanner/types"
 )
 
+var _ types.Scanner = &Scanner{}
+
 type Scanner struct{}
+
+func ptr[T any](obj T) *T {
+	return &obj
+}
 
 func (s *Scanner) GetInfo(ctx context.Context) (*types.ScannerInfo, error) {
 	return &types.ScannerInfo{
-		Name:    "cisdocker",
-		Version: "1.23",
+		Name:    ptr("cisdocker"),
+		Version: ptr("1.23"),
 	}, nil
 }
 
-func (s *Scanner) Scan(ctx context.Context, family types.ScanFamily, input types.ScanObjectInput) (*types.ScanResult, error) {
+func (s *Scanner) Scan(ctx context.Context, scanID string, input types.ScanInput) ([]types.ScanResult, error) {
 	// Validate this is an input type supported by the scanner,
 	// otherwise return skipped.
 	if !s.isValidInputType(input.Type) {
@@ -45,10 +51,10 @@ func (s *Scanner) Scan(ctx context.Context, family types.ScanFamily, input types
 
 	findings := parseDockleReport(input, assessmentMap)
 
-	return &findings, nil
+	return findings, nil
 }
 
-func (s *Scanner) isValidInputType(sourceType types.ScanObjectInputType) bool {
+func (s *Scanner) isValidInputType(sourceType types.ScanInputType) bool {
 	switch sourceType {
 	case types.InputTypeImage, types.InputTypeDockerArchive:
 		return true

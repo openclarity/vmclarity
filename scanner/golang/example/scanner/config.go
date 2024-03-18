@@ -22,7 +22,7 @@ import (
 	"github.com/openclarity/vmclarity/scanner/types"
 )
 
-func createDockleConfig(input types.ScanObjectInput) *dockle_config.Config {
+func createDockleConfig(input types.ScanInput) *dockle_config.Config {
 	dockleConfig := &dockle_config.Config{
 		Debug:      true,
 		Timeout:    2 * time.Minute,

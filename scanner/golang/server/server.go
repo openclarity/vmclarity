@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package _default
+package server
 
 import (
 	"context"
@@ -22,7 +22,7 @@ import (
 	"github.com/labstack/echo/v4"
 	echomiddleware "github.com/labstack/echo/v4/middleware"
 	middleware "github.com/oapi-codegen/echo-middleware"
-	server2 "github.com/openclarity/vmclarity/scanner/server"
+	"github.com/openclarity/vmclarity/scanner/server/store/local"
 	"github.com/openclarity/vmclarity/scanner/types"
 	"net/http"
 	"time"
@@ -30,20 +30,28 @@ import (
 
 type Server struct {
 	echo    *echo.Echo
-	manager types.ScanManager
+	store   types.Store
+	scanner types.Scanner
 }
 
 func NewServer(scanner types.Scanner) (*Server, error) {
 	// Get swagger specs
-	swagger, err := server2.GetSwagger()
+	swagger, err := GetSwagger()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load swagger spec: %w", err)
+	}
+
+	// Create DB store
+	store, err := local.NewStore()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create store: %w", err)
 	}
 
 	// Create server instance
 	server := &Server{
 		echo:    echo.New(),
-		manager: types.NewScannerManager(scanner),
+		scanner: scanner,
+		store:   store,
 	}
 
 	// Log all requests
@@ -57,7 +65,7 @@ func NewServer(scanner types.Scanner) (*Server, error) {
 	server.echo.Use(middleware.OapiRequestValidator(swagger))
 
 	// Register paths with the server implementation
-	server2.RegisterHandlers(server.echo, server)
+	RegisterHandlers(server.echo, server)
 
 	return server, nil
 }

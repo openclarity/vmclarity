@@ -98,6 +98,19 @@ type ExploitFindingInfo struct {
 	Urls        *[]string `json:"urls"`
 }
 
+// FindingSummary defines model for FindingSummary.
+type FindingSummary struct {
+	DataRead           *string `json:"DataRead,omitempty"`
+	DataScanned        *string `json:"DataScanned,omitempty"`
+	EngineVersion      *string `json:"EngineVersion,omitempty"`
+	InfectedFiles      *int    `json:"InfectedFiles,omitempty"`
+	KnownViruses       *int    `json:"KnownViruses,omitempty"`
+	ScannedDirectories *int    `json:"ScannedDirectories,omitempty"`
+	ScannedFiles       *int    `json:"ScannedFiles,omitempty"`
+	SuspectedFiles     *int    `json:"SuspectedFiles,omitempty"`
+	TimeTaken          *string `json:"TimeTaken,omitempty"`
+}
+
 // InfoFinder defines model for InfoFinder.
 type InfoFinder struct {
 	// Data The data found by the scanner in the specific path for a specific type. See example for SSHKnownHostFingerprint info type
@@ -263,16 +276,23 @@ type ScanFinding struct {
 	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
 	Annotations *Annotations            `json:"annotations,omitempty"`
 	FindingInfo ScanFinding_FindingInfo `json:"findingInfo"`
+	Id          *string                 `json:"id,omitempty"`
 
 	// Input Input data of an object to scan.
-	Input   ScanInput    `json:"input"`
-	ScanID  string       `json:"scanID"`
-	Summary *ScanSummary `json:"summary,omitempty"`
+	Input   ScanInput       `json:"input"`
+	ScanID  *string         `json:"scanID,omitempty"`
+	Summary *FindingSummary `json:"summary,omitempty"`
 }
 
 // ScanFinding_FindingInfo defines model for ScanFinding.FindingInfo.
 type ScanFinding_FindingInfo struct {
 	union json.RawMessage
+}
+
+// ScanFindings Describes the result of a scan.
+type ScanFindings struct {
+	Count *int           `json:"count,omitempty"`
+	Items *[]ScanFinding `json:"items,omitempty"`
 }
 
 // ScanInput Input data of an object to scan.
@@ -286,13 +306,6 @@ type ScanInput struct {
 
 // ScanInputType The input type (ROOTFS, DIR, IMAGE etc.)
 type ScanInputType string
-
-// ScanResult Describes the result of a scan.
-type ScanResult struct {
-	Findings []ScanFinding `json:"findings"`
-	ScanID   string        `json:"scanID"`
-	Summary  *ScanSummary  `json:"summary,omitempty"`
-}
 
 // ScanStatus defines model for ScanStatus.
 type ScanStatus struct {
@@ -325,38 +338,22 @@ type ScanStatus struct {
 // | Done       | Scan has finished successfully |
 type ScanStatusState string
 
-// ScanSummary defines model for ScanSummary.
-type ScanSummary struct {
-	DataRead           *string `json:"DataRead,omitempty"`
-	DataScanned        *string `json:"DataScanned,omitempty"`
-	EngineVersion      *string `json:"EngineVersion,omitempty"`
-	InfectedFiles      *int    `json:"InfectedFiles,omitempty"`
-	KnownViruses       *int    `json:"KnownViruses,omitempty"`
-	ScannedDirectories *int    `json:"ScannedDirectories,omitempty"`
-	ScannedFiles       *int    `json:"ScannedFiles,omitempty"`
-	SuspectedFiles     *int    `json:"SuspectedFiles,omitempty"`
-	TimeTaken          *string `json:"TimeTaken,omitempty"`
-}
-
 // ScannerInfo defines model for ScannerInfo.
 type ScannerInfo struct {
 	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
 	Annotations *Annotations `json:"annotations,omitempty"`
 
 	// Name Scanner name.
-	Name string `json:"name"`
+	Name *string `json:"name,omitempty"`
 
 	// Version Scanner runtime version.
-	Version string `json:"version"`
+	Version *string `json:"version,omitempty"`
 }
 
 // Scans defines model for Scans.
 type Scans struct {
-	// Count Total scans count according the given request data
-	Count int `json:"count"`
-
-	// Items List of assets in the given filters and page. List length must be lower or equal to pageSize.
-	Items []Scan `json:"items"`
+	Count *int    `json:"count,omitempty"`
+	Items *[]Scan `json:"items,omitempty"`
 }
 
 // Secret defines model for Secret.
@@ -463,12 +460,6 @@ type VulnerabilityFix struct {
 // VulnerabilitySeverity defines model for VulnerabilitySeverity.
 type VulnerabilitySeverity string
 
-// Page defines model for page.
-type Page = int
-
-// PageSize defines model for pageSize.
-type PageSize = int
-
 // ScanID defines model for scanID.
 type ScanID = string
 
@@ -480,9 +471,8 @@ type UnknownError = ErrorResponse
 
 // GetScansParams defines parameters for GetScans.
 type GetScansParams struct {
-	Page     *Page      `form:"page,omitempty" json:"page,omitempty"`
-	PageSize *PageSize  `form:"page_size,omitempty" json:"page_size,omitempty"`
-	State    *ScanState `form:"state,omitempty" json:"state,omitempty"`
+	// State scan state, e.g. pending
+	State *ScanState `form:"state,omitempty" json:"state,omitempty"`
 }
 
 // CreateScanJSONRequestBody defines body for CreateScan for application/json ContentType.

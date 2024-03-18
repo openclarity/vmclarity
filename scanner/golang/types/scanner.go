@@ -17,7 +17,13 @@ package types
 
 import "context"
 
+type ScanResult struct {
+	Annotations map[string]string       `json:"annotations,omitempty"`
+	Finding     ScanFinding_FindingInfo `json:"finding"`
+	Summary     *FindingSummary         `json:"summary,omitempty"`
+}
+
 type Scanner interface {
 	GetInfo(ctx context.Context) (*ScannerInfo, error)
-	Scan(ctx context.Context, scanID ScanID, input ScanInput) ([]ScanFinding, error)
+	Scan(ctx context.Context, scanID string, input ScanInput) ([]ScanResult, error)
 }

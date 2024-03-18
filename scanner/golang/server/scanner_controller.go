@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package _default
+package server
 
 import (
 	"context"
@@ -30,7 +30,7 @@ func (s *Server) IsReady(ctx echo.Context) error {
 }
 
 func (s *Server) GetScannerInfo(ctx echo.Context) error {
-	info, err := s.manager.Scanner().GetInfo(context.Background())
+	info, err := s.scanner.GetInfo(context.Background())
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, err.Error())
 	}

@@ -1007,14 +1007,14 @@ func (m *InfoFinder) GetData() string {
 
 type Vulnerability struct {
 	VulnerabilityName string                `protobuf:"bytes,1,opt,name=vulnerability_name,json=vulnerabilityName" json:"vulnerability_name,omitempty"`
-	Description       string                `protobuf:"bytes,2,opt,name=description" json:"description,omitempty"`
-	Severity          VulnerabilitySeverity `protobuf:"varint,3,opt,name=severity,enum=proto.VulnerabilitySeverity" json:"severity,omitempty"`
-	Links             []string              `protobuf:"bytes,4,rep,name=links" json:"links,omitempty"`
-	Distro            *VulnerabilityDistro  `protobuf:"bytes,5,opt,name=distro" json:"distro,omitempty"`
-	Cvss              []*VulnerabilityCvss  `protobuf:"bytes,6,rep,name=cvss" json:"cvss,omitempty"`
-	Package           *Package              `protobuf:"bytes,7,opt,name=package" json:"package,omitempty"`
-	Fix               *VulnerabilityFix     `protobuf:"bytes,8,opt,name=fix" json:"fix,omitempty"`
-	LayerId           string                `protobuf:"bytes,9,opt,name=layer_id,json=layerId" json:"layer_id,omitempty"`
+	Description string                `protobuf:"bytes,2,opt,name=description" json:"description,omitempty"`
+	Severity    VulnerabilitySeverity `protobuf:"varint,3,opt,name=severity,enum=proto.VulnerabilitySeverity" json:"severity,omitempty"`
+	Links       []string              `protobuf:"bytes,4,rep,name=links" json:"links,omitempty"`
+	Distro      *VulnerabilityDistro  `protobuf:"bytes,5,opt,name=distro" json:"distro,omitempty"`
+	Cvss        []*VulnerabilityCvss  `protobuf:"bytes,6,rep,name=cvss" json:"cvss,omitempty"`
+	Package     *Package              `protobuf:"bytes,7,opt,name=package" json:"package,omitempty"`
+	Fix         *VulnerabilityFix     `protobuf:"bytes,8,opt,name=fix" json:"fix,omitempty"`
+	LayerId     string                `protobuf:"bytes,9,opt,name=layer_id,json=layerId" json:"layer_id,omitempty"`
 	Path              string                `protobuf:"bytes,10,opt,name=path" json:"path,omitempty"`
 }
 
