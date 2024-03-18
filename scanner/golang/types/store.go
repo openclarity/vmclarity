@@ -27,7 +27,12 @@ type ScanStore interface {
 }
 
 type GetScanFindingsRequest struct {
-	ScanID string `json:"scanID"`
+	ScanID *string `json:"scanID"`
+}
+
+type DeleteScanFindingsRequest struct {
+	ID     *string `json:"ID"`
+	ScanID *string `json:"scanID"`
 }
 
 type ScanFindingStore interface {
@@ -38,7 +43,7 @@ type ScanFindingStore interface {
 	// Update is not needed since we only keep data in-memory for analytical purposes
 	// Update(findingID string, finding ScanFinding) (ScanFinding, error)
 
-	Delete(findingID string) error
+	Delete(req DeleteScanFindingsRequest) error
 }
 
 type Store interface {

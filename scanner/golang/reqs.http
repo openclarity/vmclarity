@@ -1,0 +1,35 @@
+### get scanner info
+GET http://localhost:8765/scanner
+
+### create scan
+POST http://localhost:8765/scans
+Content-Type: application/json
+
+{
+  "inputs": [
+    {
+      "scanID": "string",
+      "type": "SBOM",
+      "path": "string"
+    }
+  ],
+  "timeoutSeconds": 650
+}
+
+### get all scans
+GET http://localhost:8765/scans
+
+### get pending scans
+GET http://localhost:8765/scans?state=pending
+
+### get specific scan
+GET http://localhost:8765/scan/b87741ca-ec90-4fa5-b76e-fabc007d5f8b
+
+### get specific scan result
+GET http://localhost:8765/scan/b87741ca-ec90-4fa5-b76e-fabc007d5f8b/result
+
+### stop specific scan
+POST http://localhost:8765/scan/b87741ca-ec90-4fa5-b76e-fabc007d5f8b/stop
+
+### delete scan
+DELETE http://localhost/scan/b87741ca-ec90-4fa5-b76e-fabc007d5f8b

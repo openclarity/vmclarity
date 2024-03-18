@@ -307,6 +307,13 @@ type ScanInput struct {
 // ScanInputType The input type (ROOTFS, DIR, IMAGE etc.)
 type ScanInputType string
 
+// ScanProgressResponse defines model for ScanProgressResponse.
+type ScanProgressResponse struct {
+	JobsDone      *int    `json:"jobsDone,omitempty"`
+	JobsRemaining *int    `json:"jobsRemaining,omitempty"`
+	Message       *string `json:"message,omitempty"`
+}
+
 // ScanStatus defines model for ScanStatus.
 type ScanStatus struct {
 	// LastTransitionTime Last date time when the status has changed.

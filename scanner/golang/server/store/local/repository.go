@@ -1,6 +1,8 @@
 package local
 
 import (
+	"errors"
+	"github.com/openclarity/vmclarity/scanner/types"
 	"gorm.io/gorm"
 )
 
@@ -18,18 +20,18 @@ func (r *repo[T]) GetAll(params getParams, dest *[]T) error {
 }
 
 func (r *repo[T]) Get(cond *T, dest *T) error {
-	return r.DB.Where(cond).First(dest).Error
+	err := r.DB.Where(cond).First(dest).Error
+	return extractErr(err)
 }
 
 func (r *repo[T]) Update(cond *T, updatedColumns *T) error {
-	return r.DB.Model(r.Model).Select("*").Where(cond).Updates(updatedColumns).Error
+	err := r.DB.Model(r.Model).Select("*").Where(cond).Updates(updatedColumns).Error
+	return extractErr(err)
 }
 
 func (r *repo[T]) Delete(cond *T) error {
-	if err := r.DB.Model(r.Model).Delete(cond); err != nil {
-		return err.Error
-	}
-	return nil
+	err := r.DB.Model(r.Model).Delete(cond)
+	return extractErr(err.Error)
 }
 
 func (r *repo[T]) Create(data *T) error {
@@ -45,4 +47,14 @@ func newRepo[T any](db *gorm.DB, model T) *repo[T] {
 		DB:    db,
 		Model: model,
 	}
+}
+
+func extractErr(err error) error {
+	if err == nil {
+		return nil
+	}
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return types.ErrNotFound
+	}
+	return err
 }

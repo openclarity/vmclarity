@@ -5,6 +5,8 @@ import (
 	"github.com/openclarity/vmclarity/scanner/types"
 	"gorm.io/driver/sqlite" // Sqlite driver based on CGO
 	"gorm.io/gorm"
+	"os"
+	"path/filepath"
 )
 
 type handler struct {
@@ -13,7 +15,7 @@ type handler struct {
 
 func NewStore() (types.Store, error) {
 	// Create database
-	db, err := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(filepath.Join(os.TempDir(), "gorm.db")), &gorm.Config{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create db: %w", err)
 	}

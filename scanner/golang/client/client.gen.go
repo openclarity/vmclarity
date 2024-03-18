@@ -717,7 +717,7 @@ type GetScanResultResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ScanFindings
-	JSON202      *ErrorResponse
+	JSON202      *ScanProgressResponse
 	JSON404      *ErrorResponse
 	JSONDefault  *UnknownError
 }
@@ -1089,7 +1089,7 @@ func ParseGetScanResultResponse(rsp *http.Response) (*GetScanResultResponse, err
 		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
-		var dest ErrorResponse
+		var dest ScanProgressResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

@@ -16,89 +16,12 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/openclarity/vmclarity/scanner/types"
 	"net/http"
 )
-
-func (s *Server) CreateScan(ctx echo.Context) error {
-	// Load scan
-	var scan types.Scan
-	if err := ctx.Bind(&scan); err != nil {
-		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
-	}
-
-	// Start scan
-	scan, err := s.store.Scans().Create(scan)
-	if err != nil {
-		//if errors.Is(err, ErrScanAlreadyExists) {
-		//	return sendError(ctx, http.StatusConflict, err.Error())
-		//}
-		return sendError(ctx, http.StatusInternalServerError, err.Error())
-	}
-
-	return sendResponse(ctx, http.StatusCreated, scan)
-}
-
-func (s *Server) GetScan(ctx echo.Context, scanID types.ScanID) error {
-	result, err := s.store.Scans().Get(scanID)
-	if err != nil {
-		//if errors.Is(err, ErrScanNotFound) {
-		//	return sendError(ctx, http.StatusNotFound, err.Error())
-		//}
-		return sendError(ctx, http.StatusInternalServerError, err.Error())
-	}
-
-	return sendResponse(ctx, http.StatusOK, result)
-}
-
-func (s *Server) DeleteScan(ctx echo.Context, scanID types.ScanID) error {
-	err := s.store.Scans().Delete(scanID)
-	if err != nil {
-		//if errors.Is(err, ErrScanNotFound) {
-		//	return sendError(ctx, http.StatusNotFound, err.Error())
-		//}
-		return sendError(ctx, http.StatusInternalServerError, err.Error())
-	}
-
-	return sendResponse(ctx, http.StatusOK, "")
-}
-
-func (s *Server) GetScanResult(ctx echo.Context, scanID types.ScanID) error {
-	// check scan status
-	scan, err := s.store.Scans().Get(scanID)
-	if err != nil {
-		//if errors.Is(err, ErrScanInProgress) {
-		//	return sendError(ctx, http.StatusAccepted, err.Error())
-		//}
-		//if errors.Is(err, ErrScanNotFound) {
-		//	return sendError(ctx, http.StatusNotFound, err.Error())
-		//}
-		return sendError(ctx, http.StatusInternalServerError, err.Error())
-	}
-
-	// get scan result
-	scanResult, err := s.store.ScanFindings().GetAll(types.GetScanFindingsRequest{
-		ScanID: scanID,
-	})
-	if err != nil {
-		//if errors.Is(err, ErrScanInProgress) {
-		//	return sendError(ctx, http.StatusAccepted, err.Error())
-		//}
-		//if errors.Is(err, ErrScanNotFound) {
-		//	return sendError(ctx, http.StatusNotFound, err.Error())
-		//}
-		return sendError(ctx, http.StatusInternalServerError, err.Error())
-	}
-
-	return sendResponse(ctx, http.StatusOK, scanResult)
-}
-
-func (s *Server) StopScan(ctx echo.Context, scanID types.ScanID) error {
-	//TODO implement me
-	panic("implement me")
-}
 
 func (s *Server) GetScans(ctx echo.Context, params types.GetScansParams) error {
 	scans, err := s.store.Scans().GetAll(types.GetScansRequest{
@@ -108,5 +31,109 @@ func (s *Server) GetScans(ctx echo.Context, params types.GetScansParams) error {
 		return sendError(ctx, http.StatusInternalServerError, err.Error())
 	}
 
-	return sendResponse(ctx, http.StatusOK, scans)
+	count := len(scans)
+	return sendResponse(ctx, http.StatusOK, types.Scans{
+		Count: &count,
+		Items: &scans,
+	})
+}
+
+func (s *Server) GetScan(ctx echo.Context, scanID types.ScanID) error {
+	result, err := s.store.Scans().Get(scanID)
+	if err != nil {
+		if errors.Is(err, types.ErrNotFound) {
+			return sendError(ctx, http.StatusNotFound, err.Error())
+		}
+		return sendError(ctx, http.StatusInternalServerError, err.Error())
+	}
+
+	return sendResponse(ctx, http.StatusOK, result)
+}
+
+func (s *Server) CreateScan(ctx echo.Context) error {
+	// Load request
+	var scan types.Scan
+	if err := ctx.Bind(&scan); err != nil {
+		return sendError(ctx, http.StatusBadRequest, fmt.Sprintf("failed to bind request: %v", err))
+	}
+
+	// Create scan
+	scan, err := s.store.Scans().Create(scan)
+	if err != nil {
+		var checkErr *types.PreconditionFailedError
+		if errors.As(err, &checkErr) {
+			return sendError(ctx, http.StatusBadRequest, checkErr.Error())
+		}
+		return sendError(ctx, http.StatusInternalServerError, err.Error())
+	}
+
+	return sendResponse(ctx, http.StatusCreated, scan)
+}
+
+func (s *Server) DeleteScan(ctx echo.Context, scanID types.ScanID) error {
+	// Delete scan
+	err := s.store.Scans().Delete(scanID)
+	if err != nil {
+		if errors.Is(err, types.ErrNotFound) {
+			return sendError(ctx, http.StatusNotFound, err.Error())
+		}
+		return sendError(ctx, http.StatusInternalServerError, err.Error())
+	}
+
+	// Clear findings for the given scan
+	_ = s.store.ScanFindings().Delete(types.DeleteScanFindingsRequest{
+		ScanID: &scanID,
+	})
+
+	// TODO: send stop signal via orchestrator in case scan is running
+
+	return sendResponse(ctx, http.StatusOK, "scan successfully deleted")
+}
+
+func (s *Server) GetScanResult(ctx echo.Context, scanID types.ScanID) error {
+	// Get scan
+	scan, err := s.store.Scans().Get(scanID)
+	if err != nil {
+		if errors.Is(err, types.ErrNotFound) {
+			return sendError(ctx, http.StatusNotFound, err.Error())
+		}
+		return sendError(ctx, http.StatusInternalServerError, err.Error())
+	}
+
+	// Check scan state
+	switch state := scan.Status.State; state {
+	case types.ScanStatusStateInProgress:
+		msg := "scan still in progress"
+		return sendResponse(ctx, http.StatusAccepted, types.ScanProgressResponse{
+			JobsDone:      scan.JobsCompleted,
+			JobsRemaining: scan.JobsLeftToRun,
+			Message:       &msg,
+		})
+
+	case types.ScanStatusStatePending, types.ScanStatusStateAborted, types.ScanStatusStateFailed:
+		return sendError(ctx, http.StatusPreconditionFailed,
+			fmt.Sprintf("cannot get scan result due to scan state: %s", state))
+	}
+
+	// Get scan results
+	scanResult, err := s.store.ScanFindings().GetAll(types.GetScanFindingsRequest{
+		ScanID: &scanID,
+	})
+	if err != nil {
+		if errors.Is(err, types.ErrNotFound) {
+			return sendError(ctx, http.StatusNotFound, "scan findings not found or created yet")
+		}
+		return sendError(ctx, http.StatusInternalServerError, err.Error())
+	}
+
+	count := len(scanResult)
+	return sendResponse(ctx, http.StatusOK, types.ScanFindings{
+		Count: &count,
+		Items: &scanResult,
+	})
+}
+
+func (s *Server) StopScan(ctx echo.Context, scanID types.ScanID) error {
+	// TODO: send stop signal via orchestrator in case scan is running
+	return nil
 }
