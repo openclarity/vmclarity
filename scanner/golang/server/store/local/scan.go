@@ -91,6 +91,7 @@ func (s *scanStore) Update(scanID string, scan types.Scan) (types.Scan, error) {
 	// Update scan
 	var toUpdate scanModel
 	toUpdate.fromScan(scan)
+	toUpdate.Id = &scanID
 
 	if err := s.repo.Update(&scanModel{Id: &scanID}, &toUpdate); err != nil {
 		return types.Scan{}, fmt.Errorf("failed to update scan: %w", err)

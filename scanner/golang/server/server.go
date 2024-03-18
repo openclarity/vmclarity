@@ -22,6 +22,7 @@ import (
 	"github.com/labstack/echo/v4"
 	echomiddleware "github.com/labstack/echo/v4/middleware"
 	middleware "github.com/oapi-codegen/echo-middleware"
+	"github.com/openclarity/vmclarity/scanner/server/orchestrator"
 	"github.com/openclarity/vmclarity/scanner/server/store/local"
 	"github.com/openclarity/vmclarity/scanner/types"
 	"net/http"
@@ -29,9 +30,11 @@ import (
 )
 
 type Server struct {
-	echo    *echo.Echo
-	store   types.Store
-	scanner types.Scanner
+	errCh        chan error
+	echo         *echo.Echo
+	store        types.Store
+	scanner      types.Scanner
+	orchestrator types.Orchestrator
 }
 
 func NewServer(scanner types.Scanner) (*Server, error) {
@@ -47,11 +50,19 @@ func NewServer(scanner types.Scanner) (*Server, error) {
 		return nil, fmt.Errorf("failed to create store: %w", err)
 	}
 
+	// Create Orchestrator
+	orchestrator, err := orchestrator.NewOrchestrator(scanner, store)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create store: %w", err)
+	}
+
 	// Create server instance
 	server := &Server{
-		echo:    echo.New(),
-		scanner: scanner,
-		store:   store,
+		echo:         echo.New(),
+		errCh:        make(chan error),
+		scanner:      scanner,
+		store:        store,
+		orchestrator: orchestrator,
 	}
 
 	// Log all requests
@@ -71,11 +82,23 @@ func NewServer(scanner types.Scanner) (*Server, error) {
 }
 
 // Start starts the server and blocks until the server exits or returns an error
-func (s *Server) Start(address string) error {
-	err := s.echo.Start(address)
-	if !errors.Is(err, http.ErrServerClosed) {
-		return err
-	}
+func (s *Server) Start(address string) <-chan error {
+	errCh := make(chan error)
+
+	go func() {
+		err := s.echo.Start(address)
+		if !errors.Is(err, http.ErrServerClosed) {
+			errCh <- err
+		}
+	}()
+
+	go func() {
+		err := s.orchestrator.Start()
+		if err != nil {
+			errCh <- err
+		}
+	}()
+
 	return nil
 }
 
@@ -85,6 +108,10 @@ func (s *Server) Stop() error {
 	defer cancel()
 
 	if err := s.echo.Shutdown(ctx); err != nil {
+		return err
+	}
+
+	if err := s.orchestrator.Stop(); err != nil {
 		return err
 	}
 

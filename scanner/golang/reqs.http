@@ -8,9 +8,8 @@ Content-Type: application/json
 {
   "inputs": [
     {
-      "scanID": "string",
-      "type": "SBOM",
-      "path": "string"
+      "type": "IMAGE",
+      "path": "nginx"
     }
   ],
   "timeoutSeconds": 650
@@ -26,10 +25,10 @@ GET http://localhost:8765/scans?state=pending
 GET http://localhost:8765/scan/b87741ca-ec90-4fa5-b76e-fabc007d5f8b
 
 ### get specific scan result
-GET http://localhost:8765/scan/b87741ca-ec90-4fa5-b76e-fabc007d5f8b/result
+GET http://localhost:8765/scan/8d60d55c-bbd3-4120-b346-27524fb60c23/result
 
 ### stop specific scan
 POST http://localhost:8765/scan/b87741ca-ec90-4fa5-b76e-fabc007d5f8b/stop
 
 ### delete scan
-DELETE http://localhost/scan/b87741ca-ec90-4fa5-b76e-fabc007d5f8b
+DELETE http://localhost:8765/scan/44a31da4-cb99-4141-90dd-d546010f97d5

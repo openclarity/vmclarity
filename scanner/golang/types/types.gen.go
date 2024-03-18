@@ -66,11 +66,14 @@ const (
 	NEGLIGIBLE VulnerabilitySeverity = "NEGLIGIBLE"
 )
 
-// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
-type Annotations = []struct {
+// Annotation defines model for Annotation.
+type Annotation struct {
 	Key   *string `json:"key,omitempty"`
 	Value *string `json:"value,omitempty"`
 }
+
+// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+type Annotations = []Annotation
 
 // ErrorResponse An object that is returned for a failed API request.
 type ErrorResponse struct {
@@ -259,7 +262,7 @@ type Scan struct {
 	EndTime *time.Time `json:"endTime,omitempty"`
 	Id      *string    `json:"id,omitempty"`
 
-	// Inputs List of inputs to scan (some rational amount, e.g. 100).
+	// Inputs List of inputs to scan (some rational amount, e.g. 50).
 	Inputs        []ScanInput `json:"inputs"`
 	JobsCompleted *int        `json:"jobsCompleted,omitempty"`
 	JobsLeftToRun *int        `json:"jobsLeftToRun,omitempty"`

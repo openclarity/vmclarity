@@ -3,12 +3,15 @@ module github.com/openclarity/vmclarity/scanner
 go 1.21.4
 
 require (
+	github.com/alitto/pond v1.8.3
 	github.com/deepmap/oapi-codegen/v2 v2.1.0
 	github.com/getkin/kin-openapi v0.123.0
 	github.com/google/uuid v1.6.0
 	github.com/labstack/echo/v4 v4.11.4
 	github.com/oapi-codegen/echo-middleware v1.0.1
 	github.com/oapi-codegen/runtime v1.1.1
+	github.com/sirupsen/logrus v1.8.1
+	golang.org/x/sync v0.6.0
 	gorm.io/datatypes v1.2.0
 	gorm.io/driver/sqlite v1.5.5
 	gorm.io/gorm v1.25.7

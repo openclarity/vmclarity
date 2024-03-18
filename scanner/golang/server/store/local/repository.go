@@ -38,6 +38,10 @@ func (r *repo[T]) Create(data *T) error {
 	return r.DB.Create(data).Error
 }
 
+func (r *repo[T]) CreateMany(data *[]*T) error {
+	return r.DB.Create(data).Error
+}
+
 func (r *repo[T]) getTx() *gorm.DB {
 	return r.DB.Model(r.Model)
 }

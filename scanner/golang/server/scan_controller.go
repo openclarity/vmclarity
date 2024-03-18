@@ -21,6 +21,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/openclarity/vmclarity/scanner/types"
 	"net/http"
+	"time"
 )
 
 func (s *Server) GetScans(ctx echo.Context, params types.GetScansParams) error {
@@ -58,7 +59,16 @@ func (s *Server) CreateScan(ctx echo.Context) error {
 	}
 
 	// Create scan
-	scan, err := s.store.Scans().Create(scan)
+	inputsCount := len(scan.Inputs)
+	scan, err := s.store.Scans().Create(types.Scan{
+		Inputs:        scan.Inputs,
+		JobsLeftToRun: &inputsCount,
+		Status: &types.ScanStatus{
+			LastTransitionTime: time.Now(),
+			State:              types.ScanStatusStatePending,
+		},
+		TimeoutSeconds: scan.TimeoutSeconds,
+	})
 	if err != nil {
 		var checkErr *types.PreconditionFailedError
 		if errors.As(err, &checkErr) {
@@ -134,6 +144,13 @@ func (s *Server) GetScanResult(ctx echo.Context, scanID types.ScanID) error {
 }
 
 func (s *Server) StopScan(ctx echo.Context, scanID types.ScanID) error {
-	// TODO: send stop signal via orchestrator in case scan is running
-	return nil
+	err := s.orchestrator.StartScan(scanID)
+	if err != nil {
+		if errors.Is(err, types.ErrNotRunning) {
+			return sendError(ctx, http.StatusNotFound, err.Error())
+		}
+		return sendError(ctx, http.StatusInternalServerError, err.Error())
+	}
+
+	return sendResponse(ctx, http.StatusOK, "scan stoppe successfuly")
 }

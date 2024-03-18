@@ -45,8 +45,8 @@ func main() {
 	// Handle server start
 	go func() {
 		log.Infof("Scanner server starting...")
-		err := server.Start(config.ListenAddress)
-		if err != nil {
+		errCh := server.Start(config.ListenAddress)
+		if err := <-errCh; err != nil {
 			log.Fatalf("Scanner server failed: %v", err)
 		}
 	}()

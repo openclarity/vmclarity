@@ -23,8 +23,8 @@ import (
 
 var CISDockerImpactCategory = "best-practice"
 
-func parseDockleReport(input types.ScanInput, assessmentMap dockle_types.AssessmentMap) []types.ScanResult {
-	var results []types.ScanResult
+func parseDockleReport(scanID string, input types.ScanInput, assessmentMap dockle_types.AssessmentMap) []types.ScanFinding {
+	var results []types.ScanFinding
 
 	for _, codeInfo := range assessmentMap {
 		severity := convertDockleSeverity(codeInfo.Level)
@@ -50,8 +50,10 @@ func parseDockleReport(input types.ScanInput, assessmentMap dockle_types.Assessm
 			Severity:    &severity,
 		})
 
-		results = append(results, types.ScanResult{
-			Finding: *findingInfo,
+		results = append(results, types.ScanFinding{
+			FindingInfo: *findingInfo,
+			Input:       input,
+			ScanID:      &scanID,
 		})
 	}
 

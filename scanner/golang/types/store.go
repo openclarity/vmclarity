@@ -38,7 +38,7 @@ type DeleteScanFindingsRequest struct {
 type ScanFindingStore interface {
 	GetAll(req GetScanFindingsRequest) ([]ScanFinding, error)
 	Get(findingID string) (ScanFinding, error)
-	Create(finding ScanFinding) (ScanFinding, error)
+	CreateMany(findings ...ScanFinding) error
 
 	// Update is not needed since we only keep data in-memory for analytical purposes
 	// Update(findingID string, finding ScanFinding) (ScanFinding, error)

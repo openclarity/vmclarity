@@ -14,10 +14,16 @@ type findingsStore struct {
 	repo *repo[findingModel]
 }
 
-func (s findingsStore) GetAll(req types.GetScanFindingsRequest) ([]types.ScanFinding, error) {
+func (h *handler) ScanFindings() types.ScanFindingStore {
+	return &findingsStore{
+		repo: newRepo(h.db, findingModel{}),
+	}
+}
+
+func (s *findingsStore) GetAll(req types.GetScanFindingsRequest) ([]types.ScanFinding, error) {
 	var filters []interface{}
-	if req.ScanID != "" {
-		filters = append(filters, "scanID = ?", req.ScanID)
+	if req.ScanID != nil && *req.ScanID != "" {
+		filters = append(filters, "scanID = ?", *req.ScanID)
 	}
 
 	var findingModels []findingModel
@@ -34,7 +40,7 @@ func (s findingsStore) GetAll(req types.GetScanFindingsRequest) ([]types.ScanFin
 	return findings, nil
 }
 
-func (s findingsStore) Get(findingID string) (types.ScanFinding, error) {
+func (s *findingsStore) Get(findingID string) (types.ScanFinding, error) {
 	var finding findingModel
 	if err := s.repo.Get(&findingModel{Id: &findingID}, &finding); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -45,44 +51,44 @@ func (s findingsStore) Get(findingID string) (types.ScanFinding, error) {
 	return finding.toFinding(), nil
 }
 
-func (s findingsStore) Create(finding types.ScanFinding) (types.ScanFinding, error) {
-	if finding.Id != nil && *finding.Id != "" {
-		return types.ScanFinding{}, &types.PreconditionFailedError{
-			Reason: "cannot specify id field when creating a new scan finding",
+func (s *findingsStore) CreateMany(findings ...types.ScanFinding) error {
+	toCreate := make([]*findingModel, len(findings))
+	for idx, finding := range findings {
+		if finding.Id != nil && *finding.Id != "" {
+			return &types.PreconditionFailedError{
+				Reason: "cannot specify id field when creating a new scan finding",
+			}
 		}
-	}
-	if finding.ScanID == nil || *finding.ScanID == "" {
-		return types.ScanFinding{}, &types.PreconditionFailedError{
-			Reason: "cannot specify empty scan ID field when creating a new scan finding",
+		if finding.ScanID == nil || *finding.ScanID == "" {
+			return &types.PreconditionFailedError{
+				Reason: "cannot specify empty scan ID field when creating a new scan finding",
+			}
 		}
+
+		// Create finding ID
+		findingID := uuid.New().String()
+
+		// Create finding
+		toCreate[idx] = &findingModel{}
+		toCreate[idx].fromFinding(finding)
+		toCreate[idx].Id = &findingID
 	}
 
-	// Create finding ID
-	findingID := uuid.New().String()
-
-	// Create finding
-	var toCreate findingModel
-	toCreate.fromFinding(finding)
-	toCreate.Id = &findingID
-
-	if err := s.repo.Create(&toCreate); err != nil {
-		return types.ScanFinding{}, fmt.Errorf("failed to create scan finding: %w", err)
+	if err := s.repo.CreateMany(&toCreate); err != nil {
+		return fmt.Errorf("failed to create scan findings: %w", err)
 	}
 
-	return s.Get(findingID)
-}
-
-func (s findingsStore) Delete(findingID string) error {
-	if err := s.repo.Delete(&findingModel{Id: &findingID}); err != nil {
-		return fmt.Errorf("failed to delete scan finding: %w", err)
-	}
 	return nil
 }
 
-func (h *handler) ScanFindings() types.ScanFindingStore {
-	return &findingsStore{
-		repo: newRepo(h.db, findingModel{}),
+func (s *findingsStore) Delete(req types.DeleteScanFindingsRequest) error {
+	if err := s.repo.Delete(&findingModel{
+		Id:     req.ID,
+		ScanID: req.ScanID,
+	}); err != nil {
+		return fmt.Errorf("failed to delete scan finding: %w", err)
 	}
+	return nil
 }
 
 type findingModel struct {

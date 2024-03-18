@@ -36,7 +36,7 @@ func (s *Scanner) GetInfo(ctx context.Context) (*types.ScannerInfo, error) {
 	}, nil
 }
 
-func (s *Scanner) Scan(ctx context.Context, scanID string, input types.ScanInput) ([]types.ScanResult, error) {
+func (s *Scanner) Scan(ctx context.Context, scanID string, input types.ScanInput) ([]types.ScanFinding, error) {
 	// Validate this is an input type supported by the scanner,
 	// otherwise return skipped.
 	if !s.isValidInputType(input.Type) {
@@ -49,7 +49,7 @@ func (s *Scanner) Scan(ctx context.Context, scanID string, input types.ScanInput
 		return nil, err
 	}
 
-	findings := parseDockleReport(input, assessmentMap)
+	findings := parseDockleReport(scanID, input, assessmentMap)
 
 	return findings, nil
 }

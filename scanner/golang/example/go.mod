@@ -14,6 +14,7 @@ require (
 	github.com/Microsoft/go-winio v0.6.0 // indirect
 	github.com/Microsoft/hcsshim v0.10.0-rc.7 // indirect
 	github.com/adrg/xdg v0.4.0 // indirect
+	github.com/alitto/pond v1.8.3 // indirect
 	github.com/anchore/go-logger v0.0.0-20220728155337-03b66a5207d8 // indirect
 	github.com/anchore/stereoscope v0.0.0-20230911191510-2fc2d6c2503b // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect

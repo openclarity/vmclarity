@@ -186,16 +186,19 @@ paths:
 
 components:
   schemas:
+    Annotation:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+
     Annotations:
       type: array
       description: Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
       items:
-        type: object
-        properties:
-          key:
-            type: string
-          value:
-            type: string
+        $ref: '#/components/schemas/Annotation'
 
     Metadata:
       type: object
@@ -293,9 +296,11 @@ components:
           readOnly: true
         inputs:
           type: array
-          description: List of inputs to scan (some rational amount, e.g. 100).
+          description: List of inputs to scan (some rational amount, e.g. 50).
           items:
             $ref: '#/components/schemas/ScanInput'
+          minItems: 1
+          maxItems: 50
         timeoutSeconds:
           type: integer
           minimum: 0
