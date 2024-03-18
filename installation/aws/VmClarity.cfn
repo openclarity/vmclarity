@@ -234,6 +234,9 @@ Resources:
                   # Enable and start/restart VMClarity backend
                   systemctl enable vmclarity.service
                   systemctl restart vmclarity.service
+
+                  # Add ubuntu user to docker group
+                  usermod -a -G docker ubuntu
               mode: "000744"
 
             "/etc/vmclarity/vmclarity.yaml":

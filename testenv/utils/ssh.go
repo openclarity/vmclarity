@@ -37,13 +37,13 @@ type SSHKeyPair struct {
 
 // GenerateSSHKeyPair generates a new SSH key pair.
 func GenerateSSHKeyPair() (*SSHKeyPair, error) {
-	privateKey, err := rsa.GenerateKey(rand.Reader, 1024)
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048) //nolint:gomnd
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate private key: %w", err)
 	}
 
 	privateKeyFile, err := os.Create("id_rsa_testenv")
-	defer privateKeyFile.Close()
+	defer privateKeyFile.Close() // nolint:staticcheck
 	if err != nil {
 		return nil, fmt.Errorf("failed to create private key file: %w", err)
 	}
@@ -56,13 +56,17 @@ func GenerateSSHKeyPair() (*SSHKeyPair, error) {
 		return nil, fmt.Errorf("failed to encode private key: %w", err)
 	}
 
+	if err := os.Chmod(privateKeyFile.Name(), 0o600); err != nil { //nolint:gomnd
+		return nil, fmt.Errorf("failed to change file permissions: %w", err)
+	}
+
 	publicKey, err := ssh.NewPublicKey(&privateKey.PublicKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create public key: %w", err)
 	}
 
 	publicKeyFile := "id_rsa_testenv.pub"
-	err = os.WriteFile(publicKeyFile, ssh.MarshalAuthorizedKey(publicKey), 0655)
+	err = os.WriteFile(publicKeyFile, ssh.MarshalAuthorizedKey(publicKey), 0o600) //nolint:gomnd
 	if err != nil {
 		return nil, fmt.Errorf("failed to write public key file: %w", err)
 	}

@@ -17,7 +17,6 @@ package aws
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"time"
@@ -27,7 +26,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	cloudformationtypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 
 	"github.com/openclarity/vmclarity/testenv/aws/asset"
@@ -48,11 +46,17 @@ type AWSEnv struct {
 	ec2Client   *ec2.Client
 	s3Client    *s3.Client
 	testAsset   *asset.Asset
+	server      *Server
 	stackName   string
 	templateURL string
 	region      string
 	sshKeyPair  *utils.SSHKeyPair
 	meta        map[string]interface{}
+}
+
+type Server struct {
+	InstanceID string
+	PublicIP   string
 }
 
 // Setup AWS test environment from cloud formation template.
@@ -119,31 +123,28 @@ func (e *AWSEnv) TearDown(ctx context.Context) error {
 }
 
 func (e *AWSEnv) ServicesReady(ctx context.Context) (bool, error) {
-	// Get stack status
-	stackStatus, err := e.getStackStatus(ctx)
+	// Check infrastructure status before checking services
+	ready, err := e.infrastructureReady(ctx)
+	if err != nil || !ready {
+		return false, err
+	}
+
+	// Get list of services
+	services, err := e.Services(ctx)
 	if err != nil {
-		return false, fmt.Errorf("failed to get stack status: %w", err)
+		return false, fmt.Errorf("failed to get services: %w", err)
 	}
 
-	// If the stack status is not CREATE_COMPLETE, then the services are not ready
-	if stackStatus != cloudformationtypes.StackStatusCreateComplete {
-		return false, nil
+	// Assume that the services are ready if all server containers are in ready state
+	ready = true
+	for _, service := range services {
+		if service.GetState() != types.ServiceStateReady {
+			ready = false
+			break
+		}
 	}
 
-	// Get test asset status
-	testAssetStatus, err := e.getEC2InstanceStatus(ctx, e.testAsset.InstanceID)
-	if err != nil {
-		return false, fmt.Errorf("failed to get instance status: %w", err)
-	}
-
-	// If the instance status is not running, then the services are not ready
-	if testAssetStatus != ec2types.InstanceStateNameRunning {
-		return false, nil
-	}
-
-	// If the stack status is CREATE_COMPLETE and the test instance status is Running,
-	// then the services are ready
-	return true, nil
+	return ready, nil
 }
 
 func (e *AWSEnv) ServiceLogs(ctx context.Context, services []string, startTime time.Time, stdout, stderr io.Writer) error {
@@ -151,60 +152,26 @@ func (e *AWSEnv) ServiceLogs(ctx context.Context, services []string, startTime t
 }
 
 func (e *AWSEnv) Services(ctx context.Context) (types.Services, error) {
-	resources, err := e.client.ListStackResources(
-		ctx,
-		&cloudformation.ListStackResourcesInput{
-			StackName: &e.stackName,
-		},
-	)
+	// Get Docker Container list from VMClarity Server
+	containerList, err := utils.GetRemoteDockerContainerList(ctx, e.sshKeyPair.PrivateKeyFile, e.server.PublicIP)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list stack resources: %w", err)
+		return nil, fmt.Errorf("failed to get container list: %w", err)
 	}
 
-	// Assume that there is only one service in the stack, the VMClarity Server.
-	for _, resource := range resources.StackResourceSummaries {
-		if *resource.ResourceType == "AWS::EC2::Instance" {
-			return types.Services{
-				&Service{
-					ID:          *resource.PhysicalResourceId,
-					Namespace:   e.stackName,
-					Application: "VMClarity Server",
-					Component:   "server",
-					State:       convertStateFromAWS(resource.ResourceStatus),
-				},
-			}, nil
-		}
+	var services types.Services
+	for _, container := range *containerList {
+		services = append(services, &Service{
+			ID:    container.ID,
+			State: convertStateFromDocker(container.State),
+		})
 	}
 
-	return types.Services{}, errors.New("failed to get services")
+	return services, nil
 }
 
 func (e *AWSEnv) Endpoints(ctx context.Context) (*types.Endpoints, error) {
-	// Get VMClarity Server EC2 instance
-	instances, err := e.Services(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get services: %w", err)
-	}
-
-	if len(instances) != 1 {
-		return nil, errors.New("failed to get VMClarity Server instance")
-	}
-
-	// Describe VMClarity Server EC2 instance
-	output, err := e.ec2Client.DescribeInstances(
-		ctx,
-		&ec2.DescribeInstancesInput{
-			InstanceIds: []string{instances[0].GetID()},
-		},
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to describe instance: %w", err)
-	}
-
-	// Get Public IP of VMClarity Server
-	remoteHost := *output.Reservations[0].Instances[0].PublicIpAddress
+	remoteHost := e.server.PublicIP
 	remotePort := "80"
-
 	localHost := "localhost"
 	localPort := "8080"
 

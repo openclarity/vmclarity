@@ -16,8 +16,6 @@
 package aws
 
 import (
-	"github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
-
 	envtypes "github.com/openclarity/vmclarity/testenv/types"
 )
 
@@ -53,48 +51,13 @@ func (s Service) String() string {
 	return s.ID
 }
 
-var (
-	// ResourceStatusReadySet represents all states of the resource when it is ready.
-	ResourceStatusReadySet = map[types.ResourceStatus]bool{
-		types.ResourceStatusCreateComplete:         true,
-		types.ResourceStatusDeleteComplete:         true,
-		types.ResourceStatusDeleteSkipped:          true,
-		types.ResourceStatusUpdateComplete:         true,
-		types.ResourceStatusImportComplete:         true,
-		types.ResourceStatusImportRollbackComplete: true,
-		types.ResourceStatusUpdateRollbackComplete: true,
-		types.ResourceStatusRollbackComplete:       true,
-	}
-	// ResourceStateNotReadySet represents all states of the resource when it is not ready.
-	ResourceStatusNotReadySet = map[types.ResourceStatus]bool{
-		types.ResourceStatusCreateInProgress:         true,
-		types.ResourceStatusDeleteInProgress:         true,
-		types.ResourceStatusUpdateInProgress:         true,
-		types.ResourceStatusImportInProgress:         true,
-		types.ResourceStatusImportRollbackInProgress: true,
-		types.ResourceStatusUpdateRollbackInProgress: true,
-		types.ResourceStatusRollbackInProgress:       true,
-	}
-	// ResourceStateDegradedSet represents all states of the resource when it is degraded.
-	ResourceStatusDegradedSet = map[types.ResourceStatus]bool{
-		types.ResourceStatusCreateFailed:         true,
-		types.ResourceStatusDeleteFailed:         true,
-		types.ResourceStatusUpdateFailed:         true,
-		types.ResourceStatusImportFailed:         true,
-		types.ResourceStatusImportRollbackFailed: true,
-		types.ResourceStatusUpdateRollbackFailed: true,
-		types.ResourceStatusRollbackFailed:       true,
-	}
-)
-
-// Convert AWS CloudFormation stack resource status to vmclarity service state.
-func convertStateFromAWS(state types.ResourceStatus) envtypes.ServiceState {
-	if ResourceStatusReadySet[state] {
+// Convert Docker container state to vmclarity service state.
+func convertStateFromDocker(state string) envtypes.ServiceState {
+	switch state {
+	case "running":
 		return envtypes.ServiceStateReady
-	} else if ResourceStatusNotReadySet[state] {
+	case "exited":
 		return envtypes.ServiceStateNotReady
-	} else if ResourceStatusDegradedSet[state] {
-		return envtypes.ServiceStateDegraded
 	}
 	return envtypes.ServiceStateUnknown
 }
