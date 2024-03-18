@@ -28,6 +28,7 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
+
 	"github.com/openclarity/vmclarity/testenv/utils"
 )
 
@@ -149,6 +150,71 @@ func (e *AWSEnv) getStackStatus(ctx context.Context) (cloudformationtypes.StackS
 	return stacks.Stacks[0].StackStatus, nil
 }
 
+// Check if the infrastructure is ready.
+func (e *AWSEnv) infrastructureReady(ctx context.Context) (bool, error) {
+	// Get stack status
+	// If the stack status is not CREATE_COMPLETE, then the infrastructure is not ready
+	stackStatus, err := e.getStackStatus(ctx)
+	if err != nil {
+		return false, fmt.Errorf("failed to get stack status: %w", err)
+	}
+	if stackStatus != cloudformationtypes.StackStatusCreateComplete {
+		return false, nil
+	}
+
+	// Get test asset status
+	// If the test asset status is not running, then the infrastructure are not ready
+	testAssetStatus, err := e.getEC2InstanceStatus(ctx, e.testAsset.InstanceID)
+	if err != nil {
+		return false, fmt.Errorf("failed to get test instance status: %w", err)
+	}
+	if testAssetStatus != ec2types.InstanceStateNameRunning {
+		return false, nil
+	}
+
+	// Get list of stack resources
+	resources, err := e.client.ListStackResources(
+		ctx,
+		&cloudformation.ListStackResourcesInput{
+			StackName: &e.stackName,
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("failed to list stack resources: %w", err)
+	}
+
+	// Get VMClarity Server EC2 instance ID
+	var serverInstanceID string
+	for _, resource := range resources.StackResourceSummaries {
+		if *resource.ResourceType == "AWS::EC2::Instance" {
+			serverInstanceID = *resource.PhysicalResourceId
+		}
+	}
+
+	// Get VMClarity Server EC2 instance status
+	// If the server status is not running, then the infrastructure are not ready
+	status, err := e.getEC2InstanceStatus(ctx, serverInstanceID)
+	if err != nil {
+		return false, fmt.Errorf("failed to get server instance status: %w", err)
+	}
+	if status != ec2types.InstanceStateNameRunning {
+		return false, nil
+	}
+
+	// Get VMClarity Server public IP
+	serverPublicIP, err := e.getServerPublicIP(ctx, serverInstanceID)
+	if err != nil {
+		return false, fmt.Errorf("failed to get server public IP: %w", err)
+	}
+
+	e.server = &Server{
+		InstanceID: serverInstanceID,
+		PublicIP:   serverPublicIP,
+	}
+
+	return true, nil
+}
+
 // Get EC2 instance status by instance ID.
 func (e *AWSEnv) getEC2InstanceStatus(ctx context.Context, instanceID string) (ec2types.InstanceStateName, error) {
 	instanceStatus, err := e.ec2Client.DescribeInstanceStatus(
@@ -166,4 +232,27 @@ func (e *AWSEnv) getEC2InstanceStatus(ctx context.Context, instanceID string) (e
 	}
 
 	return instanceStatus.InstanceStatuses[0].InstanceState.Name, nil
+}
+
+// Get the public IP address by instance ID.
+func (e *AWSEnv) getServerPublicIP(ctx context.Context, instanceID string) (string, error) {
+	instances, err := e.ec2Client.DescribeInstances(
+		ctx,
+		&ec2.DescribeInstancesInput{
+			InstanceIds: []string{instanceID},
+		},
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to describe instances: %w", err)
+	}
+
+	if len(instances.Reservations) != 1 {
+		return "", errors.New("failed to find instance status")
+	}
+
+	if instances.Reservations[0].Instances[0].State.Name != ec2types.InstanceStateNameRunning {
+		return "", errors.New("server instance is not running")
+	}
+
+	return *instances.Reservations[0].Instances[0].PublicIpAddress, nil
 }
