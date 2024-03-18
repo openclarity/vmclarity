@@ -25,6 +25,8 @@ import (
 	"scanner/scanner"
 )
 
+// TODO(ramizpolic): change to use client stubs rather than REST server import
+
 func main() {
 	// Load components
 	config, err := NewConfig()

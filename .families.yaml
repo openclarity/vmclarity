@@ -122,20 +122,22 @@ rootkits:
     chkrootkit:
       binary_path: chkrootkit
 
+# TODO: decide how to use them across families, probably
+# referencing them from here would be the simplest way.
 plugins:
   - name: binary-plugin
     type: binary
     path: path-to-binary
-    # config
+    # config: some config data
     # Note: communicates via CLI
   - name: container-plugin
     type: container
     # version: v1
     path: image-repo
-    # config
-    # Note: communicates via HTTP endpoint/socket
-  - name: grpc-plugin
-    type: grpc
+    # config: some config data, e.g. bootstrapping options, additional volumes, etc
+    # Note: communicates via embedded HTTP server via socket
+  - name: rest-plugin
+    type: rest-server
     path: http://localhost:1234
-    # config
-    # Note: this works by interacting with the HTTP server
+    # config: something to figure out?
+    # Note: communicates with the HTTP server directly
