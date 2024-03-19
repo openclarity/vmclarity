@@ -6,26 +6,13 @@ info:
   version: 1.0.0
 
 paths:
-  /scanner:
-    get:
-      summary: Fetches runtime scanner details.
-      operationId: GetScannerInfo
-      responses:
-        200:
-          description: Scanner details fetched successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ScannerInfo'
-        default:
-          $ref: '#/components/responses/UnknownError'
-
   /scans:
     get:
       summary: Get all scans.
       operationId: GetScans
       parameters:
         - $ref: '#/components/parameters/scanState'
+        - $ref: '#/components/parameters/metaSelectors'
       responses:
         200:
           description: Scans fetched successfully
@@ -64,7 +51,7 @@ paths:
 
   /scan/{scanID}:
     get:
-      summary: Get scan details.
+      summary: Get scan.
       operationId: GetScan
       parameters:
         - $ref: '#/components/parameters/scanID'
@@ -84,36 +71,15 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
 
-    delete:
-      summary: Delete a scan.
-      operationId: DeleteScan
-      parameters:
-        - $ref: '#/components/parameters/scanID'
-      responses:
-        200:
-          description: Scan deleted successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
-        404:
-          description: Scan does not exist
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        default:
-          $ref: '#/components/responses/UnknownError'
-
   /scan/{scanID}/stop:
     post:
-      summary: Stop currently running scan.
-      operationId: StopScan
+      summary: Mark scan as aborted.
+      operationId: MarkScanAborted
       parameters:
         - $ref: '#/components/parameters/scanID'
       responses:
         200:
-          description: Scan stopped successfully
+          description: Scan marked aborted successfully
           content:
             application/json:
               schema:
@@ -127,32 +93,72 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
 
-
-  /scan/{scanID}/result:
-    get:
-      summary: Get scan result
-      operationId: GetScanResult
+  /scan/{scanID}/event:
+    post:
+      summary: Submit a scan event.
+      operationId: SubmitScanEvent
       parameters:
         - $ref: '#/components/parameters/scanID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScanEvent'
+        required: true
       responses:
-        200:
-          description: Scan result fetched successfully
+        201:
+          description: Scanner event submitted successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ScanFindings'
-        202:
-          description: Scan still in progress
+                $ref: '#/components/schemas/Scan'
+        400:
+          description: Scan event could not be submitted.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ScanProgressResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         404:
           description: Scan does not exist
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      x-codegen-request-body-name: body
+
+  /findings/{scanID}:
+    get:
+      summary: Get all findings for a given scan.
+      operationId: GetScanFindingsForScan
+      parameters:
+        - $ref: '#/components/parameters/scanID'
+      responses:
+        200:
+          description: Scan findings fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanFindings'
+        202:
+          description: Scan not completed yet, retry again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        404:
+          description: Scan does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        405:
+          description: Cannot get findings for failed/aborted scans.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
         default:
           $ref: '#/components/responses/UnknownError'
 
@@ -206,20 +212,6 @@ components:
         annotations:
           $ref: '#/components/schemas/Annotations'
 
-    ScannerInfo:
-      type: object
-      description: Describes scanner runtime details.
-      allOf:
-        - $ref: '#/components/schemas/Metadata'
-        - type: object
-          properties:
-            name:
-              type: string
-              description: Scanner name.
-            version:
-              type: string
-              description: Scanner runtime version.
-
     ScanStatus:
       type: object
       required:
@@ -260,6 +252,9 @@ components:
 
     Scans:
       type: object
+      required:
+        - count
+        - items
       properties:
         count:
           type: integer
@@ -270,44 +265,181 @@ components:
 
     Scan:
       type: object
+      allOf:
+        - $ref: '#/components/schemas/Metadata'
+        - type: object
+          properties:
+            id:
+              type: string
+              readOnly: true
+            status:
+              allOf:
+                - $ref: '#/components/schemas/ScanStatus'
+              readOnly: true
+            submitTime:
+              type: string
+              format: date-time
+              readOnly: true
+            startTime:
+              type: string
+              format: date-time
+              readOnly: true
+            endTime:
+              type: string
+              format: date-time
+              readOnly: true
+            scanner:
+              allOf:
+                - $ref: '#/components/schemas/ScannerInfo'
+              readOnly: true
+            summary:
+              allOf:
+                - $ref: '#/components/schemas/ScanSummary'
+              readOnly: true
+            inputs:
+              type: array
+              description: List of inputs to scan
+              items:
+                $ref: '#/components/schemas/ScanInput'
+              minItems: 1
+              maxItems: 50
+            pendingTimeoutSeconds:
+              type: integer
+              minimum: 0
+              description: |
+                The maximum time in seconds that a scan should
+                remain in Pending state before being automatically aborted.
+                This ensures that scan does not remain in Pending state forever
+                as the scanner might never pick this scan. The timer is
+                started from the moment the scan is created. Once a scan changes
+                state from Pending to anything else, this timer will be stopped.
+            inProgressTimeoutSeconds:
+              type: integer
+              minimum: 0
+              description: |
+                The maximum time in seconds that a scan should
+                remain in InProgress state before being automatically aborted.
+                The timer is started from the moment scan enters InProgress state.
+                This ensures that scan does not remain InProgress forever.
+
+    ScanSummary:
+      type: object
       required:
-        - inputs
+        - jobsDone
+        - jobsFailed
+        - jobsRemaining
       properties:
-        id:
-          type: string
-          readOnly: true
-        status:
-          allOf:
-            - $ref: '#/components/schemas/ScanStatus'
-          readOnly: true
-        startTime:
-          type: string
-          format: date-time
-          readOnly: true
-        endTime:
-          type: string
-          format: date-time
-          readOnly: true
-        jobsLeftToRun:
+        jobsDone:
+          type: integer
+        jobsFailed:
+          type: integer
+        jobsRemaining:
+          type: integer
+        jobsTotal:
           type: integer
           readOnly: true
-        jobsCompleted:
-          type: integer
-          readOnly: true
-        inputs:
+
+    ScanEvent:
+      type: object
+      required:
+        - eventInfo
+      properties:
+        eventInfo:
+          anyOf:
+            - $ref: '#/components/schemas/ScannerHandshakeEventInfo'
+            - $ref: '#/components/schemas/ScannerHeartbeatEventInfo'
+            - $ref: '#/components/schemas/ScannerFindingsEventInfo'
+          discriminator:
+            propertyName: eventType
+            mapping:
+              Handshake: '#/components/schemas/ScannerHandshakeEventInfo'
+              Heartbeat: '#/components/schemas/ScannerHeartbeatEventInfo'
+              Findings: '#/components/schemas/ScannerFindingsEventInfo'
+
+    ScannerHandshakeEvent:
+      type: object
+      description: Initialize scan scanner data. This event can only be submitted once.
+      allOf:
+        - $ref: '#/components/schemas/ScannerInfo'
+
+    ScannerHandshakeEventInfo:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ScannerHandshakeEvent'
+        - type: object
+          properties:
+            eventType:
+              type: string
+          required: [eventType]
+
+    ScannerHeartbeatEvent:
+      type: object
+      required:
+        - name
+        - state
+      properties:
+        summary:
+          $ref: '#/components/schemas/ScanSummary'
+        state:
+          $ref: '#/components/schemas/ScannerHeartbeatState'
+        message:
+          type: string
+          description: In case of states other than OK, this message will be used for scan status message
+
+    ScannerHeartbeatState:
+      type: string
+      enum:
+        - OK
+        - Cancelled
+        - Errored
+        - Completed
+      x-enum-varnames:
+        - ScannerHeartbeatOK
+        - ScannerHeartbeatCancelled
+        - ScannerHeartbeatErrored
+        - ScannerHeartbeatCompleted
+
+    ScannerHeartbeatEventInfo:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ScannerHeartbeatEvent'
+        - type: object
+          properties:
+            eventType:
+              type: string
+          required: [eventType]
+
+    ScannerFindingsEvent:
+      type: object
+      required:
+        - name
+        - findings
+      properties:
+        findings:
           type: array
-          description: List of inputs to scan (some rational amount, e.g. 50).
           items:
-            $ref: '#/components/schemas/ScanInput'
-          minItems: 1
-          maxItems: 50
-        timeoutSeconds:
-          type: integer
-          minimum: 0
-          description: |
-            The maximum time in seconds that a scan should
-            run for before being automatically aborted.
-          writeOnly: true
+            $ref: '#/components/schemas/ScanFinding'
+
+    ScannerFindingsEventInfo:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ScannerFindingsEvent'
+        - type: object
+          properties:
+            eventType:
+              type: string
+          required: [eventType]
+
+    ScannerInfo:
+      allOf:
+        - $ref: '#/components/schemas/Metadata'
+        - type: object
+          required:
+            - name
+          properties:
+            name:
+              type: string
+              description: Unique scanner worker name (e.g. cisdocker, or cisdocker-01 for worker pool)
 
     Package:
       type: object
@@ -652,6 +784,9 @@ components:
     ScanFindings:
       type: object
       description: Describes the result of a scan.
+      required:
+        - count
+        - items
       properties:
         count:
           type: integer
@@ -665,12 +800,10 @@ components:
       allOf:
         - $ref: '#/components/schemas/Metadata'
         - type: object
-          required:
-            - input
-            - findingInfo
           properties:
             id:
               type: string
+              readOnly: true
             scanID:
               type: string
               readOnly: true
@@ -778,3 +911,12 @@ components:
       name: state
       schema:
         type: string
+
+    metaSelectors:
+      description: 'metadata selectors, e.g. "scanner/name=123"'
+      in: query
+      name: metaSelectors
+      schema:
+        type: array
+        items:
+          type: string

@@ -1,8 +1,8 @@
-package store
+package local
 
 import (
 	"errors"
-	"github.com/openclarity/vmclarity/scanner/types"
+	"github.com/openclarity/vmclarity/scanner/server/store"
 	"gorm.io/gorm"
 )
 
@@ -25,7 +25,7 @@ func (r *repo[T]) Get(cond *T, dest *T) error {
 }
 
 func (r *repo[T]) Update(cond *T, updatedColumns *T) error {
-	err := r.DB.Model(r.Model).Select("*").Where(cond).Updates(updatedColumns).Error
+	err := r.DB.Model(r.Model).Where(cond).Updates(updatedColumns).Error
 	return extractErr(err)
 }
 
@@ -58,7 +58,7 @@ func extractErr(err error) error {
 		return nil
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return types.ErrNotFound
+		return store.ErrNotFound
 	}
 	return err
 }

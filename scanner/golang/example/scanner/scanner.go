@@ -18,10 +18,11 @@ package scanner
 import (
 	"context"
 	dockle_run "github.com/Portshift/dockle/pkg"
+	"github.com/openclarity/vmclarity/scanner/pkg/scanner"
 	"github.com/openclarity/vmclarity/scanner/types"
 )
 
-var _ types.Scanner = &Scanner{}
+var _ scanner.Scanner = &Scanner{}
 
 type Scanner struct{}
 
@@ -29,11 +30,10 @@ func ptr[T any](obj T) *T {
 	return &obj
 }
 
-func (s *Scanner) GetInfo(ctx context.Context) (*types.ScannerInfo, error) {
-	return &types.ScannerInfo{
-		Name:    ptr("cisdocker"),
-		Version: ptr("1.23"),
-	}, nil
+func (s *Scanner) GetInfo(ctx context.Context) types.ScannerInfo {
+	return types.ScannerInfo{
+		Name: "cisdocker",
+	}
 }
 
 func (s *Scanner) Scan(ctx context.Context, scanID string, input types.ScanInput) ([]types.ScanFinding, error) {

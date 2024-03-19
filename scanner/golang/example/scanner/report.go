@@ -51,8 +51,8 @@ func parseDockleReport(scanID string, input types.ScanInput, assessmentMap dockl
 		})
 
 		results = append(results, types.ScanFinding{
-			FindingInfo: *findingInfo,
-			Input:       input,
+			FindingInfo: findingInfo,
+			Input:       &input,
 			ScanID:      &scanID,
 		})
 	}

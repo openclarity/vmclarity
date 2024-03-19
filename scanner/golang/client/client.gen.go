@@ -90,26 +90,25 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
+	// GetScanFindingsForScan request
+	GetScanFindingsForScan(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// IsAlive request
 	IsAlive(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// IsReady request
 	IsReady(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// DeleteScan request
-	DeleteScan(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// GetScan request
 	GetScan(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetScanResult request
-	GetScanResult(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// SubmitScanEventWithBody request with any body
+	SubmitScanEventWithBody(ctx context.Context, scanID ScanID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// StopScan request
-	StopScan(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	SubmitScanEvent(ctx context.Context, scanID ScanID, body SubmitScanEventJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetScannerInfo request
-	GetScannerInfo(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// MarkScanAborted request
+	MarkScanAborted(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetScans request
 	GetScans(ctx context.Context, params *GetScansParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -118,6 +117,18 @@ type ClientInterface interface {
 	CreateScanWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	CreateScan(ctx context.Context, body CreateScanJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+}
+
+func (c *Client) GetScanFindingsForScan(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetScanFindingsForScanRequest(c.Server, scanID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
 }
 
 func (c *Client) IsAlive(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -144,18 +155,6 @@ func (c *Client) IsReady(ctx context.Context, reqEditors ...RequestEditorFn) (*h
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteScan(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteScanRequest(c.Server, scanID)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
 func (c *Client) GetScan(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetScanRequest(c.Server, scanID)
 	if err != nil {
@@ -168,8 +167,8 @@ func (c *Client) GetScan(ctx context.Context, scanID ScanID, reqEditors ...Reque
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetScanResult(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetScanResultRequest(c.Server, scanID)
+func (c *Client) SubmitScanEventWithBody(ctx context.Context, scanID ScanID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSubmitScanEventRequestWithBody(c.Server, scanID, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -180,8 +179,8 @@ func (c *Client) GetScanResult(ctx context.Context, scanID ScanID, reqEditors ..
 	return c.Client.Do(req)
 }
 
-func (c *Client) StopScan(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewStopScanRequest(c.Server, scanID)
+func (c *Client) SubmitScanEvent(ctx context.Context, scanID ScanID, body SubmitScanEventJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSubmitScanEventRequest(c.Server, scanID, body)
 	if err != nil {
 		return nil, err
 	}
@@ -192,8 +191,8 @@ func (c *Client) StopScan(ctx context.Context, scanID ScanID, reqEditors ...Requ
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetScannerInfo(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetScannerInfoRequest(c.Server)
+func (c *Client) MarkScanAborted(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewMarkScanAbortedRequest(c.Server, scanID)
 	if err != nil {
 		return nil, err
 	}
@@ -238,6 +237,40 @@ func (c *Client) CreateScan(ctx context.Context, body CreateScanJSONRequestBody,
 		return nil, err
 	}
 	return c.Client.Do(req)
+}
+
+// NewGetScanFindingsForScanRequest generates requests for GetScanFindingsForScan
+func NewGetScanFindingsForScanRequest(server string, scanID ScanID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "scanID", runtime.ParamLocationPath, scanID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/findings/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
 }
 
 // NewIsAliveRequest generates requests for IsAlive
@@ -294,40 +327,6 @@ func NewIsReadyRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewDeleteScanRequest generates requests for DeleteScan
-func NewDeleteScanRequest(server string, scanID ScanID) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "scanID", runtime.ParamLocationPath, scanID)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/scan/%s", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
 // NewGetScanRequest generates requests for GetScan
 func NewGetScanRequest(server string, scanID ScanID) (*http.Request, error) {
 	var err error
@@ -362,8 +361,19 @@ func NewGetScanRequest(server string, scanID ScanID) (*http.Request, error) {
 	return req, nil
 }
 
-// NewGetScanResultRequest generates requests for GetScanResult
-func NewGetScanResultRequest(server string, scanID ScanID) (*http.Request, error) {
+// NewSubmitScanEventRequest calls the generic SubmitScanEvent builder with application/json body
+func NewSubmitScanEventRequest(server string, scanID ScanID, body SubmitScanEventJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewSubmitScanEventRequestWithBody(server, scanID, "application/json", bodyReader)
+}
+
+// NewSubmitScanEventRequestWithBody generates requests for SubmitScanEvent with any type of body
+func NewSubmitScanEventRequestWithBody(server string, scanID ScanID, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -378,7 +388,7 @@ func NewGetScanResultRequest(server string, scanID ScanID) (*http.Request, error
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/scan/%s/result", pathParam0)
+	operationPath := fmt.Sprintf("/scan/%s/event", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -388,16 +398,18 @@ func NewGetScanResultRequest(server string, scanID ScanID) (*http.Request, error
 		return nil, err
 	}
 
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	req, err := http.NewRequest("POST", queryURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
 
+	req.Header.Add("Content-Type", contentType)
+
 	return req, nil
 }
 
-// NewStopScanRequest generates requests for StopScan
-func NewStopScanRequest(server string, scanID ScanID) (*http.Request, error) {
+// NewMarkScanAbortedRequest generates requests for MarkScanAborted
+func NewMarkScanAbortedRequest(server string, scanID ScanID) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -430,33 +442,6 @@ func NewStopScanRequest(server string, scanID ScanID) (*http.Request, error) {
 	return req, nil
 }
 
-// NewGetScannerInfoRequest generates requests for GetScannerInfo
-func NewGetScannerInfoRequest(server string) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/scanner")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
 // NewGetScansRequest generates requests for GetScans
 func NewGetScansRequest(server string, params *GetScansParams) (*http.Request, error) {
 	var err error
@@ -482,6 +467,22 @@ func NewGetScansRequest(server string, params *GetScansParams) (*http.Request, e
 		if params.State != nil {
 
 			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "state", runtime.ParamLocationQuery, *params.State); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.MetaSelectors != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "metaSelectors", runtime.ParamLocationQuery, *params.MetaSelectors); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -589,26 +590,25 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
+	// GetScanFindingsForScanWithResponse request
+	GetScanFindingsForScanWithResponse(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*GetScanFindingsForScanResponse, error)
+
 	// IsAliveWithResponse request
 	IsAliveWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*IsAliveResponse, error)
 
 	// IsReadyWithResponse request
 	IsReadyWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*IsReadyResponse, error)
 
-	// DeleteScanWithResponse request
-	DeleteScanWithResponse(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*DeleteScanResponse, error)
-
 	// GetScanWithResponse request
 	GetScanWithResponse(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*GetScanResponse, error)
 
-	// GetScanResultWithResponse request
-	GetScanResultWithResponse(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*GetScanResultResponse, error)
+	// SubmitScanEventWithBodyWithResponse request with any body
+	SubmitScanEventWithBodyWithResponse(ctx context.Context, scanID ScanID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SubmitScanEventResponse, error)
 
-	// StopScanWithResponse request
-	StopScanWithResponse(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*StopScanResponse, error)
+	SubmitScanEventWithResponse(ctx context.Context, scanID ScanID, body SubmitScanEventJSONRequestBody, reqEditors ...RequestEditorFn) (*SubmitScanEventResponse, error)
 
-	// GetScannerInfoWithResponse request
-	GetScannerInfoWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetScannerInfoResponse, error)
+	// MarkScanAbortedWithResponse request
+	MarkScanAbortedWithResponse(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*MarkScanAbortedResponse, error)
 
 	// GetScansWithResponse request
 	GetScansWithResponse(ctx context.Context, params *GetScansParams, reqEditors ...RequestEditorFn) (*GetScansResponse, error)
@@ -617,6 +617,32 @@ type ClientWithResponsesInterface interface {
 	CreateScanWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateScanResponse, error)
 
 	CreateScanWithResponse(ctx context.Context, body CreateScanJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateScanResponse, error)
+}
+
+type GetScanFindingsForScanResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ScanFindings
+	JSON202      *SuccessResponse
+	JSON404      *ErrorResponse
+	JSON405      *SuccessResponse
+	JSONDefault  *UnknownError
+}
+
+// Status returns HTTPResponse.Status
+func (r GetScanFindingsForScanResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetScanFindingsForScanResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
 }
 
 type IsAliveResponse struct {
@@ -665,30 +691,6 @@ func (r IsReadyResponse) StatusCode() int {
 	return 0
 }
 
-type DeleteScanResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *SuccessResponse
-	JSON404      *ErrorResponse
-	JSONDefault  *UnknownError
-}
-
-// Status returns HTTPResponse.Status
-func (r DeleteScanResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r DeleteScanResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 type GetScanResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -713,17 +715,17 @@ func (r GetScanResponse) StatusCode() int {
 	return 0
 }
 
-type GetScanResultResponse struct {
+type SubmitScanEventResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ScanFindings
-	JSON202      *ScanProgressResponse
+	JSON201      *Scan
+	JSON400      *ErrorResponse
 	JSON404      *ErrorResponse
 	JSONDefault  *UnknownError
 }
 
 // Status returns HTTPResponse.Status
-func (r GetScanResultResponse) Status() string {
+func (r SubmitScanEventResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -731,14 +733,14 @@ func (r GetScanResultResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetScanResultResponse) StatusCode() int {
+func (r SubmitScanEventResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type StopScanResponse struct {
+type MarkScanAbortedResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *Scan
@@ -747,7 +749,7 @@ type StopScanResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r StopScanResponse) Status() string {
+func (r MarkScanAbortedResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -755,30 +757,7 @@ func (r StopScanResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r StopScanResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetScannerInfoResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *ScannerInfo
-	JSONDefault  *UnknownError
-}
-
-// Status returns HTTPResponse.Status
-func (r GetScannerInfoResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetScannerInfoResponse) StatusCode() int {
+func (r MarkScanAbortedResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -832,6 +811,15 @@ func (r CreateScanResponse) StatusCode() int {
 	return 0
 }
 
+// GetScanFindingsForScanWithResponse request returning *GetScanFindingsForScanResponse
+func (c *ClientWithResponses) GetScanFindingsForScanWithResponse(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*GetScanFindingsForScanResponse, error) {
+	rsp, err := c.GetScanFindingsForScan(ctx, scanID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetScanFindingsForScanResponse(rsp)
+}
+
 // IsAliveWithResponse request returning *IsAliveResponse
 func (c *ClientWithResponses) IsAliveWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*IsAliveResponse, error) {
 	rsp, err := c.IsAlive(ctx, reqEditors...)
@@ -850,15 +838,6 @@ func (c *ClientWithResponses) IsReadyWithResponse(ctx context.Context, reqEditor
 	return ParseIsReadyResponse(rsp)
 }
 
-// DeleteScanWithResponse request returning *DeleteScanResponse
-func (c *ClientWithResponses) DeleteScanWithResponse(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*DeleteScanResponse, error) {
-	rsp, err := c.DeleteScan(ctx, scanID, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseDeleteScanResponse(rsp)
-}
-
 // GetScanWithResponse request returning *GetScanResponse
 func (c *ClientWithResponses) GetScanWithResponse(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*GetScanResponse, error) {
 	rsp, err := c.GetScan(ctx, scanID, reqEditors...)
@@ -868,31 +847,30 @@ func (c *ClientWithResponses) GetScanWithResponse(ctx context.Context, scanID Sc
 	return ParseGetScanResponse(rsp)
 }
 
-// GetScanResultWithResponse request returning *GetScanResultResponse
-func (c *ClientWithResponses) GetScanResultWithResponse(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*GetScanResultResponse, error) {
-	rsp, err := c.GetScanResult(ctx, scanID, reqEditors...)
+// SubmitScanEventWithBodyWithResponse request with arbitrary body returning *SubmitScanEventResponse
+func (c *ClientWithResponses) SubmitScanEventWithBodyWithResponse(ctx context.Context, scanID ScanID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SubmitScanEventResponse, error) {
+	rsp, err := c.SubmitScanEventWithBody(ctx, scanID, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetScanResultResponse(rsp)
+	return ParseSubmitScanEventResponse(rsp)
 }
 
-// StopScanWithResponse request returning *StopScanResponse
-func (c *ClientWithResponses) StopScanWithResponse(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*StopScanResponse, error) {
-	rsp, err := c.StopScan(ctx, scanID, reqEditors...)
+func (c *ClientWithResponses) SubmitScanEventWithResponse(ctx context.Context, scanID ScanID, body SubmitScanEventJSONRequestBody, reqEditors ...RequestEditorFn) (*SubmitScanEventResponse, error) {
+	rsp, err := c.SubmitScanEvent(ctx, scanID, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseStopScanResponse(rsp)
+	return ParseSubmitScanEventResponse(rsp)
 }
 
-// GetScannerInfoWithResponse request returning *GetScannerInfoResponse
-func (c *ClientWithResponses) GetScannerInfoWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetScannerInfoResponse, error) {
-	rsp, err := c.GetScannerInfo(ctx, reqEditors...)
+// MarkScanAbortedWithResponse request returning *MarkScanAbortedResponse
+func (c *ClientWithResponses) MarkScanAbortedWithResponse(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*MarkScanAbortedResponse, error) {
+	rsp, err := c.MarkScanAborted(ctx, scanID, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetScannerInfoResponse(rsp)
+	return ParseMarkScanAbortedResponse(rsp)
 }
 
 // GetScansWithResponse request returning *GetScansResponse
@@ -919,6 +897,60 @@ func (c *ClientWithResponses) CreateScanWithResponse(ctx context.Context, body C
 		return nil, err
 	}
 	return ParseCreateScanResponse(rsp)
+}
+
+// ParseGetScanFindingsForScanResponse parses an HTTP response from a GetScanFindingsForScanWithResponse call
+func ParseGetScanFindingsForScanResponse(rsp *http.Response) (*GetScanFindingsForScanResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetScanFindingsForScanResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ScanFindings
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest SuccessResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 405:
+		var dest SuccessResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON405 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest UnknownError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
 }
 
 // ParseIsAliveResponse parses an HTTP response from a IsAliveWithResponse call
@@ -987,46 +1019,6 @@ func ParseIsReadyResponse(rsp *http.Response) (*IsReadyResponse, error) {
 	return response, nil
 }
 
-// ParseDeleteScanResponse parses an HTTP response from a DeleteScanWithResponse call
-func ParseDeleteScanResponse(rsp *http.Response) (*DeleteScanResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &DeleteScanResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest SuccessResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON404 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest UnknownError
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
 // ParseGetScanResponse parses an HTTP response from a GetScanWithResponse call
 func ParseGetScanResponse(rsp *http.Response) (*GetScanResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -1067,33 +1059,33 @@ func ParseGetScanResponse(rsp *http.Response) (*GetScanResponse, error) {
 	return response, nil
 }
 
-// ParseGetScanResultResponse parses an HTTP response from a GetScanResultWithResponse call
-func ParseGetScanResultResponse(rsp *http.Response) (*GetScanResultResponse, error) {
+// ParseSubmitScanEventResponse parses an HTTP response from a SubmitScanEventWithResponse call
+func ParseSubmitScanEventResponse(rsp *http.Response) (*SubmitScanEventResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetScanResultResponse{
+	response := &SubmitScanEventResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ScanFindings
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest Scan
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
-		response.JSON200 = &dest
+		response.JSON201 = &dest
 
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
-		var dest ScanProgressResponse
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
-		response.JSON202 = &dest
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest ErrorResponse
@@ -1114,15 +1106,15 @@ func ParseGetScanResultResponse(rsp *http.Response) (*GetScanResultResponse, err
 	return response, nil
 }
 
-// ParseStopScanResponse parses an HTTP response from a StopScanWithResponse call
-func ParseStopScanResponse(rsp *http.Response) (*StopScanResponse, error) {
+// ParseMarkScanAbortedResponse parses an HTTP response from a MarkScanAbortedWithResponse call
+func ParseMarkScanAbortedResponse(rsp *http.Response) (*MarkScanAbortedResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &StopScanResponse{
+	response := &MarkScanAbortedResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -1141,39 +1133,6 @@ func ParseStopScanResponse(rsp *http.Response) (*StopScanResponse, error) {
 			return nil, err
 		}
 		response.JSON404 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest UnknownError
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetScannerInfoResponse parses an HTTP response from a GetScannerInfoWithResponse call
-func ParseGetScannerInfoResponse(rsp *http.Response) (*GetScannerInfoResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetScannerInfoResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ScannerInfo
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest UnknownError

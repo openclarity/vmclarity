@@ -57,6 +57,14 @@ const (
 	ScanStatusStatePending    ScanStatusState = "Pending"
 )
 
+// Defines values for ScannerHeartbeatState.
+const (
+	ScannerHeartbeatCancelled ScannerHeartbeatState = "Cancelled"
+	ScannerHeartbeatCompleted ScannerHeartbeatState = "Completed"
+	ScannerHeartbeatErrored   ScannerHeartbeatState = "Errored"
+	ScannerHeartbeatOK        ScannerHeartbeatState = "OK"
+)
+
 // Defines values for VulnerabilitySeverity.
 const (
 	CRITICAL   VulnerabilitySeverity = "CRITICAL"
@@ -259,30 +267,53 @@ type RootkitType string
 
 // Scan defines model for Scan.
 type Scan struct {
-	EndTime *time.Time `json:"endTime,omitempty"`
-	Id      *string    `json:"id,omitempty"`
+	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+	Annotations *Annotations `json:"annotations,omitempty"`
+	EndTime     *time.Time   `json:"endTime,omitempty"`
+	Id          *string      `json:"id,omitempty"`
 
-	// Inputs List of inputs to scan (some rational amount, e.g. 50).
-	Inputs        []ScanInput `json:"inputs"`
-	JobsCompleted *int        `json:"jobsCompleted,omitempty"`
-	JobsLeftToRun *int        `json:"jobsLeftToRun,omitempty"`
-	StartTime     *time.Time  `json:"startTime,omitempty"`
-	Status        *ScanStatus `json:"status,omitempty"`
+	// InProgressTimeoutSeconds The maximum time in seconds that a scan should
+	// remain in InProgress state before being automatically aborted.
+	// The timer is started from the moment scan enters InProgress state.
+	// This ensures that scan does not remain InProgress forever.
+	InProgressTimeoutSeconds *int `json:"inProgressTimeoutSeconds,omitempty"`
 
-	// TimeoutSeconds The maximum time in seconds that a scan should
-	// run for before being automatically aborted.
-	TimeoutSeconds *int `json:"timeoutSeconds,omitempty"`
+	// Inputs List of inputs to scan
+	Inputs *[]ScanInput `json:"inputs,omitempty"`
+
+	// PendingTimeoutSeconds The maximum time in seconds that a scan should
+	// remain in Pending state before being automatically aborted.
+	// This ensures that scan does not remain in Pending state forever
+	// as the scanner might never pick this scan. The timer is
+	// started from the moment the scan is created. Once a scan changes
+	// state from Pending to anything else, this timer will be stopped.
+	PendingTimeoutSeconds *int         `json:"pendingTimeoutSeconds,omitempty"`
+	Scanner               *ScannerInfo `json:"scanner,omitempty"`
+	StartTime             *time.Time   `json:"startTime,omitempty"`
+	Status                *ScanStatus  `json:"status,omitempty"`
+	SubmitTime            *time.Time   `json:"submitTime,omitempty"`
+	Summary               *ScanSummary `json:"summary,omitempty"`
+}
+
+// ScanEvent defines model for ScanEvent.
+type ScanEvent struct {
+	EventInfo ScanEvent_EventInfo `json:"eventInfo"`
+}
+
+// ScanEvent_EventInfo defines model for ScanEvent.EventInfo.
+type ScanEvent_EventInfo struct {
+	union json.RawMessage
 }
 
 // ScanFinding defines model for ScanFinding.
 type ScanFinding struct {
 	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
-	Annotations *Annotations            `json:"annotations,omitempty"`
-	FindingInfo ScanFinding_FindingInfo `json:"findingInfo"`
-	Id          *string                 `json:"id,omitempty"`
+	Annotations *Annotations             `json:"annotations,omitempty"`
+	FindingInfo *ScanFinding_FindingInfo `json:"findingInfo,omitempty"`
+	Id          *string                  `json:"id,omitempty"`
 
 	// Input Input data of an object to scan.
-	Input   ScanInput       `json:"input"`
+	Input   *ScanInput      `json:"input,omitempty"`
 	ScanID  *string         `json:"scanID,omitempty"`
 	Summary *FindingSummary `json:"summary,omitempty"`
 }
@@ -294,8 +325,8 @@ type ScanFinding_FindingInfo struct {
 
 // ScanFindings Describes the result of a scan.
 type ScanFindings struct {
-	Count *int           `json:"count,omitempty"`
-	Items *[]ScanFinding `json:"items,omitempty"`
+	Count int           `json:"count"`
+	Items []ScanFinding `json:"items"`
 }
 
 // ScanInput Input data of an object to scan.
@@ -348,22 +379,72 @@ type ScanStatus struct {
 // | Done       | Scan has finished successfully |
 type ScanStatusState string
 
+// ScanSummary defines model for ScanSummary.
+type ScanSummary struct {
+	JobsDone      int  `json:"jobsDone"`
+	JobsFailed    int  `json:"jobsFailed"`
+	JobsRemaining int  `json:"jobsRemaining"`
+	JobsTotal     *int `json:"jobsTotal,omitempty"`
+}
+
+// ScannerFindingsEvent defines model for ScannerFindingsEvent.
+type ScannerFindingsEvent struct {
+	Findings []ScanFinding `json:"findings"`
+}
+
+// ScannerFindingsEventInfo defines model for ScannerFindingsEventInfo.
+type ScannerFindingsEventInfo struct {
+	EventType string        `json:"eventType"`
+	Findings  []ScanFinding `json:"findings"`
+}
+
+// ScannerHandshakeEvent defines model for ScannerHandshakeEvent.
+type ScannerHandshakeEvent = ScannerInfo
+
+// ScannerHandshakeEventInfo defines model for ScannerHandshakeEventInfo.
+type ScannerHandshakeEventInfo struct {
+	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+	Annotations *Annotations `json:"annotations,omitempty"`
+	EventType   string       `json:"eventType"`
+
+	// Name Unique scanner worker name (e.g. cisdocker, or cisdocker-01 for worker pool)
+	Name string `json:"name"`
+}
+
+// ScannerHeartbeatEvent defines model for ScannerHeartbeatEvent.
+type ScannerHeartbeatEvent struct {
+	// Message In case of states other than OK, this message will be used for scan status message
+	Message *string               `json:"message,omitempty"`
+	State   ScannerHeartbeatState `json:"state"`
+	Summary *ScanSummary          `json:"summary,omitempty"`
+}
+
+// ScannerHeartbeatEventInfo defines model for ScannerHeartbeatEventInfo.
+type ScannerHeartbeatEventInfo struct {
+	EventType string `json:"eventType"`
+
+	// Message In case of states other than OK, this message will be used for scan status message
+	Message *string               `json:"message,omitempty"`
+	State   ScannerHeartbeatState `json:"state"`
+	Summary *ScanSummary          `json:"summary,omitempty"`
+}
+
+// ScannerHeartbeatState defines model for ScannerHeartbeatState.
+type ScannerHeartbeatState string
+
 // ScannerInfo defines model for ScannerInfo.
 type ScannerInfo struct {
 	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
 	Annotations *Annotations `json:"annotations,omitempty"`
 
-	// Name Scanner name.
-	Name *string `json:"name,omitempty"`
-
-	// Version Scanner runtime version.
-	Version *string `json:"version,omitempty"`
+	// Name Unique scanner worker name (e.g. cisdocker, or cisdocker-01 for worker pool)
+	Name string `json:"name"`
 }
 
 // Scans defines model for Scans.
 type Scans struct {
-	Count *int    `json:"count,omitempty"`
-	Items *[]Scan `json:"items,omitempty"`
+	Count int    `json:"count"`
+	Items []Scan `json:"items"`
 }
 
 // Secret defines model for Secret.
@@ -470,6 +551,9 @@ type VulnerabilityFix struct {
 // VulnerabilitySeverity defines model for VulnerabilitySeverity.
 type VulnerabilitySeverity string
 
+// MetaSelectors defines model for metaSelectors.
+type MetaSelectors = []string
+
 // ScanID defines model for scanID.
 type ScanID = string
 
@@ -483,10 +567,135 @@ type UnknownError = ErrorResponse
 type GetScansParams struct {
 	// State scan state, e.g. pending
 	State *ScanState `form:"state,omitempty" json:"state,omitempty"`
+
+	// MetaSelectors metadata selectors, e.g. "scanner/name=123"
+	MetaSelectors *MetaSelectors `form:"metaSelectors,omitempty" json:"metaSelectors,omitempty"`
 }
+
+// SubmitScanEventJSONRequestBody defines body for SubmitScanEvent for application/json ContentType.
+type SubmitScanEventJSONRequestBody = ScanEvent
 
 // CreateScanJSONRequestBody defines body for CreateScan for application/json ContentType.
 type CreateScanJSONRequestBody = Scan
+
+// AsScannerHandshakeEventInfo returns the union data inside the ScanEvent_EventInfo as a ScannerHandshakeEventInfo
+func (t ScanEvent_EventInfo) AsScannerHandshakeEventInfo() (ScannerHandshakeEventInfo, error) {
+	var body ScannerHandshakeEventInfo
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromScannerHandshakeEventInfo overwrites any union data inside the ScanEvent_EventInfo as the provided ScannerHandshakeEventInfo
+func (t *ScanEvent_EventInfo) FromScannerHandshakeEventInfo(v ScannerHandshakeEventInfo) error {
+	v.EventType = "Handshake"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeScannerHandshakeEventInfo performs a merge with any union data inside the ScanEvent_EventInfo, using the provided ScannerHandshakeEventInfo
+func (t *ScanEvent_EventInfo) MergeScannerHandshakeEventInfo(v ScannerHandshakeEventInfo) error {
+	v.EventType = "Handshake"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsScannerHeartbeatEventInfo returns the union data inside the ScanEvent_EventInfo as a ScannerHeartbeatEventInfo
+func (t ScanEvent_EventInfo) AsScannerHeartbeatEventInfo() (ScannerHeartbeatEventInfo, error) {
+	var body ScannerHeartbeatEventInfo
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromScannerHeartbeatEventInfo overwrites any union data inside the ScanEvent_EventInfo as the provided ScannerHeartbeatEventInfo
+func (t *ScanEvent_EventInfo) FromScannerHeartbeatEventInfo(v ScannerHeartbeatEventInfo) error {
+	v.EventType = "Heartbeat"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeScannerHeartbeatEventInfo performs a merge with any union data inside the ScanEvent_EventInfo, using the provided ScannerHeartbeatEventInfo
+func (t *ScanEvent_EventInfo) MergeScannerHeartbeatEventInfo(v ScannerHeartbeatEventInfo) error {
+	v.EventType = "Heartbeat"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsScannerFindingsEventInfo returns the union data inside the ScanEvent_EventInfo as a ScannerFindingsEventInfo
+func (t ScanEvent_EventInfo) AsScannerFindingsEventInfo() (ScannerFindingsEventInfo, error) {
+	var body ScannerFindingsEventInfo
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromScannerFindingsEventInfo overwrites any union data inside the ScanEvent_EventInfo as the provided ScannerFindingsEventInfo
+func (t *ScanEvent_EventInfo) FromScannerFindingsEventInfo(v ScannerFindingsEventInfo) error {
+	v.EventType = "Findings"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeScannerFindingsEventInfo performs a merge with any union data inside the ScanEvent_EventInfo, using the provided ScannerFindingsEventInfo
+func (t *ScanEvent_EventInfo) MergeScannerFindingsEventInfo(v ScannerFindingsEventInfo) error {
+	v.EventType = "Findings"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t ScanEvent_EventInfo) Discriminator() (string, error) {
+	var discriminator struct {
+		Discriminator string `json:"eventType"`
+	}
+	err := json.Unmarshal(t.union, &discriminator)
+	return discriminator.Discriminator, err
+}
+
+func (t ScanEvent_EventInfo) ValueByDiscriminator() (interface{}, error) {
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return nil, err
+	}
+	switch discriminator {
+	case "Findings":
+		return t.AsScannerFindingsEventInfo()
+	case "Handshake":
+		return t.AsScannerHandshakeEventInfo()
+	case "Heartbeat":
+		return t.AsScannerHeartbeatEventInfo()
+	default:
+		return nil, errors.New("unknown discriminator value: " + discriminator)
+	}
+}
+
+func (t ScanEvent_EventInfo) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *ScanEvent_EventInfo) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
 
 // AsPackageFindingInfo returns the union data inside the ScanFinding_FindingInfo as a PackageFindingInfo
 func (t ScanFinding_FindingInfo) AsPackageFindingInfo() (PackageFindingInfo, error) {

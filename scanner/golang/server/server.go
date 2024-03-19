@@ -22,22 +22,19 @@ import (
 	"github.com/labstack/echo/v4"
 	echomiddleware "github.com/labstack/echo/v4/middleware"
 	middleware "github.com/oapi-codegen/echo-middleware"
-	"github.com/openclarity/vmclarity/scanner/server/orchestrator"
+	"github.com/openclarity/vmclarity/scanner/pkg/scanner"
 	"github.com/openclarity/vmclarity/scanner/server/store"
-	"github.com/openclarity/vmclarity/scanner/types"
+	"github.com/openclarity/vmclarity/scanner/server/store/local"
 	"net/http"
 	"time"
 )
 
 type Server struct {
-	errCh        chan error
-	echo         *echo.Echo
-	store        types.Store
-	scanner      types.Scanner
-	orchestrator types.Orchestrator
+	echo  *echo.Echo
+	store store.Store
 }
 
-func NewServer(scanner types.Scanner) (*Server, error) {
+func NewServer(scanner scanner.Scanner) (*Server, error) {
 	// Get swagger specs
 	swagger, err := GetSwagger()
 	if err != nil {
@@ -45,24 +42,15 @@ func NewServer(scanner types.Scanner) (*Server, error) {
 	}
 
 	// Create DB store
-	store, err := store.NewStore()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create store: %w", err)
-	}
-
-	// Create Orchestrator
-	orchestrator, err := orchestrator.NewOrchestrator(scanner, store)
+	store, err := local.NewStore()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create store: %w", err)
 	}
 
 	// Create server instance
 	server := &Server{
-		echo:         echo.New(),
-		errCh:        make(chan error),
-		scanner:      scanner,
-		store:        store,
-		orchestrator: orchestrator,
+		echo:  echo.New(),
+		store: store,
 	}
 
 	// Log all requests
@@ -82,23 +70,11 @@ func NewServer(scanner types.Scanner) (*Server, error) {
 }
 
 // Start starts the server and blocks until the server exits or returns an error
-func (s *Server) Start(address string) <-chan error {
-	errCh := make(chan error)
-
-	go func() {
-		err := s.echo.Start(address)
-		if !errors.Is(err, http.ErrServerClosed) {
-			errCh <- err
-		}
-	}()
-
-	go func() {
-		err := s.orchestrator.Start()
-		if err != nil {
-			errCh <- err
-		}
-	}()
-
+func (s *Server) Start(address string) error {
+	err := s.echo.Start(address)
+	if !errors.Is(err, http.ErrServerClosed) {
+		return err
+	}
 	return nil
 }
 
@@ -108,10 +84,6 @@ func (s *Server) Stop() error {
 	defer cancel()
 
 	if err := s.echo.Shutdown(ctx); err != nil {
-		return err
-	}
-
-	if err := s.orchestrator.Stop(); err != nil {
 		return err
 	}
 

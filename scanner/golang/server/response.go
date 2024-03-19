@@ -22,8 +22,7 @@ import (
 
 // nolint:wrapcheck
 func sendError(ctx echo.Context, code int, message string) error {
-	response := &types.ErrorResponse{Message: &message}
-	return ctx.JSON(code, response)
+	return ctx.JSON(code, &types.ErrorResponse{Message: &message})
 }
 
 // nolint:wrapcheck,unparam

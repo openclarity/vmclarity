@@ -13,26 +13,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package server
+package scanner
 
 import (
 	"context"
-	"github.com/labstack/echo/v4"
-	"net/http"
+	"github.com/openclarity/vmclarity/scanner/types"
 )
 
-func (s *Server) IsAlive(ctx echo.Context) error {
-	return sendResponse(ctx, 200, nil)
-}
+// Scanner defines the actual scanner implementation. This should be implemented
+// on the example side.
+type Scanner interface {
+	// GetInfo returns scanner metadata details
+	GetInfo(ctx context.Context) types.ScannerInfo
 
-func (s *Server) IsReady(ctx echo.Context) error {
-	return sendResponse(ctx, 200, nil)
-}
-
-func (s *Server) GetScannerInfo(ctx echo.Context) error {
-	info, err := s.scanner.GetInfo(context.Background())
-	if err != nil {
-		return sendError(ctx, http.StatusInternalServerError, err.Error())
-	}
-	return sendResponse(ctx, http.StatusOK, info)
+	// Scan performs a scan for a given input
+	Scan(ctx context.Context, scanID string, input types.ScanInput) ([]types.ScanFinding, error)
 }

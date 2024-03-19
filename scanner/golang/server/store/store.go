@@ -1,47 +1,73 @@
 package store
 
 import (
-	"fmt"
+	"errors"
 	"github.com/openclarity/vmclarity/scanner/types"
-	"gorm.io/driver/sqlite" // Sqlite driver based on CGO
-	"gorm.io/gorm"
-	"os"
-	"path/filepath"
+	"strings"
 )
 
-type handler struct {
-	db *gorm.DB
+const MetaSelectorSeparator = "="
+
+var ErrNotFound = errors.New("not found")
+
+type PreconditionFailedError struct {
+	Reason string
 }
 
-func NewStore() (types.Store, error) {
-	// Create database
-	db, err := gorm.Open(sqlite.Open(filepath.Join(os.TempDir(), "gorm.db")), &gorm.Config{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to create db: %w", err)
-	}
-
-	// Create and initialize db handler
-	handler := &handler{db: db}
-	if err := handler.init(); err != nil {
-		return nil, fmt.Errorf("failed to initialize db: %w", err)
-	}
-
-	return handler, nil
+func (e *PreconditionFailedError) Error() string {
+	return "Precondition failed: " + e.Reason
 }
 
-func (h *handler) init() error {
-	// Add extensions
-	//if err := h.db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`).Error; err != nil {
-	//	return fmt.Errorf("failed to create uuid extension: %w", err)
-	//}
+type GetScansRequest struct {
+	State        *string   `json:"state,omitempty"`
+	MetaSelector *[]string `json:"metaSelector,omitempty"`
+}
 
-	// Migrate models
-	if err := h.db.AutoMigrate(
-		scanModel{},
-		findingModel{},
-	); err != nil {
-		return fmt.Errorf("failed to run auto migration: %w", err)
+func (r *GetScansRequest) GetMetaKVSelectors() map[string]string {
+	if r.MetaSelector == nil {
+		return nil
 	}
 
-	return nil
+	// this extracts selectors such as key=value specified for metaSelector query param
+	kvSelectors := make(map[string]string)
+	for _, item := range *r.MetaSelector {
+		items := strings.SplitN(item, MetaSelectorSeparator, 2)
+		if len(items) < 2 {
+			continue
+		}
+		kvSelectors[items[0]] = items[1]
+	}
+	return kvSelectors
+}
+
+type ScanStore interface {
+	GetAll(req GetScansRequest) ([]types.Scan, error)
+	Get(scanID string) (types.Scan, error)
+	Create(scan types.Scan) (types.Scan, error)
+	Update(scanID string, scan types.Scan) (types.Scan, error)
+	Delete(scanID string) error
+}
+
+type GetScanFindingsRequest struct {
+	ScanID *string `json:"scanID"`
+}
+
+type DeleteScanFindingsRequest struct {
+	ScanID *string `json:"scanID"`
+}
+
+type ScanFindingStore interface {
+	GetAll(req GetScanFindingsRequest) ([]types.ScanFinding, error)
+	Get(findingID string) (types.ScanFinding, error)
+	CreateMany(scanID string, findings ...types.ScanFinding) ([]types.ScanFinding, error)
+
+	// Update is not needed since we only keep data in-memory for analytical purposes
+	// Update(findingID string, finding ScanFinding) (ScanFinding, error)
+
+	Delete(req DeleteScanFindingsRequest) error
+}
+
+type Store interface {
+	Scans() ScanStore
+	ScanFindings() ScanFindingStore
 }
