@@ -312,9 +312,9 @@ gen-uibackend-api: ## Generating Go library for UI Backend API specification
 .PHONY: gen-scanner-api
 gen-scanner-api: ## Generating Go library for Scanner API specification
 	$(info Generating API for UI backend code ...)
-	go -C $(ROOT_DIR)/scanner/scanner-go/types generate
-	go -C $(ROOT_DIR)/scanner/scanner-go/client generate
-	go -C $(ROOT_DIR)/scanner/scanner-go/server generate
+	go -C $(ROOT_DIR)/scanner/types generate
+	go -C $(ROOT_DIR)/scanner/client generate
+	go -C $(ROOT_DIR)/scanner/server generate
 
 .PHONY: gen-bicep
 gen-bicep: bin/bicep ## Generating Azure Bicep template(s)

@@ -28,20 +28,41 @@ Other languages will only implement the scanner interface and interact with the 
 that will be embedded into containers (MIGHT CHANGE).
 Use Golang scanner example to see how the new scanners will look like.
 
+## PoC
 
-## Running server
+### Running server
 
 ```bash
-$ cd scaner/golang                        # from repo root
+$ cd scanner/server                       # from repo root
 $ export TARGETPLATFORM=linux/arm64       # whatever works for you
 $ docker build . -t scanner-server        # build
 $ docker run -p 8765:8765 scanner-server  # start server
 ```
 
-## Running example Golang scanner
+### Running example Golang scanner
 ```bash
-$ cd scaner/golang                        # from repo root
+$ cd scanner/examples/golang              # from repo root
 $ export TARGETPLATFORM=linux/arm64       # whatever works for you
-$ docker build . -t scanner-server        # build
-$ docker run -p 8765:8765 scanner-server  # start server
+$ docker build . -t golang-scanner        # build
+
+## Pass env variables for scanner-server
+$ docker run -p 8765:8765 golang-scanner  # start scanner
 ```
+
+### Running example Python scanner
+```bash
+$ cd scanner/examples/python              # from repo root
+$ export TARGETPLATFORM=linux/arm64       # whatever works for you
+$ docker build . -t python-scanner        # build
+
+## Pass env variables for scanner-server
+$ docker run -p 8765:8765 python-scanner  # start scanner
+```
+
+
+
+#### TODO
+- Fix API query and DB builders (metadata selector has some transient bugs due to ORM)
+- Add Docker images to Makefile
+- Resolve leftover package setup (to conform to the existing specifications)
+- Add simple E2E docker compose framework same as implemented for other components

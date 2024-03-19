@@ -1,7 +1,0 @@
----
-package: types
-generate:
-  models: true
-output: types/types.gen.go
-output-options:
-  skip-prune: true
