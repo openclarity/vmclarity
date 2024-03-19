@@ -11,15 +11,18 @@ import (
 	"github.com/openclarity/vmclarity/scanner/types"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
+	"io"
 	"net/http"
 	"sync"
 	"time"
 )
 
+// TODO: add options struct to make everything more configurable
+
 const (
-	maxScanJobs        = 100             // total number of scans that can run at the same time
-	maxQueueSize       = 1000            // total number of scans that can be queued
-	scanSchedulePeriod = 5 * time.Second // period to check for pending tasks and schedule them
+	maxScanJobs        = 100              // total number of scans that can run at the same time
+	maxQueueSize       = 1000             // total number of scans that can be queued
+	scanSchedulePeriod = 10 * time.Second // period to check for pending tasks and schedule them
 )
 
 var ErrScanQueueFull = fmt.Errorf("scan queue is full and cannot accept new tasks yet")
@@ -28,13 +31,27 @@ type manager struct {
 	sync.RWMutex
 	ctx        context.Context
 	scanner    scanner.Scanner
-	client     client.Client
+	scanLabels map[string]string
+	client     *client.Client
 	workerPool *pond.WorkerPool
 	scanCancel map[string]func()
 	cancel     func()
 }
 
-func NewOrchestrator(ctx context.Context, scanner scanner.Scanner, client client.Client) (Orchestrator, error) {
+// NewOrchestrator creates a new Orchestrator. Pass scanMetadataSelector to only
+// watch pending scans that contain given labels.
+func NewOrchestrator(ctx context.Context,
+	scanner scanner.Scanner,
+	client *client.Client,
+	watchPendingScanLabels map[string]string,
+) (Orchestrator, error) {
+	log.SetLevel(log.DebugLevel)
+
+	// Validate
+	if len(watchPendingScanLabels) == 0 {
+		return nil, fmt.Errorf("orchestrator should not watch everything, pass scan metadata labels to watch")
+	}
+
 	// Create orchestrator context
 	ctx, cancel := context.WithCancel(ctx)
 
@@ -47,6 +64,7 @@ func NewOrchestrator(ctx context.Context, scanner scanner.Scanner, client client
 	return &manager{
 		ctx:        ctx,
 		scanner:    scanner,
+		scanLabels: watchPendingScanLabels,
 		client:     client,
 		workerPool: pool,
 		scanCancel: make(map[string]func()),
@@ -57,6 +75,7 @@ func NewOrchestrator(ctx context.Context, scanner scanner.Scanner, client client
 func (m *manager) Scanner() scanner.Scanner { return m.scanner }
 
 func (m *manager) Start() error {
+	scanLabelsSelector := types.MetaSelectorsFromMap(m.scanLabels)
 	go func() {
 		ticker := time.NewTicker(scanSchedulePeriod)
 		defer ticker.Stop()
@@ -65,11 +84,12 @@ func (m *manager) Start() error {
 		for {
 			select {
 			case <-ticker.C:
-				log.Infof("checking for pending tasks...")
+				log.WithField("scan-labels", m.scanLabels).Infof("checking for pending tasks...")
 
 				// Get pending tasks
-				scans, err := respTo[[]types.Scan](m.client.GetScans(m.ctx, &types.GetScansParams{
-					State: &scanPendingState,
+				scans, err := respTo[types.Scans](m.client.GetScans(m.ctx, &types.GetScansParams{
+					State:         &scanPendingState,
+					MetaSelectors: scanLabelsSelector,
 				}))
 				if err != nil {
 					log.Errorf("failed to get pending scans: %v", err)
@@ -77,7 +97,7 @@ func (m *manager) Start() error {
 				}
 
 				// Start pending tasks
-				for _, scan := range scans {
+				for _, scan := range scans.Items {
 					scanID := *scan.Id
 					if err = m.StartScan(scan); err != nil {
 						log.Errorf("orchestrator failed to schedule scan %s: %v", scanID, err)
@@ -95,8 +115,10 @@ func (m *manager) Start() error {
 }
 
 func (m *manager) Stop() error {
-	m.workerPool.Stop()
+	// TODO: add timeout here and run in goroutine; wait for ctx done
+
 	m.cancel()
+	m.workerPool.Stop()
 
 	m.Lock()
 	for _, cancelScan := range m.scanCancel {
@@ -110,14 +132,14 @@ func (m *manager) Stop() error {
 	return nil
 }
 
+// StartScan adds scan job to the worker queue. Workers will pick up the scan job
+// when they become available. If the worker queue is full, this method returns
+// an error notifying the caller that the scan could not be queued. Workers
+// execute multiple scan jobs in parallel. Each scan job performs its own
+// sub-scans in parallel too, but waits for all sub-scans to complete before
+// marking the scan job as completed and releasing the worker. This will not wait
+// for the queue to become free and will drop instantly.
 func (m *manager) StartScan(scan types.Scan) error {
-	// Add scan job to the worker queue. Workers will pick up the scan job when they
-	// become available. If the worker queue is full, this method returns an error
-	// notifying the caller that the scan could not be queued. Workers execute
-	// multiple scan jobs in parallel. Each scan job performs its own sub-scans in
-	// parallel too, but waits for all sub-scans to complete before marking the scan
-	// job as completed and releasing the worker. This will not wait for the queue to
-	// become free and will drop instantly.
 	queued := m.workerPool.TrySubmit(func() {
 		scanID := *scan.Id
 		log.Infof("Scan %s started...", scanID)
@@ -135,12 +157,16 @@ func (m *manager) StartScan(scan types.Scan) error {
 		{
 			scannerInfo := m.scanner.GetInfo(scanCtx)
 			scanEvent := &types.ScanEvent_EventInfo{}
-			_ = scanEvent.FromScannerHandshakeEventInfo(types.ScannerHandshakeEventInfo{
+			err := scanEvent.FromScannerHandshakeEventInfo(types.ScannerHandshakeEventInfo{
 				Annotations: scannerInfo.Annotations,
 				EventType:   "Handshake", // TODO: expose proper models that does this automatically
 				Name:        scannerInfo.Name,
 			})
-			_, err := m.client.SubmitScanEvent(m.ctx, scanID, types.SubmitScanEventJSONRequestBody{
+			if err != nil {
+				log.Errorf("Could not send handshake event to the scanner server")
+				return
+			}
+			_, err = m.client.SubmitScanEvent(m.ctx, scanID, types.SubmitScanEventJSONRequestBody{
 				EventInfo: *scanEvent,
 			})
 			if err != nil {
@@ -169,7 +195,11 @@ func (m *manager) StartScan(scan types.Scan) error {
 
 		// Run all sub-scans in parallel within a given worker. The worker will become
 		// available for new scan jobs when this one is completed.
-		for _, input := range scan.Inputs {
+		var inputs []types.ScanInput
+		if scan.Inputs != nil {
+			inputs = *scan.Inputs
+		}
+		for _, input := range inputs {
 			input := input
 			scanJob.Go(func() error {
 				var err error
@@ -204,7 +234,7 @@ func (m *manager) StartScan(scan types.Scan) error {
 		}()
 
 		// Watch for scan results and update stats
-		results := make([]types.ScanFinding, len(scan.Inputs))
+		results := make([]types.ScanFinding, 0, len(inputs))
 		for subScan := range inputScanCh {
 			results = append(results, subScan)
 
@@ -236,11 +266,14 @@ func (m *manager) StartScan(scan types.Scan) error {
 		// Submit findings event
 		{
 			findingsEvent := &types.ScanEvent_EventInfo{}
-			_ = findingsEvent.FromScannerFindingsEventInfo(types.ScannerFindingsEventInfo{
-				EventType: "Findings", // TODO: expose proper models that does this automatically
-				Findings:  results,
+			err := findingsEvent.FromScannerFindingsEventInfo(types.ScannerFindingsEventInfo{
+				Findings: results,
 			})
-			_, err := m.client.SubmitScanEvent(m.ctx, scanID, types.SubmitScanEventJSONRequestBody{
+			if err != nil {
+				log.Errorf("Could not send findings event to the scanner server")
+				return
+			}
+			_, err = m.client.SubmitScanEvent(m.ctx, scanID, types.SubmitScanEventJSONRequestBody{
 				EventInfo: *findingsEvent,
 			})
 			if err != nil {
@@ -252,13 +285,16 @@ func (m *manager) StartScan(scan types.Scan) error {
 		// Submit final heartbeat
 		{
 			heartbeatEvent := &types.ScanEvent_EventInfo{}
-			_ = heartbeatEvent.FromScannerHeartbeatEventInfo(types.ScannerHeartbeatEventInfo{
-				EventType: "Heartbeat", // TODO: expose proper models that does this automatically
-				Message:   &stateMsg,
-				State:     state,
-				Summary:   &summary,
+			err := heartbeatEvent.FromScannerHeartbeatEventInfo(types.ScannerHeartbeatEventInfo{
+				Message: &stateMsg,
+				State:   state,
+				Summary: &summary,
 			})
-			_, err := m.client.SubmitScanEvent(m.ctx, scanID, types.SubmitScanEventJSONRequestBody{
+			if err != nil {
+				log.Errorf("Could not send final heartbeat event to the scanner server")
+				return
+			}
+			_, err = m.client.SubmitScanEvent(m.ctx, scanID, types.SubmitScanEventJSONRequestBody{
 				EventInfo: *heartbeatEvent,
 			})
 			if err != nil {
@@ -303,11 +339,17 @@ func respTo[T any](r *http.Response, err error) (T, error) {
 
 	// check original error
 	if err != nil {
-		return target, err
+		return target, fmt.Errorf("failed while performing request: %w", err)
 	}
 
 	// decode
 	defer r.Body.Close()
-	err = json.NewDecoder(r.Body).Decode(&target)
-	return target, err
+	bytes, err := io.ReadAll(r.Body)
+
+	err = json.Unmarshal(bytes, &target) //.Decode(&target)
+	if err != nil {
+		return target, fmt.Errorf("failed to parse result to %T: %w", target, err)
+	}
+
+	return target, nil
 }

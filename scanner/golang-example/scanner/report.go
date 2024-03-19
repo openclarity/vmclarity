@@ -23,7 +23,7 @@ import (
 
 var CISDockerImpactCategory = "best-practice"
 
-func parseDockleReport(scanID string, input types.ScanInput, assessmentMap dockle_types.AssessmentMap) []types.ScanFinding {
+func (s *Scanner) parseDockleReport(scanID string, input types.ScanInput, assessmentMap dockle_types.AssessmentMap) []types.ScanFinding {
 	var results []types.ScanFinding
 
 	for _, codeInfo := range assessmentMap {
@@ -46,14 +46,16 @@ func parseDockleReport(scanID string, input types.ScanInput, assessmentMap dockl
 			Id:          &codeInfo.Code,
 			Location:    &input.Path,
 			Message:     &message,
-			ObjectType:  "Misconfiguration",
 			Severity:    &severity,
 		})
 
 		results = append(results, types.ScanFinding{
+			Annotations: s.FindingAnnotations,
 			FindingInfo: findingInfo,
+			Id:          nil,
 			Input:       &input,
 			ScanID:      &scanID,
+			Summary:     nil,
 		})
 	}
 

@@ -15,32 +15,10 @@
 
 package main
 
-import (
-	"fmt"
-	log "github.com/sirupsen/logrus"
-	"io"
-)
+import "github.com/openclarity/vmclarity/scanner/server/cmd/run"
 
-func initLogger(level string, output io.Writer) error {
-	logLevel, err := log.ParseLevel(level)
-	if err != nil {
-		return fmt.Errorf("failed to parse log level: %w", err)
-	}
-	log.SetLevel(logLevel)
+// TODO(ramizpolic): change to use client stubs rather than REST server import
 
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp:          true,
-		DisableTimestamp:       false,
-		DisableSorting:         true,
-		DisableLevelTruncation: true,
-		QuoteEmptyFields:       true,
-	})
-
-	if logLevel >= log.DebugLevel {
-		log.SetReportCaller(true)
-	}
-
-	log.SetOutput(output)
-
-	return nil
+func main() {
+	run.Run()
 }

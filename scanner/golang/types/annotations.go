@@ -14,3 +14,20 @@ func AnnotationsAsMap(a *Annotations) map[string]string {
 	}
 	return result
 }
+
+func AnnotationsFromMap(data map[string]string) *Annotations {
+	if len(data) == 0 {
+		return nil
+	}
+
+	result := Annotations{}
+	for k, v := range data {
+		k, v := k, v
+		result = append(result, Annotation{
+			Key:   &k,
+			Value: &v,
+		})
+	}
+
+	return &result
+}

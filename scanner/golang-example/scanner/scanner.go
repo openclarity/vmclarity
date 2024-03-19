@@ -24,7 +24,9 @@ import (
 
 var _ scanner.Scanner = &Scanner{}
 
-type Scanner struct{}
+type Scanner struct {
+	FindingAnnotations *types.Annotations
+}
 
 func ptr[T any](obj T) *T {
 	return &obj
@@ -32,7 +34,8 @@ func ptr[T any](obj T) *T {
 
 func (s *Scanner) GetInfo(ctx context.Context) types.ScannerInfo {
 	return types.ScannerInfo{
-		Name: "cisdocker",
+		Annotations: s.FindingAnnotations,
+		Name:        "cisdocker",
 	}
 }
 
@@ -49,7 +52,7 @@ func (s *Scanner) Scan(ctx context.Context, scanID string, input types.ScanInput
 		return nil, err
 	}
 
-	findings := parseDockleReport(scanID, input, assessmentMap)
+	findings := s.parseDockleReport(scanID, input, assessmentMap)
 
 	return findings, nil
 }

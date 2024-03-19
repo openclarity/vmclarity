@@ -21,9 +21,15 @@ func (h *handler) ScanFindings() store.ScanFindingStore {
 }
 
 func (s *findingsStore) GetAll(req store.GetScanFindingsRequest) ([]types.ScanFinding, error) {
-	var filters []interface{}
+	var filters [][]interface{}
 	if req.ScanID != nil && *req.ScanID != "" {
-		filters = append(filters, "scan_id = ?", *req.ScanID)
+		filters = append(filters, []interface{}{"scan_id = ?", *req.ScanID})
+	}
+	if req.MetaSelector != nil && len(*req.MetaSelector) > 0 {
+		selector := getMetaKVSelectors("annotations", *req.MetaSelector)
+		if selector != nil {
+			filters = append(filters, []interface{}{*selector})
+		}
 	}
 
 	var findingModels []findingModel

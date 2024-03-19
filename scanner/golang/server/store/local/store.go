@@ -3,6 +3,7 @@ package local
 import (
 	"fmt"
 	"github.com/openclarity/vmclarity/scanner/server/store"
+	"gorm.io/datatypes"
 	"gorm.io/driver/sqlite" // Sqlite driver based on CGO
 	"gorm.io/gorm"
 	"os"
@@ -44,4 +45,18 @@ func (h *handler) init() error {
 	}
 
 	return nil
+}
+
+func getMetaKVSelectors(column string, metaSelectors map[string]string) *datatypes.JSONQueryExpression {
+	if len(metaSelectors) == 0 {
+		return nil
+	}
+
+	// this extracts selectors such as key=value specified for metaSelector query param
+	jqe := datatypes.JSONQuery(column)
+	for key, value := range metaSelectors {
+		key, value := key, value
+		jqe = jqe.Equals(value, key)
+	}
+	return jqe
 }

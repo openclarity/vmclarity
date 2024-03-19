@@ -128,6 +128,22 @@ paths:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
 
+  /findings:
+    get:
+      summary: Get all available findings.
+      operationId: GetFindings
+      parameters:
+        - $ref: '#/components/parameters/metaSelectors'
+      responses:
+        200:
+          description: Findings fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanFindings'
+        default:
+          $ref: '#/components/responses/UnknownError'
+
   /findings/{scanID}:
     get:
       summary: Get all findings for a given scan.
@@ -141,24 +157,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ScanFindings'
-        202:
-          description: Scan not completed yet, retry again.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
         404:
           description: Scan does not exist
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        405:
-          description: Cannot get findings for failed/aborted scans.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
         default:
           $ref: '#/components/responses/UnknownError'
 
@@ -871,16 +875,6 @@ components:
         message:
           type: string
       description: An object that is returned for a successful API request that returns nothing.
-
-    ScanProgressResponse:
-      type: object
-      properties:
-        message:
-          type: string
-        jobsDone:
-          type: integer
-        jobsRemaining:
-          type: integer
 
     ErrorResponse:
       type: object

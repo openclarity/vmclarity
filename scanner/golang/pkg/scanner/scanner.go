@@ -26,6 +26,9 @@ type Scanner interface {
 	// GetInfo returns scanner metadata details
 	GetInfo(ctx context.Context) types.ScannerInfo
 
-	// Scan performs a scan for a given input
+	// Scan performs a scan for a given input. ScanFinding.FindingInfo,
+	// ScanFinding.ScanID and ScanFinding.Input are required to be populated. Note
+	// that ScanFinding.Id should not be populated as this will be done by the server
+	// itself. All other fields are optional.
 	Scan(ctx context.Context, scanID string, input types.ScanInput) ([]types.ScanFinding, error)
 }

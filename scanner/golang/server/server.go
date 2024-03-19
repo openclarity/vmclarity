@@ -13,6 +13,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// TODO: add background worker to mark scans failed/timed out if they do not get
+// picked up/finished in time.
+
 package server
 
 import (
@@ -21,8 +24,6 @@ import (
 	"fmt"
 	"github.com/labstack/echo/v4"
 	echomiddleware "github.com/labstack/echo/v4/middleware"
-	middleware "github.com/oapi-codegen/echo-middleware"
-	"github.com/openclarity/vmclarity/scanner/pkg/scanner"
 	"github.com/openclarity/vmclarity/scanner/server/store"
 	"github.com/openclarity/vmclarity/scanner/server/store/local"
 	"net/http"
@@ -34,9 +35,9 @@ type Server struct {
 	store store.Store
 }
 
-func NewServer(scanner scanner.Scanner) (*Server, error) {
+func NewServer() (*Server, error) {
 	// Get swagger specs
-	swagger, err := GetSwagger()
+	_, err := GetSwagger()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load swagger spec: %w", err)
 	}
@@ -59,9 +60,10 @@ func NewServer(scanner scanner.Scanner) (*Server, error) {
 	// Recover any panics into HTTP 500
 	server.echo.Use(echomiddleware.Recover())
 
+	// TODO: FIX VALIDATION SCHEMA!
 	// Use oapi-codegen validation middleware to validate
 	// the API group against the OpenAPI schema.
-	server.echo.Use(middleware.OapiRequestValidator(swagger))
+	//server.echo.Use(middleware.OapiRequestValidator(swagger))
 
 	// Register paths with the server implementation
 	RegisterHandlers(server.echo, server)

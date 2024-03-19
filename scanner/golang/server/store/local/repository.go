@@ -12,11 +12,17 @@ type repo[T any] struct {
 }
 
 type getParams struct {
-	filters []interface{}
+	filters [][]interface{}
 }
 
 func (r *repo[T]) GetAll(params getParams, dest *[]T) error {
-	return r.DB.Model(r.Model).Find(dest, params.filters...).Error
+	tx := r.DB.Model(r.Model)
+	for _, filter := range params.filters {
+		if len(filter) >= 1 {
+			tx = tx.Where(filter[0], filter[1:]...)
+		}
+	}
+	return tx.Find(dest).Error
 }
 
 func (r *repo[T]) Get(cond *T, dest *T) error {

@@ -563,6 +563,12 @@ type ScanState = string
 // UnknownError An object that is returned for a failed API request.
 type UnknownError = ErrorResponse
 
+// GetFindingsParams defines parameters for GetFindings.
+type GetFindingsParams struct {
+	// MetaSelectors metadata selectors, e.g. "scanner/name=123"
+	MetaSelectors *MetaSelectors `form:"metaSelectors,omitempty" json:"metaSelectors,omitempty"`
+}
+
 // GetScansParams defines parameters for GetScans.
 type GetScansParams struct {
 	// State scan state, e.g. pending

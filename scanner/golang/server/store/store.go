@@ -3,10 +3,7 @@ package store
 import (
 	"errors"
 	"github.com/openclarity/vmclarity/scanner/types"
-	"strings"
 )
-
-const MetaSelectorSeparator = "="
 
 var ErrNotFound = errors.New("not found")
 
@@ -19,25 +16,8 @@ func (e *PreconditionFailedError) Error() string {
 }
 
 type GetScansRequest struct {
-	State        *string   `json:"state,omitempty"`
-	MetaSelector *[]string `json:"metaSelector,omitempty"`
-}
-
-func (r *GetScansRequest) GetMetaKVSelectors() map[string]string {
-	if r.MetaSelector == nil {
-		return nil
-	}
-
-	// this extracts selectors such as key=value specified for metaSelector query param
-	kvSelectors := make(map[string]string)
-	for _, item := range *r.MetaSelector {
-		items := strings.SplitN(item, MetaSelectorSeparator, 2)
-		if len(items) < 2 {
-			continue
-		}
-		kvSelectors[items[0]] = items[1]
-	}
-	return kvSelectors
+	State        *string            `json:"state,omitempty"`
+	MetaSelector *map[string]string `json:"metaSelector,omitempty"`
 }
 
 type ScanStore interface {
@@ -49,7 +29,8 @@ type ScanStore interface {
 }
 
 type GetScanFindingsRequest struct {
-	ScanID *string `json:"scanID"`
+	ScanID       *string            `json:"scanID"`
+	MetaSelector *map[string]string `json:"metaSelector,omitempty"`
 }
 
 type DeleteScanFindingsRequest struct {

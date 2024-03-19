@@ -23,17 +23,15 @@ func (h *handler) Scans() store.ScanStore {
 }
 
 func (s *scanStore) GetAll(req store.GetScansRequest) ([]types.Scan, error) {
-	var filters []interface{}
+	var filters [][]interface{}
 	if req.State != nil && *req.State != "" {
-		filters = append(filters, "state = ?", *req.State)
+		filters = append(filters, []interface{}{"state = ?", *req.State})
 	}
 	if req.MetaSelector != nil && len(*req.MetaSelector) > 0 {
-		jqe := datatypes.JSONQuery("annotations")
-		for key, value := range req.GetMetaKVSelectors() {
-			key, value := key, value
-			jqe = jqe.Equals(value, key)
+		selector := getMetaKVSelectors("annotations", *req.MetaSelector)
+		if selector != nil {
+			filters = append(filters, []interface{}{selector})
 		}
-		filters = append(filters, jqe)
 	}
 
 	var scanModels []scanModel

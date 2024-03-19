@@ -90,6 +90,9 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
+	// GetFindings request
+	GetFindings(ctx context.Context, params *GetFindingsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetScanFindingsForScan request
 	GetScanFindingsForScan(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -117,6 +120,18 @@ type ClientInterface interface {
 	CreateScanWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	CreateScan(ctx context.Context, body CreateScanJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+}
+
+func (c *Client) GetFindings(ctx context.Context, params *GetFindingsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetFindingsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
 }
 
 func (c *Client) GetScanFindingsForScan(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -237,6 +252,55 @@ func (c *Client) CreateScan(ctx context.Context, body CreateScanJSONRequestBody,
 		return nil, err
 	}
 	return c.Client.Do(req)
+}
+
+// NewGetFindingsRequest generates requests for GetFindings
+func NewGetFindingsRequest(server string, params *GetFindingsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/findings")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.MetaSelectors != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "metaSelectors", runtime.ParamLocationQuery, *params.MetaSelectors); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
 }
 
 // NewGetScanFindingsForScanRequest generates requests for GetScanFindingsForScan
@@ -590,6 +654,9 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
+	// GetFindingsWithResponse request
+	GetFindingsWithResponse(ctx context.Context, params *GetFindingsParams, reqEditors ...RequestEditorFn) (*GetFindingsResponse, error)
+
 	// GetScanFindingsForScanWithResponse request
 	GetScanFindingsForScanWithResponse(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*GetScanFindingsForScanResponse, error)
 
@@ -619,13 +686,34 @@ type ClientWithResponsesInterface interface {
 	CreateScanWithResponse(ctx context.Context, body CreateScanJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateScanResponse, error)
 }
 
+type GetFindingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ScanFindings
+	JSONDefault  *UnknownError
+}
+
+// Status returns HTTPResponse.Status
+func (r GetFindingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetFindingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetScanFindingsForScanResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ScanFindings
-	JSON202      *SuccessResponse
 	JSON404      *ErrorResponse
-	JSON405      *SuccessResponse
 	JSONDefault  *UnknownError
 }
 
@@ -811,6 +899,15 @@ func (r CreateScanResponse) StatusCode() int {
 	return 0
 }
 
+// GetFindingsWithResponse request returning *GetFindingsResponse
+func (c *ClientWithResponses) GetFindingsWithResponse(ctx context.Context, params *GetFindingsParams, reqEditors ...RequestEditorFn) (*GetFindingsResponse, error) {
+	rsp, err := c.GetFindings(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetFindingsResponse(rsp)
+}
+
 // GetScanFindingsForScanWithResponse request returning *GetScanFindingsForScanResponse
 func (c *ClientWithResponses) GetScanFindingsForScanWithResponse(ctx context.Context, scanID ScanID, reqEditors ...RequestEditorFn) (*GetScanFindingsForScanResponse, error) {
 	rsp, err := c.GetScanFindingsForScan(ctx, scanID, reqEditors...)
@@ -899,6 +996,39 @@ func (c *ClientWithResponses) CreateScanWithResponse(ctx context.Context, body C
 	return ParseCreateScanResponse(rsp)
 }
 
+// ParseGetFindingsResponse parses an HTTP response from a GetFindingsWithResponse call
+func ParseGetFindingsResponse(rsp *http.Response) (*GetFindingsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetFindingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ScanFindings
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest UnknownError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetScanFindingsForScanResponse parses an HTTP response from a GetScanFindingsForScanWithResponse call
 func ParseGetScanFindingsForScanResponse(rsp *http.Response) (*GetScanFindingsForScanResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -920,26 +1050,12 @@ func ParseGetScanFindingsForScanResponse(rsp *http.Response) (*GetScanFindingsFo
 		}
 		response.JSON200 = &dest
 
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
-		var dest SuccessResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON202 = &dest
-
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON404 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 405:
-		var dest SuccessResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON405 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest UnknownError

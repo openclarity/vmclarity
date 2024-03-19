@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package run
 
 import (
 	"fmt"
@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	DefaultEnvPrefix     = "VMCLARITY_SCANNER"
+	DefaultEnvPrefix     = "VMCLARITY_SCANNER_SERVER"
 	DefaultListenAddress = "0.0.0.0:8765"
 	DefaultLogLevel      = "info"
 )

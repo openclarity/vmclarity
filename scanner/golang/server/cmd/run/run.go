@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package run
 
 import (
 	scannerserver "github.com/openclarity/vmclarity/scanner/server"
@@ -21,25 +21,23 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-
-	"scanner/scanner"
 )
 
 // TODO(ramizpolic): change to use client stubs rather than REST server import
 
-func main() {
+func Run() {
 	// Load components
 	config, err := NewConfig()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	if err := initLogger(config.LogLevel, os.Stderr); err != nil {
+	if err := InitLogger(config.LogLevel, os.Stderr); err != nil {
 		log.Fatalf("Failed to initialize logger: %v", err)
 	}
 
 	// Create server
-	server, err := scannerserver.NewServer(&scanner.Scanner{})
+	server, err := scannerserver.NewServer()
 	if err != nil {
 		log.Fatalf("Failed to create scanner server: %v", err)
 	}

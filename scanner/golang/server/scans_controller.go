@@ -28,7 +28,7 @@ import (
 func (s *Server) GetScans(ctx echo.Context, params types.GetScansParams) error {
 	scans, err := s.store.Scans().GetAll(store.GetScansRequest{
 		State:        params.State,
-		MetaSelector: params.MetaSelectors,
+		MetaSelector: types.MetaSelectorsToMap(params.MetaSelectors),
 	})
 	if err != nil {
 		return sendError(ctx, http.StatusInternalServerError, err.Error())
