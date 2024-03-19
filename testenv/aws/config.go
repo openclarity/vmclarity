@@ -22,8 +22,6 @@ import (
 	envtypes "github.com/openclarity/vmclarity/testenv/types"
 )
 
-const DefaultAWSRegion = "eu-central-1"
-
 // Config defines configuration for AWS environment.
 //
 //nolint:containedctx
