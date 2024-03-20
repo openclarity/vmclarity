@@ -49,6 +49,7 @@ type AWSEnv struct {
 	server      *Server
 	stackName   string
 	templateURL string
+	workDir     string
 	region      string
 	sshKeyPair  *utils.SSHKeyPair
 	meta        map[string]interface{}
@@ -197,11 +198,6 @@ func New(config *Config, opts ...ConfigOptFn) (*AWSEnv, error) {
 		return nil, fmt.Errorf("failed to apply config options: %w", err)
 	}
 
-	// Validate configuration
-	if err := config.Validate(); err != nil {
-		return nil, fmt.Errorf("failed to validate configuration: %w", err)
-	}
-
 	// Load default AWS configuration and set region
 	cfg, err := awsconfig.LoadDefaultConfig(context.Background())
 	if err != nil {
@@ -223,6 +219,7 @@ func New(config *Config, opts ...ConfigOptFn) (*AWSEnv, error) {
 		ec2Client: ec2Client,
 		s3Client:  s3Client,
 		stackName: config.EnvName,
+		workDir:   config.WorkDir,
 		region:    config.Region,
 		sshKeyPair: &utils.SSHKeyPair{
 			PublicKeyFile:  config.PublicKeyFile,

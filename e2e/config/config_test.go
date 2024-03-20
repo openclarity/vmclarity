@@ -196,7 +196,7 @@ func TestConfig(t *testing.T) {
 					},
 					AWS: &awsenv.Config{
 						EnvName:        "vmclarity-testenv",
-						Region:         "",
+						Region:         "eu-central-1",
 						PrivateKeyFile: "",
 						PublicKeyFile:  "",
 					},

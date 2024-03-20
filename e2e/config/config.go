@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/openclarity/vmclarity/testenv"
+	"github.com/openclarity/vmclarity/testenv/aws"
 	k8senv "github.com/openclarity/vmclarity/testenv/kubernetes"
 	"github.com/openclarity/vmclarity/testenv/kubernetes/helm"
 	k8senvtypes "github.com/openclarity/vmclarity/testenv/kubernetes/types"
@@ -142,6 +143,8 @@ func NewConfig() (*Config, error) {
 	v.SetDefault("kubernetes.helm.driver", helm.DefaultHelmDriver)
 
 	_ = v.BindEnv("aws.region")
+	v.SetDefault("aws.region", aws.DefaultRegion)
+
 	_ = v.BindEnv("aws.public_key_file")
 	_ = v.BindEnv("aws.private_key_file")
 
