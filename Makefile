@@ -34,6 +34,7 @@ INSTALLATION_DIR := $(ROOT_DIR)/installation
 HELM_CHART_DIR := $(INSTALLATION_DIR)/kubernetes/helm
 HELM_OCI_REPOSITORY := ghcr.io/openclarity/charts
 DIST_DIR ?= $(ROOT_DIR)/dist
+BICEP_DIR := $(INSTALLATION_DIR)/azure/vmclarity
 
 ####
 ## Load additional makefiles
@@ -499,9 +500,31 @@ $(DIST_DIR)/CHANGELOG.md: $(ROOT_DIR)/cliff.toml bin/git-cliff | $(DIST_DIR)
 
 .PHONY: multimod-verify
 multimod-verify: bin/multimod
-	@echo "Validating versions.yaml file"
+	$(info --- Validating versions.yaml file)
 	$(MULTIMOD_BIN) verify
 
 .PHONY: multimod-prerelease
 multimod-prerelease: bin/multimod
 	$(MULTIMOD_BIN) prerelease --all-module-sets --skip-go-mod-tidy=true --commit-to-different-branch=false
+
+
+##@ Renovate
+
+
+.PHONY: renovate-fix-gomod
+renovate-fix-gomod: gomod-tidy ## Fix go.mod files after bumping Go dependency versions
+	$(info --- Fix go.mod files after bumping Go dependency versions)
+	git add ':/**/go.mod' ':/**/go.sum' \
+	&& git commit -m "fix: go mod tidy"
+
+.PHONY: renovate-fix-helm-docs
+renovate-fix-helm-docs: gen-helm-docs ## Fix Helm Chart documentation after version update
+	$(info --- Fix Helm Chart documentation after version update)
+	git add ':$(subst $(ROOT_DIR),,$(HELM_CHART_DIR))' \
+	&& git commit -m "docs: update helm docs"
+
+.PHONY: renovate-fix-bicep
+renovate-fix-bicep: gen-bicep ## Fix Azure Bicep files after version update
+	$(info --- Fix Azure Bicep files after version update)
+	git add ':$(subst $(ROOT_DIR),,$(BICEP_DIR))' \
+	&& git commit -m "fix: generate bicep template"
