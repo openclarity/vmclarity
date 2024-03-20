@@ -49,7 +49,6 @@ func New(config *Config, opts ...ConfigOptFn) (types.Environment, error) {
 		)
 	case types.EnvironmentTypeAWS:
 		env, err = aws.New(config.AWS,
-			aws.WithContext(config.ctx),
 			aws.WithWorkDir(config.WorkDir),
 		)
 	case types.EnvironmentTypeAzure, types.EnvironmentTypeGCP:

@@ -25,6 +25,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"path/filepath"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -36,13 +37,13 @@ type SSHKeyPair struct {
 }
 
 // GenerateSSHKeyPair generates a new SSH key pair.
-func GenerateSSHKeyPair() (*SSHKeyPair, error) {
+func GenerateSSHKeyPair(workDir string) (*SSHKeyPair, error) {
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048) //nolint:gomnd
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate private key: %w", err)
 	}
 
-	privateKeyFile, err := os.Create("id_rsa_testenv")
+	privateKeyFile, err := os.Create(filepath.Join(workDir, "id_rsa_testenv"))
 	defer privateKeyFile.Close() // nolint:staticcheck
 	if err != nil {
 		return nil, fmt.Errorf("failed to create private key file: %w", err)
@@ -65,7 +66,7 @@ func GenerateSSHKeyPair() (*SSHKeyPair, error) {
 		return nil, fmt.Errorf("failed to create public key: %w", err)
 	}
 
-	publicKeyFile := "id_rsa_testenv.pub"
+	publicKeyFile := filepath.Join(workDir, "id_rsa_testenv.pub")
 	err = os.WriteFile(publicKeyFile, ssh.MarshalAuthorizedKey(publicKey), 0o600) //nolint:gomnd
 	if err != nil {
 		return nil, fmt.Errorf("failed to write public key file: %w", err)

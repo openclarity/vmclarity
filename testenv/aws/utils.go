@@ -37,7 +37,7 @@ func (e *AWSEnv) prepareStack(ctx context.Context) error {
 
 	// If the private and public key files are not provided, then generate a temporary key pair
 	if e.sshKeyPair.PublicKeyFile == "" || e.sshKeyPair.PrivateKeyFile == "" {
-		e.sshKeyPair, err = utils.GenerateSSHKeyPair()
+		e.sshKeyPair, err = utils.GenerateSSHKeyPair(e.workDir)
 		if err != nil {
 			return fmt.Errorf("failed to generate ssh key pair: %w", err)
 		}

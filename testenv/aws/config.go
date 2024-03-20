@@ -16,10 +16,12 @@
 package aws
 
 import (
-	"context"
-	"errors"
-
 	envtypes "github.com/openclarity/vmclarity/testenv/types"
+)
+
+const (
+	// DefaultRegion is the default AWS region to be used.
+	DefaultRegion = "eu-central-1"
 )
 
 // Config defines configuration for AWS environment.
@@ -36,32 +38,12 @@ type Config struct {
 	PublicKeyFile string `mapstructure:"public_key_file"`
 	// PrivateKeyFile the private key file to be used for the key pair
 	PrivateKeyFile string `mapstructure:"private_key_file"`
-
-	// ctx used during project initialization
-	ctx context.Context
-}
-
-// Validate validates the configuration.
-func (c *Config) Validate() error {
-	if c.Region == "" {
-		return errors.New("parameter region must be provided")
-	}
-
-	return nil
 }
 
 // ConfigOptFn defines transformer function for Config.
 type ConfigOptFn func(*Config) error
 
 var applyConfigWithOpts = envtypes.WithOpts[Config, ConfigOptFn]
-
-func WithContext(ctx context.Context) ConfigOptFn {
-	return func(config *Config) error {
-		config.ctx = ctx
-
-		return nil
-	}
-}
 
 // WithWorkDir set workDir for Config.
 func WithWorkDir(dir string) ConfigOptFn {
