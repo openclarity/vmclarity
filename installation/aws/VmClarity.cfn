@@ -399,7 +399,7 @@ Resources:
                           restart_policy:
                             condition: on-failure
                         healthcheck:
-                          test: ["CMD", "nc", "-z", "127.0.0.1", "9991"]
+                          test: wget --no-verbose --tries=10 --spider http://127.0.0.1:8080/healthz/ready || exit 1
                           interval: 10s
                           retries: 60
 
