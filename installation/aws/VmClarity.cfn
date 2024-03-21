@@ -251,7 +251,6 @@ Resources:
                           - info
                         ports:
                           - "8888:8888"
-                          - "8081:8081"
                         env_file: ./apiserver.env
                         volumes:
                           - type: bind
@@ -275,8 +274,6 @@ Resources:
                           - run
                           - --log-level
                           - info
-                        ports:
-                          - "8082:8082"
                         env_file: ./orchestrator.env
                         logging:
                           driver: journald
@@ -306,8 +303,6 @@ Resources:
                           - run
                           - --log-level
                           - info
-                        ports:
-                          - "8083:8083"
                         env_file: ./uibackend.env
                         logging:
                           driver: journald
