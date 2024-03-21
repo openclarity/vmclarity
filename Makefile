@@ -34,7 +34,7 @@ INSTALLATION_DIR := $(ROOT_DIR)/installation
 HELM_CHART_DIR := $(INSTALLATION_DIR)/kubernetes/helm
 HELM_OCI_REPOSITORY := ghcr.io/openclarity/charts
 DIST_DIR ?= $(ROOT_DIR)/dist
-BICEP_DIR := $(INSTALLATION_DIR)/azure/vmclarity
+BICEP_DIR := $(INSTALLATION_DIR)/azure
 
 ####
 ## Load additional makefiles
@@ -380,7 +380,6 @@ $(CFN_DIST_DIR)/LICENSE: $(ROOT_DIR)/LICENSE | $(CFN_DIST_DIR)
 $(CFN_DIST_DIR):
 	@mkdir -p $@
 
-BICEP_DIR := $(INSTALLATION_DIR)/azure
 BICEP_FILES := $(shell find $(BICEP_DIR))
 BICEP_DIST_DIR := $(DIST_DIR)/bicep
 
