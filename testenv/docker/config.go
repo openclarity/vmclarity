@@ -29,7 +29,7 @@ type Config struct {
 	EnvName string `mapstructure:"env_name"`
 	// Images used for docker deployment
 	Images ContainerImages `mapstructure:",squash"`
-	// ComposeFiles contains the list of docker compose files used for deployment
+	// ComposeFiles contains the list of docker docker files used for deployment
 	ComposeFiles []string `mapstructure:"compose_files"`
 	// WorkDir absolute path to the directory where the deployment files prior performing actions
 	WorkDir string `mapstructure:"work_dir"`

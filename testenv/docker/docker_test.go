@@ -44,8 +44,8 @@ func TestProjectFromConfig(t *testing.T) {
 					Scanner:      "openclarity/vmclarity-cli:latest",
 				},
 				ComposeFiles: []string{
-					"../../installation/docker/docker-compose.yml",
-					"asset/docker-compose.override.yml",
+					"../../installation/docker/docker-docker.yml",
+					"asset/docker-docker.override.yml",
 				},
 			},
 			ExpectedServiceImages: map[string]string{

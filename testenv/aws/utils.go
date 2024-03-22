@@ -19,6 +19,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/openclarity/vmclarity/testenv/utils"
+	"os"
+
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	cloudformationtypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -26,7 +29,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/openclarity/vmclarity/installation"
-	"os"
+
+	dockerhelper "github.com/openclarity/vmclarity/testenv/utils/docker"
 )
 
 func (e *AWSEnv) prepareStack(ctx context.Context) error {
@@ -67,6 +71,57 @@ func (e *AWSEnv) prepareStack(ctx context.Context) error {
 		return fmt.Errorf("failed to put object: %w", err)
 	}
 	e.templateURL = "https://" + e.stackName + ".s3.amazonaws.com/" + e.stackName
+
+	return nil
+}
+
+func (e *AWSEnv) postSetUp(ctx context.Context) error {
+	// Check infrastructure status before checking services
+	ready, err := e.infrastructureReady(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to check if infrastructure is ready: %w", err)
+	}
+	if !ready {
+		return errors.New("infrastructure is not ready")
+	}
+
+	server, err := e.getServer(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get VMClarity server: %w", err)
+	}
+
+	if err = server.WaitForSSH(ctx, DefaultSSHPortReadyTimeout); err != nil {
+		return fmt.Errorf("failed to wait for the SSH port to become ready: %w", err)
+	}
+
+	e.sshPortForwardInput = &utils.SSHForwardInput{
+		PrivateKey:    e.sshKeyPair.PrivateKey,
+		User:          "ubuntu",
+		Host:          server.PublicIP,
+		Port:          utils.DefaultSSHPort,
+		LocalPort:     8080,
+		RemoteAddress: "localhost",
+		RemotePort:    80,
+	}
+
+	sshPF, err := utils.NewSSHPortForward(e.sshPortForwardInput)
+	if err != nil {
+		return fmt.Errorf("failed to setup SSH port forwarding: %w", err)
+	}
+
+	if err = sshPF.Start(ctx); err != nil {
+		return fmt.Errorf("failed to wait for the SSH port to become ready: %w", err)
+	}
+
+	clientOpts, err := dockerhelper.ClientOptsWithSSHConn(ctx, e.workDir, e.sshKeyPair, e.sshPortForwardInput)
+	if err != nil {
+		return fmt.Errorf("failed to get options for docker client: %w", err)
+	}
+
+	e.DockerHelper, err = dockerhelper.New(clientOpts)
+	if err != nil {
+		return fmt.Errorf("failed to create Docker helper: %w", err)
+	}
 
 	return nil
 }

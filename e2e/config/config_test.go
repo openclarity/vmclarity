@@ -56,7 +56,7 @@ func TestConfig(t *testing.T) {
 				"VMCLARITY_E2E_SCANNER_IMAGE":             "openclarity/vmclarity-cli:test",
 				"VMCLARITY_E2E_CR_DISCOVERY_SERVER_IMAGE": "openclarity/vmclarity-cr-discovery-server:test",
 				// testenv.docker
-				"VMCLARITY_E2E_DOCKER_COMPOSE_FILES": "docker-compose.yml,docker-compose-override.yml",
+				"VMCLARITY_E2E_DOCKER_COMPOSE_FILES": "docker-docker.yml,docker-docker-override.yml",
 				// testenv.kubernetes
 				"VMCLARITY_E2E_KUBERNETES_NAMESPACE":                "vmclarity-e2e-namespace",
 				"VMCLARITY_E2E_KUBERNETES_PROVIDER":                 "eXTERnal",
@@ -95,8 +95,8 @@ func TestConfig(t *testing.T) {
 							CRDiscoveryServer: "openclarity/vmclarity-cr-discovery-server:test",
 						},
 						ComposeFiles: []string{
-							"docker-compose.yml",
-							"docker-compose-override.yml",
+							"docker-docker.yml",
+							"docker-docker-override.yml",
 						},
 					},
 					Kubernetes: &k8senv.Config{

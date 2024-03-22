@@ -84,7 +84,7 @@ func ProjectFromConfig(config *Config) (*types.Project, error) {
 
 	project, err := cli.ProjectFromOptions(config.ctx, opts)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create compose project: %w", err)
+		return nil, fmt.Errorf("failed to create docker project: %w", err)
 	}
 
 	for i, service := range project.Services {

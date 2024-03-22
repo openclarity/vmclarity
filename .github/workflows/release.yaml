@@ -96,7 +96,7 @@ jobs:
       - name: Create Docker Compose manifest(s)
         env:
           VERSION: ${{ github.ref_name }}
-        run: make dist-docker-compose
+        run: make dist-docker-docker
 
       - name: Create Google Cloud Deployment manifest(s)
         env:
