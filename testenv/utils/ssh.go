@@ -16,49 +16,81 @@
 package utils
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"golang.org/x/crypto/ssh"
 	"io"
 	"net"
 	"os"
-	"path/filepath"
+	"sync"
+	"sync/atomic"
+)
 
-	"golang.org/x/crypto/ssh"
+const (
+	DefaultSSHPort = 22
 )
 
 type SSHKeyPair struct {
-	PublicKeyFile  string
-	PrivateKeyFile string
-	Temporary      bool
+	PublicKey  []byte
+	PrivateKey []byte
+	Temporary  bool
+}
+
+// Save is responsible for writing the SSHKeyPair to the filesystem
+func (p *SSHKeyPair) Save(privKeyFile, pubKeyFile string) error {
+	err := os.WriteFile(privKeyFile, p.PrivateKey, 0o600)
+	if err != nil {
+		return fmt.Errorf("failed to save private key file: %w", err)
+	}
+
+	err = os.WriteFile(pubKeyFile, p.PublicKey, 0o644)
+	if err != nil {
+		return fmt.Errorf("failed to save public key file: %w", err)
+	}
+
+	return nil
+}
+
+// Load is responsible for loading the ssh keypair from filesystem into SSHKeyPair
+func (p *SSHKeyPair) Load(privKeyFile, pubKeyFile string) error {
+	var err error
+
+	// Read the private key file.
+	p.PrivateKey, err = os.ReadFile(privKeyFile)
+	if err != nil {
+		return fmt.Errorf("failed to read private key: %w", err)
+	}
+
+	// Read the public key file.
+	p.PublicKey, err = os.ReadFile(pubKeyFile)
+	if err != nil {
+		return fmt.Errorf("failed to read public key: %w", err)
+	}
+
+	return nil
 }
 
 // GenerateSSHKeyPair generates a new SSH key pair.
-func GenerateSSHKeyPair(workDir string) (*SSHKeyPair, error) {
+func GenerateSSHKeyPair() (*SSHKeyPair, error) {
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048) //nolint:gomnd
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate private key: %w", err)
-	}
-
-	privateKeyFile, err := os.Create(filepath.Join(workDir, "id_rsa_testenv"))
-	defer privateKeyFile.Close() // nolint:staticcheck
-	if err != nil {
-		return nil, fmt.Errorf("failed to create private key file: %w", err)
 	}
 
 	privateKeyPEM := &pem.Block{
 		Type:  "RSA PRIVATE KEY",
 		Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
 	}
-	if err := pem.Encode(privateKeyFile, privateKeyPEM); err != nil {
-		return nil, fmt.Errorf("failed to encode private key: %w", err)
-	}
+	var privateKeyData []byte
+	b := bytes.NewBuffer(privateKeyData)
 
-	if err := os.Chmod(privateKeyFile.Name(), 0o600); err != nil { //nolint:gomnd
-		return nil, fmt.Errorf("failed to change file permissions: %w", err)
+	if err = pem.Encode(b, privateKeyPEM); err != nil {
+		return nil, fmt.Errorf("failed to encode private key: %w", err)
 	}
 
 	publicKey, err := ssh.NewPublicKey(&privateKey.PublicKey)
@@ -66,106 +98,153 @@ func GenerateSSHKeyPair(workDir string) (*SSHKeyPair, error) {
 		return nil, fmt.Errorf("failed to create public key: %w", err)
 	}
 
-	publicKeyFile := filepath.Join(workDir, "id_rsa_testenv.pub")
-	err = os.WriteFile(publicKeyFile, ssh.MarshalAuthorizedKey(publicKey), 0o600) //nolint:gomnd
-	if err != nil {
-		return nil, fmt.Errorf("failed to write public key file: %w", err)
-	}
-
 	return &SSHKeyPair{
-		PublicKeyFile:  publicKeyFile,
-		PrivateKeyFile: privateKeyFile.Name(),
-		Temporary:      true,
+		PublicKey:  ssh.MarshalAuthorizedKey(publicKey),
+		PrivateKey: privateKeyData,
+		Temporary:  true,
 	}, nil
 }
 
-// Run SSH tunnel to remote VMClarity server.
-func RunSSHTunnel(ctx context.Context, privateKeyFile, remoteHost, remotePort, localPort string) {
-	logger := GetLoggerFromContextOrDiscard(ctx)
+type SSHForwardCallback func(ctx context.Context, err error) error
 
-	// Read the private key file.
-	key, err := os.ReadFile(privateKeyFile)
+type SSHForwardInput struct {
+	PrivateKey    []byte
+	User          string
+	Host          string
+	Port          int
+	LocalPort     int
+	RemoteAddress string
+	RemotePort    int
+
+	Callback SSHForwardCallback
+}
+
+func (i *SSHForwardInput) HostAddressPort() string {
+	return fmt.Sprintf("%s:%d", i.Host, i.Port)
+}
+
+func (i *SSHForwardInput) LocalAddressPort() string {
+	return fmt.Sprintf("localhost:%d", i.LocalPort)
+}
+
+func (i *SSHForwardInput) RemoteAddressPort() string {
+	if i.RemoteAddress == "" {
+		i.RemoteAddress = "localhost"
+	}
+
+	return fmt.Sprintf("%s:%d", i.RemoteAddress, i.RemotePort)
+}
+
+type SSHPortForward struct {
+	input        *SSHForwardInput
+	clientConfig ssh.ClientConfig
+
+	stop atomic.Bool
+}
+
+func (f *SSHPortForward) Start(ctx context.Context) error {
+	// Dial the remote server.
+	client, err := ssh.Dial("tcp", f.input.HostAddressPort(), &f.clientConfig)
 	if err != nil {
-		logger.Fatalf("failed to read private key: %s\n", err)
-		return
+		return fmt.Errorf("failed to dial:%w", err)
+	}
+
+	// Listen on local port.
+	listener, err := net.Listen("tcp", f.input.LocalAddressPort())
+	if err != nil {
+		return fmt.Errorf("failed to listen: %w", err)
+	}
+
+	// TODO: wait until the BannerCallBack is invoked
+
+	go func() {
+		var callbackErr error
+		for callbackErr == nil && !f.stop.Load() {
+			defer client.Close()
+			defer listener.Close()
+
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+
+			// Accept local connection.
+			local, err := listener.Accept()
+			if err != nil {
+				callbackErr = f.input.Callback(ctx, fmt.Errorf("local SSH tunnel error: %w", err))
+			}
+			defer local.Close()
+
+			// Dial remote server.
+			remote, err := client.Dial("tcp", f.input.RemoteAddressPort())
+			if err != nil {
+				callbackErr = f.input.Callback(ctx, fmt.Errorf("remote SSH tunnel error: %w", err))
+			}
+			defer remote.Close()
+
+			wg := sync.WaitGroup{}
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+
+				_, err := io.Copy(local, remote)
+				if err != nil {
+					callbackErr = f.input.Callback(ctx, fmt.Errorf("failed to copy data from remote to local: %w", err))
+				}
+			}()
+
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+
+				_, err := io.Copy(remote, local)
+				if err != nil {
+					callbackErr = f.input.Callback(ctx, fmt.Errorf("failed to copy data from remote to local: %w", err))
+				}
+			}()
+
+			wg.Wait()
+
+		}
+
+	}()
+
+	return nil
+}
+
+func (f *SSHPortForward) Stop() {
+	f.stop.Store(true)
+}
+
+func NewSSHPortForward(input *SSHForwardInput) (*SSHPortForward, error) {
+	if input.Callback == nil {
+		input.Callback = func(ctx context.Context, err error) error {
+			logger := GetLoggerFromContextOrDiscard(ctx)
+			logger.Error(err)
+
+			return err
+		}
 	}
 
 	// Create Signer from private key.
-	signer, err := ssh.ParsePrivateKey(key)
+	signer, err := ssh.ParsePrivateKey(input.PrivateKey)
 	if err != nil {
-		logger.Fatalf("failed to parse private key: %s\n", err)
-		return
+		return nil, fmt.Errorf("failed to parse private key: %w", err)
 	}
 
 	// Create SSH client config.
 	config := ssh.ClientConfig{
-		User: "ubuntu",
+		User: input.User,
 		Auth: []ssh.AuthMethod{
 			ssh.PublicKeys(signer),
 		},
-		// TODO(paralta) Review this insecure host key callback, which accepts any host key.
 		HostKeyCallback:   ssh.InsecureIgnoreHostKey(), //nolint:gosec
 		HostKeyAlgorithms: []string{ssh.KeyAlgoED25519},
 	}
 
-	// Add port to remote host.
-	remoteAddress := fmt.Sprintf("%s:%s", remoteHost, "22")
-
-	// Dial the remote server.
-	client, err := ssh.Dial("tcp", remoteAddress, &config)
-	if err != nil {
-		logger.Fatalf("failed to dial: %s\n", err)
-	}
-	defer client.Close()
-
-	// Listen on local port.
-	listener, err := net.Listen("tcp", "localhost:"+localPort)
-	if err != nil {
-		logger.Fatalf("failed to listen: %s\n", err)
-	}
-	defer listener.Close()
-
-	for {
-		// Accept local connection.
-		local, err := listener.Accept()
-		if err != nil {
-			logger.Fatalf("failed to accept: %s\n", err)
-		}
-
-		// Dial remote server.
-		remote, err := client.Dial("tcp", "localhost:"+remotePort)
-		if err != nil {
-			logger.Fatalf("failed to dial: %s\n", err)
-		}
-
-		// Run tunnel between local and remote connections.
-		runTunnel(ctx, local, remote)
-	}
-}
-
-// runTunnel runs a tunnel between two connections.
-func runTunnel(ctx context.Context, local, remote net.Conn) {
-	logger := GetLoggerFromContextOrDiscard(ctx)
-
-	defer local.Close()
-	defer remote.Close()
-	done := make(chan struct{}, 2) //nolint:gomnd
-
-	go func() {
-		_, err := io.Copy(local, remote)
-		if err != nil {
-			logger.Fatalf("failed to copy data from remote to local: %s\n", err)
-		}
-		done <- struct{}{}
-	}()
-
-	go func() {
-		_, err := io.Copy(remote, local)
-		if err != nil {
-			logger.Fatalf("failed to copy data from local to remote: %s\n", err)
-		}
-		done <- struct{}{}
-	}()
-
-	<-done
+	return &SSHPortForward{
+		input:        input,
+		clientConfig: config,
+	}, nil
 }

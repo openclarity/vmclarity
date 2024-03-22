@@ -19,40 +19,23 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
-
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	cloudformationtypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
-
-	"github.com/openclarity/vmclarity/testenv/utils"
+	"github.com/openclarity/vmclarity/installation"
+	"os"
 )
 
 func (e *AWSEnv) prepareStack(ctx context.Context) error {
 	var err error
 
-	// If the private and public key files are not provided, then generate a temporary key pair
-	if e.sshKeyPair.PublicKeyFile == "" || e.sshKeyPair.PrivateKeyFile == "" {
-		e.sshKeyPair, err = utils.GenerateSSHKeyPair(e.workDir)
-		if err != nil {
-			return fmt.Errorf("failed to generate ssh key pair: %w", err)
-		}
-	}
-
-	//	Read the public key file.
-	key, err := os.ReadFile(e.sshKeyPair.PublicKeyFile)
-	if err != nil {
-		return fmt.Errorf("failed to read public key: %w", err)
-	}
-
 	// Create a new key pair
 	_, err = e.ec2Client.ImportKeyPair(ctx, &ec2.ImportKeyPairInput{
-		KeyName:           aws.String(AWSKeyName),
-		PublicKeyMaterial: key,
+		KeyName:           &e.stackName,
+		PublicKeyMaterial: e.sshKeyPair.PublicKey,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to import key pair: %w", err)
@@ -69,8 +52,7 @@ func (e *AWSEnv) prepareStack(ctx context.Context) error {
 		return fmt.Errorf("failed to create bucket: %w", err)
 	}
 
-	// Read template file
-	f, err := os.Open("../installation/aws/VmClarity.cfn")
+	f, err := installation.AWSManifestBundle.Open("VmClarity.cfn")
 	if err != nil {
 		return fmt.Errorf("failed to read template file: %w", err)
 	}
@@ -89,26 +71,20 @@ func (e *AWSEnv) prepareStack(ctx context.Context) error {
 	return nil
 }
 
+// TODO: skip cleanup for debug purposes
 func (e *AWSEnv) cleanupStack(ctx context.Context) error {
 	// Delete the key pair
 	_, err := e.ec2Client.DeleteKeyPair(ctx, &ec2.DeleteKeyPairInput{
-		KeyName: aws.String(AWSKeyName),
+		KeyName: &e.stackName,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to delete key pair: %w", err)
 	}
 
-	// Delete temporary SSH key pair files
-	if e.sshKeyPair.Temporary {
-		err = os.Remove(e.sshKeyPair.PublicKeyFile)
-		if err != nil {
-			return fmt.Errorf("failed to remove public key file: %w", err)
-		}
-
-		err = os.Remove(e.sshKeyPair.PrivateKeyFile)
-		if err != nil {
-			return fmt.Errorf("failed to remove private key file: %w", err)
-		}
+	// Remove work directory
+	err = os.RemoveAll(e.workDir)
+	if err != nil {
+		return fmt.Errorf("failed to remove public key file: %w", err)
 	}
 
 	// Delete template file from S3 bucket
@@ -148,6 +124,39 @@ func (e *AWSEnv) getStackStatus(ctx context.Context) (cloudformationtypes.StackS
 	}
 
 	return stacks.Stacks[0].StackStatus, nil
+}
+
+func (e *AWSEnv) getServer(ctx context.Context) (*Server, error) {
+	// Get list of stack resources
+	resources, err := e.client.ListStackResources(
+		ctx,
+		&cloudformation.ListStackResourcesInput{
+			StackName: &e.stackName,
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list stack resources: %w", err)
+	}
+
+	// Get VMClarity Server EC2 instance ID
+	var serverInstanceID string
+	for _, resource := range resources.StackResourceSummaries {
+		if *resource.ResourceType == "AWS::EC2::Instance" {
+			serverInstanceID = *resource.PhysicalResourceId
+
+			break
+		}
+	}
+
+	publicIP, err := e.getServerPublicIP(ctx, serverInstanceID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get public IP address for instance with %s ID: %w", serverInstanceID, err)
+	}
+
+	return &Server{
+		InstanceID: serverInstanceID,
+		PublicIP:   publicIP,
+	}, nil
 }
 
 // Check if the infrastructure is ready.
