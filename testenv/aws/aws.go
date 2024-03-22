@@ -17,8 +17,10 @@ package aws
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"net/url"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -36,28 +38,34 @@ import (
 type ContextKeyType string
 
 const (
-	AWSClientContextKey ContextKeyType = "AWSClient"
-	AWSKeyName          string         = "vmclarity-testenv-key"
+	AWSClientContextKey         ContextKeyType = "AWSClient"
+	DefaultStackCreationTimeout                = 30 * time.Minute
+	DefaultSSHPortReadyTimeout                 = 2 * time.Minute
 )
 
 // AWS Environment.
 type AWSEnv struct {
-	client      *cloudformation.Client
-	ec2Client   *ec2.Client
-	s3Client    *s3.Client
-	testAsset   *asset.Asset
-	server      *Server
-	stackName   string
-	templateURL string
-	workDir     string
-	region      string
-	sshKeyPair  *utils.SSHKeyPair
-	meta        map[string]interface{}
+	client              *cloudformation.Client
+	ec2Client           *ec2.Client
+	s3Client            *s3.Client
+	testAsset           *asset.Asset
+	server              *Server
+	stackName           string
+	templateURL         string
+	workDir             string
+	region              string
+	sshKeyPair          *utils.SSHKeyPair
+	sshPortForwardInput *utils.SSHForwardInput
+	meta                map[string]interface{}
 }
 
 type Server struct {
 	InstanceID string
 	PublicIP   string
+}
+
+func (s Server) WaitForSSH(ctx context.Context, t time.Duration) error {
+	return nil
 }
 
 // Setup AWS test environment from cloud formation template.
@@ -79,7 +87,7 @@ func (e *AWSEnv) SetUp(ctx context.Context) error {
 			Capabilities: []cloudformationtypes.Capability{cloudformationtypes.CapabilityCapabilityIam},
 			TemplateURL:  &e.templateURL,
 			Parameters: []cloudformationtypes.Parameter{
-				{ParameterKey: aws.String("KeyName"), ParameterValue: aws.String(AWSKeyName)},
+				{ParameterKey: aws.String("KeyName"), ParameterValue: &e.stackName},
 			},
 		},
 	)
@@ -87,10 +95,55 @@ func (e *AWSEnv) SetUp(ctx context.Context) error {
 		return fmt.Errorf("failed to create stack: %w", err)
 	}
 
+	waiter := cloudformation.NewStackCreateCompleteWaiter(e.client)
+	descStackInput := &cloudformation.DescribeStacksInput{
+		StackName: &e.stackName,
+	}
+	if err = waiter.Wait(ctx, descStackInput, DefaultStackCreationTimeout); err != nil {
+		return fmt.Errorf("faield to wait for the stack to be craeted: %w", err)
+	}
+
 	// Create a new test asset
 	err = e.testAsset.Create(ctx, e.ec2Client)
 	if err != nil {
 		return fmt.Errorf("failed to create test asset: %w", err)
+	}
+
+	// Check infrastructure status before checking services
+	ready, err := e.infrastructureReady(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to check if infrastructure is ready: %w", err)
+	}
+	if !ready {
+		return errors.New("infrastructure is not ready")
+	}
+
+	server, err := e.getServer(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get VMClarity server: %w", err)
+	}
+
+	if err = server.WaitForSSH(ctx, DefaultSSHPortReadyTimeout); err != nil {
+		return fmt.Errorf("failed to wait for the SSH port to become ready: %w", err)
+	}
+
+	e.sshPortForwardInput = &utils.SSHForwardInput{
+		PrivateKey:    e.sshKeyPair.PrivateKey,
+		User:          "ubuntu",
+		Host:          server.PublicIP,
+		Port:          utils.DefaultSSHPort,
+		LocalPort:     8080,
+		RemoteAddress: "localhost",
+		RemotePort:    80,
+	}
+
+	sshPF, err := utils.NewSSHPortForward(e.sshPortForwardInput)
+	if err != nil {
+		return fmt.Errorf("failed to setup SSH port forwarding: %w", err)
+	}
+
+	if err = sshPF.Start(ctx); err != nil {
+		return fmt.Errorf("failed to wait for the SSH port to become ready: %w", err)
 	}
 
 	return nil
@@ -124,12 +177,6 @@ func (e *AWSEnv) TearDown(ctx context.Context) error {
 }
 
 func (e *AWSEnv) ServicesReady(ctx context.Context) (bool, error) {
-	// Check infrastructure status before checking services
-	ready, err := e.infrastructureReady(ctx)
-	if err != nil || !ready {
-		return false, err
-	}
-
 	// Get list of services
 	services, err := e.Services(ctx)
 	if err != nil {
@@ -137,7 +184,7 @@ func (e *AWSEnv) ServicesReady(ctx context.Context) (bool, error) {
 	}
 
 	// Assume that the services are ready if all server containers are in ready state
-	ready = true
+	ready := true
 	for _, service := range services {
 		if service.GetState() != types.ServiceStateReady {
 			ready = false
@@ -170,23 +217,21 @@ func (e *AWSEnv) Services(ctx context.Context) (types.Services, error) {
 	return services, nil
 }
 
-func (e *AWSEnv) Endpoints(ctx context.Context) (*types.Endpoints, error) {
-	remoteHost := e.server.PublicIP
-	remotePort := "80"
-	localHost := "localhost"
-	localPort := "8080"
+func (e *AWSEnv) Endpoints(_ context.Context) (*types.Endpoints, error) {
+	apiURL, err := url.Parse("http://" + e.sshPortForwardInput.LocalAddressPort() + "/api")
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse API URL: %w", err)
+	}
 
-	// Run SSH tunnel to remote VMClarity server
-	go utils.RunSSHTunnel(ctx, e.sshKeyPair.PrivateKeyFile, remoteHost, remotePort, localPort)
+	uiBackendURL, err := url.Parse("http://" + e.sshPortForwardInput.LocalAddressPort() + "/ui/api")
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse Backend API URL: %w", err)
+	}
 
-	// Wait for SSH tunnel to be ready
-	time.Sleep(10 * time.Second) // nolint:gomnd
-
-	endpoints := new(types.Endpoints)
-	endpoints.SetAPI("http", localHost, localPort, "/api")
-	endpoints.SetUIBackend("http", localHost, localPort, "/ui/api")
-
-	return endpoints, nil
+	return &types.Endpoints{
+		API:       apiURL,
+		UIBackend: uiBackendURL,
+	}, nil
 }
 
 func (e *AWSEnv) Context(ctx context.Context) (context.Context, error) {
@@ -214,19 +259,29 @@ func New(config *Config, opts ...ConfigOptFn) (*AWSEnv, error) {
 	// Create AWS S3 client
 	s3Client := s3.NewFromConfig(cfg)
 
+	sshKeyPair := &utils.SSHKeyPair{}
+	// Load SSH key-pair if provided, generate otherwise
+	if config.PublicKeyFile != "" && config.PrivateKeyFile != "" {
+		err = sshKeyPair.Load(config.PrivateKeyFile, config.PublicKeyFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load ssh key pair: %w", err)
+		}
+	} else {
+		sshKeyPair, err = utils.GenerateSSHKeyPair()
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate ssh key pair: %w", err)
+		}
+	}
+
 	return &AWSEnv{
-		client:    client,
-		ec2Client: ec2Client,
-		s3Client:  s3Client,
-		stackName: config.EnvName,
-		workDir:   config.WorkDir,
-		region:    config.Region,
-		sshKeyPair: &utils.SSHKeyPair{
-			PublicKeyFile:  config.PublicKeyFile,
-			PrivateKeyFile: config.PrivateKeyFile,
-			Temporary:      false,
-		},
-		testAsset: &asset.Asset{},
+		client:     client,
+		ec2Client:  ec2Client,
+		s3Client:   s3Client,
+		stackName:  config.EnvName,
+		workDir:    config.WorkDir,
+		region:     config.Region,
+		sshKeyPair: sshKeyPair,
+		testAsset:  &asset.Asset{},
 		meta: map[string]interface{}{
 			"environment": "aws",
 			"name":        config.EnvName,
