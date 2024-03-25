@@ -18,9 +18,10 @@ package docker
 import (
 	"context"
 	"fmt"
-	"github.com/openclarity/vmclarity/testenv/utils"
 	"net/http"
 	"path/filepath"
+
+	"github.com/openclarity/vmclarity/testenv/utils"
 
 	"github.com/docker/cli/cli/connhelper"
 	"github.com/docker/docker/client"
@@ -33,9 +34,8 @@ func ClientOptsWithSSHConn(_ context.Context, workDir string, keys *utils.SSHKey
 		return nil, fmt.Errorf("failed to save SSH keys to filesystem: %w", err)
 	}
 
-	user := input.User
 	helper, err := connhelper.GetConnectionHelperWithSSHOpts(
-		"ssh://"+user+"@"+input.LocalAddressPort(),
+		"ssh://"+input.User+"@"+input.HostAddressPort(),
 		// Automatically add host key to known_hosts file
 		[]string{
 			"-o", "StrictHostKeyChecking=no",

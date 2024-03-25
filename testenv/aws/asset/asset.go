@@ -18,6 +18,7 @@ package asset
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -25,8 +26,9 @@ import (
 )
 
 const (
-	DefaultAmazonMachineImage = "ami-03484a09b43a06725"
-	DefaultInstanceType       = ec2types.InstanceTypeT2Micro
+	DefaultAmazonMachineImage     = "ami-03484a09b43a06725"
+	DefaultInstanceType           = ec2types.InstanceTypeT2Micro
+	DefaultInstanceRunningTimeout = 2 * time.Minute
 )
 
 // Create a new asset to be scanned in the test environment.
@@ -67,7 +69,16 @@ func (a *Asset) Create(ctx context.Context, ec2Client *ec2.Client) error {
 		return fmt.Errorf("failed to create tags for instance: %w", err)
 	}
 
-	// TODO: use a waiter here
+	err = ec2.NewInstanceRunningWaiter(ec2Client).Wait(
+		ctx,
+		&ec2.DescribeInstancesInput{
+			InstanceIds: []string{a.InstanceID},
+		},
+		DefaultInstanceRunningTimeout,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to wait for instance to be running: %w", err)
+	}
 
 	return nil
 }

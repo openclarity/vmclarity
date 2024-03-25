@@ -18,7 +18,6 @@ package aws
 import (
 	"context"
 	"fmt"
-	"github.com/openclarity/vmclarity/testenv/utils/docker"
 	"net/url"
 	"time"
 
@@ -32,6 +31,7 @@ import (
 	"github.com/openclarity/vmclarity/testenv/aws/asset"
 	"github.com/openclarity/vmclarity/testenv/types"
 	"github.com/openclarity/vmclarity/testenv/utils"
+	"github.com/openclarity/vmclarity/testenv/utils/docker"
 )
 
 type ContextKeyType string
@@ -68,6 +68,7 @@ type Server struct {
 }
 
 func (s Server) WaitForSSH(ctx context.Context, t time.Duration) error {
+	// TODO Implement me
 	return nil
 }
 
@@ -75,6 +76,7 @@ func (s Server) WaitForSSH(ctx context.Context, t time.Duration) error {
 // * Create a new CloudFormation stack from template
 // (upload template file to S3 is required since the template is larger than 51,200 bytes).
 // * Create test asset.
+// * When infrastructure is ready, start SSH port forwarding and remote docker client.
 func (e *AWSEnv) SetUp(ctx context.Context) error {
 	// Prepare stack
 	err := e.prepareStack(ctx)
@@ -103,7 +105,7 @@ func (e *AWSEnv) SetUp(ctx context.Context) error {
 		StackName: &e.stackName,
 	}
 	if err = waiter.Wait(ctx, descStackInput, DefaultStackCreationTimeout); err != nil {
-		return fmt.Errorf("faield to wait for the stack to be craeted: %w", err)
+		return fmt.Errorf("failed to wait for the stack to be created: %w", err)
 	}
 
 	// Create a new test asset
@@ -112,8 +114,8 @@ func (e *AWSEnv) SetUp(ctx context.Context) error {
 		return fmt.Errorf("failed to create test asset: %w", err)
 	}
 
-	if err = e.postSetUp(ctx); err != nil {
-		return fmt.Errorf("failed to create test asset: %w", err)
+	if err = e.afterSetUp(ctx); err != nil {
+		return fmt.Errorf("failed to run after setup: %w", err)
 	}
 
 	return nil

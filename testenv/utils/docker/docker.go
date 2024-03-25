@@ -18,15 +18,17 @@ package docker
 import (
 	"context"
 	"fmt"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/filters"
-	"github.com/docker/docker/client"
-	"github.com/openclarity/vmclarity/testenv/utils"
 	"io"
 	"time"
 
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/client"
+
 	"github.com/docker/compose/v2/pkg/api"
+
 	envtypes "github.com/openclarity/vmclarity/testenv/types"
+	"github.com/openclarity/vmclarity/testenv/utils"
 )
 
 type DockerHelper struct {
@@ -41,16 +43,16 @@ func (e *DockerHelper) ServicesReady(ctx context.Context) (bool, error) {
 		return false, fmt.Errorf("failed to retrieve list of services: %w", err)
 	}
 
-	var result bool
+	result := true
 	for _, service := range services {
-		logger.Debugf("checking service readiness. Service=%s State=%s", service.GetID(), service.GetState())
+		logger.Infof("checking service readiness. Service=%s State=%s", service.GetID(), service.GetState())
 		switch service.GetState() {
 		case envtypes.ServiceStateReady:
-			result = true
+			result = result && true
 		case envtypes.ServiceStateDegraded, envtypes.ServiceStateNotReady, envtypes.ServiceStateUnknown:
 			fallthrough
 		default:
-			result = false
+			result = result && false
 		}
 	}
 
@@ -58,7 +60,7 @@ func (e *DockerHelper) ServicesReady(ctx context.Context) (bool, error) {
 }
 
 func (e *DockerHelper) ServiceLogs(ctx context.Context, services []string, startTime time.Time, stdout, stderr io.Writer) error {
-	// TODO: retrieve logs from systemd-journald
+	// Retrieve logs from remote services using journalctl
 
 	return nil
 }
@@ -66,8 +68,8 @@ func (e *DockerHelper) ServiceLogs(ctx context.Context, services []string, start
 func (e *DockerHelper) Services(ctx context.Context) (envtypes.Services, error) {
 	containerFilters := filters.NewArgs([]filters.KeyValuePair{
 		{
-			Key:   api.ProjectLabel,
-			Value: "vmclarity",
+			Key:   "label",
+			Value: api.ProjectLabel + "=vmclarity",
 		},
 	}...)
 	containers, err := e.client.ContainerList(ctx, container.ListOptions{

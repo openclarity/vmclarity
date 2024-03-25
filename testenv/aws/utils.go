@@ -19,7 +19,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/openclarity/vmclarity/testenv/utils"
 	"os"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
@@ -28,8 +27,9 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/openclarity/vmclarity/installation"
 
+	"github.com/openclarity/vmclarity/installation"
+	"github.com/openclarity/vmclarity/testenv/utils"
 	dockerhelper "github.com/openclarity/vmclarity/testenv/utils/docker"
 )
 
@@ -75,8 +75,7 @@ func (e *AWSEnv) prepareStack(ctx context.Context) error {
 	return nil
 }
 
-func (e *AWSEnv) postSetUp(ctx context.Context) error {
-	// Check infrastructure status before checking services
+func (e *AWSEnv) afterSetUp(ctx context.Context) error {
 	ready, err := e.infrastructureReady(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to check if infrastructure is ready: %w", err)
@@ -85,23 +84,18 @@ func (e *AWSEnv) postSetUp(ctx context.Context) error {
 		return errors.New("infrastructure is not ready")
 	}
 
-	server, err := e.getServer(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get VMClarity server: %w", err)
-	}
-
-	if err = server.WaitForSSH(ctx, DefaultSSHPortReadyTimeout); err != nil {
+	if err = e.server.WaitForSSH(ctx, DefaultSSHPortReadyTimeout); err != nil {
 		return fmt.Errorf("failed to wait for the SSH port to become ready: %w", err)
 	}
 
 	e.sshPortForwardInput = &utils.SSHForwardInput{
 		PrivateKey:    e.sshKeyPair.PrivateKey,
 		User:          "ubuntu",
-		Host:          server.PublicIP,
+		Host:          e.server.PublicIP,
 		Port:          utils.DefaultSSHPort,
-		LocalPort:     8080,
+		LocalPort:     8080, //nolint:gomnd
 		RemoteAddress: "localhost",
-		RemotePort:    80,
+		RemotePort:    80, //nolint:gomnd
 	}
 
 	sshPF, err := utils.NewSSHPortForward(e.sshPortForwardInput)
@@ -126,7 +120,6 @@ func (e *AWSEnv) postSetUp(ctx context.Context) error {
 	return nil
 }
 
-// TODO: skip cleanup for debug purposes
 func (e *AWSEnv) cleanupStack(ctx context.Context) error {
 	// Delete the key pair
 	_, err := e.ec2Client.DeleteKeyPair(ctx, &ec2.DeleteKeyPairInput{
@@ -139,7 +132,7 @@ func (e *AWSEnv) cleanupStack(ctx context.Context) error {
 	// Remove work directory
 	err = os.RemoveAll(e.workDir)
 	if err != nil {
-		return fmt.Errorf("failed to remove public key file: %w", err)
+		return fmt.Errorf("failed to clean up workdir: %w", err)
 	}
 
 	// Delete template file from S3 bucket
@@ -236,44 +229,19 @@ func (e *AWSEnv) infrastructureReady(ctx context.Context) (bool, error) {
 		return false, nil
 	}
 
-	// Get list of stack resources
-	resources, err := e.client.ListStackResources(
-		ctx,
-		&cloudformation.ListStackResourcesInput{
-			StackName: &e.stackName,
-		},
-	)
-	if err != nil {
-		return false, fmt.Errorf("failed to list stack resources: %w", err)
-	}
-
-	// Get VMClarity Server EC2 instance ID
-	var serverInstanceID string
-	for _, resource := range resources.StackResourceSummaries {
-		if *resource.ResourceType == "AWS::EC2::Instance" {
-			serverInstanceID = *resource.PhysicalResourceId
-		}
-	}
-
 	// Get VMClarity Server EC2 instance status
 	// If the server status is not running, then the infrastructure are not ready
-	status, err := e.getEC2InstanceStatus(ctx, serverInstanceID)
+	e.server, err = e.getServer(ctx)
+	if err != nil {
+		return false, fmt.Errorf("failed to get VMClarity server: %w", err)
+	}
+
+	status, err := e.getEC2InstanceStatus(ctx, e.server.InstanceID)
 	if err != nil {
 		return false, fmt.Errorf("failed to get server instance status: %w", err)
 	}
 	if status != ec2types.InstanceStateNameRunning {
 		return false, nil
-	}
-
-	// Get VMClarity Server public IP
-	serverPublicIP, err := e.getServerPublicIP(ctx, serverInstanceID)
-	if err != nil {
-		return false, fmt.Errorf("failed to get server public IP: %w", err)
-	}
-
-	e.server = &Server{
-		InstanceID: serverInstanceID,
-		PublicIP:   serverPublicIP,
 	}
 
 	return true, nil

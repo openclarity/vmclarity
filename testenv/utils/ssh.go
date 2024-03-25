@@ -23,12 +23,13 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"golang.org/x/crypto/ssh"
 	"io"
 	"net"
 	"os"
 	"sync"
 	"sync/atomic"
+
+	"golang.org/x/crypto/ssh"
 )
 
 const (
@@ -41,14 +42,14 @@ type SSHKeyPair struct {
 	Temporary  bool
 }
 
-// Save is responsible for writing the SSHKeyPair to the filesystem
+// Save is responsible for writing the SSHKeyPair to the filesystem.
 func (p *SSHKeyPair) Save(privKeyFile, pubKeyFile string) error {
-	err := os.WriteFile(privKeyFile, p.PrivateKey, 0o600)
+	err := os.WriteFile(privKeyFile, p.PrivateKey, 0o600) //nolint:gomnd
 	if err != nil {
 		return fmt.Errorf("failed to save private key file: %w", err)
 	}
 
-	err = os.WriteFile(pubKeyFile, p.PublicKey, 0o644)
+	err = os.WriteFile(pubKeyFile, p.PublicKey, 0o644) //nolint:gosec,gomnd
 	if err != nil {
 		return fmt.Errorf("failed to save public key file: %w", err)
 	}
@@ -56,7 +57,7 @@ func (p *SSHKeyPair) Save(privKeyFile, pubKeyFile string) error {
 	return nil
 }
 
-// Load is responsible for loading the ssh keypair from filesystem into SSHKeyPair
+// Load is responsible for loading the ssh keypair from filesystem into SSHKeyPair.
 func (p *SSHKeyPair) Load(privKeyFile, pubKeyFile string) error {
 	var err error
 
@@ -100,7 +101,7 @@ func GenerateSSHKeyPair() (*SSHKeyPair, error) {
 
 	return &SSHKeyPair{
 		PublicKey:  ssh.MarshalAuthorizedKey(publicKey),
-		PrivateKey: privateKeyData,
+		PrivateKey: b.Bytes(),
 		Temporary:  true,
 	}, nil
 }
@@ -205,9 +206,7 @@ func (f *SSHPortForward) Start(ctx context.Context) error {
 			}()
 
 			wg.Wait()
-
 		}
-
 	}()
 
 	return nil
