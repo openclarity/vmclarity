@@ -67,6 +67,8 @@ func (a *Asset) Create(ctx context.Context, ec2Client *ec2.Client) error {
 		return fmt.Errorf("failed to create tags for instance: %w", err)
 	}
 
+	// TODO: use a waiter here
+
 	return nil
 }
 

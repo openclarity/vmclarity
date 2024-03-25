@@ -13,25 +13,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package utils
+package docker
 
 import (
 	"context"
 	"fmt"
+	"github.com/openclarity/vmclarity/testenv/utils"
 	"net/http"
+	"path/filepath"
 
 	"github.com/docker/cli/cli/connhelper"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 )
 
-func GetRemoteDockerContainerList(ctx context.Context, privateKeyFile, remoteHost string) (*[]types.Container, error) {
-	user := "ubuntu"
+func ClientOptsWithSSHConn(_ context.Context, workDir string, keys *utils.SSHKeyPair, input *utils.SSHForwardInput) ([]client.Opt, error) {
+	privateKeyFile := filepath.Join(workDir, "id_rsa")
+	publicKeyFile := filepath.Join(workDir, "id_rsa.pub")
+	if err := keys.Save(privateKeyFile, publicKeyFile); err != nil {
+		return nil, fmt.Errorf("failed to save SSH keys to filesystem: %w", err)
+	}
+
+	user := input.User
 	helper, err := connhelper.GetConnectionHelperWithSSHOpts(
-		"ssh://"+user+"@"+remoteHost+":22",
+		"ssh://"+user+"@"+input.LocalAddressPort(),
 		// Automatically add host key to known_hosts file
-		[]string{"-o", "StrictHostKeyChecking=no", "-i", privateKeyFile},
+		[]string{
+			"-o", "StrictHostKeyChecking=no",
+			"-o", "ForwardAgent=no",
+			"-i", privateKeyFile,
+		},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create connection helper: %w", err)
@@ -50,15 +60,6 @@ func GetRemoteDockerContainerList(ctx context.Context, privateKeyFile, remoteHos
 		client.WithDialContext(helper.Dialer),
 		client.WithAPIVersionNegotiation(),
 	)
-	cl, err := client.NewClientWithOpts(clientOpts...)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create docker client: %w", err)
-	}
 
-	containers, err := cl.ContainerList(ctx, container.ListOptions{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to list containers: %w", err)
-	}
-
-	return &containers, nil
+	return clientOpts, nil
 }

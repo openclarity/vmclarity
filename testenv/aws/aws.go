@@ -17,9 +17,8 @@ package aws
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"io"
+	"github.com/openclarity/vmclarity/testenv/utils/docker"
 	"net/url"
 	"time"
 
@@ -43,6 +42,8 @@ const (
 	DefaultSSHPortReadyTimeout                 = 2 * time.Minute
 )
 
+var _ types.Environment = &AWSEnv{}
+
 // AWS Environment.
 type AWSEnv struct {
 	client              *cloudformation.Client
@@ -57,6 +58,8 @@ type AWSEnv struct {
 	sshKeyPair          *utils.SSHKeyPair
 	sshPortForwardInput *utils.SSHForwardInput
 	meta                map[string]interface{}
+
+	*docker.DockerHelper
 }
 
 type Server struct {
@@ -109,41 +112,8 @@ func (e *AWSEnv) SetUp(ctx context.Context) error {
 		return fmt.Errorf("failed to create test asset: %w", err)
 	}
 
-	// Check infrastructure status before checking services
-	ready, err := e.infrastructureReady(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to check if infrastructure is ready: %w", err)
-	}
-	if !ready {
-		return errors.New("infrastructure is not ready")
-	}
-
-	server, err := e.getServer(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get VMClarity server: %w", err)
-	}
-
-	if err = server.WaitForSSH(ctx, DefaultSSHPortReadyTimeout); err != nil {
-		return fmt.Errorf("failed to wait for the SSH port to become ready: %w", err)
-	}
-
-	e.sshPortForwardInput = &utils.SSHForwardInput{
-		PrivateKey:    e.sshKeyPair.PrivateKey,
-		User:          "ubuntu",
-		Host:          server.PublicIP,
-		Port:          utils.DefaultSSHPort,
-		LocalPort:     8080,
-		RemoteAddress: "localhost",
-		RemotePort:    80,
-	}
-
-	sshPF, err := utils.NewSSHPortForward(e.sshPortForwardInput)
-	if err != nil {
-		return fmt.Errorf("failed to setup SSH port forwarding: %w", err)
-	}
-
-	if err = sshPF.Start(ctx); err != nil {
-		return fmt.Errorf("failed to wait for the SSH port to become ready: %w", err)
+	if err = e.postSetUp(ctx); err != nil {
+		return fmt.Errorf("failed to create test asset: %w", err)
 	}
 
 	return nil
@@ -174,47 +144,6 @@ func (e *AWSEnv) TearDown(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-func (e *AWSEnv) ServicesReady(ctx context.Context) (bool, error) {
-	// Get list of services
-	services, err := e.Services(ctx)
-	if err != nil {
-		return false, fmt.Errorf("failed to get services: %w", err)
-	}
-
-	// Assume that the services are ready if all server containers are in ready state
-	ready := true
-	for _, service := range services {
-		if service.GetState() != types.ServiceStateReady {
-			ready = false
-			break
-		}
-	}
-
-	return ready, nil
-}
-
-func (e *AWSEnv) ServiceLogs(ctx context.Context, services []string, startTime time.Time, stdout, stderr io.Writer) error {
-	panic("not implemented")
-}
-
-func (e *AWSEnv) Services(ctx context.Context) (types.Services, error) {
-	// Get Docker Container list from VMClarity Server
-	containerList, err := utils.GetRemoteDockerContainerList(ctx, e.sshKeyPair.PrivateKeyFile, e.server.PublicIP)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get container list: %w", err)
-	}
-
-	var services types.Services
-	for _, container := range *containerList {
-		services = append(services, &Service{
-			ID:    container.ID,
-			State: convertStateFromDocker(container.State),
-		})
-	}
-
-	return services, nil
 }
 
 func (e *AWSEnv) Endpoints(_ context.Context) (*types.Endpoints, error) {
