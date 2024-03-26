@@ -18,6 +18,7 @@ package aws
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/url"
 	"time"
 
@@ -143,6 +144,24 @@ func (e *AWSEnv) TearDown(ctx context.Context) error {
 	err = e.testAsset.Delete(ctx, e.ec2Client)
 	if err != nil {
 		return fmt.Errorf("failed to delete test asset: %w", err)
+	}
+
+	return nil
+}
+
+func (e *AWSEnv) ServiceLogs(ctx context.Context, _ []string, startTime time.Time, stdout, stderr io.Writer) error {
+	input := &utils.SSHJournalctlInput{
+		PrivateKey: e.sshKeyPair.PrivateKey,
+		PublicKey:  e.sshKeyPair.PublicKey,
+		User:       "ubuntu",
+		Host:       e.server.PublicIP,
+		WorkDir:    e.workDir,
+		Service:    "docker",
+	}
+
+	err := utils.GetServiceLogs(input, startTime, stdout, stderr)
+	if err != nil {
+		return fmt.Errorf("failed to get service logs: %w", err)
 	}
 
 	return nil

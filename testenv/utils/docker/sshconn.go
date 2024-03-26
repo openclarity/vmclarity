@@ -17,8 +17,10 @@ package docker
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"path/filepath"
 
 	"github.com/openclarity/vmclarity/testenv/utils"
@@ -30,8 +32,10 @@ import (
 func ClientOptsWithSSHConn(_ context.Context, workDir string, keys *utils.SSHKeyPair, input *utils.SSHForwardInput) ([]client.Opt, error) {
 	privateKeyFile := filepath.Join(workDir, "id_rsa")
 	publicKeyFile := filepath.Join(workDir, "id_rsa.pub")
-	if err := keys.Save(privateKeyFile, publicKeyFile); err != nil {
-		return nil, fmt.Errorf("failed to save SSH keys to filesystem: %w", err)
+	if _, err := os.Stat(privateKeyFile); errors.Is(err, os.ErrNotExist) {
+		if err := keys.Save(privateKeyFile, publicKeyFile); err != nil {
+			return nil, fmt.Errorf("failed to save SSH keys to filesystem: %w", err)
+		}
 	}
 
 	helper, err := connhelper.GetConnectionHelperWithSSHOpts(

@@ -18,8 +18,6 @@ package docker
 import (
 	"context"
 	"fmt"
-	"io"
-	"time"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
@@ -57,12 +55,6 @@ func (e *DockerHelper) ServicesReady(ctx context.Context) (bool, error) {
 	}
 
 	return result, nil
-}
-
-func (e *DockerHelper) ServiceLogs(ctx context.Context, services []string, startTime time.Time, stdout, stderr io.Writer) error {
-	// Retrieve logs from remote services using journalctl
-
-	return nil
 }
 
 func (e *DockerHelper) Services(ctx context.Context) (envtypes.Services, error) {

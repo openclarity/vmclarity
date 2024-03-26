@@ -22,12 +22,16 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"io"
 	"net"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -246,4 +250,42 @@ func NewSSHPortForward(input *SSHForwardInput) (*SSHPortForward, error) {
 		input:        input,
 		clientConfig: config,
 	}, nil
+}
+
+type SSHJournalctlInput struct {
+	PrivateKey []byte
+	PublicKey  []byte
+	User       string
+	Host       string
+	WorkDir    string
+	Service    string
+}
+
+// GetServiceLogs retrieves log entries stored in journal by systemd via ssh.
+func GetServiceLogs(input *SSHJournalctlInput, startTime time.Time, stdout, stderr io.Writer) error {
+	keys := &SSHKeyPair{
+		PrivateKey: input.PrivateKey,
+		PublicKey:  input.PublicKey,
+	}
+	privateKeyFile := filepath.Join(input.WorkDir, "id_rsa")
+	publicKeyFile := filepath.Join(input.WorkDir, "id_rsa.pub")
+	if _, err := os.Stat(privateKeyFile); errors.Is(err, os.ErrNotExist) {
+		if err := keys.Save(privateKeyFile, publicKeyFile); err != nil {
+			return fmt.Errorf("failed to save SSH keys to filesystem: %w", err)
+		}
+	}
+
+	dst := input.User + "@" + input.Host
+	journalctlCmd := "journalctl -u " + input.Service + ".service --since='" + startTime.Format("2006-01-02 15:04:05") + "'"
+
+	args := []string{dst, "-i", privateKeyFile, journalctlCmd}
+	cmd := exec.Command("ssh", args...)
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
+	err := cmd.Run()
+	if err != nil {
+		return fmt.Errorf("failed to run journalctl command via ssh: %w", err)
+	}
+
+	return nil
 }
