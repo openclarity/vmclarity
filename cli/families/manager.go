@@ -79,6 +79,8 @@ func New(config *Config) *Manager {
 		manager.families = append(manager.families, exploits.New(config.Exploits))
 	}
 
+	// TODO add plugins here
+
 	return manager
 }
 
