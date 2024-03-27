@@ -122,24 +122,20 @@ rootkits:
     chkrootkit:
       binary_path: chkrootkit
 
-# TODO: decide how to use them across families, probably
-# referencing them from here would be the simplest way.
 plugins:
-  - name: binary-plugin
-    type: binary
-    path: path-to-binary
-    # config: some config data
-    # Note: communicates via CLI
-  - name: container-plugin
-    type: container
-    # version: v1
-    path: image-repo
-    # config: some config data, e.g. bootstrapping options, additional volumes, etc
-    # Note: communicates via embedded HTTP server via socket
-  - name: rest-plugin
-    type: rest-server
-    path: http://localhost:1234
-    dependencies:
-      - binary-plugin
-    # config: something to figure out?
-    # Note: communicates with the HTTP server directly
+  enabled: true
+  scanners_list:
+    - "kics"
+    - "dspm"
+  inputs: 
+    - input: "/vol/asset"
+      input_type: "rootfs"
+  scanners_config:
+    kics:
+      image_name: kics-image:latest
+      output_dir: "/export/kics"
+      config: {}
+    dspm:
+      image_name: dspm-image:latest
+      output_dir: "/export/dspm"
+      config: {}

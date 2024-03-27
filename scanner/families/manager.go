@@ -26,6 +26,7 @@ import (
 	"github.com/openclarity/vmclarity/scanner/families/interfaces"
 	"github.com/openclarity/vmclarity/scanner/families/malware"
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration"
+	"github.com/openclarity/vmclarity/scanner/families/plugins"
 	"github.com/openclarity/vmclarity/scanner/families/results"
 	"github.com/openclarity/vmclarity/scanner/families/rootkits"
 	"github.com/openclarity/vmclarity/scanner/families/sbom"
@@ -79,7 +80,9 @@ func New(config *Config) *Manager {
 		manager.families = append(manager.families, exploits.New(config.Exploits))
 	}
 
-	// TODO add plugins here
+	if config.Plugins.Enabled {
+		manager.families = append(manager.families, plugins.New(config.Plugins))
+	}
 
 	return manager
 }
