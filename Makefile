@@ -297,7 +297,7 @@ docker-cr-discovery-server: ## Build K8S Image Resolver Docker image
 gen: gen-api gen-bicep gen-helm-docs ## Generating all code, manifests, docs
 
 .PHONY: gen-api
-gen-api: gen-apiserver-api gen-uibackend-api ## Generating API code
+gen-api: gen-apiserver-api gen-uibackend-api gen-scanner-api ## Generating API code
 
 .PHONY: gen-apiserver-api
 gen-apiserver-api: ## Generating Go library for API specification
@@ -312,6 +312,13 @@ gen-uibackend-api: ## Generating Go library for UI Backend API specification
 	go -C $(ROOT_DIR)/uibackend/types generate
 	go -C $(ROOT_DIR)/uibackend/client generate
 	go -C $(ROOT_DIR)/uibackend/server generate
+
+.PHONY: gen-scanner-api
+gen-scanner-api: ## Generating Go library for Scanner API specification
+	$(info Generating API for scanner code ...)
+	go -C $(ROOT_DIR)/scanner/types generate
+	go -C $(ROOT_DIR)/scanner/plugin generate
+	go -C $(ROOT_DIR)/scanner/runner generate
 
 .PHONY: gen-bicep
 gen-bicep: bin/bicep ## Generating Azure Bicep template(s)
