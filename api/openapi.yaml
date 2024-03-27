@@ -1820,6 +1820,8 @@ components:
           $ref: '#/components/schemas/ExploitsConfig'
         infoFinder:
           $ref: '#/components/schemas/InfoFinderConfig'
+        plugins:
+          $ref: '#/components/schemas/PluginsConfig'
 
     InfoFinderConfig:
       type: object
@@ -1900,6 +1902,30 @@ components:
           type: array
           items:
             type: string
+
+    PluginsConfig:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        scanners_list:
+          type: array
+          items:
+            type: string
+        scanners_config:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/PluginScannerConfig'
+
+    PluginScannerConfig:
+      type: object
+      properties:
+        image_name:
+          type: string
+        output_file:
+          type: string
+        config:
+          type: string
 
     ScanConfigs:
       type: object
