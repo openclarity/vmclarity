@@ -32,6 +32,11 @@ type Config struct {
 	TimeoutSeconds *int `json:"timeoutSeconds,omitempty"`
 }
 
+// ErrorResponse An object that is returned for a failed API request.
+type ErrorResponse struct {
+	Message *string `json:"message,omitempty"`
+}
+
 // Metadata Describes the scanner plugin.
 type Metadata struct {
 	ApiVersion *string `json:"apiVersion,omitempty"`

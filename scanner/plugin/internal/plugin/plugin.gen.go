@@ -14,7 +14,6 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/labstack/echo/v4"
-	. "github.com/openclarity/vmclarity/scanner/types"
 )
 
 // ServerInterface represents all server handlers.
@@ -112,23 +111,24 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/7RW32/jNgz+VwhtwL3kknSHveTtdsHuCmxDsRZ7We+BselYN1vyRPq6rM3/PlCy3fxQ",
-	"2xXY/BJHEj9+pMiPvjeFbzvvyAmb1b3hoqYW4+sH7yq71beSuAi2E+udWZl1/LchBgQu0DkKUMSzczMz",
-	"XfAdBbEUMSrb0DnCTU2gO3BnpQapabDvA+oJCPRnbwOVsNnF3dFL1/Rb6+ZwU1sGq/47lBq8i6cUkXcs",
-	"1IL4A9S4Mb91ZmZk15FZGZZg3dbsZ8a6rpe1DXmOpQ1UiA87uKttUQPXvm9K2IyMniKY9+V7+bfOKFAG",
-	"d/TP4gOBlTcMlXWldVt+wqXYlnwv11R4V3Leb4t/2bZvQc+COkmHQWqU4YaBBYNQCVXwLYhmP6X21g2U",
-	"Qu+g8gE2VCm3DVm3BezFtyi2wKbZAW68YiSmrXXq1KyWE2vrhLYUzH4/LfnNFypEA/mZBEsUfK4aMxdx",
-	"Vo/Y2d8ocDS9P81XzvG1oPTR9BioQZabgI6t8rixbabMf0IWKFEo5fauplSoHDGhRoaiRrelUolWPrQo",
-	"ZmXU4q1a5G60JWbcZpx96lvUzsESNw3BcG6ew1D/9GImE0lfjTmd37oHSOmA8XmA9SMEvP55UMy3Rw+c",
-	"LrzySZi/ePmVsNxNPC+dFYtNDOvwKh71S9DqWyx1zvE8BIyY14Mxk/QdxKZou4aEAF0JVnQpRCPxEKgg",
-	"+5WithELD5i9c9oqZ5iDdN0hj5ZlRD0krfAn9or5I9qGygzP6njjNXe09o4gF/tB1CVwXxTEXPXa7y9g",
-	"mpkhpwrwuxkvy8zM9JviMjOTojEzoxTM51mmacdxoViptme5/vx81t77OAEqH7XAio4qMwZ2lST3/dWl",
-	"mZmvo2aYi/lyvoxq3pHDzpqVeTdfzi9UaVDqqA2LYpqcnWfRX5WOONsuS7MyV55lmK6JPbH84MudntRK",
-	"JCdJrLrGFtFs8YWTZKX5rG/fBqrMynyzeBzgi2F6Lwbw/XF2JPQUF7jzjpOOfbe8eJXXYxXUSrxc5+fK",
-	"5VrFY6zXNE5U8jZEDopAKEn3XhRhXTqGfw+O7hLsOaIe575tMeyGVI/NNHwVnAxV7arY9JPQRYhFTdhI",
-	"/bcGt6XMJX4k+TQcOcvpMp+Sg8ZN6LvofZqwQ6trQ48yMdda+3757kVA5+UUVJeewT3K04eaij8y6Xkz",
-	"Uh2y0h4M4qfSMg3rfF7+kwqffGTKY2zhketprB9Jpr3xk+b80yGGy9P4fyrY4QPhfwx18JAJ9OZoTh8E",
-	"kYtYnju83/8TAAD//0y23hoJDAAA",
+	"H4sIAAAAAAAC/7RW34/bNgz+VwhtQF9cJ7diL3m7NVsbYBsOvWAvuz4oNh2rsyVPpJtlvfzvAyXblx+6",
+	"ux6w+iWORX38SJEf9UUVru2cRcukFl8UFTW2Ory+dbYyW3krkQpvOjbOqoVahn8bJNBAhbYWPRTBNleZ",
+	"6rzr0LPBgFGZBi8R1jWCrMDOcA1c47C/91oswOPfvfFYwmYfVkcvXdNvjc1hXRsCI/47zTU4G6wEkfbE",
+	"2AK7I9SwkN9ZlSned6gWitgbu1WHTBnb9bw0Ps2xNB4Ldn4Pu9oUNVDt+qaEzcjoMYJpX67nr3WGHhO4",
+	"o39i5xEMvyKojC2N3dIjLtm06Hq+xcLZktJ+W/2PafsWxBbESTQGrjUPJwzE2jOWUHnXAkv2Y2rv7EDJ",
+	"9xYq52GDlXDboLFb0D27VrMpdNPsQW+cYESmrbHiVC3mE2tjGbfo1eEwfXKbT1iwBPKz985/QOqcpURB",
+	"XVuItpG1IfDIvZcTElYaKm0aLOH6ZhWKC4kva7VFIr0N6GeJTDH6DVmXmvVT/ZEojQuvujN/oKew9asc",
+	"37LmPmw9BWo08dprS0Z4rE2byNOvmhhKzRhPe1djbB0KmFBrgqLWdoulEK2cbzWrhZIdr2VHqsaO0nbq",
+	"7H3faullXepNgzDY5SkM8Y/PZjKSdNWY0/zO3kNMB4zPPSwfIODlz71gvj554PzDC5+I+bvjD6jL/cRz",
+	"ZQ0b3YSwjo/iQVFZG3kLzUcpnseAAfN22EzIfQehTduuQUbQtgQzdIZsYgceCzSfcWwIGjB7a6V5LzAH",
+	"Md1pGneWAfWYtMCf7RfMX2L3XWJWpwsvOaOlswip2I+iLoH6okCiqhcFegZTZQqtaNKfajwslanpN8al",
+	"MhWjUZkSCupjlmjacYAJVqztLNWfHy/a+xBmUuWCFhiW4anGwG7iELi+WalMfR41Q13l83we5kuHVndG",
+	"LdSbfJ5fidJoroM2zIpplneOWH5FOsK0XZVqoW4c8TDvI3sk/smVe7GUSkTLUay6xhRh2+wTRcmKNwZ5",
+	"+95jpRbqu9nDlWI23CdmA/jhNDvsewwforAHrj/Mr17k9VQFpRJXy/SkWy1FPMZ6jaNCJG+DaKHwqDnq",
+	"3rMiLJ/OBhBY3EXYS0Qxp75ttd8PqR6babinnI156arQ9JPQBYhZjbrh+l8JbouJQ3yH/H4wucjpPJ2S",
+	"o8aN6PvgfZr5Q6tLQ48ykUut/Th/8yygdXwOKp+ewD3J09sai78S6Xk1Uh2y0h4N4sfSMg3rdF7+lwqf",
+	"fCTKY2zhket5rO+Qp7XxknV5dQjh0jT+Hwt2uCB8w1AHD4lA1ydz+iiIVMT8lPHh8F8AAAD//yQygQqb",
+	"DAAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
