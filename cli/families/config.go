@@ -20,6 +20,7 @@ import (
 	infofinderTypes "github.com/openclarity/vmclarity/cli/families/infofinder/types"
 	"github.com/openclarity/vmclarity/cli/families/malware"
 	misconfigurationTypes "github.com/openclarity/vmclarity/cli/families/misconfiguration/types"
+	"github.com/openclarity/vmclarity/cli/families/plugins"
 	"github.com/openclarity/vmclarity/cli/families/rootkits"
 	"github.com/openclarity/vmclarity/cli/families/sbom"
 	"github.com/openclarity/vmclarity/cli/families/secrets"
@@ -43,6 +44,9 @@ type Config struct {
 
 	// Enrichers
 	Exploits exploits.Config `json:"exploits" yaml:"exploits" mapstructure:"exploits"`
+
+	// Plugins
+	Plugins plugins.Config `json:"plugins" yaml:"plugins" mapstructure:"plugins"`
 }
 
 func NewConfig() *Config {
