@@ -7,8 +7,8 @@ require (
 	github.com/Portshift/dockle v0.3.2-0.20230921065504-6cd22e0b9ebe
 	github.com/anchore/clio v0.0.0-20240307182142-fb5fc4c9db3c
 	github.com/anchore/grype v0.74.7
-	github.com/anchore/stereoscope v0.0.2-0.20240216182029-6171ee21e1d5
-	github.com/anchore/syft v0.105.1
+	github.com/anchore/stereoscope v0.0.2-0.20240229175558-fe426d1b1c84
+	github.com/anchore/syft v1.1.0
 	github.com/aquasecurity/go-dep-parser v0.0.0-20240213093706-423cd04548a5
 	github.com/aquasecurity/trivy v0.50.0
 	github.com/aquasecurity/trivy-db v0.0.0-20240304133434-db9bf07792af
@@ -86,6 +86,7 @@ require (
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/alecthomas/chroma v0.10.0 // indirect
 	github.com/anchore/fangs v0.0.0-20231201140849-5075d28d6d8b // indirect
+	github.com/anchore/go-collections v0.0.0-20240216171411-9321230ce537 // indirect
 	github.com/anchore/go-logger v0.0.0-20230725134548-c21dafa1ec5a // indirect
 	github.com/anchore/go-macholibre v0.0.0-20220308212642-53e6d0aaf6fb // indirect
 	github.com/anchore/go-struct-converter v0.0.0-20221118182256-c68fdcfa2092 // indirect
@@ -127,6 +128,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.23.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.28.1 // indirect
 	github.com/aws/smithy-go v1.20.1 // indirect
+	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/becheran/wildmatch-go v1.0.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
@@ -137,6 +139,7 @@ require (
 	github.com/bugsnag/bugsnag-go v1.0.5-0.20150529004307-13fd6b8acda0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chai2010/gettext-go v1.0.2 // indirect
+	github.com/charmbracelet/lipgloss v0.10.0 // indirect
 	github.com/cheggaaa/pb/v3 v3.1.4 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/containerd/cgroups/v3 v3.0.3 // indirect
@@ -162,7 +165,7 @@ require (
 	github.com/dlclark/regexp2 v1.4.0 // indirect
 	github.com/docker/cli v25.0.5+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
-	github.com/docker/docker v25.0.5+incompatible // indirect
+	github.com/docker/docker v26.0.0+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.8.1 // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
@@ -214,7 +217,7 @@ require (
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/flatbuffers v23.5.26+incompatible // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
-	github.com/google/go-containerregistry v0.19.0 // indirect
+	github.com/google/go-containerregistry v0.19.1 // indirect
 	github.com/google/go-intervals v0.0.2 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/licensecheck v0.3.1 // indirect
@@ -260,7 +263,7 @@ require (
 	github.com/knqyf263/go-apk-version v0.0.0-20200609155635-041fdbb8563f // indirect
 	github.com/knqyf263/go-deb-version v0.0.0-20230223133812-3ed183d23422 // indirect
 	github.com/knqyf263/go-rpm-version v0.0.0-20220614171824-631e686d1075 // indirect
-	github.com/knqyf263/go-rpmdb v0.0.0-20231008124120-ac49267ab4e1 // indirect
+	github.com/knqyf263/go-rpmdb v0.1.0 // indirect
 	github.com/knqyf263/nested v0.0.1 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
@@ -270,6 +273,7 @@ require (
 	github.com/liamg/memoryfs v1.6.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect
+	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
@@ -295,6 +299,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/moby/buildkit v0.13.0-rc3 // indirect
+	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/locker v1.0.1 // indirect
 	github.com/moby/spdystream v0.2.0 // indirect
 	github.com/moby/sys/mountinfo v0.7.1 // indirect
@@ -306,6 +311,8 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
+	github.com/muesli/reflow v0.3.0 // indirect
+	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
@@ -341,7 +348,7 @@ require (
 	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
-	github.com/rivo/uniseg v0.4.6 // indirect
+	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/rubenv/sql-migrate v1.5.2 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
@@ -409,7 +416,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.21.0 // indirect
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
-	golang.org/x/mod v0.15.0 // indirect
+	golang.org/x/mod v0.16.0 // indirect
 	golang.org/x/net v0.22.0 // indirect
 	golang.org/x/oauth2 v0.18.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
@@ -446,7 +453,7 @@ require (
 	modernc.org/libc v1.41.0 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.7.2 // indirect
-	modernc.org/sqlite v1.29.2 // indirect
+	modernc.org/sqlite v1.29.5 // indirect
 	oras.land/oras-go/v2 v2.5.0 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/kustomize/api v0.13.5-0.20230601165947-6ce0bf390ce3 // indirect
