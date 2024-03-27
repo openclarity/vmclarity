@@ -117,3 +117,10 @@ components:
       properties:
         apiVersion:
           type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      description: An object that is returned for a failed API request.
