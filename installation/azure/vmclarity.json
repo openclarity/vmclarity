@@ -90,7 +90,7 @@
     },
     "trivyServerContainerImage": {
       "type": "string",
-      "defaultValue": "docker.io/aquasec/trivy:0.50.0",
+      "defaultValue": "docker.io/aquasec/trivy:0.50.1",
       "metadata": {
         "description": "Trivy Server Container Image"
       }
@@ -660,7 +660,7 @@
             },
             "trivyServerContainerImage": {
               "type": "string",
-              "defaultValue": "docker.io/aquasec/trivy:0.50.0",
+              "defaultValue": "docker.io/aquasec/trivy:0.50.1",
               "metadata": {
                 "description": "Trivy Server Container Image"
               }
