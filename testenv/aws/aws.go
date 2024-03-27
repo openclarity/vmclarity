@@ -41,6 +41,7 @@ const (
 	AWSClientContextKey         ContextKeyType = "AWSClient"
 	DefaultStackCreationTimeout                = 30 * time.Minute
 	DefaultSSHPortReadyTimeout                 = 2 * time.Minute
+	DefaultRemoteUser                          = "ubuntu"
 )
 
 var _ types.Environment = &AWSEnv{}
@@ -155,7 +156,7 @@ func (e *AWSEnv) ServiceLogs(ctx context.Context, _ []string, startTime time.Tim
 	input := &utils.SSHJournalctlInput{
 		PrivateKey: e.sshKeyPair.PrivateKey,
 		PublicKey:  e.sshKeyPair.PublicKey,
-		User:       "ubuntu",
+		User:       DefaultRemoteUser,
 		Host:       e.server.PublicIP,
 		WorkDir:    e.workDir,
 		Service:    "docker",

@@ -90,7 +90,7 @@ func (e *AWSEnv) afterSetUp(ctx context.Context) error {
 
 	e.sshPortForwardInput = &utils.SSHForwardInput{
 		PrivateKey:    e.sshKeyPair.PrivateKey,
-		User:          "ubuntu",
+		User:          DefaultRemoteUser,
 		Host:          e.server.PublicIP,
 		Port:          utils.DefaultSSHPort,
 		LocalPort:     8080, //nolint:gomnd
