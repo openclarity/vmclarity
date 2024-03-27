@@ -898,6 +898,20 @@ type PackageFindingInfo struct {
 	Version    *string   `json:"version,omitempty"`
 }
 
+// Plugin defines model for Plugin.
+type Plugin struct {
+	Enabled      *bool   `json:"enabled,omitempty"`
+	ImageName    *string `json:"image_name,omitempty"`
+	Name         *string `json:"name,omitempty"`
+	Output       *string `json:"output,omitempty"`
+	PluginConfig *string `json:"plugin_config,omitempty"`
+}
+
+// PluginsConfig defines model for PluginsConfig.
+type PluginsConfig struct {
+	PluginsList *[]Plugin `json:"plugins_list,omitempty"`
+}
+
 // PodInfo defines model for PodInfo.
 type PodInfo struct {
 	Location   *string `json:"location,omitempty"`
@@ -1325,6 +1339,7 @@ type ScanFamiliesConfig struct {
 	InfoFinder        *InfoFinderConfig        `json:"infoFinder,omitempty"`
 	Malware           *MalwareConfig           `json:"malware,omitempty"`
 	Misconfigurations *MisconfigurationsConfig `json:"misconfigurations,omitempty"`
+	Plugins           *PluginsConfig           `json:"plugins,omitempty"`
 	Rootkits          *RootkitsConfig          `json:"rootkits,omitempty"`
 	Sbom              *SBOMConfig              `json:"sbom,omitempty"`
 	Secrets           *SecretsConfig           `json:"secrets,omitempty"`

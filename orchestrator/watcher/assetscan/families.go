@@ -32,6 +32,7 @@ import (
 	malwarecommon "github.com/openclarity/vmclarity/cli/families/malware/common"
 	yaraconfig "github.com/openclarity/vmclarity/cli/families/malware/yara/config"
 	misconfiguration "github.com/openclarity/vmclarity/cli/families/misconfiguration/types"
+	"github.com/openclarity/vmclarity/cli/families/plugins"
 	"github.com/openclarity/vmclarity/cli/families/rootkits"
 	chkrootkitConfig "github.com/openclarity/vmclarity/cli/families/rootkits/chkrootkit/config"
 	rootkitsCommon "github.com/openclarity/vmclarity/cli/families/rootkits/common"
@@ -238,6 +239,26 @@ func withRootkitsConfig(config *apitypes.RootkitsConfig, _ *ScannerConfig) Famil
 	}
 }
 
+func withPluginsConfig(config *apitypes.PluginsConfig, _ *ScannerConfig) FamiliesConfigOption {
+	return func(c *families.Config) {
+		list := []plugins.Plugin{}
+		for _, p := range *config.PluginsList {
+			list = append(list, plugins.Plugin{
+				Enabled:      *p.Enabled,
+				ImageName:    *p.ImageName,
+				Name:         *p.Name,
+				Output:       *p.Output,
+				PluginConfig: *p.PluginConfig,
+			})
+		}
+
+		c.Plugins = plugins.Config{
+			PluginList: list,
+			Inputs:     nil, // rootfs directory will be determined by the CLI after mount.
+		}
+	}
+}
+
 func NewFamiliesConfigFrom(config *ScannerConfig, sfc *apitypes.ScanFamiliesConfig) *families.Config {
 	c := families.NewConfig()
 
@@ -250,6 +271,7 @@ func NewFamiliesConfigFrom(config *ScannerConfig, sfc *apitypes.ScanFamiliesConf
 		withMisconfigurationConfig(sfc.Misconfigurations, config),
 		withRootkitsConfig(sfc.Rootkits, config),
 		withInfoFinderConfig(sfc.InfoFinder, config),
+		withPluginsConfig(sfc.Plugins, config),
 	}
 
 	for _, o := range opts {
