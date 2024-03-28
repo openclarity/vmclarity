@@ -27,7 +27,9 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 
+	"github.com/openclarity/vmclarity/core/to"
 	runnerclient "github.com/openclarity/vmclarity/scanner/runner/internal/runner"
+	"github.com/openclarity/vmclarity/scanner/types"
 )
 
 const (
@@ -141,7 +143,29 @@ func (r *Runner) StartScanner() error {
 // Wait for scanner to be ready:
 // * poll the plugin container's /healthz endpoint until its healthy
 func (r *Runner) WaitScannerReady(pollInterval, timeout time.Duration) error {
-	return fmt.Errorf("not implemented")
+	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	ticker := time.NewTicker(pollInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("checking health of %s timed out", r.PluginConfig.Name)
+
+		case <-ticker.C:
+			resp, err := r.client.GetHealthzWithResponse(context.Background())
+			if err != nil {
+				return err
+			}
+
+			if resp.StatusCode() == 200 {
+				return nil
+			}
+		}
+	}
 }
 
 // Post scanner configuration:
@@ -153,8 +177,30 @@ func (r *Runner) RunScanner() error {
 
 // Wait for scanner to be done:
 // * poll plugin container's /status endpoint
-func (r *Runner) WaitScannerDone() error {
-	return fmt.Errorf("not implemented")
+func (r *Runner) WaitScannerDone(pollInterval, timeout time.Duration) error {
+	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	ticker := time.NewTicker(pollInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("checking status of %s timed out", r.PluginConfig.Name)
+
+		case <-ticker.C:
+			resp, err := r.client.GetStatusWithResponse(context.Background())
+			if err != nil {
+				return fmt.Errorf("failed to get scanner status: %w", err)
+			}
+
+			if resp.JSON200.State == types.Done {
+				return nil
+			}
+		}
+	}
 }
 
 // Stop scanner
