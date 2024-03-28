@@ -24,7 +24,7 @@ import (
 	"os"
 )
 
-func Run() {
+func Run(scanner plugin.Scanner) {
 	config, err := NewConfig()
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
@@ -34,7 +34,7 @@ func Run() {
 		log.Fatalf("Failed to initialize logger: %v", err)
 	}
 
-	server, err := plugin.NewServer()
+	server, err := plugin.NewServer(scanner)
 	if err != nil {
 		log.Fatalf("Failed to create HTTP server: %v", err)
 	}

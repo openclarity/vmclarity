@@ -350,6 +350,8 @@ type PostConfigResponse struct {
 		// ScanID The ID of the scan that has been created.
 		ScanID *string `json:"scanID,omitempty"`
 	}
+	JSON400 *ErrorResponse
+	JSON500 *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -500,6 +502,20 @@ func ParsePostConfigResponse(rsp *http.Response) (*PostConfigResponse, error) {
 			return nil, err
 		}
 		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
 
 	}
 

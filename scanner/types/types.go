@@ -13,10 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package types
 
-import "github.com/openclarity/vmclarity/scanner/plugin/cmd/run"
+import "time"
 
-func main() {
-	run.Run()
+func NewScannerStatus(s StatusState, m *string) *Status {
+	return &Status{
+		State:              s,
+		Message:            m,
+		LastTransitionTime: time.Now(),
+	}
 }
