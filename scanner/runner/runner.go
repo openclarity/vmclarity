@@ -27,7 +27,6 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 
-	"github.com/openclarity/vmclarity/core/to"
 	runnerclient "github.com/openclarity/vmclarity/scanner/runner/internal/runner"
 	"github.com/openclarity/vmclarity/scanner/types"
 )
@@ -172,7 +171,20 @@ func (r *Runner) WaitScannerReady(pollInterval, timeout time.Duration) error {
 // * send scanner configuration file parsed from the AssetScan configuration received
 // * send directories where the asset filesystem is stored and where the scanner findings should be saved
 func (r *Runner) RunScanner() error {
-	return fmt.Errorf("not implemented")
+	_, err := r.client.PostConfigWithResponse(
+		context.Background(),
+		types.PostConfigJSONRequestBody{
+			File:           r.ScannerConfig,
+			InputDir:       DefaultScannerInputDir,
+			OutputDir:      DefaultScannerOutputDir,
+			TimeoutSeconds: 60,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to post scanner config: %w", err)
+	}
+
+	return nil
 }
 
 // Wait for scanner to be done:
