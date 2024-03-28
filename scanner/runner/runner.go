@@ -156,7 +156,20 @@ func (r *Runner) WaitScannerReady(pollInterval, timeout time.Duration) error {
 // * send scanner configuration file parsed from the AssetScan configuration received
 // * send directories where the asset filesystem is stored and where the scanner findings should be saved
 func (r *Runner) RunScanner() error {
-	return fmt.Errorf("not implemented")
+	_, err := r.client.PostConfigWithResponse(
+		context.Background(),
+		types.PostConfigJSONRequestBody{
+			File:           &r.ScannerConfig,
+			InputDir:       to.Ptr(DefaultScannerInputDir),
+			OutputDir:      to.Ptr(DefaultScannerOutputDir),
+			TimeoutSeconds: to.Ptr(60),
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to post scanner config: %w", err)
+	}
+
+	return nil
 }
 
 // Wait for scanner to be done:
