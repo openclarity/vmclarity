@@ -50,11 +50,12 @@ func TestStartScanner(t *testing.T) {
 		fmt.Println(err)
 		return
 	}
+	defer runner.StopScanner()
 
 	time.Sleep(10 * time.Second)
 
-	fmt.Printf("Stopping scanner  %s\n", runner.Name)
-	err = runner.StopScanner()
+	fmt.Printf("Waiting for scanner %s to be ready\n", runner.Name)
+	err = runner.WaitScannerReady(time.Second, time.Minute*2)
 	if err != nil {
 		fmt.Println(err)
 		return

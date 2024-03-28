@@ -18,6 +18,10 @@ package runner
 import (
 	"context"
 	"fmt"
+	"net"
+	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 
 	containertypes "github.com/docker/docker/api/types/container"
@@ -25,16 +29,16 @@ import (
 	imagetypes "github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
-	"github.com/docker/go-connections/nat"
 
 	runnerclient "github.com/openclarity/vmclarity/scanner/runner/internal/runner"
 	"github.com/openclarity/vmclarity/scanner/types"
 )
 
 const (
-	DefaultScannerInputDir  = "/asset"
-	DefaultScannerOutputDir = "/export"
-	DefaultScannerConfig    = "plugin.json"
+	DefaultScannerInputDir   = "/asset"
+	DefaultScannerOutputDir  = "/export"
+	DefaultScannerSocketFile = "/var/run/plugin.sock"
+	DefaultScannerConfig     = "plugin.json"
 )
 
 type PluginConfig struct {
@@ -54,12 +58,12 @@ type Runner struct {
 	client       runnerclient.ClientWithResponsesInterface
 	dockerClient *client.Client
 	containerID  string
+	socketFile   string
 
 	PluginConfig
 }
 
 func New(config PluginConfig) (*Runner, error) {
-
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return nil, fmt.Errorf("failed to create docker client: %w", err)
@@ -70,16 +74,22 @@ func New(config PluginConfig) (*Runner, error) {
 	return &Runner{
 		dockerClient: dockerClient,
 		PluginConfig: config,
+		socketFile:   "/tmp/socket/plugin.sock", // TODO(paralta): make this configurable with plugin name
 	}, nil
 }
 
 // Start scanner container:
-// * DONE get image for scanner that needs to be created
-// * DONE create bind mount for filesystem directories where asset filesystem is stored and where the findings should be stored
+// * get image for scanner that needs to be created
+// * create bind mount for filesystem directories where asset filesystem is stored and where the findings should be stored
 // * TDB create bind mount for where the scanner config file is stored or copy config file to container
-// * configure socket for communication with Plugin API client
-// * create client for plugin container
+// * configure unix domain socket for communication with Plugin API client
+// * create client for plugin container.
 func (r *Runner) StartScanner() error {
+	err := os.Mkdir(filepath.Dir(r.socketFile), 0o777) //nolint:gomnd
+	if err != nil && !os.IsExist(err) {
+		return fmt.Errorf("failed to create socket dir: %w", err)
+	}
+
 	// Pull scanner image if required
 	images, err := r.dockerClient.ImageList(context.Background(), imagetypes.ListOptions{
 		Filters: filters.NewArgs(filters.Arg("reference", r.ImageName)),
@@ -101,14 +111,6 @@ func (r *Runner) StartScanner() error {
 			Cmd:   []string{"sleep", "infinity"},
 		},
 		&containertypes.HostConfig{
-			PortBindings: map[nat.Port][]nat.PortBinding{
-				"80": {
-					{
-						HostIP:   "localhost",
-						HostPort: "80",
-					},
-				},
-			},
 			Mounts: []mount.Mount{
 				{
 					Type:   mount.TypeBind,
@@ -119,6 +121,11 @@ func (r *Runner) StartScanner() error {
 					Type:   mount.TypeBind,
 					Source: r.OutputDir,
 					Target: DefaultScannerOutputDir,
+				},
+				{
+					Type:   mount.TypeBind,
+					Source: filepath.Dir(r.socketFile),
+					Target: filepath.Dir(DefaultScannerSocketFile),
 				},
 			},
 		},
@@ -136,11 +143,28 @@ func (r *Runner) StartScanner() error {
 		return fmt.Errorf("failed to start scanner container: %w", err)
 	}
 
+	httpClient := http.Client{
+		Transport: &http.Transport{
+			DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
+				return net.Dial("unix", r.socketFile)
+			},
+		},
+	}
+	r.client, err = runnerclient.NewClientWithResponses(
+		"http://unix/",
+		runnerclient.WithHTTPClient(&httpClient),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create plugin client: %w", err)
+	}
+
 	return nil
 }
 
 // Wait for scanner to be ready:
 // * poll the plugin container's /healthz endpoint until its healthy
+//
+//nolint:gomnd
 func (r *Runner) WaitScannerReady(pollInterval, timeout time.Duration) error {
 	ctx := context.Background()
 	ctx, cancel := context.WithTimeout(ctx, timeout)
@@ -157,7 +181,7 @@ func (r *Runner) WaitScannerReady(pollInterval, timeout time.Duration) error {
 		case <-ticker.C:
 			resp, err := r.client.GetHealthzWithResponse(context.Background())
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get scanner health: %w", err)
 			}
 
 			if resp.StatusCode() == 200 {
@@ -169,7 +193,7 @@ func (r *Runner) WaitScannerReady(pollInterval, timeout time.Duration) error {
 
 // Post scanner configuration:
 // * send scanner configuration file parsed from the AssetScan configuration received
-// * send directories where the asset filesystem is stored and where the scanner findings should be saved
+// * send directories where the asset filesystem is stored and where the scanner findings should be saved.
 func (r *Runner) RunScanner() error {
 	_, err := r.client.PostConfigWithResponse(
 		context.Background(),
@@ -177,7 +201,7 @@ func (r *Runner) RunScanner() error {
 			File:           r.ScannerConfig,
 			InputDir:       DefaultScannerInputDir,
 			OutputDir:      DefaultScannerOutputDir,
-			TimeoutSeconds: 60,
+			TimeoutSeconds: 60, //nolint:gomnd
 		},
 	)
 	if err != nil {
@@ -188,7 +212,7 @@ func (r *Runner) RunScanner() error {
 }
 
 // Wait for scanner to be done:
-// * poll plugin container's /status endpoint
+// * poll plugin container's /status endpoint.
 func (r *Runner) WaitScannerDone(pollInterval, timeout time.Duration) error {
 	ctx := context.Background()
 	ctx, cancel := context.WithTimeout(ctx, timeout)
@@ -215,12 +239,23 @@ func (r *Runner) WaitScannerDone(pollInterval, timeout time.Duration) error {
 	}
 }
 
-// Stop scanner
-// * once runner receives a scanner status Done, kill scanner container
+// Stop and remove scanner
+// * once runner receives a scanner status Done, kill scanner container.
 func (r *Runner) StopScanner() error {
-	err := r.dockerClient.ContainerRemove(context.Background(), r.containerID, containertypes.RemoveOptions{Force: true})
+	err := r.dockerClient.ContainerStop(context.Background(), r.containerID, containertypes.StopOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to stop scanner container: %w", err)
+	}
+
+	err = r.dockerClient.ContainerRemove(context.Background(), r.containerID, containertypes.RemoveOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to remove scanner container: %w", err)
+	}
+
+	// Remove socket dir
+	err = os.RemoveAll(filepath.Dir(r.socketFile))
+	if err != nil {
+		return fmt.Errorf("failed to remove socket file: %w", err)
 	}
 
 	return nil
