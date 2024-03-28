@@ -16,10 +16,17 @@
 package runner
 
 import (
+	"context"
 	"fmt"
 	"time"
 
+	containertypes "github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/filters"
+	imagetypes "github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
+	"github.com/docker/go-connections/nat"
+
 	runnerclient "github.com/openclarity/vmclarity/scanner/runner/internal/runner"
 )
 
@@ -51,6 +58,14 @@ type Runner struct {
 }
 
 func New(config PluginConfig) (*Runner, error) {
+
+	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return nil, fmt.Errorf("failed to create docker client: %w", err)
+	}
+
+	// TBD API Client for the plugin scanner could be created here
+
 	return &Runner{
 		dockerClient: dockerClient,
 		PluginConfig: config,
@@ -64,7 +79,63 @@ func New(config PluginConfig) (*Runner, error) {
 // * configure socket for communication with Plugin API client
 // * create client for plugin container
 func (r *Runner) StartScanner() error {
-	return fmt.Errorf("not implemented")
+	// Pull scanner image if required
+	images, err := r.dockerClient.ImageList(context.Background(), imagetypes.ListOptions{
+		Filters: filters.NewArgs(filters.Arg("reference", r.ImageName)),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to get images: %w", err)
+	}
+	if len(images) == 0 {
+		_, err = r.dockerClient.ImagePull(context.Background(), r.ImageName, imagetypes.PullOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to pull scanner image: %w", err)
+		}
+	}
+
+	containerResp, err := r.dockerClient.ContainerCreate(
+		context.Background(),
+		&containertypes.Config{
+			Image: r.ImageName,
+			Cmd:   []string{"sleep", "infinity"},
+		},
+		&containertypes.HostConfig{
+			PortBindings: map[nat.Port][]nat.PortBinding{
+				"80": {
+					{
+						HostIP:   "localhost",
+						HostPort: "80",
+					},
+				},
+			},
+			Mounts: []mount.Mount{
+				{
+					Type:   mount.TypeBind,
+					Source: r.InputDir,
+					Target: DefaultScannerInputDir,
+				},
+				{
+					Type:   mount.TypeBind,
+					Source: r.OutputDir,
+					Target: DefaultScannerOutputDir,
+				},
+			},
+		},
+		nil,
+		nil,
+		r.Name,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create scanner container: %w", err)
+	}
+	r.containerID = containerResp.ID
+
+	err = r.dockerClient.ContainerStart(context.Background(), r.containerID, containertypes.StartOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to start scanner container: %w", err)
+	}
+
+	return nil
 }
 
 // Wait for scanner to be ready:
@@ -89,5 +160,10 @@ func (r *Runner) WaitScannerDone() error {
 // Stop scanner
 // * once runner receives a scanner status Done, kill scanner container
 func (r *Runner) StopScanner() error {
-	return fmt.Errorf("not implemented")
+	err := r.dockerClient.ContainerRemove(context.Background(), r.containerID, containertypes.RemoveOptions{Force: true})
+	if err != nil {
+		return fmt.Errorf("failed to remove scanner container: %w", err)
+	}
+
+	return nil
 }
