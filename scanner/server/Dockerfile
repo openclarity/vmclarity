@@ -1,0 +1,43 @@
+# syntax=docker/dockerfile:1@sha256:ac85f380a63b13dfcefa89046420e1781752bab202122f8f50032edf31be0021
+
+# xx is a helper for cross-compilation
+FROM --platform=$BUILDPLATFORM tonistiigi/xx:1.4.0@sha256:0cd3f05c72d6c9b038eb135f91376ee1169ef3a330d34e418e65e2a5c2e9c0d4 AS xx
+
+FROM --platform=$BUILDPLATFORM golang:1.22.1-bullseye@sha256:9f880bd713b1e3d22d50d968e6369c6d7f750112f8e52c52b8a75756eb448d81 AS builder
+
+COPY --link --from=xx / /
+
+ARG TARGETPLATFORM=linux/arm64
+
+RUN --mount=type=cache,id=${TARGETPLATFORM}-apt,target=/var/cache/apt,sharing=locked \
+    apt-get update \
+    && xx-apt-get install -y --no-install-recommends \
+      gcc \
+      libc6-dev
+
+WORKDIR /build
+
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=bind,source=.,target=/build,ro \
+    xx-go mod download -x
+
+ENV CGO_ENABLED=1
+
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=bind,source=.,target=/build,ro \
+    xx-go build ${BUILD_OPTS} -ldflags="-s -w -extldflags -static" \
+    -o /bin/scanner-apiserver ./server/cmd/main.go
+
+RUN xx-verify /bin/scanner-apiserver
+
+FROM alpine:3.19@sha256:c5b1261d6d3e43071626931fc004f70149baeba2c8ec672bd4f27761f8e1ad6b
+
+RUN apk add --update --no-cache \
+    ca-certificates \
+    libc6-compat
+
+COPY --from=builder ["/bin/scanner-apiserver", "/bin/scanner-apiserver"]
+
+ENTRYPOINT ["/bin/scanner-apiserver"]

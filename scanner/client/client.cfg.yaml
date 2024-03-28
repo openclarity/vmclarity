@@ -1,0 +1,10 @@
+---
+package: client
+output: internal/client/client.gen.go
+additional-imports:
+  - package: github.com/openclarity/vmclarity/scanner/types
+    alias: .
+generate:
+  client: true
+output-options:
+  skip-prune: true
