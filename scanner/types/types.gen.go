@@ -19,17 +19,17 @@ const (
 // Config Describes a scanner config.
 type Config struct {
 	// File The file with the configuration required by the scanner plugin. This is a path on the filesystem to the config file.
-	File *string `json:"file,omitempty"`
+	File string `json:"file" validate:"required"`
 
 	// InputDir The directory which should be scanned by the scanner plugin.
-	InputDir *string `json:"inputDir,omitempty"`
+	InputDir string `json:"inputDir" validate:"required"`
 
 	// OutputDir The directory where the scanner plugin should store it's findings.
-	OutputDir *string `json:"outputDir,omitempty"`
+	OutputDir string `json:"outputDir" validate:"required"`
 
 	// TimeoutSeconds The maximum time in seconds that a scan started from this config
 	// should run for before being automatically aborted.
-	TimeoutSeconds *int `json:"timeoutSeconds,omitempty"`
+	TimeoutSeconds int `json:"timeoutSeconds" validate:"required,gt=0"`
 }
 
 // ErrorResponse An object that is returned for a failed API request.

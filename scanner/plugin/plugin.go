@@ -19,26 +19,30 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	echomiddleware "github.com/labstack/echo/v4/middleware"
 	internal "github.com/openclarity/vmclarity/scanner/plugin/internal/plugin"
+	"github.com/openclarity/vmclarity/scanner/types"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"time"
 )
 
 type Server struct {
-	echo *echo.Echo
+	echo    *echo.Echo
+	scanner Scanner
 }
 
-func NewServer() (*Server, error) {
+func NewServer(scanner Scanner) (*Server, error) {
 	_, err := internal.GetSwagger()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load swagger spec: %w", err)
 	}
 
 	server := &Server{
-		echo: echo.New(),
+		echo:    echo.New(),
+		scanner: scanner,
 	}
 
 	server.echo.Use(echomiddleware.Logger())
@@ -49,24 +53,52 @@ func NewServer() (*Server, error) {
 	return server, nil
 }
 
-func (s *Server) PostConfig(ctx echo.Context) error {
-	log.Info("Received PostConfig request")
-	return sendResponse(ctx, http.StatusNotImplemented, nil)
-}
-
 func (s *Server) GetHealthz(ctx echo.Context) error {
 	log.Info("Received GetHealthz request")
-	return sendResponse(ctx, http.StatusNotImplemented, nil)
+
+	if s.scanner.Healthz() {
+		s.scanner.SetStatus(types.NewScannerStatus(types.Ready, nil))
+		return ctx.JSON(http.StatusOK, nil)
+	}
+
+	return ctx.JSON(http.StatusServiceUnavailable, nil)
 }
 
 func (s *Server) GetMetadata(ctx echo.Context) error {
 	log.Info("Received GetMetadata request")
-	return sendResponse(ctx, http.StatusNotImplemented, nil)
+
+	return ctx.JSON(http.StatusOK, &types.Metadata{ApiVersion: PointerTo("1.0")})
+}
+
+func (s *Server) PostConfig(ctx echo.Context) error {
+	log.Info("Received PostConfig request")
+
+	var config types.Config
+	if err := ctx.Bind(&config); err != nil {
+		return ctx.JSON(http.StatusBadRequest, &types.ErrorResponse{
+			Message: PointerTo("failed to bind request"),
+		})
+	}
+
+	validate := validator.New()
+	if err := validate.Struct(config); err != nil {
+		return ctx.JSON(http.StatusBadRequest, &types.ErrorResponse{
+			Message: PointerTo("failed to validate request"),
+		})
+	}
+
+	if err := s.scanner.Start(&config); err != nil {
+		return ctx.JSON(http.StatusInternalServerError, &types.ErrorResponse{
+			Message: PointerTo(fmt.Sprintf("failed to start scanner: %v", err)),
+		})
+	}
+
+	return ctx.JSON(http.StatusCreated, nil)
 }
 
 func (s *Server) GetStatus(ctx echo.Context) error {
 	log.Info("Received GetStatus request")
-	return sendResponse(ctx, http.StatusNotImplemented, nil)
+	return ctx.JSON(http.StatusOK, s.scanner.GetStatus())
 }
 
 func (s *Server) Start(address string) error {
@@ -88,10 +120,13 @@ func (s *Server) Stop() error {
 	return nil
 }
 
-//func sendError(ctx echo.Context, code int, message string) error {
-//	return ctx.JSON(code, &types.ErrorResponse{Message: &message})
-//}
+func PointerTo[T any](value T) *T {
+	return &value
+}
 
-func sendResponse(ctx echo.Context, code int, object interface{}) error {
-	return ctx.JSON(code, object)
+type Scanner interface {
+	Healthz() bool
+	Start(config *types.Config) error
+	GetStatus() *types.Status
+	SetStatus(status *types.Status)
 }

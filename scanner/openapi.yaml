@@ -3,6 +3,7 @@ info:
   title: Scanner Plugin API
   version: 1.0.0
 paths:
+
   /healthz:
     get:
       summary: Check the scanner plugin's health.
@@ -12,6 +13,7 @@ paths:
           description: The scanner is healthy and can start receiving requests.
         503:
           description: The scanner is not healthy and cannot start receiving requests.
+
   /metadata:
     get:
       summary: Get metadata from the scanner plugin.
@@ -23,6 +25,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Metadata'
+
   /config:
     post:
       summary: Post config to the scanner plugin and start scanner.
@@ -38,12 +41,25 @@ paths:
                   scanID:
                     type: string
                     description: The ID of the scan that has been created.
+        400:
+          description: The request body is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: The scanner failed to start.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/Config'
+
   /status:
     get:
       summary: Get the status of the scanner.
@@ -55,8 +71,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Status'
+
 components:
   schemas:
+
     Status:
       type: object
       required:
@@ -91,22 +109,35 @@ components:
     Config:
       type: object
       description: Describes a scanner config.
+      required:
+        - file
+        - inputDir
+        - outputDir
+        - timeoutSeconds
       properties:
         file:
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
           description: |
             The file with the configuration required by the scanner plugin. This is a path on the filesystem to the config file.
         inputDir:
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
           description: |
             The directory which should be scanned by the scanner plugin.
         outputDir:
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
           description: |
             The directory where the scanner plugin should store it's findings.
         timeoutSeconds:
           type: integer
           minimum: 0
+          x-oapi-codegen-extra-tags:
+            validate: required,gt=0
           description: |
             The maximum time in seconds that a scan started from this config
             should run for before being automatically aborted.
