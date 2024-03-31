@@ -17,7 +17,6 @@ package plugin
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
@@ -25,6 +24,7 @@ import (
 	internal "github.com/openclarity/vmclarity/scanner/plugin/internal/plugin"
 	"github.com/openclarity/vmclarity/scanner/types"
 	log "github.com/sirupsen/logrus"
+	"net"
 	"net/http"
 	"time"
 )
@@ -34,14 +34,22 @@ type Server struct {
 	scanner Scanner
 }
 
-func NewServer(scanner Scanner) (*Server, error) {
+func NewServer(scanner Scanner, socketFile string) (*Server, error) {
 	_, err := internal.GetSwagger()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load swagger spec: %w", err)
 	}
 
+	listener, err := net.Listen("unix", socketFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	e := echo.New()
+	e.Listener = listener
+
 	server := &Server{
-		echo:    echo.New(),
+		echo:    e,
 		scanner: scanner,
 	}
 
@@ -101,11 +109,12 @@ func (s *Server) GetStatus(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, s.scanner.GetStatus())
 }
 
-func (s *Server) Start(address string) error {
-	err := s.echo.Start(address)
-	if !errors.Is(err, http.ErrServerClosed) {
+func (s *Server) Start() error {
+	server := new(http.Server)
+	if err := s.echo.StartServer(server); err != nil {
 		return err
 	}
+
 	return nil
 }
 
