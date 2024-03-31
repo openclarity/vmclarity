@@ -47,12 +47,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        409:
+          description: The scanner is not in ready state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         500:
           description: The scanner failed to start.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+
       requestBody:
         required: true
         content:

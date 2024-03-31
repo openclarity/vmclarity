@@ -1,6 +1,6 @@
 module github.com/openclarity/vmclarity/scanner/types
 
-go 1.22.0
+go 1.21.4
 
 require github.com/deepmap/oapi-codegen/v2 v2.1.0
 

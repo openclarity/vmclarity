@@ -65,16 +65,14 @@ func (d *DummyScanner) SetStatus(s *types.Status) {
 }
 
 func main() {
+	// Healthz and status initialized to true and ready,
+	// since the scanner does not have any dependencies.
+	// Otherwise, the scanner would be initialized with
+	// healthz = false and status = NotReady.
 	d := &DummyScanner{
-		healthz: false,
-		status:  types.NewScannerStatus(types.NotReady, plugin.PointerTo("Starting scanner...")),
+		healthz: true,
+		status:  types.NewScannerStatus(types.Ready, plugin.PointerTo("Starting scanner...")),
 	}
-
-	go func() {
-		timer := time.NewTimer(1 * time.Minute)
-		<-timer.C
-		d.healthz = true
-	}()
 
 	run.Run(d)
 }

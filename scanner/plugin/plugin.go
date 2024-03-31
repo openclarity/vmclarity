@@ -65,7 +65,6 @@ func (s *Server) GetHealthz(ctx echo.Context) error {
 	log.Info("Received GetHealthz request")
 
 	if s.scanner.Healthz() {
-		s.scanner.SetStatus(types.NewScannerStatus(types.Ready, nil))
 		return ctx.JSON(http.StatusOK, nil)
 	}
 
@@ -95,6 +94,12 @@ func (s *Server) PostConfig(ctx echo.Context) error {
 		})
 	}
 
+	if s.scanner.GetStatus().State != types.Ready {
+		return ctx.JSON(http.StatusConflict, &types.ErrorResponse{
+			Message: PointerTo("scanner is not in ready state"),
+		})
+	}
+
 	if err := s.scanner.Start(&config); err != nil {
 		return ctx.JSON(http.StatusInternalServerError, &types.ErrorResponse{
 			Message: PointerTo(fmt.Sprintf("failed to start scanner: %v", err)),
@@ -106,6 +111,7 @@ func (s *Server) PostConfig(ctx echo.Context) error {
 
 func (s *Server) GetStatus(ctx echo.Context) error {
 	log.Info("Received GetStatus request")
+
 	return ctx.JSON(http.StatusOK, s.scanner.GetStatus())
 }
 
