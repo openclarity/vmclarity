@@ -103,7 +103,8 @@ func (e *AWSEnv) afterSetUp(ctx context.Context) error {
 		return fmt.Errorf("failed to setup SSH port forwarding: %w", err)
 	}
 
-	if err = sshPF.Start(ctx); err != nil {
+	// Use non-inherited context to avoid cancelling the port forward with timeout
+	if err = sshPF.Start(context.Background()); err != nil { //nolint:contextcheck
 		return fmt.Errorf("failed to wait for the SSH port to become ready: %w", err)
 	}
 
