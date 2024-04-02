@@ -16,60 +16,75 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"github.com/Checkmarx/kics/pkg/printer"
+	"github.com/Checkmarx/kics/pkg/progress"
+	"github.com/Checkmarx/kics/pkg/scan"
+	"github.com/labstack/echo/v4"
 	"github.com/openclarity/vmclarity/scanner/plugin"
 	"github.com/openclarity/vmclarity/scanner/plugin/cmd/run"
 	"github.com/openclarity/vmclarity/scanner/types"
-	"os/exec"
-	"time"
+	log "github.com/sirupsen/logrus"
 )
 
-type DummyScanner struct {
+type KICSScanner struct {
 	healthz bool
 	status  *types.Status
 }
 
-func (d *DummyScanner) Healthz() bool {
+func (d *KICSScanner) Healthz() bool {
 	return d.healthz
 }
 
-func (d *DummyScanner) Start(config *types.Config) error {
+func (d *KICSScanner) Start(ctx echo.Context, config *types.Config) error {
+	log.Infof("Starting scanner with config: %+v\n", config)
+
 	go func() {
-		fmt.Printf("Starting scanner with config: %+v\n", config)
 		d.SetStatus(types.NewScannerStatus(types.Running, plugin.PointerTo("Scanner is running...")))
-		args := []string{"-a", "-l", "-h"}
 
-		time.Sleep(1 * time.Minute)
-
-		cmd := exec.Command("ls", args...)
-		stdout, err := cmd.Output()
+		c, err := scan.NewClient(
+			&scan.Parameters{
+				Path:             []string{config.InputDir},
+				QueriesPath:      []string{"../../../queries"},
+				PreviewLines:     3,
+				Platform:         []string{"OpenAPI"},
+				OutputPath:       config.OutputDir,
+				MaxFileSizeFlag:  100,
+				DisableSecrets:   true,
+				QueryExecTimeout: 60,
+			},
+			&progress.PbBuilder{Silent: false},
+			printer.NewPrinter(true),
+		)
 		if err != nil {
-			d.SetStatus(types.NewScannerStatus(types.Failed, plugin.PointerTo(fmt.Sprintf("Failed to run command: %v", err))))
+			d.SetStatus(types.NewScannerStatus(types.Failed, plugin.PointerTo(fmt.Sprintf("Failed to initialize scanner: %v", err))))
 			fmt.Println(err)
 			return
 		}
 
+		err = c.PerformScan(context.Background())
+		if err != nil {
+			d.SetStatus(types.NewScannerStatus(types.Failed, plugin.PointerTo(fmt.Sprintf("Failed to perform scan: %v", err))))
+			fmt.Println(err)
+		}
+
 		d.SetStatus(types.NewScannerStatus(types.Done, plugin.PointerTo("Scanner finished running.")))
-		fmt.Println(string(stdout))
 	}()
 
 	return nil
 }
 
-func (d *DummyScanner) GetStatus() *types.Status {
+func (d *KICSScanner) GetStatus() *types.Status {
 	return d.status
 }
 
-func (d *DummyScanner) SetStatus(s *types.Status) {
+func (d *KICSScanner) SetStatus(s *types.Status) {
 	d.status = types.NewScannerStatus(s.State, s.Message)
 }
 
 func main() {
-	// Healthz and status initialized to true and ready,
-	// since the scanner does not have any dependencies.
-	// Otherwise, the scanner would be initialized with
-	// healthz = false and status = NotReady.
-	d := &DummyScanner{
+	d := &KICSScanner{
 		healthz: true,
 		status:  types.NewScannerStatus(types.Ready, plugin.PointerTo("Starting scanner...")),
 	}

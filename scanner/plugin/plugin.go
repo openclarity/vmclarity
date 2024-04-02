@@ -100,7 +100,7 @@ func (s *Server) PostConfig(ctx echo.Context) error {
 		})
 	}
 
-	if err := s.scanner.Start(&config); err != nil {
+	if err := s.scanner.Start(ctx, &config); err != nil {
 		return ctx.JSON(http.StatusInternalServerError, &types.ErrorResponse{
 			Message: PointerTo(fmt.Sprintf("failed to start scanner: %v", err)),
 		})
@@ -141,7 +141,7 @@ func PointerTo[T any](value T) *T {
 
 type Scanner interface {
 	Healthz() bool
-	Start(config *types.Config) error
+	Start(ctx echo.Context, config *types.Config) error
 	GetStatus() *types.Status
 	SetStatus(status *types.Status)
 }
