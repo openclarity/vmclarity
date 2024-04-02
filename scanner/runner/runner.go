@@ -35,10 +35,11 @@ import (
 )
 
 const (
-	DefaultScannerInputDir   = "/asset"
-	DefaultScannerOutputDir  = "/export"
-	DefaultScannerSocketFile = "/var/run/plugin.sock"
-	DefaultScannerConfig     = "plugin.json"
+	DefaultScannerInputDir       = "/asset"
+	DefaultScannerOutputDir      = "/export"
+	DefaultHostScannerSocketFile = "/tmp/socket/plugin.sock"
+	DefaultScannerSocketFile     = "/var/run/plugin.sock"
+	DefaultScannerConfig         = "plugin.json"
 )
 
 type PluginConfig struct {
@@ -74,7 +75,7 @@ func New(config PluginConfig) (*Runner, error) {
 	return &Runner{
 		dockerClient: dockerClient,
 		PluginConfig: config,
-		socketFile:   "/tmp/socket/plugin.sock", // TODO(paralta): make this configurable with plugin name
+		socketFile:   DefaultHostScannerSocketFile, // TODO(paralta): make this configurable with plugin name
 	}, nil
 }
 
@@ -146,7 +147,7 @@ func (r *Runner) StartScanner() error {
 	httpClient := http.Client{
 		Transport: &http.Transport{
 			DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
-				return net.Dial("unix", r.socketFile)
+				return net.Dial("unix", DefaultScannerSocketFile)
 			},
 		},
 	}
@@ -252,8 +253,8 @@ func (r *Runner) StopScanner() error {
 		return fmt.Errorf("failed to remove scanner container: %w", err)
 	}
 
-	// Remove socket dir
-	err = os.RemoveAll(filepath.Dir(r.socketFile))
+	// Remove socket file
+	err = os.RemoveAll(DefaultScannerSocketFile)
 	if err != nil {
 		return fmt.Errorf("failed to remove socket file: %w", err)
 	}

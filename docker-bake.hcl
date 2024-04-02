@@ -19,12 +19,8 @@ function "get_tag" {
 
 group "default" {
 	targets = [
-		"vmclarity-apiserver",
-		"vmclarity-cli",
-		"vmclarity-cr-discovery-server",
-		"vmclarity-orchestrator",
-		"vmclarity-ui",
-		"vmclarity-ui-backend"
+		"vmclarity-scanner",
+		"vmclarity-scanner-runner",
 	]
 }
 
@@ -111,5 +107,27 @@ target "vmclarity-ui-backend" {
 	labels = {
 		"org.opencontainers.image.title" = "VMClarity UI Backend"
 		"org.opencontainers.image.description" = "A separate backend API which offloads some processing from the browser to the infrastructure to process and filter data closer to the source."
+	}
+}
+
+target "vmclarity-scanner" {
+	context = "."
+	dockerfile = "Dockerfile.scanner"
+	tags = get_tag("${target.vmclarity-scanner.name}")
+	inherits = ["_common", "_common_args_for_go"]
+	labels = {
+		"org.opencontainers.image.title" = "VMClarity Dummy Scanner"
+		"org.opencontainers.image.description" = ""
+	}
+}
+
+target "vmclarity-scanner-runner" {
+	context = "."
+	dockerfile = "Dockerfile.scanner-runner"
+	tags = get_tag("${target.vmclarity-scanner-runner.name}")
+	inherits = ["_common", "_common_args_for_go"]
+	labels = {
+		"org.opencontainers.image.title" = "VMClarity Dummy Scanner"
+		"org.opencontainers.image.description" = ""
 	}
 }

@@ -18,14 +18,14 @@ package plugin
 import (
 	"context"
 	"fmt"
+	"net"
+	"net/http"
+	"time"
+
 	"github.com/labstack/echo/v4"
 	echomiddleware "github.com/labstack/echo/v4/middleware"
 	internal "github.com/openclarity/vmclarity/scanner/plugin/internal/plugin"
 	"github.com/openclarity/vmclarity/scanner/types"
-	log "github.com/sirupsen/logrus"
-	"net"
-	"net/http"
-	"time"
 )
 
 type Server struct {
@@ -41,7 +41,7 @@ func NewServer(scanner Scanner, socketFile string) (*Server, error) {
 
 	listener, err := net.Listen("unix", socketFile)
 	if err != nil {
-		log.Fatal(err)
+		return nil, fmt.Errorf("failed to listen on socket: %w", err)
 	}
 
 	e := echo.New()

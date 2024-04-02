@@ -13,32 +13,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package runner
+package main
 
 import (
 	"fmt"
 	"os"
-	"testing"
 	"time"
+
+	rr "github.com/openclarity/vmclarity/scanner/runner"
 )
 
-// Test start scanner function
-func TestStartScanner(t *testing.T) {
-
+// Test start scanner function.
+func main() {
 	wd, err := os.Getwd()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	config := PluginConfig{
+	fmt.Printf("Working directory: %s\n", wd)
+
+	config := rr.PluginConfig{
 		Name:          "test-scanner",
-		ImageName:     "alpine:latest",
-		InputDir:      wd + "/input",
-		OutputDir:     wd + "/output",
+		ImageName:     "paralta/vmclarity-scanner:6eae95f6",
+		InputDir:      "/Users/clouropa/Repository/vmclarity/scanner/runner/input",  // wd + "/input",
+		OutputDir:     "/Users/clouropa/Repository/vmclarity/scanner/runner/output", // wd + "/output",
 		ScannerConfig: "plugin.json",
 	}
 
-	runner, err := New(config)
+	runner, err := rr.New(config)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -50,12 +52,26 @@ func TestStartScanner(t *testing.T) {
 		fmt.Println(err)
 		return
 	}
-	defer runner.StopScanner()
+	defer runner.StopScanner() //nolint:errcheck
 
-	time.Sleep(10 * time.Second)
+	time.Sleep(20 * time.Second) //nolint:gomnd
 
 	fmt.Printf("Waiting for scanner %s to be ready\n", runner.Name)
-	err = runner.WaitScannerReady(time.Second, time.Minute*2)
+	err = runner.WaitScannerReady(time.Second, time.Minute*2) //nolint:gomnd
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Printf("Running scanner %s\n", runner.Name)
+	err = runner.RunScanner()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Printf("Waiting for scanner %s to finish\n", runner.Name)
+	err = runner.WaitScannerDone(time.Second, time.Minute*2) //nolint:gomnd
 	if err != nil {
 		fmt.Println(err)
 		return
