@@ -112,11 +112,11 @@ target "vmclarity-ui-backend" {
 
 target "vmclarity-scanner" {
 	context = "."
-	dockerfile = "Dockerfile.scanner"
+	dockerfile = "Dockerfile.kics"
 	tags = get_tag("${target.vmclarity-scanner.name}")
 	inherits = ["_common", "_common_args_for_go"]
 	labels = {
-		"org.opencontainers.image.title" = "VMClarity Dummy Scanner"
+		"org.opencontainers.image.title" = "VMClarity KICS Scanner"
 		"org.opencontainers.image.description" = ""
 	}
 }

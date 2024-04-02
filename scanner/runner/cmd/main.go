@@ -17,7 +17,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	rr "github.com/openclarity/vmclarity/scanner/runner"
@@ -25,18 +24,11 @@ import (
 
 // Test start scanner function.
 func main() {
-	wd, err := os.Getwd()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Printf("Working directory: %s\n", wd)
-
 	config := rr.PluginConfig{
-		Name:          "test-scanner",
-		ImageName:     "paralta/vmclarity-scanner:6eae95f6",
-		InputDir:      "/Users/clouropa/Repository/vmclarity/scanner/runner/input",  // wd + "/input",
-		OutputDir:     "/Users/clouropa/Repository/vmclarity/scanner/runner/output", // wd + "/output",
+		Name:          "",
+		ImageName:     "", // TODO Add image name
+		InputDir:      "", // TODO Add input directory
+		OutputDir:     "", // TODO Add output directory
 		ScannerConfig: "plugin.json",
 	}
 
@@ -53,8 +45,6 @@ func main() {
 		return
 	}
 	defer runner.StopScanner() //nolint:errcheck
-
-	time.Sleep(20 * time.Second) //nolint:gomnd
 
 	fmt.Printf("Waiting for scanner %s to be ready\n", runner.Name)
 	err = runner.WaitScannerReady(time.Second, time.Minute*2) //nolint:gomnd
