@@ -3080,6 +3080,7 @@ components:
         - MisconfigurationHighSeverity
         - MisconfigurationMediumSeverity
         - MisconfigurationLowSeverity
+        - MisconfigurationInfoSeverity
 
     Misconfiguration:
       type: object

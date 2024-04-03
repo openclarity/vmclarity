@@ -75,6 +75,7 @@ const (
 // Defines values for MisconfigurationSeverity.
 const (
 	MisconfigurationHighSeverity   MisconfigurationSeverity = "MisconfigurationHighSeverity"
+	MisconfigurationInfoSeverity   MisconfigurationSeverity = "MisconfigurationInfoSeverity"
 	MisconfigurationLowSeverity    MisconfigurationSeverity = "MisconfigurationLowSeverity"
 	MisconfigurationMediumSeverity MisconfigurationSeverity = "MisconfigurationMediumSeverity"
 )
