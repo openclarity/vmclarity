@@ -23,7 +23,8 @@ require (
 	github.com/onsi/gomega v1.32.0
 	github.com/openclarity/grype-server/api v0.0.0-20240201133700-ad5e6432b894
 	github.com/openclarity/vmclarity/api/types v0.0.0-00010101000000-000000000000
-	github.com/openclarity/vmclarity/core v0.0.0-00010101000000-000000000000
+	github.com/openclarity/vmclarity/core v0.0.0-20240410073938-fa34da109407
+	github.com/openclarity/vmclarity/plugins/runner v0.0.0-00010101000000-000000000000
 	github.com/openclarity/yara-rule-server v0.3.0
 	github.com/package-url/packageurl-go v0.1.2
 	github.com/sirupsen/logrus v1.9.3
@@ -318,6 +319,7 @@ require (
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/open-policy-agent/opa v0.62.0 // indirect
+	github.com/openclarity/vmclarity/plugins/sdk v0.0.0-00010101000000-000000000000 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/opencontainers/runtime-spec v1.2.0 // indirect
@@ -405,7 +407,7 @@ require (
 	go.mozilla.org/pkcs7 v0.0.0-20210826202110-33d05740a352 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.47.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.47.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.49.0 // indirect
 	go.opentelemetry.io/otel v1.24.0 // indirect
 	go.opentelemetry.io/otel/metric v1.24.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.24.0 // indirect
@@ -467,6 +469,8 @@ replace helm.sh/helm/v3 => github.com/zregvart/helm/v3 v3.0.0-20240402130115-358
 replace (
 	github.com/openclarity/vmclarity/api/types => ../api/types
 	github.com/openclarity/vmclarity/core => ../core
+	github.com/openclarity/vmclarity/plugins/runner => ../plugins/runner
+	github.com/openclarity/vmclarity/plugins/sdk => ../plugins/sdk/go
 )
 
 // NOTE(akijakya): replace is required for the following issue: https://github.com/mitchellh/mapstructure/issues/327,

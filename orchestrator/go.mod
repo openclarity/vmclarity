@@ -11,7 +11,7 @@ require (
 	github.com/onsi/gomega v1.32.0
 	github.com/openclarity/vmclarity/api/client v0.0.0-00010101000000-000000000000
 	github.com/openclarity/vmclarity/api/types v0.0.0-00010101000000-000000000000
-	github.com/openclarity/vmclarity/core v0.0.0-00010101000000-000000000000
+	github.com/openclarity/vmclarity/core v0.0.0-20240410073938-fa34da109407
 	github.com/openclarity/vmclarity/provider v0.0.0-00010101000000-000000000000
 	github.com/openclarity/vmclarity/scanner v0.0.0-00010101000000-000000000000
 	github.com/sirupsen/logrus v1.9.3
@@ -324,6 +324,8 @@ require (
 	github.com/openclarity/grype-server/api v0.0.0-20240201133700-ad5e6432b894 // indirect
 	github.com/openclarity/vmclarity/containerruntimediscovery/client v0.0.0-00010101000000-000000000000 // indirect
 	github.com/openclarity/vmclarity/containerruntimediscovery/types v0.0.0-00010101000000-000000000000 // indirect
+	github.com/openclarity/vmclarity/plugins/runner v0.0.0-00010101000000-000000000000 // indirect
+	github.com/openclarity/vmclarity/plugins/sdk v0.0.0-00010101000000-000000000000 // indirect
 	github.com/openclarity/yara-rule-server v0.3.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
@@ -480,6 +482,8 @@ replace (
 	github.com/openclarity/vmclarity/containerruntimediscovery/client => ../containerruntimediscovery/client
 	github.com/openclarity/vmclarity/containerruntimediscovery/types => ../containerruntimediscovery/types
 	github.com/openclarity/vmclarity/core => ../core
+	github.com/openclarity/vmclarity/plugins/runner => ../plugins/runner
+	github.com/openclarity/vmclarity/plugins/sdk => ../plugins/sdk/go
 	github.com/openclarity/vmclarity/provider => ../provider
 	github.com/openclarity/vmclarity/scanner => ../scanner
 	github.com/openclarity/vmclarity/utils => ../utils
