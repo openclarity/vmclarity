@@ -18,10 +18,10 @@ package plugins
 import "github.com/openclarity/vmclarity/scanner/families/types"
 
 type Config struct {
-	Enabled        bool                     `yaml:"enabled" mapstructure:"enabled"`
-	ScannersList   []string                 `yaml:"scanners_list" mapstructure:"scanners_list"`
-	Inputs         []types.Input            `yaml:"inputs" mapstructure:"inputs"`
-	ScannersConfig map[string]ScannerConfig `yaml:"scanners_config" mapstructure:"scanners_config"`
+	Enabled        bool           `yaml:"enabled" mapstructure:"enabled"`
+	ScannersList   []string       `yaml:"scanners_list" mapstructure:"scanners_list"`
+	Inputs         []types.Input  `yaml:"inputs" mapstructure:"inputs"`
+	ScannersConfig ScannersConfig `yaml:"scanners_config" mapstructure:"scanners_config"`
 }
 
 type ScannerConfig struct {
@@ -32,3 +32,7 @@ type ScannerConfig struct {
 	// Config is a json string that will be passed to the plugin scanner
 	Config string `yaml:"config" mapstructure:"config"`
 }
+
+type ScannersConfig map[string]ScannerConfig
+
+func (ScannersConfig) IsConfig() {}
