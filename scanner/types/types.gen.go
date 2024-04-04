@@ -7,6 +7,14 @@ import (
 	"time"
 )
 
+// Defines values for MisconfigurationSeverity.
+const (
+	MisconfigurationHighSeverity   MisconfigurationSeverity = "MisconfigurationHighSeverity"
+	MisconfigurationInfoSeverity   MisconfigurationSeverity = "MisconfigurationInfoSeverity"
+	MisconfigurationLowSeverity    MisconfigurationSeverity = "MisconfigurationLowSeverity"
+	MisconfigurationMediumSeverity MisconfigurationSeverity = "MisconfigurationMediumSeverity"
+)
+
 // Defines values for StatusState.
 const (
 	Done     StatusState = "Done"
@@ -41,6 +49,32 @@ type ErrorResponse struct {
 type Metadata struct {
 	ApiVersion *string `json:"apiVersion,omitempty"`
 }
+
+// Misconfiguration defines model for Misconfiguration.
+type Misconfiguration struct {
+	// Category Specifies misconfiguration impact category
+	Category *string `json:"category,omitempty"`
+
+	// Description Additional context such as the potential impact
+	Description *string `json:"description,omitempty"`
+
+	// Id Check or test ID, if applicable (e.g. Lynis TestID, CIS Docker Benchmark checkpoint code, etc)
+	Id *string `json:"id,omitempty"`
+
+	// Location Location within the asset where the misconfiguration was recorded (e.g. filesystem path)
+	Location *string `json:"location,omitempty"`
+
+	// Message Short info about the misconfiguration
+	Message *string `json:"message,omitempty"`
+
+	// Remediation Possible fix for the misconfiguration
+	Remediation *string                   `json:"remediation,omitempty"`
+	ScannerName *string                   `json:"scannerName,omitempty"`
+	Severity    *MisconfigurationSeverity `json:"severity,omitempty"`
+}
+
+// MisconfigurationSeverity defines model for MisconfigurationSeverity.
+type MisconfigurationSeverity string
 
 // Status defines model for Status.
 type Status struct {

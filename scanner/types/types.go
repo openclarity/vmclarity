@@ -24,3 +24,7 @@ func NewScannerStatus(s StatusState, m *string) *Status {
 		LastTransitionTime: time.Now(),
 	}
 }
+
+func Ptr[T any](value T) *T {
+	return &value
+}

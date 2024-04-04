@@ -18,7 +18,6 @@ package plugin
 import (
 	"context"
 	"fmt"
-	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	echomiddleware "github.com/labstack/echo/v4/middleware"
 	internal "github.com/openclarity/vmclarity/scanner/plugin/internal/plugin"
@@ -61,60 +60,6 @@ func NewServer(scanner Scanner, socketFile string) (*Server, error) {
 	return server, nil
 }
 
-func (s *Server) GetHealthz(ctx echo.Context) error {
-	log.Info("Received GetHealthz request")
-
-	if s.scanner.Healthz() {
-		return ctx.JSON(http.StatusOK, nil)
-	}
-
-	return ctx.JSON(http.StatusServiceUnavailable, nil)
-}
-
-func (s *Server) GetMetadata(ctx echo.Context) error {
-	log.Info("Received GetMetadata request")
-
-	return ctx.JSON(http.StatusOK, &types.Metadata{ApiVersion: PointerTo("1.0")})
-}
-
-func (s *Server) PostConfig(ctx echo.Context) error {
-	log.Info("Received PostConfig request")
-
-	var config types.Config
-	if err := ctx.Bind(&config); err != nil {
-		return ctx.JSON(http.StatusBadRequest, &types.ErrorResponse{
-			Message: PointerTo("failed to bind request"),
-		})
-	}
-
-	validate := validator.New()
-	if err := validate.Struct(config); err != nil {
-		return ctx.JSON(http.StatusBadRequest, &types.ErrorResponse{
-			Message: PointerTo("failed to validate request"),
-		})
-	}
-
-	if s.scanner.GetStatus().State != types.Ready {
-		return ctx.JSON(http.StatusConflict, &types.ErrorResponse{
-			Message: PointerTo("scanner is not in ready state"),
-		})
-	}
-
-	if err := s.scanner.Start(ctx, &config); err != nil {
-		return ctx.JSON(http.StatusInternalServerError, &types.ErrorResponse{
-			Message: PointerTo(fmt.Sprintf("failed to start scanner: %v", err)),
-		})
-	}
-
-	return ctx.JSON(http.StatusCreated, nil)
-}
-
-func (s *Server) GetStatus(ctx echo.Context) error {
-	log.Info("Received GetStatus request")
-
-	return ctx.JSON(http.StatusOK, s.scanner.GetStatus())
-}
-
 func (s *Server) Start() error {
 	server := new(http.Server)
 	if err := s.echo.StartServer(server); err != nil {
@@ -135,13 +80,9 @@ func (s *Server) Stop() error {
 	return nil
 }
 
-func PointerTo[T any](value T) *T {
-	return &value
-}
-
 type Scanner interface {
 	Healthz() bool
-	Start(ctx echo.Context, config *types.Config) error
+	Start(config *types.Config) error
 	GetStatus() *types.Status
 	SetStatus(status *types.Status)
 }

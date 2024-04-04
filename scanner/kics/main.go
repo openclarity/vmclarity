@@ -23,39 +23,43 @@ import (
 	"github.com/Checkmarx/kics/pkg/printer"
 	"github.com/Checkmarx/kics/pkg/progress"
 	"github.com/Checkmarx/kics/pkg/scan"
-	"github.com/labstack/echo/v4"
-	apitypes "github.com/openclarity/vmclarity/api/types"
-	"github.com/openclarity/vmclarity/scanner/plugin"
 	"github.com/openclarity/vmclarity/scanner/plugin/cmd/run"
 	"github.com/openclarity/vmclarity/scanner/types"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"os"
 	"strconv"
+	"time"
 )
 
-var mapKICSSeverity = map[model.Severity]apitypes.MisconfigurationSeverity{
-	model.SeverityHigh:   apitypes.MisconfigurationHighSeverity,
-	model.SeverityMedium: apitypes.MisconfigurationMediumSeverity,
-	model.SeverityLow:    apitypes.MisconfigurationLowSeverity,
-	model.SeverityInfo:   apitypes.MisconfigurationInfoSeverity,
-	model.SeverityTrace:  apitypes.MisconfigurationInfoSeverity,
+var mapKICSSeverity = map[model.Severity]types.MisconfigurationSeverity{
+	model.SeverityHigh:   types.MisconfigurationHighSeverity,
+	model.SeverityMedium: types.MisconfigurationMediumSeverity,
+	model.SeverityLow:    types.MisconfigurationLowSeverity,
+	model.SeverityInfo:   types.MisconfigurationInfoSeverity,
+	model.SeverityTrace:  types.MisconfigurationInfoSeverity,
 }
 
 type KICSScanner struct {
 	healthz bool
 	status  *types.Status
+	ctx     context.Context
 }
 
-func (d *KICSScanner) Healthz() bool {
-	return d.healthz
+func (s *KICSScanner) Healthz() bool {
+	return s.healthz
 }
 
-func (d *KICSScanner) Start(ctx echo.Context, config *types.Config) error {
+func (s *KICSScanner) Start(config *types.Config) error {
 	log.Infof("Starting scanner with config: %+v\n", config)
 
 	go func() {
-		d.SetStatus(types.NewScannerStatus(types.Running, plugin.PointerTo("Scanner is running...")))
+		ctx, cancel := context.WithTimeout(s.ctx, time.Duration(config.TimeoutSeconds)*time.Second)
+		defer cancel()
+
+		log.Infof("Scanner is running...")
+		s.SetStatus(types.NewScannerStatus(types.Running, types.Ptr("Scanner is running...")))
+		tmp := os.TempDir()
 
 		c, err := scan.NewClient(
 			&scan.Parameters{
@@ -63,7 +67,7 @@ func (d *KICSScanner) Start(ctx echo.Context, config *types.Config) error {
 				QueriesPath:      []string{"../../../queries"},
 				PreviewLines:     3,
 				Platform:         []string{"OpenAPI"},
-				OutputPath:       config.OutputDir,
+				OutputPath:       tmp,
 				MaxFileSizeFlag:  100,
 				DisableSecrets:   true,
 				QueryExecTimeout: 60,
@@ -73,86 +77,97 @@ func (d *KICSScanner) Start(ctx echo.Context, config *types.Config) error {
 			printer.NewPrinter(true),
 		)
 		if err != nil {
-			d.SetStatus(types.NewScannerStatus(types.Failed, plugin.PointerTo(fmt.Sprintf("Failed to initialize scanner: %v", err))))
-			fmt.Println(err)
+			log.Errorf("Failed to create KICS client: %v", err)
+			s.SetStatus(types.NewScannerStatus(types.Failed, types.Ptr(fmt.Errorf("failed to create KICS client: %w", err).Error())))
 			return
 		}
 
-		err = c.PerformScan(context.Background())
+		err = c.PerformScan(ctx)
 		if err != nil {
-			d.SetStatus(types.NewScannerStatus(types.Failed, plugin.PointerTo(fmt.Sprintf("Failed to perform scan: %v", err))))
-			fmt.Println(err)
+			log.Errorf("Failed to perform KICS scan: %v", err)
+			s.SetStatus(types.NewScannerStatus(types.Failed, types.Ptr(fmt.Errorf("failed to perform KICS scan: %w", err).Error())))
 			return
 		}
 
-		file, err := os.Open(config.OutputDir + "/kics.json")
+		if ctx.Err() != nil {
+			log.Errorf("The operation timed out: %v", ctx.Err())
+			s.SetStatus(types.NewScannerStatus(types.Failed, types.Ptr(fmt.Errorf("failed due to timeout %w", ctx.Err()).Error())))
+			return
+		}
+
+		err = s.formatOutput(tmp, config.OutputDir)
 		if err != nil {
-			d.SetStatus(types.NewScannerStatus(types.Failed, plugin.PointerTo(fmt.Sprintf("Failed to open file: %v", err))))
-			fmt.Println(err)
-			return
-		}
-		defer file.Close()
-
-		decoder := json.NewDecoder(file)
-		var summary model.Summary
-		err = decoder.Decode(&summary)
-		if err != nil {
-			d.SetStatus(types.NewScannerStatus(types.Failed, plugin.PointerTo(fmt.Sprintf("Failed to decode json: %v", err))))
-			fmt.Println(err)
+			log.Errorf("Failed to format KICS output: %v", err)
+			s.SetStatus(types.NewScannerStatus(types.Failed, types.Ptr(fmt.Errorf("failed to format KICS output: %w", err).Error())))
 			return
 		}
 
-		var result []apitypes.Misconfiguration
-		for _, q := range summary.Queries {
-			for _, file := range q.Files {
-				result = append(result, apitypes.Misconfiguration{
-					ScannerName: plugin.PointerTo("KICS"),
-					Id:          plugin.PointerTo(file.SimilarityID),
-					Location:    plugin.PointerTo(file.FileName + "#" + strconv.Itoa(file.Line)),
-					Category:    plugin.PointerTo(q.Category + ":" + string(file.IssueType)),
-					Message:     plugin.PointerTo(file.KeyActualValue),
-					Description: plugin.PointerTo(q.Description),
-					Remediation: plugin.PointerTo(file.KeyExpectedValue),
-					Severity:    plugin.PointerTo(mapKICSSeverity[q.Severity]),
-				})
-			}
-		}
-
-		jsonData, err := json.MarshalIndent(result, "", "    ")
-		if err != nil {
-			d.SetStatus(types.NewScannerStatus(types.Failed, plugin.PointerTo(fmt.Sprintf("Failed to marshal json: %v", err))))
-			fmt.Println(err)
-			return
-		}
-
-		file, err = os.Create(config.OutputDir + "/kics-formatted.json")
-		defer file.Close()
-
-		_, err = io.WriteString(file, string(jsonData))
-		if err != nil {
-			d.SetStatus(types.NewScannerStatus(types.Failed, plugin.PointerTo(fmt.Sprintf("Failed to write json: %v", err))))
-			fmt.Println(err)
-			return
-		}
-
-		d.SetStatus(types.NewScannerStatus(types.Done, plugin.PointerTo("Scanner finished running.")))
+		log.Infof("Scanner finished running.")
+		s.SetStatus(types.NewScannerStatus(types.Done, types.Ptr("Scanner finished running.")))
 	}()
 
 	return nil
 }
 
-func (d *KICSScanner) GetStatus() *types.Status {
-	return d.status
+func (s *KICSScanner) formatOutput(tmp, outputDir string) error {
+	file, err := os.Open(tmp + "/kics.json")
+	if err != nil {
+		return fmt.Errorf("failed to open kics.json: %w", err)
+	}
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+	var summary model.Summary
+	err = decoder.Decode(&summary)
+	if err != nil {
+		return fmt.Errorf("failed to decode kics.json: %w", err)
+	}
+
+	var result []types.Misconfiguration
+	for _, q := range summary.Queries {
+		for _, file := range q.Files {
+			result = append(result, types.Misconfiguration{
+				ScannerName: types.Ptr("KICS"),
+				Id:          types.Ptr(file.SimilarityID),
+				Location:    types.Ptr(file.FileName + "#" + strconv.Itoa(file.Line)),
+				Category:    types.Ptr(q.Category + ":" + string(file.IssueType)),
+				Message:     types.Ptr(file.KeyActualValue),
+				Description: types.Ptr(q.Description),
+				Remediation: types.Ptr(file.KeyExpectedValue),
+				Severity:    types.Ptr(mapKICSSeverity[q.Severity]),
+			})
+		}
+	}
+
+	jsonData, err := json.MarshalIndent(result, "", "    ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal kics.json: %w", err)
+	}
+
+	file, err = os.Create(outputDir + "/kics-formatted.json")
+	defer file.Close()
+
+	_, err = io.WriteString(file, string(jsonData))
+	if err != nil {
+		return fmt.Errorf("failed to write kics-formatted.json: %w", err)
+	}
+
+	return nil
 }
 
-func (d *KICSScanner) SetStatus(s *types.Status) {
-	d.status = types.NewScannerStatus(s.State, s.Message)
+func (s *KICSScanner) GetStatus() *types.Status {
+	return s.status
+}
+
+func (s *KICSScanner) SetStatus(newStatus *types.Status) {
+	s.status = types.NewScannerStatus(newStatus.State, newStatus.Message)
 }
 
 func main() {
 	d := &KICSScanner{
 		healthz: true,
-		status:  types.NewScannerStatus(types.Ready, plugin.PointerTo("Starting scanner...")),
+		status:  types.NewScannerStatus(types.Ready, types.Ptr("Starting scanner...")),
+		ctx:     context.Background(),
 	}
 
 	run.Run(d)

@@ -162,3 +162,37 @@ components:
         message:
           type: string
       description: An object that is returned for a failed API request.
+
+    MisconfigurationSeverity:
+      type: string
+      enum:
+        - MisconfigurationHighSeverity
+        - MisconfigurationMediumSeverity
+        - MisconfigurationLowSeverity
+        - MisconfigurationInfoSeverity
+
+    Misconfiguration:
+      type: object
+      properties:
+        scannerName:
+          type: string
+        id:
+          type: string
+          description: Check or test ID, if applicable (e.g. Lynis TestID, CIS Docker Benchmark checkpoint code, etc)
+        location:
+          type: string
+          description: Location within the asset where the misconfiguration was recorded (e.g. filesystem path)
+        category:
+          type: string
+          description: Specifies misconfiguration impact category
+        message:
+          type: string
+          description: Short info about the misconfiguration
+        description:
+          type: string
+          description: Additional context such as the potential impact
+        remediation:
+          type: string
+          description: Possible fix for the misconfiguration
+        severity:
+          $ref: '#/components/schemas/MisconfigurationSeverity'
