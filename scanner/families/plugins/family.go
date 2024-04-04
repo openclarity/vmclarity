@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/families/interfaces"
-	"github.com/openclarity/vmclarity/scanner/families/plugins/job"
+	"github.com/openclarity/vmclarity/scanner/families/plugins/runner"
 	"github.com/openclarity/vmclarity/scanner/families/results"
 	"github.com/openclarity/vmclarity/scanner/families/types"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
@@ -25,7 +24,12 @@ func (p *Plugins) Run(ctx context.Context, res *results.Results) (interfaces.IsR
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "plugins")
 	logger.Info("Plugins Run...")
 
-	manager := job_manager.New(p.conf.ScannersList, p.conf.ScannersConfig, logger, job.Factory)
+	factory := job_manager.NewJobFactory()
+	for _, n := range p.conf.ScannersList {
+		factory.Register(n, runner.New)
+	}
+
+	manager := job_manager.New(p.conf.ScannersList, p.conf.ScannersConfig, logger, factory)
 
 	var pluginsResults Results
 	for _, input := range p.conf.Inputs {

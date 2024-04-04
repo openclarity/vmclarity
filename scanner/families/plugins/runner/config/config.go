@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package runner
+package config
 
 type Config struct {
 	// Name is the name of the plugin scanner

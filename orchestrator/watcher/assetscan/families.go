@@ -33,6 +33,8 @@ import (
 	yaraconfig "github.com/openclarity/vmclarity/scanner/families/malware/yara/config"
 	misconfiguration "github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
 	"github.com/openclarity/vmclarity/scanner/families/plugins"
+	pluginscommon "github.com/openclarity/vmclarity/scanner/families/plugins/common"
+	pluginsrunnerconfig "github.com/openclarity/vmclarity/scanner/families/plugins/runner/config"
 	"github.com/openclarity/vmclarity/scanner/families/rootkits"
 	chkrootkitConfig "github.com/openclarity/vmclarity/scanner/families/rootkits/chkrootkit/config"
 	rootkitsCommon "github.com/openclarity/vmclarity/scanner/families/rootkits/common"
@@ -245,12 +247,12 @@ func withPluginsConfig(config *apitypes.PluginsConfig, _ *ScannerConfig) Familie
 			return
 		}
 
-		scannersConfig := map[string]plugins.ScannerConfig{}
+		scannersConfig := pluginscommon.ScannersConfig{}
 		for k, v := range *config.ScannersConfig {
-			scannersConfig[k] = plugins.ScannerConfig{
-				ImageName: *v.ImageName,
-				OutputDir: *v.OutputFile,
-				Config:    *v.Config,
+			scannersConfig[k] = pluginsrunnerconfig.Config{
+				ImageName:     *v.ImageName,
+				OutputDir:     *v.OutputFile,
+				ScannerConfig: *v.Config,
 			}
 		}
 
@@ -258,7 +260,7 @@ func withPluginsConfig(config *apitypes.PluginsConfig, _ *ScannerConfig) Familie
 			Enabled:        true,
 			ScannersList:   *config.ScannersList,
 			Inputs:         nil, // rootfs directory will be determined by the CLI after mount.
-			ScannersConfig: scannersConfig,
+			ScannersConfig: &scannersConfig,
 		}
 	}
 }

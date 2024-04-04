@@ -1,4 +1,4 @@
-// Copyright © 2024 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,16 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package plugins
+package common
 
-import (
-	"github.com/openclarity/vmclarity/scanner/families/plugins/common"
-	"github.com/openclarity/vmclarity/scanner/families/types"
-)
+import "github.com/openclarity/vmclarity/scanner/families/plugins/runner/config"
 
-type Config struct {
-	Enabled        bool                   `yaml:"enabled" mapstructure:"enabled"`
-	ScannersList   []string               `yaml:"scanners_list" mapstructure:"scanners_list"`
-	Inputs         []types.Input          `yaml:"inputs" mapstructure:"inputs"`
-	ScannersConfig *common.ScannersConfig `yaml:"scanners_config" mapstructure:"scanners_config"`
-}
+type ScannersConfig map[string]config.Config
+
+func (ScannersConfig) IsConfig() {}
