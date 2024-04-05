@@ -121,6 +121,7 @@ components:
         - inputDir
         - outputDir
         - timeoutSeconds
+        - outputFormat
       properties:
         file:
           type: string
@@ -148,6 +149,14 @@ components:
           description: |
             The maximum time in seconds that a scan started from this config
             should run for before being automatically aborted.
+        outputFormat:
+          type: string
+          enum:
+            - VMClarityJSON
+          x-oapi-codegen-extra-tags:
+            validate: required,oneof=VMClarityJSON
+          description: |
+            The format in which the scanner plugin should store it's findings.
 
     Metadata:
       type: object
@@ -163,13 +172,13 @@ components:
           type: string
       description: An object that is returned for a failed API request.
 
-    MisconfigurationSeverity:
-      type: string
-      enum:
-        - MisconfigurationHighSeverity
-        - MisconfigurationMediumSeverity
-        - MisconfigurationLowSeverity
-        - MisconfigurationInfoSeverity
+    PluginOutput:
+      type: object
+      properties:
+        misconfigurations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Misconfiguration'
 
     Misconfiguration:
       type: object
@@ -196,3 +205,11 @@ components:
           description: Possible fix for the misconfiguration
         severity:
           $ref: '#/components/schemas/MisconfigurationSeverity'
+
+    MisconfigurationSeverity:
+      type: string
+      enum:
+        - MisconfigurationHighSeverity
+        - MisconfigurationMediumSeverity
+        - MisconfigurationLowSeverity
+        - MisconfigurationInfoSeverity

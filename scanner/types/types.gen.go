@@ -7,6 +7,11 @@ import (
 	"time"
 )
 
+// Defines values for ConfigOutputFormat.
+const (
+	VMClarityJSON ConfigOutputFormat = "VMClarityJSON"
+)
+
 // Defines values for MisconfigurationSeverity.
 const (
 	MisconfigurationHighSeverity   MisconfigurationSeverity = "MisconfigurationHighSeverity"
@@ -35,10 +40,16 @@ type Config struct {
 	// OutputDir The directory where the scanner plugin should store it's findings.
 	OutputDir string `json:"outputDir" validate:"required"`
 
+	// OutputFormat The format in which the scanner plugin should store it's findings.
+	OutputFormat ConfigOutputFormat `json:"outputFormat" validate:"required,oneof=VMClarityJSON"`
+
 	// TimeoutSeconds The maximum time in seconds that a scan started from this config
 	// should run for before being automatically aborted.
 	TimeoutSeconds int `json:"timeoutSeconds" validate:"required,gt=0"`
 }
+
+// ConfigOutputFormat The format in which the scanner plugin should store it's findings.
+type ConfigOutputFormat string
 
 // ErrorResponse An object that is returned for a failed API request.
 type ErrorResponse struct {
@@ -75,6 +86,11 @@ type Misconfiguration struct {
 
 // MisconfigurationSeverity defines model for MisconfigurationSeverity.
 type MisconfigurationSeverity string
+
+// PluginOutput defines model for PluginOutput.
+type PluginOutput struct {
+	Misconfigurations *[]Misconfiguration `json:"misconfigurations,omitempty"`
+}
 
 // Status defines model for Status.
 type Status struct {

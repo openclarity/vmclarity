@@ -95,7 +95,7 @@ func (s *KICSScanner) Start(config *types.Config) error {
 			return
 		}
 
-		err = s.formatOutput(tmp, config.OutputDir)
+		err = s.formatOutput(tmp, config.OutputDir, config.OutputFormat)
 		if err != nil {
 			log.Errorf("Failed to format KICS output: %v", err)
 			s.SetStatus(types.NewScannerStatus(types.Failed, types.Ptr(fmt.Errorf("failed to format KICS output: %w", err).Error())))
@@ -109,7 +109,7 @@ func (s *KICSScanner) Start(config *types.Config) error {
 	return nil
 }
 
-func (s *KICSScanner) formatOutput(tmp, outputDir string) error {
+func (s *KICSScanner) formatOutput(tmp, outputDir string, outputFormat types.ConfigOutputFormat) error {
 	file, err := os.Open(tmp + "/kics.json")
 	if err != nil {
 		return fmt.Errorf("failed to open kics.json: %w", err)
@@ -139,9 +139,15 @@ func (s *KICSScanner) formatOutput(tmp, outputDir string) error {
 		}
 	}
 
-	jsonData, err := json.MarshalIndent(result, "", "    ")
-	if err != nil {
-		return fmt.Errorf("failed to marshal kics.json: %w", err)
+	var jsonData []byte
+	switch outputFormat {
+	case types.VMClarityJSON:
+		jsonData, err = json.MarshalIndent(types.PluginOutput{Misconfigurations: &result}, "", "    ")
+		if err != nil {
+			return fmt.Errorf("failed to marshal kics.json: %w", err)
+		}
+	default:
+		return fmt.Errorf("unsupported output format: %s", outputFormat)
 	}
 
 	file, err = os.Create(outputDir + "/kics-formatted.json")
