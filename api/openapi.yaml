@@ -1774,6 +1774,8 @@ components:
           type: integer
         totalVulnerabilities:
           $ref: '#/components/schemas/VulnerabilityScanSummary'
+        totalPlugins:
+          type: integer
 
     VulnerabilityScanSummary:
       description: A summary of number of vulnerabilities found per severity.
@@ -2451,6 +2453,8 @@ components:
               $ref: '#/components/schemas/ExploitScan'
             infoFinder:
               $ref: '#/components/schemas/InfoFinderScan'
+            plugins:
+              $ref: '#/components/schemas/PluginScan'
             findingsProcessed:
               type: boolean
             resourceCleanupStatus:
@@ -2642,6 +2646,10 @@ components:
           items:
             $ref: '#/components/schemas/AssetScanInputScanStats'
         infoFinder:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssetScanInputScanStats'
+        plugins:
           type: array
           items:
             $ref: '#/components/schemas/AssetScanInputScanStats'
@@ -3106,6 +3114,7 @@ components:
         - MisconfigurationHighSeverity
         - MisconfigurationMediumSeverity
         - MisconfigurationLowSeverity
+        - MisconfigurationInfoSeverity
 
     Misconfiguration:
       type: object
@@ -3263,6 +3272,14 @@ components:
           items:
             $ref: '#/components/schemas/InfoFinderInfo'
           nullable: true
+
+    PluginScan:
+      type: object
+      properties:
+        status:
+          $ref: "#/components/schemas/ScannerStatus"
+        output:
+          $ref: '#/components/schemas/PluginOutput'
 
     InfoFinderInfo:
       type: object

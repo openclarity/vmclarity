@@ -75,6 +75,7 @@ const (
 // Defines values for MisconfigurationSeverity.
 const (
 	MisconfigurationHighSeverity   MisconfigurationSeverity = "MisconfigurationHighSeverity"
+	MisconfigurationInfoSeverity   MisconfigurationSeverity = "MisconfigurationInfoSeverity"
 	MisconfigurationLowSeverity    MisconfigurationSeverity = "MisconfigurationLowSeverity"
 	MisconfigurationMediumSeverity MisconfigurationSeverity = "MisconfigurationMediumSeverity"
 )
@@ -288,6 +289,7 @@ type AssetScan struct {
 	InfoFinder        *InfoFinderScan       `json:"infoFinder,omitempty"`
 	Malware           *MalwareScan          `json:"malware,omitempty"`
 	Misconfigurations *MisconfigurationScan `json:"misconfigurations,omitempty"`
+	Plugins           *PluginScan           `json:"plugins,omitempty"`
 
 	// Provider Describes a relationship to a provider which can be expanded.
 	Provider              *ProviderRelationship  `json:"provider,omitempty"`
@@ -485,6 +487,7 @@ type AssetScanStats struct {
 	InfoFinder        *[]AssetScanInputScanStats `json:"infoFinder,omitempty"`
 	Malware           *[]AssetScanInputScanStats `json:"malware,omitempty"`
 	Misconfigurations *[]AssetScanInputScanStats `json:"misconfigurations,omitempty"`
+	Plugins           *[]AssetScanInputScanStats `json:"plugins,omitempty"`
 	Rootkits          *[]AssetScanInputScanStats `json:"rootkits,omitempty"`
 	Sbom              *[]AssetScanInputScanStats `json:"sbom,omitempty"`
 	Secrets           *[]AssetScanInputScanStats `json:"secrets,omitempty"`
@@ -896,6 +899,24 @@ type PackageFindingInfo struct {
 	Purl       *string   `json:"purl,omitempty"`
 	Type       *string   `json:"type,omitempty"`
 	Version    *string   `json:"version,omitempty"`
+}
+
+// PluginOutput defines model for PluginOutput.
+type PluginOutput struct {
+	Exploits          *[]Exploit          `json:"exploits,omitempty"`
+	InfoFinder        *[]InfoFinderInfo   `json:"infoFinder,omitempty"`
+	Malware           *[]Malware          `json:"malware,omitempty"`
+	Misconfigurations *[]Misconfiguration `json:"misconfigurations,omitempty"`
+	Packages          *[]Package          `json:"packages,omitempty"`
+	Rootkits          *[]Rootkit          `json:"rootkits,omitempty"`
+	Secrets           *[]Secret           `json:"secrets,omitempty"`
+	Vulnerabilities   *[]Vulnerability    `json:"vulnerabilities,omitempty"`
+}
+
+// PluginScan defines model for PluginScan.
+type PluginScan struct {
+	Output *PluginOutput  `json:"output,omitempty"`
+	Status *ScannerStatus `json:"status,omitempty"`
 }
 
 // PluginScannerConfig defines model for PluginScannerConfig.
@@ -1353,6 +1374,7 @@ type ScanFindingsSummary struct {
 	TotalMalware           *int `json:"totalMalware,omitempty"`
 	TotalMisconfigurations *int `json:"totalMisconfigurations,omitempty"`
 	TotalPackages          *int `json:"totalPackages,omitempty"`
+	TotalPlugins           *int `json:"totalPlugins,omitempty"`
 	TotalRootkits          *int `json:"totalRootkits,omitempty"`
 	TotalSecrets           *int `json:"totalSecrets,omitempty"`
 
@@ -1468,6 +1490,7 @@ type ScanSummary struct {
 	TotalMalware           *int `json:"totalMalware,omitempty"`
 	TotalMisconfigurations *int `json:"totalMisconfigurations,omitempty"`
 	TotalPackages          *int `json:"totalPackages,omitempty"`
+	TotalPlugins           *int `json:"totalPlugins,omitempty"`
 	TotalRootkits          *int `json:"totalRootkits,omitempty"`
 	TotalSecrets           *int `json:"totalSecrets,omitempty"`
 
