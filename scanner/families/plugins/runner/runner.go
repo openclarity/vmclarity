@@ -17,10 +17,13 @@ package runner
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 
 	"github.com/sirupsen/logrus"
 
+	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/plugins/runner"
 	"github.com/openclarity/vmclarity/scanner/families/plugins/common"
 	"github.com/openclarity/vmclarity/scanner/families/plugins/runner/config"
@@ -98,12 +101,13 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 			return
 		}
 
-		retResults, err = s.parseResults(retResults, s.config.OutputDir)
+		output, err := s.parseResults(rr)
 		if err != nil {
 			s.sendResults(retResults, fmt.Errorf("failed to parse plugin scanner results: %w", err))
 			return
 		}
 
+		retResults.Output = *output
 		s.sendResults(retResults, nil)
 	}()
 
@@ -122,9 +126,24 @@ func (s *Scanner) isValidInputType(sourceType utils.SourceType) bool {
 	return false
 }
 
-func (s *Scanner) parseResults(results common.Results, resultsDir string) (common.Results, error) {
-	// TODO parse scanner output files from directory
-	return common.Results{}, nil
+func (s *Scanner) parseResults(runner *runner.Runner) (*apitypes.PluginOutput, error) {
+	result, err := runner.Result()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get plugin scanner result: %w", err)
+	}
+
+	b, err := io.ReadAll(result)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read plugin scanner output: %w", err)
+	}
+
+	var pluginOutput apitypes.PluginOutput
+	err = json.Unmarshal(b, &pluginOutput)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal plugin scanner output: %w", err)
+	}
+
+	return &pluginOutput, nil
 }
 
 func (s *Scanner) sendResults(results common.Results, err error) {

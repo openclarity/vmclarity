@@ -18,17 +18,10 @@ package common
 import "github.com/openclarity/vmclarity/api/types"
 
 type Results struct {
-	Packages          []types.Package
-	Exploits          []types.Exploit
-	Malware           []types.Malware
-	Misconfigurations []types.Misconfiguration
-	Rootkits          []types.Rootkit
-	Secrets           []types.Secret
-	InfoFinders       []types.InfoFinderInfo
-	Vulnerabilities   []types.Vulnerability
-	ScannedInput      string
-	ScannerName       string
-	Error             error
+	Output       types.PluginOutput
+	ScannedInput string
+	ScannerName  string
+	Error        error
 }
 
 func (r *Results) GetError() error {

@@ -3476,6 +3476,42 @@ components:
                   Exploit: '#/components/schemas/ExploitFindingInfo'
                   InfoFinder: '#/components/schemas/InfoFinderFindingInfo'
 
+    PluginOutput:
+      type: object
+      properties:
+        packages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Package'
+        vulnerabilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/Vulnerability'
+        malware:
+          type: array
+          items:
+            $ref: '#/components/schemas/Malware'
+        secrets:
+          type: array
+          items:
+            $ref: '#/components/schemas/Secret'
+        misconfigurations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Misconfiguration'
+        rootkits:
+          type: array
+          items:
+            $ref: '#/components/schemas/Rootkit'
+        exploits:
+          type: array
+          items:
+            $ref: '#/components/schemas/Exploit'
+        infoFinder:
+          type: array
+          items:
+            $ref: '#/components/schemas/InfoFinderInfo'
+
     ScanEstimations:
       type: object
       properties:
