@@ -43,7 +43,6 @@ const (
 type SSHKeyPair struct {
 	PublicKey  []byte
 	PrivateKey []byte
-	Temporary  bool
 }
 
 // Save is responsible for writing the SSHKeyPair to the filesystem.
@@ -106,7 +105,6 @@ func GenerateSSHKeyPair() (*SSHKeyPair, error) {
 	return &SSHKeyPair{
 		PublicKey:  ssh.MarshalAuthorizedKey(publicKey),
 		PrivateKey: b.Bytes(),
-		Temporary:  true,
 	}, nil
 }
 
@@ -144,10 +142,13 @@ type SSHPortForward struct {
 	input        *SSHForwardInput
 	clientConfig ssh.ClientConfig
 
-	stop atomic.Bool
+	cancel context.CancelFunc
+	stop   atomic.Bool
 }
 
 func (f *SSHPortForward) Start(ctx context.Context) error {
+	ctx, f.cancel = context.WithCancel(ctx)
+
 	// Dial the remote server.
 	client, err := ssh.Dial("tcp", f.input.HostAddressPort(), &f.clientConfig)
 	if err != nil {
@@ -164,52 +165,54 @@ func (f *SSHPortForward) Start(ctx context.Context) error {
 
 	go func() {
 		var callbackErr error
-		for callbackErr == nil && !f.stop.Load() {
-			defer client.Close()
-			defer listener.Close()
+		defer client.Close()
+		defer listener.Close()
 
+		for callbackErr == nil && !f.stop.Load() {
 			select {
 			case <-ctx.Done():
 				return
 			default:
 			}
 
-			// Accept local connection.
-			local, err := listener.Accept()
-			if err != nil {
-				callbackErr = f.input.Callback(ctx, fmt.Errorf("local SSH tunnel error: %w", err))
-			}
-			defer local.Close()
-
-			// Dial remote server.
-			remote, err := client.Dial("tcp", f.input.RemoteAddressPort())
-			if err != nil {
-				callbackErr = f.input.Callback(ctx, fmt.Errorf("remote SSH tunnel error: %w", err))
-			}
-			defer remote.Close()
-
-			wg := sync.WaitGroup{}
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-
-				_, err := io.Copy(local, remote)
+			func() {
+				// Accept local connection.
+				local, err := listener.Accept()
 				if err != nil {
-					callbackErr = f.input.Callback(ctx, fmt.Errorf("failed to copy data from remote to local: %w", err))
+					callbackErr = f.input.Callback(ctx, fmt.Errorf("local SSH tunnel error: %w", err))
 				}
-			}()
+				defer local.Close()
 
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-
-				_, err := io.Copy(remote, local)
+				// Dial remote server.
+				remote, err := client.Dial("tcp", f.input.RemoteAddressPort())
 				if err != nil {
-					callbackErr = f.input.Callback(ctx, fmt.Errorf("failed to copy data from remote to local: %w", err))
+					callbackErr = f.input.Callback(ctx, fmt.Errorf("remote SSH tunnel error: %w", err))
 				}
-			}()
+				defer remote.Close()
 
-			wg.Wait()
+				wg := sync.WaitGroup{}
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+
+					_, err := io.Copy(local, remote)
+					if err != nil {
+						callbackErr = f.input.Callback(ctx, fmt.Errorf("failed to copy data from remote to local: %w", err))
+					}
+				}()
+
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+
+					_, err := io.Copy(remote, local)
+					if err != nil {
+						callbackErr = f.input.Callback(ctx, fmt.Errorf("failed to copy data from remote to local: %w", err))
+					}
+				}()
+
+				wg.Wait()
+			}()
 		}
 	}()
 
@@ -218,6 +221,8 @@ func (f *SSHPortForward) Start(ctx context.Context) error {
 
 func (f *SSHPortForward) Stop() {
 	f.stop.Store(true)
+
+	f.cancel()
 }
 
 func NewSSHPortForward(input *SSHForwardInput) (*SSHPortForward, error) {
@@ -275,10 +280,13 @@ func GetServiceLogs(input *SSHJournalctlInput, startTime time.Time, stdout, stde
 		}
 	}
 
-	dst := input.User + "@" + input.Host
-	journalctlCmd := "journalctl -u " + input.Service + ".service --since='" + startTime.Format("2006-01-02 15:04:05") + "'"
-
-	args := []string{dst, "-i", privateKeyFile, journalctlCmd}
+	args := []string{
+		input.User + "@" + input.Host,
+		"-i", privateKeyFile,
+		"journalctl",
+		"-u", input.Service + ".service",
+		"--since=", "'" + startTime.Format("2006-01-02 15:04:05") + "'",
+	}
 	cmd := exec.Command("ssh", args...)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr

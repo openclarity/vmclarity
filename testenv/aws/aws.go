@@ -59,6 +59,7 @@ type AWSEnv struct {
 	region              string
 	sshKeyPair          *utils.SSHKeyPair
 	sshPortForwardInput *utils.SSHForwardInput
+	sshPortForward      *utils.SSHPortForward
 	meta                map[string]interface{}
 
 	*docker.DockerHelper
@@ -96,7 +97,10 @@ func (e *AWSEnv) SetUp(ctx context.Context) error {
 			Capabilities: []cloudformationtypes.Capability{cloudformationtypes.CapabilityCapabilityIam},
 			TemplateURL:  &e.templateURL,
 			Parameters: []cloudformationtypes.Parameter{
-				{ParameterKey: aws.String("KeyName"), ParameterValue: &e.stackName},
+				{
+					ParameterKey:   aws.String("KeyName"),
+					ParameterValue: &e.stackName,
+				},
 			},
 		},
 	)
@@ -105,10 +109,9 @@ func (e *AWSEnv) SetUp(ctx context.Context) error {
 	}
 
 	waiter := cloudformation.NewStackCreateCompleteWaiter(e.client)
-	descStackInput := &cloudformation.DescribeStacksInput{
+	if err = waiter.Wait(ctx, &cloudformation.DescribeStacksInput{
 		StackName: &e.stackName,
-	}
-	if err = waiter.Wait(ctx, descStackInput, DefaultStackCreationTimeout); err != nil {
+	}, DefaultStackCreationTimeout); err != nil {
 		return fmt.Errorf("failed to wait for the stack to be created: %w", err)
 	}
 
@@ -126,6 +129,9 @@ func (e *AWSEnv) SetUp(ctx context.Context) error {
 }
 
 func (e *AWSEnv) TearDown(ctx context.Context) error {
+	// Stop SSH port forwarding
+	e.sshPortForward.Stop()
+
 	// Delete the CloudFormation stack
 	_, err := e.client.DeleteStack(
 		ctx,

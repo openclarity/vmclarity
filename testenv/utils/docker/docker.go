@@ -46,11 +46,11 @@ func (e *DockerHelper) ServicesReady(ctx context.Context) (bool, error) {
 		logger.Infof("checking service readiness. Service=%s State=%s", service.GetID(), service.GetState())
 		switch service.GetState() {
 		case envtypes.ServiceStateReady:
-			result = result && true
+			// continue
 		case envtypes.ServiceStateDegraded, envtypes.ServiceStateNotReady, envtypes.ServiceStateUnknown:
 			fallthrough
 		default:
-			result = result && false
+			result = false
 		}
 	}
 

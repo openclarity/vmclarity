@@ -32,11 +32,10 @@ var _ = ginkgo.Describe("Running a full scan (exploits, info finder, malware, mi
 
 	ginkgo.Context("which scans a docker container", func() {
 		ginkgo.It("should finish successfully", func(ctx ginkgo.SpecContext) {
-			scope := getDefaultScope(cfg)
-			scanTimeout := getDefaultScanTimeout(cfg)
-
 			ginkgo.By("applying a scan configuration")
-			apiScanConfig, err := client.PostScanConfig(ctx, GetFullScanConfig(scope, scanTimeout))
+			apiScanConfig, err := client.PostScanConfig(
+				ctx,
+				GetFullScanConfig(cfg.TestSuiteParams.Scope, cfg.TestSuiteParams.ScanTimeout))
 			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			ginkgo.By("updating scan configuration to run now")
@@ -80,7 +79,7 @@ var _ = ginkgo.Describe("Running a full scan (exploits, info finder, malware, mi
 				scans, err = client.GetScans(ctx, scanParams)
 				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				return len(*scans.Items) == 1
-			}, scanTimeout, time.Second).Should(gomega.BeTrue())
+			}, cfg.TestSuiteParams.ScanTimeout, time.Second).Should(gomega.BeTrue())
 
 			ginkgo.By("waiting until asset is found in riskiest assets dashboard")
 			gomega.Eventually(func() bool {

@@ -18,7 +18,6 @@ package e2e
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
@@ -76,24 +75,12 @@ func beforeSuite(ctx context.Context) {
 		ginkgo.By("re-using test environment")
 	}
 
-	// Set timeout for services to become ready
-	var servicesReadyTimeout time.Duration
-	switch cfg.TestEnvConfig.Platform {
-	case types.EnvironmentTypeDocker:
-		servicesReadyTimeout = 5 * time.Second
-	case types.EnvironmentTypeAWS:
-		servicesReadyTimeout = 10 * time.Minute
-	case types.EnvironmentTypeGCP, types.EnvironmentTypeAzure, types.EnvironmentTypeKubernetes:
-	default:
-		servicesReadyTimeout = time.Minute
-	}
-
 	ginkgo.By("waiting for services to become ready")
 	gomega.Eventually(func() bool {
 		ready, err := testEnv.ServicesReady(ctx)
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
 		return ready
-	}, servicesReadyTimeout).Should(gomega.BeTrue())
+	}, cfg.TestSuiteParams.ServicesReadyTimeout).Should(gomega.BeTrue())
 
 	endpoints, err := testEnv.Endpoints(ctx)
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())

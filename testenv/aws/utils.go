@@ -98,13 +98,13 @@ func (e *AWSEnv) afterSetUp(ctx context.Context) error {
 		RemotePort:    80, //nolint:gomnd
 	}
 
-	sshPF, err := utils.NewSSHPortForward(e.sshPortForwardInput)
+	e.sshPortForward, err = utils.NewSSHPortForward(e.sshPortForwardInput)
 	if err != nil {
 		return fmt.Errorf("failed to setup SSH port forwarding: %w", err)
 	}
 
 	// Use non-inherited context to avoid cancelling the port forward with timeout
-	if err = sshPF.Start(context.Background()); err != nil { //nolint:contextcheck
+	if err = e.sshPortForward.Start(context.Background()); err != nil { //nolint:contextcheck
 		return fmt.Errorf("failed to wait for the SSH port to become ready: %w", err)
 	}
 
@@ -222,11 +222,11 @@ func (e *AWSEnv) infrastructureReady(ctx context.Context) (bool, error) {
 
 	// Get test asset status
 	// If the test asset status is not running, then the infrastructure are not ready
-	testAssetStatus, err := e.getEC2InstanceStatus(ctx, e.testAsset.InstanceID)
+	ready, err := e.isEC2InstanceReady(ctx, e.testAsset.InstanceID)
 	if err != nil {
 		return false, fmt.Errorf("failed to get test instance status: %w", err)
 	}
-	if testAssetStatus != ec2types.InstanceStateNameRunning {
+	if !ready {
 		return false, nil
 	}
 
@@ -237,19 +237,16 @@ func (e *AWSEnv) infrastructureReady(ctx context.Context) (bool, error) {
 		return false, fmt.Errorf("failed to get VMClarity server: %w", err)
 	}
 
-	status, err := e.getEC2InstanceStatus(ctx, e.server.InstanceID)
+	ready, err = e.isEC2InstanceReady(ctx, e.server.InstanceID)
 	if err != nil {
 		return false, fmt.Errorf("failed to get server instance status: %w", err)
 	}
-	if status != ec2types.InstanceStateNameRunning {
-		return false, nil
-	}
 
-	return true, nil
+	return ready, nil
 }
 
 // Get EC2 instance status by instance ID.
-func (e *AWSEnv) getEC2InstanceStatus(ctx context.Context, instanceID string) (ec2types.InstanceStateName, error) {
+func (e *AWSEnv) isEC2InstanceReady(ctx context.Context, instanceID string) (bool, error) {
 	instanceStatus, err := e.ec2Client.DescribeInstanceStatus(
 		ctx,
 		&ec2.DescribeInstanceStatusInput{
@@ -257,14 +254,14 @@ func (e *AWSEnv) getEC2InstanceStatus(ctx context.Context, instanceID string) (e
 		},
 	)
 	if err != nil {
-		return "", fmt.Errorf("failed to describe instance status: %w", err)
+		return false, fmt.Errorf("failed to describe instance status: %w", err)
 	}
 
 	if len(instanceStatus.InstanceStatuses) != 1 {
-		return "", errors.New("failed to find instance status")
+		return false, errors.New("failed to find instance status")
 	}
 
-	return instanceStatus.InstanceStatuses[0].InstanceState.Name, nil
+	return instanceStatus.InstanceStatuses[0].InstanceState.Name == ec2types.InstanceStateNameRunning, nil
 }
 
 // Get the public IP address by instance ID.

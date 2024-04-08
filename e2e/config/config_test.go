@@ -133,6 +133,11 @@ func TestConfig(t *testing.T) {
 						PublicKeyFile:  "/home/vmclarity/.ssh/id_rsa.pub",
 					},
 				},
+				TestSuiteParams: &TestSuiteParams{
+					ServicesReadyTimeout: 5 * time.Minute,
+					ScanTimeout:          2 * time.Minute,
+					Scope:                "assetInfo/labels/any(t: t/key eq 'scanconfig' and t/value eq 'test')",
+				},
 			},
 		},
 		{
@@ -200,6 +205,11 @@ func TestConfig(t *testing.T) {
 						PrivateKeyFile: "",
 						PublicKeyFile:  "",
 					},
+				},
+				TestSuiteParams: &TestSuiteParams{
+					ServicesReadyTimeout: 5 * time.Minute,
+					ScanTimeout:          2 * time.Minute,
+					Scope:                "assetInfo/labels/any(t: t/key eq 'scanconfig' and t/value eq 'test')",
 				},
 			},
 		},

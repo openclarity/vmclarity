@@ -35,15 +35,13 @@ var _ = ginkgo.Describe("Running a basic scan (only SBOM)", func() {
 	ginkgo.Context("which scans an asset", func() {
 		ginkgo.It("should finish successfully", func(ctx ginkgo.SpecContext) {
 			var err error
-			scope := getDefaultScope(cfg)
-
 			ginkgo.By("waiting until test asset is found")
 			reportFailedConfig.objects = append(
 				reportFailedConfig.objects,
-				APIObject{"asset", scope},
+				APIObject{"asset", cfg.TestSuiteParams.Scope},
 			)
 			assetsParams := apitypes.GetAssetsParams{
-				Filter: to.Ptr(scope),
+				Filter: to.Ptr(cfg.TestSuiteParams.Scope),
 			}
 			gomega.Eventually(func() bool {
 				assets, err = client.GetAssets(ctx, assetsParams)
@@ -51,7 +49,7 @@ var _ = ginkgo.Describe("Running a basic scan (only SBOM)", func() {
 				return len(*assets.Items) == 1
 			}, DefaultTimeout, time.Second).Should(gomega.BeTrue())
 
-			RunSuccessfulScan(ctx, &reportFailedConfig, scope)
+			RunSuccessfulScan(ctx, &reportFailedConfig, cfg.TestSuiteParams.Scope)
 		})
 	})
 
@@ -96,8 +94,6 @@ var _ = ginkgo.Describe("Running a basic scan (only SBOM)", func() {
 
 // nolint:gomnd
 func RunSuccessfulScan(ctx ginkgo.SpecContext, report *ReportFailedConfig, filter string) {
-	scanTimeout := getDefaultScanTimeout(cfg)
-
 	ginkgo.By("applying a scan configuration")
 	apiScanConfig, err := client.PostScanConfig(
 		ctx,
@@ -108,7 +104,7 @@ func RunSuccessfulScan(ctx ginkgo.SpecContext, report *ReportFailedConfig, filte
 				},
 			},
 			filter,
-			int(scanTimeout.Seconds()),
+			int(cfg.TestSuiteParams.ScanTimeout.Seconds()),
 		))
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
@@ -158,5 +154,5 @@ func RunSuccessfulScan(ctx ginkgo.SpecContext, report *ReportFailedConfig, filte
 		scans, err = client.GetScans(ctx, scanParams)
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
 		return len(*scans.Items) == 1
-	}, scanTimeout, time.Second).Should(gomega.BeTrue())
+	}, cfg.TestSuiteParams.ScanTimeout, time.Second).Should(gomega.BeTrue())
 }
