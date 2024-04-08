@@ -120,8 +120,8 @@ components:
         - file
         - inputDir
         - outputDir
-        - timeoutSeconds
         - outputFormat
+        - timeoutSeconds
       properties:
         file:
           type: string
@@ -141,6 +141,21 @@ components:
             validate: required
           description: |
             The directory where the scanner plugin should store it's findings.
+        outputFormat:
+          type: string
+          enum:
+            # defines supported formats by VMClarity API
+            - vmclarity-json
+          x-enumNames:
+            - VMClarityJSON
+          x-oapi-codegen-extra-tags:
+            validate: required,oneof=vmclarity-json
+          description: |
+            The format in which the scanner plugin should store it's findings.
+            To ensure operability with VMClarity API, the format must be one of enum values.
+            However, the scanner can support custom formats as well to support other
+            tools (e.g. cyclondex-json, custom-format-for-tool-ABC, etc.).
+            When creating VMClarity JSON output, use types library from VMClarity API to construct the output.
         timeoutSeconds:
           type: integer
           minimum: 0
@@ -149,14 +164,6 @@ components:
           description: |
             The maximum time in seconds that a scan started from this config
             should run for before being automatically aborted.
-        outputFormat:
-          type: string
-          enum:
-            - VMClarityJSON
-          x-oapi-codegen-extra-tags:
-            validate: required,oneof=VMClarityJSON
-          description: |
-            The format in which the scanner plugin should store it's findings.
 
     Metadata:
       type: object
@@ -171,45 +178,3 @@ components:
         message:
           type: string
       description: An object that is returned for a failed API request.
-
-    PluginOutput:
-      type: object
-      properties:
-        misconfigurations:
-          type: array
-          items:
-            $ref: '#/components/schemas/Misconfiguration'
-
-    Misconfiguration:
-      type: object
-      properties:
-        scannerName:
-          type: string
-        id:
-          type: string
-          description: Check or test ID, if applicable (e.g. Lynis TestID, CIS Docker Benchmark checkpoint code, etc)
-        location:
-          type: string
-          description: Location within the asset where the misconfiguration was recorded (e.g. filesystem path)
-        category:
-          type: string
-          description: Specifies misconfiguration impact category
-        message:
-          type: string
-          description: Short info about the misconfiguration
-        description:
-          type: string
-          description: Additional context such as the potential impact
-        remediation:
-          type: string
-          description: Possible fix for the misconfiguration
-        severity:
-          $ref: '#/components/schemas/MisconfigurationSeverity'
-
-    MisconfigurationSeverity:
-      type: string
-      enum:
-        - MisconfigurationHighSeverity
-        - MisconfigurationMediumSeverity
-        - MisconfigurationLowSeverity
-        - MisconfigurationInfoSeverity

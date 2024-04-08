@@ -9,15 +9,7 @@ import (
 
 // Defines values for ConfigOutputFormat.
 const (
-	VMClarityJSON ConfigOutputFormat = "VMClarityJSON"
-)
-
-// Defines values for MisconfigurationSeverity.
-const (
-	MisconfigurationHighSeverity   MisconfigurationSeverity = "MisconfigurationHighSeverity"
-	MisconfigurationInfoSeverity   MisconfigurationSeverity = "MisconfigurationInfoSeverity"
-	MisconfigurationLowSeverity    MisconfigurationSeverity = "MisconfigurationLowSeverity"
-	MisconfigurationMediumSeverity MisconfigurationSeverity = "MisconfigurationMediumSeverity"
+	VMClarityJSON ConfigOutputFormat = "vmclarity-json"
 )
 
 // Defines values for StatusState.
@@ -41,7 +33,11 @@ type Config struct {
 	OutputDir string `json:"outputDir" validate:"required"`
 
 	// OutputFormat The format in which the scanner plugin should store it's findings.
-	OutputFormat ConfigOutputFormat `json:"outputFormat" validate:"required,oneof=VMClarityJSON"`
+	// To ensure operability with VMClarity API, the format must be one of enum values.
+	// However, the scanner can support custom formats as well to support other
+	// tools (e.g. cyclondex-json, custom-format-for-tool-ABC, etc.).
+	// When creating VMClarity JSON output, use types library from VMClarity API to construct the output.
+	OutputFormat ConfigOutputFormat `json:"outputFormat" validate:"required,oneof=vmclarity-json"`
 
 	// TimeoutSeconds The maximum time in seconds that a scan started from this config
 	// should run for before being automatically aborted.
@@ -49,6 +45,10 @@ type Config struct {
 }
 
 // ConfigOutputFormat The format in which the scanner plugin should store it's findings.
+// To ensure operability with VMClarity API, the format must be one of enum values.
+// However, the scanner can support custom formats as well to support other
+// tools (e.g. cyclondex-json, custom-format-for-tool-ABC, etc.).
+// When creating VMClarity JSON output, use types library from VMClarity API to construct the output.
 type ConfigOutputFormat string
 
 // ErrorResponse An object that is returned for a failed API request.
@@ -59,37 +59,6 @@ type ErrorResponse struct {
 // Metadata Describes the scanner plugin.
 type Metadata struct {
 	ApiVersion *string `json:"apiVersion,omitempty"`
-}
-
-// Misconfiguration defines model for Misconfiguration.
-type Misconfiguration struct {
-	// Category Specifies misconfiguration impact category
-	Category *string `json:"category,omitempty"`
-
-	// Description Additional context such as the potential impact
-	Description *string `json:"description,omitempty"`
-
-	// Id Check or test ID, if applicable (e.g. Lynis TestID, CIS Docker Benchmark checkpoint code, etc)
-	Id *string `json:"id,omitempty"`
-
-	// Location Location within the asset where the misconfiguration was recorded (e.g. filesystem path)
-	Location *string `json:"location,omitempty"`
-
-	// Message Short info about the misconfiguration
-	Message *string `json:"message,omitempty"`
-
-	// Remediation Possible fix for the misconfiguration
-	Remediation *string                   `json:"remediation,omitempty"`
-	ScannerName *string                   `json:"scannerName,omitempty"`
-	Severity    *MisconfigurationSeverity `json:"severity,omitempty"`
-}
-
-// MisconfigurationSeverity defines model for MisconfigurationSeverity.
-type MisconfigurationSeverity string
-
-// PluginOutput defines model for PluginOutput.
-type PluginOutput struct {
-	Misconfigurations *[]Misconfiguration `json:"misconfigurations,omitempty"`
 }
 
 // Status defines model for Status.

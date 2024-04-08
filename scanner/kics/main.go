@@ -23,6 +23,7 @@ import (
 	"github.com/Checkmarx/kics/pkg/printer"
 	"github.com/Checkmarx/kics/pkg/progress"
 	"github.com/Checkmarx/kics/pkg/scan"
+	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/scanner/plugin/cmd/run"
 	"github.com/openclarity/vmclarity/scanner/types"
 	log "github.com/sirupsen/logrus"
@@ -32,12 +33,12 @@ import (
 	"time"
 )
 
-var mapKICSSeverity = map[model.Severity]types.MisconfigurationSeverity{
-	model.SeverityHigh:   types.MisconfigurationHighSeverity,
-	model.SeverityMedium: types.MisconfigurationMediumSeverity,
-	model.SeverityLow:    types.MisconfigurationLowSeverity,
-	model.SeverityInfo:   types.MisconfigurationInfoSeverity,
-	model.SeverityTrace:  types.MisconfigurationInfoSeverity,
+var mapKICSSeverity = map[model.Severity]apitypes.MisconfigurationSeverity{
+	model.SeverityHigh:   apitypes.MisconfigurationHighSeverity,
+	model.SeverityMedium: apitypes.MisconfigurationMediumSeverity,
+	model.SeverityLow:    apitypes.MisconfigurationLowSeverity,
+	model.SeverityInfo:   apitypes.MisconfigurationInfoSeverity,
+	model.SeverityTrace:  apitypes.MisconfigurationInfoSeverity,
 }
 
 type KICSScanner struct {
@@ -123,10 +124,10 @@ func (s *KICSScanner) formatOutput(tmp, outputDir string, outputFormat types.Con
 		return fmt.Errorf("failed to decode kics.json: %w", err)
 	}
 
-	var result []types.Misconfiguration
+	var result []apitypes.Misconfiguration
 	for _, q := range summary.Queries {
 		for _, file := range q.Files {
-			result = append(result, types.Misconfiguration{
+			result = append(result, apitypes.Misconfiguration{
 				ScannerName: types.Ptr("KICS"),
 				Id:          types.Ptr(file.SimilarityID),
 				Location:    types.Ptr(file.FileName + "#" + strconv.Itoa(file.Line)),
@@ -142,7 +143,7 @@ func (s *KICSScanner) formatOutput(tmp, outputDir string, outputFormat types.Con
 	var jsonData []byte
 	switch outputFormat {
 	case types.VMClarityJSON:
-		jsonData, err = json.MarshalIndent(types.PluginOutput{Misconfigurations: &result}, "", "    ")
+		jsonData, err = json.MarshalIndent(apitypes.PluginOutput{Misconfigurations: &result}, "", "    ")
 		if err != nil {
 			return fmt.Errorf("failed to marshal kics.json: %w", err)
 		}

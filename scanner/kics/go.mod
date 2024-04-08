@@ -4,7 +4,7 @@ go 1.21.4
 
 require (
 	github.com/Checkmarx/kics v1.7.13
-	github.com/labstack/echo/v4 v4.11.4
+	github.com/openclarity/vmclarity/api/types v0.0.0-00010101000000-000000000000
 	github.com/openclarity/vmclarity/scanner/plugin v0.0.0-00010101000000-000000000000
 	github.com/openclarity/vmclarity/scanner/types v0.0.0-00010101000000-000000000000
 	github.com/sirupsen/logrus v1.9.3
@@ -31,6 +31,7 @@ require (
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0 // indirect
 	github.com/antlr/antlr4/runtime/Go/antlr/v4 v4.0.0-20230305170008-8188dc5388df // indirect
+	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef // indirect
 	github.com/aws/aws-sdk-go v1.44.295 // indirect
@@ -117,6 +118,7 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/jung-kurt/gofpdf v1.16.2 // indirect
 	github.com/klauspost/compress v1.17.2 // indirect
+	github.com/labstack/echo/v4 v4.11.4 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
@@ -146,6 +148,7 @@ require (
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f // indirect
+	github.com/oapi-codegen/runtime v1.1.1 // indirect
 	github.com/open-policy-agent/opa v0.58.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc5 // indirect
@@ -248,6 +251,7 @@ require (
 )
 
 replace (
+	github.com/openclarity/vmclarity/api/types => ../../api/types
 	github.com/openclarity/vmclarity/scanner/plugin => ../plugin
 	github.com/openclarity/vmclarity/scanner/types => ../types
 )
