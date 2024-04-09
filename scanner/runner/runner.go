@@ -25,11 +25,10 @@ import (
 	"time"
 
 	containertypes "github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/filters"
-	imagetypes "github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 
+	"github.com/openclarity/vmclarity/core/to"
 	runnerclient "github.com/openclarity/vmclarity/scanner/runner/internal/runner"
 	"github.com/openclarity/vmclarity/scanner/types"
 )
@@ -39,7 +38,7 @@ const (
 	DefaultScannerOutputDir      = "/export"
 	DefaultHostScannerSocketFile = "/tmp/socket/plugin.sock"
 	DefaultScannerSocketFile     = "/var/run/plugin.sock"
-	DefaultScannerConfig         = "plugin.json"
+	DefaultScannerServerPort     = "8080"
 )
 
 type PluginConfig struct {
@@ -82,27 +81,25 @@ func New(config PluginConfig) (*Runner, error) {
 // Start scanner container:
 // * get image for scanner that needs to be created
 // * create bind mount for filesystem directories where asset filesystem is stored and where the findings should be stored
-// * TDB create bind mount for where the scanner config file is stored or copy config file to container
+// * create bind mount for where the scanner config file is stored
 // * configure unix domain socket for communication with Plugin API client
 // * create client for plugin container.
 func (r *Runner) StartScanner() error {
-	err := os.Mkdir(filepath.Dir(r.socketFile), 0o777) //nolint:gomnd
+	// Write scanner config file to temp dir
+	err := os.WriteFile(getScannerConfigSourcePath(r.Name), []byte(r.ScannerConfig), 0o777) // nolint:gomnd
+	if err != nil {
+		return fmt.Errorf("failed write scanner config file: %w", err)
+	}
+
+	err = os.Mkdir(filepath.Dir(r.socketFile), 0o777) //nolint:gomnd
 	if err != nil && !os.IsExist(err) {
 		return fmt.Errorf("failed to create socket dir: %w", err)
 	}
 
 	// Pull scanner image if required
-	images, err := r.dockerClient.ImageList(context.Background(), imagetypes.ListOptions{
-		Filters: filters.NewArgs(filters.Arg("reference", r.ImageName)),
-	})
+	err = r.pullImage(context.Background(), r.ImageName)
 	if err != nil {
-		return fmt.Errorf("failed to get images: %w", err)
-	}
-	if len(images) == 0 {
-		_, err = r.dockerClient.ImagePull(context.Background(), r.ImageName, imagetypes.PullOptions{})
-		if err != nil {
-			return fmt.Errorf("failed to pull scanner image: %w", err)
-		}
+		return fmt.Errorf("failed to pull scanner image: %w", err)
 	}
 
 	containerResp, err := r.dockerClient.ContainerCreate(
@@ -113,6 +110,11 @@ func (r *Runner) StartScanner() error {
 		},
 		&containertypes.HostConfig{
 			Mounts: []mount.Mount{
+				{
+					Type:   mount.TypeBind,
+					Source: getScannerConfigSourcePath(r.Name),
+					Target: getScannerConfigDestinationPath(),
+				},
 				{
 					Type:   mount.TypeBind,
 					Source: r.InputDir,
@@ -199,9 +201,10 @@ func (r *Runner) RunScanner() error {
 	_, err := r.client.PostConfigWithResponse(
 		context.Background(),
 		types.PostConfigJSONRequestBody{
-			File:           r.ScannerConfig,
+			File:           to.Ptr(getScannerConfigDestinationPath()),
 			InputDir:       DefaultScannerInputDir,
 			OutputDir:      DefaultScannerOutputDir,
+			OutputFormat:   "vmclarity-json",
 			TimeoutSeconds: 60, //nolint:gomnd
 		},
 	)
@@ -257,6 +260,12 @@ func (r *Runner) StopScanner() error {
 	err = os.RemoveAll(DefaultScannerSocketFile)
 	if err != nil {
 		return fmt.Errorf("failed to remove socket file: %w", err)
+	}
+
+	// Remove scanner config file
+	err = os.RemoveAll(getScannerConfigSourcePath(r.Name))
+	if err != nil {
+		return fmt.Errorf("failed to remove scanner config file: %w", err)
 	}
 
 	return nil
