@@ -117,7 +117,6 @@ components:
       type: object
       description: Describes a scanner config.
       required:
-        - file
         - inputDir
         - outputDir
         - outputFormat
@@ -125,8 +124,6 @@ components:
       properties:
         file:
           type: string
-          x-oapi-codegen-extra-tags:
-            validate: required
           description: |
             The file with the configuration required by the scanner plugin. This is a path on the filesystem to the config file.
         inputDir:

@@ -76,7 +76,7 @@ func (s *KICSScanner) Start(config *types.Config) error {
 		s.SetStatus(types.NewScannerStatus(types.Running, types.Ptr("Scanner is running...")))
 		tmp := os.TempDir()
 
-		clientConfig, err := s.parseConfigFile(config.File)
+		clientConfig, err := s.createScanParametersConfig(config.File)
 		if err != nil {
 			log.Errorf("Failed to parse config file: %v", err)
 			s.SetStatus(types.NewScannerStatus(types.Failed, types.Ptr(fmt.Errorf("failed to parse config file: %w", err).Error())))
@@ -131,7 +131,7 @@ func (s *KICSScanner) Start(config *types.Config) error {
 	return nil
 }
 
-func (s *KICSScanner) parseConfigFile(configPath string) (*ScanParametersConfig, error) {
+func (s *KICSScanner) createScanParametersConfig(configPath *string) (*ScanParametersConfig, error) {
 	config := ScanParametersConfig{
 		PreviewLines:     3,
 		Platform:         []string{"Ansible", "CloudFormation", "Common", "Crossplane", "Dockerfile", "DockerCompose", "Knative", "Kubernetes", "OpenAPI", "Terraform", "AzureResourceManager", "GRPC", "GoogleDeploymentManager", "Buildah", "Pulumi", "ServerlessFW", "CICD"},
@@ -142,13 +142,17 @@ func (s *KICSScanner) parseConfigFile(configPath string) (*ScanParametersConfig,
 		Minimal:          true,
 	}
 
-	file, err := os.Open(filepath.Clean(configPath))
+	if configPath == nil {
+		return &config, nil
+	}
+
+	file, err := os.Open(filepath.Clean(*configPath))
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
-	ext := filepath.Ext(configPath)
+	ext := filepath.Ext(*configPath)
 
 	bytes, err := io.ReadAll(file)
 	if err != nil {
@@ -178,7 +182,7 @@ func (s *KICSScanner) parseConfigFile(configPath string) (*ScanParametersConfig,
 		}
 
 	case ".hcl":
-		err := hclsimple.DecodeFile(configPath, nil, &config)
+		err := hclsimple.DecodeFile(*configPath, nil, &config)
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode HCL config: %w", err)
 		} else {

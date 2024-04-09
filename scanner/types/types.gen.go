@@ -24,7 +24,7 @@ const (
 // Config Describes a scanner config.
 type Config struct {
 	// File The file with the configuration required by the scanner plugin. This is a path on the filesystem to the config file.
-	File string `json:"file" validate:"required"`
+	File *string `json:"file,omitempty"`
 
 	// InputDir The directory which should be scanned by the scanner plugin.
 	InputDir string `json:"inputDir" validate:"required"`
