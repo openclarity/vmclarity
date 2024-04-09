@@ -6,6 +6,7 @@ require (
 	github.com/deepmap/oapi-codegen/v2 v2.1.0
 	github.com/docker/docker v26.0.0+incompatible
 	github.com/docker/go-connections v0.5.0
+	github.com/openclarity/vmclarity/core v0.0.0-20240410073938-fa34da109407
 	github.com/openclarity/vmclarity/scanner/types v0.0.0-00010101000000-000000000000
 )
 
@@ -57,4 +58,7 @@ require (
 	gotest.tools/v3 v3.5.1 // indirect
 )
 
-replace github.com/openclarity/vmclarity/scanner/types => ../types
+replace (
+	github.com/openclarity/vmclarity/core => ../../core
+	github.com/openclarity/vmclarity/scanner/types => ../types
+)

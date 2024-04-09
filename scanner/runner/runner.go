@@ -19,13 +19,11 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 	"time"
 
 	containertypes "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
-	"github.com/docker/go-connections/nat"
 
 	"github.com/openclarity/vmclarity/core/to"
 	runnerclient "github.com/openclarity/vmclarity/scanner/runner/internal/runner"
@@ -33,9 +31,9 @@ import (
 )
 
 const (
-	DefaultScannerInputDir  = "/asset"
-	DefaultScannerOutputDir = "/export"
-	DefaultScannerAddress   = ":8080"
+	DefaultScannerInputDir   = "/asset"
+	DefaultScannerOutputDir  = "/export"
+	DefaultScannerServerPort = "8080"
 )
 
 type PluginConfig struct {
@@ -92,22 +90,31 @@ func (r *Runner) StartScanner() error {
 		return fmt.Errorf("failed to pull scanner image: %w", err)
 	}
 
+	// Create scanner container
+	//
+	// Traefik redirects the requests to its API to our scanners so that requests to
+	// localhost:TraefikContainerPort/{SCANNER_NAME} are redirected to the actual
+	// {SCANNER_NAME} container. All traffic flow can be configured (e.g. auth,
+	// encryption). This also enables having scanners on different hosts (although
+	// not needed + requires additional configuration). The host network driver is
+	// not limited by the ports anymore as we only use one (for the proxy), This way,
+	// scanner containers wont overload the network driver.
 	containerResp, err := r.dockerClient.ContainerCreate(
 		context.Background(),
 		&containertypes.Config{
-			Image:        r.ImageName,
-			Env:          []string{"PLUGIN_SERVER_LISTEN_ADDRESS=" + DefaultScannerAddress},
-			ExposedPorts: nat.PortSet{"8080/tcp": struct{}{}},
+			Image: r.ImageName,
+			Env: []string{
+				fmt.Sprintf("PLUGIN_SERVER_LISTEN_ADDRESS=0.0.0.0:%s", DefaultScannerServerPort),
+			},
+			Labels: map[string]string{
+				"traefik.enable": "true",
+				fmt.Sprintf("traefik.http.routers.%s-scanner.rule", r.Name):                     fmt.Sprintf("PathPrefix(`/%s/`)", r.Name),
+				fmt.Sprintf("traefik.http.middlewares.%s-scanner.stripprefix.prefixes", r.Name): fmt.Sprintf("/%s", r.Name),
+				fmt.Sprintf("traefik.http.routers.%s-scanner.middlewares", r.Name):              fmt.Sprintf("%s-scanner", r.Name),
+				fmt.Sprintf("traefik.http.services.%-scanner.loadbalancer.server.port", r.Name): DefaultScannerServerPort,
+			},
 		},
 		&containertypes.HostConfig{
-			PortBindings: map[nat.Port][]nat.PortBinding{
-				"8080/tcp": {
-					{
-						HostIP:   "127.0.0.1",
-						HostPort: "",
-					},
-				},
-			},
 			Mounts: []mount.Mount{
 				{
 					Type:   mount.TypeBind,
@@ -140,7 +147,12 @@ func (r *Runner) StartScanner() error {
 		return fmt.Errorf("failed to start scanner container: %w", err)
 	}
 
-	r.createHttpClient(1*time.Second, 20*time.Second)
+	r.client, err = runnerclient.NewClientWithResponses(
+		fmt.Sprintf("http://%s/%s/", proxyHostAddress, r.Name),
+	)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -241,63 +253,6 @@ func (r *Runner) StopScanner() error {
 	err = os.RemoveAll(getScannerConfigSourcePath(r.Name))
 	if err != nil {
 		return fmt.Errorf("failed to remove scanner config file: %w", err)
-	}
-
-	return nil
-}
-
-// Create http client for plugin scanner:
-// * try connecting to the plugin scanner container with container IP address
-// * if that fails, try connecting to the plugin scanner container with host IP address
-func (r *Runner) createHttpClient(pollInterval, timeout time.Duration) error {
-	ctx := context.Background()
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
-	ticker := time.NewTicker(pollInterval)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return fmt.Errorf("checking status of %s timed out", r.PluginConfig.Name)
-
-		case <-ticker.C:
-			inspect, err := r.dockerClient.ContainerInspect(context.Background(), r.containerID)
-			if err != nil {
-				return fmt.Errorf("failed to inspect scanner container: %w", err)
-			}
-
-			// Create client
-			scannerIP := inspect.NetworkSettings.IPAddress
-			err = r.tryPluginScannerServer(ctx, "http://"+scannerIP+":8080")
-			if err != nil {
-				fmt.Printf("failed to use scanner IP address, trying scanner host IP address")
-				hostPort := inspect.NetworkSettings.Ports["8080/tcp"][0].HostPort
-				err = r.tryPluginScannerServer(ctx, "http://127.0.0.1:"+hostPort+"/")
-				if err != nil {
-					return fmt.Errorf("failed to create client")
-				}
-			}
-
-			return nil
-		}
-	}
-}
-
-func (r *Runner) tryPluginScannerServer(ctx context.Context, server string) error {
-	var err error
-
-	r.client, err = runnerclient.NewClientWithResponses(server)
-	if err != nil {
-		return fmt.Errorf("failed to create plugin client: %w", err)
-	}
-
-	newCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
-	defer cancel()
-	_, err = r.client.GetStatusWithResponse(newCtx)
-	if err != nil {
-		return fmt.Errorf("failed to ping plugin scanner server: %w", err)
 	}
 
 	return nil

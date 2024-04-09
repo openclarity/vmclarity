@@ -16,6 +16,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -29,7 +30,7 @@ func main() {
 		ImageName:     "", // TODO Add image name
 		InputDir:      "", // TODO Add input directory
 		OutputDir:     "", // TODO Add output directory
-		ScannerConfig: "plugin.json",
+		ScannerConfig: "",
 	}
 
 	runner, err := rr.New(config)
@@ -38,6 +39,14 @@ func main() {
 		return
 	}
 
+	// Prepare proxy
+	err = runner.CreateProxyContainer(context.Background())
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// Start scanner
 	fmt.Printf("Starting scanner %s\n", runner.Name)
 	err = runner.StartScanner()
 	if err != nil {
@@ -45,6 +54,11 @@ func main() {
 		return
 	}
 	defer runner.StopScanner() //nolint:errcheck
+
+	//// block forever
+	//for {
+	//
+	//}
 
 	fmt.Printf("Waiting for scanner %s to be ready\n", runner.Name)
 	err = runner.WaitScannerReady(time.Second, time.Minute*2) //nolint:gomnd
