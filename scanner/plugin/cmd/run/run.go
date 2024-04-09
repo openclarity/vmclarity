@@ -34,14 +34,14 @@ func Run(scanner plugin.Scanner) {
 		log.Fatalf("Failed to initialize logger: %v", err)
 	}
 
-	server, err := plugin.NewServer(scanner, config.SocketFile)
+	server, err := plugin.NewServer(scanner)
 	if err != nil {
 		log.Fatalf("Failed to create HTTP server: %v", err)
 	}
 
 	go func() {
 		log.Infof("Plugin HTTP server starting...")
-		if err = server.Start(); err != nil {
+		if err = server.Start(config.ListenAddress); err != nil {
 			log.Fatalf("Failed to start HTTP server: %v", err)
 		}
 	}()

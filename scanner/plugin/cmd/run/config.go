@@ -22,14 +22,14 @@ import (
 )
 
 const (
-	DefaultEnvPrefix  = "VMCLARITY_SCANNER_SERVER"
-	DefaultLogLevel   = "info"
-	DefaultSocketFile = "/var/run/plugin.sock"
+	DefaultEnvPrefix     = "VMCLARITY_SCANNER_SERVER"
+	DefaultLogLevel      = "info"
+	DefaultListenAddress = "0.0.0.0:8765"
 )
 
 type Config struct {
-	LogLevel   string `json:"log-level,omitempty" mapstructure:"log_level"`
-	SocketFile string `json:"socket-file,omitempty" mapstructure:"socket_file"`
+	LogLevel      string `json:"log-level,omitempty" mapstructure:"log_level"`
+	ListenAddress string `json:"listen-address,omitempty" mapstructure:"listen_address"`
 }
 
 func NewConfig() (*Config, error) {
@@ -42,11 +42,11 @@ func NewConfig() (*Config, error) {
 	v.AllowEmptyEnv(true)
 	v.AutomaticEnv()
 
+	_ = v.BindEnv("listen_address")
+	v.SetDefault("listen_address", DefaultListenAddress)
+
 	_ = v.BindEnv("log_level")
 	v.SetDefault("log_level", DefaultLogLevel)
-
-	_ = v.BindEnv("socket_file")
-	v.SetDefault("socket_file", DefaultSocketFile)
 
 	config := &Config{}
 	if err := v.Unmarshal(config); err != nil {

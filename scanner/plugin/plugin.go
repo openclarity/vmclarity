@@ -17,8 +17,8 @@ package plugin
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"net"
 	"net/http"
 	"time"
 
@@ -33,22 +33,14 @@ type Server struct {
 	scanner Scanner
 }
 
-func NewServer(scanner Scanner, socketFile string) (*Server, error) {
+func NewServer(scanner Scanner) (*Server, error) {
 	_, err := internal.GetSwagger()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load swagger spec: %w", err)
 	}
 
-	listener, err := net.Listen("unix", socketFile)
-	if err != nil {
-		return nil, fmt.Errorf("failed to listen on socket: %w", err)
-	}
-
-	e := echo.New()
-	e.Listener = listener
-
 	server := &Server{
-		echo:    e,
+		echo:    echo.New(),
 		scanner: scanner,
 	}
 
@@ -60,9 +52,9 @@ func NewServer(scanner Scanner, socketFile string) (*Server, error) {
 	return server, nil
 }
 
-func (s *Server) Start() error {
-	server := new(http.Server)
-	if err := s.echo.StartServer(server); err != nil {
+func (s *Server) Start(address string) error {
+	err := s.echo.Start(address)
+	if !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
 
