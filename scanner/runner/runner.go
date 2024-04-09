@@ -18,8 +18,6 @@ package runner
 import (
 	"context"
 	"fmt"
-	"net"
-	"net/http"
 	"os"
 	"path/filepath"
 	"time"
@@ -27,6 +25,7 @@ import (
 	containertypes "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
+	"github.com/docker/go-connections/nat"
 
 	"github.com/openclarity/vmclarity/core/to"
 	runnerclient "github.com/openclarity/vmclarity/scanner/runner/internal/runner"
@@ -34,11 +33,9 @@ import (
 )
 
 const (
-	DefaultScannerInputDir       = "/asset"
-	DefaultScannerOutputDir      = "/export"
-	DefaultHostScannerSocketFile = "/tmp/socket/plugin.sock"
-	DefaultScannerSocketFile     = "/var/run/plugin.sock"
-	DefaultScannerServerPort     = "8080"
+	DefaultScannerInputDir  = "/asset"
+	DefaultScannerOutputDir = "/export"
+	DefaultScannerAddress   = ":8080"
 )
 
 type PluginConfig struct {
@@ -58,7 +55,6 @@ type Runner struct {
 	client       runnerclient.ClientWithResponsesInterface
 	dockerClient *client.Client
 	containerID  string
-	socketFile   string
 
 	PluginConfig
 }
@@ -74,7 +70,6 @@ func New(config PluginConfig) (*Runner, error) {
 	return &Runner{
 		dockerClient: dockerClient,
 		PluginConfig: config,
-		socketFile:   DefaultHostScannerSocketFile, // TODO(paralta): make this configurable with plugin name
 	}, nil
 }
 
@@ -82,18 +77,13 @@ func New(config PluginConfig) (*Runner, error) {
 // * get image for scanner that needs to be created
 // * create bind mount for filesystem directories where asset filesystem is stored and where the findings should be stored
 // * create bind mount for where the scanner config file is stored
-// * configure unix domain socket for communication with Plugin API client
+// * open port for plugin container to listen on
 // * create client for plugin container.
 func (r *Runner) StartScanner() error {
 	// Write scanner config file to temp dir
 	err := os.WriteFile(getScannerConfigSourcePath(r.Name), []byte(r.ScannerConfig), 0o777) // nolint:gomnd
 	if err != nil {
 		return fmt.Errorf("failed write scanner config file: %w", err)
-	}
-
-	err = os.Mkdir(filepath.Dir(r.socketFile), 0o777) //nolint:gomnd
-	if err != nil && !os.IsExist(err) {
-		return fmt.Errorf("failed to create socket dir: %w", err)
 	}
 
 	// Pull scanner image if required
@@ -105,10 +95,19 @@ func (r *Runner) StartScanner() error {
 	containerResp, err := r.dockerClient.ContainerCreate(
 		context.Background(),
 		&containertypes.Config{
-			Image: r.ImageName,
-			Cmd:   []string{"sleep", "infinity"},
+			Image:        r.ImageName,
+			Env:          []string{"PLUGIN_SERVER_LISTEN_ADDRESS=" + DefaultScannerAddress},
+			ExposedPorts: nat.PortSet{"8080/tcp": struct{}{}},
 		},
 		&containertypes.HostConfig{
+			PortBindings: map[nat.Port][]nat.PortBinding{
+				"8080/tcp": {
+					{
+						HostIP:   "127.0.0.1",
+						HostPort: "",
+					},
+				},
+			},
 			Mounts: []mount.Mount{
 				{
 					Type:   mount.TypeBind,
@@ -124,11 +123,6 @@ func (r *Runner) StartScanner() error {
 					Type:   mount.TypeBind,
 					Source: r.OutputDir,
 					Target: DefaultScannerOutputDir,
-				},
-				{
-					Type:   mount.TypeBind,
-					Source: filepath.Dir(r.socketFile),
-					Target: filepath.Dir(DefaultScannerSocketFile),
 				},
 			},
 		},
@@ -146,20 +140,7 @@ func (r *Runner) StartScanner() error {
 		return fmt.Errorf("failed to start scanner container: %w", err)
 	}
 
-	httpClient := http.Client{
-		Transport: &http.Transport{
-			DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
-				return net.Dial("unix", DefaultScannerSocketFile)
-			},
-		},
-	}
-	r.client, err = runnerclient.NewClientWithResponses(
-		"http://unix/",
-		runnerclient.WithHTTPClient(&httpClient),
-	)
-	if err != nil {
-		return fmt.Errorf("failed to create plugin client: %w", err)
-	}
+	r.createHttpClient(1*time.Second, 20*time.Second)
 
 	return nil
 }
@@ -256,16 +237,67 @@ func (r *Runner) StopScanner() error {
 		return fmt.Errorf("failed to remove scanner container: %w", err)
 	}
 
-	// Remove socket file
-	err = os.RemoveAll(DefaultScannerSocketFile)
-	if err != nil {
-		return fmt.Errorf("failed to remove socket file: %w", err)
-	}
-
 	// Remove scanner config file
 	err = os.RemoveAll(getScannerConfigSourcePath(r.Name))
 	if err != nil {
 		return fmt.Errorf("failed to remove scanner config file: %w", err)
+	}
+
+	return nil
+}
+
+// Create http client for plugin scanner:
+// * try connecting to the plugin scanner container with container IP address
+// * if that fails, try connecting to the plugin scanner container with host IP address
+func (r *Runner) createHttpClient(pollInterval, timeout time.Duration) error {
+	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	ticker := time.NewTicker(pollInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("checking status of %s timed out", r.PluginConfig.Name)
+
+		case <-ticker.C:
+			inspect, err := r.dockerClient.ContainerInspect(context.Background(), r.containerID)
+			if err != nil {
+				return fmt.Errorf("failed to inspect scanner container: %w", err)
+			}
+
+			// Create client
+			scannerIP := inspect.NetworkSettings.IPAddress
+			err = r.tryPluginScannerServer(ctx, "http://"+scannerIP+":8080")
+			if err != nil {
+				fmt.Printf("failed to use scanner IP address, trying scanner host IP address")
+				hostPort := inspect.NetworkSettings.Ports["8080/tcp"][0].HostPort
+				err = r.tryPluginScannerServer(ctx, "http://127.0.0.1:"+hostPort+"/")
+				if err != nil {
+					return fmt.Errorf("failed to create client")
+				}
+			}
+
+			return nil
+		}
+	}
+}
+
+func (r *Runner) tryPluginScannerServer(ctx context.Context, server string) error {
+	var err error
+
+	r.client, err = runnerclient.NewClientWithResponses(server)
+	if err != nil {
+		return fmt.Errorf("failed to create plugin client: %w", err)
+	}
+
+	newCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
+	_, err = r.client.GetStatusWithResponse(newCtx)
+	if err != nil {
+		return fmt.Errorf("failed to ping plugin scanner server: %w", err)
 	}
 
 	return nil

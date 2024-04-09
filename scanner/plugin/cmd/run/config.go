@@ -22,9 +22,9 @@ import (
 )
 
 const (
-	DefaultEnvPrefix     = "VMCLARITY_SCANNER_SERVER"
+	DefaultEnvPrefix     = "PLUGIN_SERVER"
 	DefaultLogLevel      = "info"
-	DefaultListenAddress = "0.0.0.0:8765"
+	DefaultListenAddress = "0.0.0.0:8080"
 )
 
 type Config struct {
