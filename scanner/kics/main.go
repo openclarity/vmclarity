@@ -19,16 +19,20 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/BurntSushi/toml"
 	"github.com/Checkmarx/kics/pkg/model"
 	"github.com/Checkmarx/kics/pkg/printer"
 	"github.com/Checkmarx/kics/pkg/progress"
 	"github.com/Checkmarx/kics/pkg/scan"
+	"github.com/hashicorp/hcl/v2/hclsimple"
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/scanner/plugin/cmd/run"
 	"github.com/openclarity/vmclarity/scanner/types"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v3"
 	"io"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 )
@@ -47,6 +51,16 @@ type KICSScanner struct {
 	ctx     context.Context
 }
 
+type ScanParametersConfig struct {
+	PreviewLines     int      `json:"preview-lines" yaml:"preview-lines" toml:"preview-lines" hcl:"preview-lines"`
+	Platform         []string `json:"platform" yaml:"platform" toml:"platform" hcl:"platform"`
+	MaxFileSizeFlag  int      `json:"max-file-size-flag" yaml:"max-file-size-flag" toml:"max-file-size-flag" hcl:"max-file-size-flag"`
+	DisableSecrets   bool     `json:"disable-secrets" yaml:"disable-secrets" toml:"disable-secrets" hcl:"disable-secrets"`
+	QueryExecTimeout int      `json:"query-exec-timeout" yaml:"query-exec-timeout" toml:"query-exec-timeout" hcl:"query-exec-timeout"`
+	Silent           bool     `json:"silent" yaml:"silent" toml:"silent" hcl:"silent"`
+	Minimal          bool     `json:"minimal" yaml:"minimal" toml:"minimal" hcl:"minimal"`
+}
+
 func (s *KICSScanner) Healthz() bool {
 	return s.healthz
 }
@@ -62,20 +76,27 @@ func (s *KICSScanner) Start(config *types.Config) error {
 		s.SetStatus(types.NewScannerStatus(types.Running, types.Ptr("Scanner is running...")))
 		tmp := os.TempDir()
 
+		clientConfig, err := s.parseConfigFile(config.File)
+		if err != nil {
+			log.Errorf("Failed to parse config file: %v", err)
+			s.SetStatus(types.NewScannerStatus(types.Failed, types.Ptr(fmt.Errorf("failed to parse config file: %w", err).Error())))
+			return
+		}
+
 		c, err := scan.NewClient(
 			&scan.Parameters{
 				Path:             []string{config.InputDir},
 				QueriesPath:      []string{"../../../queries"},
-				PreviewLines:     3,
-				Platform:         []string{"OpenAPI"},
+				PreviewLines:     clientConfig.PreviewLines,
+				Platform:         clientConfig.Platform,
 				OutputPath:       tmp,
-				MaxFileSizeFlag:  100,
-				DisableSecrets:   true,
-				QueryExecTimeout: 60,
+				MaxFileSizeFlag:  clientConfig.MaxFileSizeFlag,
+				DisableSecrets:   clientConfig.DisableSecrets,
+				QueryExecTimeout: clientConfig.QueryExecTimeout,
 				OutputName:       "kics",
 			},
-			&progress.PbBuilder{Silent: false},
-			printer.NewPrinter(true),
+			&progress.PbBuilder{Silent: clientConfig.Silent},
+			printer.NewPrinter(clientConfig.Minimal),
 		)
 		if err != nil {
 			log.Errorf("Failed to create KICS client: %v", err)
@@ -108,6 +129,65 @@ func (s *KICSScanner) Start(config *types.Config) error {
 	}()
 
 	return nil
+}
+
+func (s *KICSScanner) parseConfigFile(configPath string) (*ScanParametersConfig, error) {
+	config := ScanParametersConfig{
+		PreviewLines:     3,
+		Platform:         []string{"Ansible", "CloudFormation", "Common", "Crossplane", "Dockerfile", "DockerCompose", "Knative", "Kubernetes", "OpenAPI", "Terraform", "AzureResourceManager", "GRPC", "GoogleDeploymentManager", "Buildah", "Pulumi", "ServerlessFW", "CICD"},
+		MaxFileSizeFlag:  100,
+		DisableSecrets:   true,
+		QueryExecTimeout: 60,
+		Silent:           true,
+		Minimal:          true,
+	}
+
+	file, err := os.Open(filepath.Clean(configPath))
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	ext := filepath.Ext(configPath)
+
+	bytes, err := io.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
+
+	switch ext {
+	case ".json":
+		if err := json.Unmarshal(bytes, &config); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal JSON config: %w", err)
+		} else {
+			return &config, nil
+		}
+
+	case ".yaml", ".yml":
+		if err := yaml.Unmarshal(bytes, &config); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal YAML config: %w", err)
+		} else {
+			return &config, nil
+		}
+
+	case ".toml":
+		if _, err := toml.Decode(string(bytes), &config); err != nil {
+			return nil, fmt.Errorf("failed to decode TOML config: %w", err)
+		} else {
+			return &config, nil
+		}
+
+	case ".hcl":
+		err := hclsimple.DecodeFile(configPath, nil, &config)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode HCL config: %w", err)
+		} else {
+			return &config, nil
+		}
+
+	default:
+		return nil, fmt.Errorf("unsupported config file format: %s", ext)
+	}
 }
 
 func (s *KICSScanner) formatOutput(tmp, outputDir string, outputFormat types.ConfigOutputFormat) error {
