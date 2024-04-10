@@ -1,8 +1,24 @@
+// Copyright © 2024 Cisco Systems, Inc. and its affiliates.
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package runner
 
 import (
 	"context"
 	"fmt"
+
 	containertypes "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/go-connections/nat"
@@ -22,9 +38,7 @@ func (r *Runner) CreateProxyContainer(ctx context.Context) error {
 	}
 
 	// Get proxy port (HOST:CONTAINER)
-	ports, bindings, _ := nat.ParsePortSpecs([]string{
-		fmt.Sprintf("%s:80", proxyHostAddress),
-	})
+	ports, bindings, _ := nat.ParsePortSpecs([]string{proxyHostAddress + ":80"})
 
 	// Create container
 	container, err := r.dockerClient.ContainerCreate(
@@ -57,7 +71,7 @@ func (r *Runner) CreateProxyContainer(ctx context.Context) error {
 	}
 
 	// Start proxy container
-	err = r.dockerClient.ContainerStart(context.Background(), container.ID, containertypes.StartOptions{})
+	err = r.dockerClient.ContainerStart(ctx, container.ID, containertypes.StartOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to start proxy container: %w", err)
 	}

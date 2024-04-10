@@ -17,8 +17,9 @@ package run
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"io"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func InitLogger(level string, output io.Writer) error {

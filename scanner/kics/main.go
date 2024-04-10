@@ -19,22 +19,24 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"strconv"
+	"time"
+
 	"github.com/BurntSushi/toml"
 	"github.com/Checkmarx/kics/pkg/model"
 	"github.com/Checkmarx/kics/pkg/printer"
 	"github.com/Checkmarx/kics/pkg/progress"
 	"github.com/Checkmarx/kics/pkg/scan"
 	"github.com/hashicorp/hcl/v2/hclsimple"
+	log "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v3"
+
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/scanner/plugin/cmd/run"
 	"github.com/openclarity/vmclarity/scanner/types"
-	log "github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v3"
-	"io"
-	"os"
-	"path/filepath"
-	"strconv"
-	"time"
 )
 
 var mapKICSSeverity = map[model.Severity]apitypes.MisconfigurationSeverity{
@@ -45,6 +47,7 @@ var mapKICSSeverity = map[model.Severity]apitypes.MisconfigurationSeverity{
 	model.SeverityTrace:  apitypes.MisconfigurationInfoSeverity,
 }
 
+//nolint:containedctx
 type KICSScanner struct {
 	healthz bool
 	status  *types.Status
@@ -98,7 +101,7 @@ func (s *KICSScanner) Start(config *types.Config) {
 				OutputName:       "kics",
 			},
 			&progress.PbBuilder{Silent: clientConfig.Silent},
-			printer.NewPrinter(clientConfig.Minimal),
+			printer.NewPrinter(clientConfig.Minimal), //nolint:forbidigo
 		)
 		if err != nil {
 			log.Errorf("Failed to create KICS client: %v", err)
@@ -131,6 +134,7 @@ func (s *KICSScanner) Start(config *types.Config) {
 	}()
 }
 
+//nolint:gomnd
 func (s *KICSScanner) createScanParametersConfig(configPath *string) (*ScanParametersConfig, error) {
 	config := ScanParametersConfig{
 		PreviewLines:     3,
@@ -148,7 +152,7 @@ func (s *KICSScanner) createScanParametersConfig(configPath *string) (*ScanParam
 
 	file, err := os.Open(filepath.Clean(*configPath))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open config file: %w", err)
 	}
 	defer file.Close()
 
@@ -156,7 +160,7 @@ func (s *KICSScanner) createScanParametersConfig(configPath *string) (*ScanParam
 
 	bytes, err := io.ReadAll(file)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 
 	switch ext {
@@ -236,6 +240,9 @@ func (s *KICSScanner) formatOutput(tmp, outputDir string, outputFormat types.Con
 	}
 
 	file, err = os.Create(outputDir + "/kics-formatted.json")
+	if err != nil {
+		return fmt.Errorf("failed to create kics-formatted.json: %w", err)
+	}
 	defer file.Close()
 
 	_, err = io.WriteString(file, string(jsonData))

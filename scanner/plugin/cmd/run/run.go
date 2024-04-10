@@ -16,12 +16,13 @@
 package run
 
 import (
-	"github.com/openclarity/vmclarity/scanner/plugin"
-	log "github.com/sirupsen/logrus"
+	"os"
 	"os/signal"
 	"syscall"
 
-	"os"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/openclarity/vmclarity/scanner/plugin"
 )
 
 func Run(scanner plugin.Scanner) {

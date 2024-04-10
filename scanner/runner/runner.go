@@ -79,7 +79,7 @@ func New(config PluginConfig) (*Runner, error) {
 // * create client for plugin container.
 func (r *Runner) StartScanner() error {
 	// Write scanner config file to temp dir
-	err := os.WriteFile(getScannerConfigSourcePath(r.Name), []byte(r.ScannerConfig), 0o777) // nolint:gomnd
+	err := os.WriteFile(getScannerConfigSourcePath(r.Name), []byte(r.ScannerConfig), 0o600) // nolint:gomnd
 	if err != nil {
 		return fmt.Errorf("failed write scanner config file: %w", err)
 	}
@@ -103,15 +103,13 @@ func (r *Runner) StartScanner() error {
 		context.Background(),
 		&containertypes.Config{
 			Image: r.ImageName,
-			Env: []string{
-				fmt.Sprintf("PLUGIN_SERVER_LISTEN_ADDRESS=0.0.0.0:%s", DefaultScannerServerPort),
-			},
+			Env:   []string{"PLUGIN_SERVER_LISTEN_ADDRESS=0.0.0.0:" + DefaultScannerServerPort},
 			Labels: map[string]string{
 				"traefik.enable": "true",
-				fmt.Sprintf("traefik.http.routers.%s-scanner.rule", r.Name):                     fmt.Sprintf("PathPrefix(`/%s/`)", r.Name),
-				fmt.Sprintf("traefik.http.middlewares.%s-scanner.stripprefix.prefixes", r.Name): fmt.Sprintf("/%s", r.Name),
-				fmt.Sprintf("traefik.http.routers.%s-scanner.middlewares", r.Name):              fmt.Sprintf("%s-scanner", r.Name),
-				fmt.Sprintf("traefik.http.services.%-scanner.loadbalancer.server.port", r.Name): DefaultScannerServerPort,
+				"traefik.http.routers." + r.Name + "-scanner.rule":                      "PathPrefix(`/" + r.Name + "/`)",
+				"traefik.http.middlewares." + r.Name + "-scanner.stripprefix.prefixes":  "/" + r.Name,
+				"traefik.http.routers." + r.Name + "-scanner.middlewares":               r.Name + "-scanner",
+				"traefik.http.services." + r.Name + "-scanner.loadbalancer.server.port": DefaultScannerServerPort,
 			},
 		},
 		&containertypes.HostConfig{
@@ -151,7 +149,7 @@ func (r *Runner) StartScanner() error {
 		fmt.Sprintf("http://%s/%s/", proxyHostAddress, r.Name),
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create client: %w", err)
 	}
 
 	return nil

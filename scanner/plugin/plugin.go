@@ -24,6 +24,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	echomiddleware "github.com/labstack/echo/v4/middleware"
+
 	internal "github.com/openclarity/vmclarity/scanner/plugin/internal/plugin"
 	"github.com/openclarity/vmclarity/scanner/types"
 )
@@ -55,18 +56,18 @@ func NewServer(scanner Scanner) (*Server, error) {
 func (s *Server) Start(address string) error {
 	err := s.echo.Start(address)
 	if !errors.Is(err, http.ErrServerClosed) {
-		return err
+		return fmt.Errorf("failed to start server: %w", err)
 	}
 
 	return nil
 }
 
 func (s *Server) Stop() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second) //nolint:gomnd
 	defer cancel()
 
 	if err := s.echo.Shutdown(ctx); err != nil {
-		return err
+		return fmt.Errorf("failed to stop server: %w", err)
 	}
 
 	return nil

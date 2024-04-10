@@ -16,13 +16,16 @@
 package plugin
 
 import (
+	"net/http"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
-	"github.com/openclarity/vmclarity/scanner/types"
 	log "github.com/sirupsen/logrus"
-	"net/http"
+
+	"github.com/openclarity/vmclarity/scanner/types"
 )
 
+//nolint:wrapcheck
 func (s *Server) GetHealthz(ctx echo.Context) error {
 	log.Info("Received GetHealthz request")
 
@@ -33,12 +36,14 @@ func (s *Server) GetHealthz(ctx echo.Context) error {
 	return ctx.JSON(http.StatusServiceUnavailable, nil)
 }
 
+//nolint:wrapcheck
 func (s *Server) GetMetadata(ctx echo.Context) error {
 	log.Info("Received GetMetadata request")
 
 	return ctx.JSON(http.StatusOK, &types.Metadata{ApiVersion: types.Ptr("1.0")})
 }
 
+//nolint:wrapcheck
 func (s *Server) PostConfig(ctx echo.Context) error {
 	log.Info("Received PostConfig request")
 
@@ -67,12 +72,14 @@ func (s *Server) PostConfig(ctx echo.Context) error {
 	return ctx.JSON(http.StatusCreated, nil)
 }
 
+//nolint:wrapcheck
 func (s *Server) GetStatus(ctx echo.Context) error {
 	log.Info("Received GetStatus request")
 
 	return ctx.JSON(http.StatusOK, s.scanner.GetStatus())
 }
 
+//nolint:wrapcheck
 func (s *Server) PostStop(ctx echo.Context) error {
 	log.Info("Received StopScanner request")
 
