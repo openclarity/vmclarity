@@ -7,7 +7,6 @@ paths:
   /healthz:
     get:
       summary: Check the scanner plugin's health.
-      operationId: GetHealthz
       responses:
         200:
           description: The scanner is healthy and can start receiving requests.
@@ -17,7 +16,6 @@ paths:
   /metadata:
     get:
       summary: Get metadata from the scanner plugin.
-      operationId: GetMetadata
       responses:
         200:
           description: Scanner metadata.
@@ -29,7 +27,6 @@ paths:
   /config:
     post:
       summary: Post config to the scanner plugin and start scanner.
-      operationId: PostConfig
       responses:
         201:
           description: A new scan has been created.
@@ -53,12 +50,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        500:
-          description: The scanner failed to start.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
 
       requestBody:
         required: true
@@ -70,7 +61,6 @@ paths:
   /status:
     get:
       summary: Get the status of the scanner.
-      operationId: GetStatus
       responses:
         200:
           description: The status of the scanner.
@@ -78,6 +68,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Status'
+
+
+  /stop:
+    post:
+      summary: Stop the scanner.
+      responses:
+        201:
+          description: The server will be stopped.
+
+        400:
+          description: The request body is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Stop'
 
 components:
   schemas:
@@ -168,6 +179,18 @@ components:
       properties:
         apiVersion:
           type: string
+
+    Stop:
+      type: object
+      required:
+        - timeoutSeconds
+      properties:
+        timeoutSeconds:
+          type: integer
+          minimum: 0
+          x-oapi-codegen-extra-tags:
+            validate: required,gt=0
+          description: After this timeout the server will be stopped.
 
     ErrorResponse:
       type: object

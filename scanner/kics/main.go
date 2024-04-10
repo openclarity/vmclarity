@@ -49,6 +49,7 @@ type KICSScanner struct {
 	healthz bool
 	status  *types.Status
 	ctx     context.Context
+	cancel  context.CancelFunc
 }
 
 type ScanParametersConfig struct {
@@ -65,11 +66,12 @@ func (s *KICSScanner) Healthz() bool {
 	return s.healthz
 }
 
-func (s *KICSScanner) Start(config *types.Config) error {
+func (s *KICSScanner) Start(config *types.Config) {
 	log.Infof("Starting scanner with config: %+v\n", config)
 
 	go func() {
 		ctx, cancel := context.WithTimeout(s.ctx, time.Duration(config.TimeoutSeconds)*time.Second)
+		s.cancel = cancel
 		defer cancel()
 
 		log.Infof("Scanner is running...")
@@ -127,8 +129,6 @@ func (s *KICSScanner) Start(config *types.Config) error {
 		log.Infof("Scanner finished running.")
 		s.SetStatus(types.NewScannerStatus(types.Done, types.Ptr("Scanner finished running.")))
 	}()
-
-	return nil
 }
 
 func (s *KICSScanner) createScanParametersConfig(configPath *string) (*ScanParametersConfig, error) {
@@ -254,12 +254,20 @@ func (s *KICSScanner) SetStatus(newStatus *types.Status) {
 	s.status = types.NewScannerStatus(newStatus.State, newStatus.Message)
 }
 
+func (s *KICSScanner) Stop(_ int) {
+	go func() {
+		if s.cancel != nil {
+			s.cancel()
+		}
+	}()
+}
+
 func main() {
-	d := &KICSScanner{
+	k := &KICSScanner{
 		healthz: true,
 		status:  types.NewScannerStatus(types.Ready, types.Ptr("Starting scanner...")),
 		ctx:     context.Background(),
 	}
 
-	run.Run(d)
+	run.Run(k)
 }

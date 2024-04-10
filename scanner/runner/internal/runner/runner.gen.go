@@ -102,6 +102,11 @@ type ClientInterface interface {
 
 	// GetStatus request
 	GetStatus(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostStopWithBody request with any body
+	PostStopWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostStop(ctx context.Context, body PostStopJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) PostConfigWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -154,6 +159,30 @@ func (c *Client) GetMetadata(ctx context.Context, reqEditors ...RequestEditorFn)
 
 func (c *Client) GetStatus(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetStatusRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostStopWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostStopRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostStop(ctx context.Context, body PostStopJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostStopRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -285,6 +314,46 @@ func NewGetStatusRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewPostStopRequest calls the generic PostStop builder with application/json body
+func NewPostStopRequest(server string, body PostStopJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostStopRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostStopRequestWithBody generates requests for PostStop with any type of body
+func NewPostStopRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/stop")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -341,6 +410,11 @@ type ClientWithResponsesInterface interface {
 
 	// GetStatusWithResponse request
 	GetStatusWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetStatusResponse, error)
+
+	// PostStopWithBodyWithResponse request with any body
+	PostStopWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostStopResponse, error)
+
+	PostStopWithResponse(ctx context.Context, body PostStopJSONRequestBody, reqEditors ...RequestEditorFn) (*PostStopResponse, error)
 }
 
 type PostConfigResponse struct {
@@ -352,7 +426,6 @@ type PostConfigResponse struct {
 	}
 	JSON400 *ErrorResponse
 	JSON409 *ErrorResponse
-	JSON500 *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -436,6 +509,28 @@ func (r GetStatusResponse) StatusCode() int {
 	return 0
 }
 
+type PostStopResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON400      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostStopResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostStopResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 // PostConfigWithBodyWithResponse request with arbitrary body returning *PostConfigResponse
 func (c *ClientWithResponses) PostConfigWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostConfigResponse, error) {
 	rsp, err := c.PostConfigWithBody(ctx, contentType, body, reqEditors...)
@@ -480,6 +575,23 @@ func (c *ClientWithResponses) GetStatusWithResponse(ctx context.Context, reqEdit
 	return ParseGetStatusResponse(rsp)
 }
 
+// PostStopWithBodyWithResponse request with arbitrary body returning *PostStopResponse
+func (c *ClientWithResponses) PostStopWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostStopResponse, error) {
+	rsp, err := c.PostStopWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostStopResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostStopWithResponse(ctx context.Context, body PostStopJSONRequestBody, reqEditors ...RequestEditorFn) (*PostStopResponse, error) {
+	rsp, err := c.PostStop(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostStopResponse(rsp)
+}
+
 // ParsePostConfigResponse parses an HTTP response from a PostConfigWithResponse call
 func ParsePostConfigResponse(rsp *http.Response) (*PostConfigResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -517,13 +629,6 @@ func ParsePostConfigResponse(rsp *http.Response) (*PostConfigResponse, error) {
 			return nil, err
 		}
 		response.JSON409 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON500 = &dest
 
 	}
 
@@ -592,6 +697,32 @@ func ParseGetStatusResponse(rsp *http.Response) (*GetStatusResponse, error) {
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostStopResponse parses an HTTP response from a PostStopWithResponse call
+func ParsePostStopResponse(rsp *http.Response) (*PostStopResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostStopResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	}
 

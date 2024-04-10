@@ -16,7 +16,6 @@
 package plugin
 
 import (
-	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/openclarity/vmclarity/scanner/types"
@@ -63,11 +62,7 @@ func (s *Server) PostConfig(ctx echo.Context) error {
 		})
 	}
 
-	if err := s.scanner.Start(&config); err != nil {
-		return ctx.JSON(http.StatusInternalServerError, &types.ErrorResponse{
-			Message: types.Ptr(fmt.Sprintf("failed to start scanner: %v", err)),
-		})
-	}
+	s.scanner.Start(&config)
 
 	return ctx.JSON(http.StatusCreated, nil)
 }
@@ -76,4 +71,26 @@ func (s *Server) GetStatus(ctx echo.Context) error {
 	log.Info("Received GetStatus request")
 
 	return ctx.JSON(http.StatusOK, s.scanner.GetStatus())
+}
+
+func (s *Server) PostStop(ctx echo.Context) error {
+	log.Info("Received StopScanner request")
+
+	var requestBody types.Stop
+	if err := ctx.Bind(&requestBody); err != nil {
+		return ctx.JSON(http.StatusBadRequest, &types.ErrorResponse{
+			Message: types.Ptr("failed to bind request"),
+		})
+	}
+
+	validate := validator.New()
+	if err := validate.Struct(requestBody); err != nil {
+		return ctx.JSON(http.StatusBadRequest, &types.ErrorResponse{
+			Message: types.Ptr("failed to validate request"),
+		})
+	}
+
+	s.scanner.Stop(requestBody.TimeoutSeconds)
+
+	return ctx.JSON(http.StatusCreated, nil)
 }

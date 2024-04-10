@@ -90,5 +90,14 @@ type Status struct {
 // | Done           | Scanner is completed successfully                             |
 type StatusState string
 
+// Stop defines model for Stop.
+type Stop struct {
+	// TimeoutSeconds After this timeout the server will be stopped.
+	TimeoutSeconds int `json:"timeoutSeconds" validate:"required,gt=0"`
+}
+
 // PostConfigJSONRequestBody defines body for PostConfig for application/json ContentType.
 type PostConfigJSONRequestBody = Config
+
+// PostStopJSONRequestBody defines body for PostStop for application/json ContentType.
+type PostStopJSONRequestBody = Stop

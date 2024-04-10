@@ -74,7 +74,8 @@ func (s *Server) Stop() error {
 
 type Scanner interface {
 	Healthz() bool
-	Start(config *types.Config) error
+	Start(config *types.Config)
 	GetStatus() *types.Status
 	SetStatus(status *types.Status)
+	Stop(timeoutSeconds int)
 }
