@@ -49,9 +49,10 @@ var mapKICSSeverity = map[model.Severity]apitypes.MisconfigurationSeverity{
 
 //nolint:containedctx
 type KICSScanner struct {
-	healthz bool
-	status  *types.Status
-	cancel  context.CancelFunc
+	healthz  bool
+	metadata *types.Metadata
+	status   *types.Status
+	cancel   context.CancelFunc
 }
 
 type ScanParametersConfig struct {
@@ -66,6 +67,10 @@ type ScanParametersConfig struct {
 
 func (s *KICSScanner) Healthz() bool {
 	return s.healthz
+}
+
+func (s *KICSScanner) Metadata() *types.Metadata {
+	return s.metadata
 }
 
 func (s *KICSScanner) Start(config *types.Config) {
@@ -269,8 +274,9 @@ func (s *KICSScanner) Stop(_ int) {
 
 func main() {
 	k := &KICSScanner{
-		healthz: true,
-		status:  types.NewScannerStatus(types.Ready, types.Ptr("Starting scanner...")),
+		healthz:  true,
+		metadata: &types.Metadata{ApiVersion: types.Ptr("1.0")},
+		status:   types.NewScannerStatus(types.Ready, types.Ptr("Starting scanner...")),
 	}
 
 	run.Run(k)

@@ -76,6 +76,7 @@ func (s *Server) Stop() error {
 
 type Scanner interface {
 	Healthz() bool
+	Metadata() *types.Metadata
 	Start(config *types.Config)
 	GetStatus() *types.Status
 	SetStatus(status *types.Status)

@@ -41,7 +41,7 @@ func (s *Server) GetHealthz(ctx echo.Context) error {
 func (s *Server) GetMetadata(ctx echo.Context) error {
 	log.Info("Received GetMetadata request")
 
-	return ctx.JSON(http.StatusOK, &types.Metadata{ApiVersion: types.Ptr("1.0")})
+	return ctx.JSON(http.StatusOK, s.scanner.Metadata())
 }
 
 //nolint:wrapcheck

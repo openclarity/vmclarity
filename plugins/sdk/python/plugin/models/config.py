@@ -12,15 +12,15 @@ class Config(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, file=None, input_dir=None, output_dir=None, output_format=None, timeout_seconds=None):  # noqa: E501
+    def __init__(self, file=None, input_dir=None, output_file=None, output_format=None, timeout_seconds=None):  # noqa: E501
         """Config - a model defined in OpenAPI
 
         :param file: The file of this Config.  # noqa: E501
         :type file: str
         :param input_dir: The input_dir of this Config.  # noqa: E501
         :type input_dir: str
-        :param output_dir: The output_dir of this Config.  # noqa: E501
-        :type output_dir: str
+        :param output_file: The output_file of this Config.  # noqa: E501
+        :type output_file: str
         :param output_format: The output_format of this Config.  # noqa: E501
         :type output_format: str
         :param timeout_seconds: The timeout_seconds of this Config.  # noqa: E501
@@ -29,7 +29,7 @@ class Config(Model):
         self.openapi_types = {
             'file': str,
             'input_dir': str,
-            'output_dir': str,
+            'output_file': str,
             'output_format': str,
             'timeout_seconds': int
         }
@@ -37,14 +37,14 @@ class Config(Model):
         self.attribute_map = {
             'file': 'file',
             'input_dir': 'inputDir',
-            'output_dir': 'outputDir',
+            'output_file': 'outputFile',
             'output_format': 'outputFormat',
             'timeout_seconds': 'timeoutSeconds'
         }
 
         self._file = file
         self._input_dir = input_dir
-        self._output_dir = output_dir
+        self._output_file = output_file
         self._output_format = output_format
         self._timeout_seconds = timeout_seconds
 
@@ -108,29 +108,29 @@ class Config(Model):
         self._input_dir = input_dir
 
     @property
-    def output_dir(self) -> str:
-        """Gets the output_dir of this Config.
+    def output_file(self) -> str:
+        """Gets the output_file of this Config.
 
-        The directory where the scanner plugin should store it's findings.   # noqa: E501
+        The file where the scanner plugin should store it's findings.   # noqa: E501
 
-        :return: The output_dir of this Config.
+        :return: The output_file of this Config.
         :rtype: str
         """
-        return self._output_dir
+        return self._output_file
 
-    @output_dir.setter
-    def output_dir(self, output_dir: str):
-        """Sets the output_dir of this Config.
+    @output_file.setter
+    def output_file(self, output_file: str):
+        """Sets the output_file of this Config.
 
-        The directory where the scanner plugin should store it's findings.   # noqa: E501
+        The file where the scanner plugin should store it's findings.   # noqa: E501
 
-        :param output_dir: The output_dir of this Config.
-        :type output_dir: str
+        :param output_file: The output_file of this Config.
+        :type output_file: str
         """
-        if output_dir is None:
-            raise ValueError("Invalid value for `output_dir`, must not be `None`")  # noqa: E501
+        if output_file is None:
+            raise ValueError("Invalid value for `output_file`, must not be `None`")  # noqa: E501
 
-        self._output_dir = output_dir
+        self._output_file = output_file
 
     @property
     def output_format(self) -> str:

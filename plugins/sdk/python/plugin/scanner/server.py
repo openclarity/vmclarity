@@ -1,4 +1,6 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, copy_current_request_context
+from threading import Thread
+import asyncio
 
 from plugin.scanner.scanner import AbstractScanner  # noqa: E501
 from plugin.models.config import Config  # noqa: E501
@@ -33,8 +35,8 @@ class Server:
 
     def get_metadata(self):
         self.app.logger.info("Received GetMetadata request")
-        metadata = Metadata("1.0")
-        return jsonify(metadata.to_dict()), 200
+
+        return jsonify(self.scanner.get_metadata().to_dict()), 200
 
     def post_config(self):
         self.app.logger.info("Received PostConfig request")
@@ -44,7 +46,16 @@ class Server:
         if self.scanner.get_status().state != "Ready":
             return jsonify({"message": "scanner is not in ready state"}), 409
 
-        self.scanner.start(config)
+        @copy_current_request_context
+        def start_scanner(config):
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                loop.run_until_complete(self.scanner.start(config))
+            finally:
+                loop.close()
+
+        Thread(target=start_scanner, args=(config,)).start()
 
         return jsonify(''), 201
 
@@ -58,6 +69,15 @@ class Server:
         request_data = request.get_json()
         stop_data = Stop().from_dict(request_data)
 
-        self.scanner.stop(stop_data.timeout_seconds)
+        @copy_current_request_context
+        def stop_scanner(stop_data):
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                loop.run_until_complete(self.scanner.stop(stop_data.timeout_seconds))
+            finally:
+                loop.close()
+
+        Thread(target=stop_scanner, args=(stop_data,)).start()
 
         return jsonify(''), 201

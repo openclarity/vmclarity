@@ -2,11 +2,16 @@ from abc import ABC, abstractmethod
 
 from plugin.models.config import Config  # noqa: E501
 from plugin.models.status import Status  # noqa: E501
+from plugin.models.metadata import Metadata  # noqa: E501
 
 class AbstractScanner(ABC):
 
     @abstractmethod
     def healthz(self) -> bool:
+        pass
+
+    @abstractmethod
+    def get_metadata(self) -> Metadata:
         pass
 
     @abstractmethod

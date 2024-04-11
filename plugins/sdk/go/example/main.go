@@ -26,10 +26,13 @@ import (
 
 //nolint:containedctx
 type Scanner struct {
-	status *types.Status
+	metadata *types.Metadata
+	status   *types.Status
 }
 
 func (s *Scanner) Healthz() bool { return true }
+
+func (s *Scanner) Metadata() *types.Metadata { return s.metadata }
 
 func (s *Scanner) Start(config *types.Config) {
 	log.Infof("Starting scanner with config: %+v\n", config)
@@ -59,6 +62,7 @@ func (s *Scanner) Stop(_ int) {}
 
 func main() {
 	run.Run(&Scanner{
-		status: types.NewScannerStatus(types.Ready, types.Ptr("Scanner ready")),
+		metadata: &types.Metadata{ApiVersion: types.Ptr("1.0")},
+		status:   types.NewScannerStatus(types.Ready, types.Ptr("Scanner ready")),
 	})
 }
