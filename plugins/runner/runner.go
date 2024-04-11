@@ -18,6 +18,7 @@ package runner
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"time"
 
@@ -36,6 +37,29 @@ const (
 	DefaultScannerServerPort = "8080"
 )
 
+var ErrScanNotDone = fmt.Errorf("scan has not finished yet")
+
+// TODO: implement interfaces
+
+type CleanupFunc func(ctx context.Context) error
+
+// New PluginManager only creates client
+
+// Singleton.
+type PluginManager interface {
+	Init(ctx context.Context) (CleanupFunc, error)                                     // prepares env (starts proxy container). should autoclean on error without returning CleanupFunc. called only once.
+	Start(ctx context.Context, config PluginConfig) (PluginRunner, CleanupFunc, error) // creates and starts container. should autoclean on error without returning CleanupFunc. used as a factory for PluginRunner
+}
+
+// rename this to Runner when the old version is stripped down, this controls the flow for running a scan via plugin scanner
+// flow WaitReady -> Start -> WaitDone -> Result. All methods only interacts with HTTP endpoint.
+type PluginRunner interface {
+	WaitReady(ctx context.Context) error // use fixed interval of 2s for polling, use ctx for timeout, retry logic for requests should be added as container might not start right away
+	Start(ctx context.Context) error     // sends a post request to container to start the scanning
+	WaitDone(ctx context.Context) error  // use fixed interval of 2s for polling, use ctx for timeout, retry logic for requests should be added as container might not start right away
+	Result() (io.Reader, error)          // return ErrScanNotDone if the scan is not done yet, otherwise return file stream of the result so that we can read and parse it upstream
+}
+
 type PluginConfig struct {
 	// Name is the name of the plugin scanner
 	Name string `yaml:"name" mapstructure:"name"`
@@ -47,6 +71,9 @@ type PluginConfig struct {
 	OutputDir string `yaml:"output_dir" mapstructure:"output_dir"`
 	// ScannerConfig is a json string that will be passed to the scanner in the plugin
 	ScannerConfig string `yaml:"scanner_config" mapstructure:"scanner_config"`
+
+	// we set this option before creating PluginRunner with PluginManager proxy address so that we know which endpoint to target
+	address string
 }
 
 type Runner struct {
