@@ -1924,7 +1924,7 @@ components:
       properties:
         image_name:
           type: string
-        output_dir:
+        output_file:
           type: string
         config:
           type: string

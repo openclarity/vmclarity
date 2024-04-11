@@ -19,6 +19,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	containertypes "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
@@ -106,7 +107,7 @@ func (m *PluginManager) Start(ctx context.Context, config PluginConfig) (Runner,
 				},
 				{
 					Type:   mount.TypeBind,
-					Source: config.OutputDir,
+					Source: filepath.Dir(config.OutputFile),
 					Target: DefaultScannerOutputDir,
 				},
 			},

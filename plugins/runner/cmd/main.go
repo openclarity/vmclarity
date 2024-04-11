@@ -45,7 +45,7 @@ func main() {
 		Name:          "",
 		ImageName:     "", // TODO Add image name
 		InputDir:      "", // TODO Add input directory
-		OutputDir:     "", // TODO Add output directory
+		OutputFile:    "", // TODO Add output file
 		ScannerConfig: "",
 	}
 	runner, cleanup, err := manager.Start(ctx, config)

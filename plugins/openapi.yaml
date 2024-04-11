@@ -121,7 +121,7 @@ components:
       description: Describes a scanner config.
       required:
         - inputDir
-        - outputDir
+        - outputFile
         - outputFormat
         - timeoutSeconds
       properties:
@@ -135,12 +135,12 @@ components:
             validate: required
           description: |
             The directory which should be scanned by the scanner plugin.
-        outputDir:
+        outputFile:
           type: string
           x-oapi-codegen-extra-tags:
             validate: required
           description: |
-            The directory where the scanner plugin should store it's findings.
+            The file where the scanner plugin should store it's findings.
         outputFormat:
           type: string
           enum:

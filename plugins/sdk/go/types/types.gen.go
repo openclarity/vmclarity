@@ -29,8 +29,8 @@ type Config struct {
 	// InputDir The directory which should be scanned by the scanner plugin.
 	InputDir string `json:"inputDir" validate:"required"`
 
-	// OutputDir The directory where the scanner plugin should store it's findings.
-	OutputDir string `json:"outputDir" validate:"required"`
+	// OutputFile The file where the scanner plugin should store it's findings.
+	OutputFile string `json:"outputFile" validate:"required"`
 
 	// OutputFormat The format in which the scanner plugin should store it's findings.
 	// To ensure operability with VMClarity API, the format must be one of enum values.

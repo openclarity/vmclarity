@@ -60,8 +60,8 @@ type PluginConfig struct {
 	ImageName string `yaml:"image_name" mapstructure:"image_name"`
 	// InputDir is a directory where the plugin scanner will read the asset filesystem
 	InputDir string `yaml:"input_dir" mapstructure:"input_dir"`
-	// Output is a directory where the plugin scanner will store its results
-	OutputDir string `yaml:"output_dir" mapstructure:"output_dir"`
+	// OutputFile is a file where the plugin scanner will write the result
+	OutputFile string `yaml:"output_file" mapstructure:"output_file"`
 	// ScannerConfig is a json string that will be passed to the scanner in the plugin
 	ScannerConfig string `yaml:"scanner_config" mapstructure:"scanner_config"`
 }
@@ -107,7 +107,7 @@ func (r *Runner) Start(ctx context.Context) error {
 		types.PostConfigJSONRequestBody{
 			File:           to.Ptr(getScannerConfigDestinationPath()),
 			InputDir:       DefaultScannerInputDir,
-			OutputDir:      DefaultScannerOutputDir,
+			OutputFile:     filepath.Join(DefaultScannerOutputDir, filepath.Base(r.OutputFile)),
 			OutputFormat:   "vmclarity-json",
 			TimeoutSeconds: int(DefaultTimeout),
 		},
@@ -145,15 +145,14 @@ func (r *Runner) WaitDone(ctx context.Context) error {
 }
 
 func (r *Runner) Result() (io.Reader, error) {
-	filename := filepath.Join(r.OutputDir, r.Name+".json")
-	_, err := os.Stat(filename)
+	_, err := os.Stat(r.OutputFile)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, ErrScanNotDone
 		}
 	}
 
-	file, err := os.Open(filepath.Join(r.OutputDir, r.Name+".json"))
+	file, err := os.Open(r.OutputFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open scanner result file: %w", err)
 	}

@@ -121,7 +121,7 @@ func (s *KICSScanner) Start(config *types.Config) {
 			return
 		}
 
-		err = s.formatOutput(tmp, config.OutputDir, config.OutputFormat)
+		err = s.formatOutput(tmp, config.OutputFile, config.OutputFormat)
 		if err != nil {
 			log.Errorf("Failed to format KICS output: %v", err)
 			s.SetStatus(types.NewScannerStatus(types.Failed, types.Ptr(fmt.Errorf("failed to format KICS output: %w", err).Error())))
@@ -197,7 +197,7 @@ func (s *KICSScanner) createScanParametersConfig(configPath *string) (*ScanParam
 	}
 }
 
-func (s *KICSScanner) formatOutput(tmp, outputDir string, outputFormat types.ConfigOutputFormat) error {
+func (s *KICSScanner) formatOutput(tmp, outputFile string, outputFormat types.ConfigOutputFormat) error {
 	file, err := os.Open(tmp + "/kics.json")
 	if err != nil {
 		return fmt.Errorf("failed to open kics.json: %w", err)
@@ -237,8 +237,7 @@ func (s *KICSScanner) formatOutput(tmp, outputDir string, outputFormat types.Con
 	default:
 		return fmt.Errorf("unsupported output format: %s", outputFormat)
 	}
-
-	file, err = os.Create(outputDir + "/kics-formatted.json")
+	file, err = os.Create(outputFile)
 	if err != nil {
 		return fmt.Errorf("failed to create kics-formatted.json: %w", err)
 	}
