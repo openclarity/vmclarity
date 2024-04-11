@@ -112,7 +112,7 @@ target "vmclarity-ui-backend" {
 
 target "vmclarity-scanner" {
 	context = "."
-	dockerfile = "Dockerfile.kics"
+	dockerfile = "./plugins/store/kics/Dockerfile"
 	tags = get_tag("${target.vmclarity-scanner.name}")
 	inherits = ["_common", "_common_args_for_go"]
 	labels = {
