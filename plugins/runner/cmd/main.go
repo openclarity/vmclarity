@@ -18,64 +18,59 @@ package main
 import (
 	"context"
 	"fmt"
-	"time"
 
-	rr "github.com/openclarity/vmclarity/plugins/runner"
+	runner "github.com/openclarity/vmclarity/plugins/runner"
 )
 
 // Test start scanner function.
 func main() {
-	config := rr.PluginConfig{
+	ctx := context.Background()
+
+	manager, err := runner.NewPluginManager()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Printf("Initializing plugin manager\n")
+	cleanup, err := manager.Init(ctx)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer cleanup(ctx) //nolint:errcheck
+
+	fmt.Printf("Starting plugin\n")
+	config := runner.PluginConfig{
 		Name:          "",
 		ImageName:     "", // TODO Add image name
 		InputDir:      "", // TODO Add input directory
 		OutputDir:     "", // TODO Add output directory
 		ScannerConfig: "",
 	}
+	runner, cleanup, err := manager.Start(ctx, config)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer cleanup(ctx) //nolint:errcheck
 
-	runner, err := rr.New(config)
+	fmt.Printf("Waiting for plugin %s to be ready\n", runner.Name)
+	err = runner.WaitReady(ctx)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	// Prepare proxy
-	err = runner.CreateProxyContainer(context.Background())
+	fmt.Printf("Running plugin %s\n", runner.Name)
+	err = runner.Start(ctx)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	// Start scanner
-	fmt.Printf("Starting scanner %s\n", runner.Name)
-	err = runner.StartScanner()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer runner.StopScanner() //nolint:errcheck
-
-	//// block forever
-	//for {
-	//
-	//}
-
-	fmt.Printf("Waiting for scanner %s to be ready\n", runner.Name)
-	err = runner.WaitScannerReady(time.Second, time.Minute*2) //nolint:gomnd
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	fmt.Printf("Running scanner %s\n", runner.Name)
-	err = runner.RunScanner()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	fmt.Printf("Waiting for scanner %s to finish\n", runner.Name)
-	err = runner.WaitScannerDone(time.Second, time.Minute*2) //nolint:gomnd
+	fmt.Printf("Waiting for plugin %s to finish\n", runner.Name)
+	err = runner.WaitDone(ctx)
 	if err != nil {
 		fmt.Println(err)
 		return

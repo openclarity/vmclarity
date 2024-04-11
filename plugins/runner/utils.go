@@ -24,10 +24,13 @@ import (
 
 	"github.com/docker/docker/api/types/filters"
 	imagetypes "github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/client"
 )
 
-func (r *Runner) pullImage(ctx context.Context, imageName string) error {
-	images, err := r.dockerClient.ImageList(ctx, imagetypes.ListOptions{
+type CleanupFunc func(ctx context.Context) error
+
+func PullImage(ctx context.Context, client *client.Client, imageName string) error {
+	images, err := client.ImageList(ctx, imagetypes.ListOptions{
 		Filters: filters.NewArgs(filters.Arg("reference", imageName)),
 	})
 	if err != nil {
@@ -35,7 +38,7 @@ func (r *Runner) pullImage(ctx context.Context, imageName string) error {
 	}
 
 	if len(images) == 0 {
-		pullResp, err := r.dockerClient.ImagePull(ctx, imageName, imagetypes.PullOptions{})
+		pullResp, err := client.ImagePull(ctx, imageName, imagetypes.PullOptions{})
 		if err != nil {
 			return fmt.Errorf("failed to pull image: %w", err)
 		}

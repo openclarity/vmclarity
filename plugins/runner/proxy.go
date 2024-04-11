@@ -30,9 +30,9 @@ const (
 	proxyHostAddress   = "127.0.0.1:8080"
 )
 
-func (r *Runner) CreateProxyContainer(ctx context.Context) error {
+func (m *PluginManager) StartProxyContainer(ctx context.Context) error {
 	// Pull proxy image
-	err := r.pullImage(ctx, proxyImage)
+	err := PullImage(ctx, m.dockerClient, proxyImage)
 	if err != nil {
 		return fmt.Errorf("failed to pull proxy image: %w", err)
 	}
@@ -41,7 +41,7 @@ func (r *Runner) CreateProxyContainer(ctx context.Context) error {
 	ports, bindings, _ := nat.ParsePortSpecs([]string{proxyHostAddress + ":80"})
 
 	// Create container
-	container, err := r.dockerClient.ContainerCreate(
+	container, err := m.dockerClient.ContainerCreate(
 		ctx,
 		&containertypes.Config{
 			Image: proxyImage,
@@ -70,10 +70,28 @@ func (r *Runner) CreateProxyContainer(ctx context.Context) error {
 		return fmt.Errorf("failed to create proxy container: %w", err)
 	}
 
+	m.proxyID = container.ID
+
 	// Start proxy container
-	err = r.dockerClient.ContainerStart(ctx, container.ID, containertypes.StartOptions{})
+	err = m.dockerClient.ContainerStart(ctx, container.ID, containertypes.StartOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to start proxy container: %w", err)
+	}
+
+	return nil
+}
+
+func (m *PluginManager) StopProxyContainer(ctx context.Context) error {
+	// Stop proxy container
+	err := m.dockerClient.ContainerStop(ctx, m.proxyID, containertypes.StopOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to stop proxy container: %w", err)
+	}
+
+	// Remove proxy container
+	err = m.dockerClient.ContainerRemove(ctx, m.proxyID, containertypes.RemoveOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to remove proxy container: %w", err)
 	}
 
 	return nil

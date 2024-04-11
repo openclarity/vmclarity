@@ -16,14 +16,16 @@
 package runner
 
 import (
+	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"time"
 
 	containertypes "github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 
 	"github.com/openclarity/vmclarity/core/to"
@@ -35,21 +37,11 @@ const (
 	DefaultScannerInputDir   = "/asset"
 	DefaultScannerOutputDir  = "/export"
 	DefaultScannerServerPort = "8080"
+	DefaultPollInterval      = 2 * time.Second
+	DefaultTimeout           = 60 * time.Second
 )
 
-var ErrScanNotDone = fmt.Errorf("scan has not finished yet")
-
-// TODO: implement interfaces
-
-type CleanupFunc func(ctx context.Context) error
-
-// New PluginManager only creates client
-
-// Singleton.
-type PluginManager interface {
-	Init(ctx context.Context) (CleanupFunc, error)                                     // prepares env (starts proxy container). should autoclean on error without returning CleanupFunc. called only once.
-	Start(ctx context.Context, config PluginConfig) (PluginRunner, CleanupFunc, error) // creates and starts container. should autoclean on error without returning CleanupFunc. used as a factory for PluginRunner
-}
+var ErrScanNotDone = errors.New("scan has not finished yet")
 
 // rename this to Runner when the old version is stripped down, this controls the flow for running a scan via plugin scanner
 // flow WaitReady -> Start -> WaitDone -> Result. All methods only interacts with HTTP endpoint.
@@ -58,6 +50,7 @@ type PluginRunner interface {
 	Start(ctx context.Context) error     // sends a post request to container to start the scanning
 	WaitDone(ctx context.Context) error  // use fixed interval of 2s for polling, use ctx for timeout, retry logic for requests should be added as container might not start right away
 	Result() (io.Reader, error)          // return ErrScanNotDone if the scan is not done yet, otherwise return file stream of the result so that we can read and parse it upstream
+	Stop(ctx context.Context) error      // stop and remove the container
 }
 
 type PluginConfig struct {
@@ -71,10 +64,9 @@ type PluginConfig struct {
 	OutputDir string `yaml:"output_dir" mapstructure:"output_dir"`
 	// ScannerConfig is a json string that will be passed to the scanner in the plugin
 	ScannerConfig string `yaml:"scanner_config" mapstructure:"scanner_config"`
-
-	// we set this option before creating PluginRunner with PluginManager proxy address so that we know which endpoint to target
-	address string
 }
+
+var _ PluginRunner = &Runner{}
 
 type Runner struct {
 	client       runnerclient.ClientWithResponsesInterface
@@ -84,114 +76,11 @@ type Runner struct {
 	PluginConfig
 }
 
-func New(config PluginConfig) (*Runner, error) {
-	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		return nil, fmt.Errorf("failed to create docker client: %w", err)
-	}
-
-	// TBD API Client for the plugin scanner could be created here
-
-	return &Runner{
-		dockerClient: dockerClient,
-		PluginConfig: config,
-	}, nil
-}
-
-// Start scanner container:
-// * get image for scanner that needs to be created
-// * create bind mount for filesystem directories where asset filesystem is stored and where the findings should be stored
-// * create bind mount for where the scanner config file is stored
-// * open port for plugin container to listen on
-// * create client for plugin container.
-func (r *Runner) StartScanner() error {
-	// Write scanner config file to temp dir
-	err := os.WriteFile(getScannerConfigSourcePath(r.Name), []byte(r.ScannerConfig), 0o600) // nolint:gomnd
-	if err != nil {
-		return fmt.Errorf("failed write scanner config file: %w", err)
-	}
-
-	// Pull scanner image if required
-	err = r.pullImage(context.Background(), r.ImageName)
-	if err != nil {
-		return fmt.Errorf("failed to pull scanner image: %w", err)
-	}
-
-	// Create scanner container
-	//
-	// Traefik redirects the requests to its API to our scanners so that requests to
-	// localhost:TraefikContainerPort/{SCANNER_NAME} are redirected to the actual
-	// {SCANNER_NAME} container. All traffic flow can be configured (e.g. auth,
-	// encryption). This also enables having scanners on different hosts (although
-	// not needed + requires additional configuration). The host network driver is
-	// not limited by the ports anymore as we only use one (for the proxy), This way,
-	// scanner containers wont overload the network driver.
-	containerResp, err := r.dockerClient.ContainerCreate(
-		context.Background(),
-		&containertypes.Config{
-			Image: r.ImageName,
-			Env:   []string{"PLUGIN_SERVER_LISTEN_ADDRESS=0.0.0.0:" + DefaultScannerServerPort},
-			Labels: map[string]string{
-				"traefik.enable": "true",
-				"traefik.http.routers." + r.Name + "-scanner.rule":                      "PathPrefix(`/" + r.Name + "/`)",
-				"traefik.http.middlewares." + r.Name + "-scanner.stripprefix.prefixes":  "/" + r.Name,
-				"traefik.http.routers." + r.Name + "-scanner.middlewares":               r.Name + "-scanner",
-				"traefik.http.services." + r.Name + "-scanner.loadbalancer.server.port": DefaultScannerServerPort,
-			},
-		},
-		&containertypes.HostConfig{
-			Mounts: []mount.Mount{
-				{
-					Type:   mount.TypeBind,
-					Source: getScannerConfigSourcePath(r.Name),
-					Target: getScannerConfigDestinationPath(),
-				},
-				{
-					Type:   mount.TypeBind,
-					Source: r.InputDir,
-					Target: DefaultScannerInputDir,
-				},
-				{
-					Type:   mount.TypeBind,
-					Source: r.OutputDir,
-					Target: DefaultScannerOutputDir,
-				},
-			},
-		},
-		nil,
-		nil,
-		r.Name,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to create scanner container: %w", err)
-	}
-	r.containerID = containerResp.ID
-
-	err = r.dockerClient.ContainerStart(context.Background(), r.containerID, containertypes.StartOptions{})
-	if err != nil {
-		return fmt.Errorf("failed to start scanner container: %w", err)
-	}
-
-	r.client, err = runnerclient.NewClientWithResponses(
-		fmt.Sprintf("http://%s/%s/", proxyHostAddress, r.Name),
-	)
-	if err != nil {
-		return fmt.Errorf("failed to create client: %w", err)
-	}
-
-	return nil
-}
-
-// Wait for scanner to be ready:
-// * poll the plugin container's /healthz endpoint until its healthy
-//
-//nolint:gomnd
-func (r *Runner) WaitScannerReady(pollInterval, timeout time.Duration) error {
-	ctx := context.Background()
-	ctx, cancel := context.WithTimeout(ctx, timeout)
+func (r *Runner) WaitReady(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, DefaultTimeout)
 	defer cancel()
 
-	ticker := time.NewTicker(pollInterval)
+	ticker := time.NewTicker(DefaultPollInterval)
 	defer ticker.Stop()
 
 	for {
@@ -200,30 +89,27 @@ func (r *Runner) WaitScannerReady(pollInterval, timeout time.Duration) error {
 			return fmt.Errorf("checking health of %s timed out", r.PluginConfig.Name)
 
 		case <-ticker.C:
-			resp, err := r.client.GetHealthzWithResponse(context.Background())
+			resp, err := r.client.GetHealthzWithResponse(ctx)
 			if err != nil {
 				return fmt.Errorf("failed to get scanner health: %w", err)
 			}
 
-			if resp.StatusCode() == 200 {
+			if resp.StatusCode() == 200 { //nolint:gomnd
 				return nil
 			}
 		}
 	}
 }
 
-// Post scanner configuration:
-// * send scanner configuration file parsed from the AssetScan configuration received
-// * send directories where the asset filesystem is stored and where the scanner findings should be saved.
-func (r *Runner) RunScanner() error {
+func (r *Runner) Start(ctx context.Context) error {
 	_, err := r.client.PostConfigWithResponse(
-		context.Background(),
+		ctx,
 		types.PostConfigJSONRequestBody{
 			File:           to.Ptr(getScannerConfigDestinationPath()),
 			InputDir:       DefaultScannerInputDir,
 			OutputDir:      DefaultScannerOutputDir,
 			OutputFormat:   "vmclarity-json",
-			TimeoutSeconds: 60, //nolint:gomnd
+			TimeoutSeconds: int(DefaultTimeout),
 		},
 	)
 	if err != nil {
@@ -233,14 +119,11 @@ func (r *Runner) RunScanner() error {
 	return nil
 }
 
-// Wait for scanner to be done:
-// * poll plugin container's /status endpoint.
-func (r *Runner) WaitScannerDone(pollInterval, timeout time.Duration) error {
-	ctx := context.Background()
-	ctx, cancel := context.WithTimeout(ctx, timeout)
+func (r *Runner) WaitDone(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, DefaultTimeout)
 	defer cancel()
 
-	ticker := time.NewTicker(pollInterval)
+	ticker := time.NewTicker(DefaultPollInterval)
 	defer ticker.Stop()
 
 	for {
@@ -249,7 +132,7 @@ func (r *Runner) WaitScannerDone(pollInterval, timeout time.Duration) error {
 			return fmt.Errorf("checking status of %s timed out", r.PluginConfig.Name)
 
 		case <-ticker.C:
-			resp, err := r.client.GetStatusWithResponse(context.Background())
+			resp, err := r.client.GetStatusWithResponse(ctx)
 			if err != nil {
 				return fmt.Errorf("failed to get scanner status: %w", err)
 			}
@@ -261,15 +144,30 @@ func (r *Runner) WaitScannerDone(pollInterval, timeout time.Duration) error {
 	}
 }
 
-// Stop and remove scanner
-// * once runner receives a scanner status Done, kill scanner container.
-func (r *Runner) StopScanner() error {
-	err := r.dockerClient.ContainerStop(context.Background(), r.containerID, containertypes.StopOptions{})
+func (r *Runner) Result() (io.Reader, error) {
+	filename := filepath.Join(r.OutputDir, r.Name+".json")
+	_, err := os.Stat(filename)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, ErrScanNotDone
+		}
+	}
+
+	file, err := os.Open(filepath.Join(r.OutputDir, r.Name+".json"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to open scanner result file: %w", err)
+	}
+
+	return bufio.NewReader(file), nil
+}
+
+func (r *Runner) Stop(ctx context.Context) error {
+	err := r.dockerClient.ContainerStop(ctx, r.containerID, containertypes.StopOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to stop scanner container: %w", err)
 	}
 
-	err = r.dockerClient.ContainerRemove(context.Background(), r.containerID, containertypes.RemoveOptions{})
+	err = r.dockerClient.ContainerRemove(ctx, r.containerID, containertypes.RemoveOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to remove scanner container: %w", err)
 	}
