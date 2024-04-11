@@ -19,8 +19,14 @@ function "get_tag" {
 
 group "default" {
 	targets = [
+		"vmclarity-apiserver",
+		"vmclarity-cli",
+		"vmclarity-cr-discovery-server",
+		"vmclarity-orchestrator",
 		"vmclarity-scanner",
 		"vmclarity-scanner-runner",
+		"vmclarity-ui",
+		"vmclarity-ui-backend",
 	]
 }
 

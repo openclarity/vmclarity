@@ -291,6 +291,16 @@ docker-cr-discovery-server: ## Build K8S Image Resolver Docker image
 	$(info Building cr-discovery-server docker image ...)
 	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) vmclarity-cr-discovery-server
 
+.PHONY: docker-scanner
+docker-scanner: ## Build Scanner container image
+	$(info Building scanner docker image ...)
+	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) vmclarity-scanner
+
+.PHONY: docker-scanner-runner
+docker-scanner-runner: ## Build Scanner Runner container image
+	$(info Building scanner-runner docker image ...)
+	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) vmclarity-scanner-runner
+
 ##@ Code generation
 
 .PHONY: gen
