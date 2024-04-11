@@ -16,7 +16,7 @@ EOT
 
 ARG TARGETOS TARGETARCH
 
-WORKDIR /build/scanner/kics
+WORKDIR /build/plugins/store/kics
 
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=bind,source=.,target=/build,ro \

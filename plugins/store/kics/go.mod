@@ -249,4 +249,7 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-replace github.com/openclarity/vmclarity/plugins/sdk => ./../../sdk/go
+replace (
+	github.com/openclarity/vmclarity/api/types => ./../../../api/types
+	github.com/openclarity/vmclarity/plugins/sdk => ./../../sdk/go
+)

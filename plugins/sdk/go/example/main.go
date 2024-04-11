@@ -16,10 +16,12 @@
 package main
 
 import (
+	"time"
+
+	log "github.com/sirupsen/logrus"
+
 	"github.com/openclarity/vmclarity/plugins/sdk/cmd/run"
 	"github.com/openclarity/vmclarity/plugins/sdk/types"
-	log "github.com/sirupsen/logrus"
-	"time"
 )
 
 //nolint:containedctx
@@ -37,7 +39,7 @@ func (s *Scanner) Start(config *types.Config) {
 		s.SetStatus(types.NewScannerStatus(types.Running, types.Ptr("Scanner is running...")))
 
 		// Do actual scanning here
-		time.Sleep(5 * time.Second)
+		time.Sleep(5 * time.Second) //nolint:gomnd
 		//
 
 		log.Infof("Scanner finished running.")

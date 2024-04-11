@@ -31,11 +31,12 @@ import (
 	"github.com/Checkmarx/kics/pkg/progress"
 	"github.com/Checkmarx/kics/pkg/scan"
 	"github.com/hashicorp/hcl/v2/hclsimple"
+	log "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v3"
+
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/plugins/sdk/cmd/run"
 	"github.com/openclarity/vmclarity/plugins/sdk/types"
-	log "github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v3"
 )
 
 var mapKICSSeverity = map[model.Severity]apitypes.MisconfigurationSeverity{
