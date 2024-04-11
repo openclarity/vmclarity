@@ -14,12 +14,15 @@ docker run --rm \
   -o /src/sdk/python/generated \
   --package-name "plugin"
 
+## Remove existing directory
+rm -rf $PYTHONSDKPATH/plugin/models
+
 ## Move files
-mv $PYTHONSDKPATH/generated/plugin $PYTHONSDKPATH/plugin
-mv $PYTHONSDKPATH/generated/.dockerignore $PYTHONSDKPATH/.dockerignore
-mv $PYTHONSDKPATH/generated/.gitignore $PYTHONSDKPATH/.gitignore
-mv $PYTHONSDKPATH/generated/requirements.txt $PYTHONSDKPATH/requirements.txt
-mv $PYTHONSDKPATH/generated/setup.py $PYTHONSDKPATH/setup.py
+mv $PYTHONSDKPATH/generated/plugin/* $PYTHONSDKPATH/plugin
+mv $PYTHONSDKPATH/generated/.dockerignore $PYTHONSDKPATH/
+mv $PYTHONSDKPATH/generated/.gitignore $PYTHONSDKPATH/
+mv $PYTHONSDKPATH/generated/requirements.txt $PYTHONSDKPATH/
+mv $PYTHONSDKPATH/generated/setup.py $PYTHONSDKPATH/
 
 ## Cleanup
 rm -rf $PYTHONSDKPATH/generated
