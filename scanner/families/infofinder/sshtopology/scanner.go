@@ -29,8 +29,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/openclarity/vmclarity/cli/families/infofinder/types"
-	familiesutils "github.com/openclarity/vmclarity/cli/families/utils"
+	"github.com/openclarity/vmclarity/scanner/families/infofinder/types"
+	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
 	"github.com/openclarity/vmclarity/cli/job_manager"
 	"github.com/openclarity/vmclarity/cli/utils"
 )

@@ -17,7 +17,7 @@ package vulnerabilities
 
 import (
 	"github.com/openclarity/vmclarity/cli/config"
-	"github.com/openclarity/vmclarity/cli/families/types"
+	"github.com/openclarity/vmclarity/scanner/families/types"
 )
 
 type Config struct {

@@ -19,11 +19,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/openclarity/vmclarity/cli/families/malware"
-	"github.com/openclarity/vmclarity/cli/families/sbom"
-	"github.com/openclarity/vmclarity/cli/families/secrets"
-	"github.com/openclarity/vmclarity/cli/families/types"
-	"github.com/openclarity/vmclarity/cli/families/vulnerabilities"
+	"github.com/openclarity/vmclarity/scanner/families/malware"
+	"github.com/openclarity/vmclarity/scanner/families/sbom"
+	"github.com/openclarity/vmclarity/scanner/families/secrets"
+	"github.com/openclarity/vmclarity/scanner/families/types"
+	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities"
 	"github.com/openclarity/vmclarity/cli/utils"
 	"github.com/openclarity/vmclarity/core/to"
 )

@@ -16,7 +16,7 @@
 package vulnerabilities
 
 import (
-	"github.com/openclarity/vmclarity/cli/families/types"
+	"github.com/openclarity/vmclarity/scanner/families/types"
 	"github.com/openclarity/vmclarity/cli/scanner"
 )
 

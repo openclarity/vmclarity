@@ -16,7 +16,7 @@
 package job
 
 import (
-	"github.com/openclarity/vmclarity/cli/families/infofinder/sshtopology"
+	"github.com/openclarity/vmclarity/scanner/families/infofinder/sshtopology"
 	"github.com/openclarity/vmclarity/cli/job_manager"
 )
 

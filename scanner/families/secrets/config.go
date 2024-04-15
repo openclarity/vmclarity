@@ -16,8 +16,8 @@
 package secrets
 
 import (
-	"github.com/openclarity/vmclarity/cli/families/secrets/common"
-	"github.com/openclarity/vmclarity/cli/families/types"
+	"github.com/openclarity/vmclarity/scanner/families/secrets/common"
+	"github.com/openclarity/vmclarity/scanner/families/types"
 )
 
 type Config struct {

@@ -24,9 +24,9 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/openclarity/vmclarity/cli/families/secrets/common"
-	gitleaksconfig "github.com/openclarity/vmclarity/cli/families/secrets/gitleaks/config"
-	familiesutils "github.com/openclarity/vmclarity/cli/families/utils"
+	"github.com/openclarity/vmclarity/scanner/families/secrets/common"
+	gitleaksconfig "github.com/openclarity/vmclarity/scanner/families/secrets/gitleaks/config"
+	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
 	"github.com/openclarity/vmclarity/cli/job_manager"
 	"github.com/openclarity/vmclarity/cli/utils"
 )

@@ -71,6 +71,7 @@ replace (
 	github.com/openclarity/vmclarity/api/types => ../../api/types
 	github.com/openclarity/vmclarity/cli => ../../cli
 	github.com/openclarity/vmclarity/core => ../../core
+	github.com/openclarity/vmclarity/scanner => ../../scanner
 	github.com/openclarity/vmclarity/uibackend/types => ../types
 	github.com/openclarity/vmclarity/utils => ../../utils
 )

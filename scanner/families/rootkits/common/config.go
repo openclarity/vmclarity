@@ -15,7 +15,7 @@
 
 package common
 
-import "github.com/openclarity/vmclarity/cli/families/rootkits/chkrootkit/config"
+import "github.com/openclarity/vmclarity/scanner/families/rootkits/chkrootkit/config"
 
 type ScannersConfig struct {
 	Chkrootkit config.Config `yaml:"chkrootkit" mapstructure:"chkrootkit"`

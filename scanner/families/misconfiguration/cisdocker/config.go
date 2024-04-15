@@ -21,7 +21,7 @@ import (
 	dockle_config "github.com/Portshift/dockle/config"
 	"github.com/sirupsen/logrus"
 
-	"github.com/openclarity/vmclarity/cli/families/misconfiguration/types"
+	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
 	"github.com/openclarity/vmclarity/cli/utils"
 )
 

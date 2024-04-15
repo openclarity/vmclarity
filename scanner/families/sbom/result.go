@@ -21,7 +21,7 @@ import (
 	cdx "github.com/CycloneDX/cyclonedx-go"
 
 	"github.com/openclarity/vmclarity/cli/converter"
-	"github.com/openclarity/vmclarity/cli/families/types"
+	"github.com/openclarity/vmclarity/scanner/families/types"
 )
 
 type Results struct {

@@ -16,8 +16,8 @@
 package rootkits
 
 import (
-	"github.com/openclarity/vmclarity/cli/families/rootkits/common"
-	"github.com/openclarity/vmclarity/cli/families/types"
+	"github.com/openclarity/vmclarity/scanner/families/rootkits/common"
+	"github.com/openclarity/vmclarity/scanner/families/types"
 )
 
 type Config struct {

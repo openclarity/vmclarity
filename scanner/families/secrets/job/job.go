@@ -16,7 +16,7 @@
 package job
 
 import (
-	"github.com/openclarity/vmclarity/cli/families/secrets/gitleaks"
+	"github.com/openclarity/vmclarity/scanner/families/secrets/gitleaks"
 	"github.com/openclarity/vmclarity/cli/job_manager"
 )
 

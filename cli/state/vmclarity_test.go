@@ -24,9 +24,9 @@ import (
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/cli/config"
-	"github.com/openclarity/vmclarity/cli/families"
-	"github.com/openclarity/vmclarity/cli/families/sbom"
-	"github.com/openclarity/vmclarity/cli/families/types"
+	"github.com/openclarity/vmclarity/scanner/families"
+	"github.com/openclarity/vmclarity/scanner/families/sbom"
+	"github.com/openclarity/vmclarity/scanner/families/types"
 	"github.com/openclarity/vmclarity/core/to"
 )
 

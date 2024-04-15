@@ -21,7 +21,7 @@ import (
 	dockle_types "github.com/Portshift/dockle/pkg/types"
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/openclarity/vmclarity/cli/families/misconfiguration/types"
+	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
 )
 
 func TestParseDockleReport(t *testing.T) {

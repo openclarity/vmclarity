@@ -16,9 +16,9 @@
 package job
 
 import (
-	"github.com/openclarity/vmclarity/cli/families/misconfiguration/cisdocker"
-	"github.com/openclarity/vmclarity/cli/families/misconfiguration/fake"
-	"github.com/openclarity/vmclarity/cli/families/misconfiguration/lynis"
+	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/cisdocker"
+	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/fake"
+	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/lynis"
 	"github.com/openclarity/vmclarity/cli/job_manager"
 )
 

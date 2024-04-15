@@ -22,7 +22,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/openclarity/vmclarity/cli/families/types"
+	"github.com/openclarity/vmclarity/scanner/families/types"
 	"github.com/openclarity/vmclarity/cli/utils"
 	"github.com/openclarity/vmclarity/cli/utils/containerrootfs"
 	"github.com/openclarity/vmclarity/core/log"

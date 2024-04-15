@@ -16,7 +16,7 @@
 package job
 
 import (
-	"github.com/openclarity/vmclarity/cli/families/rootkits/chkrootkit"
+	"github.com/openclarity/vmclarity/scanner/families/rootkits/chkrootkit"
 	"github.com/openclarity/vmclarity/cli/job_manager"
 )
 

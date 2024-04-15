@@ -18,7 +18,7 @@ package fake
 import (
 	log "github.com/sirupsen/logrus"
 
-	misconfigurationTypes "github.com/openclarity/vmclarity/cli/families/misconfiguration/types"
+	misconfigurationTypes "github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
 	"github.com/openclarity/vmclarity/cli/job_manager"
 	"github.com/openclarity/vmclarity/cli/utils"
 )

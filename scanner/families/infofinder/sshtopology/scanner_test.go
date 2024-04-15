@@ -21,7 +21,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/openclarity/vmclarity/cli/families/infofinder/types"
+	"github.com/openclarity/vmclarity/scanner/families/infofinder/types"
 )
 
 var testScanner = &Scanner{

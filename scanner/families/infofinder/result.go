@@ -18,8 +18,8 @@ package infofinder
 import (
 	"time"
 
-	"github.com/openclarity/vmclarity/cli/families/infofinder/types"
-	familiestypes "github.com/openclarity/vmclarity/cli/families/types"
+	"github.com/openclarity/vmclarity/scanner/families/infofinder/types"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
 )
 
 type FlattenedInfos struct {

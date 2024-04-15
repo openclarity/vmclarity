@@ -18,8 +18,8 @@ package interfaces
 import (
 	"context"
 
-	"github.com/openclarity/vmclarity/cli/families/results"
-	"github.com/openclarity/vmclarity/cli/families/types"
+	"github.com/openclarity/vmclarity/scanner/families/results"
+	"github.com/openclarity/vmclarity/scanner/families/types"
 )
 
 type Family interface {
