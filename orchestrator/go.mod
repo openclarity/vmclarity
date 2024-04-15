@@ -13,7 +13,7 @@ require (
 	github.com/openclarity/vmclarity/api/types v0.0.0-00010101000000-000000000000
 	github.com/openclarity/vmclarity/core v0.0.0-00010101000000-000000000000
 	github.com/openclarity/vmclarity/provider v0.0.0-00010101000000-000000000000
-	github.com/openclarity/vmclarity/scanner v0.0.0-00010101000000-000000000000
+	github.com/openclarity/vmclarity/scanner v0.6.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
