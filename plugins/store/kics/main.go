@@ -241,6 +241,7 @@ func (s *KICSScanner) formatOutput(tmp, outputFile string, outputFormat types.Co
 	default:
 		return fmt.Errorf("unsupported output format: %s", outputFormat)
 	}
+
 	file, err = os.Create(outputFile)
 	if err != nil {
 		return fmt.Errorf("failed to create kics-formatted.json: %w", err)
