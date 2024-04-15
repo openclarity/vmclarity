@@ -6,7 +6,6 @@ from plugin.scanner.scanner import AbstractScanner
 class ExampleScanner(AbstractScanner):
     def __init__(self):
         self.status = Status(state="Ready", message="Started")
-        self.metadata = Metadata(api_version="1.0")
 
     def get_status(self) -> Status:
         return self.status
@@ -28,4 +27,4 @@ class ExampleScanner(AbstractScanner):
         return True
     
     def get_metadata(self) -> Metadata:
-        return self.metadata
+        return Metadata(api_version="1.0")
