@@ -26,6 +26,7 @@ import (
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/to"
+	"github.com/openclarity/vmclarity/testenv/types"
 )
 
 var _ = ginkgo.Describe("Running a scan (only SBOM)", func() {
@@ -35,6 +36,11 @@ var _ = ginkgo.Describe("Running a scan (only SBOM)", func() {
 
 	ginkgo.Context("which scans a directory", func() {
 		ginkgo.It("should finish successfully", func(ctx ginkgo.SpecContext) {
+			if cfg.TestEnvConfig.Platform != types.EnvironmentTypeDocker {
+				ginkgo.By("skipping test because it's not running on docker")
+				return
+			}
+
 			var assets *apitypes.Assets
 			var err error
 
