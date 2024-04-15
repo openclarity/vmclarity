@@ -28,26 +28,24 @@ import (
 	"github.com/openclarity/vmclarity/core/to"
 )
 
-var _ = ginkgo.Describe("Running a basic scan (only SBOM)", func() {
+var _ = ginkgo.Describe("Running a scan (only SBOM)", func() {
 	reportFailedConfig := ReportFailedConfig{
 		services: []string{"orchestrator"},
 	}
 
-	ginkgo.Context("which scans a docker container", func() {
+	ginkgo.Context("which scans a directory", func() {
 		ginkgo.It("should finish successfully", func(ctx ginkgo.SpecContext) {
 			var assets *apitypes.Assets
 			var err error
 
-			dir := "/tmp/testdir"
-			cleanup, err := createTestDir(dir)
+			wd, err := os.Getwd()
 			gomega.Expect(err).NotTo(gomega.HaveOccurred())
-			defer cleanup()
 
 			assetType := apitypes.AssetType{}
 			err = assetType.FromDirInfo(apitypes.DirInfo{
 				ObjectType: "DirInfo",
 				DirName:    to.Ptr("test"),
-				Location:   to.Ptr(dir),
+				Location:   to.Ptr(filepath.Join(wd, "testdata")),
 			})
 			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
@@ -154,31 +152,3 @@ var _ = ginkgo.Describe("Running a basic scan (only SBOM)", func() {
 		}
 	})
 })
-
-// nolint:gomnd
-func createTestDir(dir string) (func(), error) {
-	err := os.MkdirAll(dir, 0o755)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create test dir: %w", err)
-	}
-
-	// Create a test file to print a UUID
-	testFile := filepath.Join(dir, "test.go")
-	testScript := "package main\n\nimport (\n\"fmt\"\n\"github.com/google/uuid\"\n)\n\nfunc main() {fmt.Println(uuid.New().String())}\n"
-	err = os.WriteFile(testFile, []byte(testScript), 0o600)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create test file: %w", err)
-	}
-
-	// Create a mod file to include the UUID package
-	testModFile := filepath.Join(dir, "go.mod")
-	testModScript := "module test\n\ngo 1.21.7\n\nrequire github.com/google/uuid v1.6.0\n"
-	err = os.WriteFile(testModFile, []byte(testModScript), 0o600)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create test mod file: %w", err)
-	}
-
-	return func() {
-		os.RemoveAll("/tmp/testdir")
-	}, nil
-}
