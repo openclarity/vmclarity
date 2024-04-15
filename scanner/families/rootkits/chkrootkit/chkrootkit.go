@@ -26,8 +26,8 @@ import (
 	chkrootkitutils "github.com/openclarity/vmclarity/scanner/families/rootkits/chkrootkit/utils"
 	"github.com/openclarity/vmclarity/scanner/families/rootkits/common"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
-	"github.com/openclarity/vmclarity/cli/job_manager"
-	"github.com/openclarity/vmclarity/cli/utils"
+	"github.com/openclarity/vmclarity/scanner/job_manager"
+	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
 const (

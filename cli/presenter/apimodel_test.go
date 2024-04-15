@@ -25,6 +25,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
+	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/scanner/families/exploits"
 	common2 "github.com/openclarity/vmclarity/scanner/families/exploits/common"
 	"github.com/openclarity/vmclarity/scanner/families/infofinder"
@@ -38,9 +39,8 @@ import (
 	"github.com/openclarity/vmclarity/scanner/families/secrets/common"
 	"github.com/openclarity/vmclarity/scanner/families/types"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities"
-	"github.com/openclarity/vmclarity/cli/scanner"
-	"github.com/openclarity/vmclarity/cli/utils/vulnerability"
-	"github.com/openclarity/vmclarity/core/to"
+	"github.com/openclarity/vmclarity/scanner/scanner"
+	"github.com/openclarity/vmclarity/scanner/utils/vulnerability"
 )
 
 func Test_ConvertSBOMResultToPackages(t *testing.T) {

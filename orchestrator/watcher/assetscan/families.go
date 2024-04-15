@@ -21,7 +21,7 @@ import (
 	"github.com/anchore/syft/syft/source"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
-	cliconfig "github.com/openclarity/vmclarity/cli/config"
+	cliconfig "github.com/openclarity/vmclarity/scanner/config"
 	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/exploits"
 	exploitsCommon "github.com/openclarity/vmclarity/scanner/families/exploits/common"

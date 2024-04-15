@@ -24,9 +24,9 @@ import (
 	"github.com/sirupsen/logrus"
 	logrusTest "github.com/sirupsen/logrus/hooks/test"
 
-	cliconfig "github.com/openclarity/vmclarity/cli/config"
+	cliconfig "github.com/openclarity/vmclarity/scanner/config"
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
-	"github.com/openclarity/vmclarity/cli/utils"
+	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
 func TestCreateDockleConfig(t *testing.T) {

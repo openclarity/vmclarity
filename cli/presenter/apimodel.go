@@ -22,6 +22,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
+	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/scanner/families/exploits"
 	"github.com/openclarity/vmclarity/scanner/families/infofinder"
 	"github.com/openclarity/vmclarity/scanner/families/infofinder/types"
@@ -33,10 +34,9 @@ import (
 	"github.com/openclarity/vmclarity/scanner/families/sbom"
 	"github.com/openclarity/vmclarity/scanner/families/secrets"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities"
-	"github.com/openclarity/vmclarity/cli/scanner"
-	"github.com/openclarity/vmclarity/cli/utils/cyclonedx_helper"
-	"github.com/openclarity/vmclarity/cli/utils/vulnerability"
-	"github.com/openclarity/vmclarity/core/to"
+	"github.com/openclarity/vmclarity/scanner/scanner"
+	"github.com/openclarity/vmclarity/scanner/utils/cyclonedx_helper"
+	"github.com/openclarity/vmclarity/scanner/utils/vulnerability"
 )
 
 func ConvertSBOMResultToPackages(sbomResults *sbom.Results) []apitypes.Package {

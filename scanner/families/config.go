@@ -16,6 +16,7 @@
 package families
 
 import (
+	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/scanner/families/exploits"
 	infofinderTypes "github.com/openclarity/vmclarity/scanner/families/infofinder/types"
 	"github.com/openclarity/vmclarity/scanner/families/malware"
@@ -25,8 +26,7 @@ import (
 	"github.com/openclarity/vmclarity/scanner/families/secrets"
 	"github.com/openclarity/vmclarity/scanner/families/types"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities"
-	"github.com/openclarity/vmclarity/cli/utils"
-	"github.com/openclarity/vmclarity/core/to"
+	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
 type Config struct {

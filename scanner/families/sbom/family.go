@@ -21,17 +21,17 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/openclarity/vmclarity/cli/analyzer"
-	"github.com/openclarity/vmclarity/cli/analyzer/job"
-	"github.com/openclarity/vmclarity/cli/converter"
+	"github.com/openclarity/vmclarity/core/log"
+	"github.com/openclarity/vmclarity/core/version"
+	"github.com/openclarity/vmclarity/scanner/analyzer"
+	"github.com/openclarity/vmclarity/scanner/analyzer/job"
+	"github.com/openclarity/vmclarity/scanner/converter"
 	"github.com/openclarity/vmclarity/scanner/families/interfaces"
 	familiesresults "github.com/openclarity/vmclarity/scanner/families/results"
 	"github.com/openclarity/vmclarity/scanner/families/types"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
-	"github.com/openclarity/vmclarity/cli/job_manager"
-	"github.com/openclarity/vmclarity/cli/utils"
-	"github.com/openclarity/vmclarity/core/log"
-	"github.com/openclarity/vmclarity/core/version"
+	"github.com/openclarity/vmclarity/scanner/job_manager"
+	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
 type SBOM struct {

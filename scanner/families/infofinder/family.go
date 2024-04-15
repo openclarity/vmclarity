@@ -20,15 +20,15 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/families/infofinder/job"
 	infofinderTypes "github.com/openclarity/vmclarity/scanner/families/infofinder/types"
 	"github.com/openclarity/vmclarity/scanner/families/interfaces"
 	"github.com/openclarity/vmclarity/scanner/families/results"
 	"github.com/openclarity/vmclarity/scanner/families/types"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
-	"github.com/openclarity/vmclarity/cli/job_manager"
-	"github.com/openclarity/vmclarity/cli/utils"
-	"github.com/openclarity/vmclarity/core/log"
+	"github.com/openclarity/vmclarity/scanner/job_manager"
+	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
 type InfoFinder struct {

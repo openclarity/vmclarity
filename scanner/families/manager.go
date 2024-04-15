@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/families/exploits"
 	"github.com/openclarity/vmclarity/scanner/families/infofinder"
 	"github.com/openclarity/vmclarity/scanner/families/interfaces"
@@ -32,8 +33,7 @@ import (
 	"github.com/openclarity/vmclarity/scanner/families/types"
 	"github.com/openclarity/vmclarity/scanner/families/utils"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities"
-	"github.com/openclarity/vmclarity/cli/utils/containerrootfs"
-	"github.com/openclarity/vmclarity/core/log"
+	"github.com/openclarity/vmclarity/scanner/utils/containerrootfs"
 )
 
 type Manager struct {

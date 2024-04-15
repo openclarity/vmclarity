@@ -22,18 +22,18 @@ import (
 	"os"
 	"time"
 
-	"github.com/openclarity/vmclarity/cli/scanner/job"
+	"github.com/openclarity/vmclarity/scanner/scanner/job"
 
-	"github.com/openclarity/vmclarity/cli/config"
+	"github.com/openclarity/vmclarity/core/log"
+	"github.com/openclarity/vmclarity/scanner/config"
 	"github.com/openclarity/vmclarity/scanner/families/interfaces"
 	"github.com/openclarity/vmclarity/scanner/families/results"
 	"github.com/openclarity/vmclarity/scanner/families/sbom"
 	"github.com/openclarity/vmclarity/scanner/families/types"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
-	"github.com/openclarity/vmclarity/cli/job_manager"
-	"github.com/openclarity/vmclarity/cli/scanner"
-	"github.com/openclarity/vmclarity/cli/utils"
-	"github.com/openclarity/vmclarity/core/log"
+	"github.com/openclarity/vmclarity/scanner/job_manager"
+	"github.com/openclarity/vmclarity/scanner/scanner"
+	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
 const (

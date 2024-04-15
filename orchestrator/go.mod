@@ -11,7 +11,6 @@ require (
 	github.com/onsi/gomega v1.32.0
 	github.com/openclarity/vmclarity/api/client v0.0.0-00010101000000-000000000000
 	github.com/openclarity/vmclarity/api/types v0.0.0-00010101000000-000000000000
-	github.com/openclarity/vmclarity/cli v0.0.0-20240412114751-b4283cbfef72
 	github.com/openclarity/vmclarity/core v0.0.0-00010101000000-000000000000
 	github.com/openclarity/vmclarity/provider v0.0.0-00010101000000-000000000000
 	github.com/openclarity/vmclarity/scanner v0.0.0-00010101000000-000000000000
@@ -470,7 +469,6 @@ replace helm.sh/helm/v3 => github.com/zregvart/helm/v3 v3.0.0-20240402130115-358
 replace (
 	github.com/openclarity/vmclarity/api/client => ../api/client
 	github.com/openclarity/vmclarity/api/types => ../api/types
-	github.com/openclarity/vmclarity/cli => ../cli
 	github.com/openclarity/vmclarity/containerruntimediscovery/client => ../containerruntimediscovery/client
 	github.com/openclarity/vmclarity/containerruntimediscovery/types => ../containerruntimediscovery/types
 	github.com/openclarity/vmclarity/core => ../core

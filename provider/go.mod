@@ -21,7 +21,6 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/onsi/gomega v1.32.0
 	github.com/openclarity/vmclarity/api/types v0.0.0-00010101000000-000000000000
-	github.com/openclarity/vmclarity/cli v0.0.0-20240412114751-b4283cbfef72
 	github.com/openclarity/vmclarity/containerruntimediscovery/client v0.0.0-00010101000000-000000000000
 	github.com/openclarity/vmclarity/containerruntimediscovery/types v0.0.0-00010101000000-000000000000
 	github.com/openclarity/vmclarity/core v0.0.0-00010101000000-000000000000

@@ -27,8 +27,8 @@ import (
 	"github.com/openclarity/vmclarity/scanner/families/secrets/common"
 	gitleaksconfig "github.com/openclarity/vmclarity/scanner/families/secrets/gitleaks/config"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
-	"github.com/openclarity/vmclarity/cli/job_manager"
-	"github.com/openclarity/vmclarity/cli/utils"
+	"github.com/openclarity/vmclarity/scanner/job_manager"
+	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
 const (

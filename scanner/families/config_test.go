@@ -19,13 +19,13 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/scanner/families/malware"
 	"github.com/openclarity/vmclarity/scanner/families/sbom"
 	"github.com/openclarity/vmclarity/scanner/families/secrets"
 	"github.com/openclarity/vmclarity/scanner/families/types"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities"
-	"github.com/openclarity/vmclarity/cli/utils"
-	"github.com/openclarity/vmclarity/core/to"
+	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
 func Test_SetMountPointsForFamiliesInput(t *testing.T) {

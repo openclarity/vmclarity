@@ -17,7 +17,7 @@ package vulnerabilities
 
 import (
 	"github.com/openclarity/vmclarity/scanner/families/types"
-	"github.com/openclarity/vmclarity/cli/scanner"
+	"github.com/openclarity/vmclarity/scanner/scanner"
 )
 
 type Results struct {
