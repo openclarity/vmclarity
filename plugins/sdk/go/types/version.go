@@ -15,36 +15,4 @@
 
 package types
 
-import (
-	"encoding/json"
-	"fmt"
-	"os"
-	"time"
-)
-
-func NewScannerStatus(s StatusState, m *string) *Status {
-	return &Status{
-		State:              s,
-		Message:            m,
-		LastTransitionTime: time.Now(),
-	}
-}
-
-func Ptr[T any](value T) *T {
-	return &value
-}
-
-// Save saves the data as JSON to the provided file.
-func (r *Result) Save(filepath string) error {
-	data, err := json.MarshalIndent(r, "", "  ")
-	if err != nil {
-		return fmt.Errorf("failed to marshal result: %w", err)
-	}
-
-	err = os.WriteFile(filepath, data, 0o660 /* read & write, owner & group */)
-	if err != nil {
-		return fmt.Errorf("failed to save result: %w", err)
-	}
-
-	return nil
-}
+const ApiVersion = "1.0.0"

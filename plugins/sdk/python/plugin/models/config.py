@@ -12,7 +12,7 @@ class Config(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, file=None, input_dir=None, output_file=None, output_format=None, timeout_seconds=None):  # noqa: E501
+    def __init__(self, file=None, input_dir=None, output_file=None, output_schema=None, timeout_seconds=None):  # noqa: E501
         """Config - a model defined in OpenAPI
 
         :param file: The file of this Config.  # noqa: E501
@@ -21,8 +21,8 @@ class Config(Model):
         :type input_dir: str
         :param output_file: The output_file of this Config.  # noqa: E501
         :type output_file: str
-        :param output_format: The output_format of this Config.  # noqa: E501
-        :type output_format: str
+        :param output_schema: The output_schema of this Config.  # noqa: E501
+        :type output_schema: str
         :param timeout_seconds: The timeout_seconds of this Config.  # noqa: E501
         :type timeout_seconds: int
         """
@@ -30,7 +30,7 @@ class Config(Model):
             'file': str,
             'input_dir': str,
             'output_file': str,
-            'output_format': str,
+            'output_schema': str,
             'timeout_seconds': int
         }
 
@@ -38,14 +38,14 @@ class Config(Model):
             'file': 'file',
             'input_dir': 'inputDir',
             'output_file': 'outputFile',
-            'output_format': 'outputFormat',
+            'output_schema': 'outputSchema',
             'timeout_seconds': 'timeoutSeconds'
         }
 
         self._file = file
         self._input_dir = input_dir
         self._output_file = output_file
-        self._output_format = output_format
+        self._output_schema = output_schema
         self._timeout_seconds = timeout_seconds
 
     @classmethod
@@ -111,7 +111,7 @@ class Config(Model):
     def output_file(self) -> str:
         """Gets the output_file of this Config.
 
-        The file where the scanner plugin should store it's findings.   # noqa: E501
+        Path to JSON file where the scanner plugin should store its results.   # noqa: E501
 
         :return: The output_file of this Config.
         :rtype: str
@@ -122,7 +122,7 @@ class Config(Model):
     def output_file(self, output_file: str):
         """Sets the output_file of this Config.
 
-        The file where the scanner plugin should store it's findings.   # noqa: E501
+        Path to JSON file where the scanner plugin should store its results.   # noqa: E501
 
         :param output_file: The output_file of this Config.
         :type output_file: str
@@ -133,39 +133,33 @@ class Config(Model):
         self._output_file = output_file
 
     @property
-    def output_format(self) -> str:
-        """Gets the output_format of this Config.
+    def output_schema(self) -> str:
+        """Gets the output_schema of this Config.
 
-        The format in which the scanner plugin should store it's findings. To ensure operability with VMClarity API, the format must be one of enum values. However, the scanner can support custom formats as well to support other tools (e.g. cyclondex-json, custom-format-for-tool-ABC, etc.). When creating VMClarity JSON output, use types library from VMClarity API to construct the output.   # noqa: E501
+        Specifies custom schema the scanner plugin should use to process scan results and save them into `Result.rawData`. Custom schema allows the scanner plugin to be used with third-party tools and services. For example, `cyclondx-json` custom schema can be used to save/parse (JSON) byte stream into/from `Result.rawData` about SBOM findings.  If the custom schema is not supported by the scanner, the scan should fail. When no custom schema is specified, `Result.schema` and `Result.rawData` properties should be empty.   # noqa: E501
 
-        :return: The output_format of this Config.
+        :return: The output_schema of this Config.
         :rtype: str
         """
-        return self._output_format
+        return self._output_schema
 
-    @output_format.setter
-    def output_format(self, output_format: str):
-        """Sets the output_format of this Config.
+    @output_schema.setter
+    def output_schema(self, output_schema: str):
+        """Sets the output_schema of this Config.
 
-        The format in which the scanner plugin should store it's findings. To ensure operability with VMClarity API, the format must be one of enum values. However, the scanner can support custom formats as well to support other tools (e.g. cyclondex-json, custom-format-for-tool-ABC, etc.). When creating VMClarity JSON output, use types library from VMClarity API to construct the output.   # noqa: E501
+        Specifies custom schema the scanner plugin should use to process scan results and save them into `Result.rawData`. Custom schema allows the scanner plugin to be used with third-party tools and services. For example, `cyclondx-json` custom schema can be used to save/parse (JSON) byte stream into/from `Result.rawData` about SBOM findings.  If the custom schema is not supported by the scanner, the scan should fail. When no custom schema is specified, `Result.schema` and `Result.rawData` properties should be empty.   # noqa: E501
 
-        :param output_format: The output_format of this Config.
-        :type output_format: str
+        :param output_schema: The output_schema of this Config.
+        :type output_schema: str
         """
-        allowed_values = ["vmclarity-json"]  # noqa: E501
-        if output_format not in allowed_values:
-            raise ValueError(
-                "Invalid value for `output_format` ({0}), must be one of {1}"
-                .format(output_format, allowed_values)
-            )
 
-        self._output_format = output_format
+        self._output_schema = output_schema
 
     @property
     def timeout_seconds(self) -> int:
         """Gets the timeout_seconds of this Config.
 
-        The maximum time in seconds that a scan started from this config should run for before being automatically aborted.   # noqa: E501
+        The maximum time in seconds that a scan started from this scan should run for before being automatically aborted.   # noqa: E501
 
         :return: The timeout_seconds of this Config.
         :rtype: int
@@ -176,7 +170,7 @@ class Config(Model):
     def timeout_seconds(self, timeout_seconds: int):
         """Sets the timeout_seconds of this Config.
 
-        The maximum time in seconds that a scan started from this config should run for before being automatically aborted.   # noqa: E501
+        The maximum time in seconds that a scan started from this scan should run for before being automatically aborted.   # noqa: E501
 
         :param timeout_seconds: The timeout_seconds of this Config.
         :type timeout_seconds: int

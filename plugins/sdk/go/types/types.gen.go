@@ -7,9 +7,30 @@ import (
 	"time"
 )
 
-// Defines values for ConfigOutputFormat.
+// Defines values for InfoFinderType.
 const (
-	VMClarityJSON ConfigOutputFormat = "vmclarity-json"
+	InfoFinderTypeSSHAuthorizedKeyFingerprint InfoFinderType = "SSHAuthorizedKeyFingerprint"
+	InfoFinderTypeSSHDaemonKeyFingerprint     InfoFinderType = "SSHDaemonKeyFingerprint"
+	InfoFinderTypeSSHKnownHostFingerprint     InfoFinderType = "SSHKnownHostFingerprint"
+	InfoFinderTypeSSHPrivateKeyFingerprint    InfoFinderType = "SSHPrivateKeyFingerprint"
+	InfoFinderTypeUnknown                     InfoFinderType = "UNKNOWN"
+)
+
+// Defines values for MisconfigurationSeverity.
+const (
+	MisconfigurationSeverityHigh   MisconfigurationSeverity = "HIGH"
+	MisconfigurationSeverityInfo   MisconfigurationSeverity = "INFO"
+	MisconfigurationSeverityLow    MisconfigurationSeverity = "LOW"
+	MisconfigurationSeverityMedium MisconfigurationSeverity = "MEDIUM"
+)
+
+// Defines values for RootkitType.
+const (
+	RootkitTypeApplication RootkitType = "APPLICATION"
+	RootkitTypeFirmware    RootkitType = "FIRMWARE"
+	RootkitTypeKernel      RootkitType = "KERNEL"
+	RootkitTypeMemory      RootkitType = "MEMORY"
+	RootkitTypeUnknown     RootkitType = "UNKNOWN"
 )
 
 // Defines values for StatusState.
@@ -21,6 +42,15 @@ const (
 	Running  StatusState = "Running"
 )
 
+// Defines values for VulnerabilitySeverity.
+const (
+	VulnerabilitySeverityCritical   VulnerabilitySeverity = "CRITICAL"
+	VulnerabilitySeverityHigh       VulnerabilitySeverity = "HIGH"
+	VulnerabilitySeverityLow        VulnerabilitySeverity = "LOW"
+	VulnerabilitySeverityMedium     VulnerabilitySeverity = "MEDIUM"
+	VulnerabilitySeverityNegligible VulnerabilitySeverity = "NEGLIGIBLE"
+)
+
 // Config Describes a scanner config.
 type Config struct {
 	// File The file with the configuration required by the scanner plugin. This is a path on the filesystem to the config file.
@@ -29,36 +59,144 @@ type Config struct {
 	// InputDir The directory which should be scanned by the scanner plugin.
 	InputDir string `json:"inputDir" validate:"required"`
 
-	// OutputFile The file where the scanner plugin should store it's findings.
+	// OutputFile Path to JSON file where the scanner plugin should store its results.
 	OutputFile string `json:"outputFile" validate:"required"`
 
-	// OutputFormat The format in which the scanner plugin should store it's findings.
-	// To ensure operability with VMClarity API, the format must be one of enum values.
-	// However, the scanner can support custom formats as well to support other
-	// tools (e.g. cyclondex-json, custom-format-for-tool-ABC, etc.).
-	// When creating VMClarity JSON output, use types library from VMClarity API to construct the output.
-	OutputFormat ConfigOutputFormat `json:"outputFormat" validate:"required,oneof=vmclarity-json"`
+	// OutputSchema Specifies custom schema the scanner plugin should use to process
+	// scan results and save them into `Result.rawData`. Custom schema
+	// allows the scanner plugin to be used with third-party tools and services.
+	// For example, `cyclondx-json` custom schema can be used to save/parse
+	// (JSON) byte stream into/from `Result.rawData` about SBOM findings.
+	//
+	// If the custom schema is not supported by the scanner, the scan should fail.
+	// When no custom schema is specified, `Result.schema` and `Result.rawData`
+	// properties should be empty.
+	OutputSchema *string `json:"outputSchema,omitempty"`
 
-	// TimeoutSeconds The maximum time in seconds that a scan started from this config
+	// TimeoutSeconds The maximum time in seconds that a scan started from this scan
 	// should run for before being automatically aborted.
 	TimeoutSeconds int `json:"timeoutSeconds" validate:"required,gt=0"`
 }
-
-// ConfigOutputFormat The format in which the scanner plugin should store it's findings.
-// To ensure operability with VMClarity API, the format must be one of enum values.
-// However, the scanner can support custom formats as well to support other
-// tools (e.g. cyclondex-json, custom-format-for-tool-ABC, etc.).
-// When creating VMClarity JSON output, use types library from VMClarity API to construct the output.
-type ConfigOutputFormat string
 
 // ErrorResponse An object that is returned for a failed API request.
 type ErrorResponse struct {
 	Message *string `json:"message,omitempty"`
 }
 
+// Exploit defines model for Exploit.
+type Exploit struct {
+	CveID       *string   `json:"cveID,omitempty"`
+	Description *string   `json:"description,omitempty"`
+	Name        *string   `json:"name,omitempty"`
+	SourceDB    *string   `json:"sourceDB,omitempty"`
+	Title       *string   `json:"title,omitempty"`
+	Urls        *[]string `json:"urls"`
+}
+
+// InfoFinder defines model for InfoFinder.
+type InfoFinder struct {
+	// Data The data found by the scanner in the specific path for a specific type. See example for SSHKnownHostFingerprint info type
+	Data *string `json:"data,omitempty"`
+
+	// Path File path containing the info
+	Path *string         `json:"path,omitempty"`
+	Type *InfoFinderType `json:"type,omitempty"`
+}
+
+// InfoFinderType defines model for InfoFinderType.
+type InfoFinderType string
+
+// Malware defines model for Malware.
+type Malware struct {
+	MalwareName *string `json:"malwareName,omitempty"`
+	MalwareType *string `json:"malwareType,omitempty"`
+
+	// Path Path of the file that contains malware
+	Path     *string `json:"path,omitempty"`
+	RuleName *string `json:"ruleName,omitempty"`
+}
+
 // Metadata Describes the scanner plugin.
 type Metadata struct {
-	ApiVersion *string `json:"apiVersion,omitempty"`
+	Annotations *map[string]string `json:"annotations,omitempty"`
+	ApiVersion  *string            `json:"apiVersion,omitempty"`
+	Name        *string            `json:"name,omitempty"`
+	Version     *string            `json:"version,omitempty"`
+}
+
+// Misconfiguration defines model for Misconfiguration.
+type Misconfiguration struct {
+	// Category Specifies misconfiguration impact category
+	Category *string `json:"category,omitempty"`
+
+	// Description Additional context such as the potential impact
+	Description *string `json:"description,omitempty"`
+
+	// Id Check or test ID, if applicable (e.g. Lynis TestID, CIS Docker Benchmark checkpoint code, etc)
+	Id *string `json:"id,omitempty"`
+
+	// Location Location within the asset where the misconfiguration was recorded (e.g. filesystem path)
+	Location *string `json:"location,omitempty"`
+
+	// Message Short info about the misconfiguration
+	Message *string `json:"message,omitempty"`
+
+	// Remediation Possible fix for the misconfiguration
+	Remediation *string                   `json:"remediation,omitempty"`
+	Severity    *MisconfigurationSeverity `json:"severity,omitempty"`
+}
+
+// MisconfigurationSeverity defines model for MisconfigurationSeverity.
+type MisconfigurationSeverity string
+
+// Package defines model for Package.
+type Package struct {
+	Cpes     *[]string `json:"cpes"`
+	Language *string   `json:"language,omitempty"`
+	Licenses *[]string `json:"licenses"`
+	Name     *string   `json:"name,omitempty"`
+	Purl     *string   `json:"purl,omitempty"`
+	Type     *string   `json:"type,omitempty"`
+	Version  *string   `json:"version,omitempty"`
+}
+
+// Result Describes data saved to a JSON file when a scan finishes successfully.
+type Result struct {
+	// RawData Byte stream defining scan results based on a given schema
+	// that can be consumed by different tools and services.
+	RawData *string `json:"rawData"`
+
+	// Schema Custom schema used to construct `rawData`.
+	// Consumers should know how to parse `rawData` byte stream into concrete objects.
+	Schema *string `json:"schema"`
+
+	// Vmclarity Defines scan result data that can be consumed by VMClarity API.
+	Vmclarity VMClarityData `json:"vmclarity"`
+}
+
+// Rootkit defines model for Rootkit.
+type Rootkit struct {
+	Message     *string      `json:"message,omitempty"`
+	RootkitName *string      `json:"rootkitName,omitempty"`
+	RootkitType *RootkitType `json:"rootkitType,omitempty"`
+}
+
+// RootkitType defines model for RootkitType.
+type RootkitType string
+
+// Secret defines model for Secret.
+type Secret struct {
+	Description *string `json:"description,omitempty"`
+	EndColumn   *int    `json:"endColumn,omitempty"`
+	EndLine     *int    `json:"endLine,omitempty"`
+
+	// FilePath Name of the file containing the secret
+	FilePath *string `json:"filePath,omitempty"`
+
+	// Fingerprint Note: this is not unique
+	Fingerprint *string `json:"fingerprint,omitempty"`
+	StartColumn *int    `json:"startColumn,omitempty"`
+	StartLine   *int    `json:"startLine,omitempty"`
 }
 
 // Status defines model for Status.
@@ -95,6 +233,64 @@ type Stop struct {
 	// TimeoutSeconds After this timeout the server will be stopped.
 	TimeoutSeconds int `json:"timeoutSeconds" validate:"required,gt=0"`
 }
+
+// VMClarityData Defines scan result data that can be consumed by VMClarity API.
+type VMClarityData struct {
+	Exploits          *[]Exploit          `json:"exploits,omitempty"`
+	InfoFinder        *[]InfoFinder       `json:"infoFinder,omitempty"`
+	Malware           *[]Malware          `json:"malware,omitempty"`
+	Misconfigurations *[]Misconfiguration `json:"misconfigurations,omitempty"`
+	Packages          *[]Package          `json:"packages,omitempty"`
+	Rootkits          *[]Rootkit          `json:"rootkits,omitempty"`
+	Secrets           *[]Secret           `json:"secrets,omitempty"`
+	Vulnerabilities   *[]Vulnerability    `json:"vulnerabilities,omitempty"`
+}
+
+// Vulnerability defines model for Vulnerability.
+type Vulnerability struct {
+	Cvss        *[]VulnerabilityCvss `json:"cvss"`
+	Description *string              `json:"description,omitempty"`
+
+	// Distro Distro provides information about a detected Linux distribution.
+	Distro            *VulnerabilityDistro   `json:"distro,omitempty"`
+	Fix               *VulnerabilityFix      `json:"fix,omitempty"`
+	LayerId           *string                `json:"layerId,omitempty"`
+	Links             *[]string              `json:"links"`
+	Package           *Package               `json:"package,omitempty"`
+	Path              *string                `json:"path,omitempty"`
+	Severity          *VulnerabilitySeverity `json:"severity,omitempty"`
+	VulnerabilityName *string                `json:"vulnerabilityName,omitempty"`
+}
+
+// VulnerabilityCvss defines model for VulnerabilityCvss.
+type VulnerabilityCvss struct {
+	BaseScore           *float32 `json:"baseScore,omitempty"`
+	ExploitabilityScore *float32 `json:"exploitabilityScore,omitempty"`
+	ImpactScore         *float32 `json:"impactScore,omitempty"`
+	Vector              *string  `json:"vector,omitempty"`
+	Version             *string  `json:"version,omitempty"`
+}
+
+// VulnerabilityDistro Distro provides information about a detected Linux distribution.
+type VulnerabilityDistro struct {
+	// IDLike the ID_LIKE field found within the /etc/os-release file
+	IDLike *[]string `json:"IDLike"`
+
+	// Name Name of the Linux distribution
+	Name *string `json:"name,omitempty"`
+
+	// Version Version of the Linux distribution (major or major.minor version)
+	Version *string `json:"version,omitempty"`
+}
+
+// VulnerabilityFix defines model for VulnerabilityFix.
+type VulnerabilityFix struct {
+	State    *string   `json:"state,omitempty"`
+	Versions *[]string `json:"versions"`
+}
+
+// VulnerabilitySeverity defines model for VulnerabilitySeverity.
+type VulnerabilitySeverity string
 
 // PostConfigJSONRequestBody defines body for PostConfig for application/json ContentType.
 type PostConfigJSONRequestBody = Config

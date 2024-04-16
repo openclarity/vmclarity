@@ -34,17 +34,16 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
-	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/plugins/sdk/cmd/run"
 	"github.com/openclarity/vmclarity/plugins/sdk/types"
 )
 
-var mapKICSSeverity = map[model.Severity]apitypes.MisconfigurationSeverity{
-	model.SeverityHigh:   apitypes.MisconfigurationHighSeverity,
-	model.SeverityMedium: apitypes.MisconfigurationMediumSeverity,
-	model.SeverityLow:    apitypes.MisconfigurationLowSeverity,
-	model.SeverityInfo:   apitypes.MisconfigurationInfoSeverity,
-	model.SeverityTrace:  apitypes.MisconfigurationInfoSeverity,
+var mapKICSSeverity = map[model.Severity]types.MisconfigurationSeverity{
+	model.SeverityHigh:   types.MisconfigurationSeverityHigh,
+	model.SeverityMedium: types.MisconfigurationSeverityMedium,
+	model.SeverityLow:    types.MisconfigurationSeverityLow,
+	model.SeverityInfo:   types.MisconfigurationSeverityInfo,
+	model.SeverityTrace:  types.MisconfigurationSeverityInfo,
 }
 
 //nolint:containedctx
@@ -69,7 +68,11 @@ func (s *KICSScanner) Healthz() bool {
 }
 
 func (s *KICSScanner) Metadata() *types.Metadata {
-	return &types.Metadata{ApiVersion: types.Ptr("1.0")}
+	return &types.Metadata{
+		ApiVersion: types.Ptr(types.ApiVersion),
+		Name:       types.Ptr("KICS"),
+		Version:    types.Ptr("v1.7.13"),
+	}
 }
 
 func (s *KICSScanner) Start(config *types.Config) {
@@ -91,6 +94,7 @@ func (s *KICSScanner) Start(config *types.Config) {
 			return
 		}
 
+		outputFile := filepath.Join(tmp, "kics.json")
 		c, err := scan.NewClient(
 			&scan.Parameters{
 				Path:             []string{config.InputDir},
@@ -125,7 +129,7 @@ func (s *KICSScanner) Start(config *types.Config) {
 			return
 		}
 
-		err = s.formatOutput(tmp, config.OutputFile, config.OutputFormat)
+		err = s.formatOutput(outputFile, config.OutputFile)
 		if err != nil {
 			log.Errorf("Failed to format KICS output: %v", err)
 			s.SetStatus(types.NewScannerStatus(types.Failed, types.Ptr(fmt.Errorf("failed to format KICS output: %w", err).Error())))
@@ -201,25 +205,23 @@ func (s *KICSScanner) createScanParametersConfig(configPath *string) (*ScanParam
 	}
 }
 
-func (s *KICSScanner) formatOutput(tmp, outputFile string, outputFormat types.ConfigOutputFormat) error {
-	file, err := os.Open(tmp + "/kics.json")
+func (s *KICSScanner) formatOutput(rawFile, outputFile string) error {
+	file, err := os.Open(rawFile)
 	if err != nil {
 		return fmt.Errorf("failed to open kics.json: %w", err)
 	}
 	defer file.Close()
 
-	decoder := json.NewDecoder(file)
 	var summary model.Summary
-	err = decoder.Decode(&summary)
+	err = json.NewDecoder(file).Decode(&summary)
 	if err != nil {
 		return fmt.Errorf("failed to decode kics.json: %w", err)
 	}
 
-	var result []apitypes.Misconfiguration
+	var misconfigurations []types.Misconfiguration
 	for _, q := range summary.Queries {
 		for _, file := range q.Files {
-			result = append(result, apitypes.Misconfiguration{
-				ScannerName: types.Ptr("KICS"),
+			misconfigurations = append(misconfigurations, types.Misconfiguration{
 				Id:          types.Ptr(file.SimilarityID),
 				Location:    types.Ptr(file.FileName + "#" + strconv.Itoa(file.Line)),
 				Category:    types.Ptr(q.Category + ":" + string(file.IssueType)),
@@ -231,26 +233,14 @@ func (s *KICSScanner) formatOutput(tmp, outputFile string, outputFormat types.Co
 		}
 	}
 
-	var jsonData []byte
-	switch outputFormat {
-	case types.VMClarityJSON:
-		jsonData, err = json.MarshalIndent(apitypes.PluginOutput{Misconfigurations: &result}, "", "    ")
-		if err != nil {
-			return fmt.Errorf("failed to marshal kics.json: %w", err)
-		}
-	default:
-		return fmt.Errorf("unsupported output format: %s", outputFormat)
+	// Save result
+	result := types.Result{
+		Vmclarity: types.VMClarityData{
+			Misconfigurations: &misconfigurations,
+		},
 	}
-
-	file, err = os.Create(outputFile)
-	if err != nil {
-		return fmt.Errorf("failed to create kics-formatted.json: %w", err)
-	}
-	defer file.Close()
-
-	_, err = io.WriteString(file, string(jsonData))
-	if err != nil {
-		return fmt.Errorf("failed to write kics-formatted.json: %w", err)
+	if err := result.Save(outputFile); err != nil {
+		return fmt.Errorf("failed to save KICS result: %w", err)
 	}
 
 	return nil

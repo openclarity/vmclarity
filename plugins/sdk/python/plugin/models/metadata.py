@@ -12,20 +12,35 @@ class Metadata(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, api_version=None):  # noqa: E501
+    def __init__(self, annotations=None, name=None, version=None, api_version=None):  # noqa: E501
         """Metadata - a model defined in OpenAPI
 
+        :param annotations: The annotations of this Metadata.  # noqa: E501
+        :type annotations: Dict[str, str]
+        :param name: The name of this Metadata.  # noqa: E501
+        :type name: str
+        :param version: The version of this Metadata.  # noqa: E501
+        :type version: str
         :param api_version: The api_version of this Metadata.  # noqa: E501
         :type api_version: str
         """
         self.openapi_types = {
+            'annotations': Dict[str, str],
+            'name': str,
+            'version': str,
             'api_version': str
         }
 
         self.attribute_map = {
+            'annotations': 'annotations',
+            'name': 'name',
+            'version': 'version',
             'api_version': 'apiVersion'
         }
 
+        self._annotations = annotations
+        self._name = name
+        self._version = version
         self._api_version = api_version
 
     @classmethod
@@ -38,6 +53,69 @@ class Metadata(Model):
         :rtype: Metadata
         """
         return util.deserialize_model(dikt, cls)
+
+    @property
+    def annotations(self) -> Dict[str, str]:
+        """Gets the annotations of this Metadata.
+
+
+        :return: The annotations of this Metadata.
+        :rtype: Dict[str, str]
+        """
+        return self._annotations
+
+    @annotations.setter
+    def annotations(self, annotations: Dict[str, str]):
+        """Sets the annotations of this Metadata.
+
+
+        :param annotations: The annotations of this Metadata.
+        :type annotations: Dict[str, str]
+        """
+
+        self._annotations = annotations
+
+    @property
+    def name(self) -> str:
+        """Gets the name of this Metadata.
+
+
+        :return: The name of this Metadata.
+        :rtype: str
+        """
+        return self._name
+
+    @name.setter
+    def name(self, name: str):
+        """Sets the name of this Metadata.
+
+
+        :param name: The name of this Metadata.
+        :type name: str
+        """
+
+        self._name = name
+
+    @property
+    def version(self) -> str:
+        """Gets the version of this Metadata.
+
+
+        :return: The version of this Metadata.
+        :rtype: str
+        """
+        return self._version
+
+    @version.setter
+    def version(self, version: str):
+        """Sets the version of this Metadata.
+
+
+        :param version: The version of this Metadata.
+        :type version: str
+        """
+
+        self._version = version
 
     @property
     def api_version(self) -> str:

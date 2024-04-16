@@ -4,6 +4,7 @@ from plugin.models.config import Config  # noqa: E501
 from plugin.models.status import Status  # noqa: E501
 from plugin.models.metadata import Metadata  # noqa: E501
 
+
 class AbstractScanner(ABC):
 
     @abstractmethod
