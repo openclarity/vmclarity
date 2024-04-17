@@ -69,7 +69,7 @@ func (s *KICSScanner) Healthz() bool {
 
 func (s *KICSScanner) Metadata() *types.Metadata {
 	return &types.Metadata{
-		ApiVersion: types.Ptr(types.ApiVersion),
+		ApiVersion: types.Ptr(types.APIVersion),
 		Name:       types.Ptr("KICS"),
 		Version:    types.Ptr("v1.7.13"),
 	}

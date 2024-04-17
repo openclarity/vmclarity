@@ -105,11 +105,11 @@ func (r *Runner) Start(ctx context.Context) error {
 	_, err := r.client.PostConfigWithResponse(
 		ctx,
 		types.PostConfigJSONRequestBody{
-			File:           to.Ptr(getScannerConfigDestinationPath()),
-			InputDir:       DefaultScannerInputDir,
-			OutputFile:     filepath.Join(DefaultScannerOutputDir, filepath.Base(r.OutputFile)),
-			OutputFormat:   "vmclarity-json",
-			TimeoutSeconds: int(DefaultTimeout),
+			File:               to.Ptr(getScannerConfigDestinationPath()),
+			InputDir:           DefaultScannerInputDir,
+			OutputFile:         filepath.Join(DefaultScannerOutputDir, filepath.Base(r.OutputFile)),
+			OutputExtraSchemas: to.Ptr("vmclarity-json"),
+			TimeoutSeconds:     int(DefaultTimeout),
 		},
 	)
 	if err != nil {

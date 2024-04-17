@@ -41,7 +41,7 @@ func (r *Result) Save(filepath string) error {
 		return fmt.Errorf("failed to marshal result: %w", err)
 	}
 
-	err = os.WriteFile(filepath, data, 0o660 /* read & write, owner & group */)
+	err = os.WriteFile(filepath, data, 0o660 /* read & write, owner & group */) //nolint:gosec,gomnd
 	if err != nil {
 		return fmt.Errorf("failed to save result: %w", err)
 	}

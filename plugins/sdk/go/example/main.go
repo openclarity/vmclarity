@@ -31,7 +31,7 @@ type Scanner struct {
 
 func (s *Scanner) Metadata() *types.Metadata {
 	return &types.Metadata{
-		ApiVersion: types.Ptr(types.ApiVersion),
+		ApiVersion: types.Ptr(types.APIVersion),
 		Name:       types.Ptr("Example scanner"),
 		Version:    types.Ptr("v0.1.2"),
 	}
