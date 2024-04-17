@@ -29,23 +29,26 @@ type Scanner struct {
 	status *types.Status
 }
 
-func (s *Scanner) Healthz() bool { return true }
-
 func (s *Scanner) Metadata() *types.Metadata {
-	return &types.Metadata{ApiVersion: types.Ptr("1.0")}
+	return &types.Metadata{
+		ApiVersion: types.Ptr(types.ApiVersion),
+		Name:       types.Ptr("Example scanner"),
+		Version:    types.Ptr("v0.1.2"),
+	}
 }
 
 func (s *Scanner) Start(config *types.Config) {
 	log.Infof("Starting scanner with config: %+v\n", config)
 
 	go func() {
+		// Mark scan started
 		log.Infof("Scanner is running...")
 		s.SetStatus(types.NewScannerStatus(types.Running, types.Ptr("Scanner is running...")))
 
 		// Do actual scanning here
 		time.Sleep(5 * time.Second) //nolint:gomnd
-		//
 
+		// Save scan results
 		log.Infof("Scanner finished running.")
 		s.SetStatus(types.NewScannerStatus(types.Done, types.Ptr("Scanner finished running.")))
 	}()
@@ -59,7 +62,11 @@ func (s *Scanner) SetStatus(newStatus *types.Status) {
 	s.status = types.NewScannerStatus(newStatus.State, newStatus.Message)
 }
 
-func (s *Scanner) Stop(_ int) {}
+func (s *Scanner) Stop(timeoutSeconds int) {
+	// Shutdown logic
+}
+
+func (s *Scanner) Healthz() bool { return true }
 
 func main() {
 	run.Run(&Scanner{

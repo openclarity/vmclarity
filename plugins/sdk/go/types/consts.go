@@ -15,4 +15,5 @@
 
 package types
 
+// ApiVersion defines the current version of the Plugin API SDK
 const ApiVersion = "1.0.0"

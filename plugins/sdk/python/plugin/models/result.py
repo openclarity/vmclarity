@@ -3,9 +3,11 @@ from datetime import date, datetime  # noqa: F401
 from typing import List, Dict  # noqa: F401
 
 from plugin.models.base_model import Model
+from plugin.models.schema_data import SchemaData
 from plugin.models.vm_clarity_data import VMClarityData
 from plugin import util
 
+from plugin.models.schema_data import SchemaData  # noqa: E501
 from plugin.models.vm_clarity_data import VMClarityData  # noqa: E501
 
 class Result(Model):
@@ -14,31 +16,26 @@ class Result(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, _schema=None, raw_data=None, vmclarity=None):  # noqa: E501
+    def __init__(self, vmclarity=None, extra_schemas=None):  # noqa: E501
         """Result - a model defined in OpenAPI
 
-        :param _schema: The _schema of this Result.  # noqa: E501
-        :type _schema: str
-        :param raw_data: The raw_data of this Result.  # noqa: E501
-        :type raw_data: str
         :param vmclarity: The vmclarity of this Result.  # noqa: E501
         :type vmclarity: VMClarityData
+        :param extra_schemas: The extra_schemas of this Result.  # noqa: E501
+        :type extra_schemas: Dict[str, SchemaData]
         """
         self.openapi_types = {
-            '_schema': str,
-            'raw_data': str,
-            'vmclarity': VMClarityData
+            'vmclarity': VMClarityData,
+            'extra_schemas': Dict[str, SchemaData]
         }
 
         self.attribute_map = {
-            '_schema': 'schema',
-            'raw_data': 'rawData',
-            'vmclarity': 'vmclarity'
+            'vmclarity': 'vmclarity',
+            'extra_schemas': 'extraSchemas'
         }
 
-        self.__schema = _schema
-        self._raw_data = raw_data
         self._vmclarity = vmclarity
+        self._extra_schemas = extra_schemas
 
     @classmethod
     def from_dict(cls, dikt) -> 'Result':
@@ -50,52 +47,6 @@ class Result(Model):
         :rtype: Result
         """
         return util.deserialize_model(dikt, cls)
-
-    @property
-    def _schema(self) -> str:
-        """Gets the _schema of this Result.
-
-        Custom schema used to construct `rawData`. Consumers should know how to parse `rawData` byte stream into concrete objects.   # noqa: E501
-
-        :return: The _schema of this Result.
-        :rtype: str
-        """
-        return self.__schema
-
-    @_schema.setter
-    def _schema(self, _schema: str):
-        """Sets the _schema of this Result.
-
-        Custom schema used to construct `rawData`. Consumers should know how to parse `rawData` byte stream into concrete objects.   # noqa: E501
-
-        :param _schema: The _schema of this Result.
-        :type _schema: str
-        """
-
-        self.__schema = _schema
-
-    @property
-    def raw_data(self) -> str:
-        """Gets the raw_data of this Result.
-
-        Byte stream defining scan results based on a given schema that can be consumed by different tools and services.   # noqa: E501
-
-        :return: The raw_data of this Result.
-        :rtype: str
-        """
-        return self._raw_data
-
-    @raw_data.setter
-    def raw_data(self, raw_data: str):
-        """Sets the raw_data of this Result.
-
-        Byte stream defining scan results based on a given schema that can be consumed by different tools and services.   # noqa: E501
-
-        :param raw_data: The raw_data of this Result.
-        :type raw_data: str
-        """
-
-        self._raw_data = raw_data
 
     @property
     def vmclarity(self) -> VMClarityData:
@@ -119,3 +70,26 @@ class Result(Model):
             raise ValueError("Invalid value for `vmclarity`, must not be `None`")  # noqa: E501
 
         self._vmclarity = vmclarity
+
+    @property
+    def extra_schemas(self) -> Dict[str, SchemaData]:
+        """Gets the extra_schemas of this Result.
+
+        Defines schema-specific results that third-party tools and services can consume.  For example, if the scanner plugin supports a schema such as `cyclondx-14-json`, then the SBOM result will be available as raw JSON bytes defined via https://cyclonedx.org/docs/1.4/json/ schema.   # noqa: E501
+
+        :return: The extra_schemas of this Result.
+        :rtype: Dict[str, SchemaData]
+        """
+        return self._extra_schemas
+
+    @extra_schemas.setter
+    def extra_schemas(self, extra_schemas: Dict[str, SchemaData]):
+        """Sets the extra_schemas of this Result.
+
+        Defines schema-specific results that third-party tools and services can consume.  For example, if the scanner plugin supports a schema such as `cyclondx-14-json`, then the SBOM result will be available as raw JSON bytes defined via https://cyclonedx.org/docs/1.4/json/ schema.   # noqa: E501
+
+        :param extra_schemas: The extra_schemas of this Result.
+        :type extra_schemas: Dict[str, SchemaData]
+        """
+
+        self._extra_schemas = extra_schemas

@@ -59,19 +59,20 @@ type Config struct {
 	// InputDir The directory which should be scanned by the scanner plugin.
 	InputDir string `json:"inputDir" validate:"required"`
 
-	// OutputFile Path to JSON file where the scanner plugin should store its results.
-	OutputFile string `json:"outputFile" validate:"required"`
-
-	// OutputSchema Specifies custom schema the scanner plugin should use to process
-	// scan results and save them into `Result.rawData`. Custom schema
-	// allows the scanner plugin to be used with third-party tools and services.
-	// For example, `cyclondx-json` custom schema can be used to save/parse
-	// (JSON) byte stream into/from `Result.rawData` about SBOM findings.
+	// OutputExtraSchemas Specifies additional schemas the scanner plugin should include in the output.
+	// Schemas allow scanner plugin to export additional data that third-party tools
+	// and services can consume. Both the scanner plugin and the result consumer should
+	// know about implemented schemas to be able to create/parse the result.
+	// For example, `cyclondx-json` schema can be used to save/parse JSON data
+	// about SBOM findings.
 	//
 	// If the custom schema is not supported by the scanner, the scan should fail.
-	// When no custom schema is specified, `Result.schema` and `Result.rawData`
-	// properties should be empty.
-	OutputSchema *string `json:"outputSchema,omitempty"`
+	// It is up to the developer of the scanner plugin to add support for custom schemas,
+	// if any, based on the tools/services that will consume that data.
+	OutputExtraSchemas *string `json:"outputExtraSchemas"`
+
+	// OutputFile Path to JSON file where the scanner plugin should store its results.
+	OutputFile string `json:"outputFile" validate:"required"`
 
 	// TimeoutSeconds The maximum time in seconds that a scan started from this scan
 	// should run for before being automatically aborted.
@@ -162,13 +163,12 @@ type Package struct {
 
 // Result Describes data saved to a JSON file when a scan finishes successfully.
 type Result struct {
-	// RawData Byte stream defining scan results based on a given schema
-	// that can be consumed by different tools and services.
-	RawData *string `json:"rawData"`
-
-	// Schema Custom schema used to construct `rawData`.
-	// Consumers should know how to parse `rawData` byte stream into concrete objects.
-	Schema *string `json:"schema"`
+	// ExtraSchemas Defines schema-specific results that third-party tools and services can consume.
+	//
+	// For example, if the scanner plugin supports a schema such as `cyclondx-14-json`,
+	// then the SBOM result will be available as raw JSON bytes defined via
+	// https://cyclonedx.org/docs/1.4/json/ schema.
+	ExtraSchemas *map[string]SchemaData `json:"extraSchemas"`
 
 	// Vmclarity Defines scan result data that can be consumed by VMClarity API.
 	Vmclarity VMClarityData `json:"vmclarity"`
@@ -183,6 +183,17 @@ type Rootkit struct {
 
 // RootkitType defines model for RootkitType.
 type RootkitType string
+
+// SchemaData defines model for SchemaData.
+type SchemaData struct {
+	// Data Raw data about the scan results that matches a given schema.
+	// The schema can be used by the consumer to parse this data.
+	Data string `json:"data"`
+
+	// Schema Defines a schema that was used to construct the data.
+	// The schema can be used by the consumer for parsing.
+	Schema string `json:"schema"`
+}
 
 // Secret defines model for Secret.
 type Secret struct {

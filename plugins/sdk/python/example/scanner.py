@@ -2,10 +2,12 @@ import asyncio
 
 from plugin.models import Config, Status, Metadata
 from plugin.scanner.scanner import AbstractScanner
+from plugin.consts import API_VERSION
+
 
 class ExampleScanner(AbstractScanner):
     def __init__(self):
-        self.status = Status(state="Ready", message="Started")
+        self.status = Status(state="Ready", message="Scanner ready")
 
     def get_status(self) -> Status:
         return self.status
@@ -27,4 +29,8 @@ class ExampleScanner(AbstractScanner):
         return True
     
     def get_metadata(self) -> Metadata:
-        return Metadata(api_version="1.0")
+        return Metadata(
+            name="Example scanner",
+            version="v0.1.2",
+            api_version=API_VERSION,
+        )
