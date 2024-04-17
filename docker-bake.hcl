@@ -23,10 +23,14 @@ group "default" {
 		"vmclarity-cli",
 		"vmclarity-cr-discovery-server",
 		"vmclarity-orchestrator",
-		"vmclarity-scanner",
-		"vmclarity-scanner-runner",
 		"vmclarity-ui",
 		"vmclarity-ui-backend",
+	]
+}
+
+group "scanner-plugins" {
+	targets = [
+		"kics-scanner",
 	]
 }
 
@@ -116,24 +120,13 @@ target "vmclarity-ui-backend" {
 	}
 }
 
-target "vmclarity-scanner" {
+target "kics-scanner" {
 	context = "."
 	dockerfile = "./plugins/store/kics/Dockerfile"
-	tags = get_tag("${target.vmclarity-scanner.name}")
+	tags = get_tag("${target.kics-scanner.name}")
 	inherits = ["_common", "_common_args_for_go"]
 	labels = {
 		"org.opencontainers.image.title" = "VMClarity KICS Scanner"
-		"org.opencontainers.image.description" = ""
-	}
-}
-
-target "vmclarity-scanner-runner" {
-	context = "."
-	dockerfile = "Dockerfile.scanner-runner"
-	tags = get_tag("${target.vmclarity-scanner-runner.name}")
-	inherits = ["_common", "_common_args_for_go"]
-	labels = {
-		"org.opencontainers.image.title" = "VMClarity Dummy Scanner"
 		"org.opencontainers.image.description" = ""
 	}
 }

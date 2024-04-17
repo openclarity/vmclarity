@@ -1774,8 +1774,6 @@ components:
           type: integer
         totalVulnerabilities:
           $ref: '#/components/schemas/VulnerabilityScanSummary'
-        totalPlugins:
-          type: integer
 
     VulnerabilityScanSummary:
       description: A summary of number of vulnerabilities found per severity.
@@ -1822,8 +1820,6 @@ components:
           $ref: '#/components/schemas/ExploitsConfig'
         infoFinder:
           $ref: '#/components/schemas/InfoFinderConfig'
-        plugins:
-          $ref: '#/components/schemas/PluginsConfig'
 
     InfoFinderConfig:
       type: object
@@ -1904,30 +1900,6 @@ components:
           type: array
           items:
             type: string
-
-    PluginsConfig:
-      type: object
-      properties:
-        enabled:
-          type: boolean
-        scanners_list:
-          type: array
-          items:
-            type: string
-        scanners_config:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/PluginScannerConfig'
-
-    PluginScannerConfig:
-      type: object
-      properties:
-        image_name:
-          type: string
-        output_file:
-          type: string
-        config:
-          type: string
 
     ScanConfigs:
       type: object
@@ -2453,8 +2425,6 @@ components:
               $ref: '#/components/schemas/ExploitScan'
             infoFinder:
               $ref: '#/components/schemas/InfoFinderScan'
-            plugins:
-              $ref: '#/components/schemas/PluginScan'
             findingsProcessed:
               type: boolean
             resourceCleanupStatus:
@@ -2646,10 +2616,6 @@ components:
           items:
             $ref: '#/components/schemas/AssetScanInputScanStats'
         infoFinder:
-          type: array
-          items:
-            $ref: '#/components/schemas/AssetScanInputScanStats'
-        plugins:
           type: array
           items:
             $ref: '#/components/schemas/AssetScanInputScanStats'
@@ -3114,7 +3080,6 @@ components:
         - MisconfigurationHighSeverity
         - MisconfigurationMediumSeverity
         - MisconfigurationLowSeverity
-        - MisconfigurationInfoSeverity
 
     Misconfiguration:
       type: object
@@ -3272,14 +3237,6 @@ components:
           items:
             $ref: '#/components/schemas/InfoFinderInfo'
           nullable: true
-
-    PluginScan:
-      type: object
-      properties:
-        status:
-          $ref: "#/components/schemas/ScannerStatus"
-        output:
-          $ref: '#/components/schemas/PluginOutput'
 
     InfoFinderInfo:
       type: object
@@ -3492,42 +3449,6 @@ components:
                   Rootkit: '#/components/schemas/RootkitFindingInfo'
                   Exploit: '#/components/schemas/ExploitFindingInfo'
                   InfoFinder: '#/components/schemas/InfoFinderFindingInfo'
-
-    PluginOutput:
-      type: object
-      properties:
-        packages:
-          type: array
-          items:
-            $ref: '#/components/schemas/Package'
-        vulnerabilities:
-          type: array
-          items:
-            $ref: '#/components/schemas/Vulnerability'
-        malware:
-          type: array
-          items:
-            $ref: '#/components/schemas/Malware'
-        secrets:
-          type: array
-          items:
-            $ref: '#/components/schemas/Secret'
-        misconfigurations:
-          type: array
-          items:
-            $ref: '#/components/schemas/Misconfiguration'
-        rootkits:
-          type: array
-          items:
-            $ref: '#/components/schemas/Rootkit'
-        exploits:
-          type: array
-          items:
-            $ref: '#/components/schemas/Exploit'
-        infoFinder:
-          type: array
-          items:
-            $ref: '#/components/schemas/InfoFinderInfo'
 
     ScanEstimations:
       type: object

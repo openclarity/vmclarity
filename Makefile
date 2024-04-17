@@ -291,15 +291,10 @@ docker-cr-discovery-server: ## Build K8S Image Resolver Docker image
 	$(info Building cr-discovery-server docker image ...)
 	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) vmclarity-cr-discovery-server
 
-.PHONY: docker-scanner
-docker-scanner: ## Build Scanner container image
-	$(info Building scanner docker image ...)
-	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) vmclarity-scanner
-
-.PHONY: docker-scanner-runner
-docker-scanner-runner: ## Build Scanner Runner container image
-	$(info Building scanner-runner docker image ...)
-	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) vmclarity-scanner-runner
+.PHONY: docker-scanner-plugins
+docker-scanner-plugins: ## Build scanner plugin container images
+	$(info Building scanner plugin docker images ...)
+	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) scanner-plugins
 
 ##@ Code generation
 
@@ -307,7 +302,7 @@ docker-scanner-runner: ## Build Scanner Runner container image
 gen: gen-api gen-bicep gen-helm-docs ## Generating all code, manifests, docs
 
 .PHONY: gen-api
-gen-api: gen-apiserver-api gen-uibackend-api gen-scanner-api ## Generating API code
+gen-api: gen-apiserver-api gen-uibackend-api gen-plugin-sdk ## Generating API code
 
 .PHONY: gen-apiserver-api
 gen-apiserver-api: ## Generating Go library for API specification
@@ -323,11 +318,19 @@ gen-uibackend-api: ## Generating Go library for UI Backend API specification
 	go -C $(ROOT_DIR)/uibackend/client generate
 	go -C $(ROOT_DIR)/uibackend/server generate
 
-.PHONY: gen-scanner-api
-gen-scanner-api: ## Generating Go library for Scanner API specification
-	$(info Generating API for scanner code ...)
+.PHONY: gen-plugin-sdk
+gen-plugin-sdk: gen-go-plugin-sdk gen-python-plugin-sdk ## Generating Scanner Plugin SDKs
+
+.PHONY: gen-go-plugin-sdk
+gen-go-plugin-sdk: ## Generating Scanner Plugin Golang SDK
+	$(info Generating SDK code for Golang scanner plugin ...)
 	go -C $(ROOT_DIR)/plugins/sdk/go generate
 	go -C $(ROOT_DIR)/plugins/runner generate
+
+.PHONY: gen-python-plugin-sdk
+gen-python-plugin-sdk: ## Generating Scanner Plugin Python SDK
+	$(info Generating SDK code for Python scanner plugin ...)
+	sh ./plugins/sdk/python/tools/gen-sdk.sh
 
 .PHONY: gen-bicep
 gen-bicep: bin/bicep ## Generating Azure Bicep template(s)
