@@ -13,19 +13,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package plugin
+package server
 
 import (
-	"github.com/openclarity/vmclarity/plugins/sdk/types"
+	"log/slog"
+	"os"
 )
 
-// TODO(ramizpolic): Document usage and execution flow
+var logger *slog.Logger
 
-type Scanner interface {
-	Healthz() bool
-	Metadata() *types.Metadata
-	Start(config *types.Config)
-	GetStatus() *types.Status
-	SetStatus(status *types.Status)
-	Stop(timeoutSeconds int)
+func init() {
+	var logLevel slog.Level
+	if logLevel.UnmarshalText([]byte(getLogLevel())) != nil {
+		logLevel = slog.LevelInfo
+	}
+
+	logger = slog.New(
+		slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+			Level: logLevel,
+		}),
+	)
+}
+
+// GetLogger defines JSON logger that outputs to stdout with level loaded fom
+// EnvLogLevel.
+func GetLogger() *slog.Logger {
+	return logger
 }

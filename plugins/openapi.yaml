@@ -102,10 +102,12 @@ components:
         version:
           type: string
         apiVersion:
+          description: This value will be automatically set by the SDK.
           type: string
 
     Status:
       type: object
+      description: Describes the scanner status.
       required:
         - state
         - lastTransitionTime
@@ -137,7 +139,7 @@ components:
 
     Config:
       type: object
-      description: Describes a scanner config.
+      description: Describes config for scanner to start the scanning process.
       required:
         - inputDir
         - outputFile
@@ -170,6 +172,7 @@ components:
 
     Stop:
       type: object
+      description: Describes data for scanner to stop the scanning process.
       required:
         - timeoutSeconds
       properties:

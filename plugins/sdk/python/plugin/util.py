@@ -1,6 +1,5 @@
 import datetime
 
-import typing
 from plugin import typing_utils
 
 

@@ -19,7 +19,7 @@ import (
 	"context"
 	"fmt"
 
-	runner "github.com/openclarity/vmclarity/plugins/runner"
+	"github.com/openclarity/vmclarity/plugins/runner"
 )
 
 // Test start scanner function.

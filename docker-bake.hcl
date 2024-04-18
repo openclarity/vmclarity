@@ -25,13 +25,15 @@ group "default" {
 		"vmclarity-orchestrator",
 		"vmclarity-ui",
 		"vmclarity-ui-backend",
-    		"vmclarity-plugin-kics",
+		"vmclarity-plugin-kics",
 	]
 }
 
 group "vmclarity-scanner-plugins" {
 	targets = [
 		"vmclarity-plugin-kics",
+		"vmclarity-plugin-example-go",
+		"vmclarity-plugin-example-python"
 	]
 }
 
@@ -128,6 +130,26 @@ target "vmclarity-plugin-kics" {
 	inherits = ["_common", "_common_args_for_go"]
 	labels = {
 		"org.opencontainers.image.title" = "VMClarity KICS Scanner"
+		"org.opencontainers.image.description" = ""
+	}
+}
+
+target "vmclarity-plugin-example-go" {
+	context = "."
+	dockerfile = "./plugins/sdk/go/example/Dockerfile"
+	tags = get_tag("${target.vmclarity-plugin-example-go.name}")
+	labels = {
+		"org.opencontainers.image.title" = "VMClarity Scanner Go Example"
+		"org.opencontainers.image.description" = ""
+	}
+}
+
+target "vmclarity-plugin-example-python" {
+	context = "."
+	dockerfile = "./plugins/sdk/python/example/Dockerfile"
+	tags = get_tag("${target.vmclarity-plugin-example-python.name}")
+	labels = {
+		"org.opencontainers.image.title" = "VMClarity Scanner Python Example"
 		"org.opencontainers.image.description" = ""
 	}
 }

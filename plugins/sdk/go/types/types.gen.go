@@ -54,7 +54,7 @@ const (
 // Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
 type Annotations map[string]string
 
-// Config Describes a scanner config.
+// Config Describes config for scanner to start the scanning process.
 type Config struct {
 	// File The file with the configuration required by the scanner plugin. This is a path on the filesystem to the config file.
 	File *string `json:"file,omitempty"`
@@ -112,9 +112,11 @@ type Malware struct {
 type Metadata struct {
 	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
 	Annotations *Annotations `json:"annotations,omitempty"`
-	ApiVersion  *string      `json:"apiVersion,omitempty"`
-	Name        *string      `json:"name,omitempty"`
-	Version     *string      `json:"version,omitempty"`
+
+	// ApiVersion This value will be automatically set by the SDK.
+	ApiVersion *string `json:"apiVersion,omitempty"`
+	Name       *string `json:"name,omitempty"`
+	Version    *string `json:"version,omitempty"`
 }
 
 // Misconfiguration defines model for Misconfiguration.
@@ -187,7 +189,7 @@ type Secret struct {
 	StartLine   *int    `json:"startLine,omitempty"`
 }
 
-// Status defines model for Status.
+// Status Describes the scanner status.
 type Status struct {
 	// LastTransitionTime Last date time when the status has changed.
 	LastTransitionTime time.Time `json:"lastTransitionTime"`
@@ -216,7 +218,7 @@ type Status struct {
 // | Done           | Scanner is completed successfully                             |
 type StatusState string
 
-// Stop defines model for Stop.
+// Stop Describes data for scanner to stop the scanning process.
 type Stop struct {
 	// TimeoutSeconds After this timeout the server will be stopped.
 	TimeoutSeconds int `json:"timeoutSeconds" validate:"required,gt=0"`

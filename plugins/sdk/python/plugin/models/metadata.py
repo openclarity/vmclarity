@@ -123,6 +123,7 @@ class Metadata(Model):
     def api_version(self) -> str:
         """Gets the api_version of this Metadata.
 
+        This value will be automatically set by the SDK.  # noqa: E501
 
         :return: The api_version of this Metadata.
         :rtype: str
@@ -133,6 +134,7 @@ class Metadata(Model):
     def api_version(self, api_version: str):
         """Sets the api_version of this Metadata.
 
+        This value will be automatically set by the SDK.  # noqa: E501
 
         :param api_version: The api_version of this Metadata.
         :type api_version: str

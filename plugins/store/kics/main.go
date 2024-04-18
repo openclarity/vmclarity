@@ -26,6 +26,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/openclarity/vmclarity/plugins/sdk/server"
+
 	"github.com/BurntSushi/toml"
 	"github.com/Checkmarx/kics/pkg/model"
 	"github.com/Checkmarx/kics/pkg/printer"
@@ -34,7 +36,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsimple"
 	"gopkg.in/yaml.v3"
 
-	"github.com/openclarity/vmclarity/plugins/sdk/cmd/run"
 	"github.com/openclarity/vmclarity/plugins/sdk/types"
 )
 
@@ -47,10 +48,9 @@ var mapKICSSeverity = map[model.Severity]types.MisconfigurationSeverity{
 }
 
 //nolint:containedctx
-type KICSScanner struct {
-	healthz bool
-	status  *types.Status
-	cancel  context.CancelFunc
+type Scanner struct {
+	status *types.Status
+	cancel context.CancelFunc
 }
 
 type ScanParametersConfig struct {
@@ -63,32 +63,35 @@ type ScanParametersConfig struct {
 	Minimal          bool     `json:"minimal" yaml:"minimal" toml:"minimal" hcl:"minimal"`
 }
 
-func (s *KICSScanner) Healthz() bool {
-	return s.healthz
-}
-
-func (s *KICSScanner) Metadata() *types.Metadata {
+func (s *Scanner) Metadata() *types.Metadata {
 	return &types.Metadata{
-		ApiVersion: types.Ptr(types.APIVersion),
-		Name:       types.Ptr("KICS"),
-		Version:    types.Ptr("v1.7.13"),
+		Name:    types.Ptr("KICS"),
+		Version: types.Ptr("v1.7.13"),
 	}
 }
 
-func (s *KICSScanner) Start(config *types.Config) {
-	slog.Info("Starting scanner with config", slog.Any("config", config))
+func (s *Scanner) GetStatus() *types.Status {
+	return s.status
+}
 
+func (s *Scanner) SetStatus(newStatus *types.Status) {
+	s.status = types.NewScannerStatus(newStatus.State, newStatus.Message)
+}
+
+func (s *Scanner) Start(config types.Config) {
 	go func() {
+		logger := server.GetLogger()
+
 		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(config.TimeoutSeconds)*time.Second)
 		s.cancel = cancel
 		defer cancel()
 
-		slog.Info("Scanner is running...")
+		logger.Info("Scanner is running...")
 		s.SetStatus(types.NewScannerStatus(types.Running, types.Ptr("Scanner is running...")))
 
 		clientConfig, err := s.createScanParametersConfig(config.File)
 		if err != nil {
-			slog.Error("Failed to parse config file", slog.Any("error", err))
+			logger.Error("Failed to parse config file", slog.Any("error", err))
 			s.SetStatus(types.NewScannerStatus(types.Failed, types.Ptr(fmt.Errorf("failed to parse config file: %w", err).Error())))
 			return
 		}
@@ -111,38 +114,46 @@ func (s *KICSScanner) Start(config *types.Config) {
 			printer.NewPrinter(clientConfig.Minimal), //nolint:forbidigo
 		)
 		if err != nil {
-			slog.Error("Failed to create KICS client", slog.Any("error", err))
+			logger.Error("Failed to create KICS client", slog.Any("error", err))
 			s.SetStatus(types.NewScannerStatus(types.Failed, types.Ptr(fmt.Errorf("failed to create KICS client: %w", err).Error())))
 			return
 		}
 
 		err = c.PerformScan(ctx)
 		if err != nil {
-			slog.Error("Failed to perform KICS scan", slog.Any("error", err))
+			logger.Error("Failed to perform KICS scan", slog.Any("error", err))
 			s.SetStatus(types.NewScannerStatus(types.Failed, types.Ptr(fmt.Errorf("failed to perform KICS scan: %w", err).Error())))
 			return
 		}
 
 		if ctx.Err() != nil {
-			slog.Error("The operation timed out", slog.Any("error", ctx.Err()))
+			logger.Error("The operation timed out", slog.Any("error", ctx.Err()))
 			s.SetStatus(types.NewScannerStatus(types.Failed, types.Ptr(fmt.Errorf("failed due to timeout %w", ctx.Err()).Error())))
 			return
 		}
 
 		err = s.formatOutput(rawOutputFile, config.OutputFile)
 		if err != nil {
-			slog.Error("Failed to format KICS output", slog.Any("error", err))
+			logger.Error("Failed to format KICS output", slog.Any("error", err))
 			s.SetStatus(types.NewScannerStatus(types.Failed, types.Ptr(fmt.Errorf("failed to format KICS output: %w", err).Error())))
 			return
 		}
 
-		slog.Info("Scanner finished running.")
+		logger.Info("Scanner finished running.")
 		s.SetStatus(types.NewScannerStatus(types.Done, types.Ptr("Scanner finished running.")))
 	}()
 }
 
+func (s *Scanner) Stop(_ types.Stop) {
+	go func() {
+		if s.cancel != nil {
+			s.cancel()
+		}
+	}()
+}
+
 //nolint:gomnd
-func (s *KICSScanner) createScanParametersConfig(configPath *string) (*ScanParametersConfig, error) {
+func (s *Scanner) createScanParametersConfig(configPath *string) (*ScanParametersConfig, error) {
 	config := ScanParametersConfig{
 		PreviewLines:     3,
 		Platform:         []string{"Ansible", "CloudFormation", "Common", "Crossplane", "Dockerfile", "DockerCompose", "Knative", "Kubernetes", "OpenAPI", "Terraform", "AzureResourceManager", "GRPC", "GoogleDeploymentManager", "Buildah", "Pulumi", "ServerlessFW", "CICD"},
@@ -163,14 +174,12 @@ func (s *KICSScanner) createScanParametersConfig(configPath *string) (*ScanParam
 	}
 	defer file.Close()
 
-	ext := filepath.Ext(*configPath)
-
 	bytes, err := io.ReadAll(file)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 
-	switch ext {
+	switch ext := filepath.Ext(*configPath); ext {
 	case ".json":
 		if err := json.Unmarshal(bytes, &config); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal JSON config: %w", err)
@@ -205,7 +214,7 @@ func (s *KICSScanner) createScanParametersConfig(configPath *string) (*ScanParam
 	}
 }
 
-func (s *KICSScanner) formatOutput(rawFile, outputFile string) error {
+func (s *Scanner) formatOutput(rawFile, outputFile string) error {
 	file, err := os.Open(rawFile)
 	if err != nil {
 		return fmt.Errorf("failed to open kics.json: %w", err)
@@ -239,34 +248,15 @@ func (s *KICSScanner) formatOutput(rawFile, outputFile string) error {
 			Misconfigurations: &misconfigurations,
 		},
 	}
-	if err := result.Save(outputFile); err != nil {
+	if err := result.Export(outputFile); err != nil {
 		return fmt.Errorf("failed to save KICS result: %w", err)
 	}
 
 	return nil
 }
 
-func (s *KICSScanner) GetStatus() *types.Status {
-	return s.status
-}
-
-func (s *KICSScanner) SetStatus(newStatus *types.Status) {
-	s.status = types.NewScannerStatus(newStatus.State, newStatus.Message)
-}
-
-func (s *KICSScanner) Stop(_ int) {
-	go func() {
-		if s.cancel != nil {
-			s.cancel()
-		}
-	}()
-}
-
 func main() {
-	k := &KICSScanner{
-		healthz: true,
-		status:  types.NewScannerStatus(types.Ready, types.Ptr("Starting scanner...")),
-	}
-
-	run.Run(k)
+	server.Run(&Scanner{
+		status: types.NewScannerStatus(types.Ready, types.Ptr("Starting scanner...")),
+	})
 }

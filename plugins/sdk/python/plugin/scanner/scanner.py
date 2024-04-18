@@ -1,26 +1,17 @@
+import json
 from abc import ABC, abstractmethod
 
-from plugin.models.config import Config  # noqa: E501
-from plugin.models.status import Status  # noqa: E501
-from plugin.models.metadata import Metadata  # noqa: E501
+from plugin.models import Config, Status, Metadata, Stop, Result  # noqa: E501
 
 
 class AbstractScanner(ABC):
-
-    @abstractmethod
-    def healthz(self) -> bool:
-        pass
 
     @abstractmethod
     def get_metadata(self) -> Metadata:
         pass
 
     @abstractmethod
-    async def start(self, config: Config):
-        pass
-
-    @abstractmethod
-    async def stop(self, timeout_seconds: int):
+    def get_status(self) -> Status:
         pass
 
     @abstractmethod
@@ -28,5 +19,14 @@ class AbstractScanner(ABC):
         pass
 
     @abstractmethod
-    def get_status(self) -> Status:
+    async def start(self, config: Config):
         pass
+
+    @abstractmethod
+    async def stop(self, stop: Stop):
+        pass
+
+    @staticmethod
+    def export_result(result: Result, output_file: str):
+        with open(output_file, 'w') as f:
+            json.dump(result.to_json(), f)

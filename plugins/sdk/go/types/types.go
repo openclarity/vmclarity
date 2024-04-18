@@ -22,6 +22,9 @@ import (
 	"time"
 )
 
+// APIVersion defines the current version of the Scanner Plugin API.
+const APIVersion = "1.0.0"
+
 func NewScannerStatus(s StatusState, m *string) *Status {
 	return &Status{
 		State:              s,
@@ -34,14 +37,14 @@ func Ptr[T any](value T) *T {
 	return &value
 }
 
-// Save saves the data as JSON to the provided file.
-func (r *Result) Save(filepath string) error {
+// Export saves the data as JSON to the provided file.
+func (r *Result) Export(outputFile string) error {
 	data, err := json.MarshalIndent(r, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal result: %w", err)
 	}
 
-	err = os.WriteFile(filepath, data, 0o660 /* read & write, owner & group */) //nolint:gosec,gomnd
+	err = os.WriteFile(outputFile, data, 0o660 /* read & write, owner & group */) //nolint:gosec,gomnd
 	if err != nil {
 		return fmt.Errorf("failed to save result: %w", err)
 	}

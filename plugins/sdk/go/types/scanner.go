@@ -13,22 +13,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package run
+package types
 
-import (
-	"log/slog"
-	"os"
-)
+// TODO(ramizpolic): Document usage and execution flow
 
-func initLogger(level string) {
-	opts := &slog.HandlerOptions{
-		Level: slog.LevelDebug,
-	}
-
-	var logLevel slog.Level
-	if logLevel.UnmarshalText([]byte(level)) == nil {
-		opts.Level = logLevel
-	}
-
-	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, opts)))
+// Scanner defines the interface that the plugin scanner developer should
+// implement. You should not run Scanner on its own but via plugin.Run.
+type Scanner interface {
+	Metadata() *Metadata
+	GetStatus() *Status
+	SetStatus(status *Status)
+	Start(config Config)
+	Stop(stop Stop)
 }

@@ -1,24 +1,46 @@
-FROM --platform=$BUILDPLATFORM golang:1.21.4-alpine3.18@sha256:70afe55365a265f0762257550bc38440e0d6d6b97020d3f8c85328f00200dd8e AS builder
+## Image is built from root repo dir context.
+## Example: docker build . -f plugins/sdk/python/example/Dockerfile -t python-scanner
 
-ARG TARGETOS TARGETARCH
+FROM ubuntu:20.04 AS builder-image
 
-WORKDIR /build/scanner/kics
+# Avoid stuck build due to user prompt
+ARG DEBIAN_FRONTEND=noninteractive
 
-RUN --mount=type=cache,target=/go/pkg/mod \
-    --mount=type=bind,source=.,target=/build,ro \
-    go mod download -x
+RUN apt-get update &&  \
+    apt-get install --no-install-recommends -y python3.9 python3.9-dev python3.9-venv python3-pip python3-wheel build-essential && \
+	  apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN --mount=type=cache,target=/go/pkg/mod \
-    --mount=type=cache,target=/root/.cache/go-build \
-    --mount=type=bind,source=.,target=/build,ro \
-    GOOS=$TARGETOS GOARCH=$TARGETARCH CGO_ENABLED=0 \
-    go build -ldflags="-s -w -extldflags -static" \
-    -o /bin/vmclarity-scanner ./main.go
+# Create and activate virtual environment
+# Using final folder name to avoid path issues with packages
+RUN python3.9 -m venv /venv
+ENV PATH="/venv/bin:$PATH"
 
-FROM alpine:3.18@sha256:11e21d7b981a59554b3f822c49f6e9f57b6068bb74f49c4cd5cc4c663c7e5160
+# Install SDK from folder
+COPY ./plugins/sdk/python /pluginsdk
+RUN pip3 install --no-cache-dir wheel
+RUN pip3 install --no-cache-dir /pluginsdk
 
-COPY --from=builder /bin/vmclarity-scanner /bin/vmclarity-scanner
+
+FROM ubuntu:20.04 AS runner-image
+
+RUN apt-get update &&  \
+    apt-get install --no-install-recommends -y python3.9 python3-venv && \
+	  apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Copy installed venv packages
+COPY --from=builder-image /venv /venv
+
+# Make sure all messages always reach console
+ENV PYTHONUNBUFFERED=1
+
+# Activate virtual environment
+ENV VIRTUAL_ENV=/venv
+ENV PATH="/venv/bin:$PATH"
+
+# Copy example
+COPY ./plugins/sdk/python/example ./src
 
 USER 65534
 
-ENTRYPOINT ["/bin/vmclarity-scanner"]
+# Run example scanner
+CMD ["python3", "/src/scanner.py"]

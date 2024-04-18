@@ -6,8 +6,10 @@ quickly develop new security scanners.
 
 ## Usage
 
-```python
-TODO(ramizpolic): Provide installation options
+```bash
+SDK_NAME="plugin"
+SDK_PATH="plugins/sdk/python"
+pip install -e "git+https://github.com/openclarity/vmclarity.git#egg=$SDK_NAME&subdirectory=$SDK_PATH" 
 ```
 
 ## Developer notes
@@ -20,11 +22,7 @@ TODO(ramizpolic): Provide installation options
 All scanner plugins are run as containers and used via REST server interface.
 Developers should ship their scanners as container images that run the REST server.
 
-Configuration for the REST server (and container via env vars) are given in [config.py](plugin/scanner/config.py).
-
-Use `plugin.server` module to create and run the REST server.
-Default logger is configured on start to write to standard output.
-You can use default logger in your code.
+Configuration for the REST server can be found in [config.py](plugin/server/config.py).
 
 ## TODO
 

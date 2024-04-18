@@ -13,7 +13,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package types
+package server
 
-// APIVersion defines the current version of the Scanner Plugin SDK API.
-const APIVersion = "1.0.0"
+import (
+	"os"
+)
+
+const (
+	EnvLogLevel     = "PLUGIN_SERVER_LOG_LEVEL"
+	DefaultLogLevel = "info"
+
+	EnvListenAddress     = "PLUGIN_SERVER_LISTEN_ADDRESS"
+	DefaultListenAddress = "http://0.0.0.0:8080"
+)
+
+func getLogLevel() string {
+	if logLevel := os.Getenv(EnvLogLevel); logLevel != "" {
+		return logLevel
+	}
+
+	return DefaultLogLevel
+}
+
+func getListenAddress() string {
+	if listenAddress := os.Getenv(EnvListenAddress); listenAddress != "" {
+		return listenAddress
+	}
+
+	return DefaultListenAddress
+}

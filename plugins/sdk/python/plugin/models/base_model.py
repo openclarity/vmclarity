@@ -48,6 +48,21 @@ class Model:
 
         return result
 
+    def to_json(self):
+        """Returns the JSON representation of the model.
+        Does not include None attrs to the dict.
+
+        :rtype: dict
+        """
+        dikt = {}
+        for attr in self.openapi_types:
+            value = getattr(self, attr)
+            if value is None:
+                continue
+            attr = self.attribute_map[attr]
+            dikt[attr] = value
+        return dikt
+
     def to_str(self):
         """Returns the string representation of the model
 
