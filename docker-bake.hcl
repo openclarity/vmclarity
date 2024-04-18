@@ -25,13 +25,13 @@ group "default" {
 		"vmclarity-orchestrator",
 		"vmclarity-ui",
 		"vmclarity-ui-backend",
-    		"scanner-plugin-kics",
+    		"vmclarity-plugin-kics",
 	]
 }
 
-group "scanner-plugins" {
+group "vmclarity-scanner-plugins" {
 	targets = [
-		"scanner-plugin-kics",
+		"vmclarity-plugin-kics",
 	]
 }
 
@@ -121,10 +121,10 @@ target "vmclarity-ui-backend" {
 	}
 }
 
-target "scanner-plugin-kics" {
+target "vmclarity-plugin-kics" {
 	context = "."
 	dockerfile = "./plugins/store/kics/Dockerfile"
-	tags = get_tag("${target.scanner-plugin-kics.name}")
+	tags = get_tag("${target.vmclarity-plugin-kics.name}")
 	inherits = ["_common", "_common_args_for_go"]
 	labels = {
 		"org.opencontainers.image.title" = "VMClarity KICS Scanner"

@@ -294,7 +294,7 @@ docker-cr-discovery-server: ## Build K8S Image Resolver Docker image
 .PHONY: docker-scanner-plugins
 docker-scanner-plugins: ## Build scanner plugin container images
 	$(info Building scanner plugin docker images ...)
-	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) scanner-plugins
+	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) vmclarity-scanner-plugins
 
 ##@ Code generation
 
