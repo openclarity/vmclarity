@@ -25,6 +25,7 @@ group "default" {
 		"vmclarity-orchestrator",
 		"vmclarity-ui",
 		"vmclarity-ui-backend",
+    	"scanner-plugin-kics",
 	]
 }
 

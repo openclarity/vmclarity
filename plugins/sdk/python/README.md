@@ -27,4 +27,5 @@ Default logger is configured on start to write to standard output.
 You can use default logger in your code.
 
 ## TODO
+
 - Add testing logic to verify that SDK works

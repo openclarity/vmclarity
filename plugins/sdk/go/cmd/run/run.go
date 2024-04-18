@@ -54,20 +54,20 @@ func Run(scanner plugin.Scanner, opts ...func(*options)) {
 	// Start server
 	server, err := plugin.NewServer(scanner)
 	if err != nil {
-		slog.Error(fmt.Errorf("failed to create HTTP server: %w", err).Error())
+		slog.Error("failed to create HTTP server", slog.Any("error", err))
 	}
 
 	go func() {
 		slog.Info("Plugin HTTP server starting...")
 		if err = server.Start(options.config.ListenAddress); err != nil {
-			slog.Error(fmt.Errorf("failed to start HTTP server: %w", err).Error())
+			slog.Error("failed to start HTTP server", slog.Any("error", err))
 		}
 	}()
 
 	defer func() {
 		slog.Info("Plugin HTTP server stopping...")
 		if err = server.Stop(); err != nil {
-			slog.Error(fmt.Errorf("failed to stop HTTP server: %w", err).Error())
+			slog.Error("failed to stop HTTP server", slog.Any("error", err))
 			return
 		}
 		slog.Info("Plugin HTTP server stopped")

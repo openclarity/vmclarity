@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -31,7 +32,6 @@ import (
 	"github.com/Checkmarx/kics/pkg/progress"
 	"github.com/Checkmarx/kics/pkg/scan"
 	"github.com/hashicorp/hcl/v2/hclsimple"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
 	"github.com/openclarity/vmclarity/plugins/sdk/cmd/run"
@@ -76,25 +76,25 @@ func (s *KICSScanner) Metadata() *types.Metadata {
 }
 
 func (s *KICSScanner) Start(config *types.Config) {
-	log.Infof("Starting scanner with config: %+v\n", config)
+	slog.Info("Starting scanner with config", slog.Any("config", config))
 
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(config.TimeoutSeconds)*time.Second)
 		s.cancel = cancel
 		defer cancel()
 
-		log.Infof("Scanner is running...")
+		slog.Info("Scanner is running...")
 		s.SetStatus(types.NewScannerStatus(types.Running, types.Ptr("Scanner is running...")))
 		tmp := os.TempDir()
 
 		clientConfig, err := s.createScanParametersConfig(config.File)
 		if err != nil {
-			log.Errorf("Failed to parse config file: %v", err)
+			slog.Error("Failed to parse config file", slog.Any("error", err))
 			s.SetStatus(types.NewScannerStatus(types.Failed, types.Ptr(fmt.Errorf("failed to parse config file: %w", err).Error())))
 			return
 		}
 
-		outputFile := filepath.Join(tmp, "kics.json")
+		rawOutputFile := filepath.Join(tmp, "kics.json")
 		c, err := scan.NewClient(
 			&scan.Parameters{
 				Path:             []string{config.InputDir},
@@ -111,32 +111,32 @@ func (s *KICSScanner) Start(config *types.Config) {
 			printer.NewPrinter(clientConfig.Minimal), //nolint:forbidigo
 		)
 		if err != nil {
-			log.Errorf("Failed to create KICS client: %v", err)
+			slog.Error("Failed to create KICS client", slog.Any("error", err))
 			s.SetStatus(types.NewScannerStatus(types.Failed, types.Ptr(fmt.Errorf("failed to create KICS client: %w", err).Error())))
 			return
 		}
 
 		err = c.PerformScan(ctx)
 		if err != nil {
-			log.Errorf("Failed to perform KICS scan: %v", err)
+			slog.Error("Failed to perform KICS scan", slog.Any("error", err))
 			s.SetStatus(types.NewScannerStatus(types.Failed, types.Ptr(fmt.Errorf("failed to perform KICS scan: %w", err).Error())))
 			return
 		}
 
 		if ctx.Err() != nil {
-			log.Errorf("The operation timed out: %v", ctx.Err())
+			slog.Error("The operation timed out", slog.Any("error", ctx.Err()))
 			s.SetStatus(types.NewScannerStatus(types.Failed, types.Ptr(fmt.Errorf("failed due to timeout %w", ctx.Err()).Error())))
 			return
 		}
 
-		err = s.formatOutput(outputFile, config.OutputFile)
+		err = s.formatOutput(rawOutputFile, config.OutputFile)
 		if err != nil {
-			log.Errorf("Failed to format KICS output: %v", err)
+			slog.Error("Failed to format KICS output", slog.Any("error", err))
 			s.SetStatus(types.NewScannerStatus(types.Failed, types.Ptr(fmt.Errorf("failed to format KICS output: %w", err).Error())))
 			return
 		}
 
-		log.Infof("Scanner finished running.")
+		slog.Info("Scanner finished running.")
 		s.SetStatus(types.NewScannerStatus(types.Done, types.Ptr("Scanner finished running.")))
 	}()
 }

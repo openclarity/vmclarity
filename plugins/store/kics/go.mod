@@ -7,7 +7,6 @@ require (
 	github.com/Checkmarx/kics v1.7.13
 	github.com/hashicorp/hcl/v2 v2.16.2
 	github.com/openclarity/vmclarity/plugins/sdk v0.0.0-00010101000000-000000000000
-	github.com/sirupsen/logrus v1.9.3
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -168,6 +167,7 @@ require (
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/samber/lo v1.38.1 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
+	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/sosedoff/ansible-vault-go v0.1.1 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect

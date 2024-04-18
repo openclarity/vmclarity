@@ -1,12 +1,12 @@
 # KICS
 
-> **KICS** is a scanner application that uses [Checkmarx KICS](https://checkmarx.com/product/opensource/kics-open-source-infrastructure-as-code-project/) (Keeping Infrastructure as Code Secure) 
-> to scan your Infrastructure as Code (IaC) files for misconfigurations. 
+> **KICS** is a scanner application that uses [Checkmarx KICS](https://checkmarx.com/product/opensource/kics-open-source-infrastructure-as-code-project/) (Keeping Infrastructure as Code Secure)
+> to scan your Infrastructure as Code (IaC) files for misconfigurations.
 > It's designed to be used as a plugin for the [VMClarity](https://openclarity.io/docs/vmclarity/) platform.
 
 ## Usage
 
-Make a POST request with config below to the VMClarity API `/assetScans` endpoint to initiate a KICS scan. 
+Make a POST request with config below to the VMClarity API `/assetScans` endpoint to initiate a KICS scan.
 The body of the POST request should include a JSON object with the configuration for the scan.
 
 > NOTE: Below is a minimal example. Your actual configuration should have additional properties.
