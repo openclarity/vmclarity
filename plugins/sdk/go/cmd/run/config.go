@@ -16,14 +16,13 @@
 package run
 
 import (
-	"fmt"
-	"strings"
-
-	"github.com/spf13/viper"
+	"os"
 )
 
 const (
-	DefaultEnvPrefix     = "PLUGIN_SERVER"
+	EnvLogLevel      = "PLUGIN_SERVER_LOG_LEVEL"
+	EnvListenAddress = "PLUGIN_SERVER_LISTEN_ADDRESS"
+
 	DefaultLogLevel      = "info"
 	DefaultListenAddress = "0.0.0.0:8080"
 )
@@ -33,26 +32,19 @@ type Config struct {
 	ListenAddress string `json:"listen-address,omitempty" mapstructure:"listen_address"`
 }
 
-func NewConfig() (*Config, error) {
-	v := viper.NewWithOptions(
-		viper.KeyDelimiter("."),
-		viper.EnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_")),
-	)
-
-	v.SetEnvPrefix(DefaultEnvPrefix)
-	v.AllowEmptyEnv(true)
-	v.AutomaticEnv()
-
-	_ = v.BindEnv("listen_address")
-	v.SetDefault("listen_address", DefaultListenAddress)
-
-	_ = v.BindEnv("log_level")
-	v.SetDefault("log_level", DefaultLogLevel)
-
-	config := &Config{}
-	if err := v.Unmarshal(config); err != nil {
-		return nil, fmt.Errorf("failed to load API Server configuration: %w", err)
+func NewConfig() *Config {
+	config := &Config{
+		LogLevel:      DefaultLogLevel,
+		ListenAddress: DefaultListenAddress,
 	}
 
-	return config, nil
+	if logLevel, ok := os.LookupEnv(EnvLogLevel); ok {
+		config.LogLevel = logLevel
+	}
+
+	if listenAddress, ok := os.LookupEnv(EnvListenAddress); ok {
+		config.ListenAddress = listenAddress
+	}
+
+	return config
 }

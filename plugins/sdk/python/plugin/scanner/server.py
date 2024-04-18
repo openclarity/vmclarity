@@ -1,14 +1,15 @@
 from flask import Flask, request, jsonify, copy_current_request_context
 from threading import Thread
-
+import logging
+import sys
 import asyncio
 
 from plugin import encoder
 from plugin.scanner.scanner import AbstractScanner  # noqa: E501
 from plugin.models.config import Config  # noqa: E501
 from plugin.models.error_response import ErrorResponse  # noqa: E501
-from plugin.models.metadata import Metadata  # noqa: E501
 from plugin.models.stop import Stop  # noqa: E501
+from plugin.scanner.config import Config
 
 
 class Server:
@@ -16,10 +17,14 @@ class Server:
         self.app = Flask(__name__)
         self.app.json_encoder = encoder
         self.scanner = scanner
+        self.config = Config()
         self.register_routes()
 
-    def start(self, host: str, port: int):
-        self.app.run(host=host, port=port)
+        logging.basicConfig(stream=sys.stdout,
+                            level=logging.getLevelName(self.config.log_level.upper()))
+
+    def start(self):
+        self.app.run(host=self.config.get_host(), port=self.config.get_port())
 
     def stop(self):
         return "", 200

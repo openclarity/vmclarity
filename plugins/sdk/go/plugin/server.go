@@ -16,19 +16,75 @@
 package plugin
 
 import (
+	"context"
+	"errors"
+	"fmt"
+	"log/slog"
 	"net/http"
+	"time"
+
+	echomiddleware "github.com/labstack/echo/v4/middleware"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 
-	log "github.com/sirupsen/logrus"
-
+	internal "github.com/openclarity/vmclarity/plugins/sdk/internal/plugin"
 	"github.com/openclarity/vmclarity/plugins/sdk/types"
 )
 
+type Server struct {
+	echo    *echo.Echo
+	scanner Scanner
+}
+
+func NewServer(scanner Scanner) (*Server, error) {
+	_, err := internal.GetSwagger()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load swagger spec: %w", err)
+	}
+
+	server := &Server{
+		echo:    echo.New(),
+		scanner: scanner,
+	}
+
+	server.echo.Use(echomiddleware.Logger())
+	server.echo.Use(echomiddleware.Recover())
+
+	internal.RegisterHandlers(server.echo, server)
+
+	return server, nil
+}
+
+func (s *Server) Start(address string) error {
+	err := s.echo.Start(address)
+	if !errors.Is(err, http.ErrServerClosed) {
+		return fmt.Errorf("failed to start server: %w", err)
+	}
+
+	return nil
+}
+
+func (s *Server) Stop() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second) //nolint:gomnd
+	defer cancel()
+
+	if err := s.echo.Shutdown(ctx); err != nil {
+		return fmt.Errorf("failed to stop server: %w", err)
+	}
+
+	return nil
+}
+
+// Echo returns the underlying Echo server that can be used to e.g. add
+// middlewares or register new routes. This should happen before Start.
+func (s *Server) Echo() *echo.Echo {
+	return s.echo
+}
+
 //nolint:wrapcheck
 func (s *Server) GetHealthz(ctx echo.Context) error {
-	log.Info("Received GetHealthz request")
+	slog.Info("Received GetHealthz request")
 
 	if s.scanner.Healthz() {
 		return ctx.JSON(http.StatusOK, nil)
@@ -39,14 +95,14 @@ func (s *Server) GetHealthz(ctx echo.Context) error {
 
 //nolint:wrapcheck
 func (s *Server) GetMetadata(ctx echo.Context) error {
-	log.Info("Received GetMetadata request")
+	slog.Info("Received GetMetadata request")
 
 	return ctx.JSON(http.StatusOK, s.scanner.Metadata())
 }
 
 //nolint:wrapcheck
 func (s *Server) PostConfig(ctx echo.Context) error {
-	log.Info("Received PostConfig request")
+	slog.Info("Received PostConfig request")
 
 	var config types.Config
 	if err := ctx.Bind(&config); err != nil {
@@ -75,14 +131,14 @@ func (s *Server) PostConfig(ctx echo.Context) error {
 
 //nolint:wrapcheck
 func (s *Server) GetStatus(ctx echo.Context) error {
-	log.Info("Received GetStatus request")
+	slog.Info("Received GetStatus request")
 
 	return ctx.JSON(http.StatusOK, s.scanner.GetStatus())
 }
 
 //nolint:wrapcheck
 func (s *Server) PostStop(ctx echo.Context) error {
-	log.Info("Received StopScanner request")
+	slog.Info("Received StopScanner request")
 
 	var requestBody types.Stop
 	if err := ctx.Bind(&requestBody); err != nil {

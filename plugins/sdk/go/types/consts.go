@@ -15,5 +15,5 @@
 
 package types
 
-// ApiVersion defines the current version of the Plugin API SDK.
+// APIVersion defines the current version of the Scanner Plugin SDK API.
 const APIVersion = "1.0.0"

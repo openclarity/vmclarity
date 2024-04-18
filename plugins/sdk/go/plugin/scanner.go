@@ -16,63 +16,10 @@
 package plugin
 
 import (
-	"context"
-	"errors"
-	"fmt"
-	"net/http"
-	"time"
-
-	"github.com/labstack/echo/v4"
-
-	echomiddleware "github.com/labstack/echo/v4/middleware"
-
-	internal "github.com/openclarity/vmclarity/plugins/sdk/internal/plugin"
 	"github.com/openclarity/vmclarity/plugins/sdk/types"
 )
 
-type Server struct {
-	echo    *echo.Echo
-	scanner Scanner
-}
-
-func NewServer(scanner Scanner) (*Server, error) {
-	_, err := internal.GetSwagger()
-	if err != nil {
-		return nil, fmt.Errorf("failed to load swagger spec: %w", err)
-	}
-
-	server := &Server{
-		echo:    echo.New(),
-		scanner: scanner,
-	}
-
-	server.echo.Use(echomiddleware.Logger())
-	server.echo.Use(echomiddleware.Recover())
-
-	internal.RegisterHandlers(server.echo, server)
-
-	return server, nil
-}
-
-func (s *Server) Start(address string) error {
-	err := s.echo.Start(address)
-	if !errors.Is(err, http.ErrServerClosed) {
-		return fmt.Errorf("failed to start server: %w", err)
-	}
-
-	return nil
-}
-
-func (s *Server) Stop() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second) //nolint:gomnd
-	defer cancel()
-
-	if err := s.echo.Shutdown(ctx); err != nil {
-		return fmt.Errorf("failed to stop server: %w", err)
-	}
-
-	return nil
-}
+// TODO(ramizpolic): Document usage and execution flow
 
 type Scanner interface {
 	Healthz() bool

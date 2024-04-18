@@ -58,6 +58,7 @@ class Metadata(Model):
     def annotations(self) -> Dict[str, str]:
         """Gets the annotations of this Metadata.
 
+        Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.  # noqa: E501
 
         :return: The annotations of this Metadata.
         :rtype: Dict[str, str]
@@ -68,6 +69,7 @@ class Metadata(Model):
     def annotations(self, annotations: Dict[str, str]):
         """Sets the annotations of this Metadata.
 
+        Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.  # noqa: E501
 
         :param annotations: The annotations of this Metadata.
         :type annotations: Dict[str, str]

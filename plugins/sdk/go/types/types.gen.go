@@ -51,6 +51,9 @@ const (
 	VulnerabilitySeverityNegligible VulnerabilitySeverity = "NEGLIGIBLE"
 )
 
+// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+type Annotations map[string]string
+
 // Config Describes a scanner config.
 type Config struct {
 	// File The file with the configuration required by the scanner plugin. This is a path on the filesystem to the config file.
@@ -58,18 +61,6 @@ type Config struct {
 
 	// InputDir The directory which should be scanned by the scanner plugin.
 	InputDir string `json:"inputDir" validate:"required"`
-
-	// OutputExtraSchemas Specifies additional schemas the scanner plugin should include in the output.
-	// Schemas allow scanner plugin to export additional data that third-party tools
-	// and services can consume. Both the scanner plugin and the result consumer should
-	// know about implemented schemas to be able to create/parse the result.
-	// For example, `cyclondx-json` schema can be used to save/parse JSON data
-	// about SBOM findings.
-	//
-	// If the custom schema is not supported by the scanner, the scan should fail.
-	// It is up to the developer of the scanner plugin to add support for custom schemas,
-	// if any, based on the tools/services that will consume that data.
-	OutputExtraSchemas *string `json:"outputExtraSchemas"`
 
 	// OutputFile Path to JSON file where the scanner plugin should store its results.
 	OutputFile string `json:"outputFile" validate:"required"`
@@ -119,10 +110,11 @@ type Malware struct {
 
 // Metadata Describes the scanner plugin.
 type Metadata struct {
-	Annotations *map[string]string `json:"annotations,omitempty"`
-	ApiVersion  *string            `json:"apiVersion,omitempty"`
-	Name        *string            `json:"name,omitempty"`
-	Version     *string            `json:"version,omitempty"`
+	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+	Annotations *Annotations `json:"annotations,omitempty"`
+	ApiVersion  *string      `json:"apiVersion,omitempty"`
+	Name        *string      `json:"name,omitempty"`
+	Version     *string      `json:"version,omitempty"`
 }
 
 // Misconfiguration defines model for Misconfiguration.
@@ -163,12 +155,8 @@ type Package struct {
 
 // Result Describes data saved to a JSON file when a scan finishes successfully.
 type Result struct {
-	// ExtraSchemas Defines schema-specific results that third-party tools and services can consume.
-	//
-	// For example, if the scanner plugin supports a schema such as `cyclondx-14-json`,
-	// then the SBOM result will be available as raw JSON bytes defined via
-	// https://cyclonedx.org/docs/1.4/json/ schema.
-	ExtraSchemas *map[string]SchemaData `json:"extraSchemas"`
+	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+	Annotations *Annotations `json:"annotations,omitempty"`
 
 	// Vmclarity Defines scan result data that can be consumed by VMClarity API.
 	Vmclarity VMClarityData `json:"vmclarity"`
@@ -183,17 +171,6 @@ type Rootkit struct {
 
 // RootkitType defines model for RootkitType.
 type RootkitType string
-
-// SchemaData defines model for SchemaData.
-type SchemaData struct {
-	// Data Raw data about the scan results that matches a given schema.
-	// The schema can be used by the consumer to parse this data.
-	Data string `json:"data"`
-
-	// Schema Defines a schema that was used to construct the data.
-	// The schema can be used by the consumer for parsing.
-	Schema string `json:"schema"`
-}
 
 // Secret defines model for Secret.
 type Secret struct {

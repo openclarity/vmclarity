@@ -3,11 +3,9 @@ from datetime import date, datetime  # noqa: F401
 from typing import List, Dict  # noqa: F401
 
 from plugin.models.base_model import Model
-from plugin.models.schema_data import SchemaData
 from plugin.models.vm_clarity_data import VMClarityData
 from plugin import util
 
-from plugin.models.schema_data import SchemaData  # noqa: E501
 from plugin.models.vm_clarity_data import VMClarityData  # noqa: E501
 
 class Result(Model):
@@ -16,26 +14,26 @@ class Result(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, vmclarity=None, extra_schemas=None):  # noqa: E501
+    def __init__(self, annotations=None, vmclarity=None):  # noqa: E501
         """Result - a model defined in OpenAPI
 
+        :param annotations: The annotations of this Result.  # noqa: E501
+        :type annotations: Dict[str, str]
         :param vmclarity: The vmclarity of this Result.  # noqa: E501
         :type vmclarity: VMClarityData
-        :param extra_schemas: The extra_schemas of this Result.  # noqa: E501
-        :type extra_schemas: Dict[str, SchemaData]
         """
         self.openapi_types = {
-            'vmclarity': VMClarityData,
-            'extra_schemas': Dict[str, SchemaData]
+            'annotations': Dict[str, str],
+            'vmclarity': VMClarityData
         }
 
         self.attribute_map = {
-            'vmclarity': 'vmclarity',
-            'extra_schemas': 'extraSchemas'
+            'annotations': 'annotations',
+            'vmclarity': 'vmclarity'
         }
 
+        self._annotations = annotations
         self._vmclarity = vmclarity
-        self._extra_schemas = extra_schemas
 
     @classmethod
     def from_dict(cls, dikt) -> 'Result':
@@ -47,6 +45,29 @@ class Result(Model):
         :rtype: Result
         """
         return util.deserialize_model(dikt, cls)
+
+    @property
+    def annotations(self) -> Dict[str, str]:
+        """Gets the annotations of this Result.
+
+        Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.  # noqa: E501
+
+        :return: The annotations of this Result.
+        :rtype: Dict[str, str]
+        """
+        return self._annotations
+
+    @annotations.setter
+    def annotations(self, annotations: Dict[str, str]):
+        """Sets the annotations of this Result.
+
+        Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.  # noqa: E501
+
+        :param annotations: The annotations of this Result.
+        :type annotations: Dict[str, str]
+        """
+
+        self._annotations = annotations
 
     @property
     def vmclarity(self) -> VMClarityData:
@@ -70,26 +91,3 @@ class Result(Model):
             raise ValueError("Invalid value for `vmclarity`, must not be `None`")  # noqa: E501
 
         self._vmclarity = vmclarity
-
-    @property
-    def extra_schemas(self) -> Dict[str, SchemaData]:
-        """Gets the extra_schemas of this Result.
-
-        Defines schema-specific results that third-party tools and services can consume.  For example, if the scanner plugin supports a schema such as `cyclondx-14-json`, then the SBOM result will be available as raw JSON bytes defined via https://cyclonedx.org/docs/1.4/json/ schema.   # noqa: E501
-
-        :return: The extra_schemas of this Result.
-        :rtype: Dict[str, SchemaData]
-        """
-        return self._extra_schemas
-
-    @extra_schemas.setter
-    def extra_schemas(self, extra_schemas: Dict[str, SchemaData]):
-        """Sets the extra_schemas of this Result.
-
-        Defines schema-specific results that third-party tools and services can consume.  For example, if the scanner plugin supports a schema such as `cyclondx-14-json`, then the SBOM result will be available as raw JSON bytes defined via https://cyclonedx.org/docs/1.4/json/ schema.   # noqa: E501
-
-        :param extra_schemas: The extra_schemas of this Result.
-        :type extra_schemas: Dict[str, SchemaData]
-        """
-
-        self._extra_schemas = extra_schemas

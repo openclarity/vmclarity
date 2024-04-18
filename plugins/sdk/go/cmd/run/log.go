@@ -16,32 +16,19 @@
 package run
 
 import (
-	"fmt"
-	"io"
-
-	log "github.com/sirupsen/logrus"
+	"log/slog"
+	"os"
 )
 
-func InitLogger(level string, output io.Writer) error {
-	logLevel, err := log.ParseLevel(level)
-	if err != nil {
-		return fmt.Errorf("failed to parse log level: %w", err)
-	}
-	log.SetLevel(logLevel)
-
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp:          true,
-		DisableTimestamp:       false,
-		DisableSorting:         true,
-		DisableLevelTruncation: true,
-		QuoteEmptyFields:       true,
-	})
-
-	if logLevel >= log.DebugLevel {
-		log.SetReportCaller(true)
+func initLogger(level string) {
+	opts := &slog.HandlerOptions{
+		Level: slog.LevelDebug,
 	}
 
-	log.SetOutput(output)
+	var logLevel slog.Level
+	if logLevel.UnmarshalText([]byte(level)) == nil {
+		opts.Level = logLevel
+	}
 
-	return nil
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, opts)))
 }

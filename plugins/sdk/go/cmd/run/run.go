@@ -16,48 +16,65 @@
 package run
 
 import (
+	"fmt"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/openclarity/vmclarity/plugins/sdk/plugin"
 )
 
-func Run(scanner plugin.Scanner) {
-	config, err := NewConfig()
-	if err != nil {
-		log.Fatalf("Failed to load configuration: %v", err)
+// TODO(ramizpolic): allow usage of custom slog
+
+type options struct {
+	config *Config
+}
+
+func WithConfig(config Config) func(*options) {
+	return func(o *options) {
+		o.config = &config
+	}
+}
+
+// Run starts an HTTP server based on given config data. Logger always writes
+// data to standard output in order to be able to collect logs.
+func Run(scanner plugin.Scanner, opts ...func(*options)) {
+	// Load option data
+	options := &options{
+		config: NewConfig(),
+	}
+	for _, opt := range opts {
+		opt(options)
 	}
 
-	if err = InitLogger(config.LogLevel, os.Stderr); err != nil {
-		log.Fatalf("Failed to initialize logger: %v", err)
-	}
+	// Init logger
+	initLogger(options.config.LogLevel)
 
+	// Start server
 	server, err := plugin.NewServer(scanner)
 	if err != nil {
-		log.Fatalf("Failed to create HTTP server: %v", err)
+		slog.Error(fmt.Errorf("failed to create HTTP server: %w", err).Error())
 	}
 
 	go func() {
-		log.Infof("Plugin HTTP server starting...")
-		if err = server.Start(config.ListenAddress); err != nil {
-			log.Fatalf("Failed to start HTTP server: %v", err)
+		slog.Info("Plugin HTTP server starting...")
+		if err = server.Start(options.config.ListenAddress); err != nil {
+			slog.Error(fmt.Errorf("failed to start HTTP server: %w", err).Error())
 		}
 	}()
 
 	defer func() {
-		log.Infof("Plugin HTTP server stopping...")
+		slog.Info("Plugin HTTP server stopping...")
 		if err = server.Stop(); err != nil {
-			log.Errorf("Failed to stop HTTP server: %v", err)
+			slog.Error(fmt.Errorf("failed to stop HTTP server: %w", err).Error())
 			return
 		}
-		log.Infof("Plugin HTTP server stopped")
+		slog.Info("Plugin HTTP server stopped")
 	}()
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	s := <-sig
-	log.Warningf("Received a tremination signal: %v", s)
+	slog.Warn(fmt.Sprintf("Received a termination signal: %v", s))
 }

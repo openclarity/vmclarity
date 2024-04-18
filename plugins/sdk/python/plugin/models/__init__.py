@@ -13,7 +13,6 @@ from plugin.models.package import Package
 from plugin.models.result import Result
 from plugin.models.rootkit import Rootkit
 from plugin.models.rootkit_type import RootkitType
-from plugin.models.schema_data import SchemaData
 from plugin.models.secret import Secret
 from plugin.models.status import Status
 from plugin.models.stop import Stop

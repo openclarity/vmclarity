@@ -16,9 +16,8 @@
 package main
 
 import (
+	"log/slog"
 	"time"
-
-	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/plugins/sdk/cmd/run"
 	"github.com/openclarity/vmclarity/plugins/sdk/types"
@@ -38,18 +37,18 @@ func (s *Scanner) Metadata() *types.Metadata {
 }
 
 func (s *Scanner) Start(config *types.Config) {
-	log.Infof("Starting scanner with config: %+v\n", config)
+	slog.Info("Starting scanner with config", slog.Any("config", config))
 
 	go func() {
 		// Mark scan started
-		log.Infof("Scanner is running...")
+		slog.Info("Scanner is running...")
 		s.SetStatus(types.NewScannerStatus(types.Running, types.Ptr("Scanner is running...")))
 
 		// Do actual scanning here
 		time.Sleep(5 * time.Second) //nolint:gomnd
 
 		// Save scan results
-		log.Infof("Scanner finished running.")
+		slog.Info("Scanner finished running.")
 		s.SetStatus(types.NewScannerStatus(types.Done, types.Ptr("Scanner finished running.")))
 	}()
 }

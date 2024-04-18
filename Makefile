@@ -319,17 +319,17 @@ gen-uibackend-api: ## Generating Go library for UI Backend API specification
 	go -C $(ROOT_DIR)/uibackend/server generate
 
 .PHONY: gen-plugin-sdk
-gen-plugin-sdk: gen-go-plugin-sdk gen-python-plugin-sdk ## Generating Scanner Plugin SDKs
+gen-plugin-sdk: gen-plugin-sdk-go gen-plugin-sdk-python ## Generating Scanner Plugin SDK code
 
-.PHONY: gen-go-plugin-sdk
-gen-go-plugin-sdk: ## Generating Scanner Plugin Golang SDK
-	$(info Generating SDK code for Golang scanner plugin ...)
+.PHONY: gen-plugin-sdk-go
+gen-plugin-sdk-go: ## Generating Scanner Plugin SDK code for Golang
+	$(info Generating Scanner Plugin SDK code for Golang ...)
 	go -C $(ROOT_DIR)/plugins/sdk/go generate
 	go -C $(ROOT_DIR)/plugins/runner generate
 
-.PHONY: gen-python-plugin-sdk
-gen-python-plugin-sdk: ## Generating Scanner Plugin Python SDK
-	$(info Generating SDK code for Python scanner plugin ...)
+.PHONY: gen-plugin-sdk-python
+gen-plugin-sdk-python: ## Generating Scanner Plugin SDK code for Python
+	$(info Generating Scanner Plugin SDK code for Python ...)
 	sh ./plugins/sdk/python/tools/gen-sdk.sh
 
 .PHONY: gen-bicep

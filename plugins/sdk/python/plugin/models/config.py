@@ -12,7 +12,7 @@ class Config(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, file=None, input_dir=None, output_file=None, output_extra_schemas=None, timeout_seconds=None):  # noqa: E501
+    def __init__(self, file=None, input_dir=None, output_file=None, timeout_seconds=None):  # noqa: E501
         """Config - a model defined in OpenAPI
 
         :param file: The file of this Config.  # noqa: E501
@@ -21,8 +21,6 @@ class Config(Model):
         :type input_dir: str
         :param output_file: The output_file of this Config.  # noqa: E501
         :type output_file: str
-        :param output_extra_schemas: The output_extra_schemas of this Config.  # noqa: E501
-        :type output_extra_schemas: str
         :param timeout_seconds: The timeout_seconds of this Config.  # noqa: E501
         :type timeout_seconds: int
         """
@@ -30,7 +28,6 @@ class Config(Model):
             'file': str,
             'input_dir': str,
             'output_file': str,
-            'output_extra_schemas': str,
             'timeout_seconds': int
         }
 
@@ -38,14 +35,12 @@ class Config(Model):
             'file': 'file',
             'input_dir': 'inputDir',
             'output_file': 'outputFile',
-            'output_extra_schemas': 'outputExtraSchemas',
             'timeout_seconds': 'timeoutSeconds'
         }
 
         self._file = file
         self._input_dir = input_dir
         self._output_file = output_file
-        self._output_extra_schemas = output_extra_schemas
         self._timeout_seconds = timeout_seconds
 
     @classmethod
@@ -131,29 +126,6 @@ class Config(Model):
             raise ValueError("Invalid value for `output_file`, must not be `None`")  # noqa: E501
 
         self._output_file = output_file
-
-    @property
-    def output_extra_schemas(self) -> str:
-        """Gets the output_extra_schemas of this Config.
-
-        Specifies additional schemas the scanner plugin should include in the output. Schemas allow scanner plugin to export additional data that third-party tools and services can consume. Both the scanner plugin and the result consumer should know about implemented schemas to be able to create/parse the result. For example, `cyclondx-json` schema can be used to save/parse JSON data about SBOM findings.  If the custom schema is not supported by the scanner, the scan should fail. It is up to the developer of the scanner plugin to add support for custom schemas, if any, based on the tools/services that will consume that data.   # noqa: E501
-
-        :return: The output_extra_schemas of this Config.
-        :rtype: str
-        """
-        return self._output_extra_schemas
-
-    @output_extra_schemas.setter
-    def output_extra_schemas(self, output_extra_schemas: str):
-        """Sets the output_extra_schemas of this Config.
-
-        Specifies additional schemas the scanner plugin should include in the output. Schemas allow scanner plugin to export additional data that third-party tools and services can consume. Both the scanner plugin and the result consumer should know about implemented schemas to be able to create/parse the result. For example, `cyclondx-json` schema can be used to save/parse JSON data about SBOM findings.  If the custom schema is not supported by the scanner, the scan should fail. It is up to the developer of the scanner plugin to add support for custom schemas, if any, based on the tools/services that will consume that data.   # noqa: E501
-
-        :param output_extra_schemas: The output_extra_schemas of this Config.
-        :type output_extra_schemas: str
-        """
-
-        self._output_extra_schemas = output_extra_schemas
 
     @property
     def timeout_seconds(self) -> int:

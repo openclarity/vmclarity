@@ -85,14 +85,18 @@ paths:
 components:
   schemas:
 
+    Annotations:
+      type: object
+      description: Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+      additionalProperties:
+        type: string
+
     Metadata:
       type: object
       description: Describes the scanner plugin.
       properties:
         annotations:
-          type: object
-          additionalProperties:
-            type: string
+          $ref: '#/components/schemas/Annotations'
         name:
           type: string
         version:
@@ -155,20 +159,6 @@ components:
             validate: required
           description: |
             Path to JSON file where the scanner plugin should store its results.
-        outputExtraSchemas:
-          type: string
-          nullable: true
-          description: |
-            Specifies additional schemas the scanner plugin should include in the output.
-            Schemas allow scanner plugin to export additional data that third-party tools
-            and services can consume. Both the scanner plugin and the result consumer should
-            know about implemented schemas to be able to create/parse the result.
-            For example, `cyclondx-json` schema can be used to save/parse JSON data
-            about SBOM findings.
-
-            If the custom schema is not supported by the scanner, the scan should fail.
-            It is up to the developer of the scanner plugin to add support for custom schemas,
-            if any, based on the tools/services that will consume that data.
         timeoutSeconds:
           type: integer
           minimum: 0
@@ -206,41 +196,14 @@ components:
       required:
         - vmclarity
       properties:
+        annotations:
+          # Can be used to attach some scan data consumable by third-party service.
+          # Optional.
+          $ref: '#/components/schemas/Annotations'
         vmclarity:
           # Specifies concrete scan result data that can be consumed by VMClarity API.
           # Required.
           $ref: '#/components/schemas/VMClarityData'
-        extraSchemas:
-          # Specifies free-form scan result data that can be consumed by custom services.
-          # Optional.
-          type: object
-          description: |
-            Defines schema-specific results that third-party tools and services can consume.
-
-            For example, if the scanner plugin supports a schema such as `cyclondx-14-json`,
-            then the SBOM result will be available as raw JSON bytes defined via
-            https://cyclonedx.org/docs/1.4/json/ schema.
-          nullable: true
-          additionalProperties:
-            $ref: '#/components/schemas/SchemaData'
-
-    SchemaData:
-      type: object
-      required:
-        - schema
-        - data
-      properties:
-        schema:
-          type: string
-          description: |
-            Defines a schema that was used to construct the data.
-            The schema can be used by the consumer for parsing.
-        data:
-          type: string
-          format: bytes
-          description: |
-            Raw data about the scan results that matches a given schema.
-            The schema can be used by the consumer to parse this data.
 
     VMClarityData:
       type: object
