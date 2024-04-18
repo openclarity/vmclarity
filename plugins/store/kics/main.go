@@ -85,7 +85,6 @@ func (s *KICSScanner) Start(config *types.Config) {
 
 		slog.Info("Scanner is running...")
 		s.SetStatus(types.NewScannerStatus(types.Running, types.Ptr("Scanner is running...")))
-		tmp := os.TempDir()
 
 		clientConfig, err := s.createScanParametersConfig(config.File)
 		if err != nil {
@@ -94,14 +93,15 @@ func (s *KICSScanner) Start(config *types.Config) {
 			return
 		}
 
-		rawOutputFile := filepath.Join(tmp, "kics.json")
+		rawOutputFile := filepath.Join(os.TempDir(), "kics.json")
+
 		c, err := scan.NewClient(
 			&scan.Parameters{
 				Path:             []string{config.InputDir},
 				QueriesPath:      []string{"../../../queries"},
 				PreviewLines:     clientConfig.PreviewLines,
 				Platform:         clientConfig.Platform,
-				OutputPath:       tmp,
+				OutputPath:       filepath.Dir(rawOutputFile),
 				MaxFileSizeFlag:  clientConfig.MaxFileSizeFlag,
 				DisableSecrets:   clientConfig.DisableSecrets,
 				QueryExecTimeout: clientConfig.QueryExecTimeout,
