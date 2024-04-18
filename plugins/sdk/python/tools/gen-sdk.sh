@@ -11,6 +11,7 @@ SDK_PATH="$(realpath $SCRIPT_PATH/..)"
 ## Generate code
 echo "Generating Python server code from $PLUGIN_PATH"
 docker run --rm \
+  -u $(id -u ${USER}):$(id -g ${USER}) \
   -v ${PLUGIN_PATH}:/src $OPENAPI_GENERATOR_IMAGE \
   generate \
   -i /src/openapi.yaml \
