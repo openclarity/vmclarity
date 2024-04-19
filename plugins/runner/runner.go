@@ -105,7 +105,7 @@ func (r *Runner) Start(ctx context.Context) error {
 	_, err := r.client.PostConfigWithResponse(
 		ctx,
 		types.PostConfigJSONRequestBody{
-			File:           to.Ptr(getScannerConfigDestinationPath()),
+			ScannerConfig:  to.Ptr(r.PluginConfig.ScannerConfig),
 			InputDir:       DefaultScannerInputDir,
 			OutputFile:     filepath.Join(DefaultScannerOutputDir, filepath.Base(r.OutputFile)),
 			TimeoutSeconds: int(DefaultTimeout),
