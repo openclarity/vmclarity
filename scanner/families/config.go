@@ -127,6 +127,13 @@ func SetMountPointsForFamiliesInput(mountPoints []string, familiesConfig *Config
 				},
 			)
 		}
+
+		if familiesConfig.Plugins.Enabled {
+			familiesConfig.Plugins.Inputs = append(familiesConfig.Plugins.Inputs, types.Input{
+				Input:     mountDir,
+				InputType: string(utils.ROOTFS),
+			})
+		}
 	}
 	return familiesConfig
 }
