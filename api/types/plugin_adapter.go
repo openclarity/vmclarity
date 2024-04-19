@@ -7,7 +7,6 @@ var DefaultPluginAdapter PluginAdapter = &pluginAdapter{}
 
 type PluginAdapter interface {
 	Result(data plugintypes.Result) ([]Finding_FindingInfo, error)
-
 	Exploit(data plugintypes.Exploit) (*ExploitFindingInfo, error)
 	InfoFinder(data plugintypes.InfoFinder) (*InfoFinderFindingInfo, error)
 	Malware(data plugintypes.Malware) (*MalwareFindingInfo, error)
@@ -18,22 +17,24 @@ type PluginAdapter interface {
 	Vulnerability(data plugintypes.Vulnerability) (*VulnerabilityFindingInfo, error)
 }
 
-// implement PluginAdapter
 type pluginAdapter struct{}
 
 func (p pluginAdapter) Result(data plugintypes.Result) ([]Finding_FindingInfo, error) {
 	var findings []Finding_FindingInfo
 
-	// Convert secrets
-	if secrets := data.Vmclarity.Secrets; secrets != nil {
-		for _, secret := range *secrets {
-			secret, err := p.Secret(secret)
+	// Convert misconfigurations
+	if misconfigurations := data.Vmclarity.Misconfigurations; misconfigurations != nil {
+		for _, misconfiguration := range *misconfigurations {
+			misconfiguration, err := p.Misconfiguration(misconfiguration)
 			if err != nil {
 				return nil, err
 			}
+			if misconfiguration == nil {
+				continue
+			}
 
 			var finding Finding_FindingInfo
-			_ = finding.FromSecretFindingInfo(*secret)
+			_ = finding.FromMisconfigurationFindingInfo(*misconfiguration)
 			findings = append(findings, finding)
 		}
 	}
@@ -58,8 +59,29 @@ func (p pluginAdapter) Malware(data plugintypes.Malware) (*MalwareFindingInfo, e
 }
 
 func (p pluginAdapter) Misconfiguration(data plugintypes.Misconfiguration) (*MisconfigurationFindingInfo, error) {
-	//TODO implement me
-	panic("implement me")
+	severityMapping := map[plugintypes.MisconfigurationSeverity]MisconfigurationSeverity{
+		plugintypes.MisconfigurationSeverityHigh:   MisconfigurationHighSeverity,
+		plugintypes.MisconfigurationSeverityMedium: MisconfigurationMediumSeverity,
+		plugintypes.MisconfigurationSeverityLow:    MisconfigurationLowSeverity,
+		plugintypes.MisconfigurationSeverityInfo:   MisconfigurationInfoSeverity,
+	}
+
+	severity := MisconfigurationInfoSeverity
+	if data.Severity != nil {
+		if s, ok := severityMapping[*data.Severity]; ok {
+			severity = s
+		}
+	}
+
+	return &MisconfigurationFindingInfo{
+		Category:    data.Category,
+		Description: data.Description,
+		Id:          data.Id,
+		Location:    data.Location,
+		Message:     data.Message,
+		Remediation: data.Remediation,
+		Severity:    &severity,
+	}, nil
 }
 
 func (p pluginAdapter) Package(data plugintypes.Package) (*PackageFindingInfo, error) {
