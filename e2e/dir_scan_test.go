@@ -29,7 +29,7 @@ import (
 	"github.com/openclarity/vmclarity/testenv/types"
 )
 
-var _ = ginkgo.Describe("Running a scan (only SBOM)", func() {
+var _ = ginkgo.Describe("Running a SBOM and plugin scan", func() {
 	reportFailedConfig := ReportFailedConfig{
 		services: []string{"orchestrator"},
 	}
@@ -89,10 +89,22 @@ var _ = ginkgo.Describe("Running a scan (only SBOM)", func() {
 						Sbom: &apitypes.SBOMConfig{
 							Enabled: to.Ptr(true),
 						},
+						Plugins: &apitypes.PluginsConfig{
+							Enabled:      to.Ptr(true),
+							ScannersList: to.Ptr([]string{"kics"}),
+							ScannersConfig: &map[string]apitypes.PluginScannerConfig{
+								"kics": {
+									Config:     to.Ptr(""),
+									ImageName:  to.Ptr(cfg.TestEnvConfig.Docker.Images.PluginKics),
+									OutputFile: to.Ptr(""), // TODO
+								},
+							},
+						},
 					},
 					scope,
 					600,
-				))
+				),
+			)
 			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			reportFailedConfig.objects = append(
@@ -146,6 +158,12 @@ var _ = ginkgo.Describe("Running a scan (only SBOM)", func() {
 			ginkgo.By("verifying that at least one package was found")
 			gomega.Eventually(func() bool {
 				totalPackages := (*scans.Items)[0].Summary.TotalPackages
+				return *totalPackages > 0
+			}, DefaultTimeout, time.Second).Should(gomega.BeTrue())
+
+			ginkgo.By("verifying that at least one plugin finding was found")
+			gomega.Eventually(func() bool {
+				totalPackages := (*scans.Items)[0].Summary.TotalPlugins
 				return *totalPackages > 0
 			}, DefaultTimeout, time.Second).Should(gomega.BeTrue())
 		})
