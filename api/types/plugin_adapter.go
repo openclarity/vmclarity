@@ -2,9 +2,11 @@ package types
 
 import plugintypes "github.com/openclarity/vmclarity/plugins/sdk/types"
 
-// DefaultPluginAdapter is used to convert Plugin to VMClarity objects
+// DefaultPluginAdapter is used to convert latest version Plugin API models to VMClarity
 var DefaultPluginAdapter PluginAdapter = &pluginAdapter{}
 
+// PluginAdapter is responsible for converting Plugin security findings to
+// low-level VMClarity findings.
 type PluginAdapter interface {
 	Result(data plugintypes.Result) ([]Finding_FindingInfo, error)
 	Exploit(data plugintypes.Exploit) (*ExploitFindingInfo, error)
@@ -80,6 +82,9 @@ func (p pluginAdapter) Misconfiguration(data plugintypes.Misconfiguration) (*Mis
 		Location:    data.Location,
 		Message:     data.Message,
 		Remediation: data.Remediation,
+		// TODO(ramizpolic): Remove ScannerName property from Misconfiguration API.
+		// TODO(ramizpolic): This data is available on higher Finding object.
+		ScannerName: nil,
 		Severity:    &severity,
 	}, nil
 }

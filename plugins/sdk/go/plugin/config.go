@@ -13,30 +13,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package server
+package plugin
 
 import (
-	"log/slog"
 	"os"
 )
 
-var logger *slog.Logger
+const (
+	EnvLogLevel     = "PLUGIN_SERVER_LOG_LEVEL"
+	DefaultLogLevel = "info"
 
-func init() {
-	var logLevel slog.Level
-	if logLevel.UnmarshalText([]byte(getLogLevel())) != nil {
-		logLevel = slog.LevelInfo
+	EnvListenAddress     = "PLUGIN_SERVER_LISTEN_ADDRESS"
+	DefaultListenAddress = "http://0.0.0.0:8080"
+)
+
+func getLogLevel() string {
+	if logLevel := os.Getenv(EnvLogLevel); logLevel != "" {
+		return logLevel
 	}
 
-	logger = slog.New(
-		slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-			Level: logLevel,
-		}),
-	)
+	return DefaultLogLevel
 }
 
-// GetLogger defines JSON logger that outputs to stdout with level loaded fom
-// EnvLogLevel.
-func GetLogger() *slog.Logger {
-	return logger
+func getListenAddress() string {
+	if listenAddress := os.Getenv(EnvListenAddress); listenAddress != "" {
+		return listenAddress
+	}
+
+	return DefaultListenAddress
 }

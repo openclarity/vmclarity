@@ -20,7 +20,7 @@ go get "github.com/openclarity/vmclarity/plugins/sdk"
 All scanner plugins are run as containers and used via REST server interface.
 Developers should ship their scanners as container images that run the REST server.
 
-Configuration for the REST server can be found in [config.go](server/config.go).
+Configuration for the REST server can be found in [config.go](plugin/config.go).
 
 ## TODO
 
