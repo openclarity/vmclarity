@@ -123,19 +123,14 @@ rootkits:
       binary_path: chkrootkit
 
 plugins:
-  enabled: true
+  enabled: false
   scanners_list:
     - "kics"
-    - "dspm"
   inputs: 
-    - input: "/vol/asset"
+    - input: "/tmp"
       input_type: "rootfs"
   scanners_config:
     kics:
-      image_name: kics-image:latest
-      output_dir: "/export/kics"
-      config: {}
-    dspm:
-      image_name: dspm-image:latest
-      output_dir: "/export/dspm"
-      config: {}
+      image_name: "ghcr.io/openclarity/vmclarity-plugin-kics:latest"
+      output_dir: "/tmp/kics.json"
+      config: "{}"
