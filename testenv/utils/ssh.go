@@ -52,7 +52,7 @@ func (p *SSHKeyPair) Save(privKeyFile, pubKeyFile string) error {
 		return fmt.Errorf("failed to save private key file: %w", err)
 	}
 
-	err = os.WriteFile(pubKeyFile, p.PublicKey, 0o644) //nolint:gosec,gomnd
+	err = os.WriteFile(pubKeyFile, p.PublicKey, 0o600) //nolint:gosec,gomnd
 	if err != nil {
 		return fmt.Errorf("failed to save public key file: %w", err)
 	}
@@ -150,9 +150,9 @@ func (f *SSHPortForward) Start(ctx context.Context) error {
 	ctx, f.cancel = context.WithCancel(ctx)
 
 	// Dial the remote server.
-	client, err := ssh.Dial("tcp", f.input.HostAddressPort(), &f.clientConfig)
+	client, err := f.DialWithTimeout()
 	if err != nil {
-		return fmt.Errorf("failed to dial:%w", err)
+		return fmt.Errorf("failed to wait for the SSH server to be ready: %w", err)
 	}
 
 	// Listen on local port.
@@ -223,6 +223,25 @@ func (f *SSHPortForward) Stop() {
 	f.stop.Store(true)
 
 	f.cancel()
+}
+
+func (f *SSHPortForward) DialWithTimeout() (*ssh.Client, error) {
+	timeoutChan := time.After(2 * time.Minute)
+
+	for {
+		select {
+		case <-timeoutChan:
+			return nil, fmt.Errorf("ssh server did not respond within the specified timeout")
+		default:
+			conn, err := ssh.Dial("tcp", f.input.HostAddressPort(), &f.clientConfig)
+			if err != nil {
+				time.Sleep(1 * time.Second)
+				continue
+			}
+
+			return conn, err
+		}
+	}
 }
 
 func NewSSHPortForward(input *SSHForwardInput) (*SSHPortForward, error) {

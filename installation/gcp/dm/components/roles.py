@@ -21,13 +21,10 @@ from hashlib import sha1
 def GenerateConfig(context):
     """Creates the custom roles"""
 
-    deployment_name_hash = sha1(context.env["deployment"].encode("utf8")).hexdigest()[:10]
-    prefix = f"vmclarity-{deployment_name_hash}"
-
-    discoverer_role_name = f"{prefix}-discoverer-snapshotter"
+    discoverer_role_name = f"vmclarity-{context.env['deployment']}-discoverer-snapshotter"
     discoverer_role_id = discoverer_role_name.replace("-", "_")
 
-    scanner_role_name = f"{prefix}-scanner"
+    scanner_role_name = f"vmclarity-{context.env['deployment']}-scanner"
     scanner_role_id = scanner_role_name.replace("-", "_")
 
     resources = [
@@ -98,7 +95,7 @@ def GenerateConfig(context):
             },
         },
         {
-            "name": f"{prefix}-discoverer-snapshotter-role-binding",
+            "name": f"vmclarity-{context.env['deployment']}-discoverer-snapshotter-role-binding",
             "type": "gcp-types/cloudresourcemanager-v1:virtual.projects.iamMemberBinding",
             "properties": {
                 "resource": context.env["project"],
@@ -110,7 +107,7 @@ def GenerateConfig(context):
             },
         },
         {
-            "name": f"{prefix}-scanner-role-binding",
+            "name": f"vmclarity-{context.env['deployment']}-scanner-role-binding",
             "type": "gcp-types/cloudresourcemanager-v1:virtual.projects.iamMemberBinding",
             "properties": {
                 "resource": context.env["project"],

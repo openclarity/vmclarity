@@ -18,6 +18,7 @@ package docker
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
@@ -80,6 +81,27 @@ func (e *DockerHelper) Services(ctx context.Context) (envtypes.Services, error) 
 	}
 
 	return serviceCollection.AsServices(), nil
+}
+
+func (e *DockerHelper) WaitForDockerReady(ctx context.Context) error {
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancel()
+
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctxWithTimeout.Done():
+			return fmt.Errorf("stopping periodic check due to timeout")
+		case <-ticker.C:
+			_, err := e.client.Ping(ctxWithTimeout)
+			if err != nil {
+				continue
+			}
+			return nil
+		}
+	}
 }
 
 func New(opts []client.Opt) (*DockerHelper, error) {
