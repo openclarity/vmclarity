@@ -26,6 +26,9 @@ import (
 func main() {
 	ctx := context.Background()
 
+	// Create plugin runner
+	fmt.Printf("Starting plugin runner\n")
+
 	config := runner.PluginConfig{
 		Name:          "",
 		ImageName:     "", // TODO Add image name
@@ -33,19 +36,18 @@ func main() {
 		OutputFile:    "", // TODO Add output file
 		ScannerConfig: "",
 	}
-	runner, err := runner.New(config)
+	runner, err := runner.New(ctx, config)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+	defer runner.Remove(ctx) //nolint:errcheck
 
-	fmt.Printf("Starting plugin runner\n")
-	cleanup, err := runner.Start(ctx)
-	if err != nil {
+	fmt.Println("Starting scanner plugin...")
+	if err := runner.Start(ctx); err != nil {
 		fmt.Println(err)
 		return
 	}
-	defer cleanup(ctx) //nolint:errcheck
 
 	fmt.Printf("Waiting for plugin %s to be ready\n", config.Name)
 	err = runner.WaitReady(ctx)

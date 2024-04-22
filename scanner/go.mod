@@ -201,11 +201,15 @@ require (
 	github.com/go-openapi/spec v0.21.0 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
 	github.com/go-openapi/validate v0.24.0 // indirect
+	github.com/go-playground/locales v0.14.1 // indirect
+	github.com/go-playground/universal-translator v0.18.1 // indirect
+	github.com/go-playground/validator/v10 v10.19.0 // indirect
 	github.com/go-redis/redis/v8 v8.11.5 // indirect
 	github.com/go-restruct/restruct v1.2.0-alpha // indirect
 	github.com/go-test/deep v1.1.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
@@ -264,8 +268,11 @@ require (
 	github.com/knqyf263/go-rpmdb v0.1.0 // indirect
 	github.com/knqyf263/nested v0.0.1 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
+	github.com/labstack/echo/v4 v4.11.4 // indirect
+	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
+	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/liamg/iamgo v0.0.9 // indirect
 	github.com/liamg/jfather v0.0.7 // indirect
 	github.com/liamg/memoryfs v1.6.0 // indirect
@@ -385,6 +392,8 @@ require (
 	github.com/twitchtv/twirp v8.1.2+incompatible // indirect
 	github.com/ulikunitz/xz v0.5.11 // indirect
 	github.com/urfave/cli v1.22.14 // indirect
+	github.com/valyala/bytebufferpool v1.0.0 // indirect
+	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/vbatts/go-mtree v0.5.3 // indirect
 	github.com/vbatts/tar-split v0.11.5 // indirect
 	github.com/vifraa/gopom v1.0.0 // indirect

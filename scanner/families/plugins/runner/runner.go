@@ -63,40 +63,35 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 			return
 		}
 
-		config := runner.PluginConfig{
+		rr, err := runner.New(ctx, runner.PluginConfig{
 			Name:          s.name,
 			ImageName:     s.config.ImageName,
 			InputDir:      userInput,
 			OutputFile:    s.config.OutputDir,
 			ScannerConfig: s.config.ScannerConfig,
-		}
-		rr, err := runner.New(config)
+		})
 		if err != nil {
 			s.sendResults(retResults, fmt.Errorf("failed to create plugin runner: %w", err))
 			return
 		}
+		defer rr.Remove(ctx)
 
-		cleanup, err := rr.Start(ctx)
-		if err != nil {
+		if err := rr.Start(ctx); err != nil {
 			s.sendResults(retResults, fmt.Errorf("failed to start plugin runner: %w", err))
 			return
 		}
-		defer cleanup(ctx)
 
-		err = rr.WaitReady(ctx)
-		if err != nil {
+		if err := rr.WaitReady(ctx); err != nil {
 			s.sendResults(retResults, fmt.Errorf("failed to wait for plugin scanner to be ready: %w", err))
 			return
 		}
 
-		err = rr.Run(ctx)
-		if err != nil {
+		if err := rr.Run(ctx); err != nil {
 			s.sendResults(retResults, fmt.Errorf("failed to run plugin scanner: %w", err))
 			return
 		}
 
-		err = rr.WaitDone(ctx)
-		if err != nil {
+		if err := rr.WaitDone(ctx); err != nil {
 			s.sendResults(retResults, fmt.Errorf("failed to wait for plugin scanner to finish: %w", err))
 			return
 		}
@@ -126,11 +121,12 @@ func (s *Scanner) isValidInputType(sourceType utils.SourceType) bool {
 	return false
 }
 
-func (s *Scanner) parseResults(runner *runner.Runner) (*apitypes.PluginOutput, error) {
+func (s *Scanner) parseResults(runner runner.Runner) (*apitypes.PluginOutput, error) {
 	result, err := runner.Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get plugin scanner result: %w", err)
 	}
+	defer result.Close()
 
 	b, err := io.ReadAll(result)
 	if err != nil {
