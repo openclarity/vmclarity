@@ -121,7 +121,7 @@ func (s *Scanner) isValidInputType(sourceType utils.SourceType) bool {
 	return false
 }
 
-func (s *Scanner) parseResults(runner runner.Runner) (*apitypes.PluginOutput, error) {
+func (s *Scanner) parseResults(runner runner.PluginRunner) (*apitypes.PluginOutput, error) {
 	result, err := runner.Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get plugin scanner result: %w", err)

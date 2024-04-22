@@ -48,22 +48,26 @@ const (
 
 var ErrScanNotDone = errors.New("scan has not finished yet")
 
-type Runner interface {
+type PluginRunner interface {
 	Start(ctx context.Context) error
 	WaitReady(ctx context.Context) error
 	Run(ctx context.Context) error
 	WaitDone(ctx context.Context) error
+
+	// Logs returns log stream reader.
+	// Logs() (io.ReadCloser, error)
+
 	// Result
 	// TODO: Can return the plugintypes.Result object loaded from JSON directly
 	Result() (io.ReadCloser, error)
-	// Remove removes all resources used by Runner. Should be called after New.
+
+	// Remove cleans up all resources used by this PluginRunner. Should be called after New.
+	// TODO: should first send HTTP request to container before removing resources.
 	Remove(ctx context.Context) error
-	// TODO: implement stop to send the stop HTTP request to container
-	// Stop(ctx context.Context) error
 }
 
 type PluginConfig struct {
-	// Name is the name of the plugin scanner. This should be unique as only one Runner with the same Name can exist.
+	// Name is the name of the plugin scanner. This should be unique as only one PluginRunner with the same Name can exist.
 	Name string `yaml:"name" mapstructure:"name"`
 	// ImageName is the name of the docker image that will be used to run the plugin scanner
 	ImageName string `yaml:"image_name" mapstructure:"image_name"`
@@ -82,34 +86,29 @@ type runner struct {
 	containerID  string
 }
 
-func New(ctx context.Context, config PluginConfig) (Runner, error) {
+func New(ctx context.Context, config PluginConfig) (PluginRunner, error) {
 	// Load docker client
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return nil, fmt.Errorf("failed to create docker client: %w", err)
 	}
 
-	// Create runner
+	// Create plugin runner
 	runner := &runner{
 		config:       config,
 		dockerClient: dockerClient,
 	}
-
 	if err = runner.create(ctx); err != nil {
-		// Remove resources if needed
-		var removeErr error
-		if runner.containerID != "" {
-			removeErr = runner.Remove(ctx)
-		}
+		defer runner.Remove(ctx) // cleanup
 
-		// Return collected errors
-		errs := errors.Join(err, removeErr)
-		return nil, fmt.Errorf("failed to create runner: %w", errs)
+		return nil, fmt.Errorf("failed to create plugin runner: %w", err)
 	}
 
 	return runner, nil
 }
 
+// create creates the plugin container (without starting it) and sets
+// runner.containerID on success.
 func (r *runner) create(ctx context.Context) error {
 	// Write scanner config file to temp dir
 	err := os.WriteFile(getScannerConfigSourcePath(r.config.Name), []byte(r.config.ScannerConfig), 0o600) // nolint:gomnd
@@ -124,95 +123,69 @@ func (r *runner) create(ctx context.Context) error {
 	}
 
 	// Create scanner container
-	{
-		container, err := r.dockerClient.ContainerCreate(
-			ctx,
-			&containertypes.Config{
-				Image: r.config.ImageName,
-				Env: []string{
-					fmt.Sprintf("%s=0.0.0.0:%s", plugin.EnvListenAddress, DefaultScannerInternalServerPort.Port()),
-				},
-				ExposedPorts: nat.PortSet{DefaultScannerInternalServerPort: struct{}{}},
+	container, err := r.dockerClient.ContainerCreate(
+		ctx,
+		&containertypes.Config{
+			Image: r.config.ImageName,
+			Env: []string{
+				fmt.Sprintf("%s=0.0.0.0:%s", plugin.EnvListenAddress, DefaultScannerInternalServerPort.Port()),
 			},
-			&containertypes.HostConfig{
-				PortBindings: map[nat.Port][]nat.PortBinding{
-					DefaultScannerInternalServerPort: {
-						{
-							HostIP:   DefaultScannerHostNetworkInterface,
-							HostPort: "",
-						},
-					},
-				},
-				Mounts: []mount.Mount{
+			ExposedPorts: nat.PortSet{DefaultScannerInternalServerPort: struct{}{}},
+		},
+		&containertypes.HostConfig{
+			PortBindings: map[nat.Port][]nat.PortBinding{
+				DefaultScannerInternalServerPort: {
 					{
-						Type:   mount.TypeBind,
-						Source: getScannerConfigSourcePath(r.config.Name),
-						Target: getScannerConfigDestinationPath(),
-					},
-					{
-						Type:   mount.TypeBind,
-						Source: r.config.InputDir,
-						Target: DefaultScannerInputDir,
-					},
-					{
-						Type:   mount.TypeBind,
-						Source: filepath.Dir(r.config.OutputFile),
-						Target: DefaultScannerOutputDir,
+						HostIP:   DefaultScannerHostNetworkInterface,
+						HostPort: "",
 					},
 				},
 			},
-			nil,
-			nil,
-			r.config.Name,
-		)
-		if err != nil {
-			return fmt.Errorf("failed to create scanner container: %w", err)
-		}
-
-		r.containerID = container.ID
-	}
-
-	// Get host port where the container is reachable from
-	var hostPort string
-	{
-		inspect, err := r.dockerClient.ContainerInspect(ctx, r.containerID)
-		if err != nil {
-			return fmt.Errorf("failed to inspect scanner container: %w", err)
-		}
-		hostPorts, ok := inspect.NetworkSettings.Ports[DefaultScannerInternalServerPort]
-		if !ok {
-			return fmt.Errorf("failed to get scanner ports: %w", err)
-		}
-		if len(hostPorts) != 1 {
-			return fmt.Errorf("network port not attached to scanner")
-		}
-		hostPort = hostPorts[0].HostPort
-	}
-
-	// Create client to interact with the plugin
-	r.client, err = runnerclient.NewClientWithResponses(
-		fmt.Sprintf("http://%s:%s", DefaultScannerHostNetworkInterface, hostPort),
+			Mounts: []mount.Mount{
+				{
+					Type:   mount.TypeBind,
+					Source: getScannerConfigSourcePath(r.config.Name),
+					Target: getScannerConfigDestinationPath(),
+				},
+				{
+					Type:   mount.TypeBind,
+					Source: r.config.InputDir,
+					Target: DefaultScannerInputDir,
+				},
+				{
+					Type:   mount.TypeBind,
+					Source: filepath.Dir(r.config.OutputFile),
+					Target: DefaultScannerOutputDir,
+				},
+			},
+		},
+		nil,
+		nil,
+		r.config.Name,
 	)
 	if err != nil {
-		return fmt.Errorf("failed to create plugin client: %w", err)
+		return fmt.Errorf("failed to create scanner container: %w", err)
 	}
+	r.containerID = container.ID
 
 	return nil
 }
 
 func (r *runner) Start(ctx context.Context) error {
-	err := r.dockerClient.ContainerStart(ctx, r.containerID, containertypes.StartOptions{})
-	if err != nil {
+	// Start container
+	if err := r.dockerClient.ContainerStart(ctx, r.containerID, containertypes.StartOptions{}); err != nil {
 		return fmt.Errorf("failed to start scanner container: %w", err)
+	}
+
+	// Load plugin client
+	if err := r.loadPluginClient(ctx); err != nil {
+		return fmt.Errorf("failed to create scanner container client: %w", err)
 	}
 
 	return nil
 }
 
 func (r *runner) WaitReady(ctx context.Context) error {
-	// TODO: give some time for the docker container to boot.
-	// TODO: Can be done by adding retry logic (3 retries to WaitReady, 10s delay between retries)
-
 	ctx, cancel := context.WithTimeout(ctx, DefaultTimeout)
 	defer cancel()
 
@@ -244,7 +217,7 @@ func (r *runner) Run(ctx context.Context) error {
 			ScannerConfig:  to.Ptr(r.config.ScannerConfig),
 			InputDir:       DefaultScannerInputDir,
 			OutputFile:     filepath.Join(DefaultScannerOutputDir, filepath.Base(r.config.OutputFile)),
-			TimeoutSeconds: int(DefaultTimeout),
+			TimeoutSeconds: int(DefaultTimeout.Seconds()), // TODO: this should be configurable
 		},
 	)
 	if err != nil {
@@ -316,10 +289,83 @@ func (r *runner) Remove(ctx context.Context) error {
 	return nil
 }
 
+// loadPluginClient loads http client into runner.client to interact with plugin
+// server by trying to connect with the container either via internal container
+// IP address or via host using exposed port. This method handles retry until
+// DefaultTimeout is reached (this gives the time for the container to start and
+// be ready to receive requests).
+func (r *runner) loadPluginClient(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, DefaultTimeout)
+	defer cancel()
+
+	// Get network data needed to reach the container
+	inspect, err := r.dockerClient.ContainerInspect(ctx, r.containerID)
+	if err != nil {
+		return fmt.Errorf("failed to inspect scanner container: %w", err)
+	}
+	hostPorts, ok := inspect.NetworkSettings.Ports[DefaultScannerInternalServerPort]
+	if !ok {
+		return fmt.Errorf("failed to get scanner ports: %w", err)
+	}
+	if len(hostPorts) != 1 {
+		return fmt.Errorf("network port not attached to scanner container")
+	}
+	containerHostPort := hostPorts[0].HostPort
+	containerIP := inspect.NetworkSettings.IPAddress
+
+	// Try proper client for interacting with plugin server
+	ticker := time.NewTicker(DefaultPollInterval)
+	defer ticker.Stop()
+
+	clientErrs := make([]error, 2)
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("checking http clients of %s timed out: %w", r.config.Name, errors.Join(clientErrs...))
+
+		case <-ticker.C:
+			// Check if possible to connect directly via exposed port
+			r.client, clientErrs[0] = newPluginClient(ctx,
+				fmt.Sprintf("http://localhost:%s", containerHostPort),
+			)
+			if clientErrs[0] == nil {
+				return nil
+			}
+
+			// Check if possible to connect via container IP and internal port
+			r.client, clientErrs[1] = newPluginClient(ctx,
+				fmt.Sprintf("http://%s:%s", containerIP, DefaultScannerInternalServerPort.Port()),
+			)
+			if clientErrs[1] == nil {
+				return nil
+			}
+		}
+	}
+}
+
 func getScannerConfigSourcePath(name string) string {
 	return filepath.Join(os.TempDir(), name+"-plugin.json")
 }
 
 func getScannerConfigDestinationPath() string {
 	return filepath.Join("/plugin.json")
+}
+
+// newPluginClient creates a new client to interact with plugin server and pings
+// the server to check if available or errors.
+func newPluginClient(ctx context.Context, server string) (*runnerclient.ClientWithResponses, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Second) //nolint:gomnd
+	defer cancel()
+
+	c, err := runnerclient.NewClientWithResponses(server)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create plugin client: %w", err)
+	}
+
+	_, err = c.GetStatusWithResponse(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to ping plugin scanner server: %w", err)
+	}
+
+	return c, nil
 }
