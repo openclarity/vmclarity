@@ -18,10 +18,14 @@ package runner
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
+
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	imagetypes "github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
-	"io"
+	"github.com/docker/docker/pkg/archive"
 )
 
 func pullImage(ctx context.Context, client *client.Client, imageName string) error {
@@ -41,6 +45,42 @@ func pullImage(ctx context.Context, client *client.Client, imageName string) err
 		// consume output
 		_, _ = io.Copy(io.Discard, pullResp)
 		_ = pullResp.Close()
+	}
+
+	return nil
+}
+
+func (r *runner) copyConfigToContainer(ctx context.Context) error {
+	// Write scanner config file to temp dir
+	src := getScannerConfigSourcePath(r.config.Name)
+	err := os.WriteFile(src, []byte(r.config.ScannerConfig), 0o400) // nolint:gomnd
+	if err != nil {
+		return fmt.Errorf("failed write scanner config file: %w", err)
+	}
+
+	// Create tar archive from scan config file
+	srcInfo, err := archive.CopyInfoSourcePath(src, false)
+	if err != nil {
+		return fmt.Errorf("failed to get copy info: %w", err)
+	}
+	srcArchive, err := archive.TarResource(srcInfo)
+	if err != nil {
+		return fmt.Errorf("failed to create tar archive: %w", err)
+	}
+	defer srcArchive.Close()
+
+	// Prepare archive for copy
+	dstInfo := archive.CopyInfo{Path: getScannerConfigDestinationPath()}
+	dst, preparedArchive, err := archive.PrepareArchiveCopy(srcArchive, srcInfo, dstInfo)
+	if err != nil {
+		return fmt.Errorf("failed to prepare archive: %w", err)
+	}
+	defer preparedArchive.Close()
+
+	// Copy scan config file to container
+	err = r.dockerClient.CopyToContainer(ctx, r.containerID, dst, preparedArchive, types.CopyToContainerOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to copy config file to container: %w", err)
 	}
 
 	return nil

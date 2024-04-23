@@ -110,14 +110,8 @@ func New(ctx context.Context, config PluginConfig) (PluginRunner, error) {
 // create creates the plugin container (without starting it) and sets
 // runner.containerID on success.
 func (r *runner) create(ctx context.Context) error {
-	// Write scanner config file to temp dir
-	err := os.WriteFile(getScannerConfigSourcePath(r.config.Name), []byte(r.config.ScannerConfig), 0o600) // nolint:gomnd
-	if err != nil {
-		return fmt.Errorf("failed write scanner config file: %w", err)
-	}
-
 	// Pull scanner image if required
-	err = pullImage(ctx, r.dockerClient, r.config.ImageName)
+	err := pullImage(ctx, r.dockerClient, r.config.ImageName)
 	if err != nil {
 		return fmt.Errorf("failed to pull scanner image: %w", err)
 	}
@@ -144,11 +138,6 @@ func (r *runner) create(ctx context.Context) error {
 			Mounts: []mount.Mount{
 				{
 					Type:   mount.TypeBind,
-					Source: getScannerConfigSourcePath(r.config.Name),
-					Target: getScannerConfigDestinationPath(),
-				},
-				{
-					Type:   mount.TypeBind,
 					Source: r.config.InputDir,
 					Target: DefaultScannerInputDir,
 				},
@@ -167,6 +156,12 @@ func (r *runner) create(ctx context.Context) error {
 		return fmt.Errorf("failed to create scanner container: %w", err)
 	}
 	r.containerID = container.ID
+
+	// Copy config file to container
+	err = r.copyConfigToContainer(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to copy scanner config to container: %w", err)
+	}
 
 	return nil
 }
@@ -386,7 +381,7 @@ func (r *runner) waitContainerReady(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("checking ready of %s timed out: %w", r.config.Name)
+			return fmt.Errorf("checking ready of %s timed out", r.config.Name)
 
 		case <-ticker.C:
 			// Get state data needed to check the container
