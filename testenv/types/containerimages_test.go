@@ -198,6 +198,7 @@ func TestContainerImagesWithString(t *testing.T) {
 				UIBackend:         "openclarity.io/vmclarity-uibackend:test",
 				Scanner:           "vmclarity-scanner@sha256:96374b22a50bcfc96b96b5153b185ce5bf16d7a454766747633a32d2f1fefead",
 				CRDiscoveryServer: "ghcr.io/openclarity/vmclarity-cr-discovery-server:test",
+				PluginKics:        "vmclarity-plugin-kics:test",
 			},
 			ExpectedSlice: []string{
 				"openclarity.io/vmclarity-apiserver",
@@ -206,6 +207,7 @@ func TestContainerImagesWithString(t *testing.T) {
 				"openclarity.io/vmclarity-uibackend:test",
 				"vmclarity-scanner@sha256:96374b22a50bcfc96b96b5153b185ce5bf16d7a454766747633a32d2f1fefead",
 				"ghcr.io/openclarity/vmclarity-cr-discovery-server:test",
+				"vmclarity-plugin-kics:test",
 			},
 			ExpectedStringSlice: []string{
 				"openclarity.io/vmclarity-apiserver",
@@ -214,6 +216,7 @@ func TestContainerImagesWithString(t *testing.T) {
 				"openclarity.io/vmclarity-uibackend:test",
 				"vmclarity-scanner@sha256:96374b22a50bcfc96b96b5153b185ce5bf16d7a454766747633a32d2f1fefead",
 				"ghcr.io/openclarity/vmclarity-cr-discovery-server:test",
+				"vmclarity-plugin-kics:test",
 			},
 		},
 	}

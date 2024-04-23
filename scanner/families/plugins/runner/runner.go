@@ -74,7 +74,7 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 			s.sendResults(retResults, fmt.Errorf("failed to create plugin runner: %w", err))
 			return
 		}
-		defer rr.Remove(ctx)
+		defer rr.Remove(ctx) //nolint:errcheck
 
 		if err := rr.Start(ctx); err != nil {
 			s.sendResults(retResults, fmt.Errorf("failed to start plugin runner: %w", err))

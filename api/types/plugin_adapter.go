@@ -1,8 +1,23 @@
+// Copyright © 2024 Cisco Systems, Inc. and its affiliates.
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package types
 
 import plugintypes "github.com/openclarity/vmclarity/plugins/sdk/types"
 
-// DefaultPluginAdapter is used to convert latest version Plugin API models to VMClarity
+// DefaultPluginAdapter is used to convert latest version Plugin API models to VMClarity.
 var DefaultPluginAdapter PluginAdapter = &pluginAdapter{}
 
 // PluginAdapter is responsible for converting Plugin security findings to
@@ -46,17 +61,17 @@ func (p pluginAdapter) Result(data plugintypes.Result) ([]Finding_FindingInfo, e
 }
 
 func (p pluginAdapter) Exploit(data plugintypes.Exploit) (*ExploitFindingInfo, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (p pluginAdapter) InfoFinder(data plugintypes.InfoFinder) (*InfoFinderFindingInfo, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (p pluginAdapter) Malware(data plugintypes.Malware) (*MalwareFindingInfo, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
@@ -90,21 +105,21 @@ func (p pluginAdapter) Misconfiguration(data plugintypes.Misconfiguration) (*Mis
 }
 
 func (p pluginAdapter) Package(data plugintypes.Package) (*PackageFindingInfo, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (p pluginAdapter) Rootkit(data plugintypes.Rootkit) (*RootkitFindingInfo, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (p pluginAdapter) Secret(data plugintypes.Secret) (*SecretFindingInfo, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (p pluginAdapter) Vulnerability(data plugintypes.Vulnerability) (*VulnerabilityFindingInfo, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }

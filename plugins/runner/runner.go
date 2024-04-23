@@ -19,11 +19,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/openclarity/vmclarity/plugins/sdk/plugin"
 	"io"
+	"net"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/openclarity/vmclarity/plugins/sdk/plugin"
 
 	containertypes "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -98,7 +100,7 @@ func New(ctx context.Context, config PluginConfig) (PluginRunner, error) {
 		dockerClient: dockerClient,
 	}
 	if err = runner.create(ctx); err != nil {
-		defer runner.Remove(ctx) // cleanup
+		defer runner.Remove(ctx) //nolint:errcheck
 
 		return nil, fmt.Errorf("failed to create plugin runner: %w", err)
 	}
@@ -307,7 +309,7 @@ func (r *runner) loadPluginClient(ctx context.Context) error {
 		return fmt.Errorf("failed to get scanner ports: %w", err)
 	}
 	if len(hostPorts) != 1 {
-		return fmt.Errorf("network port not attached to scanner container")
+		return errors.New("network port not attached to scanner container")
 	}
 	containerHostPort := hostPorts[0].HostPort
 	containerIP := inspect.Config.Hostname
@@ -316,7 +318,7 @@ func (r *runner) loadPluginClient(ctx context.Context) error {
 	ticker := time.NewTicker(DefaultPollInterval)
 	defer ticker.Stop()
 
-	clientErrs := make([]error, 2)
+	clientErrs := make([]error, 2) //nolint:gomnd
 	for {
 		select {
 		case <-ctx.Done():
@@ -325,7 +327,7 @@ func (r *runner) loadPluginClient(ctx context.Context) error {
 		case <-ticker.C:
 			// Check if possible to connect directly via exposed port
 			r.client, clientErrs[0] = newPluginClient(ctx,
-				fmt.Sprintf("http://localhost:%s", containerHostPort),
+				"http://localhost:"+containerHostPort,
 			)
 			if clientErrs[0] == nil {
 				return nil
@@ -333,7 +335,7 @@ func (r *runner) loadPluginClient(ctx context.Context) error {
 
 			// Check if possible to connect via container IP and internal port
 			r.client, clientErrs[1] = newPluginClient(ctx,
-				fmt.Sprintf("http://%s:%s", containerIP, DefaultScannerInternalServerPort.Port()),
+				"http://"+net.JoinHostPort(containerIP, DefaultScannerInternalServerPort.Port()),
 			)
 			if clientErrs[1] == nil {
 				return nil

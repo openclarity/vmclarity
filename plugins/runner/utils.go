@@ -145,7 +145,7 @@ func (r *runner) getNetworkingConfig(ctx context.Context) (*network.NetworkingCo
 	if err != nil {
 		if client.IsErrNotFound(err) {
 			// Not running in a container
-			return nil, nil
+			return nil, nil //nolint:nilnil
 		}
 		return nil, fmt.Errorf("failed to inspect container: %w", err)
 	}
@@ -161,5 +161,5 @@ func (r *runner) getNetworkingConfig(ctx context.Context) (*network.NetworkingCo
 		}, nil
 	}
 
-	return nil, nil
+	return nil, nil //nolint:nilnil
 }
