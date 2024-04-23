@@ -402,7 +402,6 @@ func (p *Provider) createScanContainer(ctx context.Context, assetScanMount *moun
 					Source: "/var/run/docker.sock",
 					Target: "/var/run/docker.sock",
 				},
-				// TODO Mount folder with plugin config files
 			},
 		},
 		&network.NetworkingConfig{

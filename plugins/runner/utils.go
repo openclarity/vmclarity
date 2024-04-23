@@ -20,10 +20,12 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	imagetypes "github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
 )
@@ -84,4 +86,48 @@ func (r *runner) copyConfigToContainer(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (r *runner) getPluginContainerMounts(ctx context.Context) ([]mount.Mount, error) {
+	// Get container ID
+	containerID, err := os.Hostname()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get container ID: %w", err)
+	}
+
+	// Get container mounts
+	container, err := r.dockerClient.ContainerInspect(ctx, containerID)
+	if err != nil {
+		if client.IsErrNotFound(err) {
+			// Not running in a container
+			return []mount.Mount{
+				{
+					Type:   mount.TypeBind,
+					Source: r.config.InputDir,
+					Target: DefaultScannerInputDir,
+				},
+				{
+					Type:   mount.TypeBind,
+					Source: filepath.Dir(r.config.OutputFile),
+					Target: DefaultScannerOutputDir,
+				},
+			}, nil
+		}
+		return nil, fmt.Errorf("failed to inspect container: %w", err)
+	}
+
+	// Running in a container
+	// Convert MountPoint to mount.Mount
+	var mounts []mount.Mount
+	for _, p := range container.Mounts {
+		if p.Destination == r.config.InputDir {
+			mounts = append(mounts, mount.Mount{
+				Type:   p.Type,
+				Source: p.Source,
+				Target: p.Destination,
+			})
+		}
+	}
+
+	return mounts, nil
 }

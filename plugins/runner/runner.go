@@ -26,7 +26,6 @@ import (
 	"time"
 
 	containertypes "github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 
@@ -36,7 +35,7 @@ import (
 )
 
 const (
-	DefaultScannerInputDir  = "/asset"
+	DefaultScannerInputDir  = "/mnt/snapshot"
 	DefaultScannerOutputDir = "/export"
 
 	DefaultScannerHostNetworkInterface = "127.0.0.1"
@@ -116,6 +115,12 @@ func (r *runner) create(ctx context.Context) error {
 		return fmt.Errorf("failed to pull scanner image: %w", err)
 	}
 
+	// Get scanner container mounts
+	mounts, err := r.getPluginContainerMounts(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get scanner container mounts: %w", err)
+	}
+
 	// Create scanner container
 	container, err := r.dockerClient.ContainerCreate(
 		ctx,
@@ -135,18 +140,7 @@ func (r *runner) create(ctx context.Context) error {
 					},
 				},
 			},
-			Mounts: []mount.Mount{
-				{
-					Type:   mount.TypeBind,
-					Source: r.config.InputDir,
-					Target: DefaultScannerInputDir,
-				},
-				{
-					Type:   mount.TypeBind,
-					Source: filepath.Dir(r.config.OutputFile),
-					Target: DefaultScannerOutputDir,
-				},
-			},
+			Mounts: mounts,
 		},
 		nil,
 		nil,
