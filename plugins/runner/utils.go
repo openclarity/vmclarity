@@ -26,6 +26,7 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	imagetypes "github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/mount"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
 )
@@ -130,4 +131,35 @@ func (r *runner) getPluginContainerMounts(ctx context.Context) ([]mount.Mount, e
 	}
 
 	return mounts, nil
+}
+
+func (r *runner) getNetworkingConfig(ctx context.Context) (*network.NetworkingConfig, error) {
+	// Get container ID
+	containerID, err := os.Hostname()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get container ID: %w", err)
+	}
+
+	// Get container mounts
+	container, err := r.dockerClient.ContainerInspect(ctx, containerID)
+	if err != nil {
+		if client.IsErrNotFound(err) {
+			// Not running in a container
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to inspect container: %w", err)
+	}
+
+	// Running in a container
+	for _, net := range container.NetworkSettings.Networks {
+		return &network.NetworkingConfig{
+			EndpointsConfig: map[string]*network.EndpointSettings{
+				r.containerID: {
+					NetworkID: net.NetworkID,
+				},
+			},
+		}, nil
+	}
+
+	return nil, nil
 }

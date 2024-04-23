@@ -121,6 +121,12 @@ func (r *runner) create(ctx context.Context) error {
 		return fmt.Errorf("failed to get scanner container mounts: %w", err)
 	}
 
+	// Get networking config
+	networkingConfig, err := r.getNetworkingConfig(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get network ID: %w", err)
+	}
+
 	// Create scanner container
 	container, err := r.dockerClient.ContainerCreate(
 		ctx,
@@ -142,7 +148,7 @@ func (r *runner) create(ctx context.Context) error {
 			},
 			Mounts: mounts,
 		},
-		nil,
+		networkingConfig,
 		nil,
 		r.config.Name,
 	)
@@ -304,7 +310,7 @@ func (r *runner) loadPluginClient(ctx context.Context) error {
 		return fmt.Errorf("network port not attached to scanner container")
 	}
 	containerHostPort := hostPorts[0].HostPort
-	containerIP := inspect.NetworkSettings.IPAddress
+	containerIP := inspect.Config.Hostname
 
 	// Try proper client for interacting with plugin server
 	ticker := time.NewTicker(DefaultPollInterval)
