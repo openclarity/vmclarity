@@ -177,6 +177,11 @@ func (r *runner) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to start scanner container: %w", err)
 	}
 
+	// Wait for the container to enter the running state
+	if err := r.waitContainerReady(ctx); err != nil {
+		return fmt.Errorf("failed to wait for scanner to start: %w", err)
+	}
+
 	// Load plugin client
 	if err := r.loadPluginClient(ctx); err != nil {
 		return fmt.Errorf("failed to create scanner container client: %w", err)
@@ -292,8 +297,7 @@ func (r *runner) Remove(ctx context.Context) error {
 // loadPluginClient loads http client into runner.client to interact with plugin
 // server by trying to connect with the container either via internal container
 // IP address or via host using exposed port. This method handles retry until
-// DefaultTimeout is reached (this gives the time for the container to start and
-// be ready to receive requests).
+// DefaultTimeout is reached.
 func (r *runner) loadPluginClient(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, DefaultTimeout)
 	defer cancel()
@@ -368,4 +372,32 @@ func newPluginClient(ctx context.Context, server string) (*runnerclient.ClientWi
 	}
 
 	return c, nil
+}
+
+// waitContainerReady waits for the container to enter Running state to ensure
+// that network binds are available and server is ready to receive requests.
+func (r *runner) waitContainerReady(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, DefaultTimeout)
+	defer cancel()
+
+	ticker := time.NewTicker(DefaultPollInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("checking ready of %s timed out: %w", r.config.Name)
+
+		case <-ticker.C:
+			// Get state data needed to check the container
+			inspect, err := r.dockerClient.ContainerInspect(ctx, r.containerID)
+			if err != nil {
+				return fmt.Errorf("failed to inspect scanner container: %w", err)
+			}
+
+			if inspect.State.Running {
+				return nil
+			}
+		}
+	}
 }
