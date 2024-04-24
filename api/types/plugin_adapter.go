@@ -23,7 +23,7 @@ var DefaultPluginAdapter PluginAdapter = &pluginAdapter{}
 // PluginAdapter is responsible for converting Plugin security findings to
 // low-level VMClarity findings.
 type PluginAdapter interface {
-	Result(data plugintypes.Result) ([]Finding_FindingInfo, error)
+	Result(data plugintypes.Result) ([]FindingInfo, error)
 	Exploit(data plugintypes.Exploit) (*ExploitFindingInfo, error)
 	InfoFinder(data plugintypes.InfoFinder) (*InfoFinderFindingInfo, error)
 	Malware(data plugintypes.Malware) (*MalwareFindingInfo, error)
@@ -36,8 +36,8 @@ type PluginAdapter interface {
 
 type pluginAdapter struct{}
 
-func (p pluginAdapter) Result(data plugintypes.Result) ([]Finding_FindingInfo, error) {
-	var findings []Finding_FindingInfo
+func (p pluginAdapter) Result(data plugintypes.Result) ([]FindingInfo, error) {
+	var findings []FindingInfo
 
 	// Convert misconfigurations
 	if misconfigurations := data.Vmclarity.Misconfigurations; misconfigurations != nil {
@@ -50,7 +50,7 @@ func (p pluginAdapter) Result(data plugintypes.Result) ([]Finding_FindingInfo, e
 				continue
 			}
 
-			var finding Finding_FindingInfo
+			var finding FindingInfo
 			_ = finding.FromMisconfigurationFindingInfo(*misconfiguration)
 			findings = append(findings, finding)
 		}

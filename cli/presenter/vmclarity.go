@@ -550,7 +550,7 @@ func (v *VMClarityPresenter) ExportPluginsResult(ctx context.Context, res famili
 				apitypes.ScannerStatusReasonSuccess,
 				nil,
 			)
-			assetScan.Plugins.Output = &pluginResults.Output
+			assetScan.Plugins.FindingInfos = pluginResults.Output.FindingInfos
 			// TODO Total plugins should be split by type
 			assetScan.Summary.TotalPlugins = to.Ptr(pluginResults.GetTotal())
 			assetScan.Stats.Plugins = getInputScanStats(pluginResults.Metadata.InputScans)

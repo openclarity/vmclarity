@@ -3276,8 +3276,10 @@ components:
       properties:
         status:
           $ref: "#/components/schemas/ScannerStatus"
-        output:
-          $ref: '#/components/schemas/PluginOutput'
+        findingInfos:
+          type: array
+          items:
+            $ref: '#/components/schemas/FindingInfo'
 
     InfoFinderInfo:
       type: object
@@ -3470,62 +3472,37 @@ components:
               type: string
               format: date-time
             findingInfo:
-              anyOf:
-                - $ref: '#/components/schemas/PackageFindingInfo'
-                - $ref: '#/components/schemas/VulnerabilityFindingInfo'
-                - $ref: '#/components/schemas/MalwareFindingInfo'
-                - $ref: '#/components/schemas/SecretFindingInfo'
-                - $ref: '#/components/schemas/MisconfigurationFindingInfo'
-                - $ref: '#/components/schemas/RootkitFindingInfo'
-                - $ref: '#/components/schemas/ExploitFindingInfo'
-                - $ref: '#/components/schemas/InfoFinderFindingInfo'
-              discriminator:
-                propertyName: objectType
-                mapping:
-                  Package: '#/components/schemas/PackageFindingInfo'
-                  Vulnerability: '#/components/schemas/VulnerabilityFindingInfo'
-                  Malware: '#/components/schemas/MalwareFindingInfo'
-                  Secret: '#/components/schemas/SecretFindingInfo'
-                  Misconfiguration: '#/components/schemas/MisconfigurationFindingInfo'
-                  Rootkit: '#/components/schemas/RootkitFindingInfo'
-                  Exploit: '#/components/schemas/ExploitFindingInfo'
-                  InfoFinder: '#/components/schemas/InfoFinderFindingInfo'
+              $ref: '#/components/schemas/FindingInfo'
+
+    FindingInfo:
+      anyOf:
+        - $ref: '#/components/schemas/PackageFindingInfo'
+        - $ref: '#/components/schemas/VulnerabilityFindingInfo'
+        - $ref: '#/components/schemas/MalwareFindingInfo'
+        - $ref: '#/components/schemas/SecretFindingInfo'
+        - $ref: '#/components/schemas/MisconfigurationFindingInfo'
+        - $ref: '#/components/schemas/RootkitFindingInfo'
+        - $ref: '#/components/schemas/ExploitFindingInfo'
+        - $ref: '#/components/schemas/InfoFinderFindingInfo'
+      discriminator:
+        propertyName: objectType
+        mapping:
+          Package: '#/components/schemas/PackageFindingInfo'
+          Vulnerability: '#/components/schemas/VulnerabilityFindingInfo'
+          Malware: '#/components/schemas/MalwareFindingInfo'
+          Secret: '#/components/schemas/SecretFindingInfo'
+          Misconfiguration: '#/components/schemas/MisconfigurationFindingInfo'
+          Rootkit: '#/components/schemas/RootkitFindingInfo'
+          Exploit: '#/components/schemas/ExploitFindingInfo'
+          InfoFinder: '#/components/schemas/InfoFinderFindingInfo'
 
     PluginOutput:
       type: object
       properties:
-        packages:
+        findingInfos:
           type: array
           items:
-            $ref: '#/components/schemas/Package'
-        vulnerabilities:
-          type: array
-          items:
-            $ref: '#/components/schemas/Vulnerability'
-        malware:
-          type: array
-          items:
-            $ref: '#/components/schemas/Malware'
-        secrets:
-          type: array
-          items:
-            $ref: '#/components/schemas/Secret'
-        misconfigurations:
-          type: array
-          items:
-            $ref: '#/components/schemas/Misconfiguration'
-        rootkits:
-          type: array
-          items:
-            $ref: '#/components/schemas/Rootkit'
-        exploits:
-          type: array
-          items:
-            $ref: '#/components/schemas/Exploit'
-        infoFinder:
-          type: array
-          items:
-            $ref: '#/components/schemas/InfoFinderInfo'
+            $ref: '#/components/schemas/FindingInfo'
 
     ScanEstimations:
       type: object

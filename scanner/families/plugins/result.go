@@ -28,31 +28,5 @@ type Results struct {
 func (*Results) IsResults() {}
 
 func (r *Results) GetTotal() int {
-	total := 0
-	if r.Output.Exploits != nil {
-		total += len(*r.Output.Exploits)
-	}
-	if r.Output.InfoFinder != nil {
-		total += len(*r.Output.InfoFinder)
-	}
-	if r.Output.Malware != nil {
-		total += len(*r.Output.Malware)
-	}
-	if r.Output.Misconfigurations != nil {
-		total += len(*r.Output.Misconfigurations)
-	}
-	if r.Output.Packages != nil {
-		total += len(*r.Output.Packages)
-	}
-	if r.Output.Rootkits != nil {
-		total += len(*r.Output.Rootkits)
-	}
-	if r.Output.Secrets != nil {
-		total += len(*r.Output.Secrets)
-	}
-	if r.Output.Vulnerabilities != nil {
-		total += len(*r.Output.Vulnerabilities)
-	}
-
-	return total
+	return len(*r.Output.FindingInfos)
 }

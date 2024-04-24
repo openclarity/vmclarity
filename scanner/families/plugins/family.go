@@ -83,69 +83,15 @@ func (p *Plugins) GetType() types.FamilyType {
 
 //nolint:cyclop,predeclared
 func (p *Plugins) MergeResults(merged, new apitypes.PluginOutput) apitypes.PluginOutput {
-	if new.Exploits != nil {
-		if merged.Exploits == nil {
-			merged.Exploits = &[]apitypes.Exploit{}
-		}
-		exploits := append(*merged.Exploits, *new.Exploits...)
-		merged.Exploits = &exploits
+	if merged.FindingInfos == nil {
+		return new
+	}
+	if new.FindingInfos == nil {
+		return merged
 	}
 
-	if new.InfoFinder != nil {
-		if merged.InfoFinder == nil {
-			merged.InfoFinder = &[]apitypes.InfoFinderInfo{}
-		}
-		infoFinder := append(*merged.InfoFinder, *new.InfoFinder...)
-		merged.InfoFinder = &infoFinder
-	}
-
-	if new.Malware != nil {
-		if merged.Malware == nil {
-			merged.Malware = &[]apitypes.Malware{}
-		}
-		malware := append(*merged.Malware, *new.Malware...)
-		merged.Malware = &malware
-	}
-
-	if new.Misconfigurations != nil {
-		if merged.Misconfigurations == nil {
-			merged.Misconfigurations = &[]apitypes.Misconfiguration{}
-		}
-		misconfigurations := append(*merged.Misconfigurations, *new.Misconfigurations...)
-		merged.Misconfigurations = &misconfigurations
-	}
-
-	if new.Packages != nil {
-		if merged.Packages == nil {
-			merged.Packages = &[]apitypes.Package{}
-		}
-		packages := append(*merged.Packages, *new.Packages...)
-		merged.Packages = &packages
-	}
-
-	if new.Rootkits != nil {
-		if merged.Rootkits == nil {
-			merged.Rootkits = &[]apitypes.Rootkit{}
-		}
-		rootkits := append(*merged.Rootkits, *new.Rootkits...)
-		merged.Rootkits = &rootkits
-	}
-
-	if new.Secrets != nil {
-		if merged.Secrets == nil {
-			merged.Secrets = &[]apitypes.Secret{}
-		}
-		secrets := append(*merged.Secrets, *new.Secrets...)
-		merged.Secrets = &secrets
-	}
-
-	if new.Vulnerabilities != nil {
-		if merged.Vulnerabilities == nil {
-			merged.Vulnerabilities = &[]apitypes.Vulnerability{}
-		}
-		vulnerabilities := append(*merged.Vulnerabilities, *new.Vulnerabilities...)
-		merged.Vulnerabilities = &vulnerabilities
-	}
+	m := append(*merged.FindingInfos, *new.FindingInfos...)
+	merged.FindingInfos = &m
 
 	return merged
 }
