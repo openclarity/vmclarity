@@ -265,16 +265,21 @@ func (r *runner) Result() (io.ReadCloser, error) {
 	// Extract the tar file and read the content
 	tr := tar.NewReader(reader)
 	_, err = tr.Next()
-	if err == io.EOF {
+	if errors.Is(err, io.EOF) {
 		return nil, ErrScanNotDone
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to read tar file: %w", err)
 	}
-
 	buf := new(bytes.Buffer)
-	if _, err := io.Copy(buf, tr); err != nil {
-		return nil, fmt.Errorf("failed to copy file contents: %w", err)
+	for {
+		_, err := io.CopyN(buf, tr, 1024) //nolint:gomnd
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return nil, fmt.Errorf("failed to copy file contents: %w", err)
+		}
 	}
 
 	return io.NopCloser(buf), nil
