@@ -63,10 +63,10 @@ func (p *Plugins) Run(ctx context.Context, res *results.Results) (interfaces.IsR
 		}
 
 		// Merge results from all plugins into the same output
-		var mergedResults apitypes.PluginOutput
+		var mergedResults []apitypes.FindingInfo
 		for name, result := range managerResults {
 			logger.Infof("Merging result from %q", name)
-			mergedResults = p.MergeResults(mergedResults, result.(*common.Results).Output) //nolint:forcetypeassert
+			mergedResults = append(mergedResults, result.(*common.Results).Output...) //nolint:forcetypeassert
 		}
 
 		pluginsResults.Output = mergedResults
@@ -79,21 +79,6 @@ func (p *Plugins) Run(ctx context.Context, res *results.Results) (interfaces.IsR
 
 func (p *Plugins) GetType() types.FamilyType {
 	return types.Plugins
-}
-
-//nolint:cyclop,predeclared
-func (p *Plugins) MergeResults(merged, new apitypes.PluginOutput) apitypes.PluginOutput {
-	if merged.FindingInfos == nil {
-		return new
-	}
-	if new.FindingInfos == nil {
-		return merged
-	}
-
-	m := append(*merged.FindingInfos, *new.FindingInfos...)
-	merged.FindingInfos = &m
-
-	return merged
 }
 
 func New(conf Config) *Plugins {

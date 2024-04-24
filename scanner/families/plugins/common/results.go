@@ -18,7 +18,7 @@ package common
 import "github.com/openclarity/vmclarity/api/types"
 
 type Results struct {
-	Output       types.PluginOutput
+	Output       []types.FindingInfo
 	ScannedInput string
 	ScannerName  string
 	Error        error

@@ -105,7 +105,7 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 			return
 		}
 
-		retResults.Output.FindingInfos = &output
+		retResults.Output = output
 		s.sendResults(retResults, nil)
 	}()
 

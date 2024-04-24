@@ -901,11 +901,6 @@ type PackageFindingInfo struct {
 	Version    *string   `json:"version,omitempty"`
 }
 
-// PluginOutput defines model for PluginOutput.
-type PluginOutput struct {
-	FindingInfos *[]FindingInfo `json:"findingInfos,omitempty"`
-}
-
 // PluginScan defines model for PluginScan.
 type PluginScan struct {
 	FindingInfos *[]FindingInfo `json:"findingInfos,omitempty"`

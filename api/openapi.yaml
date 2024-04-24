@@ -3496,14 +3496,6 @@ components:
           Exploit: '#/components/schemas/ExploitFindingInfo'
           InfoFinder: '#/components/schemas/InfoFinderFindingInfo'
 
-    PluginOutput:
-      type: object
-      properties:
-        findingInfos:
-          type: array
-          items:
-            $ref: '#/components/schemas/FindingInfo'
-
     ScanEstimations:
       type: object
       properties:

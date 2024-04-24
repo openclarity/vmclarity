@@ -22,11 +22,11 @@ import (
 
 type Results struct {
 	Metadata familiestypes.Metadata `json:"Metadata"`
-	Output   apitypes.PluginOutput  `json:"Output"`
+	Output   []apitypes.FindingInfo `json:"Output"`
 }
 
 func (*Results) IsResults() {}
 
 func (r *Results) GetTotal() int {
-	return len(*r.Output.FindingInfos)
+	return len(r.Output)
 }
