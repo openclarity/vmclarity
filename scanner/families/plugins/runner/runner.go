@@ -25,6 +25,7 @@ import (
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/plugins/runner"
+	plugintypes "github.com/openclarity/vmclarity/plugins/sdk/types"
 	"github.com/openclarity/vmclarity/scanner/families/plugins/common"
 	"github.com/openclarity/vmclarity/scanner/families/plugins/runner/config"
 	"github.com/openclarity/vmclarity/scanner/job_manager"
@@ -104,7 +105,7 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 			return
 		}
 
-		retResults.Output = *output
+		retResults.Output.FindingInfos = &output
 		s.sendResults(retResults, nil)
 	}()
 
@@ -123,7 +124,7 @@ func (s *Scanner) isValidInputType(sourceType utils.SourceType) bool {
 	return false
 }
 
-func (s *Scanner) parseResults(runner runner.PluginRunner) (*apitypes.PluginOutput, error) {
+func (s *Scanner) parseResults(runner runner.PluginRunner) ([]apitypes.FindingInfo, error) {
 	result, err := runner.Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get plugin scanner result: %w", err)
@@ -135,13 +136,18 @@ func (s *Scanner) parseResults(runner runner.PluginRunner) (*apitypes.PluginOutp
 		return nil, fmt.Errorf("failed to read plugin scanner output: %w", err)
 	}
 
-	var pluginOutput apitypes.PluginOutput
-	err = json.Unmarshal(b, &pluginOutput)
+	var r plugintypes.Result
+	err = json.Unmarshal(b, &r)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal plugin scanner output: %w", err)
 	}
 
-	return &pluginOutput, nil
+	findings, err := apitypes.DefaultPluginAdapter.Result(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert plugin scanner result to vmclarity findings: %w", err)
+	}
+
+	return findings, nil
 }
 
 func (s *Scanner) sendResults(results common.Results, err error) {
