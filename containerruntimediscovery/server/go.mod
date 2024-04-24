@@ -13,7 +13,7 @@ require (
 	github.com/containers/image/v5 v5.30.0
 	github.com/docker/docker v26.0.1+incompatible
 	github.com/labstack/echo/v4 v4.12.0
-	github.com/openclarity/vmclarity/core v0.0.0-00010101000000-000000000000
+	github.com/openclarity/vmclarity/core v0.0.0-20240419112718-35696f1f9930
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2

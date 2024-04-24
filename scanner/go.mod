@@ -23,7 +23,7 @@ require (
 	github.com/onsi/gomega v1.32.0
 	github.com/openclarity/grype-server/api v0.0.0-20240201133700-ad5e6432b894
 	github.com/openclarity/vmclarity/api/types v0.0.0-00010101000000-000000000000
-	github.com/openclarity/vmclarity/core v0.0.0-20240410073938-fa34da109407
+	github.com/openclarity/vmclarity/core v0.0.0-20240419112718-35696f1f9930
 	github.com/openclarity/vmclarity/plugins/runner v0.0.0-00010101000000-000000000000
 	github.com/openclarity/vmclarity/plugins/sdk v0.0.0-00010101000000-000000000000
 	github.com/openclarity/yara-rule-server v0.3.0

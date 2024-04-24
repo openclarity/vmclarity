@@ -23,7 +23,7 @@ require (
 	github.com/openclarity/vmclarity/api/types v0.0.0-00010101000000-000000000000
 	github.com/openclarity/vmclarity/containerruntimediscovery/client v0.0.0-00010101000000-000000000000
 	github.com/openclarity/vmclarity/containerruntimediscovery/types v0.0.0-00010101000000-000000000000
-	github.com/openclarity/vmclarity/core v0.0.0-20240410073938-fa34da109407
+	github.com/openclarity/vmclarity/core v0.0.0-20240419112718-35696f1f9930
 	github.com/openclarity/vmclarity/scanner v0.0.0-00010101000000-000000000000
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.18.2
