@@ -132,5 +132,4 @@ plugins:
   scanners_config:
     kics:
       image_name: "ghcr.io/openclarity/vmclarity-plugin-kics:latest"
-      output_dir: "/tmp/kics.json"
       config: "{}"

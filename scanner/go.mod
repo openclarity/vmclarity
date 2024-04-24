@@ -25,6 +25,7 @@ require (
 	github.com/openclarity/vmclarity/api/types v0.0.0-00010101000000-000000000000
 	github.com/openclarity/vmclarity/core v0.0.0-20240410073938-fa34da109407
 	github.com/openclarity/vmclarity/plugins/runner v0.0.0-00010101000000-000000000000
+	github.com/openclarity/vmclarity/plugins/sdk v0.0.0-00010101000000-000000000000
 	github.com/openclarity/yara-rule-server v0.3.0
 	github.com/package-url/packageurl-go v0.1.2
 	github.com/sirupsen/logrus v1.9.3
@@ -327,7 +328,6 @@ require (
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/open-policy-agent/opa v0.62.0 // indirect
-	github.com/openclarity/vmclarity/plugins/sdk v0.0.0-00010101000000-000000000000 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/opencontainers/runtime-spec v1.2.0 // indirect
