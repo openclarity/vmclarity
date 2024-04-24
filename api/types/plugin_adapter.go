@@ -39,6 +39,7 @@ type PluginAdapter interface {
 
 type pluginAdapter struct{}
 
+//nolint:gocognit,cyclop
 func (p pluginAdapter) Result(data plugintypes.Result) ([]FindingInfo, error) {
 	var findings []FindingInfo
 
@@ -285,7 +286,6 @@ func (p pluginAdapter) Secret(data plugintypes.Secret) (*SecretFindingInfo, erro
 }
 
 func (p pluginAdapter) Vulnerability(data plugintypes.Vulnerability) (*VulnerabilityFindingInfo, error) {
-
 	cvss := []VulnerabilityCvss{}
 	if data.Cvss != nil {
 		for _, c := range *data.Cvss {
