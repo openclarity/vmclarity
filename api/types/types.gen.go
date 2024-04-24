@@ -921,9 +921,8 @@ type PluginScan struct {
 
 // PluginScannerConfig defines model for PluginScannerConfig.
 type PluginScannerConfig struct {
-	Config     *string `json:"config,omitempty"`
-	ImageName  *string `json:"image_name,omitempty"`
-	OutputFile *string `json:"output_file,omitempty"`
+	Config    *string `json:"config,omitempty"`
+	ImageName *string `json:"image_name,omitempty"`
 }
 
 // PluginsConfig defines model for PluginsConfig.

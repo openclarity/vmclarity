@@ -251,7 +251,6 @@ func withPluginsConfig(config *apitypes.PluginsConfig, _ *ScannerConfig) Familie
 		for k, v := range *config.ScannersConfig {
 			scannersConfig[k] = pluginsrunnerconfig.Config{
 				ImageName:     *v.ImageName,
-				OutputDir:     *v.OutputFile,
 				ScannerConfig: *v.Config,
 			}
 		}

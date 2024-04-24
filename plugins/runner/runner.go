@@ -16,6 +16,8 @@
 package runner
 
 import (
+	"archive/tar"
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -37,8 +39,7 @@ import (
 )
 
 const (
-	DefaultScannerInputDir  = "/mnt/snapshot"
-	DefaultScannerOutputDir = "/export"
+	DefaultScannerInputDir = "/mnt/snapshot"
 
 	DefaultScannerHostNetworkInterface = "127.0.0.1"
 	DefaultScannerInternalServerPort   = nat.Port("8080/tcp")
@@ -152,7 +153,7 @@ func (r *runner) create(ctx context.Context) error {
 		},
 		networkingConfig,
 		nil,
-		r.config.Name,
+		"",
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create scanner container: %w", err)
@@ -218,7 +219,7 @@ func (r *runner) Run(ctx context.Context) error {
 		types.PostConfigJSONRequestBody{
 			ScannerConfig:  to.Ptr(r.config.ScannerConfig),
 			InputDir:       DefaultScannerInputDir,
-			OutputFile:     filepath.Join(DefaultScannerOutputDir, filepath.Base(r.config.OutputFile)),
+			OutputFile:     r.config.OutputFile,
 			TimeoutSeconds: int(DefaultTimeout.Seconds()), // TODO: this should be configurable
 		},
 	)
@@ -255,20 +256,28 @@ func (r *runner) WaitDone(ctx context.Context) error {
 }
 
 func (r *runner) Result() (io.ReadCloser, error) {
-	_, err := os.Stat(r.config.OutputFile)
+	// Copy result file from container
+	reader, _, err := r.dockerClient.CopyFromContainer(context.Background(), r.containerID, r.config.OutputFile)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, ErrScanNotDone
-		}
-		return nil, fmt.Errorf("failed to fetch scanner result file: %w", err)
+		return nil, fmt.Errorf("failed to copy scanner result file: %w", err)
 	}
 
-	file, err := os.Open(r.config.OutputFile)
+	// Extract the tar file and read the content
+	tr := tar.NewReader(reader)
+	_, err = tr.Next()
+	if err == io.EOF {
+		return nil, ErrScanNotDone
+	}
 	if err != nil {
-		return nil, fmt.Errorf("failed to open scanner result file: %w", err)
+		return nil, fmt.Errorf("failed to read tar file: %w", err)
 	}
 
-	return file, nil
+	buf := new(bytes.Buffer)
+	if _, err := io.Copy(buf, tr); err != nil {
+		return nil, fmt.Errorf("failed to copy file contents: %w", err)
+	}
+
+	return io.NopCloser(buf), nil
 }
 
 func (r *runner) Remove(ctx context.Context) error {

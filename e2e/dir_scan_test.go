@@ -94,9 +94,8 @@ var _ = ginkgo.Describe("Running a SBOM and plugin scan", func() {
 							ScannersList: to.Ptr([]string{"kics"}),
 							ScannersConfig: &map[string]apitypes.PluginScannerConfig{
 								"kics": {
-									Config:     to.Ptr(""),
-									ImageName:  to.Ptr(cfg.TestEnvConfig.Docker.Images.PluginKics),
-									OutputFile: to.Ptr(""), // TODO
+									Config:    to.Ptr(""),
+									ImageName: to.Ptr(cfg.TestEnvConfig.Docker.Images.PluginKics),
 								},
 							},
 						},

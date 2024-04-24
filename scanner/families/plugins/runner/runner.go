@@ -31,6 +31,8 @@ import (
 	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
+const DefaultScannerOutputFile = "/tmp/output.json"
+
 type Scanner struct {
 	name       string
 	logger     *logrus.Entry
@@ -67,7 +69,7 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 			Name:          s.name,
 			ImageName:     s.config.ImageName,
 			InputDir:      userInput,
-			OutputFile:    s.config.OutputDir,
+			OutputFile:    DefaultScannerOutputFile,
 			ScannerConfig: s.config.ScannerConfig,
 		})
 		if err != nil {

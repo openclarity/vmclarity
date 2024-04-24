@@ -22,8 +22,6 @@ type Config struct {
 	ImageName string `yaml:"image_name" mapstructure:"image_name"`
 	// InputDir is a directory where the plugin scanner will read the asset filesystem
 	InputDir string `yaml:"input_dir" mapstructure:"input_dir"`
-	// Output is a directory where the plugin scanner will store its results
-	OutputDir string `yaml:"output_dir" mapstructure:"output_dir"`
 	// ScannerConfig is a json string that will be passed to the scanner in the plugin
 	ScannerConfig string `yaml:"scanner_config" mapstructure:"scanner_config"`
 }

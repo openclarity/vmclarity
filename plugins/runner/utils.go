@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
@@ -106,11 +105,6 @@ func (r *runner) getPluginContainerMounts(ctx context.Context) ([]mount.Mount, e
 					Type:   mount.TypeBind,
 					Source: r.config.InputDir,
 					Target: DefaultScannerInputDir,
-				},
-				{
-					Type:   mount.TypeBind,
-					Source: filepath.Dir(r.config.OutputFile),
-					Target: DefaultScannerOutputDir,
 				},
 			}, nil
 		}
