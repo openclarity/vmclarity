@@ -1,4 +1,4 @@
-module example-scanner
+module github.com/openclarity/vmclarity/plugins/example
 
 go 1.21.4
 

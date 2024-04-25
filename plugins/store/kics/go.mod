@@ -1,4 +1,4 @@
-module kics-plugin-scanner
+module github.com/openclarity/vmclarity/plugins/store/kics
 
 go 1.21.4
 
