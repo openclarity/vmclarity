@@ -77,7 +77,17 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 			s.sendResults(retResults, fmt.Errorf("failed to create plugin runner: %w", err))
 			return
 		}
-		defer rr.Remove(ctx) //nolint:errcheck
+		defer func() {
+			if err := rr.Stop(context.Background()); err != nil {
+				s.logger.WithError(err).Errorf("failed to stop runner")
+			}
+
+			// TODO: add short wait before removing to respect container shutdown procedure
+
+			if err := rr.Remove(context.Background()); err != nil {
+				s.logger.WithError(err).Errorf("failed to remove runner")
+			}
+		}() //nolint:errcheck
 
 		if err := rr.Start(ctx); err != nil {
 			s.sendResults(retResults, fmt.Errorf("failed to start plugin runner: %w", err))
@@ -98,7 +108,8 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 
 		// Stream logs
 		go func() {
-			logger := s.logger.WithField("metadata", metadata)
+			logger := s.logger.WithField("metadata", metadata).WithField("plugin", s.config.Name)
+
 			logs, err := rr.Logs(ctx)
 			if err != nil {
 				logger.WithError(err).Warnf("could not listen for logs on plugin runner")
@@ -107,7 +118,7 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 			defer logs.Close()
 
 			for r := bufio.NewScanner(logs); r.Scan(); {
-				logger.WithField("plugin", s.config.Name).Info(r.Text())
+				logger.Info(r.Text())
 			}
 		}()
 

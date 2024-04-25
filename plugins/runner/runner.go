@@ -139,7 +139,7 @@ func (r *pluginRunner) Run(ctx context.Context) error {
 		ctx,
 		containermanager.WithOverrides(plugintypes.Config{
 			ScannerConfig:  to.Ptr(r.config.ScannerConfig),
-			TimeoutSeconds: r.config.TimeoutSeconds,
+			TimeoutSeconds: int(types.ScanTimeout.Seconds()),
 		}),
 	)
 	if err != nil {
@@ -172,8 +172,7 @@ func (r *pluginRunner) WaitDone(ctx context.Context) error {
 		return errors.New("client missing, did not wait for ready state")
 	}
 
-	timeout := time.Duration(r.config.TimeoutSeconds) * time.Second
-	ctx, cancel := context.WithTimeout(ctx, timeout)
+	ctx, cancel := context.WithTimeout(ctx, types.ScanTimeout)
 	defer cancel()
 
 	ticker := time.NewTicker(defaultPollInterval)

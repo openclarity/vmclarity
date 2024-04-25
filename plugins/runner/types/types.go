@@ -26,6 +26,7 @@ import (
 const (
 	WaitReadyTimeout    = 1 * time.Minute
 	GracefulStopTimeout = 10 * time.Second
+	ScanTimeout         = 15 * time.Minute
 )
 
 type PluginConfig struct {

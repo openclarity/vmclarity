@@ -88,7 +88,7 @@ func (cm *containerManager) Start(ctx context.Context) error {
 	}
 
 	// Get scanner container mounts
-	scanDirMount, err := cm.getHostScanInputDirMount()
+	scanDirMount, err := cm.getScanInputDirMount()
 	if err != nil {
 		return fmt.Errorf("failed to get mounts: %w", err)
 	}
@@ -125,7 +125,7 @@ func (cm *containerManager) Start(ctx context.Context) error {
 	cm.containerID = container.ID
 
 	// Connect container to host network if available
-	networkID, err := cm.getHostNetworkID()
+	networkID, err := cm.getNetworkID()
 	if err != nil {
 		return fmt.Errorf("failed to get network ID: %w", err)
 	}
@@ -320,7 +320,7 @@ func (cm *containerManager) waitContainerRunning(ctx context.Context) (*dockerty
 	}
 }
 
-func (cm *containerManager) getHostScanInputDirMount() (*mount.Mount, error) {
+func (cm *containerManager) getScanInputDirMount() (*mount.Mount, error) {
 	// If the host is running in a container, we need to remount as we don't know the
 	// mount type.
 	// TODO: add docs about flow
@@ -331,10 +331,9 @@ func (cm *containerManager) getHostScanInputDirMount() (*mount.Mount, error) {
 			}
 
 			return &mount.Mount{
-				Type:     p.Type,
-				Source:   p.Source,                                    // actual source on the host
-				Target:   containermanager.RemoteScanInputDirOverride, // override remote path
-				ReadOnly: true,
+				Type:   p.Type,
+				Source: p.Source,                                    // actual source on the host
+				Target: containermanager.RemoteScanInputDirOverride, // override remote path
 			}, nil
 		}
 
@@ -343,14 +342,13 @@ func (cm *containerManager) getHostScanInputDirMount() (*mount.Mount, error) {
 
 	// Use default mount
 	return &mount.Mount{
-		Type:     mount.TypeBind,
-		Source:   cm.config.InputDir,
-		Target:   containermanager.RemoteScanInputDirOverride, // override remote path
-		ReadOnly: true,
+		Type:   mount.TypeBind,
+		Source: cm.config.InputDir,
+		Target: containermanager.RemoteScanInputDirOverride, // override remote path
 	}, nil
 }
 
-func (cm *containerManager) getHostNetworkID() (string, error) {
+func (cm *containerManager) getNetworkID() (string, error) {
 	// NOTE(docker provider): When the CLI is run via docker provider, the plugin
 	// container needs to be in the same network so that we can communicate with it from host.
 	// Plugin container only needs to belong to one of host's network.
@@ -393,33 +391,3 @@ func getHostContainer(ctx context.Context, dclient *client.Client) (*dockertypes
 		return nil, fmt.Errorf("failed to inspect host: %w", err)
 	}
 }
-
-//func (cm *containerManager) copyConfigToContainer(ctx context.Context, configFile string) error {
-//	// Create tar archive from scan config file
-//	srcInfo, err := archive.CopyInfoSourcePath(configFile, false)
-//	if err != nil {
-//		return fmt.Errorf("failed to get copy info: %w", err)
-//	}
-//	srcArchive, err := archive.TarResource(srcInfo)
-//	if err != nil {
-//		return fmt.Errorf("failed to create tar archive: %w", err)
-//	}
-//	defer srcArchive.Close()
-//
-//	// Prepare archive for copy. Once we copy config data into it, we dont care about
-//	// this file anymore.
-//	dstInfo := archive.CopyInfo{Path: "/plugin.json"}
-//	dst, preparedArchive, err := archive.PrepareArchiveCopy(srcArchive, srcInfo, dstInfo)
-//	if err != nil {
-//		return fmt.Errorf("failed to prepare archive: %w", err)
-//	}
-//	defer preparedArchive.Close()
-//
-//	// Copy scan config file to container
-//	err = cm.dclient.CopyToContainer(ctx, cm.containerID, dst, preparedArchive, dockertypes.CopyToContainerOptions{})
-//	if err != nil {
-//		return fmt.Errorf("failed to copy config file to container: %w", err)
-//	}
-//
-//	return nil
-//}
