@@ -32,5 +32,6 @@ require (
 replace (
 	github.com/openclarity/vmclarity/api/types => ../../api/types
 	github.com/openclarity/vmclarity/containerruntimediscovery/types => ../types
+	github.com/openclarity/vmclarity/core => ../../core
 	github.com/openclarity/vmclarity/plugins/sdk => ../../plugins/sdk/go
 )
