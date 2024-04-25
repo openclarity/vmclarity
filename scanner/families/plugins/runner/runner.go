@@ -20,13 +20,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/openclarity/vmclarity/plugins/runner/types"
 	"io"
 
 	"github.com/sirupsen/logrus"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/plugins/runner"
+	"github.com/openclarity/vmclarity/plugins/runner/types"
 	plugintypes "github.com/openclarity/vmclarity/plugins/sdk/types"
 	"github.com/openclarity/vmclarity/scanner/families/plugins/common"
 	"github.com/openclarity/vmclarity/scanner/families/plugins/runner/config"
