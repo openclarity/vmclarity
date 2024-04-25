@@ -31,7 +31,7 @@ class ExampleScanner(AbstractScanner):
         logger = Server.logger()
 
         # Mark scan started
-        logger.info("Scanner is running")
+        logger.info(f"Scanner is running, config={config.to_str()}")
         self.set_status(Status(state="Running", message="Scan running"))
 
         # Example scanning

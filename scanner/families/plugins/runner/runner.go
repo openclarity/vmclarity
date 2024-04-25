@@ -16,9 +16,11 @@
 package runner
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/openclarity/vmclarity/plugins/runner/types"
 	"io"
 
 	"github.com/sirupsen/logrus"
@@ -31,8 +33,6 @@ import (
 	"github.com/openclarity/vmclarity/scanner/job_manager"
 	"github.com/openclarity/vmclarity/scanner/utils"
 )
-
-const DefaultScannerOutputFile = "/tmp/output.json"
 
 type Scanner struct {
 	name       string
@@ -53,7 +53,8 @@ func New(name string, c job_manager.IsConfig, logger *logrus.Entry, resultChan c
 
 func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 	go func() {
-		ctx := context.Background()
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
 
 		retResults := common.Results{
 			ScannedInput: userInput,
@@ -66,11 +67,10 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 			return
 		}
 
-		rr, err := runner.New(ctx, runner.PluginConfig{
+		rr, err := runner.New(types.PluginConfig{
 			Name:          s.name,
 			ImageName:     s.config.ImageName,
 			InputDir:      userInput,
-			OutputFile:    DefaultScannerOutputFile,
 			ScannerConfig: s.config.ScannerConfig,
 		})
 		if err != nil {
@@ -89,6 +89,28 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 			return
 		}
 
+		// Get plugin metadata
+		metadata, err := rr.Metadata(ctx)
+		if err != nil {
+			s.sendResults(retResults, fmt.Errorf("failed to get plugin scanner metadata: %w", err))
+			return
+		}
+
+		// Stream logs
+		go func() {
+			logger := s.logger.WithField("metadata", metadata)
+			logs, err := rr.Logs(ctx)
+			if err != nil {
+				logger.WithError(err).Warnf("could not listen for logs on plugin runner")
+				return
+			}
+			defer logs.Close()
+
+			for r := bufio.NewScanner(logs); r.Scan(); {
+				logger.WithField("plugin", s.config.Name).Info(r.Text())
+			}
+		}()
+
 		if err := rr.Run(ctx); err != nil {
 			s.sendResults(retResults, fmt.Errorf("failed to run plugin scanner: %w", err))
 			return
@@ -99,7 +121,7 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 			return
 		}
 
-		output, err := s.parseResults(rr)
+		output, err := s.parseResults(ctx, rr)
 		if err != nil {
 			s.sendResults(retResults, fmt.Errorf("failed to parse plugin scanner results: %w", err))
 			return
@@ -124,8 +146,8 @@ func (s *Scanner) isValidInputType(sourceType utils.SourceType) bool {
 	return false
 }
 
-func (s *Scanner) parseResults(runner runner.PluginRunner) ([]apitypes.FindingInfo, error) {
-	result, err := runner.Result()
+func (s *Scanner) parseResults(ctx context.Context, runner types.PluginRunner) ([]apitypes.FindingInfo, error) {
+	result, err := runner.Result(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get plugin scanner result: %w", err)
 	}

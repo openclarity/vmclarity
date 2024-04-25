@@ -162,8 +162,8 @@ var _ = ginkgo.Describe("Running a SBOM and plugin scan", func() {
 
 			ginkgo.By("verifying that at least one plugin finding was found")
 			gomega.Eventually(func() bool {
-				totalPackages := (*scans.Items)[0].Summary.TotalPlugins
-				return totalPackages != nil && *totalPackages > 0
+				totalPlugins := (*scans.Items)[0].Summary.TotalPlugins
+				return totalPlugins != nil && *totalPlugins > 0
 			}, DefaultTimeout, time.Second).Should(gomega.BeTrue())
 		})
 	})
