@@ -211,10 +211,10 @@ func (cm *containerManager) GetPluginServerEndpoint() (string, error) {
 		return "", errors.New("scanner container not in ready state")
 	}
 
-	// If the host is running in a container, use the plugin container name/ID to
+	// If the host is running in a container, use the plugin container hostname to
 	// communicate from host since they are on the same docker network.
 	if cm.hostContainer != nil {
-		return "http://" + net.JoinHostPort(container.Name, defaultInternalServerPort.Port()), nil
+		return "http://" + net.JoinHostPort(container.Config.Hostname, defaultInternalServerPort.Port()), nil
 	}
 
 	// If CLI is running in host, use the randomly assigned port on host to
