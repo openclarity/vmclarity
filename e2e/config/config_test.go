@@ -16,7 +16,6 @@
 package config
 
 import (
-	gcpenv "github.com/openclarity/vmclarity/testenv/gcp"
 	"os"
 	"testing"
 	"time"
@@ -27,6 +26,7 @@ import (
 	"github.com/openclarity/vmclarity/testenv"
 	awsenv "github.com/openclarity/vmclarity/testenv/aws"
 	dockerenv "github.com/openclarity/vmclarity/testenv/docker"
+	gcpenv "github.com/openclarity/vmclarity/testenv/gcp"
 	k8senv "github.com/openclarity/vmclarity/testenv/kubernetes"
 	"github.com/openclarity/vmclarity/testenv/kubernetes/helm"
 	k8senvtypes "github.com/openclarity/vmclarity/testenv/kubernetes/types"

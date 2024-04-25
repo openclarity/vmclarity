@@ -38,6 +38,7 @@ import (
 
 const (
 	DefaultSSHPort = 22
+	SSHTimeout     = 2 * time.Minute
 )
 
 type SSHKeyPair struct {
@@ -150,7 +151,7 @@ func (f *SSHPortForward) Start(ctx context.Context) error {
 	ctx, f.cancel = context.WithCancel(ctx)
 
 	// Dial the remote server.
-	client, err := f.DialWithTimeout()
+	client, err := f.DialWithTimeout(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to wait for the SSH server to be ready: %w", err)
 	}
@@ -225,13 +226,14 @@ func (f *SSHPortForward) Stop() {
 	f.cancel()
 }
 
-func (f *SSHPortForward) DialWithTimeout() (*ssh.Client, error) {
-	timeoutChan := time.After(2 * time.Minute)
+func (f *SSHPortForward) DialWithTimeout(ctx context.Context) (*ssh.Client, error) {
+	ctx, cancel := context.WithTimeout(ctx, SSHTimeout)
+	defer cancel()
 
 	for {
 		select {
-		case <-timeoutChan:
-			return nil, fmt.Errorf("ssh server did not respond within the specified timeout")
+		case <-ctx.Done():
+			return nil, fmt.Errorf("timeout waiting for SSH server to be ready: %w", ctx.Err())
 		default:
 			conn, err := ssh.Dial("tcp", f.input.HostAddressPort(), &f.clientConfig)
 			if err != nil {
@@ -239,7 +241,7 @@ func (f *SSHPortForward) DialWithTimeout() (*ssh.Client, error) {
 				continue
 			}
 
-			return conn, err
+			return conn, nil
 		}
 	}
 }

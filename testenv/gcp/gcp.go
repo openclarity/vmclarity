@@ -17,48 +17,36 @@ package gcp
 
 import (
 	"context"
+	"crypto/sha1" // nolint:gosec
+	"encoding/hex"
 	"fmt"
-	"github.com/openclarity/vmclarity/installation"
-	"github.com/openclarity/vmclarity/testenv/utils/docker"
 	"io"
 	"net/url"
 	"os"
-	"path/filepath"
-	"strings"
 	"time"
 
 	compute "cloud.google.com/go/compute/apiv1"
-	"github.com/openclarity/vmclarity/testenv/types"
-	envtypes "github.com/openclarity/vmclarity/testenv/types"
-	"github.com/openclarity/vmclarity/testenv/utils"
 	"google.golang.org/api/deploymentmanager/v2"
 	"google.golang.org/api/iam/v1"
 
 	"github.com/openclarity/vmclarity/testenv/gcp/asset"
+	"github.com/openclarity/vmclarity/testenv/types"
+	"github.com/openclarity/vmclarity/testenv/utils"
+	"github.com/openclarity/vmclarity/testenv/utils/docker"
 )
 
 type ContextKeyType string
 
 const (
-	GCPClientContextKey ContextKeyType = "GCPClient"
-	DefaultRemoteUser                  = "vmclarity"
-	ProjectID                          = "gcp-osedev-nprd-52462"
-	Zone                               = "us-central1-f"
-	TestAssetName                      = "vmclarity-test-asset"
+	GCPClientContextKey                 ContextKeyType = "GCPClient"
+	PollInterval                                       = 5 * time.Second
+	DiscovererSnapshotterRoleNameFormat                = "projects/%s/roles/vmclarity_%s_discoverer_snapshotter"
+	ScannerRoleNameFormat                              = "projects/%s/roles/vmclarity_%s_scanner"
 
-	VMClarityInstallScriptSchema = "components/vmclarity_install_script.py.schema"
-	VMClarityServerSchema        = "components/vmclarity-server.py.schema"
-	VMClaritySchema              = "vmclarity.py.schema"
-	VMClarity                    = "vmclarity.py"
-	VMClarityInstallScript       = "components/vmclarity_install_script.py"
-	VMClarityInstall             = "components/vmclarity-install.sh"
-	VMClarityServer              = "components/vmclarity-server.py"
-	Network                      = "components/network.py"
-	FirewallRules                = "components/firewall-rules.py"
-	StaticIP                     = "components/static-ip.py"
-	ServiceAccount               = "components/service-account.py"
-	Roles                        = "components/roles.py"
-	CloudRouter                  = "components/cloud-router.py"
+	DefaultRemoteUser = "vmclarity"
+	ProjectID         = "gcp-osedev-nprd-52462"
+	Zone              = "us-central1-f"
+	TestAssetName     = "vmclarity-test-asset"
 )
 
 type GCPEnv struct {
@@ -76,64 +64,16 @@ type GCPEnv struct {
 	*docker.DockerHelper
 }
 
+// nolint:cyclop
 func (e *GCPEnv) SetUp(ctx context.Context) error {
-	vmclarityConfigExampleYaml, err := installation.GCPManifestBundle.ReadFile("vmclarity-config.example.yaml")
+	example, err := e.createExample()
 	if err != nil {
-		return fmt.Errorf("failed to read file: %w", err)
+		return fmt.Errorf("failed to create example: %w", err)
 	}
-	example := strings.Replace(string(vmclarityConfigExampleYaml), "<SSH Public Key>", string(e.sshKeyPair.PublicKey), -1)
 
-	vmclarityPy, err := installation.GCPManifestBundle.ReadFile(VMClarity)
+	imports, err := createDeploymentImports()
 	if err != nil {
-		return fmt.Errorf("failed to read file: %w", err)
-	}
-	vmclarityPySchema, err := installation.GCPManifestBundle.ReadFile(VMClaritySchema)
-	if err != nil {
-		return fmt.Errorf("failed to read file: %w", err)
-	}
-	vmclarityServerPy, err := installation.GCPManifestBundle.ReadFile(VMClarityServer)
-	if err != nil {
-		return fmt.Errorf("failed to read file: %w", err)
-	}
-	networkPy, err := installation.GCPManifestBundle.ReadFile(Network)
-	if err != nil {
-		return fmt.Errorf("failed to read file: %w", err)
-	}
-	firewallRulesPy, err := installation.GCPManifestBundle.ReadFile(FirewallRules)
-	if err != nil {
-		return fmt.Errorf("failed to read file: %w", err)
-	}
-	staticIpPy, err := installation.GCPManifestBundle.ReadFile(StaticIP)
-	if err != nil {
-		return fmt.Errorf("failed to read file: %w", err)
-	}
-	serviceAccountPy, err := installation.GCPManifestBundle.ReadFile(ServiceAccount)
-	if err != nil {
-		return fmt.Errorf("failed to read file: %w", err)
-	}
-	rolesPy, err := installation.GCPManifestBundle.ReadFile(Roles)
-	if err != nil {
-		return fmt.Errorf("failed to read file: %w", err)
-	}
-	cloudRouterPy, err := installation.GCPManifestBundle.ReadFile(CloudRouter)
-	if err != nil {
-		return fmt.Errorf("failed to read file: %w", err)
-	}
-	vmclarityInstallScriptPy, err := installation.GCPManifestBundle.ReadFile(VMClarityInstallScript)
-	if err != nil {
-		return fmt.Errorf("failed to read file: %w", err)
-	}
-	vmclarityInstallSh, err := installation.GCPManifestBundle.ReadFile(VMClarityInstall)
-	if err != nil {
-		return fmt.Errorf("failed to read file: %w", err)
-	}
-	vmclarityServerPySchema, err := installation.GCPManifestBundle.ReadFile(VMClarityServerSchema)
-	if err != nil {
-		return fmt.Errorf("failed to read file: %w", err)
-	}
-	vmclarityInstallScriptPySchema, err := installation.GCPManifestBundle.ReadFile(VMClarityInstallScriptSchema)
-	if err != nil {
-		return fmt.Errorf("failed to read file: %w", err)
+		return fmt.Errorf("failed to create deployment imports: %w", err)
 	}
 
 	op, err := e.dm.Deployments.Insert(
@@ -144,60 +84,7 @@ func (e *GCPEnv) SetUp(ctx context.Context) error {
 				Config: &deploymentmanager.ConfigFile{
 					Content: example,
 				},
-				Imports: []*deploymentmanager.ImportFile{
-					{
-						Content: string(vmclarityPy),
-						Name:    VMClarity,
-					},
-					{
-						Content: string(vmclarityPySchema),
-						Name:    VMClaritySchema,
-					},
-					{
-						Content: string(vmclarityServerPy),
-						Name:    VMClarityServer,
-					},
-					{
-						Content: string(networkPy),
-						Name:    Network,
-					},
-					{
-						Content: string(firewallRulesPy),
-						Name:    FirewallRules,
-					},
-					{
-						Content: string(staticIpPy),
-						Name:    StaticIP,
-					},
-					{
-						Content: string(serviceAccountPy),
-						Name:    ServiceAccount,
-					},
-					{
-						Content: string(rolesPy),
-						Name:    Roles,
-					},
-					{
-						Content: string(cloudRouterPy),
-						Name:    CloudRouter,
-					},
-					{
-						Content: string(vmclarityInstallScriptPy),
-						Name:    filepath.Base(VMClarityInstallScript),
-					},
-					{
-						Content: string(vmclarityInstallSh),
-						Name:    filepath.Base(VMClarityInstall),
-					},
-					{
-						Content: string(vmclarityServerPySchema),
-						Name:    VMClarityServerSchema,
-					},
-					{
-						Content: string(vmclarityInstallScriptPySchema),
-						Name:    VMClarityInstallScriptSchema,
-					},
-				},
+				Imports: imports,
 			},
 		},
 	).Context(ctx).Do()
@@ -214,7 +101,7 @@ func (e *GCPEnv) SetUp(ctx context.Context) error {
 			break
 		}
 
-		time.Sleep(1 * time.Second)
+		time.Sleep(PollInterval)
 	}
 
 	err = asset.Create(ctx, e.instancesClient, ProjectID, Zone, TestAssetName)
@@ -245,7 +132,7 @@ func (e *GCPEnv) TearDown(ctx context.Context) error {
 			break
 		}
 
-		time.Sleep(1 * time.Second)
+		time.Sleep(PollInterval)
 	}
 
 	err = asset.Delete(ctx, e.instancesClient, ProjectID, Zone, TestAssetName)
@@ -258,11 +145,18 @@ func (e *GCPEnv) TearDown(ctx context.Context) error {
 		return fmt.Errorf("failed to remove work directory: %w", err)
 	}
 
-	_, err = e.iamService.Projects.Roles.Undelete("projects/"+ProjectID+"/roles/vmclarity_"+e.envName+"_discoverer_snapshotter", &iam.UndeleteRoleRequest{}).Context(ctx).Do()
+	h := sha1.New() // nolint:gosec
+	_, err = io.WriteString(h, e.envName)
+	SHA1Hash := hex.EncodeToString(h.Sum(nil))[:10]
+	if err != nil {
+		return fmt.Errorf("failed to write string: %w", err)
+	}
+
+	_, err = e.iamService.Projects.Roles.Undelete(fmt.Sprintf(DiscovererSnapshotterRoleNameFormat, ProjectID, SHA1Hash), &iam.UndeleteRoleRequest{}).Context(ctx).Do()
 	if err != nil {
 		return fmt.Errorf("failed to undelete discoverer snapshotter role: %w", err)
 	}
-	_, err = e.iamService.Projects.Roles.Undelete("projects/"+ProjectID+"/roles/vmclarity_"+e.envName+"_scanner", &iam.UndeleteRoleRequest{}).Context(ctx).Do()
+	_, err = e.iamService.Projects.Roles.Undelete(fmt.Sprintf(ScannerRoleNameFormat, ProjectID, SHA1Hash), &iam.UndeleteRoleRequest{}).Context(ctx).Do()
 	if err != nil {
 		return fmt.Errorf("failed to undelete scanner role: %w", err)
 	}
@@ -288,7 +182,7 @@ func (e *GCPEnv) ServiceLogs(_ context.Context, _ []string, startTime time.Time,
 	return nil
 }
 
-func (e *GCPEnv) Endpoints(_ context.Context) (*envtypes.Endpoints, error) {
+func (e *GCPEnv) Endpoints(_ context.Context) (*types.Endpoints, error) {
 	apiURL, err := url.Parse("http://" + e.sshPortForwardInput.LocalAddressPort() + "/api")
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse API URL: %w", err)

@@ -18,10 +18,17 @@ package asset
 import (
 	"context"
 	"fmt"
+
 	"github.com/openclarity/vmclarity/core/to"
 
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
+)
+
+const (
+	MachineType      = "zones/us-central1-f/machineTypes/e2-micro"
+	SourceImage      = "projects/debian-cloud/global/images/family/debian-12"
+	NetworkInterface = "global/networks/default"
 )
 
 func Create(ctx context.Context, instancesClient *compute.InstancesClient, projectID string, zone string, assetName string) error {
@@ -32,12 +39,12 @@ func Create(ctx context.Context, instancesClient *compute.InstancesClient, proje
 		Zone:    zone,
 		InstanceResource: &computepb.Instance{
 			Name:        to.Ptr(assetName),
-			MachineType: to.Ptr("zones/us-central1-f/machineTypes/e2-standard-2"),
+			MachineType: to.Ptr(MachineType),
 			Disks: []*computepb.AttachedDisk{
 				{
 					InitializeParams: &computepb.AttachedDiskInitializeParams{
 						DiskSizeGb:  to.Ptr(diskSizeGb),
-						SourceImage: to.Ptr("projects/debian-cloud/global/images/family/debian-12"),
+						SourceImage: to.Ptr(SourceImage),
 					},
 					AutoDelete: to.Ptr(true),
 					Boot:       to.Ptr(true),
@@ -45,7 +52,7 @@ func Create(ctx context.Context, instancesClient *compute.InstancesClient, proje
 			},
 			NetworkInterfaces: []*computepb.NetworkInterface{
 				{
-					Name: to.Ptr("global/networks/default"),
+					Name: to.Ptr(NetworkInterface),
 				},
 			},
 			Labels: map[string]string{
