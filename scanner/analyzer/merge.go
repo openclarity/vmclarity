@@ -67,6 +67,11 @@ func (m *MergedResults) Merge(other *Results) *MergedResults {
 		m.addSourceHash(other.AppInfo.SourceHash)
 	}
 
+	// Merge image properties
+	if other.AppInfo.SourceMetadata != nil && other.AppInfo.SourceMetadata.Properties != nil {
+		m.SrcMetaData.Component.Properties = mergeProperties(m.SrcMetaData.Component.Properties, other.AppInfo.SourceMetadata.Properties)
+	}
+
 	if bom.Components != nil {
 		otherComponentsByKey := toComponentByKey(bom.Components)
 		for key, otherComponent := range otherComponentsByKey {

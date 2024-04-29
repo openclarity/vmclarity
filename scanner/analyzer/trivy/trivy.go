@@ -35,6 +35,7 @@ import (
 	"github.com/openclarity/vmclarity/scanner/config"
 	"github.com/openclarity/vmclarity/scanner/job_manager"
 	"github.com/openclarity/vmclarity/scanner/utils"
+	"github.com/openclarity/vmclarity/scanner/utils/cyclonedx_helper"
 	"github.com/openclarity/vmclarity/scanner/utils/image_helper"
 	"github.com/openclarity/vmclarity/scanner/utils/trivy"
 )
@@ -163,12 +164,16 @@ func (a *Analyzer) Run(sourceType utils.SourceType, userInput string) error {
 		// hash of metadata during the merge.
 		switch sourceType {
 		case utils.IMAGE, utils.DOCKERARCHIVE, utils.OCIDIR, utils.OCIARCHIVE:
-			hash, err := getImageHash(bom.Metadata.Component.Properties, userInput)
+			hash, properties, err := getImageHashAndProperties(bom.Metadata.Component.Properties, userInput)
 			if err != nil {
 				a.setError(res, fmt.Errorf("failed to get image hash from sbom: %w", err))
 				return
 			}
 			res.AppInfo.SourceHash = hash
+			res.AppInfo.SourceMetadata = &cdx.Metadata{
+				Properties: &properties,
+			}
+
 		case utils.SBOM, utils.DIR, utils.ROOTFS, utils.FILE:
 			// ignore
 		default:
@@ -188,20 +193,23 @@ func (a *Analyzer) setError(res *analyzer.Results, err error) {
 	a.resultChan <- res
 }
 
-func getImageHash(properties *[]cdx.Property, src string) (string, error) {
+func getImageHashAndProperties(properties *[]cdx.Property, src string) (string, []cdx.Property, error) {
 	if properties == nil {
-		return "", errors.New("properties was nil")
+		return "", nil, errors.New("properties was nil")
 	}
 
 	var repoDigests []string
+	var repoTags []string
 	var imageID string
 
 	for _, property := range *properties {
 		switch property.Name {
-		case "aquasecurity:trivy:RepoDigest":
-			repoDigests = append(repoDigests, property.Value)
 		case "aquasecurity:trivy:ImageID":
 			imageID = property.Value
+		case "aquasecurity:trivy:RepoDigest":
+			repoDigests = append(repoDigests, property.Value)
+		case "aquasecurity:trivy:RepoTag":
+			repoTags = append(repoTags, property.Value)
 		default:
 			// Ignore property
 		}
@@ -209,8 +217,14 @@ func getImageHash(properties *[]cdx.Property, src string) (string, error) {
 
 	hash, err := image_helper.GetHashFromRepoDigestsOrImageID(repoDigests, imageID, src)
 	if err != nil {
-		return "", fmt.Errorf("failed to get image hash from repo digests or image id: %w", err)
+		return "", nil, fmt.Errorf("failed to get image hash from repo digests or image id: %w", err)
 	}
 
-	return hash, nil
+	imageProperties := cyclonedx_helper.SetComponentImageProperties(
+		imageID,
+		repoDigests,
+		repoTags,
+	)
+
+	return hash, imageProperties, nil
 }

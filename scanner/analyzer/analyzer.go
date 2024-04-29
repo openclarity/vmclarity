@@ -33,9 +33,10 @@ func (r *Results) GetError() error {
 }
 
 type AppInfo struct {
-	SourceType utils.SourceType
-	SourcePath string
-	SourceHash string
+	SourceType     utils.SourceType
+	SourcePath     string
+	SourceHash     string
+	SourceMetadata *cdx.Metadata
 }
 
 func CreateResults(sbomBytes *cdx.BOM, analyzerName, userInput string, srcType utils.SourceType) *Results {

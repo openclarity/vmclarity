@@ -16,21 +16,23 @@
 package trivy
 
 import (
+	"reflect"
 	"testing"
 
 	cdx "github.com/CycloneDX/cyclonedx-go"
 )
 
-func Test_getImageHash(t *testing.T) {
+func Test_getImageHashAndProperties(t *testing.T) {
 	type args struct {
 		properties *[]cdx.Property
 		src        string
 	}
 	tests := []struct {
-		name    string
-		args    args
-		want    string
-		wantErr bool
+		name           string
+		args           args
+		wantHash       string
+		wantProperties []cdx.Property
+		wantErr        bool
 	}{
 		{
 			name: "nil properties",
@@ -38,8 +40,9 @@ func Test_getImageHash(t *testing.T) {
 				properties: nil,
 				src:        "",
 			},
-			want:    "",
-			wantErr: true,
+			wantHash:       "",
+			wantProperties: nil,
+			wantErr:        true,
 		},
 		{
 			name: "empty properties",
@@ -47,8 +50,9 @@ func Test_getImageHash(t *testing.T) {
 				properties: &[]cdx.Property{},
 				src:        "",
 			},
-			want:    "",
-			wantErr: true,
+			wantHash:       "",
+			wantProperties: nil,
+			wantErr:        true,
 		},
 		{
 			name: "both RepoDigest and ImageID properties are missing",
@@ -61,8 +65,9 @@ func Test_getImageHash(t *testing.T) {
 				},
 				src: "",
 			},
-			want:    "",
-			wantErr: true,
+			wantHash:       "",
+			wantProperties: nil,
+			wantErr:        true,
 		},
 		{
 			name: "RepoDigest is missing and ImageID is not",
@@ -75,7 +80,13 @@ func Test_getImageHash(t *testing.T) {
 				},
 				src: "",
 			},
-			want:    "62ed8ed20fdbb57a19639fc3a2dc8710dd66cb2364d61ec02e11cf9b35bc31dc",
+			wantHash: "62ed8ed20fdbb57a19639fc3a2dc8710dd66cb2364d61ec02e11cf9b35bc31dc",
+			wantProperties: []cdx.Property{
+				{
+					Name:  "vmclarity:image:ID",
+					Value: "sha256:62ed8ed20fdbb57a19639fc3a2dc8710dd66cb2364d61ec02e11cf9b35bc31dc",
+				},
+			},
 			wantErr: false,
 		},
 		{
@@ -89,7 +100,13 @@ func Test_getImageHash(t *testing.T) {
 				},
 				src: "poke/debian:latest",
 			},
-			want:    "a4c378901a2ba14fd331e96a49101556e91ed592d5fd68ba7405fdbf9b969e61",
+			wantHash: "a4c378901a2ba14fd331e96a49101556e91ed592d5fd68ba7405fdbf9b969e61",
+			wantProperties: []cdx.Property{
+				{
+					Name:  "vmclarity:image:RepoDigests",
+					Value: "poke/debian@sha256:a4c378901a2ba14fd331e96a49101556e91ed592d5fd68ba7405fdbf9b969e61",
+				},
+			},
 			wantErr: false,
 		},
 		{
@@ -107,7 +124,17 @@ func Test_getImageHash(t *testing.T) {
 				},
 				src: "poke/debian:latest",
 			},
-			want:    "a4c378901a2ba14fd331e96a49101556e91ed592d5fd68ba7405fdbf9b969e61",
+			wantHash: "a4c378901a2ba14fd331e96a49101556e91ed592d5fd68ba7405fdbf9b969e61",
+			wantProperties: []cdx.Property{
+				{
+					Name:  "vmclarity:image:ID",
+					Value: "sha256:62ed8ed20fdbb57a19639fc3a2dc8710dd66cb2364d61ec02e11cf9b35bc31dc",
+				},
+				{
+					Name:  "vmclarity:image:RepoDigests",
+					Value: "poke/debian@sha256:a4c378901a2ba14fd331e96a49101556e91ed592d5fd68ba7405fdbf9b969e61",
+				},
+			},
 			wantErr: false,
 		},
 		{
@@ -129,19 +156,32 @@ func Test_getImageHash(t *testing.T) {
 				},
 				src: "poke/debian:latest",
 			},
-			want:    "a4c378901a2ba14fd331e96a49101556e91ed592d5fd68ba7405fdbf9b969e61",
+			wantHash: "a4c378901a2ba14fd331e96a49101556e91ed592d5fd68ba7405fdbf9b969e61",
+			wantProperties: []cdx.Property{
+				{
+					Name:  "vmclarity:image:ID",
+					Value: "sha256:62ed8ed20fdbb57a19639fc3a2dc8710dd66cb2364d61ec02e11cf9b35bc31dc",
+				},
+				{
+					Name:  "vmclarity:image:RepoDigests",
+					Value: "debian@sha256:2906804d2a64e8a13a434a1a127fe3f6a28bf7cf3696be4223b06276f32f1f2d, poke/debian@sha256:a4c378901a2ba14fd331e96a49101556e91ed592d5fd68ba7405fdbf9b969e61",
+				},
+			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getImageHash(tt.args.properties, tt.args.src)
+			gotHash, gotProperties, err := getImageHashAndProperties(tt.args.properties, tt.args.src)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("getImageHash() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("getImageHashAndProperties() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got != tt.want {
-				t.Errorf("getImageHash() got = %v, want %v", got, tt.want)
+			if gotHash != tt.wantHash {
+				t.Errorf("getImageHashAndProperties() got hash = %v, want hash %v", gotHash, tt.wantHash)
+			}
+			if !reflect.DeepEqual(gotProperties, tt.wantProperties) {
+				t.Errorf("getImageHashAndProperties() got properties = %v, want properties %v", gotProperties, tt.wantProperties)
 			}
 		})
 	}

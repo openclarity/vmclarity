@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 
+	cdx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/anchore/syft/syft"
 	"github.com/anchore/syft/syft/cataloging"
 	"github.com/anchore/syft/syft/format/common/cyclonedxhelpers"
@@ -31,6 +32,7 @@ import (
 	"github.com/openclarity/vmclarity/scanner/config"
 	"github.com/openclarity/vmclarity/scanner/job_manager"
 	"github.com/openclarity/vmclarity/scanner/utils"
+	"github.com/openclarity/vmclarity/scanner/utils/cyclonedx_helper"
 	"github.com/openclarity/vmclarity/scanner/utils/image_helper"
 )
 
@@ -91,10 +93,17 @@ func (a *Analyzer) Run(sourceType utils.SourceType, userInput string) error {
 		// that will be added to the component hash of metadata during the merge.
 		switch sourceType {
 		case utils.IMAGE, utils.DOCKERARCHIVE, utils.OCIDIR, utils.OCIARCHIVE:
-			if res.AppInfo.SourceHash, err = getImageHash(sbom, userInput); err != nil {
-				a.setError(res, fmt.Errorf("failed to get image hash: %w", err))
+			hash, properties, err := getImageHashAndProperties(sbom, userInput)
+			if err != nil {
+				a.setError(res, fmt.Errorf("failed to get image hash from sbom: %w", err))
 				return
 			}
+
+			res.AppInfo.SourceHash = hash
+			res.AppInfo.SourceMetadata = &cdx.Metadata{
+				Properties: &properties,
+			}
+
 		case utils.SBOM, utils.DIR, utils.ROOTFS, utils.FILE:
 			// ignore
 		default:
@@ -114,15 +123,22 @@ func (a *Analyzer) setError(res *analyzer.Results, err error) {
 	a.resultChan <- res
 }
 
-func getImageHash(s *syftsbom.SBOM, src string) (string, error) {
+func getImageHashAndProperties(s *syftsbom.SBOM, src string) (string, []cdx.Property, error) {
 	switch metadata := s.Source.Metadata.(type) {
 	case syftsrc.ImageMetadata:
 		hash, err := image_helper.GetHashFromRepoDigestsOrImageID(metadata.RepoDigests, metadata.ID, src)
 		if err != nil {
-			return "", fmt.Errorf("failed to get image hash from repo digests or image id: %w", err)
+			return "", nil, fmt.Errorf("failed to get image hash from repo digests or image id: %w", err)
 		}
-		return hash, nil
+
+		properties := cyclonedx_helper.SetComponentImageProperties(
+			metadata.ID,
+			metadata.RepoDigests,
+			metadata.Tags,
+		)
+
+		return hash, properties, nil
 	default:
-		return "", errors.New("failed to get image hash from source metadata")
+		return "", nil, errors.New("failed to get image hash from source metadata")
 	}
 }

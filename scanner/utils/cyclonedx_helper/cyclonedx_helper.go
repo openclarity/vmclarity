@@ -170,3 +170,29 @@ func sortHashes(hashes []cdx.Hash) []cdx.Hash {
 	})
 	return hashes
 }
+
+func SetComponentImageProperties(ID string, RepoDigests []string, Tags []string) []cdx.Property {
+	properties := []cdx.Property{}
+	if ID != "" {
+		properties = append(properties, cdx.Property{
+			Name:  "vmclarity:image:ID",
+			Value: ID,
+		})
+	}
+
+	for _, digest := range RepoDigests {
+		properties = append(properties, cdx.Property{
+			Name:  "vmclarity:image:RepoDigest",
+			Value: digest,
+		})
+	}
+
+	for _, tag := range Tags {
+		properties = append(properties, cdx.Property{
+			Name:  "vmclarity:image:Tag",
+			Value: tag,
+		})
+	}
+
+	return properties
+}
