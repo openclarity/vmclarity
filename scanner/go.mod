@@ -11,7 +11,7 @@ require (
 	github.com/anchore/syft v1.2.0
 	github.com/aquasecurity/go-dep-parser v0.0.0-20240213093706-423cd04548a5
 	github.com/aquasecurity/trivy v0.50.1
-	github.com/aquasecurity/trivy-db v0.0.0-20240401130858-5bfbd975e506
+	github.com/aquasecurity/trivy-db v0.0.0-20240425111931-1fe1d505d3ff
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/containers/image/v5 v5.30.0
 	github.com/go-openapi/runtime v0.28.0
