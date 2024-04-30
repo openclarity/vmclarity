@@ -19,7 +19,6 @@ import (
 	"errors"
 	"fmt"
 
-	cdx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/anchore/clio"
 	"github.com/anchore/grype/grype"
 	"github.com/anchore/grype/grype/db"
@@ -91,7 +90,7 @@ func (s *LocalScanner) run(sourceType utils.SourceType, userInput string) {
 	}
 
 	var hash string
-	var properties []cdx.Property
+	var metadata [][]string
 	origInput := userInput
 	if sourceType == utils.SBOM {
 		bom, err := sbom.NewCycloneDXSBOM(userInput)
@@ -101,7 +100,7 @@ func (s *LocalScanner) run(sourceType utils.SourceType, userInput string) {
 		}
 
 		origInput = bom.GetTargetNameFromSBOM()
-		properties = bom.GetPropertiesFromSBOM()
+		metadata = bom.GetPropertiesFromSBOM()
 		hash, err = bom.GetHashFromSBOM()
 		if err != nil {
 			ReportError(s.resultChan, fmt.Errorf("failed to get original hash from SBOM: %w", err), s.logger)
@@ -144,7 +143,7 @@ func (s *LocalScanner) run(sourceType utils.SourceType, userInput string) {
 	}
 
 	s.logger.Infof("Sending successful results")
-	s.resultChan <- CreateResults(doc, origInput, ScannerName, hash, properties)
+	s.resultChan <- CreateResults(doc, origInput, ScannerName, hash, metadata)
 }
 
 func createVulnerabilityMatcher(store *store.Store) *grype.VulnerabilityMatcher {

@@ -52,6 +52,6 @@ func (c *CycloneDXSBOM) GetHashFromSBOM() (string, error) {
 	return hash, nil
 }
 
-func (c *CycloneDXSBOM) GetPropertiesFromSBOM() []cdx.Property {
-	return *c.BOM.Metadata.Component.Properties
+func (c *CycloneDXSBOM) GetPropertiesFromSBOM() [][]string {
+	return cyclonedx_helper.GetComponentImageProperties(*c.BOM.Metadata.Component.Properties)
 }

@@ -92,7 +92,7 @@ func (s *RemoteScanner) run(sbomInputFilePath string) {
 	}
 
 	userInput := bom.GetTargetNameFromSBOM()
-	properties := bom.GetPropertiesFromSBOM()
+	metadata := bom.GetPropertiesFromSBOM()
 	hash, err := bom.GetHashFromSBOM()
 	if err != nil {
 		ReportError(s.resultChan, fmt.Errorf("failed to get original hash from SBOM: %w", err), s.logger)
@@ -100,7 +100,7 @@ func (s *RemoteScanner) run(sbomInputFilePath string) {
 	}
 
 	s.logger.Infof("Sending successful results")
-	s.resultChan <- CreateResults(*doc, userInput, ScannerName, hash, properties)
+	s.resultChan <- CreateResults(*doc, userInput, ScannerName, hash, metadata)
 }
 
 func (s *RemoteScanner) scanSbomWithGrypeServer(sbom []byte) (*grype_models.Document, error) {

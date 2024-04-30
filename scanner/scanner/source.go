@@ -15,12 +15,10 @@
 
 package scanner
 
-import cdx "github.com/CycloneDX/cyclonedx-go"
-
 type Source struct {
 	Type string `json:"type"`
 	// Name is the path in the case of the input type is dir or file, and userInput in the case of input type is image
-	Name       string         `json:"name"`
-	Hash       string         `json:"hash"`
-	Properties []cdx.Property `json:"properties"`
+	Name     string     `json:"name"`
+	Hash     string     `json:"hash"`
+	Metadata [][]string `json:"metadata"`
 }

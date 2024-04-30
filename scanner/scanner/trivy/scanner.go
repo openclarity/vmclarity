@@ -26,7 +26,6 @@ import (
 	"sort"
 	"strings"
 
-	cdx "github.com/CycloneDX/cyclonedx-go"
 	dlog "github.com/aquasecurity/go-dep-parser/pkg/log"
 	trivyDBTypes "github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy/pkg/commands/artifact"
@@ -173,7 +172,7 @@ func (a *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 		defer os.Remove(tempFile.Name())
 
 		var hash string
-		var properties []cdx.Property
+		var metadata [][]string
 		switch sourceType {
 		case utils.IMAGE, utils.ROOTFS, utils.DIR, utils.FILE, utils.DOCKERARCHIVE, utils.OCIARCHIVE, utils.OCIDIR:
 		case utils.SBOM:
@@ -183,7 +182,7 @@ func (a *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 				a.setError(fmt.Errorf("failed to create CycloneDX SBOM: %w", err))
 				return
 			}
-			properties = bom.GetPropertiesFromSBOM()
+			metadata = bom.GetPropertiesFromSBOM()
 			hash, err = bom.GetHashFromSBOM()
 			if err != nil {
 				a.setError(fmt.Errorf("failed to get original hash from SBOM: %w", err))
@@ -191,7 +190,7 @@ func (a *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 			}
 		default:
 			a.logger.Infof("Skipping scan for unsupported source type: %s", sourceType)
-			a.resultChan <- a.CreateResult(nil, hash, properties)
+			a.resultChan <- a.CreateResult(nil, hash, metadata)
 			return
 		}
 
@@ -232,7 +231,7 @@ func (a *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 		}
 
 		a.logger.Infof("Sending successful results")
-		a.resultChan <- a.CreateResult(file, hash, properties)
+		a.resultChan <- a.CreateResult(file, hash, metadata)
 	}()
 
 	return nil
@@ -290,7 +289,7 @@ func getCVSSesFromVul(vCvss trivyDBTypes.VendorCVSS) []scanner.CVSS {
 }
 
 // nolint:cyclop
-func (a *Scanner) CreateResult(trivyJSON []byte, hash string, properties []cdx.Property) *scanner.Results {
+func (a *Scanner) CreateResult(trivyJSON []byte, hash string, metadata [][]string) *scanner.Results {
 	result := &scanner.Results{
 		Matches: nil, // empty results,
 		ScannerInfo: scanner.Info{
@@ -380,10 +379,10 @@ func (a *Scanner) CreateResult(trivyJSON []byte, hash string, properties []cdx.P
 	}
 
 	source := scanner.Source{
-		Name:       report.ArtifactName,
-		Type:       string(report.ArtifactType),
-		Hash:       hash,
-		Properties: properties,
+		Name:     report.ArtifactName,
+		Type:     string(report.ArtifactType),
+		Hash:     hash,
+		Metadata: metadata,
 	}
 
 	result.Matches = matches

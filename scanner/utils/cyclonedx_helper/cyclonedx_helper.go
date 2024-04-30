@@ -196,3 +196,19 @@ func SetComponentImageProperties(ID string, RepoDigests []string, Tags []string)
 
 	return properties
 }
+
+func GetComponentImageProperties(properties []cdx.Property) [][]string {
+	var imageProperties [][]string
+	for _, property := range properties {
+		switch property.Name {
+		case "vmclarity:image:ID":
+			imageProperties = append(imageProperties, []string{"ImageID", property.Value})
+		case "vmclarity:image:RepoDigest":
+			imageProperties = append(imageProperties, []string{"ImageRepoDigest", property.Value})
+		case "vmclarity:image:Tag":
+			imageProperties = append(imageProperties, []string{"ImageTag", property.Value})
+		}
+	}
+
+	return imageProperties
+}
