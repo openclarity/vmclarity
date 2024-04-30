@@ -18,6 +18,7 @@ package grype
 import (
 	"strings"
 
+	cdx "github.com/CycloneDX/cyclonedx-go"
 	grype_models "github.com/anchore/grype/grype/presenter/models"
 	"github.com/anchore/syft/syft/file"
 	syft_source "github.com/anchore/syft/syft/source"
@@ -56,7 +57,7 @@ func ReportError(resultChan chan job_manager.Result, err error, logger *log.Entr
 	resultChan <- res
 }
 
-func CreateResults(doc grype_models.Document, userInput, scannerName, hash string) *scanner.Results {
+func CreateResults(doc grype_models.Document, userInput, scannerName, hash string, properties []cdx.Property) *scanner.Results {
 	distro := getDistro(doc)
 
 	matches := make(scanner.Matches, len(doc.Matches))
@@ -97,11 +98,11 @@ func CreateResults(doc grype_models.Document, userInput, scannerName, hash strin
 		ScannerInfo: scanner.Info{
 			Name: scannerName,
 		},
-		Source: getSource(doc, userInput, hash),
+		Source: getSource(doc, userInput, hash, properties),
 	}
 }
 
-func getSource(doc grype_models.Document, userInput, hash string) scanner.Source {
+func getSource(doc grype_models.Document, userInput, hash string, properties []cdx.Property) scanner.Source {
 	var source scanner.Source
 	if doc.Source == nil {
 		return source
@@ -129,9 +130,10 @@ func getSource(doc grype_models.Document, userInput, hash string) scanner.Source
 	}
 
 	return scanner.Source{
-		Type: doc.Source.Type,
-		Name: srcName,
-		Hash: hash,
+		Type:       doc.Source.Type,
+		Name:       srcName,
+		Hash:       hash,
+		Properties: properties,
 	}
 }
 

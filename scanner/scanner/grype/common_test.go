@@ -72,7 +72,7 @@ func TestCreateResults(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := CreateResults(tt.args.doc, tt.args.userInput, tt.args.scannerName, tt.args.hash)
+			got := CreateResults(tt.args.doc, tt.args.userInput, tt.args.scannerName, tt.args.hash, nil)
 			// gotB, _ := json.Marshal(got)
 			// assert.NilError(t, os.WriteFile("./test_data/nginx.results.json", gotB, 0666))
 			assert.DeepEqual(t, got, tt.want)
@@ -161,7 +161,7 @@ func Test_getSource(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getSource(tt.args.doc, tt.args.userInput, tt.args.hash); !reflect.DeepEqual(got, tt.want) {
+			if got := getSource(tt.args.doc, tt.args.userInput, tt.args.hash, nil); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("getSource() = %v, want %v", got, tt.want)
 			}
 		})

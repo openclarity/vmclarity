@@ -85,14 +85,22 @@ func (s *RemoteScanner) run(sbomInputFilePath string) {
 		return
 	}
 
-	userInput, hash, err := utilsSBOM.GetTargetNameAndHashFromSBOM(sbomInputFilePath)
+	bom, err := utilsSBOM.NewCycloneDXSBOM(sbomInputFilePath)
 	if err != nil {
-		ReportError(s.resultChan, fmt.Errorf("failed to get original source and hash from SBOM: %w", err), s.logger)
+		ReportError(s.resultChan, fmt.Errorf("failed to create CycloneDX SBOM: %w", err), s.logger)
+		return
+	}
+
+	userInput := bom.GetTargetNameFromSBOM()
+	properties := bom.GetPropertiesFromSBOM()
+	hash, err := bom.GetHashFromSBOM()
+	if err != nil {
+		ReportError(s.resultChan, fmt.Errorf("failed to get original hash from SBOM: %w", err), s.logger)
 		return
 	}
 
 	s.logger.Infof("Sending successful results")
-	s.resultChan <- CreateResults(*doc, userInput, ScannerName, hash)
+	s.resultChan <- CreateResults(*doc, userInput, ScannerName, hash, properties)
 }
 
 func (s *RemoteScanner) scanSbomWithGrypeServer(sbom []byte) (*grype_models.Document, error) {
