@@ -1,4 +1,4 @@
-FROM python:3.9-slim as builder-image
+FROM python:3.9-slim
 
 RUN apt-get update && \
     apt-get install --no-install-recommends -y git
@@ -17,5 +17,5 @@ ENV PYTHONUNBUFFERED=1
 
 USER 65534
 
-# Run app.py when the container launches
+# Run scanner when the container launches
 CMD ["python3", "/app/scanner.py"]
