@@ -32,8 +32,8 @@ import (
 	"github.com/openclarity/vmclarity/scanner/config"
 	"github.com/openclarity/vmclarity/scanner/job_manager"
 	"github.com/openclarity/vmclarity/scanner/utils"
-	"github.com/openclarity/vmclarity/scanner/utils/cyclonedx_helper"
 	"github.com/openclarity/vmclarity/scanner/utils/image_helper"
+	utilsSBOM "github.com/openclarity/vmclarity/scanner/utils/sbom"
 )
 
 const AnalyzerName = "syft"
@@ -131,7 +131,7 @@ func getImageHashAndProperties(s *syftsbom.SBOM, src string) (string, []cdx.Prop
 			return "", nil, fmt.Errorf("failed to get image hash from repo digests or image id: %w", err)
 		}
 
-		properties := cyclonedx_helper.SetComponentImageProperties(
+		properties := utilsSBOM.SetImageProperties(
 			metadata.ID,
 			metadata.RepoDigests,
 			metadata.Tags,

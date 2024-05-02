@@ -35,8 +35,8 @@ import (
 	"github.com/openclarity/vmclarity/scanner/config"
 	"github.com/openclarity/vmclarity/scanner/job_manager"
 	"github.com/openclarity/vmclarity/scanner/utils"
-	"github.com/openclarity/vmclarity/scanner/utils/cyclonedx_helper"
 	"github.com/openclarity/vmclarity/scanner/utils/image_helper"
+	utilsSBOM "github.com/openclarity/vmclarity/scanner/utils/sbom"
 	"github.com/openclarity/vmclarity/scanner/utils/trivy"
 )
 
@@ -220,7 +220,7 @@ func getImageHashAndProperties(properties *[]cdx.Property, src string) (string, 
 		return "", nil, fmt.Errorf("failed to get image hash from repo digests or image id: %w", err)
 	}
 
-	imageProperties := cyclonedx_helper.SetComponentImageProperties(
+	imageProperties := utilsSBOM.SetImageProperties(
 		imageID,
 		repoDigests,
 		repoTags,

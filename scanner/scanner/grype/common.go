@@ -56,7 +56,7 @@ func ReportError(resultChan chan job_manager.Result, err error, logger *log.Entr
 	resultChan <- res
 }
 
-func CreateResults(doc grype_models.Document, userInput, scannerName, hash string, metadata [][]string) *scanner.Results {
+func CreateResults(doc grype_models.Document, userInput, scannerName, hash string, metadata scanner.Metadata) *scanner.Results {
 	distro := getDistro(doc)
 
 	matches := make(scanner.Matches, len(doc.Matches))
@@ -101,7 +101,7 @@ func CreateResults(doc grype_models.Document, userInput, scannerName, hash strin
 	}
 }
 
-func getSource(doc grype_models.Document, userInput, hash string, metadata [][]string) scanner.Source {
+func getSource(doc grype_models.Document, userInput, hash string, metadata scanner.Metadata) scanner.Source {
 	var source scanner.Source
 	if doc.Source == nil {
 		return source

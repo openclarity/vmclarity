@@ -172,12 +172,12 @@ func (a *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 		defer os.Remove(tempFile.Name())
 
 		var hash string
-		var metadata [][]string
+		var metadata scanner.Metadata
 		switch sourceType {
 		case utils.IMAGE, utils.ROOTFS, utils.DIR, utils.FILE, utils.DOCKERARCHIVE, utils.OCIARCHIVE, utils.OCIDIR:
 		case utils.SBOM:
 			var err error
-			bom, err := utilsSBOM.NewCycloneDXSBOM(userInput)
+			bom, err := utilsSBOM.NewCDX(userInput)
 			if err != nil {
 				a.setError(fmt.Errorf("failed to create CycloneDX SBOM: %w", err))
 				return
@@ -289,7 +289,7 @@ func getCVSSesFromVul(vCvss trivyDBTypes.VendorCVSS) []scanner.CVSS {
 }
 
 // nolint:cyclop
-func (a *Scanner) CreateResult(trivyJSON []byte, hash string, metadata [][]string) *scanner.Results {
+func (a *Scanner) CreateResult(trivyJSON []byte, hash string, metadata scanner.Metadata) *scanner.Results {
 	result := &scanner.Results{
 		Matches: nil, // empty results,
 		ScannerInfo: scanner.Info{

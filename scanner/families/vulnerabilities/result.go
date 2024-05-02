@@ -47,8 +47,8 @@ func (r *Results) GetSourceImageID() (string, error) {
 	}
 
 	for _, prop := range r.MergedResults.Source.Metadata {
-		if prop[0] == "ImageID" {
-			return prop[1], nil
+		if prop.Key == "ImageID" {
+			return prop.Value, nil
 		}
 	}
 
@@ -66,8 +66,8 @@ func (r *Results) GetSourceImageRepoDigests() ([]string, error) {
 
 	var repoDigests []string
 	for _, prop := range r.MergedResults.Source.Metadata {
-		if prop[0] == "ImageRepoDigest" {
-			repoDigests = append(repoDigests, prop[1])
+		if prop.Key == "ImageRepoDigest" {
+			repoDigests = append(repoDigests, prop.Value)
 		}
 	}
 
@@ -85,8 +85,8 @@ func (r *Results) GetSourceImageTags() ([]string, error) {
 
 	var tags []string
 	for _, prop := range r.MergedResults.Source.Metadata {
-		if prop[0] == "ImageTag" {
-			tags = append(tags, prop[1])
+		if prop.Key == "ImageTag" {
+			tags = append(tags, prop.Value)
 		}
 	}
 

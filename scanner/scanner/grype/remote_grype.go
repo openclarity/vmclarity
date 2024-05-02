@@ -85,7 +85,7 @@ func (s *RemoteScanner) run(sbomInputFilePath string) {
 		return
 	}
 
-	bom, err := utilsSBOM.NewCycloneDXSBOM(sbomInputFilePath)
+	bom, err := utilsSBOM.NewCDX(sbomInputFilePath)
 	if err != nil {
 		ReportError(s.resultChan, fmt.Errorf("failed to create CycloneDX SBOM: %w", err), s.logger)
 		return

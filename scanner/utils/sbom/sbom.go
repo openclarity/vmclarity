@@ -21,29 +21,30 @@ import (
 	cdx "github.com/CycloneDX/cyclonedx-go"
 
 	"github.com/openclarity/vmclarity/scanner/converter"
+	"github.com/openclarity/vmclarity/scanner/scanner"
 	"github.com/openclarity/vmclarity/scanner/utils/cyclonedx_helper"
 )
 
-type CycloneDXSBOM struct {
+type CDX struct {
 	BOM *cdx.BOM
 }
 
-func NewCycloneDXSBOM(inputSBOMFile string) (*CycloneDXSBOM, error) {
+func NewCDX(inputSBOMFile string) (*CDX, error) {
 	cdxBOM, err := converter.GetCycloneDXSBOMFromFile(inputSBOMFile)
 	if err != nil {
 		return nil, converter.ErrFailedToGetCycloneDXSBOM
 	}
 
-	return &CycloneDXSBOM{
+	return &CDX{
 		BOM: cdxBOM,
 	}, nil
 }
 
-func (c *CycloneDXSBOM) GetTargetNameFromSBOM() string {
+func (c *CDX) GetTargetNameFromSBOM() string {
 	return c.BOM.Metadata.Component.Name
 }
 
-func (c *CycloneDXSBOM) GetHashFromSBOM() (string, error) {
+func (c *CDX) GetHashFromSBOM() (string, error) {
 	hash, err := cyclonedx_helper.GetComponentHash(c.BOM.Metadata.Component)
 	if err != nil {
 		return "", fmt.Errorf("unable to get hash from original SBOM: %w", err)
@@ -52,6 +53,63 @@ func (c *CycloneDXSBOM) GetHashFromSBOM() (string, error) {
 	return hash, nil
 }
 
-func (c *CycloneDXSBOM) GetPropertiesFromSBOM() [][]string {
-	return cyclonedx_helper.GetComponentImageProperties(*c.BOM.Metadata.Component.Properties)
+func (c *CDX) GetPropertiesFromSBOM() scanner.Metadata {
+	return c.GetImageProperties()
+}
+
+func (c *CDX) GetImageProperties() scanner.Metadata {
+	var imageProperties scanner.Metadata
+	for _, property := range *c.BOM.Metadata.Component.Properties {
+		switch property.Name {
+		case "vmclarity:image:ID":
+			imageProperties = append(imageProperties, scanner.Metadata{
+				{
+					Key:   "ImageID",
+					Value: property.Value,
+				},
+			}...)
+		case "vmclarity:image:RepoDigest":
+			imageProperties = append(imageProperties, scanner.Metadata{
+				{
+					Key:   "ImageRepoDigest",
+					Value: property.Value,
+				},
+			}...)
+		case "vmclarity:image:Tag":
+			imageProperties = append(imageProperties, scanner.Metadata{
+				{
+					Key:   "ImageTag",
+					Value: property.Value,
+				},
+			}...)
+		}
+	}
+
+	return imageProperties
+}
+
+func SetImageProperties(ID string, RepoDigests []string, Tags []string) []cdx.Property {
+	properties := []cdx.Property{}
+	if ID != "" {
+		properties = append(properties, cdx.Property{
+			Name:  "vmclarity:image:ID",
+			Value: ID,
+		})
+	}
+
+	for _, digest := range RepoDigests {
+		properties = append(properties, cdx.Property{
+			Name:  "vmclarity:image:RepoDigest",
+			Value: digest,
+		})
+	}
+
+	for _, tag := range Tags {
+		properties = append(properties, cdx.Property{
+			Name:  "vmclarity:image:Tag",
+			Value: tag,
+		})
+	}
+
+	return properties
 }
