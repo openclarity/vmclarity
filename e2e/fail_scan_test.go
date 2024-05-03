@@ -40,6 +40,11 @@ var _ = ginkgo.Describe("Detecting scan failures", func() {
 				))
 			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
+			reportFailedConfig.objects = append(
+				reportFailedConfig.objects,
+				APIObject{"scanConfig", fmt.Sprintf("id eq '%s'", *apiScanConfig.Id)},
+			)
+
 			ginkgo.By("updating scan configuration to run now")
 			updateScanConfig := UpdateScanConfigToStartNow(apiScanConfig)
 			err = client.PatchScanConfig(ctx, *apiScanConfig.Id, updateScanConfig)

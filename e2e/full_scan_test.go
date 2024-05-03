@@ -42,9 +42,9 @@ var _ = ginkgo.Describe("Running a full scan (exploits, info finder, malware, mi
 			}
 			gomega.Eventually(func() bool {
 				assets, err := client.GetAssets(ctx, assetsParams)
-				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(skipDBLockedErr(err)).NotTo(gomega.HaveOccurred())
 				return len(*assets.Items) == 1
-			}, DefaultTimeout, DefaultPeriod).Should(gomega.BeTrue())
+			}, defaultTimeout, defaultPeriod).Should(gomega.BeTrue())
 
 			ginkgo.By("applying a scan configuration")
 			apiScanConfig, err := client.PostScanConfig(
