@@ -150,7 +150,7 @@ func RunSuccessfulScan(ctx ginkgo.SpecContext, report *ReportFailedConfig, filte
 	}
 	gomega.Eventually(func() bool {
 		scans, err = client.GetScans(ctx, scanParams)
-		gomega.Expect(err).NotTo(gomega.HaveOccurred())
+		gomega.Expect(skipDBLockedErr(err)).NotTo(gomega.HaveOccurred())
 		return len(*scans.Items) == 1
 	}, cfg.TestSuiteParams.ScanTimeout, defaultPeriod).Should(gomega.BeTrue())
 }
