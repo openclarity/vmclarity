@@ -26,6 +26,7 @@ write_files:
           -v /opt/vmclarity:/opt/vmclarity \
           -v /run:/run \
           -v /var/opt/vmclarity:/var/opt/vmclarity \
+          -v /mnt:/mnt \
           {{ .ScannerImage }} \
           scan \
           --config /opt/vmclarity/scanconfig.yaml \
