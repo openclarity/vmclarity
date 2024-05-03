@@ -24,7 +24,11 @@ import (
 	"github.com/openclarity/vmclarity/core/to"
 )
 
-const DefaultTimeout = 60 * time.Second
+const (
+	defaultTimeout  = 5 * time.Minute
+	defaultPeriod   = 5 * time.Second
+	scanStartOffset = 5 * time.Second
+)
 
 var FullScanFamiliesConfig = apitypes.ScanFamiliesConfig{
 	Exploits: &apitypes.ExploitsConfig{
