@@ -57,8 +57,7 @@ var _ = ginkgo.Describe("Running a basic scan (only SBOM)", func() {
 	ginkgo.Context("which scans a docker image", func() {
 		ginkgo.It("should finish successfully", func(ctx ginkgo.SpecContext) {
 			if cfg.TestEnvConfig.Platform != types.EnvironmentTypeDocker {
-				ginkgo.By("skipping test because it's not running on docker")
-				return
+				ginkgo.Skip("skipping test because it's not running on docker")
 			}
 
 			containerInfo, err := (*assets.Items)[0].AssetInfo.AsContainerInfo()

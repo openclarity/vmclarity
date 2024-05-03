@@ -37,8 +37,7 @@ var _ = ginkgo.Describe("Running a SBOM and plugin scan", func() {
 	ginkgo.Context("which scans a directory", func() {
 		ginkgo.It("should finish successfully", func(ctx ginkgo.SpecContext) {
 			if cfg.TestEnvConfig.Platform != types.EnvironmentTypeDocker {
-				ginkgo.By("skipping test because it's not running on docker")
-				return
+				ginkgo.Skip("skipping test because it's not running on docker")
 			}
 
 			var assets *apitypes.Assets
