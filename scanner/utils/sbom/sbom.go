@@ -21,30 +21,29 @@ import (
 	cdx "github.com/CycloneDX/cyclonedx-go"
 
 	"github.com/openclarity/vmclarity/scanner/converter"
-	"github.com/openclarity/vmclarity/scanner/scanner"
 	"github.com/openclarity/vmclarity/scanner/utils/cyclonedx_helper"
 )
 
-type CDX struct {
+type CycloneDX struct {
 	BOM *cdx.BOM
 }
 
-func NewCDX(inputSBOMFile string) (*CDX, error) {
+func NewCycloneDX(inputSBOMFile string) (*CycloneDX, error) {
 	cdxBOM, err := converter.GetCycloneDXSBOMFromFile(inputSBOMFile)
 	if err != nil {
 		return nil, converter.ErrFailedToGetCycloneDXSBOM
 	}
 
-	return &CDX{
+	return &CycloneDX{
 		BOM: cdxBOM,
 	}, nil
 }
 
-func (c *CDX) GetTargetNameFromSBOM() string {
+func (c *CycloneDX) GetTargetNameFromSBOM() string {
 	return c.BOM.Metadata.Component.Name
 }
 
-func (c *CDX) GetHashFromSBOM() (string, error) {
+func (c *CycloneDX) GetHashFromSBOM() (string, error) {
 	hash, err := cyclonedx_helper.GetComponentHash(c.BOM.Metadata.Component)
 	if err != nil {
 		return "", fmt.Errorf("unable to get hash from original SBOM: %w", err)
@@ -53,63 +52,12 @@ func (c *CDX) GetHashFromSBOM() (string, error) {
 	return hash, nil
 }
 
-func (c *CDX) GetPropertiesFromSBOM() scanner.Metadata {
-	return c.GetImageProperties()
-}
+func (c *CycloneDX) GetMetadataFromSBOM() map[string]string {
+	metadata := make(map[string]string)
 
-func (c *CDX) GetImageProperties() scanner.Metadata {
-	var imageProperties scanner.Metadata
-	for _, property := range *c.BOM.Metadata.Component.Properties {
-		switch property.Name {
-		case "vmclarity:image:ID":
-			imageProperties = append(imageProperties, scanner.Metadata{
-				{
-					Key:   "ImageID",
-					Value: property.Value,
-				},
-			}...)
-		case "vmclarity:image:RepoDigest":
-			imageProperties = append(imageProperties, scanner.Metadata{
-				{
-					Key:   "ImageRepoDigest",
-					Value: property.Value,
-				},
-			}...)
-		case "vmclarity:image:Tag":
-			imageProperties = append(imageProperties, scanner.Metadata{
-				{
-					Key:   "ImageTag",
-					Value: property.Value,
-				},
-			}...)
-		}
+	for _, prop := range *c.BOM.Metadata.Component.Properties {
+		metadata[prop.Name] = prop.Value
 	}
 
-	return imageProperties
-}
-
-func SetImageProperties(ID string, RepoDigests []string, Tags []string) []cdx.Property {
-	properties := []cdx.Property{}
-	if ID != "" {
-		properties = append(properties, cdx.Property{
-			Name:  "vmclarity:image:ID",
-			Value: ID,
-		})
-	}
-
-	for _, digest := range RepoDigests {
-		properties = append(properties, cdx.Property{
-			Name:  "vmclarity:image:RepoDigest",
-			Value: digest,
-		})
-	}
-
-	for _, tag := range Tags {
-		properties = append(properties, cdx.Property{
-			Name:  "vmclarity:image:Tag",
-			Value: tag,
-		})
-	}
-
-	return properties
+	return metadata
 }

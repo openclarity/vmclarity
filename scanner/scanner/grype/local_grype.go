@@ -38,10 +38,10 @@ import (
 	"github.com/anchore/syft/syft/cataloging"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/openclarity/vmclarity/scanner/utils"
+
 	"github.com/openclarity/vmclarity/scanner/config"
 	"github.com/openclarity/vmclarity/scanner/job_manager"
-	"github.com/openclarity/vmclarity/scanner/scanner"
-	"github.com/openclarity/vmclarity/scanner/utils"
 	"github.com/openclarity/vmclarity/scanner/utils/sbom"
 )
 
@@ -91,17 +91,17 @@ func (s *LocalScanner) run(sourceType utils.SourceType, userInput string) {
 	}
 
 	var hash string
-	var metadata scanner.Metadata
+	var metadata map[string]string
 	origInput := userInput
 	if sourceType == utils.SBOM {
-		bom, err := sbom.NewCDX(userInput)
+		bom, err := sbom.NewCycloneDX(userInput)
 		if err != nil {
 			ReportError(s.resultChan, fmt.Errorf("failed to create CycloneDX SBOM: %w", err), s.logger)
 			return
 		}
 
 		origInput = bom.GetTargetNameFromSBOM()
-		metadata = bom.GetPropertiesFromSBOM()
+		metadata = bom.GetMetadataFromSBOM()
 		hash, err = bom.GetHashFromSBOM()
 		if err != nil {
 			ReportError(s.resultChan, fmt.Errorf("failed to get original hash from SBOM: %w", err), s.logger)

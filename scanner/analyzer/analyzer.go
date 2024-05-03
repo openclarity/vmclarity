@@ -33,10 +33,10 @@ func (r *Results) GetError() error {
 }
 
 type AppInfo struct {
+	SourceMetadata map[string]string
 	SourceType     utils.SourceType
 	SourcePath     string
 	SourceHash     string
-	SourceMetadata *cdx.Metadata
 }
 
 func CreateResults(sbomBytes *cdx.BOM, analyzerName, userInput string, srcType utils.SourceType) *Results {
@@ -44,8 +44,9 @@ func CreateResults(sbomBytes *cdx.BOM, analyzerName, userInput string, srcType u
 		Sbom:         sbomBytes,
 		AnalyzerInfo: analyzerName,
 		AppInfo: AppInfo{
-			SourceType: srcType,
-			SourcePath: userInput,
+			SourceMetadata: map[string]string{},
+			SourceType:     srcType,
+			SourcePath:     userInput,
 		},
 	}
 }

@@ -17,10 +17,13 @@ package vulnerabilities
 
 import (
 	"errors"
+	"fmt"
+
+	apitypes "github.com/openclarity/vmclarity/api/types"
 
 	"github.com/openclarity/vmclarity/scanner/families/types"
 	"github.com/openclarity/vmclarity/scanner/scanner"
-	"github.com/openclarity/vmclarity/scanner/utils"
+	"github.com/openclarity/vmclarity/scanner/utils/image_helper"
 )
 
 type Results struct {
@@ -30,65 +33,20 @@ type Results struct {
 
 func (*Results) IsResults() {}
 
-var imageSourceTypes = map[string]struct{}{
-	string(utils.IMAGE):         {},
-	string(utils.DOCKERARCHIVE): {},
-	string(utils.OCIARCHIVE):    {},
-	string(utils.OCIDIR):        {},
-}
-
-func (r *Results) GetSourceImageID() (string, error) {
-	if r.MergedResults == nil {
-		return "", errors.New("missing merged results")
-	}
-
-	if _, ok := imageSourceTypes[r.MergedResults.Source.Type]; !ok {
-		return "", errors.New("source type is not image")
-	}
-
-	for _, prop := range r.MergedResults.Source.Metadata {
-		if prop.Key == "ImageID" {
-			return prop.Value, nil
-		}
-	}
-
-	return "", errors.New("missing imageID property")
-}
-
-func (r *Results) GetSourceImageRepoDigests() ([]string, error) {
+func (r *Results) GetSourceImageInfo() (*apitypes.ContainerImageInfo, error) {
 	if r.MergedResults == nil {
 		return nil, errors.New("missing merged results")
 	}
 
-	if _, ok := imageSourceTypes[r.MergedResults.Source.Type]; !ok {
-		return nil, errors.New("source type is not image")
+	sourceImage := image_helper.ImageInfo{}
+	if err := sourceImage.FromMetadata(r.MergedResults.Source.Metadata); err != nil {
+		return nil, fmt.Errorf("failed to load source image from metadata: %w", err)
 	}
 
-	var repoDigests []string
-	for _, prop := range r.MergedResults.Source.Metadata {
-		if prop.Key == "ImageRepoDigest" {
-			repoDigests = append(repoDigests, prop.Value)
-		}
+	containerImageInfo, err := sourceImage.ToContainerImageInfo()
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert container image: %w", err)
 	}
 
-	return repoDigests, nil
-}
-
-func (r *Results) GetSourceImageTags() ([]string, error) {
-	if r.MergedResults == nil {
-		return nil, errors.New("missing merged results")
-	}
-
-	if _, ok := imageSourceTypes[r.MergedResults.Source.Type]; !ok {
-		return nil, errors.New("source type is not image")
-	}
-
-	var tags []string
-	for _, prop := range r.MergedResults.Source.Metadata {
-		if prop.Key == "ImageTag" {
-			tags = append(tags, prop.Value)
-		}
-	}
-
-	return tags, nil
+	return containerImageInfo, nil
 }

@@ -19,6 +19,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/openclarity/vmclarity/scanner/utils/image_helper"
+
 	cdx "github.com/CycloneDX/cyclonedx-go"
 )
 
@@ -28,11 +30,11 @@ func Test_getImageHashAndProperties(t *testing.T) {
 		src        string
 	}
 	tests := []struct {
-		name           string
-		args           args
-		wantHash       string
-		wantProperties []cdx.Property
-		wantErr        bool
+		name     string
+		args     args
+		wantHash string
+		wantInfo *image_helper.ImageInfo
+		wantErr  bool
 	}{
 		{
 			name: "nil properties",
@@ -40,9 +42,9 @@ func Test_getImageHashAndProperties(t *testing.T) {
 				properties: nil,
 				src:        "",
 			},
-			wantHash:       "",
-			wantProperties: nil,
-			wantErr:        true,
+			wantHash: "",
+			wantInfo: nil,
+			wantErr:  true,
 		},
 		{
 			name: "empty properties",
@@ -50,9 +52,9 @@ func Test_getImageHashAndProperties(t *testing.T) {
 				properties: &[]cdx.Property{},
 				src:        "",
 			},
-			wantHash:       "",
-			wantProperties: nil,
-			wantErr:        true,
+			wantHash: "",
+			wantInfo: nil,
+			wantErr:  true,
 		},
 		{
 			name: "both RepoDigest and ImageID properties are missing",
@@ -65,9 +67,9 @@ func Test_getImageHashAndProperties(t *testing.T) {
 				},
 				src: "",
 			},
-			wantHash:       "",
-			wantProperties: nil,
-			wantErr:        true,
+			wantHash: "",
+			wantInfo: nil,
+			wantErr:  true,
 		},
 		{
 			name: "RepoDigest is missing and ImageID is not",
@@ -81,11 +83,8 @@ func Test_getImageHashAndProperties(t *testing.T) {
 				src: "",
 			},
 			wantHash: "62ed8ed20fdbb57a19639fc3a2dc8710dd66cb2364d61ec02e11cf9b35bc31dc",
-			wantProperties: []cdx.Property{
-				{
-					Name:  "vmclarity:image:ID",
-					Value: "sha256:62ed8ed20fdbb57a19639fc3a2dc8710dd66cb2364d61ec02e11cf9b35bc31dc",
-				},
+			wantInfo: &image_helper.ImageInfo{
+				ID: "sha256:62ed8ed20fdbb57a19639fc3a2dc8710dd66cb2364d61ec02e11cf9b35bc31dc",
 			},
 			wantErr: false,
 		},
@@ -101,11 +100,9 @@ func Test_getImageHashAndProperties(t *testing.T) {
 				src: "poke/debian:latest",
 			},
 			wantHash: "a4c378901a2ba14fd331e96a49101556e91ed592d5fd68ba7405fdbf9b969e61",
-			wantProperties: []cdx.Property{
-				{
-					Name:  "vmclarity:image:RepoDigest",
-					Value: "poke/debian@sha256:a4c378901a2ba14fd331e96a49101556e91ed592d5fd68ba7405fdbf9b969e61",
-				},
+			wantInfo: &image_helper.ImageInfo{
+				Name:    "poke/debian:latest",
+				Digests: []string{"poke/debian@sha256:a4c378901a2ba14fd331e96a49101556e91ed592d5fd68ba7405fdbf9b969e61"},
 			},
 			wantErr: false,
 		},
@@ -125,15 +122,11 @@ func Test_getImageHashAndProperties(t *testing.T) {
 				src: "poke/debian:latest",
 			},
 			wantHash: "a4c378901a2ba14fd331e96a49101556e91ed592d5fd68ba7405fdbf9b969e61",
-			wantProperties: []cdx.Property{
-				{
-					Name:  "vmclarity:image:ID",
-					Value: "sha256:62ed8ed20fdbb57a19639fc3a2dc8710dd66cb2364d61ec02e11cf9b35bc31dc",
-				},
-				{
-					Name:  "vmclarity:image:RepoDigest",
-					Value: "poke/debian@sha256:a4c378901a2ba14fd331e96a49101556e91ed592d5fd68ba7405fdbf9b969e61",
-				},
+
+			wantInfo: &image_helper.ImageInfo{
+				Name:    "poke/debian:latest",
+				ID:      "sha256:62ed8ed20fdbb57a19639fc3a2dc8710dd66cb2364d61ec02e11cf9b35bc31dc",
+				Digests: []string{"poke/debian@sha256:a4c378901a2ba14fd331e96a49101556e91ed592d5fd68ba7405fdbf9b969e61"},
 			},
 			wantErr: false,
 		},
@@ -157,18 +150,12 @@ func Test_getImageHashAndProperties(t *testing.T) {
 				src: "poke/debian:latest",
 			},
 			wantHash: "a4c378901a2ba14fd331e96a49101556e91ed592d5fd68ba7405fdbf9b969e61",
-			wantProperties: []cdx.Property{
-				{
-					Name:  "vmclarity:image:ID",
-					Value: "sha256:62ed8ed20fdbb57a19639fc3a2dc8710dd66cb2364d61ec02e11cf9b35bc31dc",
-				},
-				{
-					Name:  "vmclarity:image:RepoDigest",
-					Value: "debian@sha256:2906804d2a64e8a13a434a1a127fe3f6a28bf7cf3696be4223b06276f32f1f2d",
-				},
-				{
-					Name:  "vmclarity:image:RepoDigest",
-					Value: "poke/debian@sha256:a4c378901a2ba14fd331e96a49101556e91ed592d5fd68ba7405fdbf9b969e61",
+			wantInfo: &image_helper.ImageInfo{
+				Name: "poke/debian:latest",
+				ID:   "sha256:62ed8ed20fdbb57a19639fc3a2dc8710dd66cb2364d61ec02e11cf9b35bc31dc",
+				Digests: []string{
+					"debian@sha256:2906804d2a64e8a13a434a1a127fe3f6a28bf7cf3696be4223b06276f32f1f2d",
+					"poke/debian@sha256:a4c378901a2ba14fd331e96a49101556e91ed592d5fd68ba7405fdbf9b969e61",
 				},
 			},
 			wantErr: false,
@@ -176,16 +163,16 @@ func Test_getImageHashAndProperties(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotHash, gotProperties, err := getImageHashAndProperties(tt.args.properties, tt.args.src)
+			gotHash, imageInfo, err := getImageInfo(tt.args.properties, tt.args.src)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("getImageHashAndProperties() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("getImageInfo() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if gotHash != tt.wantHash {
-				t.Errorf("getImageHashAndProperties() got hash = %v, want hash %v", gotHash, tt.wantHash)
+				t.Errorf("getImageInfo() got hash = %v, want hash %v", gotHash, tt.wantHash)
 			}
-			if !reflect.DeepEqual(gotProperties, tt.wantProperties) {
-				t.Errorf("getImageHashAndProperties() got properties = %v, want properties %v", gotProperties, tt.wantProperties)
+			if !reflect.DeepEqual(imageInfo, tt.wantInfo) {
+				t.Errorf("getImageInfo() got properties = %v, want properties %v", imageInfo, tt.wantInfo)
 			}
 		})
 	}

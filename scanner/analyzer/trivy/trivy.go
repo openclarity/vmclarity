@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/openclarity/vmclarity/scanner/utils"
+
 	"github.com/aquasecurity/trivy/pkg/fanal/types"
 	log "github.com/sirupsen/logrus"
 
@@ -34,9 +36,7 @@ import (
 	"github.com/openclarity/vmclarity/scanner/analyzer"
 	"github.com/openclarity/vmclarity/scanner/config"
 	"github.com/openclarity/vmclarity/scanner/job_manager"
-	"github.com/openclarity/vmclarity/scanner/utils"
 	"github.com/openclarity/vmclarity/scanner/utils/image_helper"
-	utilsSBOM "github.com/openclarity/vmclarity/scanner/utils/sbom"
 	"github.com/openclarity/vmclarity/scanner/utils/trivy"
 )
 
@@ -164,15 +164,15 @@ func (a *Analyzer) Run(sourceType utils.SourceType, userInput string) error {
 		// hash of metadata during the merge.
 		switch sourceType {
 		case utils.IMAGE, utils.DOCKERARCHIVE, utils.OCIDIR, utils.OCIARCHIVE:
-			hash, properties, err := getImageHashAndProperties(bom.Metadata.Component.Properties, userInput)
+			hash, imageInfo, err := getImageInfo(bom.Metadata.Component.Properties, userInput)
 			if err != nil {
 				a.setError(res, fmt.Errorf("failed to get image hash from sbom: %w", err))
 				return
 			}
+
+			// sync image details to result
 			res.AppInfo.SourceHash = hash
-			res.AppInfo.SourceMetadata = &cdx.Metadata{
-				Properties: &properties,
-			}
+			res.AppInfo.SourceMetadata = imageInfo.ToMetadata()
 
 		case utils.SBOM, utils.DIR, utils.ROOTFS, utils.FILE:
 			// ignore
@@ -193,7 +193,7 @@ func (a *Analyzer) setError(res *analyzer.Results, err error) {
 	a.resultChan <- res
 }
 
-func getImageHashAndProperties(properties *[]cdx.Property, src string) (string, []cdx.Property, error) {
+func getImageInfo(properties *[]cdx.Property, imageName string) (string, *image_helper.ImageInfo, error) {
 	if properties == nil {
 		return "", nil, errors.New("properties was nil")
 	}
@@ -215,16 +215,17 @@ func getImageHashAndProperties(properties *[]cdx.Property, src string) (string, 
 		}
 	}
 
-	hash, err := image_helper.GetHashFromRepoDigestsOrImageID(repoDigests, imageID, src)
+	imageInfo := &image_helper.ImageInfo{
+		Name:    imageName,
+		ID:      imageID,
+		Digests: repoDigests,
+		Tags:    repoTags,
+	}
+
+	hash, err := imageInfo.GetHashFromRepoDigestsOrImageID()
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to get image hash from repo digests or image id: %w", err)
 	}
 
-	imageProperties := utilsSBOM.SetImageProperties(
-		imageID,
-		repoDigests,
-		repoTags,
-	)
-
-	return hash, imageProperties, nil
+	return hash, imageInfo, nil
 }
