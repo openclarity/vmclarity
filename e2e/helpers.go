@@ -98,7 +98,7 @@ func UpdateScanConfigToStartNow(config *apitypes.ScanConfig) *apitypes.ScanConfi
 		},
 		Scheduled: &apitypes.RuntimeScheduleScanConfig{
 			CronLine:      config.Scheduled.CronLine,
-			OperationTime: to.Ptr(time.Now()),
+			OperationTime: to.Ptr(time.Now().Add(scanStartOffset)), // ensure it won't become outdated by the time it's used
 		},
 	}
 }
