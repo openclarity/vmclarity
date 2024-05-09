@@ -46,7 +46,7 @@ var _ = ginkgo.Describe("Running a basic scan (only SBOM)", func() {
 				assets, err = client.GetAssets(ctx, assetsParams)
 				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				return len(*assets.Items) == 1
-			}, defaultTimeout, defaultPeriod).Should(gomega.BeTrue())
+			}, DefaultTimeout, DefaultPeriod).Should(gomega.BeTrue())
 
 			RunSuccessfulScan(ctx, &reportFailedConfig, cfg.TestSuiteParams.Scope)
 		})
@@ -76,7 +76,7 @@ var _ = ginkgo.Describe("Running a basic scan (only SBOM)", func() {
 				})
 				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				return len(*assets.Items) == 1
-			}, defaultTimeout, defaultPeriod).Should(gomega.BeTrue())
+			}, DefaultTimeout, DefaultPeriod).Should(gomega.BeTrue())
 
 			RunSuccessfulScan(ctx, &reportFailedConfig, filter)
 		})
@@ -137,7 +137,7 @@ func RunSuccessfulScan(ctx ginkgo.SpecContext, report *ReportFailedConfig, filte
 			return true
 		}
 		return false
-	}, defaultTimeout, defaultPeriod).Should(gomega.BeTrue())
+	}, DefaultTimeout, DefaultPeriod).Should(gomega.BeTrue())
 
 	ginkgo.By("waiting until scan state changes to done")
 	scanParams = apitypes.GetScansParams{
@@ -152,5 +152,5 @@ func RunSuccessfulScan(ctx ginkgo.SpecContext, report *ReportFailedConfig, filte
 		scans, err = client.GetScans(ctx, scanParams)
 		gomega.Expect(skipDBLockedErr(err)).NotTo(gomega.HaveOccurred())
 		return len(*scans.Items) == 1
-	}, cfg.TestSuiteParams.ScanTimeout, defaultPeriod).Should(gomega.BeTrue())
+	}, cfg.TestSuiteParams.ScanTimeout, DefaultPeriod).Should(gomega.BeTrue())
 }

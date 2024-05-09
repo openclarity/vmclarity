@@ -27,9 +27,10 @@ import (
 )
 
 const (
-	defaultTimeout  = 5 * time.Minute
-	defaultPeriod   = 5 * time.Second
-	scanStartOffset = 5 * time.Second
+	DefaultTimeout = 5 * time.Minute
+	DefaultPeriod  = 5 * time.Second
+
+	fullScanStartOffset = 5 * time.Second
 )
 
 var FullScanFamiliesConfig = apitypes.ScanFamiliesConfig{
@@ -100,7 +101,7 @@ func UpdateScanConfigToStartNow(config *apitypes.ScanConfig) *apitypes.ScanConfi
 		},
 		Scheduled: &apitypes.RuntimeScheduleScanConfig{
 			CronLine:      config.Scheduled.CronLine,
-			OperationTime: to.Ptr(time.Now().Add(scanStartOffset)), // ensure it won't become outdated by the time it's used
+			OperationTime: to.Ptr(time.Now().Add(fullScanStartOffset)), // ensure it won't become outdated by the time it's used
 		},
 	}
 }

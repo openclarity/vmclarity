@@ -80,7 +80,7 @@ var _ = ginkgo.Describe("Running a SBOM and plugin scan", func() {
 				assets, err = client.GetAssets(ctx, assetsParams)
 				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				return len(*assets.Items) == 1
-			}, defaultTimeout, defaultPeriod).Should(gomega.BeTrue())
+			}, DefaultTimeout, DefaultPeriod).Should(gomega.BeTrue())
 
 			ginkgo.By("applying a scan configuration")
 			apiScanConfig, err := client.PostScanConfig(
@@ -138,7 +138,7 @@ var _ = ginkgo.Describe("Running a SBOM and plugin scan", func() {
 					return true
 				}
 				return false
-			}, defaultTimeout, defaultPeriod).Should(gomega.BeTrue())
+			}, DefaultTimeout, DefaultPeriod).Should(gomega.BeTrue())
 
 			ginkgo.By("waiting until scan state changes to done")
 			scanParams = apitypes.GetScansParams{
@@ -153,19 +153,19 @@ var _ = ginkgo.Describe("Running a SBOM and plugin scan", func() {
 				scans, err = client.GetScans(ctx, scanParams)
 				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				return len(*scans.Items) == 1
-			}, defaultTimeout, defaultPeriod).Should(gomega.BeTrue())
+			}, DefaultTimeout, DefaultPeriod).Should(gomega.BeTrue())
 
 			ginkgo.By("verifying that at least one package was found")
 			gomega.Eventually(func() bool {
 				totalPackages := (*scans.Items)[0].Summary.TotalPackages
 				return *totalPackages > 0
-			}, defaultTimeout, defaultPeriod).Should(gomega.BeTrue())
+			}, DefaultTimeout, DefaultPeriod).Should(gomega.BeTrue())
 
 			ginkgo.By("verifying that at least one plugin finding was found")
 			gomega.Eventually(func() bool {
 				totalPlugins := (*scans.Items)[0].Summary.TotalPlugins
 				return totalPlugins != nil && *totalPlugins > 0
-			}, defaultTimeout, defaultPeriod).Should(gomega.BeTrue())
+			}, DefaultTimeout, DefaultPeriod).Should(gomega.BeTrue())
 		})
 	})
 

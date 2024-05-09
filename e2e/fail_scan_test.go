@@ -68,7 +68,7 @@ var _ = ginkgo.Describe("Detecting scan failures", func() {
 					return true
 				}
 				return false
-			}, defaultTimeout, defaultPeriod).Should(gomega.BeTrue())
+			}, DefaultTimeout, DefaultPeriod).Should(gomega.BeTrue())
 
 			ginkgo.By("waiting until scan state changes to failed with nothing to scan as state reason")
 			params := apitypes.GetScansParams{
@@ -84,7 +84,7 @@ var _ = ginkgo.Describe("Detecting scan failures", func() {
 				scans, err = client.GetScans(ctx, params)
 				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				return len(*scans.Items) == 1
-			}, defaultTimeout, defaultPeriod).Should(gomega.BeTrue())
+			}, DefaultTimeout, DefaultPeriod).Should(gomega.BeTrue())
 		})
 	})
 
@@ -123,7 +123,7 @@ var _ = ginkgo.Describe("Detecting scan failures", func() {
 					return true
 				}
 				return false
-			}, defaultTimeout, defaultPeriod).Should(gomega.BeTrue())
+			}, DefaultTimeout, DefaultPeriod).Should(gomega.BeTrue())
 
 			ginkgo.By("waiting until scan state changes to failed with timed out as state reason")
 			params := apitypes.GetScansParams{
@@ -139,7 +139,7 @@ var _ = ginkgo.Describe("Detecting scan failures", func() {
 				scans, err = client.GetScans(ctx, params)
 				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				return len(*scans.Items) == 1
-			}, defaultTimeout, defaultPeriod).Should(gomega.BeTrue())
+			}, DefaultTimeout, DefaultPeriod).Should(gomega.BeTrue())
 		})
 	})
 

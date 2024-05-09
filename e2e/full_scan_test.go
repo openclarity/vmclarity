@@ -44,7 +44,7 @@ var _ = ginkgo.Describe("Running a full scan (exploits, info finder, malware, mi
 				assets, err := client.GetAssets(ctx, assetsParams)
 				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				return len(*assets.Items) == 1
-			}, defaultTimeout, defaultPeriod).Should(gomega.BeTrue())
+			}, DefaultTimeout, DefaultPeriod).Should(gomega.BeTrue())
 
 			ginkgo.By("applying a scan configuration")
 			apiScanConfig, err := client.PostScanConfig(
@@ -78,7 +78,7 @@ var _ = ginkgo.Describe("Running a full scan (exploits, info finder, malware, mi
 					return true
 				}
 				return false
-			}, defaultTimeout, defaultPeriod).Should(gomega.BeTrue())
+			}, DefaultTimeout, DefaultPeriod).Should(gomega.BeTrue())
 
 			ginkgo.By("waiting until scan state changes to done")
 			scanParams = apitypes.GetScansParams{
@@ -93,7 +93,7 @@ var _ = ginkgo.Describe("Running a full scan (exploits, info finder, malware, mi
 				scans, err = client.GetScans(ctx, scanParams)
 				gomega.Expect(skipDBLockedErr(err)).NotTo(gomega.HaveOccurred())
 				return len(*scans.Items) == 1
-			}, cfg.TestSuiteParams.ScanTimeout, defaultPeriod).Should(gomega.BeTrue())
+			}, cfg.TestSuiteParams.ScanTimeout, DefaultPeriod).Should(gomega.BeTrue())
 
 			ginkgo.By("waiting until asset is found in riskiest assets dashboard")
 			gomega.Eventually(func() bool {
@@ -108,7 +108,7 @@ var _ = ginkgo.Describe("Running a full scan (exploits, info finder, malware, mi
 					}
 				}
 				return false
-			}, defaultTimeout*2, defaultPeriod).Should(gomega.BeTrue())
+			}, DefaultTimeout*2, DefaultPeriod).Should(gomega.BeTrue())
 
 			ginkgo.By("waiting until findings trends dashboard is populated with vulnerabilities")
 			gomega.Eventually(func() bool {
@@ -133,14 +133,14 @@ var _ = ginkgo.Describe("Running a full scan (exploits, info finder, malware, mi
 					}
 				}
 				return false
-			}, defaultTimeout, defaultPeriod).Should(gomega.BeTrue())
+			}, DefaultTimeout, DefaultPeriod).Should(gomega.BeTrue())
 
 			ginkgo.By("waiting until findings impact dashboard is populated with vulnerabilities")
 			gomega.Eventually(func() bool {
 				findingsImpact, err := uiClient.GetDashboardFindingsImpact(ctx)
 				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				return findingsImpact != nil && findingsImpact.Vulnerabilities != nil && len(*findingsImpact.Vulnerabilities) > 0
-			}, defaultTimeout*2, defaultPeriod).Should(gomega.BeTrue())
+			}, DefaultTimeout*2, DefaultPeriod).Should(gomega.BeTrue())
 		})
 	})
 
