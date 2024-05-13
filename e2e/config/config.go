@@ -61,11 +61,17 @@ func TestSuiteParamsForEnv(t types.EnvironmentType) *TestSuiteParams {
 			ScanTimeout:          40 * time.Minute,
 			Scope:                fmt.Sprintf(scope, "tags"),
 		}
-	case types.EnvironmentTypeDocker, types.EnvironmentTypeKubernetes:
+	case types.EnvironmentTypeDocker:
 		return &TestSuiteParams{
 			ServicesReadyTimeout: 5 * time.Minute,
 			ScanTimeout:          2 * time.Minute,
 			Scope:                fmt.Sprintf(scope, "labels"),
+		}
+	case types.EnvironmentTypeKubernetes:
+		return &TestSuiteParams{
+			ServicesReadyTimeout: 5 * time.Minute,
+			ScanTimeout:          2 * time.Minute,
+			Scope:                fmt.Sprintf(scope, "labels") + " and assetInfo/containerName eq 'alpine'",
 		}
 	default:
 		return &TestSuiteParams{}
