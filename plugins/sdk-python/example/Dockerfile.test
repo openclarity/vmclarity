@@ -1,6 +1,3 @@
-## Image is built from root repo dir context.
-## Example: docker build . -f plugins/sdk/python/example/Dockerfile -t python-scanner
-
 FROM ubuntu:20.04 AS builder-image
 
 # Avoid stuck build due to user prompt

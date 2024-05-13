@@ -13,7 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sdk
+//go:build tools
+// +build tools
 
-//go:generate go run github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen --config=types.cfg.yaml ../../openapi.yaml
-//go:generate go run github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen --config=plugin.cfg.yaml ../../openapi.yaml
+package sdk_go
+
+import (
+	_ "github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen"
+)
