@@ -7,9 +7,9 @@ Project structure:
 - **sdk-*** - Language-specific libraries, templates, and examples to aid with the implementation of scanner plugins.
 - **store** - Collection of available plugins that can be directly used in VMClarity.
 
-**Requirements**
+### Requirements
 
-Scanner plugins are distributed as containers and require **Docker** on the host that runs the actual scanning via
+Scanner plugins are distributed as containers and require [**Docker Engine**](https://docs.docker.com/engine/) on the host that runs the actual scanning via
 VMClarity CLI to work.
 
 ## Support
@@ -23,7 +23,7 @@ VMClarity CLI to work.
 ❌ List of unsupported environments:
 - _Kubernetes_ - We plan on adding plugin support to Kubernetes once we have dealt with all the security considerations.
 
-Note: Plugin support in given environments has been tested with [VMClarity installation artifacts](../installation).
+_Note:_ Plugin support has been tested against [VMClarity installation artifacts](../installation) for the given environments.
 
 ## Usage
 

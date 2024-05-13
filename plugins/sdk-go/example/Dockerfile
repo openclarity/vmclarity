@@ -2,7 +2,7 @@ FROM --platform=$BUILDPLATFORM golang:1.22.2-alpine3.18@sha256:d995eb689a0c12359
 
 ARG TARGETOS TARGETARCH
 
-WORKDIR /build/plugins/sdk/go/example
+WORKDIR /build/plugins/sdk-go/example
 
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=bind,source=.,target=/build,ro \

@@ -16,7 +16,7 @@ var _ types.Scanner = &Scanner{}
 type Scanner struct{}
 
 func main() {
-	plugin.Run(&Scanner{})
+    plugin.Run(&Scanner{})
 }
 ```
 
