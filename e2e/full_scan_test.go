@@ -49,7 +49,12 @@ var _ = ginkgo.Describe("Running a full scan (exploits, info finder, malware, mi
 			ginkgo.By("applying a scan configuration")
 			apiScanConfig, err := client.PostScanConfig(
 				ctx,
-				GetFullScanConfig(cfg.TestSuiteParams.Scope, cfg.TestSuiteParams.ScanTimeout))
+				GetCustomScanConfig(
+					cfg.TestSuiteParams.FamiliesConfig,
+					cfg.TestSuiteParams.Scope,
+					cfg.TestSuiteParams.ScanTimeout,
+				),
+			)
 			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			ginkgo.By("updating scan configuration to run now")

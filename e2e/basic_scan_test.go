@@ -97,12 +97,10 @@ func RunSuccessfulScan(ctx ginkgo.SpecContext, report *ReportFailedConfig, filte
 		ctx,
 		GetCustomScanConfig(
 			&apitypes.ScanFamiliesConfig{
-				Sbom: &apitypes.SBOMConfig{
-					Enabled: to.Ptr(true),
-				},
+				Sbom: cfg.TestSuiteParams.FamiliesConfig.Sbom,
 			},
 			filter,
-			int(cfg.TestSuiteParams.ScanTimeout.Seconds()),
+			cfg.TestSuiteParams.ScanTimeout,
 		))
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
