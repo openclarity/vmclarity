@@ -167,6 +167,9 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
+    depends_on:
+      apiserver:
+        condition: service_healthy
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://127.0.0.1:8082/healthz/ready || exit 1
       interval: 10s
@@ -181,6 +184,9 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
+    depends_on:
+      apiserver:
+        condition: service_healthy
 
   uibackend:
     image: {UIBackendContainerImage}
@@ -196,6 +202,9 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
+    depends_on:
+      apiserver:
+        condition: service_healthy
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://127.0.0.1:8083/healthz/ready || exit 1
       interval: 10s
