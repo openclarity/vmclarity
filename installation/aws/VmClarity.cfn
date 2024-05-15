@@ -240,8 +240,6 @@ Resources:
               content:
                 Fn::Sub:
                   - |
-                    version: '3'
-
                     services:
                       apiserver:
                         image: ${APIServerContainerImage}

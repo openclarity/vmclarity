@@ -125,8 +125,6 @@ EOF
 chmod 644 /etc/vmclarity/orchestrator.env
 
 cat << 'EOF' > /etc/vmclarity/vmclarity.yaml
-version: '3'
-
 services:
   apiserver:
     image: {APIServerContainerImage}
