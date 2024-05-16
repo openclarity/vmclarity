@@ -162,7 +162,7 @@ func TestConfig(t *testing.T) {
 				},
 				TestSuiteParams: &TestSuiteParams{
 					ServicesReadyTimeout: 5 * time.Minute,
-					ScanTimeout:          2 * time.Minute,
+					ScanTimeout:          5 * time.Minute,
 					Scope:                "assetInfo/labels/any(t: t/key eq 'scanconfig' and t/value eq 'test') and assetInfo/containerName eq 'alpine'",
 					FamiliesConfig:       kubernetesFamiliesConfig,
 				},
@@ -250,7 +250,7 @@ func TestConfig(t *testing.T) {
 				},
 				TestSuiteParams: &TestSuiteParams{
 					ServicesReadyTimeout: 5 * time.Minute,
-					ScanTimeout:          2 * time.Minute,
+					ScanTimeout:          5 * time.Minute,
 					Scope:                "assetInfo/labels/any(t: t/key eq 'scanconfig' and t/value eq 'test')",
 					FamiliesConfig:       FullScanFamiliesConfig,
 				},

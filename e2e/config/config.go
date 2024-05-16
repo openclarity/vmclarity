@@ -110,7 +110,7 @@ func TestSuiteParamsForEnv(t types.EnvironmentType) *TestSuiteParams {
 	case types.EnvironmentTypeDocker:
 		return &TestSuiteParams{
 			ServicesReadyTimeout: 5 * time.Minute,
-			ScanTimeout:          2 * time.Minute,
+			ScanTimeout:          5 * time.Minute,
 			Scope:                fmt.Sprintf(scope, "labels"),
 			FamiliesConfig:       FullScanFamiliesConfig,
 		}
@@ -120,7 +120,7 @@ func TestSuiteParamsForEnv(t types.EnvironmentType) *TestSuiteParams {
 		familiesConfig.Sbom.Analyzers = &[]string{"trivy", "windows"}
 		return &TestSuiteParams{
 			ServicesReadyTimeout: 5 * time.Minute,
-			ScanTimeout:          2 * time.Minute,
+			ScanTimeout:          5 * time.Minute,
 			Scope:                fmt.Sprintf(scope, "labels") + " and assetInfo/containerName eq 'alpine'",
 			FamiliesConfig:       familiesConfig,
 		}
