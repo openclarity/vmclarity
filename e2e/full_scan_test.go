@@ -85,6 +85,11 @@ var _ = ginkgo.Describe("Running a full scan (exploits, info finder, malware, mi
 				return false
 			}, DefaultTimeout, DefaultPeriod).Should(gomega.BeTrue())
 
+			reportFailedConfig.objects = append(
+				reportFailedConfig.objects,
+				APIObject{"assetScan", fmt.Sprintf("scan/id eq '%s'", *apiScanConfig.Id)},
+			)
+
 			ginkgo.By("waiting until scan state changes to done")
 			scanParams = apitypes.GetScansParams{
 				Filter: to.Ptr(fmt.Sprintf(

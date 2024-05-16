@@ -137,6 +137,11 @@ func RunSuccessfulScan(ctx ginkgo.SpecContext, report *ReportFailedConfig, filte
 		return false
 	}, DefaultTimeout, DefaultPeriod).Should(gomega.BeTrue())
 
+	report.objects = append(
+		report.objects,
+		APIObject{"assetScan", fmt.Sprintf("scan/id eq '%s'", *apiScanConfig.Id)},
+	)
+
 	ginkgo.By("waiting until scan state changes to done")
 	scanParams = apitypes.GetScansParams{
 		Filter: to.Ptr(fmt.Sprintf(
