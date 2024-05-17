@@ -52,7 +52,27 @@ func (l *DockerImageLoader) imageIDsFromRepoTags(ctx context.Context, repoTags [
 		}
 
 		if len(result) <= 0 {
-			return nil, fmt.Errorf("failed to find image: %s", repoTag)
+			// Pull image if not found locally
+			resp, err := l.docker.ImagePull(ctx, repoTag, imagetypes.PullOptions{})
+			if err != nil {
+				return nil, fmt.Errorf("failed to pull image %s: %w", repoTag, err)
+			}
+
+			// Drain response to avoid blocking
+			_, _ = io.Copy(io.Discard, resp)
+			_ = resp.Close()
+
+			result, err = l.docker.ImageList(ctx, imagetypes.ListOptions{
+				Filters: filters.NewArgs(
+					filters.Arg("reference", repoTag)),
+			})
+			if err != nil {
+				return nil, fmt.Errorf("failed to list image %s: %w", repoTag, err)
+			}
+
+			if len(result) <= 0 {
+				return nil, fmt.Errorf("failed to find image: %s", repoTag)
+			}
 		}
 
 		imageIDs = append(imageIDs, result[0].ID)
