@@ -335,7 +335,7 @@ services:
       retries: 60
 
   swagger-ui:
-    image: swaggerapi/swagger-ui:v5.17.7
+    image: swaggerapi/swagger-ui:v5.17.10
     environment:
       CONFIG_URL: /apidocs/swagger-config.json
     configs:
