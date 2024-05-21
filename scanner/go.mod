@@ -25,7 +25,7 @@ require (
 	github.com/openclarity/vmclarity/api/types v0.7.0-rc.1
 	github.com/openclarity/vmclarity/core v0.7.0-rc.1
 	github.com/openclarity/vmclarity/plugins/runner v0.7.0-rc.1
-	github.com/openclarity/vmclarity/plugins/sdk-go v0.0.0-00010101000000-000000000000
+	github.com/openclarity/vmclarity/plugins/sdk-go v0.0.0-20240521110314-4ad346720169
 	github.com/openclarity/yara-rule-server v0.3.0
 	github.com/package-url/packageurl-go v0.1.2
 	github.com/sirupsen/logrus v1.9.3
