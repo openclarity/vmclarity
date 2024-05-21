@@ -8,7 +8,7 @@ require (
 	github.com/aptible/supercronic v0.2.29
 	github.com/deepmap/oapi-codegen/v2 v2.1.0
 	github.com/evanphx/json-patch v5.9.0+incompatible
-	github.com/getkin/kin-openapi v0.123.0
+	github.com/getkin/kin-openapi v0.124.0
 	github.com/google/go-cmp v0.6.0
 	github.com/google/uuid v1.6.0
 	github.com/labstack/echo/v4 v4.12.0
