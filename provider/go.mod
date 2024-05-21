@@ -503,4 +503,4 @@ replace github.com/mitchellh/mapstructure => github.com/go-viper/mapstructure/v2
 // NOTE(chrisgacsal): this replace is required by Trivy
 // testcontainers-go has a bug with versions v0.25.0 and v0.26.0
 // ref: https://github.com/testcontainers/testcontainers-go/issues/1782
-replace github.com/testcontainers/testcontainers-go => github.com/testcontainers/testcontainers-go v0.23.0
+replace github.com/testcontainers/testcontainers-go => github.com/testcontainers/testcontainers-go v0.31.0
