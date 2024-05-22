@@ -181,7 +181,6 @@ func (e *KubernetesEnv) Services(ctx context.Context) (envtypes.Services, error)
 	}
 
 	for _, deployment := range deployments.Items {
-		deployment := deployment
 		service := ServiceFromDeployment(&deployment)
 		if service == nil {
 			logger.Warnf("failed to get service from Deployment: %v", deployment)
@@ -200,7 +199,6 @@ func (e *KubernetesEnv) Services(ctx context.Context) (envtypes.Services, error)
 	}
 
 	for _, statefulSet := range statefulSets.Items {
-		statefulSet := statefulSet
 		service := ServiceFromStatefulSet(&statefulSet)
 		if service == nil {
 			logger.Warnf("failed to get service from StatefulSet: %v", statefulSet)
@@ -219,7 +217,6 @@ func (e *KubernetesEnv) Services(ctx context.Context) (envtypes.Services, error)
 	}
 
 	for _, daemonSet := range daemonSets.Items {
-		daemonSet := daemonSet
 		service := ServiceFromDaemonSet(&daemonSet)
 		if service == nil {
 			logger.Warnf("failed to get service for DaemonSet: %v", daemonSet)
