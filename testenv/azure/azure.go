@@ -17,10 +17,12 @@ package azure
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -221,6 +223,13 @@ func New(config *Config, opts ...ConfigOptFn) (*AzureEnv, error) {
 		sshKeyPair, err = utils.GenerateSSHKeyPair()
 		if err != nil {
 			return nil, fmt.Errorf("failed to generate ssh key pair: %w", err)
+		}
+	}
+	privateKeyFile := filepath.Join(config.WorkDir, "id_rsa")
+	publicKeyFile := filepath.Join(config.WorkDir, "id_rsa.pub")
+	if _, err := os.Stat(privateKeyFile); errors.Is(err, os.ErrNotExist) {
+		if err := sshKeyPair.Save(privateKeyFile, publicKeyFile); err != nil {
+			return nil, fmt.Errorf("failed to save SSH keys to filesystem: %w", err)
 		}
 	}
 

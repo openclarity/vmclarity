@@ -19,10 +19,12 @@ import (
 	"context"
 	"crypto/sha1" // nolint:gosec
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"net/url"
 	"os"
+	"path/filepath"
 	"time"
 
 	compute "cloud.google.com/go/compute/apiv1"
@@ -236,6 +238,13 @@ func New(config *Config, opts ...ConfigOptFn) (*GCPEnv, error) {
 		sshKeyPair, err = utils.GenerateSSHKeyPair()
 		if err != nil {
 			return nil, fmt.Errorf("failed to generate ssh key pair: %w", err)
+		}
+	}
+	privateKeyFile := filepath.Join(config.WorkDir, "id_rsa")
+	publicKeyFile := filepath.Join(config.WorkDir, "id_rsa.pub")
+	if _, err := os.Stat(privateKeyFile); errors.Is(err, os.ErrNotExist) {
+		if err := sshKeyPair.Save(privateKeyFile, publicKeyFile); err != nil {
+			return nil, fmt.Errorf("failed to save SSH keys to filesystem: %w", err)
 		}
 	}
 
