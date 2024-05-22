@@ -123,7 +123,9 @@ func (e *AWSEnv) SetUp(ctx context.Context) error {
 
 func (e *AWSEnv) TearDown(ctx context.Context) error {
 	// Stop SSH port forwarding
-	e.sshPortForward.Stop()
+	if e.sshPortForward != nil {
+		e.sshPortForward.Stop()
+	}
 
 	// Delete the CloudFormation stack
 	_, err := e.client.DeleteStack(

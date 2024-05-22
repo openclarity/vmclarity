@@ -117,7 +117,10 @@ func (e *GCPEnv) SetUp(ctx context.Context) error {
 }
 
 func (e *GCPEnv) TearDown(ctx context.Context) error {
-	e.sshPortForward.Stop()
+	// Stop SSH port forwarding
+	if e.sshPortForward != nil {
+		e.sshPortForward.Stop()
+	}
 
 	op, err := e.dm.Deployments.Delete(ProjectID, e.envName).Context(ctx).Do()
 	if err != nil {
