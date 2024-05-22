@@ -70,13 +70,6 @@ type Server struct {
 	PublicIP   string
 }
 
-func (s Server) WaitForSSH(ctx context.Context, t time.Duration) error {
-	// TODO(paralta): Implement method to check if SSH port is ready
-	time.Sleep(t) // nolint:mnd
-
-	return nil
-}
-
 // Setup AWS test environment from cloud formation template.
 // * Create a new CloudFormation stack from template
 // (upload template file to S3 is required since the template is larger than 51,200 bytes).
