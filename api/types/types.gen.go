@@ -255,6 +255,17 @@ type AssetExists struct {
 	Message *string `json:"message,omitempty"`
 }
 
+// AssetFinding defines model for AssetFinding.
+type AssetFinding struct {
+	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+	Annotations *Annotations `json:"annotations,omitempty"`
+
+	// Asset Describes a relationship to an asset which can be expanded.
+	Asset   *AssetRelationship   `json:"asset,omitempty"`
+	Finding *FindingRelationship `json:"finding,omitempty"`
+	Id      *string              `json:"id,omitempty"`
+}
+
 // AssetRelationship defines model for AssetRelationship.
 type AssetRelationship struct {
 	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
@@ -691,18 +702,16 @@ type ExploitsConfig struct {
 type Finding struct {
 	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
 	Annotations *Annotations `json:"annotations,omitempty"`
+	FindingInfo *FindingInfo `json:"findingInfo,omitempty"`
 
-	// Asset Describes a relationship to an asset which can be expanded.
-	Asset       *AssetRelationship     `json:"asset,omitempty"`
-	FindingInfo *FindingInfo           `json:"findingInfo,omitempty"`
-	FoundBy     *AssetScanRelationship `json:"foundBy,omitempty"`
+	// FirstSeen When this finding was first discovered by a scan
+	FirstSeen *time.Time `json:"firstSeen,omitempty"`
+	Id        *string    `json:"id,omitempty"`
 
-	// FoundOn When this finding was discovered by a scan
-	FoundOn *time.Time `json:"foundOn,omitempty"`
-	Id      *string    `json:"id,omitempty"`
-
-	// InvalidatedOn When this finding was invalidated by a newer scan
-	InvalidatedOn *time.Time `json:"invalidatedOn,omitempty"`
+	// LastSeen When this finding was last discovered by a scan
+	LastSeen   *time.Time             `json:"lastSeen,omitempty"`
+	LastSeenBy *AssetScanRelationship `json:"lastSeenBy,omitempty"`
+	Revision   *int                   `json:"revision,omitempty"`
 }
 
 // FindingExists defines model for FindingExists.
@@ -716,6 +725,22 @@ type FindingExists struct {
 // FindingInfo defines model for FindingInfo.
 type FindingInfo struct {
 	union json.RawMessage
+}
+
+// FindingRelationship defines model for FindingRelationship.
+type FindingRelationship struct {
+	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
+	Annotations *Annotations `json:"annotations,omitempty"`
+	FindingInfo *FindingInfo `json:"findingInfo,omitempty"`
+
+	// FirstSeen When this finding was first discovered by a scan
+	FirstSeen *time.Time `json:"firstSeen,omitempty"`
+	Id        string     `json:"id"`
+
+	// LastSeen When this finding was last discovered by a scan
+	LastSeen   *time.Time             `json:"lastSeen,omitempty"`
+	LastSeenBy *AssetScanRelationship `json:"lastSeenBy,omitempty"`
+	Revision   *int                   `json:"revision,omitempty"`
 }
 
 // Findings defines model for Findings.

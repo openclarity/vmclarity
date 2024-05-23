@@ -3455,29 +3455,51 @@ components:
           properties:
             id:
               type: string
-              # TODO(sambetts) Decide if we want the validation here by having
-              # separate schemas for GET, POST and PATCH
-              #
-              # We can't make anything readOnly or required here if we want to
-              # use the same schema for PATCH otherwise it will require you
-              # always send the required fields and remove the readOnly fields
-              # on the client side.
-              #
-              # readOnly: true
-            asset:
-              $ref: '#/components/schemas/AssetRelationship'
-            foundBy:
+            revision:
+              type: integer
+            firstSeen:
+              description: When this finding was first discovered by a scan
+              type: string
+              format: date-time
+            lastSeen:
+              description: When this finding was last discovered by a scan
+              type: string
+              format: date-time
+            lastSeenBy:
+              description: Last asset scan that discovered this finding.
               $ref: '#/components/schemas/AssetScanRelationship'
-            foundOn:
-              description: When this finding was discovered by a scan
-              type: string
-              format: date-time
-            invalidatedOn:
-              description: When this finding was invalidated by a newer scan
-              type: string
-              format: date-time
             findingInfo:
               $ref: '#/components/schemas/FindingInfo'
+
+    FindingRelationship:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/MetadataReadOnly'
+        - type: object
+          properties:
+            id:
+              type: string
+            revision:
+              type: integer
+              readOnly: true
+            firstSeen:
+              description: When this finding was first discovered by a scan
+              type: string
+              format: date-time
+              readOnly: true
+            lastSeen:
+              description: When this finding was last discovered by a scan
+              type: string
+              format: date-time
+              readOnly: true
+            lastSeenBy:
+              description: Last asset scan that discovered this finding.
+              $ref: '#/components/schemas/AssetScanRelationship'
+              readOnly: true
+            findingInfo:
+              $ref: '#/components/schemas/FindingInfo'
+              readOnly: true
+          required: ['id']
 
     FindingInfo:
       anyOf:
@@ -3500,6 +3522,19 @@ components:
           Rootkit: '#/components/schemas/RootkitFindingInfo'
           Exploit: '#/components/schemas/ExploitFindingInfo'
           InfoFinder: '#/components/schemas/InfoFinderFindingInfo'
+
+    AssetFinding:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Metadata'
+        - type: object
+          properties:
+            id:
+              type: string
+            asset:
+              $ref: '#/components/schemas/AssetRelationship'
+            finding:
+              $ref: '#/components/schemas/FindingRelationship'
 
     ScanEstimations:
       type: object
