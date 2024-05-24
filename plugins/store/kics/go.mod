@@ -4,7 +4,7 @@ go 1.22.2
 
 require (
 	github.com/Checkmarx/kics v1.7.13
-	github.com/openclarity/vmclarity/plugins/sdk-go v0.0.0-00010101000000-000000000000
+	github.com/openclarity/vmclarity/plugins/sdk-go v0.0.0-20240524094656-a6ad640a8c6c
 )
 
 require (

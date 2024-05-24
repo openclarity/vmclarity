@@ -7,7 +7,7 @@ require (
 	github.com/docker/docker v26.1.3+incompatible
 	github.com/docker/go-connections v0.5.0
 	github.com/openclarity/vmclarity/core v0.7.0-rc.1
-	github.com/openclarity/vmclarity/plugins/sdk-go v0.0.0-00010101000000-000000000000
+	github.com/openclarity/vmclarity/plugins/sdk-go v0.0.0-20240524094656-a6ad640a8c6c
 )
 
 require (
