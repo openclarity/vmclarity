@@ -25,8 +25,8 @@ import (
 // nolint:cyclop
 func (asp *AssetScanProcessor) reconcileResultPluginsToFindings(ctx context.Context, assetScan apitypes.AssetScan) error {
 	if assetScan.Plugins != nil && assetScan.Plugins.FindingInfos != nil {
-		// Create new or update existing findings all the plugin findingd found by the
-		// scan.
+		// Create new or update existing findings for all the plugin findings found by the
+		// scan. Note that plugin findings can belong to multiple families.
 		for _, findingInfo := range *assetScan.Plugins.FindingInfos {
 			id, err := asp.createOrUpdateDBFinding(ctx, &findingInfo, *assetScan.Id, assetScan.Status.LastTransitionTime)
 			if err != nil {
@@ -40,30 +40,32 @@ func (asp *AssetScanProcessor) reconcileResultPluginsToFindings(ctx context.Cont
 		}
 	}
 
-	err := asp.invalidateOlderAssetFindingsByType(ctx, "Plugin", assetScan.Asset.Id, assetScan.Status.LastTransitionTime)
-	if err != nil {
-		return fmt.Errorf("failed to invalidate older plugin finding: %w", err)
-	}
+	// TODO(paralta) Plugin findings can belong to multiple families and they cannot invalidate other family findings.
+	// This needs more thinking...
+	// err := asp.invalidateOlderAssetFindingsByType(ctx, "Plugin", assetScan.Asset.Id, assetScan.Status.LastTransitionTime)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to invalidate older plugin finding: %w", err)
+	// }
 
-	// Get all findings which aren't invalidated, and then update the asset's summary
-	asset, err := asp.client.GetAsset(ctx, assetScan.Asset.Id, apitypes.GetAssetsAssetIDParams{})
-	if err != nil {
-		return fmt.Errorf("failed to get asset %s: %w", assetScan.Asset.Id, err)
-	}
-	if asset.Summary == nil {
-		asset.Summary = &apitypes.ScanFindingsSummary{}
-	}
+	// // Get all findings which aren't invalidated, and then update the asset's summary
+	// asset, err := asp.client.GetAsset(ctx, assetScan.Asset.Id, apitypes.GetAssetsAssetIDParams{})
+	// if err != nil {
+	// 	return fmt.Errorf("failed to get asset %s: %w", assetScan.Asset.Id, err)
+	// }
+	// if asset.Summary == nil {
+	// 	asset.Summary = &apitypes.ScanFindingsSummary{}
+	// }
 
-	totalPlugins, err := asp.getActiveFindingsByType(ctx, "Plugin", assetScan.Asset.Id)
-	if err != nil {
-		return fmt.Errorf("failed to get active plugin findings: %w", err)
-	}
-	asset.Summary.TotalPlugins = &totalPlugins
+	// totalPlugins, err := asp.getActiveFindingsByType(ctx, "Plugin", assetScan.Asset.Id)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to get active plugin findings: %w", err)
+	// }
+	// asset.Summary.TotalPlugins = &totalPlugins
 
-	err = asp.client.PatchAsset(ctx, asset, assetScan.Asset.Id)
-	if err != nil {
-		return fmt.Errorf("failed to patch asset %s: %w", assetScan.Asset.Id, err)
-	}
+	// err = asp.client.PatchAsset(ctx, asset, assetScan.Asset.Id)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to patch asset %s: %w", assetScan.Asset.Id, err)
+	// }
 
 	return nil
 }
