@@ -62,7 +62,7 @@ func New(_ string, c job_manager.IsConfig, logger *log.Entry, resultChan chan jo
 }
 
 // nolint:cyclop
-func (a *Analyzer) Run(sourceType utils.SourceType, userInput string) error {
+func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInput string) error {
 	a.logger.Infof("Called %s analyzer on source %v %v", a.name, sourceType, userInput)
 
 	tempFile, err := os.CreateTemp(a.config.TempDir, "trivy.sbom.*.json")

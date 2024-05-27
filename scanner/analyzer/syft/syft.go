@@ -56,7 +56,7 @@ func New(_ string, c job_manager.IsConfig, logger *log.Entry, resultChan chan jo
 	}
 }
 
-func (a *Analyzer) Run(sourceType utils.SourceType, userInput string) error {
+func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInput string) error {
 	src := utils.CreateSource(sourceType, a.localImage)
 
 	a.logger.Infof("Called %s analyzer on source %s", a.name, src)

@@ -55,7 +55,7 @@ func New(_ string, c job_manager.IsConfig, logger *log.Entry, resultChan chan jo
 }
 
 // nolint:cyclop,gocognit
-func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
+func (s *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInput string) error {
 	go func() {
 		s.logger.Debugf("Running with input=%v and source type=%v", userInput, sourceType)
 		retResults := types.ScannerResult{

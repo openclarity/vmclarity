@@ -58,7 +58,7 @@ func (m *Manager) Run(ctx context.Context, sourceType utils.SourceType, userInpu
 
 	// start jobs
 	for _, j := range jobs {
-		err := j.Run(sourceType, userInput)
+		err := j.Run(ctx, sourceType, userInput)
 		if err != nil {
 			return nil, fmt.Errorf("failed to run job: %w", err)
 		}

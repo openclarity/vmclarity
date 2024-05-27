@@ -42,7 +42,7 @@ type Scanner struct {
 	resultChan chan job_manager.Result
 }
 
-func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
+func (s *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInput string) error {
 	go func() {
 		retResults := common.Results{
 			ScannedInput: userInput,

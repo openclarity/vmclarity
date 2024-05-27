@@ -51,7 +51,7 @@ func New(name string, c job_manager.IsConfig, logger *logrus.Entry, resultChan c
 	}
 }
 
-func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
+func (s *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInput string) error {
 	go func() {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()

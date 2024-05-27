@@ -154,7 +154,7 @@ func (a *Scanner) createTrivyOptions(output string, userInput string) (trivyFlag
 }
 
 // nolint:cyclop
-func (a *Scanner) Run(sourceType utils.SourceType, userInput string) error {
+func (a *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInput string) error {
 	a.logger.Infof("Called %s scanner on source %v %v", ScannerName, sourceType, userInput)
 
 	tempFile, err := os.CreateTemp(a.config.CacheDir, "trivy.scan.*.json")
