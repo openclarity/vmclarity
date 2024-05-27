@@ -112,11 +112,12 @@ func (asp *AssetScanProcessor) reconcileResultVulnerabilitiesToFindings(ctx cont
 }
 
 func (asp *AssetScanProcessor) getActiveVulnerabilityFindingsCount(ctx context.Context, assetID string, severity apitypes.VulnerabilitySeverity) (int, error) {
-	filter := fmt.Sprintf("findingInfo/objectType eq 'Vulnerability' and asset/id eq '%s' and invalidatedOn eq null and findingInfo/severity eq '%s'", assetID, string(severity))
-	activeFindings, err := asp.client.GetFindings(ctx, apitypes.GetFindingsParams{
-		Count:  to.Ptr(true),
-		Filter: &filter,
-
+	activeFindings, err := asp.client.GetAssetFindings(ctx, apitypes.GetAssetFindingsParams{
+		Count: to.Ptr(true),
+		Filter: to.Ptr(fmt.Sprintf(
+			"finding/findingInfo/objectType eq 'Vulnerability' and asset/id eq '%s' and invalidatedOn eq null and finding/findingInfo/severity eq '%s'",
+			assetID, string(severity)),
+		),
 		// select the smallest amount of data to return in items, we
 		// only care about the count.
 		Top:    to.Ptr(1),

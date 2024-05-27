@@ -130,13 +130,13 @@ func (asp *AssetScanProcessor) invalidateOlderAssetFindingsByType(ctx context.Co
 	return nil
 }
 
-// TODO
 func (asp *AssetScanProcessor) getActiveFindingsByType(ctx context.Context, findingType string, assetID string) (int, error) {
-	filter := fmt.Sprintf("findingInfo/objectType eq '%s' and asset/id eq '%s' and invalidatedOn eq null",
-		findingType, assetID)
-	activeFindings, err := asp.client.GetFindings(ctx, apitypes.GetFindingsParams{
-		Count:  to.Ptr(true),
-		Filter: &filter,
+	activeFindings, err := asp.client.GetAssetFindings(ctx, apitypes.GetAssetFindingsParams{
+		Count: to.Ptr(true),
+		Filter: to.Ptr(
+			fmt.Sprintf("finding/findingInfo/objectType eq '%s' and asset/id eq '%s' and invalidatedOn eq null",
+				findingType, assetID),
+		),
 
 		// select the smallest amount of data to return in items, we
 		// only care about the count.
