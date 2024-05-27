@@ -105,31 +105,32 @@ func (asp *AssetScanProcessor) createOrUpdateDBAssetFinding(ctx context.Context,
 	return nil
 }
 
-func (asp *AssetScanProcessor) invalidateOlderFindingsByType(ctx context.Context, findingType string, assetID string, completedTime time.Time) error {
-	// Invalidate any findings of this type for this asset where foundOn is
-	// older than this asset scan, and has not already been invalidated by
-	// an asset scan older than this asset scan.
-	findingsToInvalidate, err := asp.client.GetFindings(ctx, apitypes.GetFindingsParams{
+// Invalidate any asset findings of this type where lastSeen is
+// older than this asset scan, and has not already been invalidated by
+// an asset scan older than this asset scan.
+func (asp *AssetScanProcessor) invalidateOlderAssetFindingsByType(ctx context.Context, findingType string, assetID string, completedTime time.Time) error {
+	assetFindingsToInvalidate, err := asp.client.GetAssetFindings(ctx, apitypes.GetAssetFindingsParams{
 		Filter: to.Ptr(fmt.Sprintf(
-			"findingInfo/objectType eq '%s' and asset/id eq '%s' and foundOn lt %s and (invalidatedOn gt %s or invalidatedOn eq null)",
+			"finding/findingInfo/objectType eq '%s' and asset/id eq '%s' and lastSeen lt %s and (invalidatedOn gt %s or invalidatedOn eq null)",
 			findingType, assetID, completedTime.Format(time.RFC3339), completedTime.Format(time.RFC3339))),
 	})
 	if err != nil {
-		return fmt.Errorf("failed to query findings to invalidate: %w", err)
+		return fmt.Errorf("failed to query asset findings to invalidate: %w", err)
 	}
 
-	for _, finding := range *findingsToInvalidate.Items {
-		finding.InvalidatedOn = &completedTime
+	for _, assetFinding := range *assetFindingsToInvalidate.Items {
+		assetFinding.InvalidatedOn = &completedTime
 
-		err := asp.client.PatchFinding(ctx, *finding.Id, finding)
+		err := asp.client.PatchAssetFinding(ctx, *assetFinding.Id, assetFinding)
 		if err != nil {
-			return fmt.Errorf("failed to update existing finding %s: %w", *finding.Id, err)
+			return fmt.Errorf("failed to update existing asset finding %s: %w", *assetFinding.Id, err)
 		}
 	}
 
 	return nil
 }
 
+// TODO
 func (asp *AssetScanProcessor) getActiveFindingsByType(ctx context.Context, findingType string, assetID string) (int, error) {
 	filter := fmt.Sprintf("findingInfo/objectType eq '%s' and asset/id eq '%s' and invalidatedOn eq null",
 		findingType, assetID)

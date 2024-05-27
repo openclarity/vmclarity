@@ -57,10 +57,7 @@ func (asp *AssetScanProcessor) reconcileResultMisconfigurationsToFindings(ctx co
 		}
 	}
 
-	// Invalidate any findings of this type for this asset where foundOn is
-	// older than this asset scan, and has not already been invalidated by
-	// an asset scan older than this asset scan.
-	err := asp.invalidateOlderFindingsByType(ctx, "Misconfiguration", assetScan.Asset.Id, assetScan.Status.LastTransitionTime)
+	err := asp.invalidateOlderAssetFindingsByType(ctx, "Misconfiguration", assetScan.Asset.Id, assetScan.Status.LastTransitionTime)
 	if err != nil {
 		return fmt.Errorf("failed to invalidate older misconfiguration finding: %w", err)
 	}

@@ -52,11 +52,7 @@ func (asp *AssetScanProcessor) reconcileResultRootkitsToFindings(ctx context.Con
 		}
 	}
 
-	// TODO Invalidate asset findings for exploits not found in this scan
-	// Invalidate any findings of this type for this asset where foundOn is
-	// older than this asset scan, and has not already been invalidated by
-	// an asset scan older than this asset scan.
-	err := asp.invalidateOlderFindingsByType(ctx, "Rootkit", assetScan.Asset.Id, assetScan.Status.LastTransitionTime)
+	err := asp.invalidateOlderAssetFindingsByType(ctx, "Rootkit", assetScan.Asset.Id, assetScan.Status.LastTransitionTime)
 	if err != nil {
 		return fmt.Errorf("failed to invalidate older rootkit finding: %w", err)
 	}
