@@ -28,12 +28,15 @@ func (asp *AssetScanProcessor) reconcileResultPluginsToFindings(ctx context.Cont
 		// Create new or update existing findings all the plugin findingd found by the
 		// scan.
 		for _, findingInfo := range *assetScan.Plugins.FindingInfos {
-			_, err := asp.createOrUpdateDBFinding(ctx, &findingInfo, *assetScan.Id, assetScan.Status.LastTransitionTime)
+			id, err := asp.createOrUpdateDBFinding(ctx, &findingInfo, *assetScan.Id, assetScan.Status.LastTransitionTime)
 			if err != nil {
 				return fmt.Errorf("failed to update finding: %w", err)
 			}
 
-			// TODO Create or update asset finding
+			err = asp.createOrUpdateDBAssetFinding(ctx, assetScan.Asset.Id, id, assetScan.Status.LastTransitionTime)
+			if err != nil {
+				return fmt.Errorf("failed to update asset finding: %w", err)
+			}
 		}
 	}
 

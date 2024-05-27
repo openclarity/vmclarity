@@ -68,6 +68,43 @@ func (asp *AssetScanProcessor) createOrUpdateDBFinding(ctx context.Context, info
 	return id, nil
 }
 
+func (asp *AssetScanProcessor) createOrUpdateDBAssetFinding(ctx context.Context, assetID string, findingID string, completedTime time.Time) error {
+	// Create new asset finding
+	assetFinding := apitypes.AssetFinding{
+		Asset: &apitypes.AssetRelationship{
+			Id: assetID,
+		},
+		Finding: &apitypes.FindingRelationship{
+			Id: findingID,
+		},
+		LastSeen: &completedTime,
+	}
+
+	_, err := asp.client.PostAssetFinding(ctx, assetFinding)
+	if err == nil {
+		return nil
+	}
+
+	var conflictError apiclient.AssetFindingConflictError
+	if !errors.As(err, &conflictError) {
+		return fmt.Errorf("failed to create asset finding: %w", err)
+	}
+
+	// Update existing asset finding if newer
+	if conflictError.ConflictingAssetFinding.LastSeen.Before(completedTime) {
+		assetFinding := apitypes.AssetFinding{
+			LastSeen: &completedTime,
+		}
+
+		err = asp.client.PatchAssetFinding(ctx, *conflictError.ConflictingAssetFinding.Id, assetFinding)
+		if err != nil {
+			return fmt.Errorf("failed to patch asset finding: %w", err)
+		}
+	}
+
+	return nil
+}
+
 func (asp *AssetScanProcessor) invalidateOlderFindingsByType(ctx context.Context, findingType string, assetID string, completedTime time.Time) error {
 	// Invalidate any findings of this type for this asset where foundOn is
 	// older than this asset scan, and has not already been invalidated by

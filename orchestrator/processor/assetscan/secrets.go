@@ -44,12 +44,15 @@ func (asp *AssetScanProcessor) reconcileResultSecretsToFindings(ctx context.Cont
 				return fmt.Errorf("unable to convert SecretFindingInfo into FindingInfo: %w", err)
 			}
 
-			_, err = asp.createOrUpdateDBFinding(ctx, &findingInfo, *assetScan.Id, assetScan.Status.LastTransitionTime)
+			id, err := asp.createOrUpdateDBFinding(ctx, &findingInfo, *assetScan.Id, assetScan.Status.LastTransitionTime)
 			if err != nil {
 				return fmt.Errorf("failed to update finding: %w", err)
 			}
 
-			// TODO Create or update asset finding
+			err = asp.createOrUpdateDBAssetFinding(ctx, assetScan.Asset.Id, id, assetScan.Status.LastTransitionTime)
+			if err != nil {
+				return fmt.Errorf("failed to update asset finding: %w", err)
+			}
 		}
 	}
 
