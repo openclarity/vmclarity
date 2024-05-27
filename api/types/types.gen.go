@@ -264,6 +264,29 @@ type AssetFinding struct {
 	Asset   *AssetRelationship   `json:"asset,omitempty"`
 	Finding *FindingRelationship `json:"finding,omitempty"`
 	Id      *string              `json:"id,omitempty"`
+
+	// InvalidatedOn When this asset finding was invalidated by a newer scan
+	InvalidatedOn *time.Time `json:"invalidatedOn,omitempty"`
+
+	// LastSeen When this asset finding was last discovered by a scan
+	LastSeen *time.Time `json:"lastSeen,omitempty"`
+}
+
+// AssetFindingExists defines model for AssetFindingExists.
+type AssetFindingExists struct {
+	Finding *AssetFinding `json:"finding,omitempty"`
+
+	// Message Describes which unique constraint combination causes the conflict.
+	Message *string `json:"message,omitempty"`
+}
+
+// AssetFindings defines model for AssetFindings.
+type AssetFindings struct {
+	// Count Total asset findings count according to the given filters
+	Count *int `json:"count,omitempty"`
+
+	// Items List of asset findings according to the given filters
+	Items *[]AssetFinding `json:"items,omitempty"`
 }
 
 // AssetRelationship defines model for AssetRelationship.
@@ -1805,6 +1828,9 @@ type VulnerabilityScanSummary struct {
 // VulnerabilitySeverity defines model for VulnerabilitySeverity.
 type VulnerabilitySeverity string
 
+// AssetFindingID defines model for assetFindingID.
+type AssetFindingID = string
+
 // AssetID defines model for assetID.
 type AssetID = string
 
@@ -1858,6 +1884,23 @@ type Success = SuccessResponse
 
 // UnknownError An object that is returned in all cases of failures.
 type UnknownError = ApiResponse
+
+// GetAssetFindingsParams defines parameters for GetAssetFindings.
+type GetAssetFindingsParams struct {
+	Filter  *OdataFilter `form:"$filter,omitempty" json:"$filter,omitempty"`
+	Select  *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
+	Count   *OdataCount  `form:"$count,omitempty" json:"$count,omitempty"`
+	Top     *OdataTop    `form:"$top,omitempty" json:"$top,omitempty"`
+	Skip    *OdataSkip   `form:"$skip,omitempty" json:"$skip,omitempty"`
+	Expand  *OdataExpand `form:"$expand,omitempty" json:"$expand,omitempty"`
+	OrderBy *OrderBy     `form:"$orderby,omitempty" json:"$orderby,omitempty"`
+}
+
+// GetAssetFindingsAssetFindingIDParams defines parameters for GetAssetFindingsAssetFindingID.
+type GetAssetFindingsAssetFindingIDParams struct {
+	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
+	Expand *OdataExpand `form:"$expand,omitempty" json:"$expand,omitempty"`
+}
 
 // GetAssetScanEstimationsParams defines parameters for GetAssetScanEstimations.
 type GetAssetScanEstimationsParams struct {
@@ -2064,6 +2107,15 @@ type PatchScansScanIDParams struct {
 type PutScansScanIDParams struct {
 	IfMatch *Ifmatch `json:"If-Match,omitempty"`
 }
+
+// PostAssetFindingsJSONRequestBody defines body for PostAssetFindings for application/json ContentType.
+type PostAssetFindingsJSONRequestBody = AssetFinding
+
+// PatchAssetFindingsAssetFindingIDJSONRequestBody defines body for PatchAssetFindingsAssetFindingID for application/json ContentType.
+type PatchAssetFindingsAssetFindingIDJSONRequestBody = AssetFinding
+
+// PutAssetFindingsAssetFindingIDJSONRequestBody defines body for PutAssetFindingsAssetFindingID for application/json ContentType.
+type PutAssetFindingsAssetFindingIDJSONRequestBody = AssetFinding
 
 // PostAssetScanEstimationsJSONRequestBody defines body for PostAssetScanEstimations for application/json ContentType.
 type PostAssetScanEstimationsJSONRequestBody = AssetScanEstimation
