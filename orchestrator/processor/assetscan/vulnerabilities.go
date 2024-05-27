@@ -20,48 +20,11 @@ import (
 	"fmt"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
-	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/core/to"
-	"github.com/openclarity/vmclarity/scanner/findingkey"
 )
 
 // nolint:cyclop,gocognit
 func (asp *AssetScanProcessor) reconcileResultVulnerabilitiesToFindings(ctx context.Context, assetScan apitypes.AssetScan) error {
-	logger := log.GetLoggerFromContextOrDiscard(ctx)
-
-	completedTime := assetScan.Status.LastTransitionTime
-
-	newerFound, newerTime, err := asp.newerExistingFindingTime(ctx, assetScan.Asset.Id, "Vulnerability", completedTime)
-	if err != nil {
-		return fmt.Errorf("failed to check for newer existing vulnerability findings: %w", err)
-	}
-
-	existingFilter := fmt.Sprintf("findingInfo/objectType eq 'Vulnerability' and foundBy/id eq '%s'", *assetScan.Id)
-	existingFindings, err := asp.client.GetFindings(ctx, apitypes.GetFindingsParams{
-		Filter: &existingFilter,
-		Select: to.Ptr("id,findingInfo/vulnerabilityName,findingInfo/package/name,findingInfo/package/version"),
-	})
-	if err != nil {
-		return fmt.Errorf("failed to check for existing finding: %w", err)
-	}
-
-	existingMap := map[findingkey.VulnerabilityKey]string{}
-	for _, finding := range *existingFindings.Items {
-		vuln, err := (*finding.FindingInfo).AsVulnerabilityFindingInfo()
-		if err != nil {
-			return fmt.Errorf("unable to get vulnerability finding info: %w", err)
-		}
-
-		key := findingkey.GenerateVulnerabilityKey(vuln)
-		if _, ok := existingMap[key]; ok {
-			return fmt.Errorf("found multiple matching existing findings for vulnerability %s for package %s version %s", *vuln.VulnerabilityName, *vuln.Package.Name, *vuln.Package.Version)
-		}
-		existingMap[key] = *finding.Id
-	}
-
-	logger.Infof("Found %d existing vulnerabilities findings for this scan", len(existingMap))
-	logger.Debugf("Existing vulnerabilities map: %v", existingMap)
-
 	if assetScan.Vulnerabilities != nil && assetScan.Vulnerabilities.Vulnerabilities != nil {
 		// Create new findings for all the found vulnerabilities
 		for _, vuln := range *assetScan.Vulnerabilities.Vulnerabilities {
@@ -79,47 +42,24 @@ func (asp *AssetScanProcessor) reconcileResultVulnerabilitiesToFindings(ctx cont
 			}
 
 			findingInfo := apitypes.FindingInfo{}
-			err = findingInfo.FromVulnerabilityFindingInfo(vulFindingInfo)
+			err := findingInfo.FromVulnerabilityFindingInfo(vulFindingInfo)
 			if err != nil {
 				return fmt.Errorf("unable to convert VulnerabilityFindingInfo into FindingInfo: %w", err)
 			}
 
-			finding := apitypes.Finding{
-				Asset: &apitypes.AssetRelationship{
-					Id: assetScan.Asset.Id,
-				},
-				FoundBy: &apitypes.AssetScanRelationship{
-					Id: *assetScan.Id,
-				},
-				FoundOn:     &assetScan.Status.LastTransitionTime,
-				FindingInfo: &findingInfo,
+			_, err = asp.createOrUpdateDBFinding(ctx, &findingInfo, *assetScan.Id, assetScan.Status.LastTransitionTime)
+			if err != nil {
+				return fmt.Errorf("failed to update finding: %w", err)
 			}
 
-			// Set InvalidatedOn time to the FoundOn time of the oldest
-			// finding, found after this asset scan.
-			if newerFound {
-				finding.InvalidatedOn = &newerTime
-			}
-
-			key := findingkey.GenerateVulnerabilityKey(vulFindingInfo)
-			if id, ok := existingMap[key]; ok {
-				err = asp.client.PatchFinding(ctx, id, finding)
-				if err != nil {
-					return fmt.Errorf("failed to create finding: %w", err)
-				}
-			} else {
-				_, err = asp.client.PostFinding(ctx, finding)
-				if err != nil {
-					return fmt.Errorf("failed to create finding: %w", err)
-				}
-			}
+			// TODO Create or update asset finding
 		}
 	}
 
 	// Invalidate any findings of this type for this asset where foundOn is
 	// older than this asset scan, and has not already been invalidated by
 	// an asset scan older than this asset scan.
-	err = asp.invalidateOlderFindingsByType(ctx, "Vulnerability", assetScan.Asset.Id, completedTime)
+	err := asp.invalidateOlderFindingsByType(ctx, "Vulnerability", assetScan.Asset.Id, assetScan.Status.LastTransitionTime)
 	if err != nil {
 		return fmt.Errorf("failed to invalidate older vulnerability finding: %w", err)
 	}

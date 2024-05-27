@@ -17,47 +17,55 @@ package assetscan
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
+	apiclient "github.com/openclarity/vmclarity/api/client"
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/to"
 )
 
-func (asp *AssetScanProcessor) newerExistingFindingTime(ctx context.Context, assetID string, findingType string, completedTime time.Time) (bool, time.Time, error) {
-	var found bool
-	var newerTime time.Time
-	// AssetScans can be processed out of chronological order:
-	//
-	// If multiple scans of the same asset complete, A first then B, we'll
-	// pick up the event for A, and then B. If while reconciling A we hit a
-	// failure (timeout or weird glitch), the reconciler will continue on
-	// and try to reconcile B. It will then pick up A on the next poll and
-	// re-reconcile it.
-	//
-	// So we need to check if any existing findings of this type exist with
-	// a foundOn time newer than this results completed time. If there are
-	// any newer results it means that this asset scan's findings have
-	// already been invalidated by a newer scan. We'll find the oldest
-	// newer scan, and use its FoundOn time as the InvalidatedOn time for
-	// this scan.
-	newerFindings, err := asp.client.GetFindings(ctx, apitypes.GetFindingsParams{
-		Filter: to.Ptr(fmt.Sprintf(
-			"findingInfo/objectType eq '%s' and asset/id eq '%s' and foundOn gt %s",
-			findingType, assetID, completedTime.Format(time.RFC3339))),
-		OrderBy: to.Ptr("foundOn asc"),
-		Top:     to.Ptr(1), // because of the ordering we only need to get one result here and it'll be the oldest finding which matches the filter
-	})
-	if err != nil {
-		return found, newerTime, fmt.Errorf("failed to check for newer findings: %w", err)
+func (asp *AssetScanProcessor) createOrUpdateDBFinding(ctx context.Context, info *apitypes.FindingInfo, assetScanID string, completedTime time.Time) (string, error) {
+	// Create new finding
+	finding := apitypes.Finding{
+		FirstSeen: &completedTime,
+		LastSeen:  &completedTime,
+		LastSeenBy: &apitypes.AssetScanRelationship{
+			Id: assetScanID,
+		},
+		FindingInfo: info,
 	}
 
-	found = len(*newerFindings.Items) > 0
-	if found {
-		newerTime = *(*newerFindings.Items)[0].FoundOn
+	fd, err := asp.client.PostFinding(ctx, finding)
+	if err == nil {
+		return *fd.Id, nil
 	}
 
-	return found, newerTime, nil
+	var conflictError apiclient.FindingConflictError
+	if !errors.As(err, &conflictError) {
+		return "", fmt.Errorf("failed to create finding: %w", err)
+	}
+
+	var id string
+	// Update existing finding if newer
+	if conflictError.ConflictingFinding.LastSeen.Before(completedTime) {
+		id = *conflictError.ConflictingFinding.Id
+		finding := apitypes.Finding{
+			LastSeen: &completedTime,
+			LastSeenBy: &apitypes.AssetScanRelationship{
+				Id: assetScanID,
+			},
+			FindingInfo: info,
+		}
+
+		err = asp.client.PatchFinding(ctx, id, finding)
+		if err != nil {
+			return id, fmt.Errorf("failed to patch finding: %w", err)
+		}
+	}
+
+	return id, nil
 }
 
 func (asp *AssetScanProcessor) invalidateOlderFindingsByType(ctx context.Context, findingType string, assetID string, completedTime time.Time) error {
