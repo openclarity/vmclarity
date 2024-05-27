@@ -61,7 +61,7 @@ type containerManager struct {
 	runningErr       atomic.Pointer[error]
 }
 
-func New(config types.PluginConfig) (containermanager.PluginContainerManager, error) {
+func New(ctx context.Context, config types.PluginConfig) (containermanager.PluginContainerManager, error) {
 	// Load docker client
 	dclient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -69,7 +69,7 @@ func New(config types.PluginConfig) (containermanager.PluginContainerManager, er
 	}
 
 	// Load host container
-	hostContainer, err := getHostContainer(context.Background(), dclient)
+	hostContainer, err := getHostContainer(ctx, dclient)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check host: %w", err)
 	}

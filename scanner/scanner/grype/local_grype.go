@@ -16,6 +16,7 @@
 package grype
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -66,7 +67,7 @@ func newLocalScanner(conf *config.Config, logger *log.Entry, resultChan chan job
 	}
 }
 
-func (s *LocalScanner) Run(sourceType utils.SourceType, userInput string) error {
+func (s *LocalScanner) Run(ctx context.Context, sourceType utils.SourceType, userInput string) error {
 	go s.run(sourceType, userInput)
 
 	return nil

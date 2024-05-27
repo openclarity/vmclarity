@@ -16,6 +16,7 @@
 package cisdocker
 
 import (
+	"context"
 	"fmt"
 
 	dockle_run "github.com/Portshift/dockle/pkg"
@@ -47,7 +48,7 @@ func New(_ string, c job_manager.IsConfig, logger *logrus.Entry, resultChan chan
 	}
 }
 
-func (a *Scanner) Run(sourceType utils.SourceType, userInput string) error {
+func (a *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInput string) error {
 	go func() {
 		retResults := types.ScannerResult{
 			ScannerName: ScannerName,
