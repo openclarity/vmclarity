@@ -270,6 +270,7 @@ type AssetFinding struct {
 
 	// LastSeen When this asset finding was last discovered by a scan
 	LastSeen *time.Time `json:"lastSeen,omitempty"`
+	Revision *int       `json:"revision,omitempty"`
 }
 
 // AssetFindingExists defines model for AssetFindingExists.
@@ -1900,6 +1901,16 @@ type GetAssetFindingsParams struct {
 type GetAssetFindingsAssetFindingIDParams struct {
 	Select *OdataSelect `form:"$select,omitempty" json:"$select,omitempty"`
 	Expand *OdataExpand `form:"$expand,omitempty" json:"$expand,omitempty"`
+}
+
+// PatchAssetFindingsAssetFindingIDParams defines parameters for PatchAssetFindingsAssetFindingID.
+type PatchAssetFindingsAssetFindingIDParams struct {
+	IfMatch *Ifmatch `json:"If-Match,omitempty"`
+}
+
+// PutAssetFindingsAssetFindingIDParams defines parameters for PutAssetFindingsAssetFindingID.
+type PutAssetFindingsAssetFindingIDParams struct {
+	IfMatch *Ifmatch `json:"If-Match,omitempty"`
 }
 
 // GetAssetScanEstimationsParams defines parameters for GetAssetScanEstimations.

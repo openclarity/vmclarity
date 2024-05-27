@@ -1075,7 +1075,7 @@ func (c *Client) GetAssetFindings(ctx context.Context, params types.GetAssetFind
 }
 
 func (c *Client) PatchAssetFinding(ctx context.Context, assetFindingID types.AssetFindingID, assetFinding types.AssetFinding) error {
-	resp, err := c.api.PatchAssetFindingsAssetFindingIDWithResponse(ctx, assetFindingID, assetFinding)
+	resp, err := c.api.PatchAssetFindingsAssetFindingIDWithResponse(ctx, assetFindingID, &types.PatchAssetFindingsAssetFindingIDParams{}, assetFinding)
 	if err != nil {
 		return fmt.Errorf("failed to update an asset finding: %w", err)
 	}

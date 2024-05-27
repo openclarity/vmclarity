@@ -986,6 +986,7 @@ paths:
       operationId: PutAssetFindingsAssetFindingID
       parameters:
         - $ref: '#/components/parameters/assetFindingID'
+        - $ref: '#/components/parameters/ifmatch'
       requestBody:
         content:
           application/json:
@@ -1011,6 +1012,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+        409:
+          description: Asset finding conflict.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetFindingExists'
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
@@ -1019,6 +1026,7 @@ paths:
       operationId: PatchAssetFindingsAssetFindingID
       parameters:
         - $ref: '#/components/parameters/assetFindingID'
+        - $ref: '#/components/parameters/ifmatch'
       requestBody:
         content:
           application/json:
@@ -1044,11 +1052,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+        409:
+          description: Asset finding conflict.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetFindingExists'
         default:
           $ref: '#/components/responses/UnknownError'
       x-codegen-request-body-name: body
     delete:
-      summary: Delete as asset finding.
+      summary: Delete an asset finding.
       operationId: DeleteAssetFindingsAssetFindingID
       parameters:
         - $ref: '#/components/parameters/assetFindingID'
@@ -3724,7 +3738,9 @@ components:
               description: When this asset finding was invalidated by a newer scan
               type: string
               format: date-time
-
+            revision:
+              type: integer
+  
     ScanEstimations:
       type: object
       properties:
