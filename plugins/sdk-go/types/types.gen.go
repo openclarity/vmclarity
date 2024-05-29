@@ -161,6 +161,9 @@ type Result struct {
 	// Annotations Generic map of string keys and string values to attach arbitrary non-identifying metadata to objects.
 	Annotations *Annotations `json:"annotations,omitempty"`
 
+	// RawJSON Defines scan result data that is unfornatted.
+	RawJSON map[string]interface{} `json:"rawJSON"`
+
 	// Vmclarity Defines scan result data that can be consumed by VMClarity API.
 	Vmclarity VMClarityData `json:"vmclarity"`
 }
