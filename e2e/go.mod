@@ -7,12 +7,12 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/onsi/ginkgo/v2 v2.19.0
 	github.com/onsi/gomega v1.33.1
-	github.com/openclarity/vmclarity/api/client v0.7.0-rc.1
-	github.com/openclarity/vmclarity/api/types v0.7.0-rc.1
-	github.com/openclarity/vmclarity/core v0.7.0-rc.1
-	github.com/openclarity/vmclarity/testenv v0.7.0-rc.1
-	github.com/openclarity/vmclarity/uibackend/client v0.7.0-rc.1
-	github.com/openclarity/vmclarity/uibackend/types v0.7.0-rc.1
+	github.com/openclarity/vmclarity/api/client v0.7.0
+	github.com/openclarity/vmclarity/api/types v0.7.0
+	github.com/openclarity/vmclarity/core v0.7.0
+	github.com/openclarity/vmclarity/testenv v0.7.0
+	github.com/openclarity/vmclarity/uibackend/client v0.7.0
+	github.com/openclarity/vmclarity/uibackend/types v0.7.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.18.2
 )
@@ -191,9 +191,9 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f // indirect
 	github.com/oapi-codegen/runtime v1.1.1 // indirect
-	github.com/openclarity/vmclarity/installation v0.7.0-rc.1 // indirect
-	github.com/openclarity/vmclarity/plugins/sdk-go v0.0.0-00010101000000-000000000000 // indirect
-	github.com/openclarity/vmclarity/utils v0.7.0-rc.1 // indirect
+	github.com/openclarity/vmclarity/installation v0.7.0 // indirect
+	github.com/openclarity/vmclarity/plugins/sdk-go v0.7.0 // indirect
+	github.com/openclarity/vmclarity/utils v0.7.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
@@ -265,10 +265,10 @@ require (
 	golang.org/x/text v0.15.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.21.0 // indirect
-	google.golang.org/api v0.180.0 // indirect
+	google.golang.org/api v0.181.0 // indirect
 	google.golang.org/genproto v0.0.0-20240401170217-c3f982113cda // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240513163218-0867130af1f8 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240509183442-62759503f434 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240513163218-0867130af1f8 // indirect
 	google.golang.org/grpc v1.63.2 // indirect
 	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/cenkalti/backoff.v1 v1.1.0 // indirect
@@ -276,7 +276,7 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	helm.sh/helm/v3 v3.14.4 // indirect
+	helm.sh/helm/v3 v3.15.1 // indirect
 	k8s.io/api v0.30.1 // indirect
 	k8s.io/apiextensions-apiserver v0.30.0 // indirect
 	k8s.io/apimachinery v0.30.1 // indirect

@@ -9,11 +9,11 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/onsi/gomega v1.33.1
-	github.com/openclarity/vmclarity/api/client v0.7.0-rc.1
-	github.com/openclarity/vmclarity/api/types v0.7.0-rc.1
-	github.com/openclarity/vmclarity/core v0.7.0-rc.1
-	github.com/openclarity/vmclarity/provider v0.7.0-rc.1
-	github.com/openclarity/vmclarity/scanner v0.7.0-rc.1
+	github.com/openclarity/vmclarity/api/client v0.7.0
+	github.com/openclarity/vmclarity/api/types v0.7.0
+	github.com/openclarity/vmclarity/core v0.7.0
+	github.com/openclarity/vmclarity/provider v0.7.0
+	github.com/openclarity/vmclarity/scanner v0.7.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
@@ -71,8 +71,8 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/alecthomas/chroma v0.10.0 // indirect
-	github.com/anchore/clio v0.0.0-20240507184749-d03a6187e649 // indirect
-	github.com/anchore/fangs v0.0.0-20231201140849-5075d28d6d8b // indirect
+	github.com/anchore/clio v0.0.0-20240522144804-d81e109008aa // indirect
+	github.com/anchore/fangs v0.0.0-20240508143433-f016b099950f // indirect
 	github.com/anchore/go-collections v0.0.0-20240216171411-9321230ce537 // indirect
 	github.com/anchore/go-logger v0.0.0-20230725134548-c21dafa1ec5a // indirect
 	github.com/anchore/go-macholibre v0.0.0-20220308212642-53e6d0aaf6fb // indirect
@@ -327,10 +327,10 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/open-policy-agent/opa v0.64.1 // indirect
 	github.com/openclarity/grype-server/api v0.0.0-20240502131359-2f1a56ef9b22 // indirect
-	github.com/openclarity/vmclarity/containerruntimediscovery/client v0.7.0-rc.1 // indirect
-	github.com/openclarity/vmclarity/containerruntimediscovery/types v0.7.0-rc.1 // indirect
-	github.com/openclarity/vmclarity/plugins/runner v0.7.0-rc.1 // indirect
-	github.com/openclarity/vmclarity/plugins/sdk-go v0.0.0-00010101000000-000000000000 // indirect
+	github.com/openclarity/vmclarity/containerruntimediscovery/client v0.7.0 // indirect
+	github.com/openclarity/vmclarity/containerruntimediscovery/types v0.7.0 // indirect
+	github.com/openclarity/vmclarity/plugins/runner v0.7.0 // indirect
+	github.com/openclarity/vmclarity/plugins/sdk-go v0.7.0 // indirect
 	github.com/openclarity/yara-rule-server v0.3.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
@@ -444,10 +444,10 @@ require (
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.21.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
-	google.golang.org/api v0.180.0 // indirect
+	google.golang.org/api v0.181.0 // indirect
 	google.golang.org/genproto v0.0.0-20240401170217-c3f982113cda // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240513163218-0867130af1f8 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240509183442-62759503f434 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240513163218-0867130af1f8 // indirect
 	google.golang.org/grpc v1.64.0 // indirect
 	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/cheggaaa/pb.v1 v1.0.28 // indirect
