@@ -17,12 +17,9 @@ package aws
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net/url"
-	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -216,25 +213,9 @@ func New(config *Config, opts ...ConfigOptFn) (*AWSEnv, error) {
 	// Create AWS S3 client
 	s3Client := s3.NewFromConfig(cfg)
 
-	sshKeyPair := &utils.SSHKeyPair{}
-	// Load SSH key-pair if provided, generate otherwise
-	if config.PublicKeyFile != "" && config.PrivateKeyFile != "" {
-		err = sshKeyPair.Load(config.PrivateKeyFile, config.PublicKeyFile)
-		if err != nil {
-			return nil, fmt.Errorf("failed to load ssh key pair: %w", err)
-		}
-	} else {
-		sshKeyPair, err = utils.GenerateSSHKeyPair()
-		if err != nil {
-			return nil, fmt.Errorf("failed to generate ssh key pair: %w", err)
-		}
-	}
-	privateKeyFile := filepath.Join(config.WorkDir, "id_rsa")
-	publicKeyFile := filepath.Join(config.WorkDir, "id_rsa.pub")
-	if _, err := os.Stat(privateKeyFile); errors.Is(err, os.ErrNotExist) {
-		if err := sshKeyPair.Save(privateKeyFile, publicKeyFile); err != nil {
-			return nil, fmt.Errorf("failed to save SSH keys to filesystem: %w", err)
-		}
+	sshKeyPair, err := utils.LoadOrGenerateAndSaveSSHKeyPair(config.PrivateKeyFile, config.PublicKeyFile, config.WorkDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get SSH key pair: %w", err)
 	}
 
 	return &AWSEnv{
