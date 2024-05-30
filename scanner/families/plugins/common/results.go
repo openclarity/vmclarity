@@ -22,6 +22,7 @@ type Results struct {
 	ScannedInput string
 	ScannerName  string
 	Error        error
+	RawData      map[string]interface{}
 }
 
 func (r *Results) GetError() error {

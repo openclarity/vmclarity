@@ -64,12 +64,15 @@ func (p *Plugins) Run(ctx context.Context, res *results.Results) (interfaces.IsR
 
 		// Merge results from all plugins into the same output
 		var mergedResults []apitypes.FindingInfo
+		mergedRawData := make(map[string]map[string]interface{})
 		for name, result := range managerResults {
 			logger.Infof("Merging result from %q", name)
 			mergedResults = append(mergedResults, result.(*common.Results).Output...) //nolint:forcetypeassert
+			mergedRawData[name] = result.(*common.Results).RawData                    //nolint:forcetypeassert
 		}
 
 		pluginsResults.Output = mergedResults
+		pluginsResults.RawData = mergedRawData
 		pluginsResults.Metadata.InputScans = append(pluginsResults.Metadata.InputScans, types.CreateInputScanMetadata(startTime, endTime, inputSize, input))
 	}
 
