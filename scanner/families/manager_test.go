@@ -17,13 +17,13 @@ package families
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
 	misconfigurationTypes "github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
 	"github.com/openclarity/vmclarity/scanner/families/types"
 	"github.com/openclarity/vmclarity/scanner/utils"
-	"github.com/stretchr/testify/assert"
 )
 
 type familyNotifierSpy struct {
@@ -41,117 +41,33 @@ func (n *familyNotifierSpy) FamilyFinished(_ context.Context, res FamilyResult) 
 }
 
 func TestManagerRunTimeout(t *testing.T) {
-	tests := []struct {
-		name       string
-		config     *Config
-		wantErr    error
-		wantResult interface{}
-	}{
-		{
-			name: "Run with misconfiguration family should timeout",
-			config: &Config{
-				Misconfiguration: misconfigurationTypes.Config{
-					Enabled:      true,
-					ScannersList: []string{"fake"},
-					Inputs: []types.Input{
-						{
-							Input:     "./",
-							InputType: string(utils.ROOTFS),
-						},
-					},
+	conf := &Config{
+		Misconfiguration: misconfigurationTypes.Config{
+			Enabled:      true,
+			ScannersList: []string{"fake"},
+			Inputs: []types.Input{
+				{
+					Input:     "./",
+					InputType: string(utils.ROOTFS),
 				},
 			},
-			wantErr:    context.DeadlineExceeded,
-			wantResult: nil,
 		},
 	}
-	for _, tt := range tests {
-		ttp := tt
-		t.Run(ttp.name, func(t *testing.T) {
-			manager := New(ttp.config)
-			notifier := &familyNotifierSpy{}
 
-			ctx, cancel := context.WithTimeout(context.Background(), -time.Nanosecond)
-			defer cancel()
+	manager := New(conf)
+	notifier := &familyNotifierSpy{}
+	ctx, cancel := context.WithTimeout(context.Background(), -time.Nanosecond)
+	defer cancel()
 
-			manager.Run(ctx, notifier)
-			if ttp.wantErr != nil {
-				assert.EqualError(t, ttp.wantErr, ctx.Err().Error())
-			}
+	manager.Run(ctx, notifier)
 
-			for _, res := range notifier.Results {
-				if ttp.wantErr != nil {
-					assert.Error(t, res.Err, "expected error in family result")
-				}
-			}
-		})
+	if !errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		t.Fatalf("expected context deadline exceeded error, got %s", ctx.Err())
+	}
+
+	for _, res := range notifier.Results {
+		if res.Err == nil {
+			t.Fatalf("expected FamilyResult(%s) error, got nil", res.FamilyType)
+		}
 	}
 }
-
-// func TestManagerRunPlugin(t *testing.T) {
-// 	tests := []struct {
-// 		name       string
-// 		config     *Config
-// 		wantErr    error
-// 		wantResult interface{}
-// 	}{
-// 		{
-// 			name: "KICS generates raw results",
-// 			config: &Config{
-// 				Plugins: plugins.Config{
-// 					Enabled:      true,
-// 					ScannersList: []string{"kics"},
-// 					Inputs: []types.Input{
-// 						{
-// 							Input:     getAbsPathOfTestdata(t, "../../e2e/testdata"),
-// 							InputType: string(utils.ROOTFS),
-// 						},
-// 					},
-// 					ScannersConfig: &common.ScannersConfig{
-// 						"kics": config.Config{
-// 							Name:          "kics",
-// 							ImageName:     "ghcr.io/openclarity/vmclarity-plugin-kics:latest",
-// 							InputDir:      "",
-// 							ScannerConfig: "",
-// 						},
-// 					},
-// 				},
-// 			},
-// 			wantErr:    nil,
-// 			wantResult: float64(23),
-// 		},
-// 	}
-// 	for _, tt := range tests {
-// 		ttp := tt
-// 		t.Run(ttp.name, func(t *testing.T) {
-// 			manager := New(ttp.config)
-// 			notifier := &familyNotifierSpy{}
-
-// 			ctx := context.Background()
-// 			manager.Run(ctx, notifier)
-// 			if ttp.wantErr != nil {
-// 				assert.EqualError(t, ttp.wantErr, ctx.Err().Error())
-// 			}
-
-// 			for _, res := range notifier.Results {
-// 				if ttp.wantErr != nil {
-// 					assert.Error(t, res.Err, "expected error in family result")
-// 				}
-
-// 				if ttp.wantResult != nil {
-// 					fmt.Println(res.Result.(*plugins.Results).RawData["kics"]["total_counter"])
-// 					assert.Equal(t, ttp.wantResult, res.Result.(*plugins.Results).RawData["kics"]["total_counter"])
-// 				}
-// 			}
-// 		})
-// 	}
-// }
-
-// func getAbsPathOfTestdata(t *testing.T, path string) string {
-// 	absPath, err := filepath.Abs(path)
-// 	if err != nil {
-// 		assert.NoError(t, err, "failed to get absolute path")
-// 	}
-
-// 	return absPath
-// }
