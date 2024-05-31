@@ -74,9 +74,8 @@ var _ = ginkgo.Describe("Running KICS scan", func() {
 
 			gomega.Eventually(func() bool {
 				for _, res := range notifier.Results {
-					if res.Result != nil && gomega.Expect(res.Result.(*plugins.Results).RawData["kics"]["total_counter"]).To(gomega.Equal(float64(23))) {
-						return true
-					}
+					return gomega.Expect(res.Result.(*plugins.Results).RawData["kics"].(map[string]interface{})["total_counter"]).To(gomega.Equal(float64(23))) &&
+						gomega.Expect(len(res.Result.(*plugins.Results).Output)).To(gomega.Equal(23))
 				}
 				return false
 			}, DefaultTimeout, DefaultPeriod).Should(gomega.BeTrue())

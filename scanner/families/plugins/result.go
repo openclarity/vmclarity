@@ -21,9 +21,9 @@ import (
 )
 
 type Results struct {
-	Metadata familiestypes.Metadata            `json:"Metadata"`
-	Output   []apitypes.FindingInfo            `json:"Output"`
-	RawData  map[string]map[string]interface{} `json:"RawData"`
+	Metadata familiestypes.Metadata `json:"Metadata"`
+	Output   []apitypes.FindingInfo `json:"Output"`
+	RawData  map[string]interface{} `json:"RawData"`
 }
 
 func (*Results) IsResults() {}

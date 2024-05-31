@@ -163,7 +163,7 @@ func (s *Scanner) isValidInputType(sourceType utils.SourceType) bool {
 	return false
 }
 
-func (s *Scanner) parseResults(ctx context.Context, runner types.PluginRunner) ([]apitypes.FindingInfo, map[string]interface{}, error) {
+func (s *Scanner) parseResults(ctx context.Context, runner types.PluginRunner) ([]apitypes.FindingInfo, interface{}, error) {
 	result, err := runner.Result(ctx)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get plugin scanner result: %w", err)

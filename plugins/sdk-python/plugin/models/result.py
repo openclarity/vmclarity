@@ -101,7 +101,7 @@ class Result(Model):
     def raw_json(self) -> object:
         """Gets the raw_json of this Result.
 
-        Defines scan result data that is unfornatted.  # noqa: E501
+        Defines scan result data that is not consumed by VMClarity API.  # noqa: E501
 
         :return: The raw_json of this Result.
         :rtype: object
@@ -112,7 +112,7 @@ class Result(Model):
     def raw_json(self, raw_json: object):
         """Sets the raw_json of this Result.
 
-        Defines scan result data that is unfornatted.  # noqa: E501
+        Defines scan result data that is not consumed by VMClarity API.  # noqa: E501
 
         :param raw_json: The raw_json of this Result.
         :type raw_json: object

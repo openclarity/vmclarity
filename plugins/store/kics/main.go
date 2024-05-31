@@ -199,25 +199,12 @@ func (s *Scanner) formatOutput(rawFile, outputFile string) error {
 		}
 	}
 
-	// Marshal the kICS summary back to JSON
-	summaryJSON, err := json.MarshalIndent(summary, "", "  ")
-	if err != nil {
-		return fmt.Errorf("failed to marshal KICS summary: %w", err)
-	}
-
-	// Unmarshal the KICS summary to a map to extract the raw data
-	var rawData map[string]interface{}
-	err = json.Unmarshal(summaryJSON, &rawData)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshal KICS summary: %w", err)
-	}
-
 	// Save result
 	result := types.Result{
 		Vmclarity: types.VMClarityData{
 			Misconfigurations: &misconfigurations,
 		},
-		RawJSON: rawData,
+		RawJSON: summary,
 	}
 	if err := result.Export(outputFile); err != nil {
 		return fmt.Errorf("failed to save KICS result: %w", err)

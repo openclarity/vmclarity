@@ -221,8 +221,8 @@ components:
         rawJSON:
           # Specifies raw scan result data.
           # Required.
-          type: object
-          description: Defines scan result data that is unfornatted.
+          type: null
+          description: Defines scan result data that is not consumed by VMClarity API.
 
     VMClarityData:
       type: object
