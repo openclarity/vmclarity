@@ -38,7 +38,7 @@ type LocalGrypeConfig struct {
 	UpdateDB           bool          `yaml:"update_db" mapstructure:"update_db"`
 	DBRootDir          string        `yaml:"db_root_dir" mapstructure:"db_root_dir"`                     // Location to write the vulnerability database cache.
 	ListingURL         string        `yaml:"listing_url" mapstructure:"listing_url"`                     // URL of the vulnerability database.
-	MaxAllowedBuiltAge time.Duration `yaml:"max_allowed_built_age" mapstructure:"max_allowed_built_age"` // Period if time after which the database is considered stale.
+	MaxAllowedBuiltAge time.Duration `yaml:"max_allowed_built_age" mapstructure:"max_allowed_built_age"` // Period of time after which the database is considered stale.
 	ListingFileTimeout time.Duration `yaml:"listing_file_timeout" mapstructure:"listing_file_timeout"`   // Timeout of grype's HTTP client used for downloading the listing file.
 	UpdateTimeout      time.Duration `yaml:"update_timeout" mapstructure:"update_timeout"`               // Timeout of grype's HTTP client used for downloading the database.
 	Scope              source.Scope  `yaml:"scope" mapstructure:"scope"`                                 // indicates "how" or from "which perspectives" the source object should be cataloged from.
