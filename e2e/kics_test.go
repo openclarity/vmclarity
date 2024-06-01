@@ -31,6 +31,11 @@ import (
 	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
+const (
+	scannerPluginName         = "kics"
+	kicsPluginE2eTestImageEnv = "VMCLARITY_E2E_PLUGIN_KICS_IMAGE"
+)
+
 type Notifier struct {
 	Results []families.FamilyResult
 }
@@ -46,7 +51,6 @@ func (n *Notifier) FamilyFinished(_ context.Context, res families.FamilyResult) 
 var _ = ginkgo.Describe("Running KICS scan", func() {
 	ginkgo.Context("which scans an openapi.yaml file", func() {
 		ginkgo.It("should finish successfully", func(ctx ginkgo.SpecContext) {
-			image := os.Getenv("VMCLARITY_E2E_PLUGIN_KICS_IMAGE")
 			input, err := filepath.Abs("./testdata")
 			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			notifier := &Notifier{}
@@ -54,7 +58,7 @@ var _ = ginkgo.Describe("Running KICS scan", func() {
 			families.New(&families.Config{
 				Plugins: plugins.Config{
 					Enabled:      true,
-					ScannersList: []string{"kics"},
+					ScannersList: []string{scannerPluginName},
 					Inputs: []types.Input{
 						{
 							Input:     input,
@@ -62,9 +66,9 @@ var _ = ginkgo.Describe("Running KICS scan", func() {
 						},
 					},
 					ScannersConfig: &common.ScannersConfig{
-						"kics": config.Config{
-							Name:          "kics",
-							ImageName:     image,
+						scannerPluginName: config.Config{
+							Name:          scannerPluginName,
+							ImageName:     os.Getenv(kicsPluginE2eTestImageEnv),
 							InputDir:      "",
 							ScannerConfig: "",
 						},
@@ -74,9 +78,10 @@ var _ = ginkgo.Describe("Running KICS scan", func() {
 
 			gomega.Eventually(func() bool {
 				for _, res := range notifier.Results {
-					return gomega.Expect(res.Result.(*plugins.Results).RawData["kics"].(map[string]interface{})["total_counter"]).To(gomega.Equal(float64(23))) &&
-						gomega.Expect(len(res.Result.(*plugins.Results).Output)).To(gomega.Equal(23))
+					return gomega.Expect(res.Result.(*plugins.Results).RawData[scannerPluginName].(map[string]interface{})["total_counter"]).To(gomega.Equal(float64(23))) && // nolint:forcetypeassert
+						gomega.Expect(len(res.Result.(*plugins.Results).Output)).To(gomega.Equal(23)) // nolint:forcetypeassert
 				}
+
 				return false
 			}, DefaultTimeout, DefaultPeriod).Should(gomega.BeTrue())
 		})
