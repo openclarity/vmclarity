@@ -17,11 +17,11 @@ package e2e
 
 import (
 	"context"
-	"os"
 	"path/filepath"
 
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
+	"github.com/spf13/viper"
 
 	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/plugins"
@@ -31,10 +31,7 @@ import (
 	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
-const (
-	scannerPluginName         = "kics"
-	kicsPluginE2eTestImageEnv = "VMCLARITY_E2E_PLUGIN_KICS_IMAGE"
-)
+const scannerPluginName = "kics"
 
 type Notifier struct {
 	Results []families.FamilyResult
@@ -51,6 +48,11 @@ func (n *Notifier) FamilyFinished(_ context.Context, res families.FamilyResult) 
 var _ = ginkgo.Describe("Running KICS scan", func() {
 	ginkgo.Context("which scans an openapi.yaml file", func() {
 		ginkgo.It("should finish successfully", func(ctx ginkgo.SpecContext) {
+			image := viper.GetString("vmclarity_e2e_plugin_kics_image")
+			if image == "" {
+				ginkgo.Skip("Skipping test because VMCLARITY_E2E_PLUGIN_KICS_IMAGE is not set")
+			}
+
 			input, err := filepath.Abs("./testdata")
 			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			notifier := &Notifier{}
@@ -68,18 +70,23 @@ var _ = ginkgo.Describe("Running KICS scan", func() {
 					ScannersConfig: &common.ScannersConfig{
 						scannerPluginName: config.Config{
 							Name:          scannerPluginName,
-							ImageName:     os.Getenv(kicsPluginE2eTestImageEnv),
+							ImageName:     image,
 							InputDir:      "",
 							ScannerConfig: "",
 						},
 					},
 				},
-			}).Run(context.TODO(), notifier)
+			}).Run(ctx, notifier)
 
 			gomega.Eventually(func() bool {
 				for _, res := range notifier.Results {
-					return gomega.Expect(res.Result.(*plugins.Results).RawData[scannerPluginName].(map[string]interface{})["total_counter"]).To(gomega.Equal(float64(23))) && // nolint:forcetypeassert
-						gomega.Expect(len(res.Result.(*plugins.Results).Output)).To(gomega.Equal(23)) // nolint:forcetypeassert
+					results := res.Result.(*plugins.Results)                                            // nolint:forcetypeassert
+					rawData := results.PluginResult[scannerPluginName].RawJSON.(map[string]interface{}) // nolint:forcetypeassert
+
+					gomega.Expect(rawData["total_counter"]).To(gomega.Equal(float64(23)))
+					gomega.Expect(len(results.Output)).To(gomega.Equal(23))
+
+					return true
 				}
 
 				return false

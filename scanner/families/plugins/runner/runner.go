@@ -137,14 +137,14 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 			return
 		}
 
-		output, rawJSON, err := s.parseResults(ctx, rr)
+		output, pluginResult, err := s.parseResults(ctx, rr)
 		if err != nil {
 			s.sendResults(retResults, fmt.Errorf("failed to parse plugin scanner results: %w", err))
 			return
 		}
 
 		retResults.Output = output
-		retResults.RawData = rawJSON
+		retResults.PluginResult = pluginResult
 		s.sendResults(retResults, nil)
 	}()
 
@@ -163,7 +163,7 @@ func (s *Scanner) isValidInputType(sourceType utils.SourceType) bool {
 	return false
 }
 
-func (s *Scanner) parseResults(ctx context.Context, runner types.PluginRunner) ([]apitypes.FindingInfo, interface{}, error) {
+func (s *Scanner) parseResults(ctx context.Context, runner types.PluginRunner) ([]apitypes.FindingInfo, *plugintypes.Result, error) {
 	result, err := runner.Result(ctx)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get plugin scanner result: %w", err)
@@ -175,18 +175,18 @@ func (s *Scanner) parseResults(ctx context.Context, runner types.PluginRunner) (
 		return nil, nil, fmt.Errorf("failed to read plugin scanner output: %w", err)
 	}
 
-	var r plugintypes.Result
-	err = json.Unmarshal(b, &r)
+	var pluginResult plugintypes.Result
+	err = json.Unmarshal(b, &pluginResult)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to unmarshal plugin scanner output: %w", err)
 	}
 
-	findings, err := apitypes.DefaultPluginAdapter.Result(r)
+	findings, err := apitypes.DefaultPluginAdapter.Result(pluginResult)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to convert plugin scanner result to vmclarity findings: %w", err)
 	}
 
-	return findings, r.RawJSON, nil
+	return findings, &pluginResult, nil
 }
 
 func (s *Scanner) sendResults(results common.Results, err error) {

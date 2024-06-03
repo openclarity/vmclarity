@@ -15,14 +15,17 @@
 
 package common
 
-import "github.com/openclarity/vmclarity/api/types"
+import (
+	"github.com/openclarity/vmclarity/api/types"
+	plugintypes "github.com/openclarity/vmclarity/plugins/sdk-go/types"
+)
 
 type Results struct {
 	Output       []types.FindingInfo
 	ScannedInput string
 	ScannerName  string
 	Error        error
-	RawData      interface{}
+	PluginResult *plugintypes.Result
 }
 
 func (r *Results) GetError() error {

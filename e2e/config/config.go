@@ -210,6 +210,9 @@ func NewConfig() (*Config, error) {
 	v.RegisterAlias("docker.plugin_kics_image", "plugin_kics_image")
 	v.RegisterAlias("kubernetes.plugin_kics_image", "plugin_kics_image")
 
+	_ = v.BindEnv("vmclarity_e2e_plugin_kics_image")
+	v.SetDefault("vmclarity_e2e_plugin_kics_image", testenv.DefaultPluginKics)
+
 	_ = v.BindEnv("docker.compose_files")
 
 	_ = v.BindEnv("kubernetes.provider")
