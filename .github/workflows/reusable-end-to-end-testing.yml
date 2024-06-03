@@ -126,7 +126,7 @@ jobs:
           VMCLARITY_E2E_UIBACKEND_IMAGE: ${{ format('{0}:{1}', needs.images.outputs.ui-backend-image, inputs.image_tag) }}
           VMCLARITY_E2E_SCANNER_IMAGE: ${{ format('{0}:{1}', needs.images.outputs.cli-image, inputs.image_tag) }}
           VMCLARITY_E2E_CR_DISCOVERY_SERVER_IMAGE: ${{ format('{0}:{1}', needs.images.outputs.cr-discovery-server-image, inputs.image_tag) }}
-          VMCLARITY_E2E_SCANNER_PLUGIN_KICS: ${{ format('{0}:{1}', needs.images.outputs.plugin-kics-image, inputs.image_tag) }}
+          VMCLARITY_E2E_PLUGIN_KICS_IMAGE: ${{ format('{0}:{1}', needs.images.outputs.plugin-kics-image, inputs.image_tag) }}
           VMCLARITY_E2E_PLATFORM: ${{ inputs.platform }}
         run: |
           if [[ "${{ inputs.platform }}" == "kubernetes" ]]; then
