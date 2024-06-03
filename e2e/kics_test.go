@@ -84,7 +84,7 @@ var _ = ginkgo.Describe("Running KICS scan", func() {
 					rawData := results.PluginResult[scannerPluginName].RawJSON.(map[string]interface{}) // nolint:forcetypeassert
 
 					gomega.Expect(rawData["total_counter"]).To(gomega.Equal(float64(23)))
-					gomega.Expect(len(results.Output)).To(gomega.Equal(23))
+					gomega.Expect(results.Output).To(gomega.HaveLen(23))
 
 					return true
 				}
