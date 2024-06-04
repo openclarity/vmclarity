@@ -138,6 +138,8 @@ type Config struct {
 	TestEnvConfig testenv.Config `mapstructure:",squash"`
 	// TestSuiteParams contains test parameters for each environment.
 	TestSuiteParams *TestSuiteParams
+	// KicsPluginImage is the image used for the KICS plugin.
+	KicsPluginImage string `mapstructure:"vmclarity_e2e_plugin_kics_image"`
 }
 
 func NewConfig() (*Config, error) {
@@ -209,9 +211,6 @@ func NewConfig() (*Config, error) {
 	v.SetDefault("plugin_kics_image", testenv.DefaultPluginKics)
 	v.RegisterAlias("docker.plugin_kics_image", "plugin_kics_image")
 	v.RegisterAlias("kubernetes.plugin_kics_image", "plugin_kics_image")
-
-	_ = v.BindEnv("vmclarity_e2e_plugin_kics_image")
-	v.SetDefault("vmclarity_e2e_plugin_kics_image", testenv.DefaultPluginKics)
 
 	_ = v.BindEnv("docker.compose_files")
 

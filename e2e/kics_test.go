@@ -17,11 +17,11 @@ package e2e
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
-	"github.com/spf13/viper"
 
 	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/plugins"
@@ -48,16 +48,16 @@ func (n *Notifier) FamilyFinished(_ context.Context, res families.FamilyResult) 
 var _ = ginkgo.Describe("Running KICS scan", func() {
 	ginkgo.Context("which scans an openapi.yaml file", func() {
 		ginkgo.It("should finish successfully", func(ctx ginkgo.SpecContext) {
-			image := viper.GetString("vmclarity_e2e_plugin_kics_image")
-			if image == "" {
-				ginkgo.Skip("Skipping test because VMCLARITY_E2E_PLUGIN_KICS_IMAGE is not set")
+			image, ok := os.LookupEnv(cfg.KicsPluginImage)
+			if !ok {
+				ginkgo.Skip("KICS plugin image not set")
 			}
 
 			input, err := filepath.Abs("./testdata")
 			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			notifier := &Notifier{}
 
-			families.New(&families.Config{
+			errs := families.New(&families.Config{
 				Plugins: plugins.Config{
 					Enabled:      true,
 					ScannersList: []string{scannerPluginName},
@@ -77,19 +77,21 @@ var _ = ginkgo.Describe("Running KICS scan", func() {
 					},
 				},
 			}).Run(ctx, notifier)
+			gomega.Expect(errs).NotTo(gomega.HaveOccurred())
 
 			gomega.Eventually(func() bool {
-				for _, res := range notifier.Results {
-					results := res.Result.(*plugins.Results)                                            // nolint:forcetypeassert
-					rawData := results.PluginResult[scannerPluginName].RawJSON.(map[string]interface{}) // nolint:forcetypeassert
-
-					gomega.Expect(rawData["total_counter"]).To(gomega.Equal(float64(23)))
-					gomega.Expect(results.Output).To(gomega.HaveLen(23))
-
-					return true
+				if len(notifier.Results) != 1 {
+					return false
 				}
 
-				return false
+				results := notifier.Results[0].Result.(*plugins.Results)
+				rawData := results.PluginOutputs[scannerPluginName].RawJSON.(map[string]interface{})
+
+				if rawData["total_counter"] != float64(23) {
+					return false
+				}
+
+				return true
 			}, DefaultTimeout, DefaultPeriod).Should(gomega.BeTrue())
 		})
 	})

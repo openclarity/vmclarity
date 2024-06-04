@@ -68,12 +68,12 @@ func (p *Plugins) Run(ctx context.Context, res *results.Results) (interfaces.IsR
 		mergedPluginResult := make(map[string]plugintypes.Result)
 		for name, result := range managerResults {
 			logger.Infof("Merging result from %q", name)
-			mergedResults = append(mergedResults, result.(*common.Results).Output...) //nolint:forcetypeassert
-			mergedPluginResult[name] = *result.(*common.Results).PluginResult         //nolint:forcetypeassert
+			mergedResults = append(mergedResults, result.(*common.Results).Findings...) //nolint:forcetypeassert
+			mergedPluginResult[name] = *result.(*common.Results).Output                 //nolint:forcetypeassert
 		}
 
-		pluginsResults.Output = mergedResults
-		pluginsResults.PluginResult = mergedPluginResult
+		pluginsResults.Findings = mergedResults
+		pluginsResults.PluginOutputs = mergedPluginResult
 		pluginsResults.Metadata.InputScans = append(pluginsResults.Metadata.InputScans, types.CreateInputScanMetadata(startTime, endTime, inputSize, input))
 	}
 

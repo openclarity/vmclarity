@@ -22,13 +22,13 @@ import (
 )
 
 type Results struct {
-	Metadata     familiestypes.Metadata        `json:"Metadata"`
-	Output       []apitypes.FindingInfo        `json:"Output"`
-	PluginResult map[string]plugintypes.Result `json:"PluginResult"`
+	Metadata      familiestypes.Metadata        `json:"Metadata"`
+	Findings      []apitypes.FindingInfo        `json:"Findings"`
+	PluginOutputs map[string]plugintypes.Result `json:"PluginOutputs"`
 }
 
 func (*Results) IsResults() {}
 
 func (r *Results) GetTotal() int {
-	return len(r.Output)
+	return len(r.Findings)
 }

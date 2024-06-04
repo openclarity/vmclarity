@@ -21,11 +21,11 @@ import (
 )
 
 type Results struct {
-	Output       []types.FindingInfo
+	Findings     []types.FindingInfo
+	Output       *plugintypes.Result
 	ScannedInput string
 	ScannerName  string
 	Error        error
-	PluginResult *plugintypes.Result
 }
 
 func (r *Results) GetError() error {

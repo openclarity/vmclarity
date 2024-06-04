@@ -137,14 +137,14 @@ func (s *Scanner) Run(sourceType utils.SourceType, userInput string) error {
 			return
 		}
 
-		output, pluginResult, err := s.parseResults(ctx, rr)
+		findings, pluginResult, err := s.parseResults(ctx, rr)
 		if err != nil {
 			s.sendResults(retResults, fmt.Errorf("failed to parse plugin scanner results: %w", err))
 			return
 		}
 
-		retResults.Output = output
-		retResults.PluginResult = pluginResult
+		retResults.Findings = findings
+		retResults.Output = pluginResult
 		s.sendResults(retResults, nil)
 	}()
 
