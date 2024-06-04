@@ -71,7 +71,7 @@ func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInp
 		return fmt.Errorf("failed to create source analyzer=%s: %w", a.name, err)
 	}
 
-	go func() {
+	go func(ctx context.Context) {
 		res := &analyzer.Results{}
 
 		sbomConfig := syft.DefaultCreateSBOMConfig().
@@ -110,7 +110,7 @@ func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInp
 
 		a.logger.Infof("Sending successful results")
 		a.resultChan <- res
-	}()
+	}(ctx)
 
 	return nil
 }

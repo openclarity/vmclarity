@@ -49,7 +49,7 @@ func New(_ string, c job_manager.IsConfig, logger *logrus.Entry, resultChan chan
 }
 
 func (a *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInput string) error {
-	go func() {
+	go func(ctx context.Context) {
 		retResults := types.ScannerResult{
 			ScannerName: ScannerName,
 		}
@@ -73,7 +73,7 @@ func (a *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInpu
 		retResults.Misconfigurations = parseDockleReport(sourceType, userInput, assessmentMap)
 
 		a.sendResults(retResults, nil)
-	}()
+	}(ctx)
 
 	return nil
 }
