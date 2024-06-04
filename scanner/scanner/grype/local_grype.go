@@ -120,7 +120,7 @@ func (s *LocalScanner) run(sourceType utils.SourceType, userInput string) {
 		},
 	}
 
-	packages, context, _, err := pkg.Provide(source+":"+userInput, providerConfig)
+	packages, grypeContext, _, err := pkg.Provide(source+":"+userInput, providerConfig)
 	if err != nil {
 		ReportError(s.resultChan, fmt.Errorf("failed to analyze packages: %w", err), s.logger)
 		return
@@ -129,7 +129,7 @@ func (s *LocalScanner) run(sourceType utils.SourceType, userInput string) {
 	s.logger.Infof("Found %d packages", len(packages))
 
 	vulnerabilityMatcher := createVulnerabilityMatcher(vulnerabilityStore)
-	allMatches, ignoredMatches, err := vulnerabilityMatcher.FindMatches(packages, context)
+	allMatches, ignoredMatches, err := vulnerabilityMatcher.FindMatches(packages, grypeContext)
 	// We can ignore ErrAboveSeverityThreshold since we are not setting the FailSeverity on the matcher.
 	if err != nil && !errors.Is(err, grypeerr.ErrAboveSeverityThreshold) {
 		ReportError(s.resultChan, fmt.Errorf("failed to find vulnerabilities: %w", err), s.logger)
@@ -138,7 +138,7 @@ func (s *LocalScanner) run(sourceType utils.SourceType, userInput string) {
 
 	s.logger.Infof("Found %d vulnerabilities", len(allMatches.Sorted()))
 	id := clio.Identification{}
-	doc, err := grype_models.NewDocument(id, packages, context, *allMatches, ignoredMatches, vulnerabilityStore.MetadataProvider, nil, dbStatus)
+	doc, err := grype_models.NewDocument(id, packages, grypeContext, *allMatches, ignoredMatches, vulnerabilityStore.MetadataProvider, nil, dbStatus)
 	if err != nil {
 		ReportError(s.resultChan, fmt.Errorf("failed to create document: %w", err), s.logger)
 		return
