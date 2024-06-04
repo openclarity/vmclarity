@@ -42,14 +42,14 @@ func New(_ string, _ job_manager.IsConfig, logger *log.Entry, resultChan chan jo
 }
 
 func (a *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInput string) error {
-	go func(ctx context.Context) {
+	go func() {
 		retResults := misconfigurationTypes.ScannerResult{
 			ScannerName:       ScannerName,
 			Misconfigurations: createFakeMisconfigurationReport(),
 		}
 
 		a.sendResults(retResults, nil)
-	}(ctx)
+	}()
 
 	return nil
 }
