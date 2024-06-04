@@ -17,7 +17,6 @@ package e2e
 
 import (
 	"context"
-	"os"
 	"path/filepath"
 
 	"github.com/onsi/ginkgo/v2"
@@ -48,9 +47,8 @@ func (n *Notifier) FamilyFinished(_ context.Context, res families.FamilyResult) 
 var _ = ginkgo.Describe("Running KICS scan", func() {
 	ginkgo.Context("which scans an openapi.yaml file", func() {
 		ginkgo.It("should finish successfully", func(ctx ginkgo.SpecContext) {
-			image, ok := os.LookupEnv(cfg.KicsPluginImage)
-			if !ok {
-				ginkgo.Skip("KICS plugin image not set")
+			if cfg.TestEnvConfig.Images.PluginKics == "" {
+				ginkgo.Skip("KICS plugin image not provided")
 			}
 
 			input, err := filepath.Abs("./testdata")
@@ -70,24 +68,28 @@ var _ = ginkgo.Describe("Running KICS scan", func() {
 					ScannersConfig: &common.ScannersConfig{
 						scannerPluginName: config.Config{
 							Name:          scannerPluginName,
-							ImageName:     image,
+							ImageName:     cfg.TestEnvConfig.Images.PluginKics,
 							InputDir:      "",
 							ScannerConfig: "",
 						},
 					},
 				},
 			}).Run(ctx, notifier)
-			gomega.Expect(errs).NotTo(gomega.HaveOccurred())
+			gomega.Expect(errs).To(gomega.HaveLen(0))
 
 			gomega.Eventually(func() bool {
 				if len(notifier.Results) != 1 {
 					return false
 				}
 
-				results := notifier.Results[0].Result.(*plugins.Results)
-				rawData := results.PluginOutputs[scannerPluginName].RawJSON.(map[string]interface{})
+				results := notifier.Results[0].Result.(*plugins.Results)                             // nolint:forcetypeassert
+				rawData := results.PluginOutputs[scannerPluginName].RawJSON.(map[string]interface{}) // nolint:forcetypeassert
 
 				if rawData["total_counter"] != float64(23) {
+					return false
+				}
+
+				if len(results.PluginOutputs) != 23 {
 					return false
 				}
 

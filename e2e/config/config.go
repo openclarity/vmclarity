@@ -138,8 +138,6 @@ type Config struct {
 	TestEnvConfig testenv.Config `mapstructure:",squash"`
 	// TestSuiteParams contains test parameters for each environment.
 	TestSuiteParams *TestSuiteParams
-	// KicsPluginImage is the image used for the KICS plugin.
-	KicsPluginImage string `mapstructure:"vmclarity_e2e_plugin_kics_image"`
 }
 
 func NewConfig() (*Config, error) {
