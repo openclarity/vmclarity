@@ -89,7 +89,7 @@ var _ = ginkgo.Describe("Running KICS scan", func() {
 					return false
 				}
 
-				if len(results.PluginOutputs) != 23 {
+				if len(results.Findings) != 23 {
 					return false
 				}
 
