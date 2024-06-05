@@ -136,7 +136,7 @@ func (s *Scanner) Start(config types.Config) {
 		}
 
 		logger.Info("Scanner finished running.")
-		s.SetStatus(types.NewScannerStatus(types.StateFailed, types.Ptr("Scanner finished running.")))
+		s.SetStatus(types.NewScannerStatus(types.StateDone, types.Ptr("Scanner finished running.")))
 	}()
 }
 
