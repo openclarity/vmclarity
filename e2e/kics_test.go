@@ -75,7 +75,7 @@ var _ = ginkgo.Describe("Running KICS scan", func() {
 					},
 				},
 			}).Run(ctx, notifier)
-			gomega.Expect(errs).To(gomega.HaveLen(0))
+			gomega.Expect(errs).To(gomega.BeEmpty())
 
 			gomega.Eventually(func() bool {
 				if len(notifier.Results) != 1 {
