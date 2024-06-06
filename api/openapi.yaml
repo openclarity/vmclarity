@@ -927,7 +927,7 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
     post:
-      summary: Create a asset finding
+      summary: Create an asset finding
       operationId: PostAssetFindings
       requestBody:
         content:
