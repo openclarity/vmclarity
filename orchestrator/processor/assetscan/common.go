@@ -77,7 +77,8 @@ func (asp *AssetScanProcessor) createOrUpdateDBAssetFinding(ctx context.Context,
 		Finding: &apitypes.FindingRelationship{
 			Id: findingID,
 		},
-		LastSeen: &completedTime,
+		FirstSeen: &completedTime,
+		LastSeen:  &completedTime,
 	}
 
 	_, err := asp.client.PostAssetFinding(ctx, assetFinding)

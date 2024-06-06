@@ -263,7 +263,10 @@ type AssetFinding struct {
 	// Asset Describes a relationship to an asset which can be expanded.
 	Asset   *AssetRelationship   `json:"asset,omitempty"`
 	Finding *FindingRelationship `json:"finding,omitempty"`
-	Id      *string              `json:"id,omitempty"`
+
+	// FirstSeen When this asset finding was first discovered by a scan
+	FirstSeen *time.Time `json:"firstSeen,omitempty"`
+	Id        *string    `json:"id,omitempty"`
 
 	// InvalidatedOn When this asset finding was invalidated by a newer scan
 	InvalidatedOn *time.Time `json:"invalidatedOn,omitempty"`

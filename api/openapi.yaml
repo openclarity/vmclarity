@@ -3730,6 +3730,10 @@ components:
               $ref: '#/components/schemas/AssetRelationship'
             finding:
               $ref: '#/components/schemas/FindingRelationship'
+            firstSeen:
+              description: When this asset finding was first discovered by a scan
+              type: string
+              format: date-time
             lastSeen:
               description: When this asset finding was last discovered by a scan
               type: string

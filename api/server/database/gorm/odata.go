@@ -1246,6 +1246,7 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 				RelationshipSchema:   "Finding",
 				RelationshipProperty: "id",
 			},
+			"firstSeen":     odatasql.FieldMeta{FieldType: odatasql.DateTimeFieldType},
 			"lastSeen":      odatasql.FieldMeta{FieldType: odatasql.DateTimeFieldType},
 			"invalidatedOn": odatasql.FieldMeta{FieldType: odatasql.DateTimeFieldType},
 			"revision":      odatasql.FieldMeta{FieldType: odatasql.NumberFieldType},
