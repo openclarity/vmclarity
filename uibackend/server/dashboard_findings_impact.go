@@ -479,8 +479,8 @@ func (s *ServerImpl) getFindingToAssetCountMapWithFilter(ctx context.Context, fi
 			if err != nil {
 				return nil, fmt.Errorf("failed to get asset findings: %w", err)
 			}
-			if assetFindings.Count != nil {
-				assetCount = *assetFindings.Count
+			if assetFindings.Items != nil {
+				assetCount = len(*assetFindings.Items)
 			}
 
 			fKey, err := findingkey.GenerateFindingKey(finding.FindingInfo)
