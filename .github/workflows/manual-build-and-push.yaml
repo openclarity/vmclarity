@@ -12,10 +12,10 @@ on:
         required: true
         type: string
         description: 'Image tag to build and push.'
-      git_branch:
+      git_ref:
         required: true
         type: string
-        description: 'Git branch to build and push.'
+        description: 'The branch, tag or SHA to build.'
       push:
         required: false
         type: boolean
@@ -44,7 +44,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
         with:
-          ref: ${{ github.event.inputs.git_branch }}
+          ref: ${{ github.event.inputs.git_ref }}
 
       - name: Set timestamp
         id: timestamp
