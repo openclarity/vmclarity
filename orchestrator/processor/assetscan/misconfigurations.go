@@ -18,6 +18,7 @@ package assetscan
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 )
@@ -28,8 +29,9 @@ func (asp *AssetScanProcessor) reconcileResultMisconfigurationsToFindings(ctx co
 		// Create new or update existing findings all the misconfigurations found by the
 		// scan.
 		for _, item := range *assetScan.Misconfigurations.Misconfigurations {
+			message := strings.ReplaceAll(*item.Message, "'", "")
 			itemFindingInfo := apitypes.MisconfigurationFindingInfo{
-				Message:     item.Message,
+				Message:     &message,
 				Remediation: item.Remediation,
 				Location:    item.Location,
 				ScannerName: item.ScannerName,
