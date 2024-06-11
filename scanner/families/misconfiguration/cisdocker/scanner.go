@@ -49,7 +49,7 @@ func New(_ string, c job_manager.IsConfig, logger *logrus.Entry, resultChan chan
 }
 
 func (a *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInput string) error {
-	go func() {
+	go func(ctx context.Context) {
 		retResults := types.ScannerResult{
 			ScannerName: ScannerName,
 		}
@@ -62,7 +62,11 @@ func (a *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInpu
 		}
 
 		a.logger.Infof("Running %s scan...", a.name)
-		assessmentMap, err := dockle_run.RunFromConfig(createDockleConfig(a.logger, sourceType, userInput, a.config))
+		config := createDockleConfig(a.logger, sourceType, userInput, a.config)
+		ctx, cancel := context.WithTimeout(ctx, config.Timeout)
+		defer cancel()
+
+		assessmentMap, err := dockle_run.RunWithContext(ctx, config)
 		if err != nil {
 			a.sendResults(retResults, fmt.Errorf("failed to run %s scan: %w", a.name, err))
 			return
@@ -73,7 +77,7 @@ func (a *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInpu
 		retResults.Misconfigurations = parseDockleReport(sourceType, userInput, assessmentMap)
 
 		a.sendResults(retResults, nil)
-	}()
+	}(ctx)
 
 	return nil
 }
