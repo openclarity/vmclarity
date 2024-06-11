@@ -71,7 +71,7 @@ require (
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/alecthomas/chroma v0.10.0 // indirect
 	github.com/alessio/shellescape v1.4.1 // indirect
-	github.com/anchore/clio v0.0.0-20240522144804-d81e109008aa // indirect
+	github.com/anchore/clio v0.0.0-20240606161808-779b8d1ce2db // indirect
 	github.com/anchore/fangs v0.0.0-20240508143433-f016b099950f // indirect
 	github.com/anchore/go-collections v0.0.0-20240216171411-9321230ce537 // indirect
 	github.com/anchore/go-logger v0.0.0-20230725134548-c21dafa1ec5a // indirect
@@ -138,7 +138,7 @@ require (
 	github.com/charmbracelet/x/ansi v0.1.1 // indirect
 	github.com/cheggaaa/pb/v3 v3.1.5 // indirect
 	github.com/cloudflare/circl v1.3.8 // indirect
-	github.com/compose-spec/compose-go/v2 v2.1.1 // indirect
+	github.com/compose-spec/compose-go/v2 v2.1.2 // indirect
 	github.com/containerd/cgroups/v3 v3.0.3 // indirect
 	github.com/containerd/console v1.0.4 // indirect
 	github.com/containerd/containerd v1.7.17 // indirect
@@ -146,6 +146,7 @@ require (
 	github.com/containerd/errdefs v0.1.0 // indirect
 	github.com/containerd/fifo v1.1.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
+	github.com/containerd/platforms v0.2.0 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.15.1 // indirect
 	github.com/containerd/ttrpc v1.2.4 // indirect
 	github.com/containerd/typeurl/v2 v2.1.1 // indirect
@@ -163,10 +164,10 @@ require (
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/dlclark/regexp2 v1.4.0 // indirect
 	github.com/docker/buildx v0.14.1 // indirect
-	github.com/docker/cli v26.1.3+incompatible // indirect
+	github.com/docker/cli v26.1.4+incompatible // indirect
 	github.com/docker/compose/v2 v2.27.1 // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
-	github.com/docker/docker v26.1.3+incompatible // indirect
+	github.com/docker/docker v26.1.4+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.8.1 // indirect
 	github.com/docker/go v1.5.1-1.0.20160303222718-d30aec9fd63c // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
@@ -352,7 +353,7 @@ require (
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/open-policy-agent/opa v0.64.1 // indirect
-	github.com/openclarity/grype-server/api v0.0.0-20240502131359-2f1a56ef9b22 // indirect
+	github.com/openclarity/grype-server/api v0.0.0-20240605105406-7ff9d7d5003b // indirect
 	github.com/openclarity/vmclarity/installation v0.7.0 // indirect
 	github.com/openclarity/vmclarity/plugins/runner v0.7.0 // indirect
 	github.com/openclarity/vmclarity/plugins/sdk-go v0.7.0 // indirect
@@ -484,8 +485,8 @@ require (
 	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/oauth2 v0.20.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.20.0 // indirect
-	golang.org/x/term v0.20.0 // indirect
+	golang.org/x/sys v0.21.0 // indirect
+	golang.org/x/term v0.21.0 // indirect
 	golang.org/x/text v0.15.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.21.0 // indirect
@@ -549,4 +550,4 @@ replace (
 
 // NOTE(chrisgacsal): remove this when the following PR is merged and new helm version is released:
 // https://github.com/helm/helm/pull/12310
-replace helm.sh/helm/v3 => github.com/zregvart/helm/v3 v3.0.0-20240515095300-29fcbe1d0a74
+replace helm.sh/helm/v3 => github.com/zregvart/helm/v3 v3.0.0-20240610092413-9adc7dbafe42

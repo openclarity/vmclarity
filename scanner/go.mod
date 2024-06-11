@@ -5,7 +5,7 @@ go 1.22.2
 require (
 	github.com/CycloneDX/cyclonedx-go v0.8.0
 	github.com/Portshift/dockle v0.3.2-0.20240611055957-53ff8586f9c7
-	github.com/anchore/clio v0.0.0-20240522144804-d81e109008aa
+	github.com/anchore/clio v0.0.0-20240606161808-779b8d1ce2db
 	github.com/anchore/grype v0.78.0
 	github.com/anchore/stereoscope v0.0.3-0.20240501181043-2e9894674185
 	github.com/anchore/syft v1.5.0
@@ -21,7 +21,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/jinzhu/copier v0.4.0
 	github.com/onsi/gomega v1.33.1
-	github.com/openclarity/grype-server/api v0.0.0-20240502131359-2f1a56ef9b22
+	github.com/openclarity/grype-server/api v0.0.0-20240605105406-7ff9d7d5003b
 	github.com/openclarity/vmclarity/api/types v0.7.0
 	github.com/openclarity/vmclarity/core v0.7.0
 	github.com/openclarity/vmclarity/plugins/runner v0.7.0
@@ -162,7 +162,7 @@ require (
 	github.com/dlclark/regexp2 v1.4.0 // indirect
 	github.com/docker/cli v26.1.3+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
-	github.com/docker/docker v26.1.3+incompatible // indirect
+	github.com/docker/docker v26.1.4+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.8.1 // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
@@ -427,8 +427,8 @@ require (
 	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/oauth2 v0.20.0 // indirect
-	golang.org/x/sys v0.20.0 // indirect
-	golang.org/x/term v0.20.0 // indirect
+	golang.org/x/sys v0.21.0 // indirect
+	golang.org/x/term v0.21.0 // indirect
 	golang.org/x/text v0.15.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.21.0 // indirect
@@ -471,7 +471,7 @@ require (
 
 // NOTE(chrisgacsal): remove this when the following PR is merged and new helm version is released:
 // https://github.com/helm/helm/pull/12310
-replace helm.sh/helm/v3 => github.com/zregvart/helm/v3 v3.0.0-20240515095300-29fcbe1d0a74
+replace helm.sh/helm/v3 => github.com/zregvart/helm/v3 v3.0.0-20240610092413-9adc7dbafe42
 
 replace (
 	github.com/openclarity/vmclarity/api/types => ../api/types

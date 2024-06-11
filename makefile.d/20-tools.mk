@@ -53,7 +53,7 @@ $(AZURECLI_VENV)/bin/az: | $(BIN_DIR)
 
 BICEP_BIN := $(BIN_DIR)/bicep
 # renovate: datasource=github-releases depName=Azure/bicep versioning=semver
-BICEP_VERSION := 0.27.1
+BICEP_VERSION := 0.28.1
 BICEP_OSTYPE := $(OSTYPE)
 BICEP_ARCH := $(ARCHTYPE)
 
@@ -99,7 +99,7 @@ $(CFNLINT_VENV)/bin/cfn-lint: | $(BIN_DIR)
 GOLANGCI_BIN := $(BIN_DIR)/golangci-lint
 GOLANGCI_CONFIG := $(ROOT_DIR)/.golangci.yml
 # renovate: datasource=go depName=github.com/golangci/golangci-lint versioning=semver
-GOLANGCI_VERSION := 1.59.0
+GOLANGCI_VERSION := 1.59.1
 
 bin/golangci-lint: bin/golangci-lint-$(GOLANGCI_VERSION)
 	@ln -sf golangci-lint-$(GOLANGCI_VERSION) bin/golangci-lint
@@ -174,7 +174,7 @@ bin/helm-docs-$(HELMDOCS_VERSION): | $(BIN_DIR)
 
 GITCLIFF_BIN := $(BIN_DIR)/git-cliff
 # renovate: datasource=github-releases depName=orhun/git-cliff versioning=semver
-GITCLIFF_VERSION := 2.2.2
+GITCLIFF_VERSION := 2.3.0
 GITCLIFF_OSTYPE := $(OSTYPE)
 GITCLIFF_ARCH := $(ARCHTYPE)
 GITCLIFF_URL =
@@ -206,7 +206,7 @@ bin/git-cliff-$(GITCLIFF_VERSION): | $(BIN_DIR)
 
 TYPOS_BIN := $(BIN_DIR)/typos
 # renovate: datasource=github-releases depName=crate-ci/typos versioning=semver
-TYPOS_VERSION := 1.21.0
+TYPOS_VERSION := 1.22.4
 TYPOS_OSTYPE := $(OSTYPE)
 TYPOS_ARCH := $(ARCHTYPE)
 TYPOS_URL =
