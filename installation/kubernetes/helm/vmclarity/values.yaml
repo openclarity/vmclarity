@@ -426,7 +426,7 @@ postgresql:
     # -- Postgresql container repository
     repository: bitnami/postgresql
     # -- Postgresql container tag
-    tag: 16.3.0-debian-12-r8
+    tag: 16.3.0-debian-12-r12
     # -- Postgresql image digest. If set will override the tag.
     digest: ""
     # -- Postgresql container image pull policy
@@ -734,7 +734,7 @@ swaggerUI:
     # -- Swagger UI container repository
     repository: swaggerapi/swagger-ui
     # -- Swagger UI container tag
-    tag: v5.17.12
+    tag: v5.17.14
     # -- Swagger UI image digest. If set will override the tag.
     digest: ""
     # -- Swagger UI image pull policy

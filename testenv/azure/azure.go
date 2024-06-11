@@ -26,8 +26,8 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v4"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v2"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v5"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 
 	"github.com/openclarity/vmclarity/testenv/types"
@@ -210,18 +210,9 @@ func New(config *Config, opts ...ConfigOptFn) (*AzureEnv, error) {
 		return nil, fmt.Errorf("failed to create Azure compute client factory: %w", err)
 	}
 
-	sshKeyPair := &utils.SSHKeyPair{}
-	// Load SSH key-pair if provided, generate otherwise
-	if config.PublicKeyFile != "" && config.PrivateKeyFile != "" {
-		err = sshKeyPair.Load(config.PrivateKeyFile, config.PublicKeyFile)
-		if err != nil {
-			return nil, fmt.Errorf("failed to load ssh key pair: %w", err)
-		}
-	} else {
-		sshKeyPair, err = utils.GenerateSSHKeyPair()
-		if err != nil {
-			return nil, fmt.Errorf("failed to generate ssh key pair: %w", err)
-		}
+	sshKeyPair, err := utils.LoadOrGenerateAndSaveSSHKeyPair(config.PrivateKeyFile, config.PublicKeyFile, config.WorkDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get SSH key pair: %w", err)
 	}
 
 	return &AzureEnv{

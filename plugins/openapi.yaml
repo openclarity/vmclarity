@@ -105,6 +105,30 @@ components:
           description: This value will be automatically set by the SDK.
           type: string
 
+    State:
+      description: |
+        Describes the status of scanner.
+        | Status         | Description                                                   |
+        | -------------- | ------------------------------------------------------------- |
+        | NotReady       | Initial state when the scanner container starts               |
+        | Ready          | Scanner setup is complete and it is ready to receive requests |
+        | Running        | Scanner config was received and the scanner is running        |
+        | Failed         | Scanner failed                                                |
+        | Done           | Scanner completed successfully                                |
+      type: string
+      enum:
+        - NotReady
+        - Ready
+        - Running
+        - Failed
+        - Done
+      x-enum-varnames:
+        - StateNotReady
+        - StateReady
+        - StateRunning
+        - StateFailed
+        - StateDone
+
     Status:
       type: object
       description: Describes the scanner status.
@@ -113,22 +137,7 @@ components:
         - lastTransitionTime
       properties:
         state:
-          description: |
-            Describes the status of scanner.
-            | Status         | Description                                                   |
-            | -------------- | ------------------------------------------------------------- |
-            | NotReady       | Initial state when the scanner container starts               |
-            | Ready          | Scanner setup is complete and it is ready to receive requests |
-            | Running        | Scanner config was received and the scanner is running        |
-            | Failed         | Scanner failed                                                |
-            | Done           | Scanner is completed successfully                             |
-          type: string
-          enum:
-            - NotReady
-            - Ready
-            - Running
-            - Failed
-            - Done
+          $ref: '#/components/schemas/State'
         message:
           description: Human readable message.
           type: string
@@ -199,6 +208,7 @@ components:
       description: Describes data saved to a JSON file when a scan finishes successfully.
       required:
         - vmclarity
+        - rawJSON
       properties:
         annotations:
           # Can be used to attach some scan data consumable by third-party service.
@@ -208,6 +218,11 @@ components:
           # Specifies concrete scan result data that can be consumed by VMClarity API.
           # Required.
           $ref: '#/components/schemas/VMClarityData'
+        rawJSON:
+          # Specifies raw scan result data.
+          # Required.
+          type: null
+          description: Defines scan result data that is not consumed by VMClarity API.
 
     VMClarityData:
       type: object
