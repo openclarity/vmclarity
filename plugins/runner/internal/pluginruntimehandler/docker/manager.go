@@ -29,7 +29,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/openclarity/vmclarity/plugins/runner/internal/containermanager"
+	"github.com/openclarity/vmclarity/plugins/runner/internal/pluginruntimehandler"
 	"github.com/openclarity/vmclarity/plugins/runner/types"
 
 	dockertypes "github.com/docker/docker/api/types"
@@ -61,7 +61,7 @@ type containerManager struct {
 	runningErr       atomic.Pointer[error]
 }
 
-func New(ctx context.Context, config types.PluginConfig) (containermanager.PluginContainerManager, error) {
+func New(ctx context.Context, config types.PluginConfig) (pluginruntimehandler.PluginRuntimeHandler, error) {
 	// Load docker client
 	client, err := newDockerClient()
 	if err != nil {
@@ -229,7 +229,7 @@ func (cm *containerManager) GetPluginServerEndpoint(ctx context.Context) (string
 
 func (cm *containerManager) Result(ctx context.Context) (io.ReadCloser, error) {
 	// Copy result file from container
-	reader, _, err := cm.client.CopyFromContainer(ctx, cm.containerID, containermanager.RemoteScanResultFileOverride)
+	reader, _, err := cm.client.CopyFromContainer(ctx, cm.containerID, pluginruntimehandler.RemoteScanResultFileOverride)
 	if err != nil {
 		return nil, fmt.Errorf("failed to copy scanner result file: %w", err)
 	}
@@ -338,8 +338,8 @@ func (cm *containerManager) getScanInputDirMount(ctx context.Context) (*mount.Mo
 
 			return &mount.Mount{
 				Type:   p.Type,
-				Source: p.Source,                                    // actual source on the host
-				Target: containermanager.RemoteScanInputDirOverride, // override remote path
+				Source: p.Source,                                        // actual source on the host
+				Target: pluginruntimehandler.RemoteScanInputDirOverride, // override remote path
 			}, nil
 		}
 
@@ -350,7 +350,7 @@ func (cm *containerManager) getScanInputDirMount(ctx context.Context) (*mount.Mo
 	return &mount.Mount{
 		Type:   mount.TypeBind,
 		Source: cm.config.InputDir,
-		Target: containermanager.RemoteScanInputDirOverride, // override remote path
+		Target: pluginruntimehandler.RemoteScanInputDirOverride, // override remote path
 	}, nil
 }
 

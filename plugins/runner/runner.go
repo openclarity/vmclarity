@@ -22,8 +22,8 @@ import (
 	"io"
 	"time"
 
-	"github.com/openclarity/vmclarity/plugins/runner/internal/containermanager"
-	"github.com/openclarity/vmclarity/plugins/runner/internal/containermanager/docker"
+	"github.com/openclarity/vmclarity/plugins/runner/internal/pluginruntimehandler"
+	"github.com/openclarity/vmclarity/plugins/runner/internal/pluginruntimehandler/docker"
 	"github.com/openclarity/vmclarity/plugins/runner/types"
 
 	"github.com/openclarity/vmclarity/core/log"
@@ -35,27 +35,27 @@ import (
 const defaultPollInterval = 2 * time.Second
 
 type pluginRunner struct {
-	config           types.PluginConfig
-	containerManager containermanager.PluginContainerManager
-	client           runnerclient.ClientWithResponsesInterface
+	config         types.PluginConfig
+	runtimeHandler pluginruntimehandler.PluginRuntimeHandler
+	client         runnerclient.ClientWithResponsesInterface
 }
 
 func New(ctx context.Context, config types.PluginConfig) (types.PluginRunner, error) {
 	// Create docker container
 	// TODO: switch to factory once the support for more container engines is added
-	manager, err := docker.New(ctx, config)
+	handler, err := docker.New(ctx, config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create plugin manager: %w", err)
 	}
 
 	return &pluginRunner{
-		config:           config,
-		containerManager: manager,
+		config:         config,
+		runtimeHandler: handler,
 	}, nil
 }
 
 func (r *pluginRunner) Start(ctx context.Context) error {
-	if err := r.containerManager.Start(ctx); err != nil {
+	if err := r.runtimeHandler.Start(ctx); err != nil {
 		return fmt.Errorf("failed to create plugin container: %w", err)
 	}
 
@@ -63,7 +63,7 @@ func (r *pluginRunner) Start(ctx context.Context) error {
 }
 
 func (r *pluginRunner) Logs(ctx context.Context) (io.ReadCloser, error) {
-	logs, err := r.containerManager.Logs(ctx)
+	logs, err := r.runtimeHandler.Logs(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load logs from container: %w", err)
 	}
@@ -87,7 +87,7 @@ func (r *pluginRunner) WaitReady(ctx context.Context) error {
 
 		case <-ticker.C:
 			// Check if plugin container is ready
-			ready, err := r.containerManager.Ready()
+			ready, err := r.runtimeHandler.Ready()
 			if err != nil {
 				return fmt.Errorf("failed to check plugin container state: %w", err)
 			}
@@ -142,7 +142,7 @@ func (r *pluginRunner) Run(ctx context.Context) error {
 
 	_, err := r.client.PostConfigWithResponse(
 		ctx,
-		containermanager.WithOverrides(plugintypes.Config{
+		pluginruntimehandler.WithOverrides(plugintypes.Config{
 			ScannerConfig:  to.Ptr(r.config.ScannerConfig),
 			TimeoutSeconds: int(types.ScanTimeout.Seconds()),
 		}),
@@ -209,7 +209,7 @@ func (r *pluginRunner) WaitDone(ctx context.Context) error {
 }
 
 func (r *pluginRunner) Result(ctx context.Context) (io.ReadCloser, error) {
-	result, err := r.containerManager.Result(ctx)
+	result, err := r.runtimeHandler.Result(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get result from container: %w", err)
 	}
@@ -218,7 +218,7 @@ func (r *pluginRunner) Result(ctx context.Context) (io.ReadCloser, error) {
 }
 
 func (r *pluginRunner) Remove(ctx context.Context) error {
-	err := r.containerManager.Remove(ctx)
+	err := r.runtimeHandler.Remove(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to remove container: %w", err)
 	}
