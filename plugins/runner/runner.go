@@ -43,7 +43,8 @@ type pluginRunner struct {
 func New(ctx context.Context, config types.PluginConfig) (types.PluginRunner, error) {
 	// Create docker container
 	// TODO: switch to factory once the support for more container engines is added
-	handler, err := docker.New(ctx, config)
+	//handler, err := docker.New(ctx, config)
+	handler, err := binary.New(ctx, config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create plugin manager: %w", err)
 	}
