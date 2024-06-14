@@ -19,11 +19,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/openclarity/vmclarity/plugins/runner/internal/runtimehandler/binary"
 	"io"
 	"time"
 
-	"github.com/openclarity/vmclarity/plugins/runner/internal/pluginruntimehandler"
-	"github.com/openclarity/vmclarity/plugins/runner/internal/pluginruntimehandler/docker"
+	"github.com/openclarity/vmclarity/plugins/runner/internal/runtimehandler"
 	"github.com/openclarity/vmclarity/plugins/runner/types"
 
 	"github.com/openclarity/vmclarity/core/log"
@@ -36,7 +36,7 @@ const defaultPollInterval = 2 * time.Second
 
 type pluginRunner struct {
 	config         types.PluginConfig
-	runtimeHandler pluginruntimehandler.PluginRuntimeHandler
+	runtimeHandler runtimehandler.PluginRuntimeHandler
 	client         runnerclient.ClientWithResponsesInterface
 }
 
@@ -97,7 +97,7 @@ func (r *pluginRunner) WaitReady(ctx context.Context) error {
 
 			// Set plugin server endpoint and client if not already set
 			if r.client == nil {
-				serverEndpoint, err := r.containerManager.GetPluginServerEndpoint(ctx)
+				serverEndpoint, err := r.runtimeHandler.GetPluginServerEndpoint(ctx)
 				if err != nil {
 					return fmt.Errorf("failed to get plugin server endpoint: %w", err)
 				}
@@ -142,7 +142,7 @@ func (r *pluginRunner) Run(ctx context.Context) error {
 
 	_, err := r.client.PostConfigWithResponse(
 		ctx,
-		pluginruntimehandler.WithOverrides(plugintypes.Config{
+		runtimehandler.WithOverrides(plugintypes.Config{
 			ScannerConfig:  to.Ptr(r.config.ScannerConfig),
 			TimeoutSeconds: int(types.ScanTimeout.Seconds()),
 		}),

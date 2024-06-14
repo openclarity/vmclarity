@@ -29,7 +29,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/openclarity/vmclarity/plugins/runner/internal/pluginruntimehandler"
+	"github.com/openclarity/vmclarity/plugins/runner/internal/runtimehandler"
 	"github.com/openclarity/vmclarity/plugins/runner/types"
 
 	dockertypes "github.com/docker/docker/api/types"
@@ -61,7 +61,7 @@ type containerRuntimeHandler struct {
 	runningErr       atomic.Pointer[error]
 }
 
-func New(ctx context.Context, config types.PluginConfig) (pluginruntimehandler.PluginRuntimeHandler, error) {
+func New(ctx context.Context, config types.PluginConfig) (runtimehandler.PluginRuntimeHandler, error) {
 	// Load docker client
 	client, err := newDockerClient()
 	if err != nil {
@@ -338,8 +338,8 @@ func (h *containerRuntimeHandler) getScanInputDirMount(ctx context.Context) (*mo
 
 			return &mount.Mount{
 				Type:   p.Type,
-				Source: p.Source,                                        // actual source on the host
-				Target: pluginruntimehandler.RemoteScanInputDirOverride, // override remote path
+				Source: p.Source,                                  // actual source on the host
+				Target: runtimehandler.RemoteScanInputDirOverride, // override remote path
 			}, nil
 		}
 
