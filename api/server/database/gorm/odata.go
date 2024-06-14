@@ -851,7 +851,7 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 			"value": odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
 		},
 	},
-	"Finding": {
+	findingSchemaName: {
 		Table: "findings",
 		Fields: odatasql.Schema{
 			"id":        odatasql.FieldMeta{FieldType: odatasql.StringFieldType},

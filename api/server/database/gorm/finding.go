@@ -272,43 +272,37 @@ func (s *FindingsTableHandler) checkUniqueness(finding types.Finding) (*types.Fi
 
 	// Construct filter based on discriminator type
 	// Use info properties that make the finding unique, check package scanner/findingkey.
-	var filter string
+	var key string
 	switch info := discriminator.(type) {
 	case types.PackageFindingInfo:
-		key := findingkey.GeneratePackageKey(info)
-		filter = fmt.Sprintf("id ne '%s' and ", *finding.Id) + key.Filter()
+		key = findingkey.GeneratePackageKey(info).Filter()
 
 	case types.VulnerabilityFindingInfo:
-		key := findingkey.GenerateVulnerabilityKey(info)
-		filter = fmt.Sprintf("id ne '%s' and ", *finding.Id) + key.Filter()
+		key = findingkey.GenerateVulnerabilityKey(info).Filter()
 
 	case types.MalwareFindingInfo:
-		key := findingkey.GenerateMalwareKey(info)
-		filter = fmt.Sprintf("id ne '%s' and ", *finding.Id) + key.Filter()
+		key = findingkey.GenerateMalwareKey(info).Filter()
 
 	case types.SecretFindingInfo:
-		key := findingkey.GenerateSecretKey(info)
-		filter = fmt.Sprintf("id ne '%s' and ", *finding.Id) + key.Filter()
+		key = findingkey.GenerateSecretKey(info).Filter()
 
 	case types.MisconfigurationFindingInfo:
-		key := findingkey.GenerateMisconfigurationKey(info)
-		filter = fmt.Sprintf("id ne '%s' and ", *finding.Id) + key.Filter()
+		key = findingkey.GenerateMisconfigurationKey(info).Filter()
 
 	case types.RootkitFindingInfo:
-		key := findingkey.GenerateRootkitKey(info)
-		filter = fmt.Sprintf("id ne '%s' and ", *finding.Id) + key.Filter()
+		key = findingkey.GenerateRootkitKey(info).Filter()
 
 	case types.ExploitFindingInfo:
-		key := findingkey.GenerateExploitKey(info)
-		filter = fmt.Sprintf("id ne '%s' and ", *finding.Id) + key.Filter()
+		key = findingkey.GenerateExploitKey(info).Filter()
 
 	case types.InfoFinderFindingInfo:
-		key := findingkey.GenerateInfoFinderKey(info)
-		filter = fmt.Sprintf("id ne '%s' and ", *finding.Id) + key.Filter()
+		key = findingkey.GenerateInfoFinderKey(info).Filter()
 
 	default:
 		return nil, fmt.Errorf("finding type is not supported (%T): %w", discriminator, err)
 	}
+
+	filter := fmt.Sprintf("id ne '%s' and ", *finding.Id) + key
 
 	// In the case of creating or updating a finding, needs to be checked whether other finding exists with same properties.
 	var findings []Finding
