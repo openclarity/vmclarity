@@ -1,5 +1,7 @@
 # VMClarity Project Goals
 
+- **Let me contribute**
+
 - **Increase the adoption of VMClarity**: One of the primary goals of VMClarity
   is to reduce the number of vulnerable VMs in the world. We hope to do this by
   getting more people involved in the project. This involves feature development,
