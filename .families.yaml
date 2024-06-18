@@ -96,8 +96,45 @@ misconfiguration:
 infofinder:
   enabled: true
   scanners_list:
+    - "sshTopology"
+  inputs:
+    - input: "/"
+      input_type: "rootfs"
+  scanners_config: {}
+
+malware:
+  enabled: true
+  scanners_list:
+    - "clam"
+  inputs:
+    - input: "/"
+      input_type: "rootfs"
+  scanners_config:
+    clam:
+      freshclam_binary_path: freshclam
+      clamscan_binary_path: clamscan
+      #clamscan_exclude_files:
+      #  - "^.*\.log$"
+      #clamscan_exclude_dirs:
+      #  - "^/sys"
+
+rootkits:
+  enabled: true
+  scanners_list:
+    - "chkrootkit"
+  inputs:
+    - input: "/"
+      input_type: "rootfs"
+  scanners_config:
+    chkrootkit:
+      binary_path: chkrootkit
+
+plugins:
+  enabled: false
+  binary_mode: false
+  scanners_list:
     - "kics"
-  inputs: 
+  inputs:
     - input: "/tmp"
       input_type: "rootfs"
   scanners_config:
