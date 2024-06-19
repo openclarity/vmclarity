@@ -95,15 +95,17 @@ func (r *pluginRunner) WaitReady(ctx context.Context) error {
 				continue
 			}
 
-			// Set plugin server endpoint
-			serverEndpoint, err := r.containerManager.GetPluginServerEndpoint(ctx)
-			if err != nil {
-				return fmt.Errorf("failed to get plugin server endpoint: %w", err)
-			}
+			// Set plugin server endpoint and client if not already set
+			if r.client == nil {
+				serverEndpoint, err := r.containerManager.GetPluginServerEndpoint(ctx)
+				if err != nil {
+					return fmt.Errorf("failed to get plugin server endpoint: %w", err)
+				}
 
-			err = r.setPluginServerClientFor(serverEndpoint)
-			if err != nil {
-				return fmt.Errorf("failed to set plugin server client: %w", err)
+				err = r.setPluginServerClientFor(serverEndpoint)
+				if err != nil {
+					return fmt.Errorf("failed to set plugin server client: %w", err)
+				}
 			}
 
 			// Check for plugin server once container is ready
