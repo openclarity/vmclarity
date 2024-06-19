@@ -57,7 +57,8 @@ func (c *Command) Start(ctx context.Context) (*State, error) {
 		cmd.Dir = c.WorkDir
 	}
 
-	var stdOut, stdErr bytes.Buffer
+	var stdIn, stdOut, stdErr bytes.Buffer
+	cmd.Stdin = &stdIn
 	cmd.Stdout = &stdOut
 	cmd.Stderr = &stdErr
 
@@ -65,6 +66,7 @@ func (c *Command) Start(ctx context.Context) (*State, error) {
 
 	return &State{
 		cmd:    cmd,
+		Stdin:  &stdIn,
 		StdOut: &stdOut,
 		StdErr: &stdErr,
 	}, err
@@ -76,6 +78,7 @@ func (c *Command) String() string {
 
 type State struct {
 	cmd    *exec.Cmd
+	Stdin  *bytes.Buffer
 	StdOut *bytes.Buffer
 	StdErr *bytes.Buffer
 }
