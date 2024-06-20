@@ -16,6 +16,9 @@ any real-time space e.g., Slack, Discord, etc.
 - [Troubleshooting and Debugging](#troubleshooting-and-debugging)
 - [Reporting Issues](#reporting-issues)
 - [Development](#development)
+  - [Setting Up Development Environment](#setting-up-development-environment)
+  - [Running Tests](#running-tests)
+  - [Building the Project](#building-the-project)
   - [Generating API code](#generating-api-code)
   - [Building VMClarity Binaries](#building-vmclarity-binaries)
   - [Building VMClarity Containers](#building-vmclarity-containers)
@@ -41,6 +44,55 @@ possible, and, if possible, a test case.
 [SECURITY.md](SECURITY.md).**
 
 ## Development
+
+### Setting Up Development Environment
+
+To set up the development environment, follow these steps:
+
+1. Clone the repository:
+   ```sh
+   git clone https://github.com/openclarity/vmclarity.git
+   cd vmclarity
+   ```
+
+2. Install dependencies:
+   ```sh
+   make deps
+   ```
+
+3. Set up the Go environment:
+   ```sh
+   go mod tidy
+   ```
+
+### Running Tests
+
+To run the tests, use the following commands:
+
+1. Run all unit tests:
+   ```sh
+   make test
+   ```
+
+2. Run end-to-end tests:
+   ```sh
+   make e2e
+   ```
+
+### Building the Project
+
+To build the project, use the following commands:
+
+1. Build all components:
+   ```sh
+   make build
+   ```
+
+2. Build specific components:
+   ```sh
+   make build-cli
+   make build-backend
+   ```
 
 ### Development Environment
 
@@ -140,3 +192,4 @@ and fix existing bugs. Here is what you can do:
 Thanks again for your interest on contributing to VMClarity!
 
 :heart:
+
