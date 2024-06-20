@@ -23,8 +23,6 @@ import (
 	"time"
 
 	"github.com/openclarity/vmclarity/plugins/runner/internal/runtimehandler"
-	"github.com/openclarity/vmclarity/plugins/runner/internal/runtimehandler/binary"
-	"github.com/openclarity/vmclarity/plugins/runner/internal/runtimehandler/docker"
 	"github.com/openclarity/vmclarity/plugins/runner/types"
 
 	"github.com/openclarity/vmclarity/core/log"
@@ -39,14 +37,6 @@ type pluginRunner struct {
 	config         types.PluginConfig
 	runtimeHandler runtimehandler.PluginRuntimeHandler
 	client         runnerclient.ClientWithResponsesInterface
-}
-
-func getPluginRuntimeHandler(ctx context.Context, config types.PluginConfig) (runtimehandler.PluginRuntimeHandler, error) {
-	if config.BinaryMode {
-		return binary.New(ctx, config)
-	}
-
-	return docker.New(ctx, config)
 }
 
 func New(ctx context.Context, config types.PluginConfig) (types.PluginRunner, error) {
