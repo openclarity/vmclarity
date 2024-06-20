@@ -79,7 +79,7 @@ func (s *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInpu
 			return
 		}
 
-		cleanup := func(ctx context.Context) {
+		finishRunner := func(ctx context.Context) {
 			if err := rr.Stop(ctx); err != nil {
 				s.logger.WithError(err).Errorf("failed to stop runner")
 			}
@@ -92,13 +92,13 @@ func (s *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInpu
 		} //nolint:errcheck
 
 		if err := rr.Start(ctx); err != nil {
-			cleanup(ctx)
+			finishRunner(ctx)
 			s.sendResults(retResults, fmt.Errorf("failed to start plugin runner: %w", err))
 			return
 		}
 
 		if err := rr.WaitReady(ctx); err != nil {
-			cleanup(ctx)
+			finishRunner(ctx)
 			s.sendResults(retResults, fmt.Errorf("failed to wait for plugin scanner to be ready: %w", err))
 			return
 		}
@@ -106,7 +106,7 @@ func (s *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInpu
 		// Get plugin metadata
 		metadata, err := rr.Metadata(ctx)
 		if err != nil {
-			cleanup(ctx)
+			finishRunner(ctx)
 			s.sendResults(retResults, fmt.Errorf("failed to get plugin scanner metadata: %w", err))
 			return
 		}
@@ -132,25 +132,25 @@ func (s *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInpu
 		}()
 
 		if err := rr.Run(ctx); err != nil {
-			cleanup(ctx)
+			finishRunner(ctx)
 			s.sendResults(retResults, fmt.Errorf("failed to run plugin scanner: %w", err))
 			return
 		}
 
 		if err := rr.WaitDone(ctx); err != nil {
-			cleanup(ctx)
+			finishRunner(ctx)
 			s.sendResults(retResults, fmt.Errorf("failed to wait for plugin scanner to finish: %w", err))
 			return
 		}
 
 		findings, pluginResult, err := s.parseResults(ctx, rr)
 		if err != nil {
-			cleanup(ctx)
+			finishRunner(ctx)
 			s.sendResults(retResults, fmt.Errorf("failed to parse plugin scanner results: %w", err))
 			return
 		}
 
-		cleanup(ctx)
+		finishRunner(ctx)
 
 		retResults.Findings = findings
 		retResults.Output = pluginResult
