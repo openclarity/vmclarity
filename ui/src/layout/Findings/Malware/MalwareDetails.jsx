@@ -30,6 +30,8 @@ const DetailsContent = ({data}) => {
         return <Loader large />
     }
 
+    data.assetCount = assetFindingData.count;
+
     return (
         <TabbedPage
             basePath={`${pathname.substring(0, pathname.indexOf(id))}${id}`}

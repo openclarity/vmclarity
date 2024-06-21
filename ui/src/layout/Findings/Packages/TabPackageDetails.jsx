@@ -2,12 +2,7 @@ import React from 'react';
 import TitleValueDisplay, { TitleValueDisplayRow, ValuesListDisplay } from 'components/TitleValueDisplay';
 import DoublePaneDisplay from 'components/DoublePaneDisplay';
 import { FindingsDetailsCommonFields } from '../utils';
-import Title from "../../../components/Title/index.jsx";
-import LinksList from "../../../components/LinksList/index.jsx";
-import {useLocation} from "react-router-dom";
-import {FILTER_TYPES, setFilters, useFilterDispatch} from "../../../context/FiltersProvider.js";
-import {ROUTES} from "../../../utils/systemConsts.js";
-import VulnerabilitiesDisplay from "../../../components/VulnerabilitiesDisplay/index.jsx";
+import { formatNumber } from 'utils/utils';
 
 const TabPackageDetails = ({data}) => {
     const {pathname} = useLocation();
@@ -43,7 +38,10 @@ const TabPackageDetails = ({data}) => {
                         <TitleValueDisplay title="Licenses"><ValuesListDisplay values={licenses} /></TitleValueDisplay>
                     </TitleValueDisplayRow>
                     <FindingsDetailsCommonFields firstSeen={firstSeen} lastSeen={lastSeen} />
-                </>  
+                    <TitleValueDisplayRow>
+                        <TitleValueDisplay title="Asset count">{formatNumber(assetCount)}</TitleValueDisplay>
+                    </TitleValueDisplayRow>
+                </>
             )}
             rightPlaneDisplay={() => (
                 <>

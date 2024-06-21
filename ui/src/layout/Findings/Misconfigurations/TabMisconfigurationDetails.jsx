@@ -3,9 +3,10 @@ import TitleValueDisplay, { TitleValueDisplayRow } from 'components/TitleValueDi
 import DoublePaneDisplay from 'components/DoublePaneDisplay';
 import { FindingsDetailsCommonFields } from '../utils';
 import { MISCONFIGURATION_SEVERITY_MAP } from './utils';
+import { formatNumber } from 'utils/utils';
 
 const TabMisconfigurationDetails = ({data}) => {
-    const {findingInfo, firstSeen, lastSeen} = data;
+    const {findingInfo, firstSeen, lastSeen, assetCount} = data;
     const {id, severity, description, scannerName, location, remediation, category, message} = findingInfo;
 
     return (
@@ -31,6 +32,9 @@ const TabMisconfigurationDetails = ({data}) => {
                         <TitleValueDisplay title="Description" withOpen defaultOpen>{description}</TitleValueDisplay>
                     </TitleValueDisplayRow>
                     <FindingsDetailsCommonFields firstSeen={firstSeen} lastSeen={lastSeen} />
+                    <TitleValueDisplayRow>
+                        <TitleValueDisplay title="Asset count">{formatNumber(assetCount)}</TitleValueDisplay>
+                    </TitleValueDisplayRow>
                 </>
             )}
         />
