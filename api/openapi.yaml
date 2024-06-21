@@ -1946,11 +1946,11 @@ components:
         totalInfoFinder:
           type: integer
         totalVulnerabilities:
-          $ref: '#/components/schemas/VulnerabilityScanSummary'
+          $ref: '#/components/schemas/VulnerabilitySeveritySummary'
         totalPlugins:
           type: integer
 
-    VulnerabilityScanSummary:
+    VulnerabilitySeveritySummary:
       description: A summary of number of vulnerabilities found per severity.
       type: object
       properties:
@@ -3546,9 +3546,19 @@ components:
         - $ref: '#/components/schemas/Package'
         - type: object
           properties:
+            summary:
+              $ref: '#/components/schemas/PackageFindingInfoSummary'
+        - type: object
+          properties:
             objectType:
               type: string
           required: [objectType]
+
+    PackageFindingInfoSummary:
+      type: object
+      properties:
+        totalVulnerabilities:
+          $ref: '#/components/schemas/VulnerabilitySeveritySummary'
 
     VulnerabilityFindingInfo:
       type: object

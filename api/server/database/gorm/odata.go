@@ -518,7 +518,7 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 			"totalInfoFinder":        odatasql.FieldMeta{FieldType: odatasql.NumberFieldType},
 			"totalVulnerabilities": odatasql.FieldMeta{
 				FieldType:           odatasql.ComplexFieldType,
-				ComplexFieldSchemas: []string{"VulnerabilityScanSummary"},
+				ComplexFieldSchemas: []string{"VulnerabilitySeveritySummary"},
 			},
 			"totalPlugins": odatasql.FieldMeta{FieldType: odatasql.NumberFieldType},
 		},
@@ -664,12 +664,12 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 			"totalInfoFinder":        odatasql.FieldMeta{FieldType: odatasql.NumberFieldType},
 			"totalVulnerabilities": odatasql.FieldMeta{
 				FieldType:           odatasql.ComplexFieldType,
-				ComplexFieldSchemas: []string{"VulnerabilityScanSummary"},
+				ComplexFieldSchemas: []string{"VulnerabilitySeveritySummary"},
 			},
 			"totalPlugins": odatasql.FieldMeta{FieldType: odatasql.NumberFieldType},
 		},
 	},
-	"VulnerabilityScanSummary": {
+	"VulnerabilitySeveritySummary": {
 		Fields: odatasql.Schema{
 			"totalCriticalVulnerabilities":   odatasql.FieldMeta{FieldType: odatasql.NumberFieldType},
 			"totalHighVulnerabilities":       odatasql.FieldMeta{FieldType: odatasql.NumberFieldType},
@@ -911,6 +911,18 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 			"licenses": odatasql.FieldMeta{
 				FieldType:          odatasql.CollectionFieldType,
 				CollectionItemMeta: &odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
+			},
+			"summary": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"PackageFindingInfoSummary"},
+			},
+		},
+	},
+	"PackageFindingInfoSummary": {
+		Fields: odatasql.Schema{
+			"totalVulnerabilities": odatasql.FieldMeta{
+				FieldType:           odatasql.ComplexFieldType,
+				ComplexFieldSchemas: []string{"VulnerabilitySeveritySummary"},
 			},
 		},
 	},

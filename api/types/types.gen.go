@@ -944,14 +944,21 @@ type Package struct {
 
 // PackageFindingInfo defines model for PackageFindingInfo.
 type PackageFindingInfo struct {
-	Cpes       *[]string `json:"cpes"`
-	Language   *string   `json:"language,omitempty"`
-	Licenses   *[]string `json:"licenses"`
-	Name       *string   `json:"name,omitempty"`
-	ObjectType string    `json:"objectType"`
-	Purl       *string   `json:"purl,omitempty"`
-	Type       *string   `json:"type,omitempty"`
-	Version    *string   `json:"version,omitempty"`
+	Cpes       *[]string                  `json:"cpes"`
+	Language   *string                    `json:"language,omitempty"`
+	Licenses   *[]string                  `json:"licenses"`
+	Name       *string                    `json:"name,omitempty"`
+	ObjectType string                     `json:"objectType"`
+	Purl       *string                    `json:"purl,omitempty"`
+	Summary    *PackageFindingInfoSummary `json:"summary,omitempty"`
+	Type       *string                    `json:"type,omitempty"`
+	Version    *string                    `json:"version,omitempty"`
+}
+
+// PackageFindingInfoSummary defines model for PackageFindingInfoSummary.
+type PackageFindingInfoSummary struct {
+	// TotalVulnerabilities A summary of number of vulnerabilities found per severity.
+	TotalVulnerabilities *VulnerabilitySeveritySummary `json:"totalVulnerabilities,omitempty"`
 }
 
 // PluginScan defines model for PluginScan.
@@ -1419,7 +1426,7 @@ type ScanFindingsSummary struct {
 	TotalSecrets           *int `json:"totalSecrets,omitempty"`
 
 	// TotalVulnerabilities A summary of number of vulnerabilities found per severity.
-	TotalVulnerabilities *VulnerabilityScanSummary `json:"totalVulnerabilities,omitempty"`
+	TotalVulnerabilities *VulnerabilitySeveritySummary `json:"totalVulnerabilities,omitempty"`
 }
 
 // ScanRelationship defines model for ScanRelationship.
@@ -1535,7 +1542,7 @@ type ScanSummary struct {
 	TotalSecrets           *int `json:"totalSecrets,omitempty"`
 
 	// TotalVulnerabilities A summary of number of vulnerabilities found per severity.
-	TotalVulnerabilities *VulnerabilityScanSummary `json:"totalVulnerabilities,omitempty"`
+	TotalVulnerabilities *VulnerabilitySeveritySummary `json:"totalVulnerabilities,omitempty"`
 }
 
 // ScanTemplate defines model for ScanTemplate.
@@ -1820,17 +1827,17 @@ type VulnerabilityScan struct {
 	Vulnerabilities *[]Vulnerability `json:"vulnerabilities"`
 }
 
-// VulnerabilityScanSummary A summary of number of vulnerabilities found per severity.
-type VulnerabilityScanSummary struct {
+// VulnerabilitySeverity defines model for VulnerabilitySeverity.
+type VulnerabilitySeverity string
+
+// VulnerabilitySeveritySummary A summary of number of vulnerabilities found per severity.
+type VulnerabilitySeveritySummary struct {
 	TotalCriticalVulnerabilities   *int `json:"totalCriticalVulnerabilities,omitempty"`
 	TotalHighVulnerabilities       *int `json:"totalHighVulnerabilities,omitempty"`
 	TotalLowVulnerabilities        *int `json:"totalLowVulnerabilities,omitempty"`
 	TotalMediumVulnerabilities     *int `json:"totalMediumVulnerabilities,omitempty"`
 	TotalNegligibleVulnerabilities *int `json:"totalNegligibleVulnerabilities,omitempty"`
 }
-
-// VulnerabilitySeverity defines model for VulnerabilitySeverity.
-type VulnerabilitySeverity string
 
 // AssetFindingID defines model for assetFindingID.
 type AssetFindingID = string

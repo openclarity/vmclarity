@@ -17,10 +17,12 @@ package gorm
 
 import (
 	"encoding/json"
+	"os"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 
+	"github.com/openclarity/vmclarity/api/server/database/types"
 	"github.com/openclarity/vmclarity/core/to"
 )
 
@@ -208,4 +210,27 @@ func Test_patchObject(t *testing.T) {
 			}
 		})
 	}
+}
+
+func createTestDB(t *testing.T) types.Database {
+	t.Helper()
+
+	localDBPath, err := os.CreateTemp("", "vmclarity-testdb-*.db")
+	if err != nil {
+		t.Errorf("failed to create test db file: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = os.Remove(localDBPath.Name())
+	})
+
+	db, err := initDataBase(types.DBConfig{
+		EnableInfoLogs: false,
+		DriverType:     types.DBDriverTypeLocal,
+		LocalDBPath:    localDBPath.Name(),
+	})
+	if err != nil {
+		t.Errorf("failed to create test db: %v", err)
+	}
+
+	return &Handler{DB: db}
 }
