@@ -18,7 +18,6 @@ package orchestrator
 import (
 	"context"
 	"fmt"
-	findingwatcher "github.com/openclarity/vmclarity/orchestrator/watcher/finding"
 	"time"
 
 	"github.com/Portshift/go-utils/healthz"
@@ -29,6 +28,7 @@ import (
 	assetscanprocessor "github.com/openclarity/vmclarity/orchestrator/processor/assetscan"
 	assetscanwatcher "github.com/openclarity/vmclarity/orchestrator/watcher/assetscan"
 	assetscanestimationwatcher "github.com/openclarity/vmclarity/orchestrator/watcher/assetscanestimation"
+	findingwatcher "github.com/openclarity/vmclarity/orchestrator/watcher/finding"
 	scanwatcher "github.com/openclarity/vmclarity/orchestrator/watcher/scan"
 	scanconfigwatcher "github.com/openclarity/vmclarity/orchestrator/watcher/scanconfig"
 	scanestimationwatcher "github.com/openclarity/vmclarity/orchestrator/watcher/scanestimation"
