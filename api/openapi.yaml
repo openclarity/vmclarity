@@ -3546,19 +3546,9 @@ components:
         - $ref: '#/components/schemas/Package'
         - type: object
           properties:
-            summary:
-              $ref: '#/components/schemas/PackageFindingInfoSummary'
-        - type: object
-          properties:
             objectType:
               type: string
           required: [objectType]
-
-    PackageFindingInfoSummary:
-      type: object
-      properties:
-        totalVulnerabilities:
-          $ref: '#/components/schemas/VulnerabilitySeveritySummary'
 
     VulnerabilityFindingInfo:
       type: object
@@ -3653,6 +3643,8 @@ components:
               $ref: '#/components/schemas/AssetScanRelationship'
             findingInfo:
               $ref: '#/components/schemas/FindingInfo'
+            summary:
+              $ref: '#/components/schemas/FindingSummary'
 
     FindingRelationship:
       type: object
@@ -3682,7 +3674,18 @@ components:
             findingInfo:
               $ref: '#/components/schemas/FindingInfo'
               readOnly: true
+            summary:
+              $ref: '#/components/schemas/FindingSummary'
+              readOnly: true
           required: ['id']
+
+    FindingSummary:
+      type: object
+      properties:
+        updatedAt:
+          type: string
+        totalVulnerabilities:
+          $ref: '#/components/schemas/VulnerabilitySeveritySummary'
 
     FindingInfo:
       anyOf:

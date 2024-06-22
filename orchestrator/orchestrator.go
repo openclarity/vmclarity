@@ -18,6 +18,7 @@ package orchestrator
 import (
 	"context"
 	"fmt"
+	findingwatcher "github.com/openclarity/vmclarity/orchestrator/watcher/finding"
 	"time"
 
 	"github.com/Portshift/go-utils/healthz"
@@ -68,6 +69,7 @@ func NewWithProvider(config *Config, p provider.Provider, c *apiclient.Client) (
 	assetScanProcessorConfig := config.AssetScanProcessorConfig.WithBackendClient(c)
 	assetScanEstimationWatcherConfig := config.AssetScanEstimationWatcherConfig.WithBackendClient(c).WithProviderClient(p)
 	scanEstimationWatcherConfig := config.ScanEstimationWatcherConfig.WithBackendClient(c).WithProviderClient(p)
+	findingWatcherConfig := config.FindingWatcherConfig.WithBackendClient(c).WithProviderClient(p)
 
 	return &Orchestrator{
 		controllers: []Controller{
@@ -78,6 +80,7 @@ func NewWithProvider(config *Config, p provider.Provider, c *apiclient.Client) (
 			assetscanwatcher.New(assetScanWatcherConfig),
 			assetscanestimationwatcher.New(assetScanEstimationWatcherConfig),
 			scanestimationwatcher.New(scanEstimationWatcherConfig),
+			findingwatcher.New(findingWatcherConfig),
 		},
 		controllerStartupDelay: config.ControllerStartupDelay,
 	}, nil

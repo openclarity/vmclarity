@@ -870,6 +870,25 @@ func (c *Client) GetFindings(ctx context.Context, params types.GetFindingsParams
 	}
 }
 
+func (c *Client) GetFinding(ctx context.Context, findingID types.FindingID, params types.GetFindingsFindingIDParams) (*types.Finding, error) {
+	resp, err := c.api.GetFindingsFindingIDWithResponse(ctx, findingID, &params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get findings: %w", err)
+	}
+	switch resp.StatusCode() {
+	case http.StatusOK:
+		if resp.JSON200 == nil {
+			return nil, errors.New("no findings: empty body")
+		}
+		return resp.JSON200, nil
+	default:
+		if resp.JSONDefault != nil && resp.JSONDefault.Message != nil {
+			return nil, fmt.Errorf("failed to get findings. status code=%v: %s", resp.StatusCode(), *resp.JSONDefault.Message)
+		}
+		return nil, fmt.Errorf("failed to get findings. status code=%v", resp.StatusCode())
+	}
+}
+
 func (c *Client) PatchFinding(ctx context.Context, findingID types.FindingID, finding types.Finding) error {
 	resp, err := c.api.PatchFindingsFindingIDWithResponse(ctx, findingID, finding)
 	if err != nil {

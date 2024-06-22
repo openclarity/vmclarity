@@ -739,6 +739,7 @@ type Finding struct {
 	LastSeen   *time.Time             `json:"lastSeen,omitempty"`
 	LastSeenBy *AssetScanRelationship `json:"lastSeenBy,omitempty"`
 	Revision   *int                   `json:"revision,omitempty"`
+	Summary    *FindingSummary        `json:"summary,omitempty"`
 }
 
 // FindingExists defines model for FindingExists.
@@ -768,6 +769,14 @@ type FindingRelationship struct {
 	LastSeen   *time.Time             `json:"lastSeen,omitempty"`
 	LastSeenBy *AssetScanRelationship `json:"lastSeenBy,omitempty"`
 	Revision   *int                   `json:"revision,omitempty"`
+	Summary    *FindingSummary        `json:"summary,omitempty"`
+}
+
+// FindingSummary defines model for FindingSummary.
+type FindingSummary struct {
+	// TotalVulnerabilities A summary of number of vulnerabilities found per severity.
+	TotalVulnerabilities *VulnerabilitySeveritySummary `json:"totalVulnerabilities,omitempty"`
+	UpdatedAt            *string                       `json:"updatedAt,omitempty"`
 }
 
 // Findings defines model for Findings.
@@ -944,21 +953,14 @@ type Package struct {
 
 // PackageFindingInfo defines model for PackageFindingInfo.
 type PackageFindingInfo struct {
-	Cpes       *[]string                  `json:"cpes"`
-	Language   *string                    `json:"language,omitempty"`
-	Licenses   *[]string                  `json:"licenses"`
-	Name       *string                    `json:"name,omitempty"`
-	ObjectType string                     `json:"objectType"`
-	Purl       *string                    `json:"purl,omitempty"`
-	Summary    *PackageFindingInfoSummary `json:"summary,omitempty"`
-	Type       *string                    `json:"type,omitempty"`
-	Version    *string                    `json:"version,omitempty"`
-}
-
-// PackageFindingInfoSummary defines model for PackageFindingInfoSummary.
-type PackageFindingInfoSummary struct {
-	// TotalVulnerabilities A summary of number of vulnerabilities found per severity.
-	TotalVulnerabilities *VulnerabilitySeveritySummary `json:"totalVulnerabilities,omitempty"`
+	Cpes       *[]string `json:"cpes"`
+	Language   *string   `json:"language,omitempty"`
+	Licenses   *[]string `json:"licenses"`
+	Name       *string   `json:"name,omitempty"`
+	ObjectType string    `json:"objectType"`
+	Purl       *string   `json:"purl,omitempty"`
+	Type       *string   `json:"type,omitempty"`
+	Version    *string   `json:"version,omitempty"`
 }
 
 // PluginScan defines model for PluginScan.
