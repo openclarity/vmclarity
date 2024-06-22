@@ -84,11 +84,10 @@ func (w *Watcher) GetFindingsWithOutdatedSummary(ctx context.Context) ([]Finding
 	// connected to vulnerabilities
 	findings, err := w.client.GetFindings(ctx, apitypes.GetFindingsParams{
 		Filter: to.Ptr(fmt.Sprintf(
-			"findingInfo/objectType eq 'Package' and summary/updatedAt lt %s",
+			"findingInfo/objectType eq 'Package' and (summary eq null or summary/updatedAt eq null or summary/updatedAt lt %s)",
 			time.Now().Add(-w.summaryUpdatePeriod).Format(time.RFC3339)),
 		),
-		Select: to.Ptr("id,findingInfo,summary"),
-		Count:  to.Ptr(true),
+		Count: to.Ptr(true),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get outdated findings: %w", err)
@@ -135,11 +134,10 @@ func (w *Watcher) Reconcile(ctx context.Context, event FindingReconcileEvent) er
 		return fmt.Errorf("failed to extract Finding type. FindingID=%s: %w", event.FindingID, err)
 	}
 
-	// Construct filter based on discriminator type
-	// Use info properties that make the finding unique, check package scanner/findingkey.
-	switch info := discriminator.(type) {
+	// Reconcile findings
+	switch findingInfo := discriminator.(type) {
 	case apitypes.PackageFindingInfo:
-		if err = w.reconcilePackageSummary(ctx, event.FindingID, info); err != nil {
+		if err = w.reconcilePackageSummary(ctx, finding, findingInfo); err != nil {
 			return err
 		}
 	default:
@@ -149,8 +147,13 @@ func (w *Watcher) Reconcile(ctx context.Context, event FindingReconcileEvent) er
 }
 
 // nolint:cyclop
-func (w *Watcher) reconcilePackageSummary(ctx context.Context, findingID string, pkg apitypes.PackageFindingInfo) error {
-	// Get total vulnerabilities
+func (w *Watcher) reconcilePackageSummary(ctx context.Context, finding *apitypes.Finding, pkg apitypes.PackageFindingInfo) error {
+	// Set summary if nil
+	if finding.Summary == nil {
+		finding.Summary = &apitypes.FindingSummary{}
+	}
+
+	// Get total vulnerabilities for package
 	critialVuls, err := w.getPackageVulnerabilityFindingsCount(ctx, pkg, apitypes.CRITICAL)
 	if err != nil {
 		return fmt.Errorf("failed to list critial vulnerabilities: %w", err)
@@ -172,19 +175,27 @@ func (w *Watcher) reconcilePackageSummary(ctx context.Context, findingID string,
 		return fmt.Errorf("failed to list negligible vulnerabilities: %w", err)
 	}
 
-	// Patch finding with updated summary
-	err = w.client.PatchFinding(ctx, findingID, apitypes.Finding{
-		Id: to.Ptr(findingID),
-		Summary: &apitypes.FindingSummary{
-			UpdatedAt: to.Ptr(time.Now().Format(time.RFC3339)),
-			TotalVulnerabilities: &apitypes.VulnerabilitySeveritySummary{
-				TotalCriticalVulnerabilities:   to.Ptr(critialVuls),
-				TotalHighVulnerabilities:       to.Ptr(highVuls),
-				TotalMediumVulnerabilities:     to.Ptr(mediumVuls),
-				TotalLowVulnerabilities:        to.Ptr(lowVuls),
-				TotalNegligibleVulnerabilities: to.Ptr(negligibleVuls),
-			},
+	// Create updated summary
+	patchedSummary := &apitypes.FindingSummary{
+		UpdatedAt: to.Ptr(time.Now().Format(time.RFC3339)),
+		TotalVulnerabilities: &apitypes.VulnerabilitySeveritySummary{
+			TotalCriticalVulnerabilities:   to.Ptr(critialVuls),
+			TotalHighVulnerabilities:       to.Ptr(highVuls),
+			TotalMediumVulnerabilities:     to.Ptr(mediumVuls),
+			TotalLowVulnerabilities:        to.Ptr(lowVuls),
+			TotalNegligibleVulnerabilities: to.Ptr(negligibleVuls),
 		},
+	}
+
+	// Patch finding with updated summary. Skip patching to avoid bumping revisions
+	// for unchanged summaries.
+	if !summaryChanged(*finding.Summary, *patchedSummary) {
+		return nil
+	}
+
+	err = w.client.PatchFinding(ctx, *finding.Id, apitypes.Finding{
+		Id:      finding.Id,
+		Summary: patchedSummary,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to patch finding summary: %w", err)
@@ -197,7 +208,7 @@ func (w *Watcher) getPackageVulnerabilityFindingsCount(ctx context.Context, pkg 
 	activeFindings, err := w.client.GetFindings(ctx, apitypes.GetFindingsParams{
 		Count: to.Ptr(true),
 		Filter: to.Ptr(fmt.Sprintf(
-			"findingInfo/objectType eq 'Vulnerability' and findingInfo/severity eq '%s' and findingInfo/package/Name eq '%s' and findingInfo/package/Name eq '%s'",
+			"findingInfo/objectType eq 'Vulnerability' and findingInfo/severity eq '%s' and findingInfo/package/name eq '%s' and findingInfo/package/version eq '%s'",
 			string(severity), to.ValueOrZero(pkg.Name), to.ValueOrZero(pkg.Version)),
 		),
 		// select the smallest amount of data to return in items, we
@@ -210,4 +221,28 @@ func (w *Watcher) getPackageVulnerabilityFindingsCount(ctx context.Context, pkg 
 	}
 
 	return *activeFindings.Count, nil
+}
+
+func summaryChanged(old, new apitypes.FindingSummary) bool {
+	if to.ValueOrZero(old.TotalVulnerabilities.TotalCriticalVulnerabilities) != to.ValueOrZero(new.TotalVulnerabilities.TotalCriticalVulnerabilities) {
+		return true
+	}
+
+	if to.ValueOrZero(old.TotalVulnerabilities.TotalHighVulnerabilities) != to.ValueOrZero(new.TotalVulnerabilities.TotalHighVulnerabilities) {
+		return true
+	}
+
+	if to.ValueOrZero(old.TotalVulnerabilities.TotalMediumVulnerabilities) != to.ValueOrZero(new.TotalVulnerabilities.TotalMediumVulnerabilities) {
+		return true
+	}
+
+	if to.ValueOrZero(old.TotalVulnerabilities.TotalLowVulnerabilities) != to.ValueOrZero(new.TotalVulnerabilities.TotalLowVulnerabilities) {
+		return true
+	}
+
+	if to.ValueOrZero(old.TotalVulnerabilities.TotalNegligibleVulnerabilities) != to.ValueOrZero(new.TotalVulnerabilities.TotalNegligibleVulnerabilities) {
+		return true
+	}
+
+	return false
 }
