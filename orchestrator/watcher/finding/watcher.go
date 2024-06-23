@@ -29,6 +29,9 @@ import (
 	"github.com/openclarity/vmclarity/provider"
 )
 
+// TODO(ramizpolic): Queue, Poller, and Reconciler could be extended to support
+// maximum items (instead of DefaultMaxProcessingCount) that can be processed at
+// once to avoid memory issues.
 type (
 	ScanQueue      = common.Queue[FindingReconcileEvent]
 	ScanPoller     = common.Poller[FindingReconcileEvent]
@@ -52,6 +55,7 @@ type Watcher struct {
 	pollPeriod          time.Duration
 	reconcileTimeout    time.Duration
 	summaryUpdatePeriod time.Duration
+	maxProcessingCount  int
 
 	queue *ScanQueue
 }
@@ -77,6 +81,12 @@ func (w *Watcher) Start(ctx context.Context) {
 
 // nolint:cyclop
 func (w *Watcher) GetFindingsWithOutdatedSummary(ctx context.Context) ([]FindingReconcileEvent, error) {
+	// Check if we have reached maximum items that we need to process to avoid memory spikes
+	if w.queue.Length() >= w.maxProcessingCount {
+		return nil, nil
+	}
+	maxItemsToFetch := w.maxProcessingCount - w.queue.Length()
+
 	logger := log.GetLoggerFromContextOrDiscard(ctx)
 	logger.Debugf("Fetching Findings with outdated summary")
 
@@ -87,6 +97,7 @@ func (w *Watcher) GetFindingsWithOutdatedSummary(ctx context.Context) ([]Finding
 			"findingInfo/objectType eq 'Package' and (summary eq null or summary/updatedAt eq null or summary/updatedAt lt %s)",
 			time.Now().Add(-w.summaryUpdatePeriod).Format(time.RFC3339)),
 		),
+		Top:   to.Ptr(maxItemsToFetch),
 		Count: to.Ptr(true),
 	})
 	if err != nil {
@@ -154,23 +165,23 @@ func (w *Watcher) reconcilePackageSummary(ctx context.Context, finding *apitypes
 	}
 
 	// Get total vulnerabilities for package
-	critialVuls, err := w.getPackageVulnerabilityFindingsCount(ctx, pkg, apitypes.CRITICAL)
+	critialVuls, err := w.getPackageVulnerabilitySeverityCount(ctx, pkg, apitypes.CRITICAL)
 	if err != nil {
 		return fmt.Errorf("failed to list critial vulnerabilities: %w", err)
 	}
-	highVuls, err := w.getPackageVulnerabilityFindingsCount(ctx, pkg, apitypes.HIGH)
+	highVuls, err := w.getPackageVulnerabilitySeverityCount(ctx, pkg, apitypes.HIGH)
 	if err != nil {
 		return fmt.Errorf("failed to list high vulnerabilities: %w", err)
 	}
-	mediumVuls, err := w.getPackageVulnerabilityFindingsCount(ctx, pkg, apitypes.MEDIUM)
+	mediumVuls, err := w.getPackageVulnerabilitySeverityCount(ctx, pkg, apitypes.MEDIUM)
 	if err != nil {
 		return fmt.Errorf("failed to list medium vulnerabilities: %w", err)
 	}
-	lowVuls, err := w.getPackageVulnerabilityFindingsCount(ctx, pkg, apitypes.LOW)
+	lowVuls, err := w.getPackageVulnerabilitySeverityCount(ctx, pkg, apitypes.LOW)
 	if err != nil {
 		return fmt.Errorf("failed to list low vulnerabilities: %w", err)
 	}
-	negligibleVuls, err := w.getPackageVulnerabilityFindingsCount(ctx, pkg, apitypes.NEGLIGIBLE)
+	negligibleVuls, err := w.getPackageVulnerabilitySeverityCount(ctx, pkg, apitypes.NEGLIGIBLE)
 	if err != nil {
 		return fmt.Errorf("failed to list negligible vulnerabilities: %w", err)
 	}
@@ -204,8 +215,8 @@ func (w *Watcher) reconcilePackageSummary(ctx context.Context, finding *apitypes
 	return nil
 }
 
-func (w *Watcher) getPackageVulnerabilityFindingsCount(ctx context.Context, pkg apitypes.PackageFindingInfo, severity apitypes.VulnerabilitySeverity) (int, error) {
-	activeFindings, err := w.client.GetFindings(ctx, apitypes.GetFindingsParams{
+func (w *Watcher) getPackageVulnerabilitySeverityCount(ctx context.Context, pkg apitypes.PackageFindingInfo, severity apitypes.VulnerabilitySeverity) (int, error) {
+	findings, err := w.client.GetFindings(ctx, apitypes.GetFindingsParams{
 		Count: to.Ptr(true),
 		Filter: to.Ptr(fmt.Sprintf(
 			"findingInfo/objectType eq 'Vulnerability' and findingInfo/severity eq '%s' and findingInfo/package/name eq '%s' and findingInfo/package/version eq '%s'",
@@ -220,7 +231,7 @@ func (w *Watcher) getPackageVulnerabilityFindingsCount(ctx context.Context, pkg 
 		return 0, fmt.Errorf("failed to list package vulnerability findings: %w", err)
 	}
 
-	return *activeFindings.Count, nil
+	return *findings.Count, nil
 }
 
 func summaryChanged(old, new apitypes.FindingSummary) bool {

@@ -178,6 +178,9 @@ func NewConfig() (*Config, error) {
 	_ = v.BindEnv("finding_watcher.summary_update_period")
 	v.SetDefault("finding_watcher.summary_update_period", findingwatcher.DefaultSummaryUpdatePeriod)
 
+	_ = v.BindEnv("finding_watcher.max_processing_count")
+	v.SetDefault("finding_watcher.max_processing_count", findingwatcher.DefaultMaxProcessingCount)
+
 	decodeHooks := mapstructure.ComposeDecodeHookFunc(
 		// TextUnmarshallerHookFunc is needed to decode custom types
 		mapstructure.TextUnmarshallerHookFunc(),

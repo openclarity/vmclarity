@@ -23,9 +23,10 @@ import (
 )
 
 const (
-	DefaultPollInterval        = 30 * time.Second
-	DefaultReconcileTimeout    = 5 * time.Minute
-	DefaultSummaryUpdatePeriod = 5 * time.Minute
+	DefaultPollInterval        = 5 * time.Second
+	DefaultReconcileTimeout    = 15 * time.Second
+	DefaultSummaryUpdatePeriod = 10 * time.Minute // outdated summaries older than 10 minutes
+	DefaultMaxProcessingCount  = 5000
 )
 
 type Config struct {
@@ -34,6 +35,7 @@ type Config struct {
 	PollPeriod          time.Duration `mapstructure:"poll_period"`
 	ReconcileTimeout    time.Duration `mapstructure:"reconcile_timeout"`
 	SummaryUpdatePeriod time.Duration `mapstructure:"summary_update_period"`
+	MaxProcessingCount  int           `mapstructure:"max_processing_count"`
 }
 
 func (c Config) WithBackendClient(client *client.Client) Config {
@@ -58,5 +60,10 @@ func (c Config) WithPollPeriod(t time.Duration) Config {
 
 func (c Config) WithSummaryUpdatePeriod(t time.Duration) Config {
 	c.SummaryUpdatePeriod = t
+	return c
+}
+
+func (c Config) WithMaxProcessingCount(n int) Config {
+	c.MaxProcessingCount = n
 	return c
 }
