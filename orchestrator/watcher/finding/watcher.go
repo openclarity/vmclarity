@@ -91,7 +91,7 @@ func (w *Watcher) GetFindingsWithOutdatedSummary(ctx context.Context) ([]Finding
 	logger.Debugf("Fetching Findings with outdated summary")
 
 	// NOTE: we only care about package findings since other findings are not
-	// connected to vulnerabilities
+	// tied to vulnerabilities and their summaries cannot be calculated
 	findings, err := w.client.GetFindings(ctx, apitypes.GetFindingsParams{
 		Filter: to.Ptr(fmt.Sprintf(
 			"findingInfo/objectType eq 'Package' and (summary eq null or summary/updatedAt eq null or summary/updatedAt lt %s)",
@@ -145,7 +145,7 @@ func (w *Watcher) Reconcile(ctx context.Context, event FindingReconcileEvent) er
 		return fmt.Errorf("failed to extract Finding type. FindingID=%s: %w", event.FindingID, err)
 	}
 
-	// Reconcile findings
+	// Reconcile finding
 	switch findingInfo := discriminator.(type) {
 	case apitypes.PackageFindingInfo:
 		if err = w.reconcilePackageSummary(ctx, finding, findingInfo); err != nil {
@@ -187,7 +187,7 @@ func (w *Watcher) reconcilePackageSummary(ctx context.Context, finding *apitypes
 	}
 
 	// Create updated summary
-	patchedSummary := &apitypes.FindingSummary{
+	updatedSummary := &apitypes.FindingSummary{
 		UpdatedAt: to.Ptr(time.Now().Format(time.RFC3339)),
 		TotalVulnerabilities: &apitypes.VulnerabilitySeveritySummary{
 			TotalCriticalVulnerabilities:   to.Ptr(critialVuls),
@@ -200,15 +200,13 @@ func (w *Watcher) reconcilePackageSummary(ctx context.Context, finding *apitypes
 
 	// Patch finding with updated summary. Skip patching to avoid bumping revisions
 	// for unchanged summaries.
-	if !summaryChanged(*finding.Summary, *patchedSummary) {
+	if !summaryChanged(*finding.Summary, *updatedSummary) {
 		return nil
 	}
-
-	err = w.client.PatchFinding(ctx, *finding.Id, apitypes.Finding{
+	if err := w.client.PatchFinding(ctx, *finding.Id, apitypes.Finding{
 		Id:      finding.Id,
-		Summary: patchedSummary,
-	})
-	if err != nil {
+		Summary: updatedSummary,
+	}); err != nil {
 		return fmt.Errorf("failed to patch finding summary: %w", err)
 	}
 
@@ -234,24 +232,24 @@ func (w *Watcher) getPackageVulnerabilitySeverityCount(ctx context.Context, pkg 
 	return *findings.Count, nil
 }
 
-func summaryChanged(old, new apitypes.FindingSummary) bool {
-	if to.ValueOrZero(old.TotalVulnerabilities.TotalCriticalVulnerabilities) != to.ValueOrZero(new.TotalVulnerabilities.TotalCriticalVulnerabilities) {
+func summaryChanged(a, b apitypes.FindingSummary) bool {
+	if to.ValueOrZero(a.TotalVulnerabilities.TotalCriticalVulnerabilities) != to.ValueOrZero(b.TotalVulnerabilities.TotalCriticalVulnerabilities) {
 		return true
 	}
 
-	if to.ValueOrZero(old.TotalVulnerabilities.TotalHighVulnerabilities) != to.ValueOrZero(new.TotalVulnerabilities.TotalHighVulnerabilities) {
+	if to.ValueOrZero(a.TotalVulnerabilities.TotalHighVulnerabilities) != to.ValueOrZero(b.TotalVulnerabilities.TotalHighVulnerabilities) {
 		return true
 	}
 
-	if to.ValueOrZero(old.TotalVulnerabilities.TotalMediumVulnerabilities) != to.ValueOrZero(new.TotalVulnerabilities.TotalMediumVulnerabilities) {
+	if to.ValueOrZero(a.TotalVulnerabilities.TotalMediumVulnerabilities) != to.ValueOrZero(b.TotalVulnerabilities.TotalMediumVulnerabilities) {
 		return true
 	}
 
-	if to.ValueOrZero(old.TotalVulnerabilities.TotalLowVulnerabilities) != to.ValueOrZero(new.TotalVulnerabilities.TotalLowVulnerabilities) {
+	if to.ValueOrZero(a.TotalVulnerabilities.TotalLowVulnerabilities) != to.ValueOrZero(b.TotalVulnerabilities.TotalLowVulnerabilities) {
 		return true
 	}
 
-	if to.ValueOrZero(old.TotalVulnerabilities.TotalNegligibleVulnerabilities) != to.ValueOrZero(new.TotalVulnerabilities.TotalNegligibleVulnerabilities) {
+	if to.ValueOrZero(a.TotalVulnerabilities.TotalNegligibleVulnerabilities) != to.ValueOrZero(b.TotalVulnerabilities.TotalNegligibleVulnerabilities) {
 		return true
 	}
 

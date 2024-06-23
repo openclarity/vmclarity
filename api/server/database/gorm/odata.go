@@ -927,14 +927,6 @@ var schemaMetas = map[string]odatasql.SchemaMeta{
 			},
 		},
 	},
-	"PackageFindingInfoSummary": {
-		Fields: odatasql.Schema{
-			"totalVulnerabilities": odatasql.FieldMeta{
-				FieldType:           odatasql.ComplexFieldType,
-				ComplexFieldSchemas: []string{"VulnerabilitySeveritySummary"},
-			},
-		},
-	},
 	"VulnerabilityFindingInfo": {
 		Fields: odatasql.Schema{
 			"objectType":        odatasql.FieldMeta{FieldType: odatasql.StringFieldType},
