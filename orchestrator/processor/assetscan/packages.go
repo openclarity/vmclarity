@@ -17,15 +17,22 @@ package assetscan
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 )
 
+type packageExtractorFn func(assetScan apitypes.AssetScan) []apitypes.Package
+
 // nolint:cyclop
-func (asp *AssetScanProcessor) reconcileResultPackagesToFindings(ctx context.Context, assetScan apitypes.AssetScan, packages []apitypes.Package) error {
-	// Create new or update existing findings for all passed packages
-	for _, pkg := range packages {
+func (asp *AssetScanProcessor) reconcileResultPackagesToFindings(ctx context.Context, assetScan apitypes.AssetScan, packageExtractor packageExtractorFn) error {
+	if packageExtractor == nil {
+		return errors.New("unable to extract packages")
+	}
+
+	// Create new or update existing findings for all extracted packages
+	for _, pkg := range packageExtractor(assetScan) {
 		findingInfo := apitypes.FindingInfo{}
 		err := findingInfo.FromPackageFindingInfo(pkg.ToPackageFindingInfo())
 		if err != nil {

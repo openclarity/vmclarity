@@ -1,4 +1,4 @@
-// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2024 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,48 +30,48 @@ import (
 )
 
 // TODO(ramizpolic): Queue, Poller, and Reconciler could be extended to support
-// maximum items (instead of DefaultMaxProcessingCount) that can be processed at
-// once to avoid memory issues.
+// maximum items that can be scheduled at once to avoid memory issues. We could
+// write to a channel in Poller instead of using a slice.
+
 type (
-	ScanQueue      = common.Queue[FindingReconcileEvent]
-	ScanPoller     = common.Poller[FindingReconcileEvent]
-	ScanReconciler = common.Reconciler[FindingReconcileEvent]
+	FindingQueue      = common.Queue[FindingReconcileEvent]
+	FindingPoller     = common.Poller[FindingReconcileEvent]
+	FindingReconciler = common.Reconciler[FindingReconcileEvent]
 )
 
-func New(c Config) *Watcher {
-	return &Watcher{
-		client:              c.Client,
-		provider:            c.Provider,
-		pollPeriod:          c.PollPeriod,
-		reconcileTimeout:    c.ReconcileTimeout,
-		summaryUpdatePeriod: c.SummaryUpdatePeriod,
-		queue:               common.NewQueue[FindingReconcileEvent](),
+func New(c Config) *Processor {
+	return &Processor{
+		client:               c.Client,
+		provider:             c.Provider,
+		pollPeriod:           c.PollPeriod,
+		reconcileTimeout:     c.ReconcileTimeout,
+		summaryRefreshPeriod: c.SummaryRefreshPeriod,
+		queue:                common.NewQueue[FindingReconcileEvent](),
 	}
 }
 
-type Watcher struct {
-	client              *apiclient.Client
-	provider            provider.Provider
-	pollPeriod          time.Duration
-	reconcileTimeout    time.Duration
-	summaryUpdatePeriod time.Duration
-	maxProcessingCount  int
+type Processor struct {
+	client               *apiclient.Client
+	provider             provider.Provider
+	pollPeriod           time.Duration
+	reconcileTimeout     time.Duration
+	summaryRefreshPeriod time.Duration
 
-	queue *ScanQueue
+	queue *FindingQueue
 }
 
-func (w *Watcher) Start(ctx context.Context) {
-	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("controller", "ScanWatcher")
+func (w *Processor) Start(ctx context.Context) {
+	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("controller", "FindingProcessor")
 	ctx = log.SetLoggerForContext(ctx, logger)
 
-	poller := &ScanPoller{
+	poller := &FindingPoller{
 		PollPeriod: w.pollPeriod,
 		Queue:      w.queue,
-		GetItems:   w.GetFindingsWithOutdatedSummary,
+		GetItems:   w.GetPackagesWithOutdatedSummary,
 	}
 	poller.Start(ctx)
 
-	reconciler := &ScanReconciler{
+	reconciler := &FindingReconciler{
 		ReconcileTimeout:  w.reconcileTimeout,
 		Queue:             w.queue,
 		ReconcileFunction: w.Reconcile,
@@ -80,25 +80,19 @@ func (w *Watcher) Start(ctx context.Context) {
 }
 
 // nolint:cyclop
-func (w *Watcher) GetFindingsWithOutdatedSummary(ctx context.Context) ([]FindingReconcileEvent, error) {
-	// Check if we have reached maximum items that we need to process to avoid memory spikes
-	if w.queue.Length() >= w.maxProcessingCount {
-		return nil, nil
-	}
-	maxItemsToFetch := w.maxProcessingCount - w.queue.Length()
-
+func (w *Processor) GetPackagesWithOutdatedSummary(ctx context.Context) ([]FindingReconcileEvent, error) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx)
-	logger.Debugf("Fetching Findings with outdated summary")
+	logger.Debugf("Fetching Package Findings with outdated summary")
 
-	// NOTE: we only care about package findings since other findings are not
-	// tied to vulnerabilities and their summaries cannot be calculated
+	// NOTE: we only care about package findings since other findings are not tied to
+	// vulnerabilities and their summaries cannot be calculated
 	findings, err := w.client.GetFindings(ctx, apitypes.GetFindingsParams{
 		Filter: to.Ptr(fmt.Sprintf(
 			"findingInfo/objectType eq 'Package' and (summary eq null or summary/updatedAt eq null or summary/updatedAt lt %s)",
-			time.Now().Add(-w.summaryUpdatePeriod).Format(time.RFC3339)),
+			time.Now().Add(-w.summaryRefreshPeriod).Format(time.RFC3339)),
 		),
-		Top:   to.Ptr(maxItemsToFetch),
-		Count: to.Ptr(true),
+		Select: to.Ptr("id"),
+		Count:  to.Ptr(true),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get outdated findings: %w", err)
@@ -130,7 +124,7 @@ func (w *Watcher) GetFindingsWithOutdatedSummary(ctx context.Context) ([]Finding
 }
 
 // nolint:cyclop
-func (w *Watcher) Reconcile(ctx context.Context, event FindingReconcileEvent) error {
+func (w *Processor) Reconcile(ctx context.Context, event FindingReconcileEvent) error {
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithFields(event.ToFields())
 	ctx = log.SetLoggerForContext(ctx, logger)
 
@@ -158,7 +152,7 @@ func (w *Watcher) Reconcile(ctx context.Context, event FindingReconcileEvent) er
 }
 
 // nolint:cyclop
-func (w *Watcher) reconcilePackageSummary(ctx context.Context, finding *apitypes.Finding, pkg apitypes.PackageFindingInfo) error {
+func (w *Processor) reconcilePackageSummary(ctx context.Context, finding *apitypes.Finding, pkg apitypes.PackageFindingInfo) error {
 	// Set summary if nil
 	if finding.Summary == nil {
 		finding.Summary = &apitypes.FindingSummary{}
@@ -206,7 +200,7 @@ func (w *Watcher) reconcilePackageSummary(ctx context.Context, finding *apitypes
 	return nil
 }
 
-func (w *Watcher) getPackageVulnerabilitySeverityCount(ctx context.Context, pkg apitypes.PackageFindingInfo, severity apitypes.VulnerabilitySeverity) (int, error) {
+func (w *Processor) getPackageVulnerabilitySeverityCount(ctx context.Context, pkg apitypes.PackageFindingInfo, severity apitypes.VulnerabilitySeverity) (int, error) {
 	findings, err := w.client.GetFindings(ctx, apitypes.GetFindingsParams{
 		Count: to.Ptr(true),
 		Filter: to.Ptr(fmt.Sprintf(

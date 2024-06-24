@@ -871,21 +871,34 @@ func (c *Client) GetFindings(ctx context.Context, params types.GetFindingsParams
 }
 
 func (c *Client) GetFinding(ctx context.Context, findingID types.FindingID, params types.GetFindingsFindingIDParams) (*types.Finding, error) {
+	newGetExistingError := func(err error) error {
+		return fmt.Errorf("failed to get existing finding %v: %w", findingID, err)
+	}
+
 	resp, err := c.api.GetFindingsFindingIDWithResponse(ctx, findingID, &params)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get findings: %w", err)
+		return nil, newGetExistingError(err)
 	}
+
 	switch resp.StatusCode() {
 	case http.StatusOK:
 		if resp.JSON200 == nil {
-			return nil, errors.New("no findings: empty body")
+			return nil, newGetExistingError(errors.New("empty body"))
 		}
 		return resp.JSON200, nil
+	case http.StatusNotFound:
+		if resp.JSON404 == nil {
+			return nil, newGetExistingError(errors.New("empty body on not found"))
+		}
+		if resp.JSON404 != nil && resp.JSON404.Message != nil {
+			return nil, newGetExistingError(fmt.Errorf("not found: %v", *resp.JSON404.Message))
+		}
+		return nil, newGetExistingError(errors.New("not found"))
 	default:
 		if resp.JSONDefault != nil && resp.JSONDefault.Message != nil {
-			return nil, fmt.Errorf("failed to get findings. status code=%v: %s", resp.StatusCode(), *resp.JSONDefault.Message)
+			return nil, newGetExistingError(fmt.Errorf("status code=%v: %v", resp.StatusCode(), *resp.JSONDefault.Message))
 		}
-		return nil, fmt.Errorf("failed to get findings. status code=%v", resp.StatusCode())
+		return nil, newGetExistingError(fmt.Errorf("status code=%v", resp.StatusCode()))
 	}
 }
 

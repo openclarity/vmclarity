@@ -27,9 +27,9 @@ import (
 
 	"github.com/openclarity/vmclarity/orchestrator/discoverer"
 	assetscanprocessor "github.com/openclarity/vmclarity/orchestrator/processor/assetscan"
+	findingprocessor "github.com/openclarity/vmclarity/orchestrator/processor/finding"
 	assetscanwatcher "github.com/openclarity/vmclarity/orchestrator/watcher/assetscan"
 	assetscanestimationwatcher "github.com/openclarity/vmclarity/orchestrator/watcher/assetscanestimation"
-	findingwatcher "github.com/openclarity/vmclarity/orchestrator/watcher/finding"
 	scanwatcher "github.com/openclarity/vmclarity/orchestrator/watcher/scan"
 	scanconfigwatcher "github.com/openclarity/vmclarity/orchestrator/watcher/scanconfig"
 	scanestimationwatcher "github.com/openclarity/vmclarity/orchestrator/watcher/scanestimation"
@@ -141,10 +141,9 @@ func TestConfig(t *testing.T) {
 				"VMCLARITY_ORCHESTRATOR_SCAN_ESTIMATION_WATCHER_ESTIMATION_TIMEOUT":         "23h",
 				"VMCLARITY_ORCHESTRATOR_ASSETSCAN_PROCESSOR_POLL_PERIOD":                    "23s",
 				"VMCLARITY_ORCHESTRATOR_ASSETSCAN_PROCESSOR_RECONCILE_TIMEOUT":              "4m",
-				"VMCLARITY_ORCHESTRATOR_FINDING_WATCHER_POLL_PERIOD":                        "59s",
-				"VMCLARITY_ORCHESTRATOR_FINDING_WATCHER_RECONCILE_TIMEOUT":                  "5m",
-				"VMCLARITY_ORCHESTRATOR_FINDING_WATCHER_SUMMARY_UPDATE_PERIOD":              "2m",
-				"VMCLARITY_ORCHESTRATOR_FINDING_WATCHER_MAX_PROCESSING_COUNT":               "25",
+				"VMCLARITY_ORCHESTRATOR_FINDING_PROCESSOR_POLL_PERIOD":                      "59s",
+				"VMCLARITY_ORCHESTRATOR_FINDING_PROCESSOR_RECONCILE_TIMEOUT":                "5m",
+				"VMCLARITY_ORCHESTRATOR_FINDING_PROCESSOR_SUMMARY_REFRESH_PERIOD":           "2m",
 			},
 			ExpectedNewErrorMatcher: Not(HaveOccurred()),
 			ExpectedConfig: &Config{
@@ -194,11 +193,10 @@ func TestConfig(t *testing.T) {
 					PollPeriod:       23 * time.Second,
 					ReconcileTimeout: 4 * time.Minute,
 				},
-				FindingWatcherConfig: findingwatcher.Config{
-					PollPeriod:          59 * time.Second,
-					ReconcileTimeout:    5 * time.Minute,
-					SummaryUpdatePeriod: 2 * time.Minute,
-					MaxProcessingCount:  25,
+				FindingProcessorConfig: findingprocessor.Config{
+					PollPeriod:           59 * time.Second,
+					ReconcileTimeout:     5 * time.Minute,
+					SummaryRefreshPeriod: 2 * time.Minute,
 				},
 			},
 		},
@@ -253,11 +251,10 @@ func TestConfig(t *testing.T) {
 					PollPeriod:       assetscanprocessor.DefaultPollInterval,
 					ReconcileTimeout: assetscanprocessor.DefaultReconcileTimeout,
 				},
-				FindingWatcherConfig: findingwatcher.Config{
-					PollPeriod:          findingwatcher.DefaultPollInterval,
-					ReconcileTimeout:    findingwatcher.DefaultReconcileTimeout,
-					SummaryUpdatePeriod: findingwatcher.DefaultSummaryUpdatePeriod,
-					MaxProcessingCount:  findingwatcher.DefaultMaxProcessingCount,
+				FindingProcessorConfig: findingprocessor.Config{
+					PollPeriod:           findingprocessor.DefaultPollInterval,
+					ReconcileTimeout:     findingprocessor.DefaultReconcileTimeout,
+					SummaryRefreshPeriod: findingprocessor.DefaultSummaryRefreshPeriod,
 				},
 			},
 		},

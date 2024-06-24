@@ -74,14 +74,14 @@ func (asp *AssetScanProcessor) Reconcile(ctx context.Context, event AssetScanRec
 		}
 
 		// NOTE: vulnerabilities can reference packages which also need to be reconciled
-		// for a successful vulnerability scan
-		if err := asp.reconcileResultPackagesToFindings(ctx, assetScan, withVulnerabilityPackageExtractor(assetScan)); err != nil {
+		// to add referenced packages as independent findings
+		if err := asp.reconcileResultPackagesToFindings(ctx, assetScan, withVulnerabilityPackageExtractor); err != nil {
 			return newFailedToReconcileTypeError(err, "vulnerabilities")
 		}
 	}
 
 	if statusCompletedWithNoErrors(assetScan.Sbom.Status) {
-		if err := asp.reconcileResultPackagesToFindings(ctx, assetScan, withSbomPackageExtractor(assetScan)); err != nil {
+		if err := asp.reconcileResultPackagesToFindings(ctx, assetScan, withSbomPackageExtractor); err != nil {
 			return newFailedToReconcileTypeError(err, "sbom")
 		}
 	}
