@@ -61,13 +61,18 @@ func (h *binaryRuntimeHandler) Start(ctx context.Context) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	h.pluginDir = filepath.Join(os.TempDir(), "vmclarity-plugins", h.config.Name)
-
 	image, cleanup, err := containerrootfs.GetImageWithCleanup(ctx, h.config.ImageName)
 	if err != nil {
 		return fmt.Errorf("unable to get image(%s): %w", h.config.ImageName, err)
 	}
 	defer cleanup()
+
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("unable to determine user's home directory: %w", err)
+	}
+
+	h.pluginDir = filepath.Join(home, ".vmclarity/plugins", h.config.Name, image.Metadata.ID)
 
 	if _, err := os.Stat(h.pluginDir); os.IsNotExist(err) {
 		err = containerrootfs.ToDirectory(ctx, image, h.pluginDir)
