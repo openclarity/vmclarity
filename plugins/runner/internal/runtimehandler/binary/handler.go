@@ -39,9 +39,9 @@ import (
 type binaryRuntimeHandler struct {
 	config types.PluginConfig
 
-	cmd       *exec.Cmd
-	cmdStdOut bytes.Buffer
-	cmdStdErr bytes.Buffer
+	cmd        *exec.Cmd
+	stdoutPipe io.ReadCloser
+	stderrPipe io.ReadCloser
 
 	pluginDir            string
 	inputDirMountPoint   string
@@ -137,8 +137,15 @@ func (h *binaryRuntimeHandler) Start(ctx context.Context) error {
 	}
 
 	h.cmd.Stdin = &bytes.Buffer{}
-	h.cmd.Stdout = &h.cmdStdOut
-	h.cmd.Stderr = &h.cmdStdErr
+	h.stdoutPipe, err = h.cmd.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("unable to open pipe for command stdout: %w", err)
+	}
+
+	h.stderrPipe, err = h.cmd.StderrPipe()
+	if err != nil {
+		return fmt.Errorf("unable to open pipe for command stderr: %w", err)
+	}
 
 	// Start command
 	openPortListener.Close()
@@ -174,8 +181,18 @@ func (h *binaryRuntimeHandler) Logs(ctx context.Context) (io.ReadCloser, error) 
 		return nil, fmt.Errorf("plugin process is not running")
 	}
 
-	reader := io.MultiReader(&h.cmdStdOut, &h.cmdStdErr)
-	return io.NopCloser(reader), nil
+	stdoutPipeReader, stdoutPipeWriter := io.Pipe()
+	stderrPipeReader, stderrPipeWriter := io.Pipe()
+
+	go func() {
+		io.Copy(stdoutPipeWriter, h.stdoutPipe)
+	}()
+
+	go func() {
+		io.Copy(stderrPipeWriter, h.stderrPipe)
+	}()
+
+	return io.NopCloser(io.MultiReader(stdoutPipeReader, stderrPipeReader)), nil
 }
 
 func (h *binaryRuntimeHandler) Result(ctx context.Context) (io.ReadCloser, error) {
