@@ -186,26 +186,19 @@ func (w *Watcher) reconcilePackageSummary(ctx context.Context, finding *apitypes
 		return fmt.Errorf("failed to list negligible vulnerabilities: %w", err)
 	}
 
-	// Create updated summary
-	updatedSummary := &apitypes.FindingSummary{
-		UpdatedAt: to.Ptr(time.Now().Format(time.RFC3339)),
-		TotalVulnerabilities: &apitypes.VulnerabilitySeveritySummary{
-			TotalCriticalVulnerabilities:   to.Ptr(critialVuls),
-			TotalHighVulnerabilities:       to.Ptr(highVuls),
-			TotalMediumVulnerabilities:     to.Ptr(mediumVuls),
-			TotalLowVulnerabilities:        to.Ptr(lowVuls),
-			TotalNegligibleVulnerabilities: to.Ptr(negligibleVuls),
-		},
-	}
-
-	// Patch finding with updated summary. Skip patching to avoid bumping revisions
-	// for unchanged summaries.
-	if !summaryChanged(*finding.Summary, *updatedSummary) {
-		return nil
-	}
+	// Patch finding with updated summary
 	if err := w.client.PatchFinding(ctx, *finding.Id, apitypes.Finding{
-		Id:      finding.Id,
-		Summary: updatedSummary,
+		Id: finding.Id,
+		Summary: &apitypes.FindingSummary{
+			UpdatedAt: to.Ptr(time.Now().Format(time.RFC3339)),
+			TotalVulnerabilities: &apitypes.VulnerabilitySeveritySummary{
+				TotalCriticalVulnerabilities:   to.Ptr(critialVuls),
+				TotalHighVulnerabilities:       to.Ptr(highVuls),
+				TotalMediumVulnerabilities:     to.Ptr(mediumVuls),
+				TotalLowVulnerabilities:        to.Ptr(lowVuls),
+				TotalNegligibleVulnerabilities: to.Ptr(negligibleVuls),
+			},
+		},
 	}); err != nil {
 		return fmt.Errorf("failed to patch finding summary: %w", err)
 	}
@@ -230,28 +223,4 @@ func (w *Watcher) getPackageVulnerabilitySeverityCount(ctx context.Context, pkg 
 	}
 
 	return *findings.Count, nil
-}
-
-func summaryChanged(a, b apitypes.FindingSummary) bool {
-	if to.ValueOrZero(a.TotalVulnerabilities.TotalCriticalVulnerabilities) != to.ValueOrZero(b.TotalVulnerabilities.TotalCriticalVulnerabilities) {
-		return true
-	}
-
-	if to.ValueOrZero(a.TotalVulnerabilities.TotalHighVulnerabilities) != to.ValueOrZero(b.TotalVulnerabilities.TotalHighVulnerabilities) {
-		return true
-	}
-
-	if to.ValueOrZero(a.TotalVulnerabilities.TotalMediumVulnerabilities) != to.ValueOrZero(b.TotalVulnerabilities.TotalMediumVulnerabilities) {
-		return true
-	}
-
-	if to.ValueOrZero(a.TotalVulnerabilities.TotalLowVulnerabilities) != to.ValueOrZero(b.TotalVulnerabilities.TotalLowVulnerabilities) {
-		return true
-	}
-
-	if to.ValueOrZero(a.TotalVulnerabilities.TotalNegligibleVulnerabilities) != to.ValueOrZero(b.TotalVulnerabilities.TotalNegligibleVulnerabilities) {
-		return true
-	}
-
-	return false
 }

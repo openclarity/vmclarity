@@ -23,36 +23,23 @@ import (
 )
 
 // nolint:cyclop
-func (asp *AssetScanProcessor) reconcileResultPackagesToFindings(ctx context.Context, assetScan apitypes.AssetScan) error {
-	if assetScan.Sbom != nil && assetScan.Sbom.Packages != nil {
-		// Create new or update existing findings all the packages found by the
-		// scan.
-		for _, item := range *assetScan.Sbom.Packages {
-			itemFindingInfo := apitypes.PackageFindingInfo{
-				Cpes:     item.Cpes,
-				Language: item.Language,
-				Licenses: item.Licenses,
-				Name:     item.Name,
-				Purl:     item.Purl,
-				Type:     item.Type,
-				Version:  item.Version,
-			}
+func (asp *AssetScanProcessor) reconcileResultPackagesToFindings(ctx context.Context, assetScan apitypes.AssetScan, packages []apitypes.Package) error {
+	// Create new or update existing findings for all passed packages
+	for _, pkg := range packages {
+		findingInfo := apitypes.FindingInfo{}
+		err := findingInfo.FromPackageFindingInfo(pkg.ToPackageFindingInfo())
+		if err != nil {
+			return fmt.Errorf("unable to convert PackageFindingInfo into FindingInfo: %w", err)
+		}
 
-			findingInfo := apitypes.FindingInfo{}
-			err := findingInfo.FromPackageFindingInfo(itemFindingInfo)
-			if err != nil {
-				return fmt.Errorf("unable to convert PackageFindingInfo into FindingInfo: %w", err)
-			}
+		id, err := asp.createOrUpdateDBFinding(ctx, &findingInfo, *assetScan.Id, assetScan.Status.LastTransitionTime)
+		if err != nil {
+			return fmt.Errorf("failed to update finding: %w", err)
+		}
 
-			id, err := asp.createOrUpdateDBFinding(ctx, &findingInfo, *assetScan.Id, assetScan.Status.LastTransitionTime)
-			if err != nil {
-				return fmt.Errorf("failed to update finding: %w", err)
-			}
-
-			err = asp.createOrUpdateDBAssetFinding(ctx, assetScan.Asset.Id, id, assetScan.Status.LastTransitionTime)
-			if err != nil {
-				return fmt.Errorf("failed to update asset finding: %w", err)
-			}
+		err = asp.createOrUpdateDBAssetFinding(ctx, assetScan.Asset.Id, id, assetScan.Status.LastTransitionTime)
+		if err != nil {
+			return fmt.Errorf("failed to update asset finding: %w", err)
 		}
 	}
 
@@ -79,6 +66,34 @@ func (asp *AssetScanProcessor) reconcileResultPackagesToFindings(ctx context.Con
 	err = asp.client.PatchAsset(ctx, asset, assetScan.Asset.Id)
 	if err != nil {
 		return fmt.Errorf("failed to patch asset %s: %w", assetScan.Asset.Id, err)
+	}
+
+	return nil
+}
+
+// withVulnerabilityPackageExtractor returns all package findings from
+// vulnerability scan.
+func withVulnerabilityPackageExtractor(assetScan apitypes.AssetScan) []apitypes.Package {
+	var packages []apitypes.Package
+
+	// extract all packages from vulnerabilities
+	if assetScan.Vulnerabilities != nil && assetScan.Vulnerabilities.Vulnerabilities != nil {
+		for _, vuln := range *assetScan.Vulnerabilities.Vulnerabilities {
+			if vuln.Package == nil {
+				continue
+			}
+
+			packages = append(packages, *vuln.Package)
+		}
+	}
+
+	return packages
+}
+
+// withSbomPackageExtractor returns all package findings from SBOM scan.
+func withSbomPackageExtractor(assetScan apitypes.AssetScan) []apitypes.Package {
+	if assetScan.Sbom != nil && assetScan.Sbom.Packages != nil {
+		return *assetScan.Sbom.Packages
 	}
 
 	return nil

@@ -24,9 +24,9 @@ import (
 
 const (
 	DefaultPollInterval        = 5 * time.Second
-	DefaultReconcileTimeout    = 15 * time.Second
-	DefaultSummaryUpdatePeriod = 10 * time.Minute // outdated summaries older than 10 minutes
-	DefaultMaxProcessingCount  = 5000
+	DefaultReconcileTimeout    = 10 * time.Second
+	DefaultSummaryUpdatePeriod = 20 * time.Minute
+	DefaultMaxProcessingCount  = 1000
 )
 
 type Config struct {
