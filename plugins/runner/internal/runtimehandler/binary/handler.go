@@ -83,7 +83,7 @@ func (h *binaryRuntimeHandler) Start(ctx context.Context) error {
 	}
 
 	// Mount input from host
-	// /tmp/vmclarity-plugins/kics + /input + /host-dir-to-scan
+	// /home/ubuntu/.vmclarity/plugins/kics/<id> + /input + /host-dir-to-scan
 	h.inputDirMountPoint = filepath.Join(h.pluginDir, runtimehandler.RemoteScanInputDirOverride, h.config.InputDir)
 	err = os.MkdirAll(h.inputDirMountPoint, 0755)
 	if err != nil {
