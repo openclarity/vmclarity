@@ -26,6 +26,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sync"
 	"syscall"
 
 	multierror "github.com/hashicorp/go-multierror"
@@ -46,6 +47,8 @@ type binaryRuntimeHandler struct {
 	inputDirMountPoint   string
 	pluginServerEndpoint string
 	ready                bool
+
+	mu sync.Mutex
 }
 
 func New(ctx context.Context, config types.PluginConfig) (runtimehandler.PluginRuntimeHandler, error) {
@@ -55,6 +58,9 @@ func New(ctx context.Context, config types.PluginConfig) (runtimehandler.PluginR
 }
 
 func (h *binaryRuntimeHandler) Start(ctx context.Context) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
 	h.pluginDir = filepath.Join(os.TempDir(), "vmclarity-plugins", h.config.Name)
 
 	image, cleanup, err := containerrootfs.GetImageWithCleanup(ctx, h.config.ImageName)
