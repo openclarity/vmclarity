@@ -19,6 +19,7 @@ package runner
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/openclarity/vmclarity/plugins/runner/internal/runtimehandler"
 	"github.com/openclarity/vmclarity/plugins/runner/internal/runtimehandler/binary"
@@ -28,8 +29,19 @@ import (
 
 func getPluginRuntimeHandler(ctx context.Context, config types.PluginConfig) (runtimehandler.PluginRuntimeHandler, error) {
 	if config.BinaryMode {
-		return binary.New(ctx, config)
+		handler, err := binary.New(ctx, config)
+
+		if err != nil {
+			return nil, fmt.Errorf("unable to initialize binary runtime handler: %w", err)
+		}
+
+		return handler, nil
 	}
 
-	return docker.New(ctx, config)
+	handler, err := docker.New(ctx, config)
+	if err != nil {
+		return nil, fmt.Errorf("unable to initialize docker runtime handler: %w", err)
+	}
+
+	return handler, nil
 }

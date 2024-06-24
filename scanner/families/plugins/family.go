@@ -50,7 +50,7 @@ func (p *Plugins) Run(ctx context.Context, res *results.Results) (interfaces.IsR
 
 	// Top level BinaryMode overrides the individual scanner BinaryMode if set
 	if p.conf.BinaryMode != nil {
-		for name, _ := range *p.conf.ScannersConfig {
+		for name := range *p.conf.ScannersConfig {
 			// for _, config := range *p.conf.ScannersConfig {
 			config := (*p.conf.ScannersConfig)[name]
 			config.BinaryMode = *p.conf.BinaryMode

@@ -78,7 +78,6 @@ func (h *binaryRuntimeHandler) Start(ctx context.Context) error {
 		return fmt.Errorf("unable to create directory for mount point: %w", err)
 	}
 
-	// nolint:typecheck
 	err = syscall.Mount(h.config.InputDir, h.inputDirMountPoint, "", syscall.MS_BIND, "")
 	if err != nil {
 		return fmt.Errorf("unable to mount input directory (%s - %s): %w", h.config.InputDir, h.inputDirMountPoint, err)

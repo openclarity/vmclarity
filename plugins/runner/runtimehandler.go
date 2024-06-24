@@ -20,6 +20,7 @@ package runner
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/openclarity/vmclarity/plugins/runner/internal/runtimehandler"
 	"github.com/openclarity/vmclarity/plugins/runner/internal/runtimehandler/docker"
@@ -31,5 +32,10 @@ func getPluginRuntimeHandler(ctx context.Context, config types.PluginConfig) (ru
 		return nil, errors.New("binary mode not supported on this platform")
 	}
 
-	return docker.New(ctx, config)
+	handler, err := docker.New(ctx, config)
+	if err != nil {
+		return nil, fmt.Errorf("unable to initialize docker runtime handler: %w", err)
+	}
+
+	return handler, nil
 }
