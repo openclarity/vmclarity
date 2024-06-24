@@ -2,10 +2,10 @@ import React from 'react';
 import TitleValueDisplay, { TitleValueDisplayRow } from 'components/TitleValueDisplay';
 import DoublePaneDisplay from 'components/DoublePaneDisplay';
 import { FindingsDetailsCommonFields } from '../utils';
-import { formatNumber } from 'utils/utils';
+import AssetCountDisplay from '../AssetCountDisplay';
 
 const TabPackageDetails = ({data}) => {
-    const {findingInfo, firstSeen, lastSeen, assetCount} = data;
+    const {id, findingInfo, firstSeen, lastSeen} = data;
     const {rootkitName, message} = findingInfo;
 
     return (
@@ -19,9 +19,7 @@ const TabPackageDetails = ({data}) => {
                         <TitleValueDisplay title="Message">{message}</TitleValueDisplay>
                     </TitleValueDisplayRow>
                     <FindingsDetailsCommonFields firstSeen={firstSeen} lastSeen={lastSeen} />
-                    <TitleValueDisplayRow>
-                        <TitleValueDisplay title="Asset count">{formatNumber(assetCount)}</TitleValueDisplay>
-                    </TitleValueDisplayRow>
+                    {AssetCountDisplay(id)}
                 </>
             )}
         />
