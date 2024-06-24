@@ -95,18 +95,18 @@ func (h *binaryRuntimeHandler) Start(ctx context.Context) error {
 		return fmt.Errorf("unable to mount input directory (%s - %s): %w", h.config.InputDir, h.inputDirMountPoint, err)
 	}
 
+	defer func() {
+		if r := recover(); r != nil {
+			syscall.Unmount(h.inputDirMountPoint, 0)
+		}
+	}()
+
 	// https://lwn.net/Articles/281157/
 	// "the read-only attribute can only be added with a remount operation afterward"
 	err = syscall.Mount(h.config.InputDir, h.inputDirMountPoint, "", syscall.MS_BIND|syscall.MS_REMOUNT|syscall.MS_RDONLY, "")
 	if err != nil {
 		return fmt.Errorf("unable to remount input directory as read-only (%s - %s): %w", h.config.InputDir, h.inputDirMountPoint, err)
 	}
-
-	defer func() {
-		if r := recover(); r != nil {
-			syscall.Unmount(h.inputDirMountPoint, 0)
-		}
-	}()
 
 	// Determine entrypoint or command to execute
 	var args []string
