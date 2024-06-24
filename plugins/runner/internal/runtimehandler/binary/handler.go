@@ -101,7 +101,11 @@ func (h *binaryRuntimeHandler) Start(ctx context.Context) error {
 		return fmt.Errorf("unable to remount input directory as read-only (%s - %s): %w", h.config.InputDir, h.inputDirMountPoint, err)
 	}
 
-	// TODO: handle panics - unmount
+	defer func() {
+		if r := recover(); r != nil {
+			syscall.Unmount(h.inputDirMountPoint, 0)
+		}
+	}()
 
 	// Determine entrypoint or command to execute
 	var args []string
