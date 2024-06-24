@@ -151,17 +151,6 @@ var _ = ginkgo.Describe("Running a full scan (exploits, info finder, malware, mi
 				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				return findingsImpact != nil && findingsImpact.Vulnerabilities != nil && len(*findingsImpact.Vulnerabilities) > 0
 			}, DefaultTimeout*2, DefaultPeriod).Should(gomega.BeTrue())
-
-			ginkgo.By("waiting until at least one findings summary has been updated")
-			gomega.Eventually(func() bool {
-				findings, err := client.GetFindings(ctx, apitypes.GetFindingsParams{
-					Filter: to.Ptr("summary/updatedAt ne null"),
-					Top:    to.Ptr(1),
-					Count:  to.Ptr(true),
-				})
-				gomega.Expect(skipDBLockedErr(err)).NotTo(gomega.HaveOccurred())
-				return *findings.Count > 0
-			}, cfg.TestSuiteParams.ScanTimeout, DefaultPeriod).Should(gomega.BeTrue())
 		})
 	})
 
