@@ -47,6 +47,7 @@ type binaryRuntimeHandler struct {
 	inputDirMountPoint   string
 	pluginServerEndpoint string
 	ready                bool
+	imageCleanup         func()
 
 	mu sync.Mutex
 }
@@ -65,7 +66,7 @@ func (h *binaryRuntimeHandler) Start(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("unable to get image(%s): %w", h.config.ImageName, err)
 	}
-	defer cleanup()
+	h.imageCleanup = cleanup
 
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -227,6 +228,10 @@ func (h *binaryRuntimeHandler) Remove(ctx context.Context) error {
 	// Unmount input directory
 	if err := syscall.Unmount(h.inputDirMountPoint, 0); err != nil {
 		removeErr = multierror.Append(removeErr, fmt.Errorf("failed to kill plugin process: %w", err))
+	} else {
+		// Call the cleanup function for the image only after the input directory is unmounted, or else it will also remove
+		// the root filesystem mounted under input
+		h.imageCleanup()
 	}
 
 	return removeErr
