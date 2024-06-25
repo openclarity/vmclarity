@@ -26,7 +26,6 @@ import (
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	discovery "github.com/openclarity/vmclarity/orchestrator/discoverer"
 	assetscanprocessor "github.com/openclarity/vmclarity/orchestrator/processor/assetscan"
-	findingprocessor "github.com/openclarity/vmclarity/orchestrator/processor/finding"
 	assetscanwatcher "github.com/openclarity/vmclarity/orchestrator/watcher/assetscan"
 	assetscanestimationwatcher "github.com/openclarity/vmclarity/orchestrator/watcher/assetscanestimation"
 	scanwatcher "github.com/openclarity/vmclarity/orchestrator/watcher/scan"
@@ -64,7 +63,6 @@ type Config struct {
 	AssetScanEstimationWatcherConfig assetscanestimationwatcher.Config `json:"assetscan-estimation-watcher,omitempty" mapstructure:"assetscan_estimation_watcher"`
 	ScanEstimationWatcherConfig      scanestimationwatcher.Config      `json:"scan-estimation-watcher,omitempty" mapstructure:"scan_estimation_watcher"`
 	AssetScanProcessorConfig         assetscanprocessor.Config         `json:"assetscan-processor,omitempty" mapstructure:"assetscan_processor"`
-	FindingProcessorConfig           findingprocessor.Config           `json:"finding-processor,omitempty" mapstructure:"finding_processor"`
 }
 
 func NewConfig() (*Config, error) {
@@ -167,16 +165,6 @@ func NewConfig() (*Config, error) {
 
 	_ = v.BindEnv("assetscan_processor.reconcile_timeout")
 	v.SetDefault("assetscan_processor.reconcile_timeout", assetscanprocessor.DefaultReconcileTimeout)
-
-	// Finding Processor Controller configuration
-	_ = v.BindEnv("finding_processor.poll_period")
-	v.SetDefault("finding_processor.poll_period", findingprocessor.DefaultPollInterval)
-
-	_ = v.BindEnv("finding_processor.reconcile_timeout")
-	v.SetDefault("finding_processor.reconcile_timeout", findingprocessor.DefaultReconcileTimeout)
-
-	_ = v.BindEnv("finding_processor.summary_refresh_period")
-	v.SetDefault("finding_processor.summary_refresh_period", findingprocessor.DefaultSummaryRefreshPeriod)
 
 	decodeHooks := mapstructure.ComposeDecodeHookFunc(
 		// TextUnmarshallerHookFunc is needed to decode custom types

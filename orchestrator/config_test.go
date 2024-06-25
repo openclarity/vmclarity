@@ -27,7 +27,6 @@ import (
 
 	"github.com/openclarity/vmclarity/orchestrator/discoverer"
 	assetscanprocessor "github.com/openclarity/vmclarity/orchestrator/processor/assetscan"
-	findingprocessor "github.com/openclarity/vmclarity/orchestrator/processor/finding"
 	assetscanwatcher "github.com/openclarity/vmclarity/orchestrator/watcher/assetscan"
 	assetscanestimationwatcher "github.com/openclarity/vmclarity/orchestrator/watcher/assetscanestimation"
 	scanwatcher "github.com/openclarity/vmclarity/orchestrator/watcher/scan"
@@ -141,9 +140,6 @@ func TestConfig(t *testing.T) {
 				"VMCLARITY_ORCHESTRATOR_SCAN_ESTIMATION_WATCHER_ESTIMATION_TIMEOUT":         "23h",
 				"VMCLARITY_ORCHESTRATOR_ASSETSCAN_PROCESSOR_POLL_PERIOD":                    "23s",
 				"VMCLARITY_ORCHESTRATOR_ASSETSCAN_PROCESSOR_RECONCILE_TIMEOUT":              "4m",
-				"VMCLARITY_ORCHESTRATOR_FINDING_PROCESSOR_POLL_PERIOD":                      "59s",
-				"VMCLARITY_ORCHESTRATOR_FINDING_PROCESSOR_RECONCILE_TIMEOUT":                "5m",
-				"VMCLARITY_ORCHESTRATOR_FINDING_PROCESSOR_SUMMARY_REFRESH_PERIOD":           "2m",
 			},
 			ExpectedNewErrorMatcher: Not(HaveOccurred()),
 			ExpectedConfig: &Config{
@@ -192,11 +188,6 @@ func TestConfig(t *testing.T) {
 				AssetScanProcessorConfig: assetscanprocessor.Config{
 					PollPeriod:       23 * time.Second,
 					ReconcileTimeout: 4 * time.Minute,
-				},
-				FindingProcessorConfig: findingprocessor.Config{
-					PollPeriod:           59 * time.Second,
-					ReconcileTimeout:     5 * time.Minute,
-					SummaryRefreshPeriod: 2 * time.Minute,
 				},
 			},
 		},
@@ -250,11 +241,6 @@ func TestConfig(t *testing.T) {
 				AssetScanProcessorConfig: assetscanprocessor.Config{
 					PollPeriod:       assetscanprocessor.DefaultPollInterval,
 					ReconcileTimeout: assetscanprocessor.DefaultReconcileTimeout,
-				},
-				FindingProcessorConfig: findingprocessor.Config{
-					PollPeriod:           findingprocessor.DefaultPollInterval,
-					ReconcileTimeout:     findingprocessor.DefaultReconcileTimeout,
-					SummaryRefreshPeriod: findingprocessor.DefaultSummaryRefreshPeriod,
 				},
 			},
 		},

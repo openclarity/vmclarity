@@ -28,37 +28,14 @@ func (asp *AssetScanProcessor) reconcileResultPluginsToFindings(ctx context.Cont
 		// Create new or update existing findings for all the plugin findings found by
 		// the scan. Note that plugin findings can belong to multiple families.
 		for _, findingInfo := range *assetScan.Plugins.FindingInfos {
-			// Sync plugin finding
-			if err := asp.syncPluginFinding(ctx, assetScan, findingInfo); err != nil {
-				return fmt.Errorf("failed to sync plugin finding: %w", err)
-			}
-
-			// Get plugin finding type
-			discriminator, err := findingInfo.ValueByDiscriminator()
+			id, err := asp.createOrUpdateDBFinding(ctx, &findingInfo, *assetScan.Id, assetScan.Status.LastTransitionTime)
 			if err != nil {
-				return fmt.Errorf("failed to extract plugin finding type: %w", err)
+				return fmt.Errorf("failed to update finding: %w", err)
 			}
 
-			// Process plugin finding further
-			switch info := discriminator.(type) {
-			case apitypes.VulnerabilityFindingInfo:
-				// If a finding is vulnerability and references a package, we also need to sync
-				// that package as a separate finding.
-				if info.Package != nil {
-					// Extract package from vulnerability
-					pkgFindingInfo := apitypes.FindingInfo{}
-					err = pkgFindingInfo.FromPackageFindingInfo(info.Package.ToPackageFindingInfo())
-					if err != nil {
-						return fmt.Errorf("failed to convert vulnerability package: %w", err)
-					}
-
-					// Sync package finding extracted from vulnerability
-					if err := asp.syncPluginFinding(ctx, assetScan, pkgFindingInfo); err != nil {
-						return fmt.Errorf("failed to sync plugin finding: %w", err)
-					}
-				}
-
-			default:
+			err = asp.createOrUpdateDBAssetFinding(ctx, assetScan.Asset.Id, id, assetScan.Status.LastTransitionTime)
+			if err != nil {
+				return fmt.Errorf("failed to update asset finding: %w", err)
 			}
 		}
 	}
@@ -89,20 +66,6 @@ func (asp *AssetScanProcessor) reconcileResultPluginsToFindings(ctx context.Cont
 	// if err != nil {
 	// 	return fmt.Errorf("failed to patch asset %s: %w", assetScan.Asset.Id, err)
 	// }
-
-	return nil
-}
-
-func (asp *AssetScanProcessor) syncPluginFinding(ctx context.Context, assetScan apitypes.AssetScan, findingInfo apitypes.FindingInfo) error {
-	id, err := asp.createOrUpdateDBFinding(ctx, &findingInfo, *assetScan.Id, assetScan.Status.LastTransitionTime)
-	if err != nil {
-		return fmt.Errorf("failed to update finding: %w", err)
-	}
-
-	err = asp.createOrUpdateDBAssetFinding(ctx, assetScan.Asset.Id, id, assetScan.Status.LastTransitionTime)
-	if err != nil {
-		return fmt.Errorf("failed to update asset finding: %w", err)
-	}
 
 	return nil
 }

@@ -26,7 +26,6 @@ import (
 	"github.com/openclarity/vmclarity/core/log"
 	discovery "github.com/openclarity/vmclarity/orchestrator/discoverer"
 	assetscanprocessor "github.com/openclarity/vmclarity/orchestrator/processor/assetscan"
-	findingprocessor "github.com/openclarity/vmclarity/orchestrator/processor/finding"
 	assetscanwatcher "github.com/openclarity/vmclarity/orchestrator/watcher/assetscan"
 	assetscanestimationwatcher "github.com/openclarity/vmclarity/orchestrator/watcher/assetscanestimation"
 	scanwatcher "github.com/openclarity/vmclarity/orchestrator/watcher/scan"
@@ -69,7 +68,6 @@ func NewWithProvider(config *Config, p provider.Provider, c *apiclient.Client) (
 	assetScanProcessorConfig := config.AssetScanProcessorConfig.WithBackendClient(c)
 	assetScanEstimationWatcherConfig := config.AssetScanEstimationWatcherConfig.WithBackendClient(c).WithProviderClient(p)
 	scanEstimationWatcherConfig := config.ScanEstimationWatcherConfig.WithBackendClient(c).WithProviderClient(p)
-	findingProcessorConfig := config.FindingProcessorConfig.WithBackendClient(c).WithProviderClient(p)
 
 	return &Orchestrator{
 		controllers: []Controller{
@@ -80,7 +78,6 @@ func NewWithProvider(config *Config, p provider.Provider, c *apiclient.Client) (
 			assetscanwatcher.New(assetScanWatcherConfig),
 			assetscanestimationwatcher.New(assetScanEstimationWatcherConfig),
 			scanestimationwatcher.New(scanEstimationWatcherConfig),
-			findingprocessor.New(findingProcessorConfig),
 		},
 		controllerStartupDelay: config.ControllerStartupDelay,
 	}, nil

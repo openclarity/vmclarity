@@ -19,8 +19,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
+	"github.com/openclarity/vmclarity/core/to"
 )
 
 type packageExtractorFn func(assetScan apitypes.AssetScan) []apitypes.Package
@@ -40,6 +42,11 @@ func (asp *AssetScanProcessor) reconcileResultPackagesToFindings(ctx context.Con
 		}
 
 		id, err := asp.createOrUpdateDBFinding(ctx, &findingInfo, *assetScan.Id, assetScan.Status.LastTransitionTime)
+		if err != nil {
+			return fmt.Errorf("failed to update finding: %w", err)
+		}
+
+		err = asp.patchPackageFindingSummary(ctx, id, pkg)
 		if err != nil {
 			return fmt.Errorf("failed to update finding: %w", err)
 		}
@@ -78,12 +85,74 @@ func (asp *AssetScanProcessor) reconcileResultPackagesToFindings(ctx context.Con
 	return nil
 }
 
+// nolint:cyclop
+func (asp *AssetScanProcessor) patchPackageFindingSummary(ctx context.Context, findingID apitypes.FindingID, pkg apitypes.Package) error {
+	// Get total vulnerabilities for package
+	critialVuls, err := asp.getPackageVulnerabilitySeverityCount(ctx, pkg, apitypes.CRITICAL)
+	if err != nil {
+		return fmt.Errorf("failed to list critial vulnerabilities: %w", err)
+	}
+	highVuls, err := asp.getPackageVulnerabilitySeverityCount(ctx, pkg, apitypes.HIGH)
+	if err != nil {
+		return fmt.Errorf("failed to list high vulnerabilities: %w", err)
+	}
+	mediumVuls, err := asp.getPackageVulnerabilitySeverityCount(ctx, pkg, apitypes.MEDIUM)
+	if err != nil {
+		return fmt.Errorf("failed to list medium vulnerabilities: %w", err)
+	}
+	lowVuls, err := asp.getPackageVulnerabilitySeverityCount(ctx, pkg, apitypes.LOW)
+	if err != nil {
+		return fmt.Errorf("failed to list low vulnerabilities: %w", err)
+	}
+	negligibleVuls, err := asp.getPackageVulnerabilitySeverityCount(ctx, pkg, apitypes.NEGLIGIBLE)
+	if err != nil {
+		return fmt.Errorf("failed to list negligible vulnerabilities: %w", err)
+	}
+
+	// Patch finding with updated summary
+	if err := asp.client.PatchFinding(ctx, findingID, apitypes.Finding{
+		Id: &findingID,
+		Summary: &apitypes.FindingSummary{
+			UpdatedAt: to.Ptr(time.Now().Format(time.RFC3339)),
+			TotalVulnerabilities: &apitypes.VulnerabilitySeveritySummary{
+				TotalCriticalVulnerabilities:   to.Ptr(critialVuls),
+				TotalHighVulnerabilities:       to.Ptr(highVuls),
+				TotalMediumVulnerabilities:     to.Ptr(mediumVuls),
+				TotalLowVulnerabilities:        to.Ptr(lowVuls),
+				TotalNegligibleVulnerabilities: to.Ptr(negligibleVuls),
+			},
+		},
+	}); err != nil {
+		return fmt.Errorf("failed to patch finding summary: %w", err)
+	}
+
+	return nil
+}
+
+func (asp *AssetScanProcessor) getPackageVulnerabilitySeverityCount(ctx context.Context, pkg apitypes.Package, severity apitypes.VulnerabilitySeverity) (int, error) {
+	findings, err := asp.client.GetFindings(ctx, apitypes.GetFindingsParams{
+		Count: to.Ptr(true),
+		Filter: to.Ptr(fmt.Sprintf(
+			"findingInfo/objectType eq 'Vulnerability' and findingInfo/severity eq '%s' and findingInfo/package/name eq '%s' and findingInfo/package/version eq '%s'",
+			string(severity), to.ValueOrZero(pkg.Name), to.ValueOrZero(pkg.Version)),
+		),
+		// select the smallest amount of data to return in items, we
+		// only care about the count.
+		Top:    to.Ptr(1),
+		Select: to.Ptr("id"),
+	})
+	if err != nil {
+		return 0, fmt.Errorf("failed to list package vulnerability findings: %w", err)
+	}
+
+	return *findings.Count, nil
+}
+
 // withVulnerabilityPackageExtractor returns all package findings from
 // vulnerability scan.
 func withVulnerabilityPackageExtractor(assetScan apitypes.AssetScan) []apitypes.Package {
 	var packages []apitypes.Package
 
-	// extract all packages from vulnerabilities
 	if assetScan.Vulnerabilities != nil && assetScan.Vulnerabilities.Vulnerabilities != nil {
 		for _, vuln := range *assetScan.Vulnerabilities.Vulnerabilities {
 			if vuln.Package == nil {
