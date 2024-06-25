@@ -80,6 +80,8 @@ func (asp *AssetScanProcessor) Reconcile(ctx context.Context, event AssetScanRec
 		}
 	}
 
+	// NOTE: always reconcile vulnerability findings before package findings to
+	// ensure that package finding summaries can be properly updated.
 	if statusCompletedWithNoErrors(assetScan.Sbom.Status) {
 		if err := asp.reconcileResultPackagesToFindings(ctx, assetScan, withSbomPackageExtractor); err != nil {
 			return newFailedToReconcileTypeError(err, "sbom")

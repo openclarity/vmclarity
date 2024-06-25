@@ -25,8 +25,8 @@ import (
 // nolint:cyclop
 func (asp *AssetScanProcessor) reconcileResultPluginsToFindings(ctx context.Context, assetScan apitypes.AssetScan) error {
 	if assetScan.Plugins != nil && assetScan.Plugins.FindingInfos != nil {
-		// Create new or update existing findings for all the plugin findings found by
-		// the scan. Note that plugin findings can belong to multiple families.
+		// Create new or update existing findings for all the plugin findings found by the
+		// scan. Note that plugin findings can belong to multiple families.
 		for _, findingInfo := range *assetScan.Plugins.FindingInfos {
 			id, err := asp.createOrUpdateDBFinding(ctx, &findingInfo, *assetScan.Id, assetScan.Status.LastTransitionTime)
 			if err != nil {
