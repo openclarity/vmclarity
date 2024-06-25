@@ -41,8 +41,8 @@ const PackagesTable = () => {
                 )
             }
         },
-        ...getScanColumnsConfigList(),
         getVulnerabilitiesColumnConfigItem("package"),
+        ...getScanColumnsConfigList(),
     ], []);
 
     return (
