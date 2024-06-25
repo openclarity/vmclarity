@@ -85,7 +85,7 @@ func (h *binaryRuntimeHandler) Start(ctx context.Context) error {
 	// Mount input from host
 	// /home/ubuntu/.vmclarity/plugins/kics/<id> + /input + /host-dir-to-scan
 	h.inputDirMountPoint = filepath.Join(h.pluginDir, runtimehandler.RemoteScanInputDirOverride, h.config.InputDir)
-	err = os.MkdirAll(h.inputDirMountPoint, 0440)
+	err = os.MkdirAll(h.inputDirMountPoint, 0550)
 	if err != nil {
 		return fmt.Errorf("unable to create directory for mount point: %w", err)
 	}
