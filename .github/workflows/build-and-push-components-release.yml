@@ -6,12 +6,12 @@ on:
       image_tag:
         required: true
         type: string
-        description: 'Image tag to build and push.'
+        description: 'Image tag to use.'
       registry_name:
         required: false
         type: string
-        description: 'Name of the image to publish'
-        default: ghcr.io/wewanttocontributetovmclarity
+        description: 'Name of the registry.'
+        default: ghcr.io/openclarity
       bake-group:
         required: false
         type: string
