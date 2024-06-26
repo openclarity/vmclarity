@@ -123,7 +123,7 @@ malware:
 
       clam_daemon_mode: false
       clam_daemon_binary_path: clamd
-      clam_daemon_config_path: /path/to/clamd.conf
+      # clam_daemon_config_path: /path/to/clamd.conf
       clam_daemon_client_binary_path: clamdscan
 
 rootkits:
