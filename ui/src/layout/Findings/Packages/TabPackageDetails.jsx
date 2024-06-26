@@ -22,7 +22,7 @@ const TabPackageDetails = ({data}) => {
             type: FILTER_TYPES.FINDINGS_VULNERABILITIES,
             filters: {
                 filter: `findingInfo/package/name eq '${name}' and findingInfo/package/version eq '${version}'`,
-                name: `Vulnerabilities for Package ${id}`,
+                name: `Package ${id}`,
                 suffix: "finding",
                 backPath: pathname
             },
