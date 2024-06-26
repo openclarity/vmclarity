@@ -4,14 +4,13 @@ import DoublePaneDisplay from 'components/DoublePaneDisplay';
 import { FindingsDetailsCommonFields } from '../utils';
 import Title from "../../../components/Title/index.jsx";
 import LinksList from "../../../components/LinksList/index.jsx";
-import {useLocation, useNavigate} from "react-router-dom";
+import {useLocation} from "react-router-dom";
 import {FILTER_TYPES, setFilters, useFilterDispatch} from "../../../context/FiltersProvider.js";
 import {ROUTES} from "../../../utils/systemConsts.js";
 import VulnerabilitiesDisplay from "../../../components/VulnerabilitiesDisplay/index.jsx";
 
 const TabPackageDetails = ({data}) => {
     const {pathname} = useLocation();
-    const navigate = useNavigate();
     const filtersDispatch = useFilterDispatch();
 
     const {id, findingInfo, firstSeen, lastSeen, summary} = data;
@@ -29,8 +28,6 @@ const TabPackageDetails = ({data}) => {
             },
             isSystem: true
         });
-
-        navigate(ROUTES.FINDINGS);
     }
 
     return (
@@ -54,7 +51,7 @@ const TabPackageDetails = ({data}) => {
                     <LinksList
                         items={[
                             {
-                                path: pathname,
+                                path: ROUTES.FINDINGS,
                                 component: () => <VulnerabilitiesDisplay counters={totalVulnerabilities} />,
                                 callback: onVulnerabilitiesClick
                             }
