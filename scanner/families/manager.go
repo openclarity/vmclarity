@@ -13,12 +13,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// TODO(ramizpolic): improve runner usage and workflow clarity
+
 package families
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/openclarity/vmclarity/workflow"
+	workflowtypes "github.com/openclarity/vmclarity/workflow/types"
 
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/families/exploits"
@@ -37,58 +41,6 @@ import (
 	"github.com/openclarity/vmclarity/utils/fsutils/containerrootfs"
 )
 
-type Manager struct {
-	config   *Config
-	families []interfaces.Family
-}
-
-func New(config *Config) *Manager {
-	manager := &Manager{
-		config: config,
-	}
-
-	// Analyzers.
-	// SBOM MUST come before vulnerabilities.
-	if config.SBOM.Enabled {
-		manager.families = append(manager.families, sbom.New(config.SBOM))
-	}
-
-	// Scanners.
-	// Vulnerabilities MUST be after SBOM to support the case it is configured to use the output from sbom.
-	if config.Vulnerabilities.Enabled {
-		manager.families = append(manager.families, vulnerabilities.New(config.Vulnerabilities))
-	}
-	if config.Secrets.Enabled {
-		manager.families = append(manager.families, secrets.New(config.Secrets))
-	}
-	if config.Rootkits.Enabled {
-		manager.families = append(manager.families, rootkits.New(config.Rootkits))
-	}
-	if config.Malware.Enabled {
-		manager.families = append(manager.families, malware.New(config.Malware))
-	}
-	if config.Misconfiguration.Enabled {
-		manager.families = append(manager.families, misconfiguration.New(config.Misconfiguration))
-	}
-	if config.InfoFinder.Enabled {
-		manager.families = append(manager.families, infofinder.New(config.InfoFinder))
-	}
-
-	// Enrichers.
-	// Exploits MUST be after Vulnerabilities to support the case it is configured to use the output from Vulnerabilities.
-	if config.Exploits.Enabled {
-		manager.families = append(manager.families, exploits.New(config.Exploits))
-	}
-
-	if config.Plugins.Enabled {
-		manager.families = append(manager.families, plugins.New(config.Plugins))
-	}
-
-	return manager
-}
-
-type RunErrors map[types.FamilyType]error
-
 type FamilyResult struct {
 	Result     interfaces.IsResults
 	FamilyType types.FamilyType
@@ -100,13 +52,90 @@ type FamilyNotifier interface {
 	FamilyFinished(ctx context.Context, res FamilyResult) error
 }
 
+type Manager struct {
+	config *Config
+	tasks  []workflowtypes.Task[runner]
+}
+
+func New(config *Config) *Manager {
+	manager := &Manager{
+		config: config,
+	}
+
+	// Analyzers
+	if config.SBOM.Enabled {
+		manager.tasks = append(manager.tasks, workflowtypes.Task[runner]{
+			Name: "sbom",
+			Fn:   withFamilyRunner(sbom.New(config.SBOM)),
+		})
+	}
+
+	// Scanners
+	if config.Vulnerabilities.Enabled {
+		manager.tasks = append(manager.tasks, workflowtypes.Task[runner]{
+			Name: "vulnerabilities",
+			// must run after SBOM to support the case when configured to use the output from sbom
+			Deps: []string{"sbom"},
+			Fn:   withFamilyRunner(vulnerabilities.New(config.Vulnerabilities)),
+		})
+	}
+	if config.Secrets.Enabled {
+		manager.tasks = append(manager.tasks, workflowtypes.Task[runner]{
+			Name: "secrets",
+			Fn:   withFamilyRunner(secrets.New(config.Secrets)),
+		})
+	}
+	if config.Rootkits.Enabled {
+		manager.tasks = append(manager.tasks, workflowtypes.Task[runner]{
+			Name: "rootkits",
+			Fn:   withFamilyRunner(rootkits.New(config.Rootkits)),
+		})
+	}
+	if config.Malware.Enabled {
+		manager.tasks = append(manager.tasks, workflowtypes.Task[runner]{
+			Name: "malware",
+			Fn:   withFamilyRunner(malware.New(config.Malware)),
+		})
+	}
+	if config.Misconfiguration.Enabled {
+		manager.tasks = append(manager.tasks, workflowtypes.Task[runner]{
+			Name: "misconfiguration",
+			Fn:   withFamilyRunner(misconfiguration.New(config.Misconfiguration)),
+		})
+	}
+	if config.InfoFinder.Enabled {
+		manager.tasks = append(manager.tasks, workflowtypes.Task[runner]{
+			Name: "infofinder",
+			Fn:   withFamilyRunner(infofinder.New(config.InfoFinder)),
+		})
+	}
+	if config.Plugins.Enabled {
+		manager.tasks = append(manager.tasks, workflowtypes.Task[runner]{
+			Name: "plugins",
+			Fn:   withFamilyRunner(plugins.New(config.Plugins)),
+		})
+	}
+
+	// Enrichers.
+	if config.Exploits.Enabled {
+		manager.tasks = append(manager.tasks, workflowtypes.Task[runner]{
+			Name: "exploits",
+			// must run after Vulnerabilities to support the case when configured to use the output from Vulnerabilities
+			Deps: []string{"vulnerabilities"},
+			Fn:   withFamilyRunner(exploits.New(config.Exploits)),
+		})
+	}
+
+	return manager
+}
+
 func (m *Manager) Run(ctx context.Context, notifier FamilyNotifier) []error {
 	var oneOrMoreFamilyFailed bool
 	var errs []error
-	familyResults := results.New()
 
 	logger := log.GetLoggerFromContextOrDiscard(ctx)
 
+	// Register container cache
 	utils.ContainerRootfsCache = containerrootfs.NewCache()
 	defer func() {
 		err := utils.ContainerRootfsCache.CleanupAll()
@@ -115,53 +144,117 @@ func (m *Manager) Run(ctx context.Context, notifier FamilyNotifier) []error {
 		}
 	}()
 
-	for _, family := range m.families {
-		if err := notifier.FamilyStarted(ctx, family.GetType()); err != nil {
-			errs = append(errs, fmt.Errorf("family started notification failed: %w", err))
+	// Define channel to use to listen for processing errors
+	errCh := make(chan error)
+
+	// Run task processor in the background
+	go func() {
+		// Close error channel to allow listener to exit properly
+		defer close(errCh)
+
+		// Create families processor
+		processor, err := workflow.New[runner, workflowtypes.Task[runner]](m.tasks)
+		if err != nil {
+			errCh <- fmt.Errorf("failed to create families processor: %w", err)
+			return
+		}
+
+		// Run families processor
+		if err := processor.Run(ctx, runner{
+			Notifier: notifier,
+			Results:  results.New(),
+			ErrCh:    errCh,
+		}); err != nil {
+			errCh <- fmt.Errorf("failed to run families processor: %w", err)
+			return
+		}
+	}()
+
+	// Listen for processing errors
+	for err := range errCh {
+		if err == nil {
 			continue
 		}
 
-		result := make(chan FamilyResult)
-		go func() {
-			ret, err := family.Run(ctx, familyResults)
-			result <- FamilyResult{
-				Result:     ret,
-				Err:        err,
-				FamilyType: family.GetType(),
-			}
-		}()
+		// Join processing errors
+		errs = append(errs, err)
 
-		select {
-		case <-ctx.Done():
-			go func() {
-				<-result
-				close(result)
-			}()
+		// Check if family failed
+		var familyErr *runnerFamilyRunError
+		if errors.As(err, &familyErr) {
 			oneOrMoreFamilyFailed = true
-			if err := notifier.FamilyFinished(ctx, FamilyResult{
-				Result:     nil,
-				FamilyType: family.GetType(),
-				Err:        fmt.Errorf("failed to run family %v: aborted", family.GetType()),
-			}); err != nil {
-				errs = append(errs, fmt.Errorf("family finished notification failed: %w", err))
-			}
-		case r := <-result:
-			logger.Debugf("received result from family %q: %v", family.GetType(), r)
-			if r.Err != nil {
-				logger.Errorf("received error result from family %q: %v", family.GetType(), r.Err)
-				oneOrMoreFamilyFailed = true
-			} else {
-				familyResults.SetResults(r.Result)
-			}
-			if err := notifier.FamilyFinished(ctx, r); err != nil {
-				errs = append(errs, fmt.Errorf("family finished notification failed: %w", err))
-			}
-			close(result)
 		}
 	}
 
 	if oneOrMoreFamilyFailed {
 		errs = append(errs, errors.New("at least one family failed to run"))
 	}
+
 	return errs
+}
+
+// withFamilyRunner returns a function that will handle workflow execution for
+// the given family using provided runner.
+func withFamilyRunner(family interfaces.Family) func(context.Context, runner) error {
+	return func(ctx context.Context, runner runner) error {
+		// NOTE(ramizpolic): We do not return errors at all as returning an error in
+		// workflow function will cancel the whole execution. This is problematic as
+		// other families could still be able to run. Instead, we write all execution
+		// errors to a channel.
+		runner.Run(ctx, family)
+		return nil
+	}
+}
+
+type runner struct {
+	Notifier FamilyNotifier
+	Results  *results.Results
+	ErrCh    chan<- error
+}
+
+func (r *runner) Run(ctx context.Context, family interfaces.Family) {
+	logger := log.GetLoggerFromContextOrDiscard(ctx)
+
+	// Notify about start, return preemptively if it fails
+	if err := r.Notifier.FamilyStarted(ctx, family.GetType()); err != nil {
+		r.ErrCh <- fmt.Errorf("family started notification failed: %w", err)
+		return
+	}
+
+	// Run family
+	result, err := family.Run(ctx, r.Results)
+	familyResult := FamilyResult{
+		Result:     result,
+		FamilyType: family.GetType(),
+		Err:        err,
+	}
+
+	// Handle family result depending on returned data
+	logger.Debugf("Received result from family %q: %v", family.GetType(), familyResult)
+	if err != nil {
+		logger.Errorf("Received error result from family %q: %v", family.GetType(), err)
+
+		// Submit run error so that we can check if the errors on channel are from
+		// notifiers or from the actual family run
+		r.ErrCh <- &runnerFamilyRunError{
+			Family: family.GetType(),
+			Err:    err,
+		}
+	} else {
+		r.Results.SetResults(result)
+	}
+
+	// Notify about finish
+	if err := r.Notifier.FamilyFinished(ctx, familyResult); err != nil {
+		r.ErrCh <- fmt.Errorf("family finished notification failed: %w", err)
+	}
+}
+
+type runnerFamilyRunError struct {
+	Family types.FamilyType
+	Err    error
+}
+
+func (e *runnerFamilyRunError) Error() string {
+	return fmt.Sprintf("family %s finished with error: %v", e.Family, e.Err)
 }

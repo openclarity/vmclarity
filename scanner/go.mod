@@ -27,6 +27,7 @@ require (
 	github.com/openclarity/vmclarity/plugins/runner v0.7.2
 	github.com/openclarity/vmclarity/plugins/sdk-go v0.7.2
 	github.com/openclarity/vmclarity/utils v0.7.2
+	github.com/openclarity/vmclarity/workflow v0.7.2
 	github.com/openclarity/yara-rule-server v0.3.0
 	github.com/package-url/packageurl-go v0.1.3
 	github.com/samber/slog-logrus/v2 v2.3.0
@@ -480,6 +481,7 @@ replace github.com/mholt/archiver/v3 v3.5.1 => github.com/anchore/archiver/v3 v3
 replace (
 	github.com/openclarity/vmclarity/api/types => ../api/types
 	github.com/openclarity/vmclarity/core => ../core
+	github.com/openclarity/vmclarity/workflow => ../workflow
 	github.com/openclarity/vmclarity/plugins/runner => ../plugins/runner
 	github.com/openclarity/vmclarity/plugins/sdk-go => ../plugins/sdk-go
 	github.com/openclarity/vmclarity/utils => ../utils
