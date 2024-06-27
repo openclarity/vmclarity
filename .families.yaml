@@ -17,6 +17,9 @@ sbom:
     analyzer:
       output_format: "cyclonedx-json"
       scope: "Squashed"
+      exclude_paths:
+        - "/dev"
+        - "/proc"
       trivy_config:
         timeout: 300
     registry:

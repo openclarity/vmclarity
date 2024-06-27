@@ -65,7 +65,10 @@ func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInp
 	source, err := syft.GetSource(
 		ctx,
 		userInput,
-		syft.DefaultGetSourceConfig().WithSources(src).WithRegistryOptions(a.config.RegistryOptions),
+		syft.DefaultGetSourceConfig().
+			WithSources(src).
+			WithRegistryOptions(a.config.RegistryOptions).
+			WithExcludeConfig(a.config.ExcludePaths),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create source analyzer=%s: %w", a.name, err)
