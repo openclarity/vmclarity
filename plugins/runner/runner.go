@@ -55,7 +55,7 @@ func New(ctx context.Context, config types.PluginConfig) (types.PluginRunner, er
 func (r *pluginRunner) Start(ctx context.Context) error {
 	go func(ctx context.Context) {
 		<-ctx.Done()
-		r.Remove(ctx)
+		r.Remove(ctx) //nolint:errcheck
 	}(ctx)
 
 	if err := r.runtimeHandler.Start(ctx); err != nil {

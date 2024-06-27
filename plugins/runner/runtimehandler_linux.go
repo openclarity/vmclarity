@@ -30,7 +30,6 @@ import (
 func getPluginRuntimeHandler(ctx context.Context, config types.PluginConfig) (runtimehandler.PluginRuntimeHandler, error) {
 	if config.BinaryMode {
 		handler, err := binary.New(ctx, config)
-
 		if err != nil {
 			return nil, fmt.Errorf("unable to initialize binary runtime handler: %w", err)
 		}

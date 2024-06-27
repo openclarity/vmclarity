@@ -20,6 +20,7 @@ package binary
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -30,6 +31,7 @@ import (
 	"syscall"
 
 	multierror "github.com/hashicorp/go-multierror"
+
 	"github.com/openclarity/vmclarity/plugins/runner/internal/runtimehandler"
 	"github.com/openclarity/vmclarity/plugins/runner/types"
 	"github.com/openclarity/vmclarity/plugins/sdk-go/plugin"
@@ -58,6 +60,7 @@ func New(ctx context.Context, config types.PluginConfig) (runtimehandler.PluginR
 	}, nil
 }
 
+//nolint:cyclop
 func (h *binaryRuntimeHandler) Start(ctx context.Context) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -85,7 +88,7 @@ func (h *binaryRuntimeHandler) Start(ctx context.Context) error {
 	// Mount input from host
 	// /home/ubuntu/.vmclarity/plugins/kics/<id> + /input + /host-dir-to-scan
 	h.inputDirMountPoint = filepath.Join(h.pluginDir, runtimehandler.RemoteScanInputDirOverride, h.config.InputDir)
-	err = os.MkdirAll(h.inputDirMountPoint, 0550)
+	err = os.MkdirAll(h.inputDirMountPoint, 0o550) //nolint:mnd
 	if err != nil {
 		return fmt.Errorf("unable to create directory for mount point: %w", err)
 	}
@@ -97,7 +100,7 @@ func (h *binaryRuntimeHandler) Start(ctx context.Context) error {
 
 	defer func() {
 		if r := recover(); r != nil {
-			syscall.Unmount(h.inputDirMountPoint, 0)
+			syscall.Unmount(h.inputDirMountPoint, 0) //nolint:errcheck
 		}
 	}()
 
@@ -115,15 +118,15 @@ func (h *binaryRuntimeHandler) Start(ctx context.Context) error {
 	} else if len(image.Metadata.Config.Config.Cmd) > 0 {
 		args = image.Metadata.Config.Config.Cmd[0:]
 	} else {
-		return fmt.Errorf("no entrypoint or command found in the config")
+		return errors.New("no entrypoint or command found in the config")
 	}
 
 	// Find a port
-	openPortListener, err := net.Listen("tcp", ":0")
+	openPortListener, err := net.Listen("tcp", ":0") //nolint:gosec
 	if err != nil {
-		return fmt.Errorf("unable to find port")
+		return errors.New("unable to find port")
 	}
-	port := openPortListener.Addr().(*net.TCPAddr).Port
+	port := openPortListener.Addr().(*net.TCPAddr).Port //nolint:forcetypeassert
 
 	h.pluginServerEndpoint = fmt.Sprintf("http://127.0.0.1:%d", port)
 
@@ -138,7 +141,7 @@ func (h *binaryRuntimeHandler) Start(ctx context.Context) error {
 	}
 
 	// Initialize command
-	h.cmd = exec.CommandContext(ctx, args[0], args[1:]...)
+	h.cmd = exec.CommandContext(ctx, args[0], args[1:]...) //nolint:gosec
 	h.cmd.Env = env
 	h.cmd.Dir = workDir
 
@@ -166,7 +169,7 @@ func (h *binaryRuntimeHandler) Start(ctx context.Context) error {
 
 	// Waiting for command to be finished in the background
 	go func() {
-		h.cmd.Wait()
+		h.cmd.Wait() //nolint:errcheck
 	}()
 
 	h.ready = true
@@ -176,7 +179,7 @@ func (h *binaryRuntimeHandler) Start(ctx context.Context) error {
 
 func (h *binaryRuntimeHandler) Ready() (bool, error) {
 	if h.cmd == nil {
-		return false, fmt.Errorf("plugin process is not running")
+		return false, errors.New("plugin process is not running")
 	}
 
 	return h.ready, nil
@@ -188,18 +191,18 @@ func (h *binaryRuntimeHandler) GetPluginServerEndpoint(ctx context.Context) (str
 
 func (h *binaryRuntimeHandler) Logs(ctx context.Context) (io.ReadCloser, error) {
 	if h.cmd == nil {
-		return nil, fmt.Errorf("plugin process is not running")
+		return nil, errors.New("plugin process is not running")
 	}
 
 	stdoutPipeReader, stdoutPipeWriter := io.Pipe()
 	stderrPipeReader, stderrPipeWriter := io.Pipe()
 
 	go func() {
-		io.Copy(stdoutPipeWriter, h.stdoutPipe)
+		io.Copy(stdoutPipeWriter, h.stdoutPipe) //nolint:errcheck
 	}()
 
 	go func() {
-		io.Copy(stderrPipeWriter, h.stderrPipe)
+		io.Copy(stderrPipeWriter, h.stderrPipe) //nolint:errcheck
 	}()
 
 	return io.NopCloser(io.MultiReader(stdoutPipeReader, stderrPipeReader)), nil
@@ -218,7 +221,7 @@ func (h *binaryRuntimeHandler) Remove(ctx context.Context) error {
 	var removeErr error
 
 	if h.cmd.ProcessState != nil {
-		if h.cmd.ProcessState.Exited() == false {
+		if !h.cmd.ProcessState.Exited() {
 			if err := h.cmd.Process.Kill(); err != nil {
 				removeErr = multierror.Append(removeErr, fmt.Errorf("failed to kill plugin process: %w", err))
 			}
@@ -234,5 +237,5 @@ func (h *binaryRuntimeHandler) Remove(ctx context.Context) error {
 		h.imageCleanup()
 	}
 
-	return removeErr
+	return removeErr //nolint:wrapcheck
 }
