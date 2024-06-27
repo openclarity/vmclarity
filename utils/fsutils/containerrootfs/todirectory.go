@@ -44,7 +44,7 @@ func GetImageWithCleanup(ctx context.Context, src string) (*image.Image, func(),
 	cleanup := func() {
 		err := image.Cleanup()
 		if err != nil {
-			logger.WithError(err).Error(fmt.Sprintf("unable to clean up extracted image %s", src))
+			logger.WithError(err).Error("unable to clean up extracted image ", src)
 		}
 	}
 
