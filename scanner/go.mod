@@ -246,6 +246,7 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.20.1 // indirect
+	github.com/heimdalr/dag v1.4.0 // indirect
 	github.com/huandu/xstrings v1.4.0 // indirect
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
@@ -481,8 +482,8 @@ replace github.com/mholt/archiver/v3 v3.5.1 => github.com/anchore/archiver/v3 v3
 replace (
 	github.com/openclarity/vmclarity/api/types => ../api/types
 	github.com/openclarity/vmclarity/core => ../core
-	github.com/openclarity/vmclarity/workflow => ../workflow
 	github.com/openclarity/vmclarity/plugins/runner => ../plugins/runner
 	github.com/openclarity/vmclarity/plugins/sdk-go => ../plugins/sdk-go
 	github.com/openclarity/vmclarity/utils => ../utils
+	github.com/openclarity/vmclarity/workflow => ../workflow
 )
