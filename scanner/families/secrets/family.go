@@ -18,8 +18,6 @@ package secrets
 import (
 	"context"
 	"fmt"
-	"time"
-
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/families/interfaces"
 	familiesresults "github.com/openclarity/vmclarity/scanner/families/results"
@@ -28,7 +26,6 @@ import (
 	"github.com/openclarity/vmclarity/scanner/families/types"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
 	"github.com/openclarity/vmclarity/scanner/job_manager"
-	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
 type Secrets struct {
@@ -40,35 +37,33 @@ func (s Secrets) Run(ctx context.Context, _ *familiesresults.Results) (interface
 	logger.Info("Secrets Run...")
 
 	manager := job_manager.New(s.conf.ScannersList, s.conf.ScannersConfig, logger, job.Factory)
+	processResults, err := manager.Process(ctx, s.conf.Inputs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to process inputs for secrets: %w", err)
+	}
+
 	mergedResults := NewMergedResults()
 
 	var secretsResults Results
-	for _, input := range s.conf.Inputs {
-		startTime := time.Now()
-		results, err := manager.Run(ctx, utils.SourceType(input.InputType), input.Input)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan input %q for secrets: %w", input.Input, err)
-		}
-		endTime := time.Now()
-		inputSize, err := familiesutils.GetInputSize(input)
-		if err != nil {
-			logger.Warnf("Failed to calculate input %v size: %v", input, err)
-		}
 
-		// Merge results.
-		for name, result := range results {
-			secretResult := result.(*common.Results) // nolint:forcetypeassert
-			if familiesutils.ShouldStripInputPath(input.StripPathFromResult, s.conf.StripInputPaths) {
-				secretResult = StripPathFromResult(secretResult, input.Input)
-			}
-			logger.Infof("Merging result from %q", name)
-			mergedResults = mergedResults.Merge(secretResult)
+	// Merge results.
+	for _, result := range processResults {
+		logger.Infof("Merging result from %q", result.ScannerName)
+		secretResult, ok := result.Result.(*common.Results)
+		if !ok {
+			return nil, fmt.Errorf("received results of a wrong type: %T", result)
 		}
-		secretsResults.Metadata.InputScans = append(secretsResults.Metadata.InputScans, types.CreateInputScanMetadata(startTime, endTime, inputSize, input))
+		if familiesutils.ShouldStripInputPath(result.Input.StripPathFromResult, s.conf.StripInputPaths) {
+			secretResult = StripPathFromResult(secretResult, result.InputPath)
+		}
+		mergedResults = mergedResults.Merge(secretResult)
+		secretsResults.Metadata.InputScans = append(secretsResults.Metadata.InputScans, result.InputScanMetadata)
 	}
 
-	logger.Info("Secrets Done...")
 	secretsResults.MergedResults = mergedResults
+
+	logger.Info("Secrets Done...")
+
 	return &secretsResults, nil
 }
 

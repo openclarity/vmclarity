@@ -18,8 +18,6 @@ package rootkits
 import (
 	"context"
 	"fmt"
-	"time"
-
 	"github.com/openclarity/vmclarity/core/log"
 	familiesinterface "github.com/openclarity/vmclarity/scanner/families/interfaces"
 	familiesresults "github.com/openclarity/vmclarity/scanner/families/results"
@@ -28,7 +26,6 @@ import (
 	"github.com/openclarity/vmclarity/scanner/families/types"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
 	"github.com/openclarity/vmclarity/scanner/job_manager"
-	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
 type Rootkits struct {
@@ -40,35 +37,32 @@ func (r Rootkits) Run(ctx context.Context, _ *familiesresults.Results) (families
 	logger.Info("Rootkits Run...")
 
 	manager := job_manager.New(r.conf.ScannersList, r.conf.ScannersConfig, logger, job.Factory)
-	mergedResults := NewMergedResults()
-
-	var rootkitsResults Results
-	for _, input := range r.conf.Inputs {
-		startTime := time.Now()
-		results, err := manager.Run(ctx, utils.SourceType(input.InputType), input.Input)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan input %q for rootkits: %w", input.Input, err)
-		}
-		endTime := time.Now()
-		inputSize, err := familiesutils.GetInputSize(input)
-		if err != nil {
-			logger.Warnf("Failed to calculate input %v size: %v", input, err)
-		}
-
-		// Merge results.
-		for name, result := range results {
-			logger.Infof("Merging result from %q", name)
-			scannerResult := result.(*common.Results) // nolint:forcetypeassert
-			if familiesutils.ShouldStripInputPath(input.StripPathFromResult, r.conf.StripInputPaths) {
-				scannerResult = StripPathFromResult(scannerResult, input.Input)
-			}
-			mergedResults = mergedResults.Merge(scannerResult)
-		}
-		rootkitsResults.Metadata.InputScans = append(rootkitsResults.Metadata.InputScans, types.CreateInputScanMetadata(startTime, endTime, inputSize, input))
+	processResults, err := manager.Process(ctx, r.conf.Inputs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to process inputs for rootkits: %w", err)
 	}
 
-	logger.Info("Rootkits Done...")
+	mergedResults := NewMergedResults()
+	var rootkitsResults Results
+
+	// Merge results.
+	for _, result := range processResults {
+		logger.Infof("Merging result from %q", result.ScannerName)
+		data, ok := result.Result.(*common.Results)
+		if !ok {
+			return nil, fmt.Errorf("received results of a wrong type: %T", result)
+		}
+		if familiesutils.ShouldStripInputPath(result.Input.StripPathFromResult, r.conf.StripInputPaths) {
+			data = StripPathFromResult(data, result.InputPath)
+		}
+		mergedResults = mergedResults.Merge(data)
+		rootkitsResults.Metadata.InputScans = append(rootkitsResults.Metadata.InputScans, result.InputScanMetadata)
+	}
+
 	rootkitsResults.MergedResults = mergedResults
+
+	logger.Info("Rootkits Done...")
+
 	return &rootkitsResults, nil
 }
 

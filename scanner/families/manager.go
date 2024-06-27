@@ -72,10 +72,15 @@ func New(config *Config) *Manager {
 
 	// Scanners
 	if config.Vulnerabilities.Enabled {
+		// must run after SBOM to support the case when configured to use the output from sbom
+		var deps []string
+		if config.SBOM.Enabled {
+			deps = append(deps, "sbom")
+		}
+
 		manager.tasks = append(manager.tasks, workflowtypes.Task[runner]{
 			Name: "vulnerabilities",
-			// must run after SBOM to support the case when configured to use the output from sbom
-			Deps: []string{"sbom"},
+			Deps: deps,
 			Fn:   withFamilyRunner(vulnerabilities.New(config.Vulnerabilities)),
 		})
 	}
@@ -118,10 +123,15 @@ func New(config *Config) *Manager {
 
 	// Enrichers.
 	if config.Exploits.Enabled {
+		// must run after Vulnerabilities to support the case when configured to use the output from Vulnerabilities
+		var deps []string
+		if config.Vulnerabilities.Enabled {
+			deps = append(deps, "vulnerabilities")
+		}
+
 		manager.tasks = append(manager.tasks, workflowtypes.Task[runner]{
 			Name: "exploits",
-			// must run after Vulnerabilities to support the case when configured to use the output from Vulnerabilities
-			Deps: []string{"vulnerabilities"},
+			Deps: deps,
 			Fn:   withFamilyRunner(exploits.New(config.Exploits)),
 		})
 	}
@@ -176,13 +186,12 @@ func (m *Manager) Run(ctx context.Context, notifier FamilyNotifier) []error {
 			continue
 		}
 
-		// Join processing errors
-		errs = append(errs, err)
-
-		// Check if family failed
+		// Check if family run failed, otherwise add the error to slice
 		var familyErr *runnerFamilyRunError
 		if errors.As(err, &familyErr) {
 			oneOrMoreFamilyFailed = true
+		} else {
+			errs = append(errs, err)
 		}
 	}
 

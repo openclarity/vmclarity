@@ -18,8 +18,6 @@ package infofinder
 import (
 	"context"
 	"fmt"
-	"time"
-
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/families/infofinder/job"
 	infofinderTypes "github.com/openclarity/vmclarity/scanner/families/infofinder/types"
@@ -28,7 +26,6 @@ import (
 	"github.com/openclarity/vmclarity/scanner/families/types"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
 	"github.com/openclarity/vmclarity/scanner/job_manager"
-	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
 type InfoFinder struct {
@@ -39,34 +36,26 @@ func (i InfoFinder) Run(ctx context.Context, _ *results.Results) (interfaces.IsR
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "info finder")
 	logger.Info("InfoFinder Run...")
 
+	manager := job_manager.New(i.conf.ScannersList, i.conf.ScannersConfig, logger, job.Factory)
+	processResults, err := manager.Process(ctx, i.conf.Inputs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to process inputs for infofinders: %w", err)
+	}
+
 	infoFinderResults := NewResults()
 
-	manager := job_manager.New(i.conf.ScannersList, i.conf.ScannersConfig, logger, job.Factory)
-	for _, input := range i.conf.Inputs {
-		startTime := time.Now()
-		managerResults, err := manager.Run(ctx, utils.SourceType(input.InputType), input.Input)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan input %q for info: %w", input.Input, err)
-		}
-		endTime := time.Now()
-		inputSize, err := familiesutils.GetInputSize(input)
-		if err != nil {
-			logger.Warnf("Failed to calculate input %v size: %v", input, err)
-		}
-
-		// Merge results.
-		for name, result := range managerResults {
-			logger.Infof("Merging result from %q", name)
-			if assetScan, ok := result.(*infofinderTypes.ScannerResult); ok {
-				if familiesutils.ShouldStripInputPath(input.StripPathFromResult, i.conf.StripInputPaths) {
-					assetScan = stripPathFromResult(assetScan, input.Input)
-				}
-				infoFinderResults.AddScannerResult(assetScan)
-			} else {
-				return nil, fmt.Errorf("received bad scanner result type %T, expected infofinderTypes.ScannerResult", result)
+	// Merge results.
+	for _, result := range processResults {
+		logger.Infof("Merging result from %q", result.ScannerName)
+		if assetScan, ok := result.Result.(*infofinderTypes.ScannerResult); ok {
+			if familiesutils.ShouldStripInputPath(result.Input.StripPathFromResult, i.conf.StripInputPaths) {
+				assetScan = stripPathFromResult(assetScan, result.InputPath)
 			}
+			infoFinderResults.AddScannerResult(assetScan)
+		} else {
+			return nil, fmt.Errorf("received bad scanner result type %T, expected infofinderTypes.ScannerResult", result)
 		}
-		infoFinderResults.Metadata.InputScans = append(infoFinderResults.Metadata.InputScans, types.CreateInputScanMetadata(startTime, endTime, inputSize, input))
+		infoFinderResults.Metadata.InputScans = append(infoFinderResults.Metadata.InputScans, result.InputScanMetadata)
 	}
 
 	logger.Info("InfoFinder Done...")
