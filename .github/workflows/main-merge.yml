@@ -16,6 +16,6 @@ jobs:
 
   build-and-push:
     needs: verification
-    uses: ./.github/workflows/build-and-push-components-release.yml
+    uses: ./.github/workflows/build-and-push-components-registry.yml
     with:
       image_tag: latest

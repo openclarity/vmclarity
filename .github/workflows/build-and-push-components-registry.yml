@@ -1,4 +1,4 @@
-name: Build and Push Components Release
+name: Build and Push Components Registry
 
 on:
   workflow_call:
@@ -12,6 +12,11 @@ on:
         type: string
         description: 'Name of the registry.'
         default: ghcr.io/openclarity
+      suffix:
+        required: false
+        type: string
+        description: 'Suffix to append to the image name'
+        default: ""
       bake-group:
         required: false
         type: string
@@ -50,9 +55,6 @@ jobs:
       fail-fast: false
       matrix:
         targets: ${{ fromJson(needs.prepare-build.outputs.targets) }}
-        platform:
-          - linux/amd64
-          - linux/arm64
     steps:
       - name: Checkout code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
@@ -81,32 +83,15 @@ jobs:
         with:
           targets: ${{ matrix.targets }}
           set: |
-            *.platform=${{ matrix.platform }}
-            *.output=type=image,name=${{ inputs.registry_name }}/${{ matrix.targets }},push-by-digest=true,name-canonical=true,push=true
-            *.tags=
+            *.platform=linux/amd64,linux/arm64
+            *.output=type=image,name=${{ inputs.registry_name }}/${{ matrix.targets }},name-canonical=true,push=true
             *.cache-to=type=local,dest=/tmp/.buildx-cache
             *.cache-from=type=local,src=/tmp/.buildx-cache
         env:
           VERSION: ${{ inputs.image_tag }}
           BUILD_TIMESTAMP: ${{ needs.prepare-build.outputs.timestamp }}
           COMMIT_HASH: ${{ github.sha }}
+          DOCKER_REGISTRY: ${{ inputs.registry_name }}
+          SUFFIX: ${{ inputs.suffix }}
+          DOCKER_TAG: ${{ inputs.image_tag }}
           BUILD_OPTS: -tags=exclude_graphdriver_btrfs,exclude_graphdriver_devicemapper
-
-      - name: Export digest
-        id: digest
-        run: |
-          mkdir -p /tmp/digests
-          digest=$(jq -r '."${{ matrix.targets }}"."containerimage.digest"'<<< '${{ steps.bake.outputs.metadata }}')
-          touch "/tmp/digests/${digest#sha256:}"
-          echo "digest=${digest#sha256:}" >> "$GITHUB_OUTPUT"
-
-      - name: Create manifest list and push
-        working-directory: /tmp/digests
-        run: |
-          # shellcheck disable=SC2046
-          docker buildx imagetools create \
-            --tag "${{ inputs.registry_name }}/${{ matrix.targets }}:${{ inputs.image_tag }}" \
-            $(printf '${{ inputs.registry_name }}/${{ matrix.targets }}@sha256:%s ' *)
-
-      - name: Inspect image
-        run: docker buildx imagetools inspect ${{ inputs.registry_name }}/${{ matrix.targets }}:${{ inputs.image_tag }}
