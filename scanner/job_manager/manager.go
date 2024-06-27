@@ -18,11 +18,13 @@ package job_manager // nolint:revive,stylecheck
 import (
 	"context"
 	"fmt"
-
 	"github.com/hashicorp/go-multierror"
-	"github.com/sirupsen/logrus"
-
+	"github.com/openclarity/vmclarity/scanner/families/types"
+	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
 	"github.com/openclarity/vmclarity/scanner/utils"
+	"github.com/sirupsen/logrus"
+	"github.com/sourcegraph/conc/pool"
+	"time"
 )
 
 type Manager struct {
@@ -41,44 +43,75 @@ func New(jobNames []string, config IsConfig, logger *logrus.Entry, factory *Fact
 	}
 }
 
-func (m *Manager) Run(ctx context.Context, sourceType utils.SourceType, userInput string) (map[string]Result, error) {
-	nameToResultChan := make(map[string]chan Result, len(m.jobNames))
+type ProcessResult struct {
+	types.InputScanMetadata
+	Result Result
+	Input  types.Input
+}
 
-	// create jobs
-	jobs := make([]Job, len(m.jobNames))
-	for i, name := range m.jobNames {
-		nameToResultChan[name] = make(chan Result, 10) // nolint:mnd
-		job, err := m.jobFactory.CreateJob(name, m.config, m.logger, nameToResultChan[name])
+func (m *Manager) Process(ctx context.Context, inputs []types.Input) ([]ProcessResult, error) {
+	mainResultCh := make(chan ProcessResult)
+	workerPool := pool.New().WithContext(ctx).WithFirstError().WithCancelOnError()
+
+	// Create processing jobs
+	for _, jobName := range m.jobNames {
+		jobResultCh := make(chan Result)
+		job, err := m.jobFactory.CreateJob(jobName, m.config, m.logger, jobResultCh)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create job: %w", err)
+			return nil, fmt.Errorf("failed to create job %s: %w", jobName, err)
 		}
 
-		jobs[i] = job
-	}
+		// schedule each {job}, {input} input pair to parallel worker
+		for _, input := range inputs {
+			workerPool.Go(func(ctx context.Context) error {
+				// Process
+				startTime := time.Now()
+				err := job.Run(ctx, utils.SourceType(input.InputType), input.Input)
+				if err != nil {
+					return fmt.Errorf("failed to run job %s for input %s: %w", jobName, input.Input, err)
+				}
+				endTime := time.Now()
+				inputSize, _ := familiesutils.GetInputSize(input)
 
-	// start jobs
-	for _, j := range jobs {
-		err := j.Run(ctx, sourceType, userInput)
-		if err != nil {
-			return nil, fmt.Errorf("failed to run job: %w", err)
+				// Read result from job channel and write to main result channel
+				jobResult := <-jobResultCh
+				mainResultCh <- ProcessResult{
+					InputScanMetadata: types.CreateInputScanMetadata(
+						jobName,
+						startTime,
+						endTime,
+						inputSize,
+						input,
+					),
+					Input:  input,
+					Result: jobResult,
+				}
+
+				return nil
+			})
 		}
 	}
 
-	// wait for results
+	// Wait for workers to finish and close main result channel to allow proper listening.
+	// Write wait error to a separate worker channel to handle it at the end.
+	workerErrCh := make(chan error)
+	go func() {
+		workerErrCh <- workerPool.Wait()
+		close(mainResultCh)
+	}()
+
+	// Read results from the main channel
 	var resultError error
-	totalSuccessfulResultsCount := 0
-	results := make(map[string]Result, len(m.jobNames))
-	for name, channel := range nameToResultChan {
-		// TODO: maybe need a timeout while waiting for a specific job result?
-		result := <-channel
-
-		if err := result.GetError(); err != nil {
-			errStr := fmt.Errorf("%q job failed: %w", name, err)
+	var totalSuccessfulResultsCount int
+	results := make([]ProcessResult, 0, len(m.jobNames))
+	for processResult := range mainResultCh {
+		if err := processResult.Result.GetError(); err != nil {
+			errStr := fmt.Errorf("%q scanner job failed: %w", processResult.ScannerName, err)
 			m.logger.Warning(errStr)
 			resultError = multierror.Append(resultError, errStr)
 		} else {
-			m.logger.Infof("Got result for job %q", name)
-			results[name] = result
+			m.logger.Infof("Got result for scanner job %q", processResult.ScannerName)
+			results = append(results, processResult)
 			totalSuccessfulResultsCount++
 		}
 	}
@@ -87,6 +120,11 @@ func (m *Manager) Run(ctx context.Context, sourceType utils.SourceType, userInpu
 	// TODO: should it be configurable? allow the user to decide failure threshold?
 	if totalSuccessfulResultsCount == 0 {
 		return nil, resultError // nolint:wrapcheck
+	}
+
+	// Check if any of the workers failed
+	if err := <-workerErrCh; err != nil {
+		return nil, fmt.Errorf("failed to process inputs: %w", err)
 	}
 
 	return results, nil
