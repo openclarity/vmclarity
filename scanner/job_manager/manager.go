@@ -64,6 +64,8 @@ func (m *Manager) Process(ctx context.Context, inputs []types.Input) ([]ProcessR
 		// schedule each {job}, {input} input pair to parallel worker
 		for _, input := range inputs {
 			workerPool.Go(func(ctx context.Context) error {
+				m.logger.Infof("Started running job %s for input %s...", jobName, input.Input)
+
 				// Process
 				startTime := time.Now()
 				err := job.Run(ctx, utils.SourceType(input.InputType), input.Input)
@@ -87,6 +89,8 @@ func (m *Manager) Process(ctx context.Context, inputs []types.Input) ([]ProcessR
 					Result: jobResult,
 				}
 
+				m.logger.Infof("Finished running job %s for input %s", jobName, input.Input)
+
 				return nil
 			})
 		}
@@ -94,7 +98,7 @@ func (m *Manager) Process(ctx context.Context, inputs []types.Input) ([]ProcessR
 
 	// Wait for workers to finish and close main result channel to allow proper listening.
 	// Write wait error to a separate worker channel to handle it at the end.
-	workerErrCh := make(chan error)
+	workerErrCh := make(chan error, 1)
 	go func() {
 		workerErrCh <- workerPool.Wait()
 		close(mainResultCh)
