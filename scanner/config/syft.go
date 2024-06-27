@@ -24,11 +24,13 @@ import (
 type SyftConfig struct {
 	Scope           source.Scope
 	RegistryOptions *image.RegistryOptions
+	ExcludePaths    source.ExcludeConfig
 }
 
 func CreateSyftConfig(analyzer *Analyzer, registry *Registry) SyftConfig {
 	return SyftConfig{
 		Scope:           source.ParseScope(analyzer.Scope),
+		ExcludePaths:    source.ExcludeConfig{Paths: analyzer.ExcludePaths},
 		RegistryOptions: CreateRegistryOptions(registry),
 	}
 }

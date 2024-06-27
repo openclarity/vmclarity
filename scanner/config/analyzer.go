@@ -21,4 +21,5 @@ type Analyzer struct {
 	AnalyzerList []string            `yaml:"analyzer_list" mapstructure:"analyzer_list"`
 	Scope        string              `yaml:"scope" mapstructure:"scope"`
 	TrivyConfig  AnalyzerTrivyConfig `yaml:"trivy_config" mapstructure:"trivy_config"`
+	ExcludePaths []string            `yaml:"exclude_paths" mapstructure:"exclude_paths"`
 }
