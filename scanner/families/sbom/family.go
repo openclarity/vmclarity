@@ -19,8 +19,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
-
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/core/version"
 	"github.com/openclarity/vmclarity/scanner/analyzer"
@@ -29,7 +27,6 @@ import (
 	"github.com/openclarity/vmclarity/scanner/families/interfaces"
 	familiesresults "github.com/openclarity/vmclarity/scanner/families/results"
 	"github.com/openclarity/vmclarity/scanner/families/types"
-	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
 	"github.com/openclarity/vmclarity/scanner/job_manager"
 	"github.com/openclarity/vmclarity/scanner/utils"
 )
@@ -56,27 +53,24 @@ func (s SBOM) Run(ctx context.Context, _ *familiesresults.Results) (interfaces.I
 	}
 
 	manager := job_manager.New(s.conf.AnalyzersList, s.conf.AnalyzersConfig, logger, job.Factory)
+	processResults, err := manager.Process(ctx, s.conf.Inputs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to process inputs for sbom: %w", err)
+	}
+
 	mergedResults := analyzer.NewMergedResults(utils.SourceType(s.conf.Inputs[0].InputType), hash)
 
 	var sbomResults Results
-	for _, input := range s.conf.Inputs {
-		startTime := time.Now()
-		results, err := manager.Run(ctx, utils.SourceType(input.InputType), input.Input)
-		if err != nil {
-			return nil, fmt.Errorf("failed to analyzer input %q: %w", s.conf.Inputs[0].Input, err)
-		}
-		endTime := time.Now()
-		inputSize, err := familiesutils.GetInputSize(input)
-		if err != nil {
-			logger.Warnf("Failed to calculate input %v size: %v", input, err)
-		}
 
-		// Merge results.
-		for name, result := range results {
-			logger.Infof("Merging result from %q", name)
-			mergedResults = mergedResults.Merge(result.(*analyzer.Results)) // nolint:forcetypeassert
+	// Merge results.
+	for _, result := range processResults {
+		logger.Infof("Merging result from %q", result.ScannerName)
+		data, ok := result.Result.(*analyzer.Results)
+		if !ok {
+			return nil, fmt.Errorf("received results of a wrong type: %T", result)
 		}
-		sbomResults.Metadata.InputScans = append(sbomResults.Metadata.InputScans, types.CreateInputScanMetadata(startTime, endTime, inputSize, input))
+		mergedResults = mergedResults.Merge(data)
+		sbomResults.Metadata.InputScans = append(sbomResults.Metadata.InputScans, result.InputScanMetadata)
 	}
 
 	for i, with := range s.conf.MergeWith {
@@ -102,9 +96,10 @@ func (s SBOM) Run(ctx context.Context, _ *familiesresults.Results) (interfaces.I
 		return nil, fmt.Errorf("failed to load merged output to CDX bom: %w", err)
 	}
 
+	sbomResults.SBOM = cdxBom
+
 	logger.Info("SBOM Done...")
 
-	sbomResults.SBOM = cdxBom
 	return &sbomResults, nil
 }
 
