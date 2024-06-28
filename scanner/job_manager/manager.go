@@ -72,16 +72,16 @@ func (m *Manager) Process(ctx context.Context, inputs []types.Input) ([]ProcessR
 				if err != nil {
 					return fmt.Errorf("failed to run job %s for input %s: %w", jobName, input.Input, err)
 				}
-				endTime := time.Now()
-				inputSize, _ := familiesutils.GetInputSize(input)
+				inputSize, _ := familiesutils.GetInputSize(input) // in megabytes
 
-				// Read result from job channel and write to main result channel
+				// Wait for job to finish by waiting for the result. Once done, forward the
+				// result formatted to main result channel
 				jobResult := <-jobResultCh
 				mainResultCh <- ProcessResult{
 					InputScanMetadata: types.CreateInputScanMetadata(
 						jobName,
 						startTime,
-						endTime,
+						time.Now(),
 						inputSize,
 						input,
 					),
