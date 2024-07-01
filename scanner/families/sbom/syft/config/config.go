@@ -18,26 +18,29 @@ package config
 import (
 	"github.com/anchore/stereoscope/pkg/image"
 	"github.com/anchore/syft/syft/source"
+	"github.com/openclarity/vmclarity/scanner/families/common/registry"
 )
 
-type SyftConfig struct {
-	Scope           source.Scope
-	RegistryOptions *image.RegistryOptions
-	ExcludePaths    source.ExcludeConfig
+type Config struct {
+	Scope        string            `yaml:"scope" mapstructure:"scope"`
+	ExcludePaths []string          `yaml:"exclude_paths" mapstructure:"exclude_paths"`
+	Registry     registry.Registry `yaml:"registry" mapstructure:"registry"`
 }
 
-func CreateSyftConfig(analyzer *Analyzer, registry *Registry) SyftConfig {
-	return SyftConfig{
-		Scope:           source.ParseScope(analyzer.Scope),
-		ExcludePaths:    source.ExcludeConfig{Paths: analyzer.ExcludePaths},
-		RegistryOptions: CreateRegistryOptions(registry),
+func (c *Config) GetScope() source.Scope {
+	return source.ParseScope(c.Scope)
+}
+
+func (c *Config) GetExcludePaths() source.ExcludeConfig {
+	return source.ExcludeConfig{
+		Paths: c.ExcludePaths,
 	}
 }
 
-func CreateRegistryOptions(registry *Registry) *image.RegistryOptions {
-	credentials := make([]image.RegistryCredentials, len(registry.Auths))
+func (c *Config) GetRegistryOptions() *image.RegistryOptions {
+	credentials := make([]image.RegistryCredentials, len(c.Registry.Auths))
 
-	for i, cred := range registry.Auths {
+	for i, cred := range c.Registry.Auths {
 		credentials[i] = image.RegistryCredentials{
 			Authority: cred.Authority,
 			Username:  cred.Username,
@@ -47,8 +50,8 @@ func CreateRegistryOptions(registry *Registry) *image.RegistryOptions {
 	}
 
 	return &image.RegistryOptions{
-		InsecureSkipTLSVerify: registry.SkipVerifyTLS,
-		InsecureUseHTTP:       registry.UseHTTP,
+		InsecureSkipTLSVerify: c.Registry.SkipVerifyTLS,
+		InsecureUseHTTP:       c.Registry.UseHTTP,
 		Credentials:           credentials,
 	}
 }

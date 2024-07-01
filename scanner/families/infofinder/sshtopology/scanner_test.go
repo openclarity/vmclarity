@@ -40,16 +40,16 @@ func Test_getHomeUserDirs(t *testing.T) {
 		{
 			name: "sanity",
 			args: args{
-				rootDir: "../testdata/rootfolder",
+				rootDir: "testdata/rootfolder",
 			},
-			want: []string{"../testdata/rootfolder/home/dir1", "../testdata/rootfolder/home/dir2"},
+			want: []string{"testdata/rootfolder/home/dir1", "testdata/rootfolder/home/dir2"},
 		},
 		{
 			name: "root folder with root home folder",
 			args: args{
-				rootDir: "../testdata/rootfolderwithroothome",
+				rootDir: "testdata/rootfolderwithroothome",
 			},
-			want: []string{"../testdata/rootfolderwithroothome/root", "../testdata/rootfolderwithroothome/home/dir1", "../testdata/rootfolderwithroothome/home/dir2"},
+			want: []string{"testdata/rootfolderwithroothome/root", "testdata/rootfolderwithroothome/home/dir1", "testdata/rootfolderwithroothome/home/dir2"},
 		},
 	}
 	for _, tt := range tests {
@@ -76,7 +76,7 @@ func TestScanner_getPrivateKeysPaths(t *testing.T) {
 		{
 			name: "not recursive - found nothing",
 			args: args{
-				rootPath:  "../testdata/rootfolder",
+				rootPath:  "testdata/rootfolder",
 				recursive: false,
 			},
 			want:    nil,
@@ -85,25 +85,25 @@ func TestScanner_getPrivateKeysPaths(t *testing.T) {
 		{
 			name: "not recursive - found keys in folder",
 			args: args{
-				rootPath:  "../testdata/rootfolder/home/dir1",
+				rootPath:  "testdata/rootfolder/home/dir1",
 				recursive: false,
 			},
-			want:    []string{"../testdata/rootfolder/home/dir1/private_key"},
+			want:    []string{"testdata/rootfolder/home/dir1/private_key"},
 			wantErr: false,
 		},
 		{
 			name: "recursive - found keys in all sub folders",
 			args: args{
-				rootPath:  "../testdata/rootfolder",
+				rootPath:  "testdata/rootfolder",
 				recursive: true,
 			},
 			want: []string{
-				"../testdata/rootfolder/.ssh/private_key",
-				"../testdata/rootfolder/etc/ssh/ssh_dummy_key",
-				"../testdata/rootfolder/etc/ssh/ssh_dummy_key2",
-				"../testdata/rootfolder/home/dir1/dir3/private_key",
-				"../testdata/rootfolder/home/dir1/private_key",
-				"../testdata/rootfolder/home/dir2/private_key",
+				"testdata/rootfolder/.ssh/private_key",
+				"testdata/rootfolder/etc/ssh/ssh_dummy_key",
+				"testdata/rootfolder/etc/ssh/ssh_dummy_key2",
+				"testdata/rootfolder/home/dir1/dir3/private_key",
+				"testdata/rootfolder/home/dir1/private_key",
+				"testdata/rootfolder/home/dir2/private_key",
 			},
 			wantErr: false,
 		},
@@ -136,7 +136,7 @@ func Test_isPrivateKey(t *testing.T) {
 		{
 			name: "private key",
 			args: args{
-				path: "../testdata/rootfolder/.ssh/private_key",
+				path: "testdata/rootfolder/.ssh/private_key",
 			},
 			want:    true,
 			wantErr: false,
@@ -144,7 +144,7 @@ func Test_isPrivateKey(t *testing.T) {
 		{
 			name: "not private key",
 			args: args{
-				path: "../testdata/rootfolder/.ssh/not_a_key",
+				path: "testdata/rootfolder/.ssh/not_a_key",
 			},
 			want:    false,
 			wantErr: false,
@@ -152,7 +152,7 @@ func Test_isPrivateKey(t *testing.T) {
 		{
 			name: "empty_file",
 			args: args{
-				path: "../testdata/rootfolder/.ssh/empty_file",
+				path: "testdata/rootfolder/.ssh/empty_file",
 			},
 			want:    false,
 			wantErr: false,
@@ -160,7 +160,7 @@ func Test_isPrivateKey(t *testing.T) {
 		{
 			name: "folder as an input should return an error",
 			args: args{
-				path: "../testdata/rootfolder/.ssh",
+				path: "testdata/rootfolder/.ssh",
 			},
 			want:    false,
 			wantErr: true,
@@ -168,7 +168,7 @@ func Test_isPrivateKey(t *testing.T) {
 		{
 			name: "path does not exists should return an error",
 			args: args{
-				path: "../testdata/dummyrootfolder/.ssh",
+				path: "testdata/dummyrootfolder/.ssh",
 			},
 			want:    false,
 			wantErr: true,

@@ -1,4 +1,4 @@
-// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2024 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,14 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package common
+package config
 
-import (
-	"github.com/openclarity/vmclarity/scanner/families/exploits/exploitdb/config"
-)
-
-type ScannersConfig struct {
-	ExploitDB config.Config `yaml:"exploit_db" mapstructure:"exploit_db"`
-}
-
-func (ScannersConfig) IsConfig() {}
+type Config struct{}

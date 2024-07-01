@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/openclarity/vmclarity/scanner/families/infofinder/sshtopology/config"
 	"os"
 	"os/exec"
 	"path"
@@ -40,7 +41,7 @@ const ScannerName = "sshTopology"
 type Scanner struct {
 	name       string
 	logger     *log.Entry
-	config     types.SSHTopologyConfig
+	config     config.Config
 	resultChan chan job_manager.Result
 }
 

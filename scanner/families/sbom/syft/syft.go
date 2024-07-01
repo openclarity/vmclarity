@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/openclarity/vmclarity/scanner/families/sbom/common"
 
 	"github.com/openclarity/vmclarity/scanner/utils"
 
@@ -29,7 +30,6 @@ import (
 	syftsrc "github.com/anchore/syft/syft/source"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/openclarity/vmclarity/scanner/analyzer"
 	"github.com/openclarity/vmclarity/scanner/config"
 	"github.com/openclarity/vmclarity/scanner/job_manager"
 	"github.com/openclarity/vmclarity/scanner/utils/image_helper"
@@ -75,7 +75,7 @@ func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInp
 	}
 
 	go func(ctx context.Context) {
-		res := &analyzer.Results{}
+		res := &common.Results{}
 
 		sbomConfig := syft.DefaultCreateSBOMConfig().
 			WithSearchConfig(cataloging.DefaultSearchConfig().WithScope(a.config.Scope))
@@ -87,7 +87,7 @@ func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInp
 		}
 
 		cdxBom := cyclonedxhelpers.ToFormatModel(*sbom)
-		res = analyzer.CreateResults(cdxBom, a.name, userInput, sourceType)
+		res = common.CreateResults(cdxBom, a.name, userInput, sourceType)
 
 		// Syft uses ManifestDigest to fill version information in the case of an image.
 		// We need RepoDigest/ImageID as well which is not set by Syft if we're using cycloneDX output.
@@ -118,7 +118,7 @@ func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInp
 	return nil
 }
 
-func (a *Analyzer) setError(res *analyzer.Results, err error) {
+func (a *Analyzer) setError(res *common.Results, err error) {
 	res.Error = err
 	a.logger.Error(res.Error)
 	a.resultChan <- res

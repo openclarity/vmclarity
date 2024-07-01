@@ -1,4 +1,4 @@
-// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,15 +13,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package exploits
+package job
 
 import (
-	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
+	"github.com/openclarity/vmclarity/scanner/families/sbom/syft"
+	"github.com/openclarity/vmclarity/scanner/families/sbom/trivy"
+	"github.com/openclarity/vmclarity/scanner/families/sbom/windows"
+	"github.com/openclarity/vmclarity/scanner/job_manager"
 )
 
-type Results struct {
-	Metadata familiestypes.Metadata
-	Exploits MergedExploits `yaml:"exploits"`
-}
+var Factory = job_manager.NewJobFactory()
 
-func (*Results) IsResults() {}
+func init() {
+	Factory.Register(trivy.AnalyzerName, trivy.New)
+	Factory.Register(syft.AnalyzerName, syft.New)
+	Factory.Register(windows.AnalyzerName, windows.New)
+}
