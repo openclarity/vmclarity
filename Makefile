@@ -55,7 +55,13 @@ $(DIST_DIR):
 
 .PHONY: help
 help: ## Display this help
-	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-30s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"; printf "
+Usage:
+  make [36m<target>[0m
+"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  [36m%-30s[0m %s
+", $$1, $$2 } /^##@/ { printf "
+[1m%s[0m
+", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 ##@ Development
 
@@ -279,12 +285,12 @@ docker: docker-apiserver docker-cli docker-orchestrator docker-ui docker-ui-back
 .PHONY: docker-apiserver
 docker-apiserver: ## Build API Server container image
 	$(info Building apiserver docker image ...)
-	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) vmclarity-apiserver
+	$(BAKE_ENV) docker buildx bake --file dockerfiles/Dockerfile.apiserver $(BAKE_OPTS) vmclarity-apiserver
 
 .PHONY: docker-cli
 docker-cli: ## Build CLI container image
 	$(info Building cli docker image ...)
-	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) vmclarity-cli
+	$(BAKE_ENV) docker buildx bake --file dockerfiles/Dockerfile.cli $(BAKE_OPTS) vmclarity-cli
 
 # TODO(paralta) Temporary workaround to remove race flag from orchestrator build
 # since build fails in arm64 after #1587
@@ -293,27 +299,27 @@ BAKE_ENV_ORCHESTRATOR = $(subst -race,, $(BAKE_ENV))
 .PHONY: docker-orchestrator
 docker-orchestrator: ## Build Orchestrator container image
 	$(info Building orchestrator docker image ...)
-	$(BAKE_ENV_ORCHESTRATOR) docker buildx bake $(BAKE_OPTS) vmclarity-orchestrator
+	$(BAKE_ENV_ORCHESTRATOR) docker buildx bake --file dockerfiles/Dockerfile.orchestrator $(BAKE_OPTS) vmclarity-orchestrator
 
 .PHONY: docker-ui
 docker-ui: ## Build UI container image
 	$(info Building ui docker image ...)
-	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) vmclarity-ui
+	$(BAKE_ENV) docker buildx bake --file dockerfiles/Dockerfile.ui $(BAKE_OPTS) vmclarity-ui
 
 .PHONY: docker-ui-backend
 docker-ui-backend: ## Build UI Backend container image
 	$(info Building ui-backend docker image ...)
-	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) vmclarity-ui-backend
+	$(BAKE_ENV) docker buildx bake --file dockerfiles/Dockerfile.uibackend $(BAKE_OPTS) vmclarity-ui-backend
 
 .PHONY: docker-cr-discovery-server
 docker-cr-discovery-server: ## Build K8S Image Resolver Docker image
 	$(info Building cr-discovery-server docker image ...)
-	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) vmclarity-cr-discovery-server
+	$(BAKE_ENV) docker buildx bake --file dockerfiles/Dockerfile.cr-discovery-server $(BAKE_OPTS) vmclarity-cr-discovery-server
 
 .PHONY: docker-scanner-plugins
 docker-scanner-plugins: ## Build scanner plugin container images
 	$(info Building scanner plugin docker images ...)
-	$(BAKE_ENV) docker buildx bake $(BAKE_OPTS) vmclarity-scanner-plugins
+	$(BAKE_ENV) docker buildx bake --file dockerfiles/Dockerfile.sdk-go --file dockerfiles/Dockerfile.sdk-python --file dockerfiles/Dockerfile.test.sdk-python $(BAKE_OPTS) vmclarity-scanner-plugins
 
 ##@ Code generation
 
@@ -410,7 +416,7 @@ $(DIST_DIR)/aws-cloudformation-$(VERSION).tar.gz: $(DIST_DIR)/aws-cloudformation
 $(DIST_DIR)/aws-cloudformation-$(VERSION).bundle: $(CFN_FILES) | $(CFN_DIST_DIR)
 	$(info --- Generate Cloudformation bundle)
 	cp -vR $(CFN_DIR)/* $(CFN_DIST_DIR)/
-	sed -i -E 's@(ghcr\.io\/openclarity\/vmclarity\-(apiserver|cli|orchestrator|ui-backend|ui)):latest@\1:$(VERSION)@' $(CFN_DIST_DIR)/VmClarity.cfn
+	sed -i -E 's@(ghcr\.io\/openclarity\/vmclarity\-(apiserver|cli|orchestrator|ui-backend|ui)):latest@:$(VERSION)@' $(CFN_DIST_DIR)/VmClarity.cfn
 	@touch $@
 
 $(CFN_DIST_DIR)/LICENSE: $(ROOT_DIR)/LICENSE | $(CFN_DIST_DIR)
@@ -433,7 +439,7 @@ $(DIST_DIR)/azure-bicep-$(VERSION).tar.gz: $(DIST_DIR)/azure-bicep-$(VERSION).bu
 $(DIST_DIR)/azure-bicep-$(VERSION).bundle: $(BICEP_FILES) bin/bicep | $(BICEP_DIST_DIR)
 	$(info --- Generate Bicep bundle)
 	cp -vR $(BICEP_DIR)/* $(BICEP_DIST_DIR)/
-	sed -i -E 's@(ghcr\.io\/openclarity\/vmclarity\-(apiserver|cli|orchestrator|ui-backend|ui)):latest@\1:$(VERSION)@' \
+	sed -i -E 's@(ghcr\.io\/openclarity\/vmclarity\-(apiserver|cli|orchestrator|ui-backend|ui)):latest@:$(VERSION)@' \
 		$(BICEP_DIST_DIR)/*.bicep $(BICEP_DIST_DIR)/vmclarity-UI.json
 	$(BICEP_BIN) build $(BICEP_DIST_DIR)/vmclarity.bicep
 	@touch $@
@@ -457,7 +463,7 @@ $(DIST_DIR)/docker-compose-$(VERSION).tar.gz: $(DIST_DIR)/docker-compose-$(VERSI
 $(DIST_DIR)/docker-compose-$(VERSION).bundle: $(DOCKER_COMPOSE_FILES) | $(DOCKER_COMPOSE_DIST_DIR)
 	$(info --- Generate Docker Compose bundle)
 	cp -vR $(DOCKER_COMPOSE_DIR)/* $(DOCKER_COMPOSE_DIST_DIR)/
-	sed -i -E 's@(ghcr\.io\/openclarity\/vmclarity\-(apiserver|cli|orchestrator|ui-backend|ui)):latest@\1:$(VERSION)@' \
+	sed -i -E 's@(ghcr\.io\/openclarity\/vmclarity\-(apiserver|cli|orchestrator|ui-backend|ui)):latest@:$(VERSION)@' \
 		$(DOCKER_COMPOSE_DIST_DIR)/*.yml $(DOCKER_COMPOSE_DIST_DIR)/*.yaml $(DOCKER_COMPOSE_DIST_DIR)/*.env
 	@touch $@
 
@@ -481,7 +487,7 @@ $(DIST_DIR)/gcp-deployment-$(VERSION).tar.gz: $(DIST_DIR)/gcp-deployment-$(VERSI
 $(DIST_DIR)/gcp-deployment-$(VERSION).bundle: $(GCP_DM_FILES) | $(GCP_DM_DIST_DIR)
 	$(info --- Generate Google Cloud Deployment bundle)
 	cp -vR $(GCP_DM_DIR)/* $(GCP_DM_DIST_DIR)/
-	sed -i -E 's@(ghcr\.io\/openclarity\/vmclarity\-(apiserver|cli|orchestrator|ui-backend|ui)):latest@\1:$(VERSION)@' \
+	sed -i -E 's@(ghcr\.io\/openclarity\/vmclarity\-(apiserver|cli|orchestrator|ui-backend|ui)):latest@:$(VERSION)@' \
 		$(GCP_DM_DIST_DIR)/vmclarity.py.schema $(GCP_DM_DIST_DIR)/components/vmclarity-server.py.schema
 	@touch $@
 
@@ -565,3 +571,4 @@ renovate-fix-bicep: gen-bicep ## Fix Azure Bicep files after version update
 	$(info --- Fix Azure Bicep files after version update)
 	git add ':$(subst $(ROOT_DIR),,$(BICEP_DIR))' \
 	&& git commit -m "fix: generate bicep template"
+
