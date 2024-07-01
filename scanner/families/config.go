@@ -18,7 +18,7 @@ package families
 import (
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/scanner/families/exploits"
-	infofinderTypes "github.com/openclarity/vmclarity/scanner/families/infofinder/types"
+	"github.com/openclarity/vmclarity/scanner/families/infofinder"
 	"github.com/openclarity/vmclarity/scanner/families/malware"
 	misconfigurationTypes "github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
 	"github.com/openclarity/vmclarity/scanner/families/plugins"
@@ -40,7 +40,7 @@ type Config struct {
 	Rootkits         rootkits.Config              `json:"rootkits" yaml:"rootkits" mapstructure:"rootkits"`
 	Malware          malware.Config               `json:"malware" yaml:"malware" mapstructure:"malware"`
 	Misconfiguration misconfigurationTypes.Config `json:"misconfiguration" yaml:"misconfiguration" mapstructure:"misconfiguration"`
-	InfoFinder       infofinderTypes.Config       `json:"infofinder" yaml:"infofinder" mapstructure:"infofinder"`
+	InfoFinder       infofinder.Config            `json:"infofinder" yaml:"infofinder" mapstructure:"infofinder"`
 
 	// Enrichers
 	Exploits exploits.Config `json:"exploits" yaml:"exploits" mapstructure:"exploits"`

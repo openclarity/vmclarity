@@ -13,15 +13,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package exploits
+package common
 
 import (
-	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
+	syft "github.com/openclarity/vmclarity/scanner/families/sbom/syft/config"
+	trivy "github.com/openclarity/vmclarity/scanner/families/sbom/trivy/config"
 )
 
-type Results struct {
-	Metadata familiestypes.Metadata
-	Exploits MergedExploits `yaml:"exploits"`
+type AnalyzersConfig struct {
+	Syft  syft.Config  `yaml:"syft" mapstructure:"syft"`
+	Trivy trivy.Config `yaml:"trivy" mapstructure:"trivy"`
 }
 
-func (*Results) IsResults() {}
+func (AnalyzersConfig) IsConfig() {}

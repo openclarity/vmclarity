@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/families/infofinder/job"
-	infofinderTypes "github.com/openclarity/vmclarity/scanner/families/infofinder/types"
+	infofindertypes "github.com/openclarity/vmclarity/scanner/families/infofinder/types"
 	"github.com/openclarity/vmclarity/scanner/families/interfaces"
 	"github.com/openclarity/vmclarity/scanner/families/results"
 	"github.com/openclarity/vmclarity/scanner/families/types"
@@ -29,7 +29,7 @@ import (
 )
 
 type InfoFinder struct {
-	conf infofinderTypes.Config
+	conf Config
 }
 
 func (i InfoFinder) Run(ctx context.Context, _ *results.Results) (interfaces.IsResults, error) {
@@ -47,7 +47,7 @@ func (i InfoFinder) Run(ctx context.Context, _ *results.Results) (interfaces.IsR
 	// Merge results.
 	for _, result := range processResults {
 		logger.Infof("Merging result from %q", result.ScannerName)
-		if assetScan, ok := result.Result.(*infofinderTypes.ScannerResult); ok {
+		if assetScan, ok := result.Result.(*infofindertypes.ScannerResult); ok {
 			if familiesutils.ShouldStripInputPath(result.Input.StripPathFromResult, i.conf.StripInputPaths) {
 				assetScan = stripPathFromResult(assetScan, result.InputPath)
 			}
@@ -64,7 +64,7 @@ func (i InfoFinder) Run(ctx context.Context, _ *results.Results) (interfaces.IsR
 }
 
 // stripPathFromResult strip input path from results wherever it is found.
-func stripPathFromResult(result *infofinderTypes.ScannerResult, path string) *infofinderTypes.ScannerResult {
+func stripPathFromResult(result *infofindertypes.ScannerResult, path string) *infofindertypes.ScannerResult {
 	for i := range result.Infos {
 		result.Infos[i].Path = familiesutils.TrimMountPath(result.Infos[i].Path, path)
 	}
@@ -78,7 +78,7 @@ func (i InfoFinder) GetType() types.FamilyType {
 // ensure types implement the requisite interfaces.
 var _ interfaces.Family = &InfoFinder{}
 
-func New(conf infofinderTypes.Config) *InfoFinder {
+func New(conf Config) *InfoFinder {
 	return &InfoFinder{
 		conf: conf,
 	}

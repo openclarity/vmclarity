@@ -13,10 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package analyzer
+package sbom
 
 import (
 	"fmt"
+	"github.com/openclarity/vmclarity/scanner/families/sbom/common"
 	"sort"
 	"strings"
 	"time"
@@ -55,7 +56,7 @@ func NewMergedResults(sourceType utils.SourceType, hash string) *MergedResults {
 	}
 }
 
-func (m *MergedResults) Merge(other *Results) *MergedResults {
+func (m *MergedResults) Merge(other *common.Results) *MergedResults {
 	if other.Sbom == nil {
 		return m
 	}
