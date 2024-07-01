@@ -21,11 +21,11 @@ import (
 	"fmt"
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/core/version"
-	"github.com/openclarity/vmclarity/scanner/analyzer"
-	"github.com/openclarity/vmclarity/scanner/analyzer/job"
 	"github.com/openclarity/vmclarity/scanner/converter"
 	"github.com/openclarity/vmclarity/scanner/families/interfaces"
 	familiesresults "github.com/openclarity/vmclarity/scanner/families/results"
+	"github.com/openclarity/vmclarity/scanner/families/sbom/common"
+	"github.com/openclarity/vmclarity/scanner/families/sbom/job"
 	"github.com/openclarity/vmclarity/scanner/families/types"
 	"github.com/openclarity/vmclarity/scanner/job_manager"
 	"github.com/openclarity/vmclarity/scanner/utils"
@@ -58,14 +58,14 @@ func (s SBOM) Run(ctx context.Context, _ *familiesresults.Results) (interfaces.I
 		return nil, fmt.Errorf("failed to process inputs for sbom: %w", err)
 	}
 
-	mergedResults := analyzer.NewMergedResults(utils.SourceType(s.conf.Inputs[0].InputType), hash)
+	mergedResults := NewMergedResults(utils.SourceType(s.conf.Inputs[0].InputType), hash)
 
 	var sbomResults Results
 
 	// Merge results.
 	for _, result := range processResults {
 		logger.Infof("Merging result from %q", result.ScannerName)
-		data, ok := result.Result.(*analyzer.Results)
+		data, ok := result.Result.(*common.Results)
 		if !ok {
 			return nil, fmt.Errorf("received results of a wrong type: %T", result)
 		}
@@ -79,7 +79,7 @@ func (s SBOM) Run(ctx context.Context, _ *familiesresults.Results) (interfaces.I
 		if err != nil {
 			return nil, fmt.Errorf("failed to get CDX SBOM from path=%s: %w", with.SbomPath, err)
 		}
-		results := analyzer.CreateResults(cdxBOMBytes, name, with.SbomPath, utils.SBOM)
+		results := common.CreateResults(cdxBOMBytes, name, with.SbomPath, utils.SBOM)
 		logger.Infof("Merging result from %q", with.SbomPath)
 		mergedResults = mergedResults.Merge(results)
 	}

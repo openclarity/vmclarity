@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/openclarity/vmclarity/scanner/families/sbom/common"
 	"os"
 
 	"github.com/openclarity/vmclarity/scanner/utils"
@@ -33,7 +34,6 @@ import (
 	trivyTypes "github.com/aquasecurity/trivy/pkg/types"
 	trivyFsutils "github.com/aquasecurity/trivy/pkg/utils/fsutils"
 
-	"github.com/openclarity/vmclarity/scanner/analyzer"
 	"github.com/openclarity/vmclarity/scanner/config"
 	"github.com/openclarity/vmclarity/scanner/job_manager"
 	"github.com/openclarity/vmclarity/scanner/utils/image_helper"
@@ -78,7 +78,7 @@ func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInp
 	go func(ctx context.Context) {
 		defer os.Remove(tempFile.Name())
 
-		res := &analyzer.Results{}
+		res := &common.Results{}
 
 		// Skip this analyser for input types we don't support
 		switch sourceType {
@@ -153,7 +153,7 @@ func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInp
 			return
 		}
 
-		res = analyzer.CreateResults(bom, a.name, userInput, sourceType)
+		res = common.CreateResults(bom, a.name, userInput, sourceType)
 
 		// Trivy doesn't include the version information in the
 		// component of CycloneDX, but it does include the RepoDigest and the ImageID as
@@ -187,7 +187,7 @@ func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInp
 	return nil
 }
 
-func (a *Analyzer) setError(res *analyzer.Results, err error) {
+func (a *Analyzer) setError(res *common.Results, err error) {
 	res.Error = err
 	a.logger.Error(res.Error)
 	a.resultChan <- res

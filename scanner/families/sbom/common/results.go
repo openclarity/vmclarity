@@ -13,13 +13,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package analyzer
+package common
 
 import (
 	cdx "github.com/CycloneDX/cyclonedx-go"
 
 	"github.com/openclarity/vmclarity/scanner/utils"
 )
+
+type AppInfo struct {
+	SourceMetadata map[string]string
+	SourceType     utils.SourceType
+	SourcePath     string
+	SourceHash     string
+}
 
 type Results struct {
 	Sbom         *cdx.BOM
@@ -30,13 +37,6 @@ type Results struct {
 
 func (r *Results) GetError() error {
 	return r.Error
-}
-
-type AppInfo struct {
-	SourceMetadata map[string]string
-	SourceType     utils.SourceType
-	SourcePath     string
-	SourceHash     string
 }
 
 func CreateResults(sbomBytes *cdx.BOM, analyzerName, userInput string, srcType utils.SourceType) *Results {

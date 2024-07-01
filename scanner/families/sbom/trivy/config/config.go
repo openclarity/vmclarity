@@ -13,19 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package job
+package config
 
-import (
-	"github.com/openclarity/vmclarity/scanner/analyzer/syft"
-	"github.com/openclarity/vmclarity/scanner/analyzer/trivy"
-	"github.com/openclarity/vmclarity/scanner/analyzer/windows"
-	"github.com/openclarity/vmclarity/scanner/job_manager"
-)
+import "github.com/openclarity/vmclarity/scanner/families/common/registry"
 
-var Factory = job_manager.NewJobFactory()
-
-func init() {
-	Factory.Register(trivy.AnalyzerName, trivy.New)
-	Factory.Register(syft.AnalyzerName, syft.New)
-	Factory.Register(windows.AnalyzerName, windows.New)
+type Config struct {
+	Timeout  int               `yaml:"timeout" mapstructure:"timeout"`
+	CacheDir string            `yaml:"cache_dir" mapstructure:"cache_dir"`
+	TempDir  string            `yaml:"temp_dir" mapstructure:"temp_dir"`
+	Registry registry.Registry `yaml:"registry" mapstructure:"registry"`
 }

@@ -13,15 +13,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package exploits
+package infofinder
 
 import (
+	"github.com/openclarity/vmclarity/scanner/families/infofinder/types"
 	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
 )
 
-type Results struct {
-	Metadata familiestypes.Metadata
-	Exploits MergedExploits `yaml:"exploits"`
+type Config struct {
+	Enabled         bool                  `json:"enabled" yaml:"enabled" mapstructure:"enabled"`
+	ScannersList    []string              `yaml:"scanners_list" mapstructure:"scanners_list"`
+	StripInputPaths bool                  `yaml:"strip_input_paths" mapstructure:"strip_input_paths"`
+	Inputs          []familiestypes.Input `yaml:"inputs" mapstructure:"inputs"`
+	ScannersConfig  types.ScannersConfig  `yaml:"scanners_config" mapstructure:"scanners_config"`
 }
-
-func (*Results) IsResults() {}
