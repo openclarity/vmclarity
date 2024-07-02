@@ -16,27 +16,26 @@
 package rootkits
 
 import (
+	"github.com/openclarity/vmclarity/scanner/families/rootkits/types"
 	"reflect"
 	"testing"
-
-	"github.com/openclarity/vmclarity/scanner/families/rootkits/common"
 )
 
 func TestStripPathFromResult(t *testing.T) {
 	type args struct {
-		result *common.Results
+		result types.ScannerResult
 		path   string
 	}
 	tests := []struct {
 		name string
 		args args
-		want *common.Results
+		want types.ScannerResult
 	}{
 		{
 			name: "sanity",
 			args: args{
-				result: &common.Results{
-					Rootkits: []common.Rootkit{
+				result: types.ScannerResult{
+					Rootkits: []types.Rootkit{
 						{
 							Message:     "rootkit found in /mnt/foo path",
 							RootkitName: "rk1",
@@ -53,8 +52,8 @@ func TestStripPathFromResult(t *testing.T) {
 				},
 				path: "/mnt",
 			},
-			want: &common.Results{
-				Rootkits: []common.Rootkit{
+			want: types.ScannerResult{
+				Rootkits: []types.Rootkit{
 					{
 						Message:     "rootkit found in /foo path",
 						RootkitName: "rk1",
@@ -73,7 +72,7 @@ func TestStripPathFromResult(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := StripPathFromResult(tt.args.result, tt.args.path); !reflect.DeepEqual(got, tt.want) {
+			if got := stripPathFromResult(tt.args.result, tt.args.path); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("StripPathFromResult() = %v, want %v", got, tt.want)
 			}
 		})

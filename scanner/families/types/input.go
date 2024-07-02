@@ -31,6 +31,7 @@ type Input struct {
 }
 
 type InputScanMetadata struct {
+	ScannerName   string
 	InputType     string
 	InputPath     string
 	InputSize     int64
@@ -38,8 +39,9 @@ type InputScanMetadata struct {
 	ScanEndTime   time.Time
 }
 
-func CreateInputScanMetadata(startTime, endTime time.Time, inputSize int64, input Input) InputScanMetadata {
+func CreateInputScanMetadata(scannerName string, startTime, endTime time.Time, inputSize int64, input Input) InputScanMetadata {
 	return InputScanMetadata{
+		ScannerName:   scannerName,
 		InputType:     input.InputType,
 		InputPath:     input.Input,
 		InputSize:     inputSize,

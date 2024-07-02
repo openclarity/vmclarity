@@ -16,13 +16,13 @@
 package plugins
 
 import (
-	"github.com/openclarity/vmclarity/scanner/families/plugins/common"
-	"github.com/openclarity/vmclarity/scanner/families/types"
+	"github.com/openclarity/vmclarity/scanner/families/plugins/types"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
 )
 
 type Config struct {
-	Enabled        bool                   `yaml:"enabled" mapstructure:"enabled"`
-	ScannersList   []string               `yaml:"scanners_list" mapstructure:"scanners_list"`
-	Inputs         []types.Input          `yaml:"inputs" mapstructure:"inputs"`
-	ScannersConfig *common.ScannersConfig `yaml:"scanners_config" mapstructure:"scanners_config"`
+	Enabled        bool                  `yaml:"enabled" mapstructure:"enabled"`
+	ScannersList   []string              `yaml:"scanners_list" mapstructure:"scanners_list"`
+	Inputs         []familiestypes.Input `yaml:"inputs" mapstructure:"inputs"`
+	ScannersConfig *types.ScannersConfig `yaml:"scanners_config" mapstructure:"scanners_config"`
 }

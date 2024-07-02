@@ -16,27 +16,26 @@
 package secrets
 
 import (
+	"github.com/openclarity/vmclarity/scanner/families/secrets/types"
 	"reflect"
 	"testing"
-
-	"github.com/openclarity/vmclarity/scanner/families/secrets/common"
 )
 
 func TestStripPathFromResult(t *testing.T) {
 	type args struct {
-		result *common.Results
+		result types.ScannerResult
 		path   string
 	}
 	tests := []struct {
 		name string
 		args args
-		want *common.Results
+		want types.ScannerResult
 	}{
 		{
 			name: "sanity",
 			args: args{
-				result: &common.Results{
-					Findings: []common.Findings{
+				result: types.ScannerResult{
+					Findings: []types.Findings{
 						{
 							Description: "description",
 							File:        "/mnt/file1",
@@ -61,8 +60,8 @@ func TestStripPathFromResult(t *testing.T) {
 				},
 				path: "/mnt",
 			},
-			want: &common.Results{
-				Findings: []common.Findings{
+			want: types.ScannerResult{
+				Findings: []types.Findings{
 					{
 						Description: "description",
 						File:        "/file1",
@@ -89,7 +88,7 @@ func TestStripPathFromResult(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := StripPathFromResult(tt.args.result, tt.args.path); !reflect.DeepEqual(got, tt.want) {
+			if got := stripPathFromResult(tt.args.result, tt.args.path); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("StripPathFromResult() = %v, want %v", got, tt.want)
 			}
 		})

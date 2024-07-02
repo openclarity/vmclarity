@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	misconfigurationTypes "github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
+	"github.com/openclarity/vmclarity/scanner/families/misconfiguration"
 	"github.com/openclarity/vmclarity/scanner/families/types"
 	"github.com/openclarity/vmclarity/scanner/utils"
 )
@@ -42,7 +42,7 @@ func (n *familyNotifierSpy) FamilyFinished(_ context.Context, res FamilyResult) 
 
 func TestManagerRunTimeout(t *testing.T) {
 	conf := &Config{
-		Misconfiguration: misconfigurationTypes.Config{
+		Misconfiguration: misconfiguration.Config{
 			Enabled:      true,
 			ScannersList: []string{"fake"},
 			Inputs: []types.Input{

@@ -18,78 +18,65 @@ package secrets
 import (
 	"context"
 	"fmt"
-	"time"
-
 	"github.com/openclarity/vmclarity/core/log"
-	"github.com/openclarity/vmclarity/scanner/families/interfaces"
-	familiesresults "github.com/openclarity/vmclarity/scanner/families/results"
-	"github.com/openclarity/vmclarity/scanner/families/secrets/common"
 	"github.com/openclarity/vmclarity/scanner/families/secrets/job"
-	"github.com/openclarity/vmclarity/scanner/families/types"
+	"github.com/openclarity/vmclarity/scanner/families/secrets/types"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
 	"github.com/openclarity/vmclarity/scanner/job_manager"
-	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
 type Secrets struct {
 	conf Config
 }
 
-func (s Secrets) Run(ctx context.Context, _ *familiesresults.Results) (interfaces.IsResults, error) {
+func New(conf Config) familiestypes.Family {
+	return &Secrets{
+		conf: conf,
+	}
+}
+
+func (s Secrets) GetType() familiestypes.FamilyType {
+	return familiestypes.Secrets
+}
+
+func (s Secrets) Run(ctx context.Context, _ *familiestypes.FamiliesResults) (familiestypes.FamilyResult, error) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "secrets")
 	logger.Info("Secrets Run...")
 
 	manager := job_manager.New(s.conf.ScannersList, s.conf.ScannersConfig, logger, job.Factory)
-	mergedResults := NewMergedResults()
+	processResults, err := manager.Process(ctx, s.conf.Inputs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to process inputs for secrets: %w", err)
+	}
 
-	var secretsResults Results
-	for _, input := range s.conf.Inputs {
-		startTime := time.Now()
-		results, err := manager.Run(ctx, utils.SourceType(input.InputType), input.Input)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan input %q for secrets: %w", input.Input, err)
-		}
-		endTime := time.Now()
-		inputSize, err := familiesutils.GetInputSize(input)
-		if err != nil {
-			logger.Warnf("Failed to calculate input %v size: %v", input, err)
-		}
+	secretsResults := types.NewFamilyResult()
 
-		// Merge results.
-		for name, result := range results {
-			secretResult := result.(*common.Results) // nolint:forcetypeassert
-			if familiesutils.ShouldStripInputPath(input.StripPathFromResult, s.conf.StripInputPaths) {
-				secretResult = StripPathFromResult(secretResult, input.Input)
-			}
-			logger.Infof("Merging result from %q", name)
-			mergedResults = mergedResults.Merge(secretResult)
+	// Merge results.
+	for _, result := range processResults {
+		logger.Infof("Merging result from %q", result.ScannerName)
+		secretResult, ok := result.Result.(types.ScannerResult)
+		if !ok {
+			return nil, fmt.Errorf("received results of a wrong type: %T", result)
 		}
-		secretsResults.Metadata.InputScans = append(secretsResults.Metadata.InputScans, types.CreateInputScanMetadata(startTime, endTime, inputSize, input))
+		if familiesutils.ShouldStripInputPath(result.Input.StripPathFromResult, s.conf.StripInputPaths) {
+			secretResult = stripPathFromResult(secretResult, result.InputPath)
+		}
+		secretsResults.MergedResults = secretsResults.MergedResults.Merge(secretResult)
+		secretsResults.Metadata.InputScans = append(secretsResults.Metadata.InputScans, result.InputScanMetadata)
 	}
 
 	logger.Info("Secrets Done...")
-	secretsResults.MergedResults = mergedResults
-	return &secretsResults, nil
+
+	return secretsResults, nil
 }
 
 // StripPathFromResult strip input path from results wherever it is found.
-func StripPathFromResult(result *common.Results, path string) *common.Results {
+func stripPathFromResult(result types.ScannerResult, path string) types.ScannerResult {
 	for i := range result.Findings {
 		result.Findings[i].File = familiesutils.TrimMountPath(result.Findings[i].File, path)
 		result.Findings[i].Fingerprint = familiesutils.RemoveMountPathSubStringIfNeeded(result.Findings[i].Fingerprint, path)
 	}
+
 	return result
-}
-
-func (s Secrets) GetType() types.FamilyType {
-	return types.Secrets
-}
-
-// ensure types implement the requisite interfaces.
-var _ interfaces.Family = &Secrets{}
-
-func New(conf Config) *Secrets {
-	return &Secrets{
-		conf: conf,
-	}
 }
