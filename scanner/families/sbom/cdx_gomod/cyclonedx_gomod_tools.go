@@ -18,6 +18,7 @@ package cdx_gomod // nolint:revive,stylecheck
 import (
 	"crypto/sha256"
 	"crypto/sha512"
+	"encoding/hex"
 	"fmt"
 	"hash"
 	"io"
@@ -27,14 +28,14 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
-const author = "kubeclarity"
+const author = "vmclarity"
 
 var Version = "v0.0.0-unset" // Must be a var so we can set it at build time
 
-func buildToolMetadata() (*cdx.Tool, error) {
+func buildToolMetadata() (*cdx.Component, error) {
 	toolExePath, err := os.Executable()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get exec path %v", err)
+		return nil, fmt.Errorf("failed to get exec path %w", err)
 	}
 
 	// Calculate only sha256 hash
@@ -43,8 +44,8 @@ func buildToolMetadata() (*cdx.Tool, error) {
 		return nil, fmt.Errorf("failed to calculate tool hashes: %w", err)
 	}
 
-	return &cdx.Tool{
-		Vendor:  author,
+	return &cdx.Component{
+		Author:  author,
 		Name:    AnalyzerName,
 		Version: Version,
 		Hashes:  &toolHashes,
@@ -94,7 +95,7 @@ func calculateFileHashes(filePath string, algos ...cdx.HashAlgorithm) ([]cdx.Has
 
 	file, err := os.Open(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("cannot open file=%s: %v", filePath, err)
+		return nil, fmt.Errorf("cannot open file=%s: %w", filePath, err)
 	}
 	defer file.Close()
 
@@ -103,7 +104,7 @@ func calculateFileHashes(filePath string, algos ...cdx.HashAlgorithm) ([]cdx.Has
 	// when iterating over algorithms below
 	multiWriter := io.MultiWriter(hashWriters...)
 	if _, err = io.Copy(multiWriter, file); err != nil {
-		return nil, fmt.Errorf("falied to copy file=%s to hashWriters: %v", filePath, err)
+		return nil, fmt.Errorf("falied to copy file=%s to hashWriters: %w", filePath, err)
 	}
 
 	cdxHashes := make([]cdx.Hash, 0, len(hashMap))
@@ -111,7 +112,7 @@ func calculateFileHashes(filePath string, algos ...cdx.HashAlgorithm) ([]cdx.Has
 		// _, err = io.Copy(hashMap[algo], file) was done by multiWriter above
 		cdxHashes = append(cdxHashes, cdx.Hash{
 			Algorithm: algo,
-			Value:     fmt.Sprintf("%x", hashMap[algo].Sum(nil)),
+			Value:     hex.EncodeToString(hashMap[algo].Sum(nil)),
 		})
 	}
 

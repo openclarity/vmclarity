@@ -16,6 +16,7 @@
 package cdx_gomod // nolint:revive,stylecheck
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
@@ -26,93 +27,76 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	zero_log "github.com/rs/zerolog/log"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 
-	"github.com/openclarity/kubeclarity/shared/pkg/analyzer"
-	"github.com/openclarity/kubeclarity/shared/pkg/config"
-	"github.com/openclarity/kubeclarity/shared/pkg/job_manager"
-	"github.com/openclarity/kubeclarity/shared/pkg/utils"
+	"github.com/openclarity/vmclarity/core/log"
+	"github.com/openclarity/vmclarity/scanner/common"
+	"github.com/openclarity/vmclarity/scanner/families"
+	"github.com/openclarity/vmclarity/scanner/families/sbom/cdx_gomod/config"
+	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
 )
 
 const AnalyzerName = "gomod"
 
 type Analyzer struct {
-	name       string
-	logger     *log.Entry
-	config     config.GomodConfig
-	resultChan chan job_manager.Result
+	config config.Config
 }
 
-func New(c job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.Result) job_manager.Job {
-	conf := c.(*config.Config) // nolint:forcetypeassert
+func New(_ context.Context, _ string, _ types.Config) (families.Scanner[*types.ScannerResult], error) {
 	return &Analyzer{
-		name:       AnalyzerName,
-		logger:     logger.Dup().WithField("analyzer", AnalyzerName),
-		config:     config.ConvertToGomodConfig(conf.Analyzer),
-		resultChan: resultChan,
+		config: config.Config{},
+	}, nil
+}
+
+func (a *Analyzer) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
+	logger := log.GetLoggerFromContextOrDefault(ctx)
+
+	// Skip this analyser for input types we don't support
+	if !sourceType.IsOneOf(common.DIR) {
+		return nil, fmt.Errorf("unsupported input type=%s", sourceType)
 	}
-}
 
-func (a *Analyzer) Run(sourceType utils.SourceType, userInput string) error {
-	go func() {
-		res := &analyzer.Results{}
-		if sourceType != utils.DIR {
-			a.logger.Infof("Skipping analyze unsupported source type: %s", sourceType)
-			a.resultChan <- res
-			return
-		}
+	zeroLogger := newZeroLogger(logger)
+	licenseDetector := local.NewDetector(zeroLogger)
 
-		zeroLogger := newZeroLogger(a.logger)
-		licenseDetector := local.NewDetector(zeroLogger)
+	generator, err := mod.NewGenerator(userInput,
+		mod.WithLogger(zeroLogger),
+		mod.WithComponentType(cdx.ComponentTypeApplication),
+		mod.WithIncludeStdlib(true),
+		mod.WithIncludeTestModules(false),
+		mod.WithLicenseDetector(licenseDetector))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create new CycloneDX-gomod generator: %w", err)
+	}
 
-		generator, err := mod.NewGenerator(userInput,
-			mod.WithLogger(zeroLogger),
-			mod.WithComponentType(cdx.ComponentTypeApplication),
-			mod.WithIncludeStdlib(true),
-			mod.WithIncludeTestModules(false),
-			mod.WithLicenseDetector(licenseDetector))
-		if err != nil {
-			a.setError(res, fmt.Errorf("failed to create new CycloneDX-gomod generator: %v", err))
-			return
-		}
+	bom, err := generator.Generate()
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate sbom: %w", err)
+	}
 
-		bom, err := generator.Generate()
-		if err != nil {
-			a.setError(res, fmt.Errorf("failed to generate sbom: %v", err))
-			return
-		}
+	bom.SerialNumber = uuid.New().URN()
+	if bom.Metadata == nil {
+		bom.Metadata = &cdx.Metadata{}
+	}
+	// create cycloneDX sbom metadata
+	tool, err := buildToolMetadata()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build tool metadata: %w", err)
+	}
 
-		bom.SerialNumber = uuid.New().URN()
-		if bom.Metadata == nil {
-			bom.Metadata = &cdx.Metadata{}
-		}
-		// create cycloneDX sbom metadata
-		tool, err := buildToolMetadata()
-		if err != nil {
-			a.setError(res, fmt.Errorf("failed to build tool metadata: %v", err))
-			return
-		}
+	bom.Metadata.Timestamp = time.Now().Format(time.RFC3339)
+	bom.Metadata.Tools = &cdx.ToolsChoice{
+		Components: &[]cdx.Component{*tool},
+	}
+	assertLicenses(bom)
 
-		bom.Metadata.Timestamp = time.Now().Format(time.RFC3339)
-		bom.Metadata.Tools = &[]cdx.Tool{*tool}
-		assertLicenses(bom)
+	result := types.CreateScannerResult(bom, AnalyzerName, userInput, sourceType)
 
-		res = analyzer.CreateResults(bom, a.name, userInput, sourceType)
-		a.logger.Infof("Sending successful results")
-		a.resultChan <- res
-	}()
-
-	return nil
-}
-
-func (a *Analyzer) setError(res *analyzer.Results, err error) {
-	res.Error = err
-	a.logger.Error(res.Error)
-	a.resultChan <- res
+	return result, nil
 }
 
 // newZeroLogger returns a zerolog.Logger.
-func newZeroLogger(logrusLogger *log.Entry) zerolog.Logger {
+func newZeroLogger(logrusLogger *logrus.Entry) zerolog.Logger {
 	logger := zero_log.Output(zerolog.ConsoleWriter{
 		Out: os.Stderr,
 	})
@@ -126,21 +110,21 @@ func newZeroLogger(logrusLogger *log.Entry) zerolog.Logger {
 }
 
 // convertLoglevel converts Logrus level to Zerolog level.
-func convertLoglevel(logLevel log.Level) (zerolog.Level, error) {
+func convertLoglevel(logLevel logrus.Level) (zerolog.Level, error) {
 	switch logLevel {
-	case log.PanicLevel:
+	case logrus.PanicLevel:
 		return zerolog.PanicLevel, nil
-	case log.FatalLevel:
+	case logrus.FatalLevel:
 		return zerolog.FatalLevel, nil
-	case log.ErrorLevel:
+	case logrus.ErrorLevel:
 		return zerolog.ErrorLevel, nil
-	case log.WarnLevel:
+	case logrus.WarnLevel:
 		return zerolog.WarnLevel, nil
-	case log.InfoLevel:
+	case logrus.InfoLevel:
 		return zerolog.InfoLevel, nil
-	case log.DebugLevel:
+	case logrus.DebugLevel:
 		return zerolog.DebugLevel, nil
-	case log.TraceLevel:
+	case logrus.TraceLevel:
 		return zerolog.TraceLevel, nil
 	default:
 		return zerolog.Disabled, fmt.Errorf("unknown logrus Level: %v", logLevel)
