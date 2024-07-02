@@ -10,6 +10,7 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/oapi-codegen/echo-middleware v1.0.2
+	github.com/oapi-codegen/nullable v1.1.0
 	github.com/oapi-codegen/runtime v1.1.1
 	github.com/onsi/gomega v1.33.1
 	github.com/openclarity/vmclarity/api/client v0.7.1
@@ -42,7 +43,6 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
-	github.com/oapi-codegen/nullable v1.1.0 // indirect
 	github.com/openclarity/vmclarity/plugins/sdk-go v0.7.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.1 // indirect
 	github.com/perimeterx/marshmallow v1.1.5 // indirect

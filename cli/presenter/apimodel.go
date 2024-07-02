@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/oapi-codegen/nullable"
 	log "github.com/sirupsen/logrus"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
@@ -48,9 +49,9 @@ func ConvertSBOMResultToPackages(sbomResults *sbom.Results) []apitypes.Package {
 
 	for _, component := range *sbomResults.SBOM.Components {
 		packages = append(packages, apitypes.Package{
-			Cpes:     to.Ptr([]string{component.CPE}),
+			Cpes:     nullable.NewNullableWithValue([]string{component.CPE}),
 			Language: to.Ptr(cyclonedx_helper.GetComponentLanguage(component)),
-			Licenses: to.Ptr(cyclonedx_helper.GetComponentLicenses(component)),
+			Licenses: nullable.NewNullableWithValue(cyclonedx_helper.GetComponentLicenses(component)),
 			Name:     to.Ptr(component.Name),
 			Purl:     to.Ptr(component.PackageURL),
 			Type:     to.Ptr(string(component.Type)),
@@ -81,7 +82,7 @@ func ConvertVulnResultToVulnerabilities(vulnerabilitiesResults *vulnerabilities.
 			Distro:            ConvertVulnDistroToAPIModel(vulCandidate.Vulnerability.Distro),
 			Fix:               ConvertVulnFixToAPIModel(vulCandidate.Vulnerability.Fix),
 			LayerId:           to.Ptr(vulCandidate.Vulnerability.LayerID),
-			Links:             to.Ptr(vulCandidate.Vulnerability.Links),
+			Links:             nullable.NewNullableWithValue(vulCandidate.Vulnerability.Links),
 			Package:           ConvertVulnPackageToAPIModel(vulCandidate.Vulnerability.Package),
 			Path:              to.Ptr(vulCandidate.Vulnerability.Path),
 			Severity:          ConvertVulnSeverityToAPIModel(vulCandidate.Vulnerability.Severity),
@@ -114,13 +115,13 @@ func ConvertVulnSeverityToAPIModel(severity string) *apitypes.VulnerabilitySever
 func ConvertVulnFixToAPIModel(fix scanner.Fix) *apitypes.VulnerabilityFix {
 	return &apitypes.VulnerabilityFix{
 		State:    to.Ptr(fix.State),
-		Versions: to.Ptr(fix.Versions),
+		Versions: nullable.NewNullableWithValue(fix.Versions),
 	}
 }
 
 func ConvertVulnDistroToAPIModel(distro scanner.Distro) *apitypes.VulnerabilityDistro {
 	return &apitypes.VulnerabilityDistro{
-		IDLike:  to.Ptr(distro.IDLike),
+		IDLike:  nullable.NewNullableWithValue(distro.IDLike),
 		Name:    to.Ptr(distro.Name),
 		Version: to.Ptr(distro.Version),
 	}
@@ -128,9 +129,9 @@ func ConvertVulnDistroToAPIModel(distro scanner.Distro) *apitypes.VulnerabilityD
 
 func ConvertVulnPackageToAPIModel(p scanner.Package) *apitypes.Package {
 	return &apitypes.Package{
-		Cpes:     to.Ptr(p.CPEs),
+		Cpes:     nullable.NewNullableWithValue(p.CPEs),
 		Language: to.Ptr(p.Language),
-		Licenses: to.Ptr(p.Licenses),
+		Licenses: nullable.NewNullableWithValue(p.Licenses),
 		Name:     to.Ptr(p.Name),
 		Purl:     to.Ptr(p.PURL),
 		Type:     to.Ptr(p.Type),
@@ -138,7 +139,7 @@ func ConvertVulnPackageToAPIModel(p scanner.Package) *apitypes.Package {
 	}
 }
 
-func ConvertVulnCvssToAPIModel(cvss []scanner.CVSS) *[]apitypes.VulnerabilityCvss {
+func ConvertVulnCvssToAPIModel(cvss []scanner.CVSS) nullable.Nullable[[]apitypes.VulnerabilityCvss] {
 	if cvss == nil {
 		return nil
 	}
@@ -164,7 +165,7 @@ func ConvertVulnCvssToAPIModel(cvss []scanner.CVSS) *[]apitypes.VulnerabilityCvs
 		})
 	}
 
-	return &ret
+	return nullable.NewNullableWithValue(ret)
 }
 
 func ConvertMalwareResultToMalwareAndMetadata(malwareResults *malware.MergedResults) ([]apitypes.Malware, []apitypes.ScannerMetadata) {
@@ -246,7 +247,7 @@ func ConvertExploitsResultToExploits(exploitsResults *exploits.Results) []apityp
 			Name:        &exploit.Name,
 			SourceDB:    &exploit.SourceDB,
 			Title:       &exploit.Title,
-			Urls:        &exploit.URLs,
+			Urls:        nullable.NewNullableWithValue(exploit.URLs),
 		})
 	}
 
