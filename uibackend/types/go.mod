@@ -2,7 +2,10 @@ module github.com/openclarity/vmclarity/uibackend/types
 
 go 1.22.4
 
-require github.com/deepmap/oapi-codegen/v2 v2.2.0
+require (
+	github.com/deepmap/oapi-codegen/v2 v2.2.0
+	github.com/oapi-codegen/nullable v1.1.0
+)
 
 require (
 	github.com/getkin/kin-openapi v0.124.0 // indirect
