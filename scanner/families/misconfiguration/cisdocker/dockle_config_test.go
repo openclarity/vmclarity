@@ -16,6 +16,8 @@
 package cisdocker
 
 import (
+	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/cisdocker/config"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
 	"testing"
 	"time"
 
@@ -24,8 +26,6 @@ import (
 	"github.com/sirupsen/logrus"
 	logrusTest "github.com/sirupsen/logrus/hooks/test"
 
-	cliconfig "github.com/openclarity/vmclarity/scanner/config"
-	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
 	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
@@ -41,14 +41,14 @@ func TestCreateDockleConfig(t *testing.T) {
 	tests := []struct {
 		name   string
 		logger *logrus.Entry
-		config types.CISDockerConfig
+		config config.Config
 		input  string
 		want   *dockle_config.Config
 	}{
 		{
 			name:   "Scanner with defaults",
 			logger: logEntryDebug,
-			config: types.CISDockerConfig{},
+			config: config.Config{},
 			input:  "node:slim",
 			want: &dockle_config.Config{
 				Debug:      true,
@@ -64,12 +64,12 @@ func TestCreateDockleConfig(t *testing.T) {
 		{
 			name:   "Scanner with configuration",
 			logger: logEntryInfo,
-			config: types.CISDockerConfig{
+			config: config.Config{
 				Timeout: 1 * time.Minute,
-				Registry: &cliconfig.Registry{
+				Registry: &familiestypes.Registry{
 					SkipVerifyTLS: true,
 					UseHTTP:       true,
-					Auths: []cliconfig.Auth{{
+					Auths: []familiestypes.Auth{{
 						Username: "testuser",
 						Password: "testpassword",
 					}},

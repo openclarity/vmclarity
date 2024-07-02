@@ -31,7 +31,7 @@ type Results struct {
 	MergedResults *scanner.MergedResults
 }
 
-func (*Results) IsResults() {}
+func (*Results) IsResult() {}
 
 func (r *Results) GetSourceImageInfo() (*apitypes.ContainerImageInfo, error) {
 	if r.MergedResults == nil {

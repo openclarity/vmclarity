@@ -18,6 +18,7 @@ package cisdocker
 import (
 	"context"
 	"fmt"
+	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/cisdocker/config"
 
 	dockle_run "github.com/Portshift/dockle/pkg"
 	"github.com/sirupsen/logrus"
@@ -34,7 +35,7 @@ const (
 type Scanner struct {
 	name       string
 	logger     *logrus.Entry
-	config     types.CISDockerConfig
+	config     config.Config
 	resultChan chan job_manager.Result
 }
 

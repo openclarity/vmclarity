@@ -19,20 +19,28 @@ import (
 	"context"
 	"fmt"
 	"github.com/openclarity/vmclarity/core/log"
-	"github.com/openclarity/vmclarity/scanner/families/interfaces"
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/job"
-	misconfigurationTypes "github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
-	"github.com/openclarity/vmclarity/scanner/families/results"
-	"github.com/openclarity/vmclarity/scanner/families/types"
+	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
 	"github.com/openclarity/vmclarity/scanner/job_manager"
 )
 
 type Misconfiguration struct {
-	conf misconfigurationTypes.Config
+	conf Config
 }
 
-func (m Misconfiguration) Run(ctx context.Context, _ *results.Results) (interfaces.IsResults, error) {
+func New(conf Config) familiestypes.Family {
+	return &Misconfiguration{
+		conf: conf,
+	}
+}
+
+func (m Misconfiguration) GetType() familiestypes.FamilyType {
+	return familiestypes.Misconfiguration
+}
+
+func (m Misconfiguration) Run(ctx context.Context, _ *familiestypes.FamiliesResults) (familiestypes.FamilyResult, error) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "misconfiguration")
 	logger.Info("Misconfiguration Run...")
 
@@ -42,13 +50,13 @@ func (m Misconfiguration) Run(ctx context.Context, _ *results.Results) (interfac
 		return nil, fmt.Errorf("failed to process inputs for misconfigurations: %w", err)
 	}
 
-	misConfigResults := NewResults()
+	misConfigResults := types.NewFamilyResult()
 
 	for _, result := range processResults {
 		logger.Infof("Merging result from %q", result.ScannerName)
-		if assetScan, ok := result.Result.(misconfigurationTypes.ScannerResult); ok {
+		if assetScan, ok := result.Result.(types.ScannerResult); ok {
 			if familiesutils.ShouldStripInputPath(result.Input.StripPathFromResult, m.conf.StripInputPaths) {
-				assetScan = StripPathFromResult(assetScan, result.InputPath)
+				assetScan = stripPathFromResult(assetScan, result.InputPath)
 			}
 			misConfigResults.AddScannerResult(assetScan)
 		} else {
@@ -63,22 +71,10 @@ func (m Misconfiguration) Run(ctx context.Context, _ *results.Results) (interfac
 }
 
 // StripPathFromResult strip input path from results wherever it is found.
-func StripPathFromResult(result misconfigurationTypes.ScannerResult, path string) misconfigurationTypes.ScannerResult {
+func stripPathFromResult(result types.ScannerResult, path string) types.ScannerResult {
 	for i := range result.Misconfigurations {
 		result.Misconfigurations[i].Location = familiesutils.TrimMountPath(result.Misconfigurations[i].Location, path)
 	}
+
 	return result
-}
-
-func (m Misconfiguration) GetType() types.FamilyType {
-	return types.Misconfiguration
-}
-
-// ensure types implement the requisite interfaces.
-var _ interfaces.Family = &Misconfiguration{}
-
-func New(conf misconfigurationTypes.Config) *Misconfiguration {
-	return &Misconfiguration{
-		conf: conf,
-	}
 }
