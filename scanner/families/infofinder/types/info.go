@@ -13,16 +13,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package common
+package types
 
-import (
-	clamconfig "github.com/openclarity/vmclarity/scanner/families/malware/clam/config"
-	yaraconfig "github.com/openclarity/vmclarity/scanner/families/malware/yara/config"
+type InfoType string
+
+const (
+	SSHKnownHostFingerprint     InfoType = "sshKnownHostFingerprint"
+	SSHAuthorizedKeyFingerprint InfoType = "sshAuthorizedKeyFingerprint"
+	SSHPrivateKeyFingerprint    InfoType = "sshPrivateKeyFingerprint"
+	SSHDaemonKeyFingerprint     InfoType = "sshDaemonKeyFingerprint"
 )
 
-type ScannersConfig struct {
-	Clam clamconfig.Config `yaml:"clam" mapstructure:"clam"`
-	Yara yaraconfig.Config `yaml:"yara" mapstructure:"yara"`
+type Info struct {
+	Type InfoType `json:"type"`
+	Path string   `json:"path"`
+	Data string   `json:"data"`
 }
 
-func (ScannersConfig) IsConfig() {}
+type FlattenedInfos struct {
+	Info
+	ScannerName string `json:"ScannerName"`
+}

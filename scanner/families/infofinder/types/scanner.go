@@ -13,15 +13,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package exploits
+package types
 
 import (
-	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
+	sshtopologyconfig "github.com/openclarity/vmclarity/scanner/families/infofinder/sshtopology/config"
 )
 
-type Results struct {
-	Metadata familiestypes.Metadata
-	Exploits MergedExploits `yaml:"exploits"`
+type ScannersConfig struct {
+	SSHTopology sshtopologyconfig.Config `yaml:"ssh_topology" mapstructure:"ssh_topology"`
 }
 
-func (*Results) IsResults() {}
+func (ScannersConfig) IsConfig() {}
+
+type ScannerResult struct {
+	ScannerName string
+	Infos       []Info
+	Error       error
+}
+
+func (sr ScannerResult) GetError() error {
+	return sr.Error
+}

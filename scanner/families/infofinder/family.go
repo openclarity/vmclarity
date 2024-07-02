@@ -20,10 +20,8 @@ import (
 	"fmt"
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/families/infofinder/job"
-	infofindertypes "github.com/openclarity/vmclarity/scanner/families/infofinder/types"
-	"github.com/openclarity/vmclarity/scanner/families/interfaces"
-	"github.com/openclarity/vmclarity/scanner/families/results"
-	"github.com/openclarity/vmclarity/scanner/families/types"
+	"github.com/openclarity/vmclarity/scanner/families/infofinder/types"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
 	"github.com/openclarity/vmclarity/scanner/job_manager"
 )
@@ -32,7 +30,17 @@ type InfoFinder struct {
 	conf Config
 }
 
-func (i InfoFinder) Run(ctx context.Context, _ *results.Results) (interfaces.IsResults, error) {
+func New(conf Config) *InfoFinder {
+	return &InfoFinder{
+		conf: conf,
+	}
+}
+
+func (i InfoFinder) GetType() familiestypes.FamilyType {
+	return familiestypes.InfoFinder
+}
+
+func (i InfoFinder) Run(ctx context.Context, _ *familiestypes.FamiliesResults) (familiestypes.FamilyResult, error) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "info finder")
 	logger.Info("InfoFinder Run...")
 
@@ -42,12 +50,12 @@ func (i InfoFinder) Run(ctx context.Context, _ *results.Results) (interfaces.IsR
 		return nil, fmt.Errorf("failed to process inputs for infofinders: %w", err)
 	}
 
-	infoFinderResults := NewResults()
+	infoFinderResults := types.NewFamilyResult()
 
 	// Merge results.
 	for _, result := range processResults {
 		logger.Infof("Merging result from %q", result.ScannerName)
-		if assetScan, ok := result.Result.(*infofindertypes.ScannerResult); ok {
+		if assetScan, ok := result.Result.(*types.ScannerResult); ok {
 			if familiesutils.ShouldStripInputPath(result.Input.StripPathFromResult, i.conf.StripInputPaths) {
 				assetScan = stripPathFromResult(assetScan, result.InputPath)
 			}
@@ -64,22 +72,9 @@ func (i InfoFinder) Run(ctx context.Context, _ *results.Results) (interfaces.IsR
 }
 
 // stripPathFromResult strip input path from results wherever it is found.
-func stripPathFromResult(result *infofindertypes.ScannerResult, path string) *infofindertypes.ScannerResult {
+func stripPathFromResult(result *types.ScannerResult, path string) *types.ScannerResult {
 	for i := range result.Infos {
 		result.Infos[i].Path = familiesutils.TrimMountPath(result.Infos[i].Path, path)
 	}
 	return result
-}
-
-func (i InfoFinder) GetType() types.FamilyType {
-	return types.InfoFinder
-}
-
-// ensure types implement the requisite interfaces.
-var _ interfaces.Family = &InfoFinder{}
-
-func New(conf Config) *InfoFinder {
-	return &InfoFinder{
-		conf: conf,
-	}
 }

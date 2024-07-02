@@ -16,11 +16,23 @@
 package types
 
 import (
-	exploitdb "github.com/openclarity/vmclarity/scanner/families/exploits/exploitdb/config"
+	cisdockerconfig "github.com/openclarity/vmclarity/scanner/families/misconfiguration/cisdocker/config"
+	lynisconfig "github.com/openclarity/vmclarity/scanner/families/misconfiguration/lynis/config"
 )
 
 type ScannersConfig struct {
-	ExploitDB exploitdb.Config `yaml:"exploit_db" mapstructure:"exploit_db"`
+	Lynis     lynisconfig.Config     `yaml:"lynis" mapstructure:"lynis"`
+	CISDocker cisdockerconfig.Config `yaml:"cisdocker" mapstructure:"cisdocker"`
 }
 
 func (ScannersConfig) IsConfig() {}
+
+type ScannerResult struct {
+	ScannerName       string
+	Misconfigurations []Misconfiguration
+	Error             error
+}
+
+func (sr ScannerResult) GetError() error {
+	return sr.Error
+}

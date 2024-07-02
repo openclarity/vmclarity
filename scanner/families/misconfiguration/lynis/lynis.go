@@ -18,6 +18,7 @@ package lynis
 import (
 	"context"
 	"fmt"
+	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/lynis/config"
 	"os"
 	"os/exec"
 	"path"
@@ -40,7 +41,7 @@ const (
 type Scanner struct {
 	name       string
 	logger     *log.Entry
-	config     types.LynisConfig
+	config     config.Config
 	resultChan chan job_manager.Result
 }
 

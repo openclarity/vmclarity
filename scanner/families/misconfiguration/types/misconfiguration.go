@@ -45,12 +45,7 @@ type Misconfiguration struct {
 	Remediation string   `json:"Remediation"`
 }
 
-type ScannerResult struct {
-	ScannerName       string
-	Misconfigurations []Misconfiguration
-	Error             error
-}
-
-func (sr ScannerResult) GetError() error {
-	return sr.Error
+type FlattenedMisconfiguration struct {
+	Misconfiguration
+	ScannerName string `json:"ScannerName"`
 }
