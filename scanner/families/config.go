@@ -20,7 +20,7 @@ import (
 	"github.com/openclarity/vmclarity/scanner/families/exploits"
 	"github.com/openclarity/vmclarity/scanner/families/infofinder"
 	"github.com/openclarity/vmclarity/scanner/families/malware"
-	misconfigurationTypes "github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
+	"github.com/openclarity/vmclarity/scanner/families/misconfiguration"
 	"github.com/openclarity/vmclarity/scanner/families/plugins"
 	"github.com/openclarity/vmclarity/scanner/families/rootkits"
 	"github.com/openclarity/vmclarity/scanner/families/sbom"
@@ -35,12 +35,12 @@ type Config struct {
 	SBOM sbom.Config `json:"sbom" yaml:"sbom" mapstructure:"sbom"`
 
 	// Scanners
-	Vulnerabilities  vulnerabilities.Config       `json:"vulnerabilities" yaml:"vulnerabilities" mapstructure:"vulnerabilities"`
-	Secrets          secrets.Config               `json:"secrets" yaml:"secrets" mapstructure:"secrets"`
-	Rootkits         rootkits.Config              `json:"rootkits" yaml:"rootkits" mapstructure:"rootkits"`
-	Malware          malware.Config               `json:"malware" yaml:"malware" mapstructure:"malware"`
-	Misconfiguration misconfigurationTypes.Config `json:"misconfiguration" yaml:"misconfiguration" mapstructure:"misconfiguration"`
-	InfoFinder       infofinder.Config            `json:"infofinder" yaml:"infofinder" mapstructure:"infofinder"`
+	Vulnerabilities  vulnerabilities.Config  `json:"vulnerabilities" yaml:"vulnerabilities" mapstructure:"vulnerabilities"`
+	Secrets          secrets.Config          `json:"secrets" yaml:"secrets" mapstructure:"secrets"`
+	Rootkits         rootkits.Config         `json:"rootkits" yaml:"rootkits" mapstructure:"rootkits"`
+	Malware          malware.Config          `json:"malware" yaml:"malware" mapstructure:"malware"`
+	Misconfiguration misconfiguration.Config `json:"misconfiguration" yaml:"misconfiguration" mapstructure:"misconfiguration"`
+	InfoFinder       infofinder.Config       `json:"infofinder" yaml:"infofinder" mapstructure:"infofinder"`
 
 	// Enrichers
 	Exploits exploits.Config `json:"exploits" yaml:"exploits" mapstructure:"exploits"`
@@ -56,7 +56,7 @@ func NewConfig() *Config {
 		Secrets:          secrets.Config{},
 		Rootkits:         rootkits.Config{},
 		Malware:          malware.Config{},
-		Misconfiguration: misconfigurationTypes.Config{},
+		Misconfiguration: misconfiguration.Config{},
 		Exploits:         exploits.Config{},
 		Plugins:          plugins.Config{},
 	}
