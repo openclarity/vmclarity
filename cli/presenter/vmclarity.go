@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/oapi-codegen/nullable"
 	apiclient "github.com/openclarity/vmclarity/api/client"
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/to"
@@ -102,8 +103,9 @@ func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res families.
 				to.Ptr("failed to convert to sbom results"),
 			)
 		} else {
-			assetScan.Sbom.Packages = to.Ptr(ConvertSBOMResultToPackages(sbomResults))
-			assetScan.Summary.TotalPackages = to.Ptr(len(*assetScan.Sbom.Packages))
+			packages := ConvertSBOMResultToPackages(sbomResults)
+			assetScan.Sbom.Packages = nullable.NewNullableWithValue(packages)
+			assetScan.Summary.TotalPackages = to.Ptr(len(packages))
 			assetScan.Stats.Sbom = getInputScanStats(sbomResults.Metadata)
 			assetScan.Sbom.Status = apitypes.NewScannerStatus(
 				apitypes.ScannerStatusStateDone,
@@ -152,8 +154,9 @@ func (v *VMClarityPresenter) ExportVulResult(ctx context.Context, res families.F
 				to.Ptr("failed to convert to vulnerabilities results"),
 			)
 		} else {
-			assetScan.Vulnerabilities.Vulnerabilities = to.Ptr(ConvertVulnResultToVulnerabilities(vulnerabilitiesResults))
-			assetScan.Summary.TotalVulnerabilities = utils.GetVulnerabilityTotalsPerSeverity(assetScan.Vulnerabilities.Vulnerabilities)
+			vulnerabilities := ConvertVulnResultToVulnerabilities(vulnerabilitiesResults)
+			assetScan.Vulnerabilities.Vulnerabilities = nullable.NewNullableWithValue(vulnerabilities)
+			assetScan.Summary.TotalVulnerabilities = utils.GetVulnerabilityTotalsPerSeverity(&vulnerabilities)
 			assetScan.Stats.Vulnerabilities = getInputScanStats(vulnerabilitiesResults.Metadata)
 			assetScan.Vulnerabilities.Status = apitypes.NewScannerStatus(
 				apitypes.ScannerStatusStateDone,
@@ -202,8 +205,9 @@ func (v *VMClarityPresenter) ExportSecretsResult(ctx context.Context, res famili
 				to.Ptr("failed to convert to secrets results"),
 			)
 		} else {
-			assetScan.Secrets.Secrets = to.Ptr(ConvertSecretsResultToSecrets(secretsResults))
-			assetScan.Summary.TotalSecrets = to.Ptr(len(*assetScan.Secrets.Secrets))
+			secrets := ConvertSecretsResultToSecrets(secretsResults)
+			assetScan.Secrets.Secrets = nullable.NewNullableWithValue(secrets)
+			assetScan.Summary.TotalSecrets = to.Ptr(len(secrets))
 			assetScan.Stats.Secrets = getInputScanStats(secretsResults.Metadata)
 			assetScan.Secrets.Status = apitypes.NewScannerStatus(
 				apitypes.ScannerStatusStateDone,
@@ -277,8 +281,8 @@ func (v *VMClarityPresenter) ExportMalwareResult(ctx context.Context, res famili
 			mware, mdata := ConvertMalwareResultToMalwareAndMetadata(malwareResults)
 			assetScan.Summary.TotalMalware = to.Ptr(len(mware))
 			assetScan.Stats.Malware = getInputScanStats(malwareResults.Metadata)
-			assetScan.Malware.Malware = to.Ptr(mware)
-			assetScan.Malware.Metadata = to.Ptr(mdata)
+			assetScan.Malware.Malware = nullable.NewNullableWithValue(mware)
+			assetScan.Malware.Metadata = nullable.NewNullableWithValue(mdata)
 			assetScan.Malware.Status = apitypes.NewScannerStatus(
 				apitypes.ScannerStatusStateDone,
 				apitypes.ScannerStatusReasonSuccess,
@@ -325,8 +329,9 @@ func (v *VMClarityPresenter) ExportExploitsResult(ctx context.Context, res famil
 				to.Ptr("failed to convert to exploits results"),
 			)
 		} else {
-			assetScan.Exploits.Exploits = to.Ptr(ConvertExploitsResultToExploits(exploitsResults))
-			assetScan.Summary.TotalExploits = to.Ptr(len(*assetScan.Exploits.Exploits))
+			exploits := ConvertExploitsResultToExploits(exploitsResults)
+			assetScan.Exploits.Exploits = nullable.NewNullableWithValue(exploits)
+			assetScan.Summary.TotalExploits = to.Ptr(len(exploits))
 			assetScan.Stats.Exploits = getInputScanStats(exploitsResults.Metadata)
 			assetScan.Exploits.Status = apitypes.NewScannerStatus(
 				apitypes.ScannerStatusStateDone,
@@ -388,8 +393,8 @@ func (v *VMClarityPresenter) ExportMisconfigurationResult(ctx context.Context, r
 					apitypes.ScannerStatusReasonSuccess,
 					nil,
 				)
-				assetScan.Misconfigurations.Misconfigurations = to.Ptr(misconfigurations)
-				assetScan.Misconfigurations.Scanners = to.Ptr(scanners)
+				assetScan.Misconfigurations.Misconfigurations = nullable.NewNullableWithValue(misconfigurations)
+				assetScan.Misconfigurations.Scanners = nullable.NewNullableWithValue(scanners)
 			}
 			assetScan.Summary.TotalMisconfigurations = to.Ptr(len(misconfigurationResults.Misconfigurations))
 			assetScan.Stats.Misconfigurations = getInputScanStats(misconfigurationResults.Metadata)
@@ -448,8 +453,8 @@ func (v *VMClarityPresenter) ExportInfoFinderResult(ctx context.Context, res fam
 					apitypes.ScannerStatusReasonSuccess,
 					nil,
 				)
-				assetScan.InfoFinder.Infos = to.Ptr(apiInfoFinder)
-				assetScan.InfoFinder.Scanners = to.Ptr(scanners)
+				assetScan.InfoFinder.Infos = nullable.NewNullableWithValue(apiInfoFinder)
+				assetScan.InfoFinder.Scanners = nullable.NewNullableWithValue(scanners)
 			}
 			assetScan.Summary.TotalInfoFinder = to.Ptr(len(results.Infos))
 			assetScan.Stats.InfoFinder = getInputScanStats(results.Metadata)
@@ -495,8 +500,9 @@ func (v *VMClarityPresenter) ExportRootkitResult(ctx context.Context, res famili
 				to.Ptr("failed to convert to rootkits results"),
 			)
 		} else {
-			assetScan.Rootkits.Rootkits = to.Ptr(ConvertRootkitsResultToRootkits(rootkitsResults))
-			assetScan.Summary.TotalRootkits = to.Ptr(len(*assetScan.Rootkits.Rootkits))
+			rootkits := ConvertRootkitsResultToRootkits(rootkitsResults)
+			assetScan.Rootkits.Rootkits = nullable.NewNullableWithValue(rootkits)
+			assetScan.Summary.TotalRootkits = to.Ptr(len(rootkits))
 			assetScan.Stats.Rootkits = getInputScanStats(rootkitsResults.Metadata)
 			assetScan.Rootkits.Status = apitypes.NewScannerStatus(
 				apitypes.ScannerStatusStateDone,
@@ -549,7 +555,7 @@ func (v *VMClarityPresenter) ExportPluginsResult(ctx context.Context, res famili
 				apitypes.ScannerStatusReasonSuccess,
 				nil,
 			)
-			assetScan.Plugins.FindingInfos = &pluginResults.Findings
+			assetScan.Plugins.FindingInfos = nullable.NewNullableWithValue(pluginResults.Findings)
 			// TODO Total plugins should be split by type
 			assetScan.Summary.TotalPlugins = to.Ptr(pluginResults.TotalFindings())
 			assetScan.Stats.Plugins = getInputScanStats(pluginResults.Metadata)

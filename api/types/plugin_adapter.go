@@ -16,6 +16,7 @@
 package types
 
 import (
+	"github.com/oapi-codegen/nullable"
 	"github.com/openclarity/vmclarity/core/to"
 	plugintypes "github.com/openclarity/vmclarity/plugins/sdk-go/types"
 )
@@ -287,8 +288,8 @@ func (p pluginAdapter) Secret(data plugintypes.Secret) (*SecretFindingInfo, erro
 
 func (p pluginAdapter) Vulnerability(data plugintypes.Vulnerability) (*VulnerabilityFindingInfo, error) {
 	cvss := []VulnerabilityCvss{}
-	if data.Cvss != nil {
-		for _, c := range *data.Cvss {
+	if values, err := data.Cvss.Get(); err != nil {
+		for _, c := range values {
 			cvss = append(cvss, VulnerabilityCvss{
 				Metrics: &VulnerabilityCvssMetrics{
 					BaseScore:           c.BaseScore,
@@ -341,7 +342,7 @@ func (p pluginAdapter) Vulnerability(data plugintypes.Vulnerability) (*Vulnerabi
 	}
 
 	return &VulnerabilityFindingInfo{
-		Cvss:              &cvss,
+		Cvss:              nullable.NewNullableWithValue(cvss),
 		Description:       data.Description,
 		Distro:            distro,
 		Fix:               fix,

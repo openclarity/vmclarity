@@ -19,6 +19,7 @@ require (
 	github.com/google/go-containerregistry v0.19.2
 	github.com/google/uuid v1.6.0
 	github.com/jinzhu/copier v0.4.0
+	github.com/oapi-codegen/nullable v1.1.0
 	github.com/onsi/gomega v1.33.1
 	github.com/openclarity/grype-server/api v0.0.0-20240619144520-b9ba72524a9c
 	github.com/openclarity/vmclarity/api/types v0.7.2
@@ -324,7 +325,6 @@ require (
 	github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/nwaples/rardecode v1.1.0 // indirect
-	github.com/oapi-codegen/nullable v1.1.0 // indirect
 	github.com/oapi-codegen/runtime v1.1.1 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
