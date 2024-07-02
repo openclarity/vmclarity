@@ -16,12 +16,12 @@
 package cisdocker
 
 import (
+	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/cisdocker/config"
 	"time"
 
 	dockle_config "github.com/Portshift/dockle/config"
 	"github.com/sirupsen/logrus"
 
-	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
 	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
@@ -29,7 +29,7 @@ const (
 	DefaultCISDockerTimeout = 2 * time.Minute
 )
 
-func createDockleConfig(logger *logrus.Entry, sourceType utils.SourceType, name string, config types.CISDockerConfig) *dockle_config.Config {
+func createDockleConfig(logger *logrus.Entry, sourceType utils.SourceType, name string, config config.Config) *dockle_config.Config {
 	dockleConfig := &dockle_config.Config{
 		Debug:      logger.Logger.Level == logrus.DebugLevel,
 		Timeout:    DefaultCISDockerTimeout,

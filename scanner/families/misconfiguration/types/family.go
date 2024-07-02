@@ -1,4 +1,4 @@
-// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2024 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,28 +13,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package misconfiguration
+package types
 
 import (
+	"github.com/openclarity/vmclarity/scanner/families/types"
 	"time"
-
-	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
 )
 
-type FlattenedMisconfiguration struct {
-	ScannerName string `json:"ScannerName"`
-	types.Misconfiguration
-}
+var _ types.FamilyResult = &FamilyResult{}
 
-type Results struct {
-	Metadata          familiestypes.Metadata      `json:"Metadata"`
+type FamilyResult struct {
+	Metadata          types.Metadata              `json:"Metadata"`
 	Misconfigurations []FlattenedMisconfiguration `json:"Misconfigurations"`
 }
 
-func NewResults() *Results {
-	return &Results{
-		Metadata: familiestypes.Metadata{
+func NewFamilyResult() *FamilyResult {
+	return &FamilyResult{
+		Metadata: types.Metadata{
 			Timestamp: time.Now(),
 			Scanners:  []string{},
 		},
@@ -42,18 +37,9 @@ func NewResults() *Results {
 	}
 }
 
-func (*Results) IsResults() {}
+func (*FamilyResult) IsResult() {}
 
-func (r *Results) addScannerNameToMetadata(name string) {
-	for _, scannerName := range r.Metadata.Scanners {
-		if scannerName == name {
-			return
-		}
-	}
-	r.Metadata.Scanners = append(r.Metadata.Scanners, name)
-}
-
-func (r *Results) AddScannerResult(scannerResult types.ScannerResult) {
+func (r *FamilyResult) AddScannerResult(scannerResult ScannerResult) {
 	r.addScannerNameToMetadata(scannerResult.ScannerName)
 
 	for _, misconfiguration := range scannerResult.Misconfigurations {
@@ -65,4 +51,13 @@ func (r *Results) AddScannerResult(scannerResult types.ScannerResult) {
 
 	// bump the timestamp as there are new results
 	r.Metadata.Timestamp = time.Now()
+}
+
+func (r *FamilyResult) addScannerNameToMetadata(name string) {
+	for _, scannerName := range r.Metadata.Scanners {
+		if scannerName == name {
+			return
+		}
+	}
+	r.Metadata.Scanners = append(r.Metadata.Scanners, name)
 }
