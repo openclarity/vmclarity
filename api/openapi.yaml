@@ -2309,6 +2309,7 @@ components:
             terminatedOn:
               type: string
               format: date-time
+              nullable: true
             lastSeen:
               type: string
               format: date-time
@@ -2348,6 +2349,7 @@ components:
             terminatedOn:
               type: string
               format: date-time
+              nullable: true
               readOnly: true
             lastSeen:
               type: string
