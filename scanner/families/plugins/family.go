@@ -22,11 +22,9 @@ import (
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/core/to"
 	plugintypes "github.com/openclarity/vmclarity/plugins/sdk-go/types"
-	"github.com/openclarity/vmclarity/scanner/families/interfaces"
-	"github.com/openclarity/vmclarity/scanner/families/plugins/common"
 	"github.com/openclarity/vmclarity/scanner/families/plugins/runner"
-	"github.com/openclarity/vmclarity/scanner/families/results"
-	"github.com/openclarity/vmclarity/scanner/families/types"
+	"github.com/openclarity/vmclarity/scanner/families/plugins/types"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
 	"github.com/openclarity/vmclarity/scanner/job_manager"
 )
 
@@ -34,9 +32,17 @@ type Plugins struct {
 	conf Config
 }
 
-var _ interfaces.Family = &Plugins{}
+func New(conf Config) familiestypes.Family {
+	return &Plugins{
+		conf: conf,
+	}
+}
 
-func (p *Plugins) Run(ctx context.Context, res *results.Results) (interfaces.IsResults, error) {
+func (p *Plugins) GetType() familiestypes.FamilyType {
+	return familiestypes.Plugins
+}
+
+func (p *Plugins) Run(ctx context.Context, res *familiestypes.FamiliesResults) (familiestypes.FamilyResult, error) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "plugins")
 	logger.Info("Plugins Run...")
 
@@ -62,14 +68,14 @@ func (p *Plugins) Run(ctx context.Context, res *results.Results) (interfaces.IsR
 	}
 
 	// Merge results from all plugins into the same output
-	var pluginsResults Results
+	pluginsResults := types.NewFamilyResult()
 
 	var mergedResults []apitypes.FindingInfo
 	mergedPluginResult := make(map[string]plugintypes.Result)
 
 	for _, result := range processResults {
 		logger.Infof("Merging result from %q", result.ScannerName)
-		data, ok := result.Result.(*common.Results)
+		data, ok := result.Result.(*types.ScannerResult)
 		if !ok {
 			return nil, fmt.Errorf("received results of a wrong type: %T", result)
 		}
@@ -83,15 +89,5 @@ func (p *Plugins) Run(ctx context.Context, res *results.Results) (interfaces.IsR
 
 	logger.Info("Plugins Done...")
 
-	return &pluginsResults, nil
-}
-
-func (p *Plugins) GetType() types.FamilyType {
-	return types.Plugins
-}
-
-func New(conf Config) *Plugins {
-	return &Plugins{
-		conf: conf,
-	}
+	return pluginsResults, nil
 }

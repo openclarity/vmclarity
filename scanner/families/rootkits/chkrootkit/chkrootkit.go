@@ -24,7 +24,7 @@ import (
 
 	"github.com/openclarity/vmclarity/scanner/families/rootkits/chkrootkit/config"
 	chkrootkitutils "github.com/openclarity/vmclarity/scanner/families/rootkits/chkrootkit/utils"
-	"github.com/openclarity/vmclarity/scanner/families/rootkits/common"
+	"github.com/openclarity/vmclarity/scanner/families/rootkits/types"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
 	"github.com/openclarity/vmclarity/scanner/job_manager"
 	"github.com/openclarity/vmclarity/scanner/utils"
@@ -44,7 +44,7 @@ type Scanner struct {
 
 func (s *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInput string) error {
 	go func(ctx context.Context) {
-		retResults := common.Results{
+		retResults := types.ScannerResult{
 			ScannedInput: userInput,
 			ScannerName:  ScannerName,
 		}
@@ -118,15 +118,15 @@ func filterResults(rootkits []chkrootkitutils.Rootkit) []chkrootkitutils.Rootkit
 	return ret
 }
 
-func toResultsRootkits(rootkits []chkrootkitutils.Rootkit) []common.Rootkit {
+func toResultsRootkits(rootkits []chkrootkitutils.Rootkit) []types.Rootkit {
 	// nolint:prealloc
-	var ret []common.Rootkit
+	var ret []types.Rootkit
 	for _, rootkit := range rootkits {
 		if !rootkit.Infected {
 			continue
 		}
 
-		ret = append(ret, common.Rootkit{
+		ret = append(ret, types.Rootkit{
 			Message:     rootkit.Message,
 			RootkitName: rootkit.RkName,
 			RootkitType: rootkit.RkType,
@@ -137,7 +137,7 @@ func toResultsRootkits(rootkits []chkrootkitutils.Rootkit) []common.Rootkit {
 }
 
 func New(_ string, c job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.Result) job_manager.Job {
-	conf := c.(*common.ScannersConfig) // nolint:forcetypeassert
+	conf := c.(*types.ScannersConfig) // nolint:forcetypeassert
 	return &Scanner{
 		name:       ScannerName,
 		logger:     logger.Dup().WithField("scanner", ScannerName),
@@ -158,7 +158,7 @@ func (s *Scanner) isValidInputType(sourceType utils.SourceType) bool {
 	return false
 }
 
-func (s *Scanner) sendResults(results common.Results, err error) {
+func (s *Scanner) sendResults(results types.ScannerResult, err error) {
 	if err != nil {
 		s.logger.Error(err)
 		results.Error = err

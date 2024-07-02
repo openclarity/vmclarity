@@ -18,13 +18,14 @@ package config
 import (
 	"github.com/anchore/stereoscope/pkg/image"
 	"github.com/anchore/syft/syft/source"
-	"github.com/openclarity/vmclarity/scanner/families/common/registry"
+	"github.com/openclarity/vmclarity/scanner/families/types"
 )
 
 type Config struct {
-	Scope        string            `yaml:"scope" mapstructure:"scope"`
-	ExcludePaths []string          `yaml:"exclude_paths" mapstructure:"exclude_paths"`
-	Registry     registry.Registry `yaml:"registry" mapstructure:"registry"`
+	Scope          string         `yaml:"scope" mapstructure:"scope"`
+	ExcludePaths   []string       `yaml:"exclude_paths" mapstructure:"exclude_paths"`
+	Registry       types.Registry `yaml:"registry" mapstructure:"registry"`
+	LocalImageScan bool           `yaml:"local_image_scan" mapstructure:"local_image_scan"`
 }
 
 func (c *Config) GetScope() source.Scope {

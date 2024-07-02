@@ -33,6 +33,6 @@ type ScannerResult struct {
 	Error             error
 }
 
-func (sr ScannerResult) GetError() error {
-	return sr.Error
+func (r ScannerResult) GetError() error {
+	return r.Error
 }

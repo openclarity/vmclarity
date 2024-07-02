@@ -24,8 +24,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/openclarity/vmclarity/scanner/families/secrets/common"
-	gitleaksconfig "github.com/openclarity/vmclarity/scanner/families/secrets/gitleaks/config"
+	"github.com/openclarity/vmclarity/scanner/families/secrets/gitleaks/config"
+	"github.com/openclarity/vmclarity/scanner/families/secrets/types"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
 	"github.com/openclarity/vmclarity/scanner/job_manager"
 	"github.com/openclarity/vmclarity/scanner/utils"
@@ -39,23 +39,23 @@ const (
 type Scanner struct {
 	name       string
 	logger     *log.Entry
-	config     gitleaksconfig.Config
+	config     config.Config
 	resultChan chan job_manager.Result
 }
 
 func New(_ string, c job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.Result) job_manager.Job {
-	conf := c.(*common.ScannersConfig) // nolint:forcetypeassert
+	conf := c.(*types.ScannersConfig) // nolint:forcetypeassert
 	return &Scanner{
 		name:       ScannerName,
 		logger:     logger.Dup().WithField("scanner", ScannerName),
-		config:     gitleaksconfig.Config{BinaryPath: conf.Gitleaks.BinaryPath},
+		config:     conf.Gitleaks,
 		resultChan: resultChan,
 	}
 }
 
 func (a *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInput string) error {
 	go func(ctx context.Context) {
-		retResults := common.Results{
+		retResults := types.ScannerResult{
 			Source:      userInput,
 			ScannerName: ScannerName,
 		}
@@ -145,7 +145,7 @@ func (a *Scanner) isValidInputType(sourceType utils.SourceType) bool {
 	return false
 }
 
-func (a *Scanner) sendResults(results common.Results, err error) {
+func (a *Scanner) sendResults(results types.ScannerResult, err error) {
 	if err != nil {
 		a.logger.Error(err)
 		results.Error = err

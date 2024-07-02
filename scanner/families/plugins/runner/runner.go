@@ -27,10 +27,10 @@ import (
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/plugins/runner"
-	"github.com/openclarity/vmclarity/plugins/runner/types"
+	runnertypes "github.com/openclarity/vmclarity/plugins/runner/types"
 	plugintypes "github.com/openclarity/vmclarity/plugins/sdk-go/types"
-	"github.com/openclarity/vmclarity/scanner/families/plugins/common"
 	"github.com/openclarity/vmclarity/scanner/families/plugins/runner/config"
+	"github.com/openclarity/vmclarity/scanner/families/plugins/types"
 	"github.com/openclarity/vmclarity/scanner/job_manager"
 	"github.com/openclarity/vmclarity/scanner/utils"
 )
@@ -43,7 +43,7 @@ type Scanner struct {
 }
 
 func New(name string, c job_manager.IsConfig, logger *logrus.Entry, resultChan chan job_manager.Result) job_manager.Job {
-	conf := *c.(*common.ScannersConfig) // nolint:forcetypeassert
+	conf := *c.(*types.ScannersConfig) // nolint:forcetypeassert
 	return &Scanner{
 		name:       name,
 		logger:     logger.Dup().WithField("scanner", name),
@@ -57,7 +57,7 @@ func (s *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInpu
 		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 
-		retResults := common.Results{
+		retResults := types.ScannerResult{
 			ScannedInput: userInput,
 			ScannerName:  s.name,
 		}
@@ -68,7 +68,7 @@ func (s *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInpu
 			return
 		}
 
-		rr, err := runner.New(ctx, types.PluginConfig{
+		rr, err := runner.New(ctx, runnertypes.PluginConfig{
 			Name:          s.name,
 			ImageName:     s.config.ImageName,
 			InputDir:      userInput,
@@ -173,7 +173,7 @@ func (s *Scanner) isValidInputType(sourceType utils.SourceType) bool {
 	return false
 }
 
-func (s *Scanner) parseResults(ctx context.Context, runner types.PluginRunner) ([]apitypes.FindingInfo, *plugintypes.Result, error) {
+func (s *Scanner) parseResults(ctx context.Context, runner runnertypes.PluginRunner) ([]apitypes.FindingInfo, *plugintypes.Result, error) {
 	result, err := runner.Result(ctx)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get plugin scanner result: %w", err)
@@ -199,7 +199,7 @@ func (s *Scanner) parseResults(ctx context.Context, runner types.PluginRunner) (
 	return findings, &pluginResult, nil
 }
 
-func (s *Scanner) sendResults(results common.Results, err error) {
+func (s *Scanner) sendResults(results types.ScannerResult, err error) {
 	if err != nil {
 		s.logger.Error(err)
 		results.Error = err

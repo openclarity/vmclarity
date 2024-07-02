@@ -18,7 +18,7 @@ package windows
 import (
 	"context"
 	"fmt"
-	"github.com/openclarity/vmclarity/scanner/families/sbom/common"
+	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
 
 	log "github.com/sirupsen/logrus"
 
@@ -47,7 +47,7 @@ func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInp
 	a.logger.Infof("Called %s analyzer on source %v %v", a.name, sourceType, userInput)
 
 	go func() {
-		res := &common.Results{}
+		res := &types.ScannerResult{}
 
 		// Create Windows registry based on supported input types
 		var err error
@@ -78,7 +78,7 @@ func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInp
 		}
 
 		// Return sbom
-		res = common.CreateResults(bom, a.name, userInput, sourceType)
+		res = types.CreateScannerResult(bom, a.name, userInput, sourceType)
 		a.logger.Infof("Sending successful results")
 		a.resultChan <- res
 	}()
@@ -86,7 +86,7 @@ func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInp
 	return nil
 }
 
-func (a *Analyzer) setError(res *common.Results, err error) {
+func (a *Analyzer) setError(res *types.ScannerResult, err error) {
 	res.Error = err
 	a.logger.Error(res.Error)
 	a.resultChan <- res

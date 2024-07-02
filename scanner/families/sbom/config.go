@@ -16,16 +16,16 @@
 package sbom
 
 import (
-	"github.com/openclarity/vmclarity/scanner/families/sbom/common"
-	"github.com/openclarity/vmclarity/scanner/families/types"
+	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
 )
 
 type Config struct {
-	Enabled         bool                    `yaml:"enabled" mapstructure:"enabled"`
-	AnalyzersList   []string                `yaml:"analyzers_list" mapstructure:"analyzers_list"`
-	Inputs          []types.Input           `yaml:"inputs" mapstructure:"inputs"`
-	MergeWith       []MergeWith             `yaml:"merge_with" mapstructure:"merge_with"`
-	AnalyzersConfig *common.AnalyzersConfig `yaml:"analyzers_config" mapstructure:"analyzers_config"`
+	Enabled         bool                   `yaml:"enabled" mapstructure:"enabled"`
+	AnalyzersList   []string               `yaml:"analyzers_list" mapstructure:"analyzers_list"`
+	Inputs          []familiestypes.Input  `yaml:"inputs" mapstructure:"inputs"`
+	MergeWith       []MergeWith            `yaml:"merge_with" mapstructure:"merge_with"`
+	AnalyzersConfig *types.AnalyzersConfig `yaml:"analyzers_config" mapstructure:"analyzers_config"`
 }
 
 type MergeWith struct {

@@ -17,7 +17,7 @@ package sbom
 
 import (
 	"fmt"
-	"github.com/openclarity/vmclarity/scanner/families/sbom/common"
+	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
 	"sort"
 	"strings"
 	"time"
@@ -56,7 +56,7 @@ func NewMergedResults(sourceType utils.SourceType, hash string) *MergedResults {
 	}
 }
 
-func (m *MergedResults) Merge(other *common.Results) *MergedResults {
+func (m *MergedResults) Merge(other *types.ScannerResult) *MergedResults {
 	if other.Sbom == nil {
 		return m
 	}

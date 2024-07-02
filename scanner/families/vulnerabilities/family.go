@@ -19,17 +19,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/openclarity/vmclarity/scanner/scanner/job"
+	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/job"
+	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/types"
 	"os"
 
 	"github.com/openclarity/vmclarity/core/log"
-	"github.com/openclarity/vmclarity/scanner/config"
-	"github.com/openclarity/vmclarity/scanner/families/interfaces"
-	"github.com/openclarity/vmclarity/scanner/families/results"
-	"github.com/openclarity/vmclarity/scanner/families/sbom"
-	"github.com/openclarity/vmclarity/scanner/families/types"
+	sbomtypes "github.com/openclarity/vmclarity/scanner/families/sbom/types"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
 	"github.com/openclarity/vmclarity/scanner/job_manager"
-	"github.com/openclarity/vmclarity/scanner/scanner"
 )
 
 const (
@@ -37,18 +34,26 @@ const (
 )
 
 type Vulnerabilities struct {
-	conf           Config
-	ScannersConfig config.Config
+	conf Config
 }
 
-func (v Vulnerabilities) Run(ctx context.Context, res *results.Results) (interfaces.IsResults, error) {
+func New(conf Config) familiestypes.Family {
+	return &Vulnerabilities{
+		conf: conf,
+	}
+}
+func (v Vulnerabilities) GetType() familiestypes.FamilyType {
+	return familiestypes.Vulnerabilities
+}
+
+func (v Vulnerabilities) Run(ctx context.Context, res *familiestypes.FamiliesResults) (familiestypes.FamilyResult, error) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "vulnerabilities")
 	logger.Info("Vulnerabilities Run...")
 
 	if v.conf.InputFromSbom {
 		logger.Infof("Using input from SBOM results")
 
-		sbomResults, err := results.GetResult[*sbom.Results](res)
+		sbomResults, err := familiestypes.GetFamilyResult[*sbomtypes.FamilyResult](res)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get sbom results: %w", err)
 		}
@@ -63,7 +68,7 @@ func (v Vulnerabilities) Run(ctx context.Context, res *results.Results) (interfa
 			return nil, fmt.Errorf("failed to write sbom to file: %w", err)
 		}
 
-		v.conf.Inputs = append(v.conf.Inputs, types.Input{
+		v.conf.Inputs = append(v.conf.Inputs, familiestypes.Input{
 			Input:     sbomTempFilePath,
 			InputType: "sbom",
 		})
@@ -79,14 +84,13 @@ func (v Vulnerabilities) Run(ctx context.Context, res *results.Results) (interfa
 		return nil, fmt.Errorf("failed to process inputs for vulnerabilities: %w", err)
 	}
 
-	mergedResults := scanner.NewMergedResults()
-
-	var vulResults Results
+	mergedResults := types.NewMergedResults()
+	vulResults := types.NewFamilyResult()
 
 	// Merge results.
 	for _, result := range processResults {
 		logger.Infof("Merging result from %q", result.ScannerName)
-		data, ok := result.Result.(*scanner.Results)
+		data, ok := result.Result.(*types.ScannerResult)
 		if !ok {
 			return nil, fmt.Errorf("received results of a wrong type: %T", result)
 		}
@@ -103,21 +107,8 @@ func (v Vulnerabilities) Run(ctx context.Context, res *results.Results) (interfa
 	// })
 
 	vulResults.MergedResults = mergedResults
-	
+
 	logger.Info("Vulnerabilities Done...")
 
-	return &vulResults, nil
-}
-
-func (v Vulnerabilities) GetType() types.FamilyType {
-	return types.Vulnerabilities
-}
-
-// ensure types implement the requisite interfaces.
-var _ interfaces.Family = &Vulnerabilities{}
-
-func New(conf Config) *Vulnerabilities {
-	return &Vulnerabilities{
-		conf: conf,
-	}
+	return vulResults, nil
 }

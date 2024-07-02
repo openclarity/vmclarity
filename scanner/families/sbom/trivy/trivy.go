@@ -19,12 +19,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/openclarity/vmclarity/scanner/families/sbom/common"
+	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
 	"os"
 
 	"github.com/openclarity/vmclarity/scanner/utils"
 
-	"github.com/aquasecurity/trivy/pkg/fanal/types"
+	trivyftypes "github.com/aquasecurity/trivy/pkg/fanal/types"
 	log "github.com/sirupsen/logrus"
 
 	cdx "github.com/CycloneDX/cyclonedx-go"
@@ -34,10 +34,10 @@ import (
 	trivyTypes "github.com/aquasecurity/trivy/pkg/types"
 	trivyFsutils "github.com/aquasecurity/trivy/pkg/utils/fsutils"
 
-	"github.com/openclarity/vmclarity/scanner/config"
+	"github.com/openclarity/vmclarity/scanner/families/sbom/trivy/config"
+	"github.com/openclarity/vmclarity/scanner/families/utils/trivy"
 	"github.com/openclarity/vmclarity/scanner/job_manager"
 	"github.com/openclarity/vmclarity/scanner/utils/image_helper"
-	"github.com/openclarity/vmclarity/scanner/utils/trivy"
 )
 
 const AnalyzerName = "trivy"
@@ -45,19 +45,17 @@ const AnalyzerName = "trivy"
 type Analyzer struct {
 	name       string
 	logger     *log.Entry
-	config     config.AnalyzerTrivyConfigEx
+	config     config.Config
 	resultChan chan job_manager.Result
-	localImage bool
 }
 
 func New(_ string, c job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.Result) job_manager.Job {
-	conf := c.(*config.Config) // nolint:forcetypeassert
+	conf := c.(*types.AnalyzersConfig) // nolint:forcetypeassert
 	return &Analyzer{
 		name:       AnalyzerName,
 		logger:     logger.Dup().WithField("analyzer", AnalyzerName),
-		config:     config.CreateAnalyzerTrivyConfigEx(conf.Analyzer, conf.Registry),
+		config:     conf.Trivy,
 		resultChan: resultChan,
-		localImage: conf.LocalImageScan,
 	}
 }
 
@@ -78,7 +76,7 @@ func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInp
 	go func(ctx context.Context) {
 		defer os.Remove(tempFile.Name())
 
-		res := &common.Results{}
+		res := &types.ScannerResult{}
 
 		// Skip this analyser for input types we don't support
 		switch sourceType {
@@ -99,7 +97,7 @@ func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInp
 
 		trivyOptions := trivyFlag.Options{
 			GlobalOptions: trivyFlag.GlobalOptions{
-				Timeout:  a.config.Timeout,
+				Timeout:  a.config.GetTimeout(),
 				CacheDir: cacheDir,
 			},
 			ScanOptions: trivyFlag.ScanOptions{
@@ -117,7 +115,7 @@ func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInp
 				VulnType: trivyTypes.VulnTypes, // Trivy disables analyzers for language packages if VulnTypeLibrary not in VulnType list
 			},
 			ImageOptions: trivyFlag.ImageOptions{
-				ImageSources: types.AllImageSources,
+				ImageSources: trivyftypes.AllImageSources,
 			},
 		}
 
@@ -153,7 +151,7 @@ func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInp
 			return
 		}
 
-		res = common.CreateResults(bom, a.name, userInput, sourceType)
+		res = types.CreateScannerResult(bom, a.name, userInput, sourceType)
 
 		// Trivy doesn't include the version information in the
 		// component of CycloneDX, but it does include the RepoDigest and the ImageID as
@@ -187,7 +185,7 @@ func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInp
 	return nil
 }
 
-func (a *Analyzer) setError(res *common.Results, err error) {
+func (a *Analyzer) setError(res *types.ScannerResult, err error) {
 	res.Error = err
 	a.logger.Error(res.Error)
 	a.resultChan <- res
