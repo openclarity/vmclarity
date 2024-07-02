@@ -7,6 +7,7 @@ require (
 	github.com/getkin/kin-openapi v0.124.0
 	github.com/go-playground/validator/v10 v10.20.0
 	github.com/labstack/echo/v4 v4.12.0
+	github.com/oapi-codegen/nullable v1.1.0
 )
 
 require (
