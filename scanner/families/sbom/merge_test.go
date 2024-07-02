@@ -16,7 +16,7 @@
 package sbom
 
 import (
-	"github.com/openclarity/vmclarity/scanner/analyzer/common"
+	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
 	"reflect"
 	"sort"
 	"testing"
@@ -281,7 +281,7 @@ func TestMergedResults_Merge(t *testing.T) {
 		SourceHash           string
 	}
 	type args struct {
-		other *common.Results
+		other *types.ScannerResult
 	}
 	tests := []struct {
 		name   string
@@ -297,7 +297,7 @@ func TestMergedResults_Merge(t *testing.T) {
 				},
 			},
 			args: args{
-				other: &common.Results{
+				other: &types.ScannerResult{
 					Sbom:         expectedSbom,
 					AnalyzerInfo: "gomod",
 				},

@@ -19,7 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/openclarity/vmclarity/scanner/families/sbom/common"
+	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
 
 	"github.com/openclarity/vmclarity/scanner/utils"
 
@@ -30,7 +30,7 @@ import (
 	syftsrc "github.com/anchore/syft/syft/source"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/openclarity/vmclarity/scanner/config"
+	"github.com/openclarity/vmclarity/scanner/families/sbom/syft/config"
 	"github.com/openclarity/vmclarity/scanner/job_manager"
 	"github.com/openclarity/vmclarity/scanner/utils/image_helper"
 )
@@ -40,24 +40,22 @@ const AnalyzerName = "syft"
 type Analyzer struct {
 	name       string
 	logger     *log.Entry
-	config     config.SyftConfig
+	config     config.Config
 	resultChan chan job_manager.Result
-	localImage bool
 }
 
 func New(_ string, c job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.Result) job_manager.Job {
-	conf := c.(*config.Config) // nolint:forcetypeassert
+	conf := c.(*types.AnalyzersConfig) // nolint:forcetypeassert
 	return &Analyzer{
 		name:       AnalyzerName,
 		logger:     logger.Dup().WithField("analyzer", AnalyzerName),
-		config:     config.CreateSyftConfig(conf.Analyzer, conf.Registry),
+		config:     conf.Syft,
 		resultChan: resultChan,
-		localImage: conf.LocalImageScan,
 	}
 }
 
 func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInput string) error {
-	src := utils.CreateSource(sourceType, a.localImage)
+	src := utils.CreateSource(sourceType, a.config.LocalImageScan)
 
 	a.logger.Infof("Called %s analyzer on source %s", a.name, src)
 	// TODO platform can be defined
@@ -67,18 +65,18 @@ func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInp
 		userInput,
 		syft.DefaultGetSourceConfig().
 			WithSources(src).
-			WithRegistryOptions(a.config.RegistryOptions).
-			WithExcludeConfig(a.config.ExcludePaths),
+			WithRegistryOptions(a.config.GetRegistryOptions()).
+			WithExcludeConfig(a.config.GetExcludePaths()),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create source analyzer=%s: %w", a.name, err)
 	}
 
 	go func(ctx context.Context) {
-		res := &common.Results{}
+		res := &types.ScannerResult{}
 
 		sbomConfig := syft.DefaultCreateSBOMConfig().
-			WithSearchConfig(cataloging.DefaultSearchConfig().WithScope(a.config.Scope))
+			WithSearchConfig(cataloging.DefaultSearchConfig().WithScope(a.config.GetScope()))
 
 		sbom, err := syft.CreateSBOM(ctx, source, sbomConfig)
 		if err != nil {
@@ -87,7 +85,7 @@ func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInp
 		}
 
 		cdxBom := cyclonedxhelpers.ToFormatModel(*sbom)
-		res = common.CreateResults(cdxBom, a.name, userInput, sourceType)
+		res = types.CreateScannerResult(cdxBom, a.name, userInput, sourceType)
 
 		// Syft uses ManifestDigest to fill version information in the case of an image.
 		// We need RepoDigest/ImageID as well which is not set by Syft if we're using cycloneDX output.
@@ -118,7 +116,7 @@ func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInp
 	return nil
 }
 
-func (a *Analyzer) setError(res *common.Results, err error) {
+func (a *Analyzer) setError(res *types.ScannerResult, err error) {
 	res.Error = err
 	a.logger.Error(res.Error)
 	a.resultChan <- res

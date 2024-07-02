@@ -22,11 +22,9 @@ import (
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/core/version"
 	"github.com/openclarity/vmclarity/scanner/converter"
-	"github.com/openclarity/vmclarity/scanner/families/interfaces"
-	familiesresults "github.com/openclarity/vmclarity/scanner/families/results"
-	"github.com/openclarity/vmclarity/scanner/families/sbom/common"
 	"github.com/openclarity/vmclarity/scanner/families/sbom/job"
-	"github.com/openclarity/vmclarity/scanner/families/types"
+	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
 	"github.com/openclarity/vmclarity/scanner/job_manager"
 	"github.com/openclarity/vmclarity/scanner/utils"
 )
@@ -35,8 +33,18 @@ type SBOM struct {
 	conf Config
 }
 
+func (s SBOM) GetType() familiestypes.FamilyType {
+	return familiestypes.SBOM
+}
+
+func New(conf Config) familiestypes.Family {
+	return &SBOM{
+		conf: conf,
+	}
+}
+
 // nolint:cyclop
-func (s SBOM) Run(ctx context.Context, _ *familiesresults.Results) (interfaces.IsResults, error) {
+func (s SBOM) Run(ctx context.Context, _ *familiestypes.FamiliesResults) (familiestypes.FamilyResult, error) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "sbom")
 	logger.Info("SBOM Run...")
 
@@ -60,12 +68,12 @@ func (s SBOM) Run(ctx context.Context, _ *familiesresults.Results) (interfaces.I
 
 	mergedResults := NewMergedResults(utils.SourceType(s.conf.Inputs[0].InputType), hash)
 
-	var sbomResults Results
+	sbomResults := types.NewFamilyResult()
 
 	// Merge results.
 	for _, result := range processResults {
 		logger.Infof("Merging result from %q", result.ScannerName)
-		data, ok := result.Result.(*common.Results)
+		data, ok := result.Result.(*types.ScannerResult)
 		if !ok {
 			return nil, fmt.Errorf("received results of a wrong type: %T", result)
 		}
@@ -79,7 +87,7 @@ func (s SBOM) Run(ctx context.Context, _ *familiesresults.Results) (interfaces.I
 		if err != nil {
 			return nil, fmt.Errorf("failed to get CDX SBOM from path=%s: %w", with.SbomPath, err)
 		}
-		results := common.CreateResults(cdxBOMBytes, name, with.SbomPath, utils.SBOM)
+		results := types.CreateScannerResult(cdxBOMBytes, name, with.SbomPath, utils.SBOM)
 		logger.Infof("Merging result from %q", with.SbomPath)
 		mergedResults = mergedResults.Merge(results)
 	}
@@ -100,18 +108,5 @@ func (s SBOM) Run(ctx context.Context, _ *familiesresults.Results) (interfaces.I
 
 	logger.Info("SBOM Done...")
 
-	return &sbomResults, nil
-}
-
-func (s SBOM) GetType() types.FamilyType {
-	return types.SBOM
-}
-
-// ensure types implement the requisite interfaces.
-var _ interfaces.Family = &SBOM{}
-
-func New(conf Config) *SBOM {
-	return &SBOM{
-		conf: conf,
-	}
+	return sbomResults, nil
 }

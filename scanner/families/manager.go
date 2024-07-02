@@ -27,11 +27,9 @@ import (
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/families/exploits"
 	"github.com/openclarity/vmclarity/scanner/families/infofinder"
-	"github.com/openclarity/vmclarity/scanner/families/interfaces"
 	"github.com/openclarity/vmclarity/scanner/families/malware"
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration"
 	"github.com/openclarity/vmclarity/scanner/families/plugins"
-	"github.com/openclarity/vmclarity/scanner/families/results"
 	"github.com/openclarity/vmclarity/scanner/families/rootkits"
 	"github.com/openclarity/vmclarity/scanner/families/sbom"
 	"github.com/openclarity/vmclarity/scanner/families/secrets"
@@ -42,7 +40,7 @@ import (
 )
 
 type FamilyResult struct {
-	Result     interfaces.IsResults
+	Result     types.FamilyResult
 	FamilyType types.FamilyType
 	Err        error
 }
@@ -172,7 +170,7 @@ func (m *Manager) Run(ctx context.Context, notifier FamilyNotifier) []error {
 		// Run families processor
 		if err := processor.Run(ctx, runner{
 			Notifier: notifier,
-			Results:  results.New(),
+			Results:  types.NewFamiliesResults(),
 			ErrCh:    errCh,
 		}); err != nil {
 			errCh <- fmt.Errorf("failed to run families processor: %w", err)
@@ -204,7 +202,7 @@ func (m *Manager) Run(ctx context.Context, notifier FamilyNotifier) []error {
 
 // withFamilyRunner returns a function that will handle workflow execution for
 // the given family using provided runner.
-func withFamilyRunner(family interfaces.Family) func(context.Context, runner) error {
+func withFamilyRunner(family types.Family) func(context.Context, runner) error {
 	return func(ctx context.Context, runner runner) error {
 		// NOTE(ramizpolic): We do not return errors at all as returning an error in
 		// workflow function will cancel the whole execution. This is problematic as
@@ -217,11 +215,11 @@ func withFamilyRunner(family interfaces.Family) func(context.Context, runner) er
 
 type runner struct {
 	Notifier FamilyNotifier
-	Results  *results.Results
+	Results  *types.FamiliesResults
 	ErrCh    chan<- error
 }
 
-func (r *runner) Run(ctx context.Context, family interfaces.Family) {
+func (r *runner) Run(ctx context.Context, family types.Family) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx)
 
 	// Notify about start, return preemptively if it fails
@@ -250,7 +248,7 @@ func (r *runner) Run(ctx context.Context, family interfaces.Family) {
 			Err:    err,
 		}
 	} else {
-		r.Results.SetResults(result)
+		r.Results.SetFamilyResult(result)
 	}
 
 	// Notify about finish

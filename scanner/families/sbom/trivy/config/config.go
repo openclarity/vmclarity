@@ -15,11 +15,19 @@
 
 package config
 
-import "github.com/openclarity/vmclarity/scanner/families/common/registry"
+import (
+	"github.com/openclarity/vmclarity/scanner/families/types"
+	"time"
+)
 
 type Config struct {
-	Timeout  int               `yaml:"timeout" mapstructure:"timeout"`
-	CacheDir string            `yaml:"cache_dir" mapstructure:"cache_dir"`
-	TempDir  string            `yaml:"temp_dir" mapstructure:"temp_dir"`
-	Registry registry.Registry `yaml:"registry" mapstructure:"registry"`
+	Timeout        int             `yaml:"timeout" mapstructure:"timeout"`
+	CacheDir       string          `yaml:"cache_dir" mapstructure:"cache_dir"`
+	TempDir        string          `yaml:"temp_dir" mapstructure:"temp_dir"`
+	Registry       *types.Registry `yaml:"registry" mapstructure:"registry"`
+	LocalImageScan bool            `yaml:"local_image_scan" mapstructure:"local_image_scan"`
+}
+
+func (c *Config) GetTimeout() time.Duration {
+	return time.Duration(c.Timeout) * time.Second
 }
