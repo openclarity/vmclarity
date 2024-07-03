@@ -18,21 +18,11 @@ package types
 import (
 	"github.com/openclarity/vmclarity/api/types"
 	plugintypes "github.com/openclarity/vmclarity/plugins/sdk-go/types"
-	runnerconfig "github.com/openclarity/vmclarity/scanner/families/plugins/runner/config"
 )
-
-type ScannersConfig map[string]runnerconfig.Config
-
-func (ScannersConfig) IsConfig() {}
 
 type ScannerResult struct {
 	Findings     []types.FindingInfo
-	Output       *plugintypes.Result
+	Output       plugintypes.Result
 	ScannedInput string
 	ScannerName  string
-	Error        error
-}
-
-func (r *ScannerResult) GetError() error {
-	return r.Error
 }

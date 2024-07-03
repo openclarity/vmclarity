@@ -19,21 +19,18 @@ import (
 	"context"
 	"fmt"
 
-	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/log"
-	"github.com/openclarity/vmclarity/core/to"
-	plugintypes "github.com/openclarity/vmclarity/plugins/sdk-go/types"
 	"github.com/openclarity/vmclarity/scanner/families/plugins/runner"
 	"github.com/openclarity/vmclarity/scanner/families/plugins/types"
 	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
-	job_manager2 "github.com/openclarity/vmclarity/scanner/internal/job_manager"
+	"github.com/openclarity/vmclarity/scanner/internal/job_manager"
 )
 
 type Plugins struct {
-	conf Config
+	conf types.Config
 }
 
-func New(conf Config) familiestypes.Family {
+func New(conf types.Config) familiestypes.Family[*types.Result] {
 	return &Plugins{
 		conf: conf,
 	}
@@ -43,13 +40,12 @@ func (p *Plugins) GetType() familiestypes.FamilyType {
 	return familiestypes.Plugins
 }
 
-func (p *Plugins) Run(ctx context.Context, res *familiestypes.FamiliesResults) (familiestypes.FamilyResult, error) {
+func (p *Plugins) Run(ctx context.Context, _ *familiestypes.Results) (*types.Result, error) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "plugins")
 	logger.Info("Plugins Run...")
 
-	factory := job_manager2.NewJobFactory()
 	for _, n := range p.conf.ScannersList {
-		factory.Register(n, runner.New)
+		types.FactoryRegister(n, runner.New)
 	}
 
 	// Top level BinaryMode overrides the individual scanner BinaryMode if set
@@ -69,24 +65,12 @@ func (p *Plugins) Run(ctx context.Context, res *familiestypes.FamiliesResults) (
 	}
 
 	// Merge results from all plugins into the same output
-	pluginsResults := types.NewFamilyResult()
-
-	var mergedResults []apitypes.FindingInfo
-	mergedPluginResult := make(map[string]plugintypes.Result)
+	pluginsResults := types.NewResult()
 
 	for _, result := range processResults {
-		logger.Infof("Merging result from %q", result.ScannerName)
-		data, ok := result.Result.(*types.ScannerResult)
-		if !ok {
-			return nil, fmt.Errorf("received results of a wrong type: %T", result)
-		}
-		mergedResults = append(mergedResults, data.Findings...)
-		mergedPluginResult[result.ScannerName] = to.ValueOrZero(data.Output)
-		pluginsResults.Metadata.InputScans = append(pluginsResults.Metadata.InputScans, result.InputScanMetadata)
+		logger.Infof("Merging result from %q", result.Metadata.ScannerName)
+		pluginsResults.Merge(result.Result)
 	}
-
-	pluginsResults.Findings = mergedResults
-	pluginsResults.PluginOutputs = mergedPluginResult
 
 	logger.Info("Plugins Done...")
 

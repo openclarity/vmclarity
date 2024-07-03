@@ -18,7 +18,7 @@ package sbom
 import (
 	"fmt"
 	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
-	types2 "github.com/openclarity/vmclarity/scanner/types"
+	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 	"github.com/openclarity/vmclarity/scanner/utils/converter"
 	"sort"
 	"strings"
@@ -31,30 +31,30 @@ import (
 
 type componentKey string // Unique identification of a package (name and version)
 
-type MergedResults struct {
-	MergedComponentByKey map[componentKey]*MergedComponent
-	Source               types2.InputType
+type mergedResults struct {
+	MergedComponentByKey map[componentKey]*mergedComponent
+	Source               scannertypes.InputType
 	SourceHash           string
 	SrcMetaData          *cdx.Metadata
 	SrcMetaDataBomRefs   []string
 	Dependencies         *[]cdx.Dependency
 }
 
-type MergedComponent struct {
+type mergedComponent struct {
 	Component    cdx.Component
 	AnalyzerInfo []string
 	BomRefs      []string
 }
 
-func NewMergedResults(sourceType types2.InputType, hash string) *MergedResults {
-	return &MergedResults{
-		MergedComponentByKey: map[componentKey]*MergedComponent{},
+func newMergedResults(sourceType scannertypes.InputType, hash string) *mergedResults {
+	return &mergedResults{
+		MergedComponentByKey: map[componentKey]*mergedComponent{},
 		Source:               sourceType,
 		SourceHash:           hash,
 	}
 }
 
-func (m *MergedResults) Merge(other *types.ScannerResult) *MergedResults {
+func (m *mergedResults) Merge(other *types.ScannerResult) *mergedResults {
 	if other.Sbom == nil {
 		return m
 	}
@@ -90,7 +90,7 @@ func (m *MergedResults) Merge(other *types.ScannerResult) *MergedResults {
 	return m
 }
 
-func (m *MergedResults) mergeMainComponent(bom *cdx.BOM) {
+func (m *mergedResults) mergeMainComponent(bom *cdx.BOM) {
 	// Keep track of all SBOM refs given to the main component so that we
 	// can normalize them later.
 	if bom.Metadata != nil && bom.Metadata.Component != nil && bom.Metadata.Component.BOMRef != "" {
@@ -105,7 +105,7 @@ func (m *MergedResults) mergeMainComponent(bom *cdx.BOM) {
 	}
 }
 
-func (m *MergedResults) CreateMergedSBOMBytes(format, version string) ([]byte, error) {
+func (m *mergedResults) CreateMergedSBOMBytes(format, version string) ([]byte, error) {
 	cdxSBOM := m.createMergedSBOM(version)
 	f, err := converter.StringToSbomFormat(format)
 	if err != nil {
@@ -118,7 +118,7 @@ func (m *MergedResults) CreateMergedSBOMBytes(format, version string) ([]byte, e
 	return bomBytes, nil
 }
 
-func (m *MergedResults) createComponentListFromMap() *[]cdx.Component {
+func (m *mergedResults) createComponentListFromMap() *[]cdx.Component {
 	components := make([]cdx.Component, 0, len(m.MergedComponentByKey))
 	for _, component := range m.MergedComponentByKey {
 		components = append(components, component.Component)
@@ -139,8 +139,8 @@ func toComponentByKey(components *[]cdx.Component) map[componentKey]cdx.Componen
 	return ret
 }
 
-func newMergedComponent(component cdx.Component, analyzerInfo string) *MergedComponent {
-	mergedComponent := &MergedComponent{
+func newMergedComponent(component cdx.Component, analyzerInfo string) *mergedComponent {
+	mergedComponent := &mergedComponent{
 		Component: component,
 	}
 	mergedComponent.appendAnalyzerInfo(analyzerInfo)
@@ -151,7 +151,7 @@ func newMergedComponent(component cdx.Component, analyzerInfo string) *MergedCom
 	return mergedComponent
 }
 
-func handleComponentWithExistingKey(mergedComponent *MergedComponent, otherComponent cdx.Component, analyzerInfo string) *MergedComponent {
+func handleComponentWithExistingKey(mergedComponent *mergedComponent, otherComponent cdx.Component, analyzerInfo string) *mergedComponent {
 	mergedComponent.Component = mergeCDXComponent(mergedComponent.Component, otherComponent, false)
 	mergedComponent.appendAnalyzerInfo(analyzerInfo)
 	if otherComponent.BOMRef != "" {
@@ -269,7 +269,7 @@ func mergeProperties(properties, otherProperties *[]cdx.Property) *[]cdx.Propert
 	return &propSlice
 }
 
-func (mc *MergedComponent) appendAnalyzerInfo(info string) *MergedComponent {
+func (mc *mergedComponent) appendAnalyzerInfo(info string) *mergedComponent {
 	analyzerInfo := cdx.Property{
 		Name:  "analyzers",
 		Value: info,
@@ -287,7 +287,7 @@ func (mc *MergedComponent) appendAnalyzerInfo(info string) *MergedComponent {
 	return mc
 }
 
-func (m *MergedResults) createMergedSBOM(version string) *cdx.BOM {
+func (m *mergedResults) createMergedSBOM(version string) *cdx.BOM {
 	cdxBOM := cdx.NewBOM()
 	versionInfo := version
 	cdxBOM.SerialNumber = uuid.New().URN()
@@ -302,7 +302,7 @@ func (m *MergedResults) createMergedSBOM(version string) *cdx.BOM {
 	return cdxBOM
 }
 
-func (m *MergedResults) normalizeDependencies(dependencies *[]cdx.Dependency) *[]cdx.Dependency {
+func (m *mergedResults) normalizeDependencies(dependencies *[]cdx.Dependency) *[]cdx.Dependency {
 	if dependencies == nil {
 		return nil
 	}
@@ -375,7 +375,7 @@ func mergeDependencies(depsA, depsB *[]cdx.Dependency) *[]cdx.Dependency {
 	return &output
 }
 
-func (m *MergedResults) getRealBomRefFromPreviousBomRef(bomRef string) string {
+func (m *mergedResults) getRealBomRefFromPreviousBomRef(bomRef string) string {
 	for _, mergedComponent := range m.MergedComponentByKey {
 		for _, ref := range mergedComponent.BomRefs {
 			if ref == bomRef {
@@ -394,7 +394,7 @@ func (m *MergedResults) getRealBomRefFromPreviousBomRef(bomRef string) string {
 }
 
 // toBomDescriptor returns metadata tailored for the current time and tool details.
-func toBomDescriptor(name, version string, source types2.InputType, srcMetadata *cdx.Metadata, hash string) *cdx.Metadata {
+func toBomDescriptor(name, version string, source scannertypes.InputType, srcMetadata *cdx.Metadata, hash string) *cdx.Metadata {
 	return &cdx.Metadata{
 		Timestamp: time.Now().Format(time.RFC3339),
 		Tools: &cdx.ToolsChoice{
@@ -410,16 +410,16 @@ func toBomDescriptor(name, version string, source types2.InputType, srcMetadata 
 	}
 }
 
-func toBomDescriptorComponent(sourceType types2.InputType, srcMetadata *cdx.Metadata, hash string) *cdx.Component {
+func toBomDescriptorComponent(sourceType scannertypes.InputType, srcMetadata *cdx.Metadata, hash string) *cdx.Component {
 	if srcMetadata.Component == nil {
 		return nil
 	}
 	metaDataComponent := srcMetadata.Component
 
 	switch sourceType {
-	case types2.IMAGE, types2.DOCKERARCHIVE, types2.OCIARCHIVE, types2.OCIDIR:
+	case scannertypes.IMAGE, scannertypes.DOCKERARCHIVE, scannertypes.OCIARCHIVE, scannertypes.OCIDIR:
 		metaDataComponent.Type = cdx.ComponentTypeContainer
-	case types2.DIR, types2.FILE, types2.ROOTFS:
+	case scannertypes.DIR, scannertypes.FILE, scannertypes.ROOTFS:
 		metaDataComponent.Type = cdx.ComponentTypeFile
 		metaDataComponent.Hashes = &[]cdx.Hash{
 			{
@@ -427,7 +427,7 @@ func toBomDescriptorComponent(sourceType types2.InputType, srcMetadata *cdx.Meta
 				Value:     hash,
 			},
 		}
-	case types2.SBOM:
+	case scannertypes.SBOM:
 	}
 
 	return metaDataComponent
@@ -446,7 +446,7 @@ func checkMainComponentName(mergedName, otherName string) string {
 	return mergedName
 }
 
-func (m *MergedResults) addSourceHash(sourceHash string) *MergedResults {
+func (m *mergedResults) addSourceHash(sourceHash string) *mergedResults {
 	if sourceHash == "" {
 		return m
 	}
@@ -471,7 +471,7 @@ func (m *MergedResults) addSourceHash(sourceHash string) *MergedResults {
 	return m
 }
 
-func (m *MergedResults) addSourceMetadata(metadata map[string]string) *MergedResults {
+func (m *mergedResults) addSourceMetadata(metadata map[string]string) *mergedResults {
 	if m == nil || m.SrcMetaData == nil || m.SrcMetaData.Component == nil {
 		return m
 	}

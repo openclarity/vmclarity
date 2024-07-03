@@ -19,8 +19,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	job_manager2 "github.com/openclarity/vmclarity/scanner/internal/job_manager"
-	types2 "github.com/openclarity/vmclarity/scanner/types"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
+	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 	"os"
 	"os/exec"
 
@@ -32,128 +32,94 @@ import (
 	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
-const (
-	ScannerName    = "gitleaks"
-	GitleaksBinary = "gitleaks"
-)
+const ScannerName = "gitleaks"
 
 type Scanner struct {
-	name       string
-	logger     *log.Entry
-	config     config.Config
-	resultChan chan job_manager2.Result
+	logger *log.Entry
+	config config.Config
 }
 
-func New(_ string, c job_manager2.IsConfig, logger *log.Entry, resultChan chan job_manager2.Result) job_manager2.Job {
-	conf := c.(*types.ScannersConfig) // nolint:forcetypeassert
+func New(_ string, config types.ScannersConfig, logger *log.Entry) familiestypes.Scanner[*types.ScannerResult] {
 	return &Scanner{
-		name:       ScannerName,
-		logger:     logger.Dup().WithField("scanner", ScannerName),
-		config:     conf.Gitleaks,
-		resultChan: resultChan,
+		logger: logger.Dup().WithField("scanner", ScannerName),
+		config: config.Gitleaks,
 	}
 }
 
-func (a *Scanner) Run(ctx context.Context, sourceType types2.InputType, userInput string) error {
-	go func(ctx context.Context) {
-		retResults := types.ScannerResult{
-			Source:      userInput,
-			ScannerName: ScannerName,
-		}
-		if !a.isValidInputType(sourceType) {
-			a.sendResults(retResults, nil)
-			return
-		}
+func (a *Scanner) Scan(ctx context.Context, sourceType scannertypes.InputType, userInput string) (*types.ScannerResult, error) {
+	if !a.isValidInputType(sourceType) {
+		return nil, fmt.Errorf("received invalid input type for gitleaks scanner: %v", sourceType)
+	}
 
-		// Locate gitleaks binary
-		if a.config.BinaryPath == "" {
-			a.config.BinaryPath = GitleaksBinary
-		}
+	gitleaksBinaryPath, err := exec.LookPath(a.config.GetBinaryPath())
+	if err != nil {
+		return nil, fmt.Errorf("failed to lookup executable %s: %w", a.config.BinaryPath, err)
+	}
+	a.logger.Debugf("found gitleaks binary at: %s", gitleaksBinaryPath)
 
-		gitleaksBinaryPath, err := exec.LookPath(a.config.BinaryPath)
-		if err != nil {
-			a.sendResults(retResults, fmt.Errorf("failed to lookup executable %s: %w", a.config.BinaryPath, err))
-			return
-		}
-		a.logger.Debugf("found gitleaks binary at: %s", gitleaksBinaryPath)
+	file, err := os.CreateTemp("", "gitleaks")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create temp file. %w", err)
+	}
+	defer func() {
+		_ = os.Remove(file.Name())
+	}()
+	reportPath := file.Name()
 
-		file, err := os.CreateTemp("", "gitleaks")
-		if err != nil {
-			a.sendResults(retResults, fmt.Errorf("failed to create temp file. %w", err))
-			return
-		}
-		defer func() {
-			_ = os.Remove(file.Name())
-		}()
-		reportPath := file.Name()
+	fsPath, cleanup, err := familiesutils.ConvertInputToFilesystem(ctx, sourceType, userInput)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert input to filesystem: %w", err)
+	}
+	defer cleanup()
 
-		fsPath, cleanup, err := familiesutils.ConvertInputToFilesystem(ctx, sourceType, userInput)
-		if err != nil {
-			a.sendResults(retResults, fmt.Errorf("failed to convert input to filesystem: %w", err))
-			return
-		}
-		defer cleanup()
+	// gitleaks detect --source <source> --no-git -r <report-path> -f json --exit-code 0 --max-target-megabytes 50
+	// nolint:gosec
+	args := []string{
+		"detect",
+		"--source",
+		fsPath,
+		"--no-git",
+		"-r",
+		reportPath,
+		"-f",
+		"json",
+		"--exit-code",
+		"0",
+		"--max-target-megabytes",
+		"50",
+	}
+	cmd := exec.Command(gitleaksBinaryPath, args...)
+	a.logger.Infof("Running gitleaks command: %v", cmd.String())
+	_, err = utils.RunCommand(cmd)
+	if err != nil {
+		return nil, fmt.Errorf("failed to run gitleaks command: %w", err)
+	}
 
-		// gitleaks detect --source <source> --no-git -r <report-path> -f json --exit-code 0 --max-target-megabytes 50
-		// nolint:gosec
-		args := []string{
-			"detect",
-			"--source",
-			fsPath,
-			"--no-git",
-			"-r",
-			reportPath,
-			"-f",
-			"json",
-			"--exit-code",
-			"0",
-			"--max-target-megabytes",
-			"50",
-		}
-		cmd := exec.Command(gitleaksBinaryPath, args...)
-		a.logger.Infof("Running gitleaks command: %v", cmd.String())
-		_, err = utils.RunCommand(cmd)
-		if err != nil {
-			a.sendResults(retResults, fmt.Errorf("failed to run gitleaks command: %w", err))
-			return
-		}
+	out, err := os.ReadFile(reportPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read report file from path %v: %w", reportPath, err)
+	}
 
-		out, err := os.ReadFile(reportPath)
-		if err != nil {
-			a.sendResults(retResults, fmt.Errorf("failed to read report file from path %v: %w", reportPath, err))
-			return
-		}
+	var findings []types.Finding
+	if err := json.Unmarshal(out, &findings); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal results. out: %s. err: %w", out, err)
+	}
 
-		if err := json.Unmarshal(out, &retResults.Findings); err != nil {
-			a.sendResults(retResults, fmt.Errorf("failed to unmarshal results. out: %s. err: %w", out, err))
-			return
-		}
-		a.sendResults(retResults, nil)
-	}(ctx)
-
-	return nil
+	return &types.ScannerResult{
+		Findings:    findings,
+		Source:      userInput,
+		ScannerName: ScannerName,
+	}, nil
 }
 
-func (a *Scanner) isValidInputType(sourceType types2.InputType) bool {
+func (a *Scanner) isValidInputType(sourceType scannertypes.InputType) bool {
 	switch sourceType {
-	case types2.DIR, types2.ROOTFS, types2.IMAGE, types2.DOCKERARCHIVE, types2.OCIARCHIVE, types2.OCIDIR:
+	case scannertypes.DIR, scannertypes.ROOTFS, scannertypes.IMAGE, scannertypes.DOCKERARCHIVE, scannertypes.OCIARCHIVE, scannertypes.OCIDIR:
 		return true
-	case types2.FILE, types2.SBOM:
+	case scannertypes.FILE, scannertypes.SBOM:
 		fallthrough
 	default:
 		a.logger.Infof("source type %v is not supported for gitleaks, skipping.", sourceType)
 	}
 	return false
-}
-
-func (a *Scanner) sendResults(results types.ScannerResult, err error) {
-	if err != nil {
-		a.logger.Error(err)
-		results.Error = err
-	}
-	select {
-	case a.resultChan <- &results:
-	default:
-		a.logger.Error("Failed to send results on channel")
-	}
 }

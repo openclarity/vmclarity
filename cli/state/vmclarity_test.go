@@ -18,6 +18,7 @@ package state
 import (
 	_ "embed"
 	"github.com/openclarity/vmclarity/scanner/families"
+	types2 "github.com/openclarity/vmclarity/scanner/families/sbom/types"
 	"testing"
 
 	. "github.com/onsi/gomega"
@@ -26,7 +27,6 @@ import (
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/scanner/config"
-	"github.com/openclarity/vmclarity/scanner/families/sbom"
 	"github.com/openclarity/vmclarity/scanner/families/types"
 )
 
@@ -49,7 +49,7 @@ func Test_appendEffectiveScanConfigAnnotation(t *testing.T) {
 			args: args{
 				annotations: nil,
 				config: &families.Config{
-					SBOM: sbom.Config{
+					SBOM: types2.Config{
 						Enabled:       true,
 						AnalyzersList: []string{"syft"},
 						Inputs: []types.Input{
@@ -78,7 +78,7 @@ func Test_appendEffectiveScanConfigAnnotation(t *testing.T) {
 			args: args{
 				annotations: &apitypes.Annotations{},
 				config: &families.Config{
-					SBOM: sbom.Config{
+					SBOM: types2.Config{
 						Enabled:       true,
 						AnalyzersList: []string{"syft"},
 						Inputs: []types.Input{
@@ -112,7 +112,7 @@ func Test_appendEffectiveScanConfigAnnotation(t *testing.T) {
 					},
 				},
 				config: &families.Config{
-					SBOM: sbom.Config{
+					SBOM: types2.Config{
 						Enabled:       true,
 						AnalyzersList: []string{"syft"},
 						Inputs: []types.Input{
@@ -150,7 +150,7 @@ func Test_appendEffectiveScanConfigAnnotation(t *testing.T) {
 					},
 				},
 				config: &families.Config{
-					SBOM: sbom.Config{
+					SBOM: types2.Config{
 						Enabled:       true,
 						AnalyzersList: []string{"syft"},
 						Inputs: []types.Input{

@@ -17,196 +17,122 @@ package families
 
 import (
 	"github.com/openclarity/vmclarity/core/to"
-	types3 "github.com/openclarity/vmclarity/scanner/families/exploits/types"
-	types4 "github.com/openclarity/vmclarity/scanner/families/infofinder/types"
-	"github.com/openclarity/vmclarity/scanner/families/malware"
-	"github.com/openclarity/vmclarity/scanner/families/misconfiguration"
-	"github.com/openclarity/vmclarity/scanner/families/plugins"
-	types5 "github.com/openclarity/vmclarity/scanner/families/rootkits/types"
-	"github.com/openclarity/vmclarity/scanner/families/sbom"
-	"github.com/openclarity/vmclarity/scanner/families/secrets"
-	"github.com/openclarity/vmclarity/scanner/families/types"
-	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities"
-	types2 "github.com/openclarity/vmclarity/scanner/types"
+	exploittypes "github.com/openclarity/vmclarity/scanner/families/exploits/types"
+	infofindertypes "github.com/openclarity/vmclarity/scanner/families/infofinder/types"
+	malwaretypes "github.com/openclarity/vmclarity/scanner/families/malware/types"
+	misconfigurationtypes "github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
+	plugintypes "github.com/openclarity/vmclarity/scanner/families/plugins/types"
+	rootkittypes "github.com/openclarity/vmclarity/scanner/families/rootkits/types"
+	sbomtypes "github.com/openclarity/vmclarity/scanner/families/sbom/types"
+	secrettypes "github.com/openclarity/vmclarity/scanner/families/secrets/types"
+	vulnerabilitytypes "github.com/openclarity/vmclarity/scanner/families/vulnerabilities/types"
+	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 )
 
 type Config struct {
 	// Analyzers
-	SBOM sbom.Config `json:"sbom" yaml:"sbom" mapstructure:"sbom"`
+	SBOM sbomtypes.Config `json:"sbom" yaml:"sbom" mapstructure:"sbom"`
 
 	// Scanners
-	Vulnerabilities  vulnerabilities.Config  `json:"vulnerabilities" yaml:"vulnerabilities" mapstructure:"vulnerabilities"`
-	Secrets          secrets.Config          `json:"secrets" yaml:"secrets" mapstructure:"secrets"`
-	Rootkits         types5.Config           `json:"rootkits" yaml:"rootkits" mapstructure:"rootkits"`
-	Malware          malware.Config          `json:"malware" yaml:"malware" mapstructure:"malware"`
-	Misconfiguration misconfiguration.Config `json:"misconfiguration" yaml:"misconfiguration" mapstructure:"misconfiguration"`
-	InfoFinder       types4.Config           `json:"infofinder" yaml:"infofinder" mapstructure:"infofinder"`
+	Vulnerabilities  vulnerabilitytypes.Config    `json:"vulnerabilities" yaml:"vulnerabilities" mapstructure:"vulnerabilities"`
+	Secrets          secrettypes.Config           `json:"secrets" yaml:"secrets" mapstructure:"secrets"`
+	Rootkits         rootkittypes.Config          `json:"rootkits" yaml:"rootkits" mapstructure:"rootkits"`
+	Malware          malwaretypes.Config          `json:"malware" yaml:"malware" mapstructure:"malware"`
+	Misconfiguration misconfigurationtypes.Config `json:"misconfiguration" yaml:"misconfiguration" mapstructure:"misconfiguration"`
+	InfoFinder       infofindertypes.Config       `json:"infofinder" yaml:"infofinder" mapstructure:"infofinder"`
 
 	// Enrichers
-	Exploits types3.Config `json:"exploits" yaml:"exploits" mapstructure:"exploits"`
+	Exploits exploittypes.Config `json:"exploits" yaml:"exploits" mapstructure:"exploits"`
 
 	// Plugins
-	Plugins plugins.Config `json:"plugins" yaml:"plugins" mapstructure:"plugins"`
+	Plugins plugintypes.Config `json:"plugins" yaml:"plugins" mapstructure:"plugins"`
 }
 
 func NewConfig() *Config {
 	return &Config{
-		SBOM:             sbom.Config{},
-		Vulnerabilities:  vulnerabilities.Config{},
-		Secrets:          secrets.Config{},
-		Rootkits:         types5.Config{},
-		Malware:          malware.Config{},
-		Misconfiguration: misconfiguration.Config{},
-		Exploits:         exploits.Config{},
-		Plugins:          plugins.Config{},
+		SBOM:             sbomtypes.Config{},
+		Vulnerabilities:  vulnerabilitytypes.Config{},
+		Secrets:          secrettypes.Config{},
+		Rootkits:         rootkittypes.Config{},
+		Malware:          malwaretypes.Config{},
+		Misconfiguration: misconfigurationtypes.Config{},
+		InfoFinder:       infofindertypes.Config{},
+		Exploits:         exploittypes.Config{},
+		Plugins:          plugintypes.Config{},
 	}
 }
 
-func SetMountPointsForFamiliesInput(mountPoints []string, familiesConfig *Config) *Config {
-	// update families inputs with the mount point as rootfs
-	for _, mountDir := range mountPoints {
-		if familiesConfig.SBOM.Enabled {
-			familiesConfig.SBOM.Inputs = append(familiesConfig.SBOM.Inputs, types.Input{
+func (c *Config) AddInputs(inputType scannertypes.InputType, inputs []string) {
+	for _, mountDir := range inputs {
+		if c.SBOM.Enabled {
+			c.SBOM.Inputs = append(c.SBOM.Inputs, scannertypes.ScanInput{
 				Input:     mountDir,
-				InputType: string(types2.ROOTFS),
+				InputType: inputType,
 			})
 		}
 
-		if familiesConfig.Vulnerabilities.Enabled {
-			if familiesConfig.SBOM.Enabled {
-				familiesConfig.Vulnerabilities.InputFromSbom = true
+		if c.Vulnerabilities.Enabled {
+			if c.SBOM.Enabled {
+				c.Vulnerabilities.InputFromSbom = true
 			} else {
-				familiesConfig.Vulnerabilities.Inputs = append(familiesConfig.Vulnerabilities.Inputs, types.Input{
+				c.Vulnerabilities.Inputs = append(c.Vulnerabilities.Inputs, scannertypes.ScanInput{
 					Input:     mountDir,
-					InputType: string(types2.ROOTFS),
+					InputType: inputType,
 				})
 			}
 		}
 
-		if familiesConfig.Secrets.Enabled {
-			familiesConfig.Secrets.Inputs = append(familiesConfig.Secrets.Inputs, types.Input{
+		if c.Secrets.Enabled {
+			c.Secrets.Inputs = append(c.Secrets.Inputs, scannertypes.ScanInput{
 				StripPathFromResult: to.Ptr(true),
 				Input:               mountDir,
-				InputType:           string(types2.ROOTFS),
+				InputType:           inputType,
 			})
 		}
 
-		if familiesConfig.Malware.Enabled {
-			familiesConfig.Malware.Inputs = append(familiesConfig.Malware.Inputs, types.Input{
+		if c.Malware.Enabled {
+			c.Malware.Inputs = append(c.Malware.Inputs, scannertypes.ScanInput{
 				StripPathFromResult: to.Ptr(true),
 				Input:               mountDir,
-				InputType:           string(types2.ROOTFS),
+				InputType:           inputType,
 			})
 		}
 
-		if familiesConfig.Rootkits.Enabled {
-			familiesConfig.Rootkits.Inputs = append(familiesConfig.Rootkits.Inputs, types.Input{
+		if c.Rootkits.Enabled {
+			c.Rootkits.Inputs = append(c.Rootkits.Inputs, scannertypes.ScanInput{
 				StripPathFromResult: to.Ptr(true),
 				Input:               mountDir,
-				InputType:           string(types2.ROOTFS),
+				InputType:           inputType,
 			})
 		}
 
-		if familiesConfig.Misconfiguration.Enabled {
-			familiesConfig.Misconfiguration.Inputs = append(
-				familiesConfig.Misconfiguration.Inputs,
-				types.Input{
+		if c.Misconfiguration.Enabled {
+			c.Misconfiguration.Inputs = append(
+				c.Misconfiguration.Inputs,
+				scannertypes.ScanInput{
 					StripPathFromResult: to.Ptr(true),
 					Input:               mountDir,
-					InputType:           string(types2.ROOTFS),
+					InputType:           inputType,
 				},
 			)
 		}
 
-		if familiesConfig.InfoFinder.Enabled {
-			familiesConfig.InfoFinder.Inputs = append(
-				familiesConfig.InfoFinder.Inputs,
-				types.Input{
+		if c.InfoFinder.Enabled {
+			c.InfoFinder.Inputs = append(
+				c.InfoFinder.Inputs,
+				scannertypes.ScanInput{
 					StripPathFromResult: to.Ptr(true),
 					Input:               mountDir,
-					InputType:           string(types2.ROOTFS),
+					InputType:           inputType,
 				},
 			)
 		}
 
-		if familiesConfig.Plugins.Enabled {
-			familiesConfig.Plugins.Inputs = append(familiesConfig.Plugins.Inputs, types.Input{
+		if c.Plugins.Enabled {
+			c.Plugins.Inputs = append(c.Plugins.Inputs, scannertypes.ScanInput{
 				Input:     mountDir,
-				InputType: string(types2.ROOTFS),
+				InputType: inputType,
 			})
 		}
 	}
-	return familiesConfig
-}
-
-// TODO(sambetts) Refactor this and the function above.
-func SetOciArchiveForFamiliesInput(archives []string, familiesConfig *Config) *Config {
-	// update families inputs with the oci archives
-	for _, archive := range archives {
-		if familiesConfig.SBOM.Enabled {
-			familiesConfig.SBOM.Inputs = append(familiesConfig.SBOM.Inputs, types.Input{
-				Input:     archive,
-				InputType: string(types2.OCIARCHIVE),
-			})
-		}
-
-		if familiesConfig.Vulnerabilities.Enabled {
-			if familiesConfig.SBOM.Enabled {
-				familiesConfig.Vulnerabilities.InputFromSbom = true
-			} else {
-				familiesConfig.Vulnerabilities.Inputs = append(familiesConfig.Vulnerabilities.Inputs, types.Input{
-					Input:     archive,
-					InputType: string(types2.OCIARCHIVE),
-				})
-			}
-		}
-
-		if familiesConfig.Secrets.Enabled {
-			familiesConfig.Secrets.Inputs = append(familiesConfig.Secrets.Inputs, types.Input{
-				StripPathFromResult: to.Ptr(true),
-				Input:               archive,
-				InputType:           string(types2.OCIARCHIVE),
-			})
-		}
-
-		if familiesConfig.Malware.Enabled {
-			familiesConfig.Malware.Inputs = append(familiesConfig.Malware.Inputs, types.Input{
-				StripPathFromResult: to.Ptr(true),
-				Input:               archive,
-				InputType:           string(types2.OCIARCHIVE),
-			})
-		}
-
-		if familiesConfig.Rootkits.Enabled {
-			familiesConfig.Rootkits.Inputs = append(familiesConfig.Rootkits.Inputs, types.Input{
-				StripPathFromResult: to.Ptr(true),
-				Input:               archive,
-				InputType:           string(types2.OCIARCHIVE),
-			})
-		}
-
-		if familiesConfig.Misconfiguration.Enabled {
-			familiesConfig.Misconfiguration.Inputs = append(
-				familiesConfig.Misconfiguration.Inputs,
-				types.Input{
-					StripPathFromResult: to.Ptr(true),
-					Input:               archive,
-					InputType:           string(types2.OCIARCHIVE),
-				},
-			)
-		}
-
-		if familiesConfig.InfoFinder.Enabled {
-			familiesConfig.InfoFinder.Inputs = append(
-				familiesConfig.InfoFinder.Inputs,
-				types.Input{
-					StripPathFromResult: to.Ptr(true),
-					Input:               archive,
-					InputType:           string(types2.OCIARCHIVE),
-				},
-			)
-		}
-	}
-
-	return familiesConfig
 }

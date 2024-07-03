@@ -17,17 +17,15 @@ package types
 
 import (
 	cdx "github.com/CycloneDX/cyclonedx-go"
-	syft "github.com/openclarity/vmclarity/scanner/families/sbom/syft/config"
-	trivy "github.com/openclarity/vmclarity/scanner/families/sbom/trivy/config"
 	"github.com/openclarity/vmclarity/scanner/types"
 )
 
-type AnalyzersConfig struct {
-	Syft  syft.Config  `yaml:"syft" mapstructure:"syft"`
-	Trivy trivy.Config `yaml:"trivy" mapstructure:"trivy"`
+type AppInfo struct {
+	SourceMetadata map[string]string
+	SourceType     types.InputType
+	SourcePath     string
+	SourceHash     string
 }
-
-func (AnalyzersConfig) IsConfig() {}
 
 type ScannerResult struct {
 	Sbom         *cdx.BOM
@@ -46,15 +44,4 @@ func CreateScannerResult(sbomBytes *cdx.BOM, analyzerName, userInput string, src
 			SourcePath:     userInput,
 		},
 	}
-}
-
-func (r *ScannerResult) GetError() error {
-	return r.Error
-}
-
-type AppInfo struct {
-	SourceMetadata map[string]string
-	SourceType     types.InputType
-	SourcePath     string
-	SourceHash     string
 }

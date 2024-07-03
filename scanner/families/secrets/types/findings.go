@@ -15,7 +15,7 @@
 
 package types
 
-type Findings struct {
+type Finding struct {
 	Description string `json:"Description"`
 	StartLine   int    `json:"StartLine"`
 	EndLine     int    `json:"EndLine"`
@@ -49,4 +49,18 @@ type Findings struct {
 
 	// unique identifier
 	Fingerprint string `json:"Fingerprint"`
+}
+
+type Findings struct {
+	MergedFindings []Finding
+	Scanners       []string
+}
+
+func NewFindings() *Findings {
+	return &Findings{}
+}
+
+func (f *Findings) Merge(result *ScannerResult) {
+	f.MergedFindings = append(f.MergedFindings, result.Findings...)
+	f.Scanners = append(f.Scanners, result.ScannerName)
 }
