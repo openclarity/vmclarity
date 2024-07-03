@@ -43,32 +43,34 @@ func (m Misconfiguration) Run(ctx context.Context, _ *families.Results) (*types.
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "misconfiguration")
 	logger.Info("Misconfiguration Run...")
 
-	manager := scan_manager.New[types.ScannersConfig, *types.ScannerResult](m.conf.ScannersList, m.conf.ScannersConfig, logger, types.Factory)
+	// Run all scanners using scan manager
+	manager := scan_manager.New[types.ScannersConfig, []types.Misconfiguration](m.conf.ScannersList, m.conf.ScannersConfig, types.Factory)
 	results, err := manager.Scan(ctx, m.conf.Inputs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process inputs for misconfigurations: %w", err)
 	}
 
-	misConfigResults := types.NewMisconfigurations()
+	misconfigurations := types.NewMisconfigurations()
 
+	// Merge results
 	for _, result := range results {
 		logger.Infof("Merging result from %q", result.Metadata)
 		if familiesutils.ShouldStripInputPath(result.ScanInput.StripPathFromResult, m.conf.StripInputPaths) {
 			result.ScanResult = stripPathFromResult(result.ScanResult, result.ScanInput.Input)
 		}
-		misConfigResults.Merge(result.ScanResult)
+		misconfigurations.Merge(result.Metadata, result.ScanResult)
 	}
 
 	logger.Info("Misconfiguration Done...")
 
-	return misConfigResults, nil
+	return misconfigurations, nil
 }
 
-// StripPathFromResult strip input path from results wherever it is found.
-func stripPathFromResult(result *types.ScannerResult, path string) *types.ScannerResult {
-	for i := range result.Misconfigurations {
-		result.Misconfigurations[i].Location = familiesutils.TrimMountPath(result.Misconfigurations[i].Location, path)
+// stripPathFromResult strip input path from results wherever it is found.
+func stripPathFromResult(items []types.Misconfiguration, path string) []types.Misconfiguration {
+	for i := range items {
+		items[i].Location = familiesutils.TrimMountPath(items[i].Location, path)
 	}
 
-	return result
+	return items
 }

@@ -20,28 +20,21 @@ import (
 	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
 )
 
 const ScannerName = "fake"
 
-type Scanner struct {
-	logger *log.Entry
+type Scanner struct{}
+
+func New(_ string, _ types.ScannersConfig) (families.Scanner[[]types.Misconfiguration], error) {
+	return &Scanner{}, nil
 }
 
-func New(_ string, _ types.ScannersConfig, logger *log.Entry) (families.Scanner[*types.ScannerResult], error) {
-	return &Scanner{
-		logger: logger.Dup().WithField("scanner", ScannerName),
-	}, nil
-}
+func (a *Scanner) Scan(_ context.Context, _ common.InputType, _ string) ([]types.Misconfiguration, error) {
+	misconfigurations := createFakeMisconfigurationReport()
 
-func (a *Scanner) Scan(_ context.Context, _ common.InputType, _ string) (*types.ScannerResult, error) {
-	return &types.ScannerResult{
-		ScannerName:       ScannerName,
-		Misconfigurations: createFakeMisconfigurationReport(),
-	}, nil
+	return misconfigurations, nil
 }
 
 func createFakeMisconfigurationReport() []types.Misconfiguration {

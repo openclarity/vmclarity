@@ -31,7 +31,6 @@ type ScannerResult struct {
 	Sbom         *cdx.BOM
 	AnalyzerInfo string
 	AppInfo      AppInfo
-	Error        error
 }
 
 func CreateScannerResult(sbomBytes *cdx.BOM, analyzerName, userInput string, srcType common.InputType) *ScannerResult {

@@ -79,18 +79,19 @@ func (v Vulnerabilities) Run(ctx context.Context, res *families.Results) (*types
 		return nil, errors.New("inputs list is empty")
 	}
 
-	manager := scan_manager.New[types.ScannersConfig, *types.ScannerResult](v.conf.ScannersList, v.conf.ScannersConfig, logger, types.Factory)
+	// Run all scanners using scan manager
+	manager := scan_manager.New[types.ScannersConfig, *types.ScannerResult](v.conf.ScannersList, v.conf.ScannersConfig, types.Factory)
 	results, err := manager.Scan(ctx, v.conf.Inputs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process inputs for vulnerabilities: %w", err)
 	}
 
-	vulResults := types.NewVulnerabilities()
+	vulnerabilities := types.NewVulnerabilities()
 
-	// Merge results.
+	// Merge results
 	for _, result := range results {
 		logger.Infof("Merging result from %q", result.Metadata)
-		vulResults.Merge(result.ScanResult)
+		vulnerabilities.Merge(result.Metadata, result.ScanResult)
 	}
 
 	// TODO:
@@ -103,5 +104,5 @@ func (v Vulnerabilities) Run(ctx context.Context, res *families.Results) (*types
 
 	logger.Info("Vulnerabilities Done...")
 
-	return vulResults, nil
+	return vulnerabilities, nil
 }

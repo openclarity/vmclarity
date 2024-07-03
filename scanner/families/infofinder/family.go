@@ -43,32 +43,33 @@ func (i InfoFinder) Run(ctx context.Context, _ *families.Results) (*types.Infos,
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "info finder")
 	logger.Info("InfoFinder Run...")
 
-	manager := scan_manager.New[types.ScannersConfig, *types.ScannerResult](i.conf.ScannersList, i.conf.ScannersConfig, logger, types.Factory)
+	// Run all scanners using scan manager
+	manager := scan_manager.New[types.ScannersConfig, []types.Info](i.conf.ScannersList, i.conf.ScannersConfig, types.Factory)
 	results, err := manager.Scan(ctx, i.conf.Inputs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process inputs for infofinders: %w", err)
 	}
 
-	infoFinderResults := types.NewInfos()
+	infos := types.NewInfos()
 
-	// Merge results.
+	// Merge results
 	for _, result := range results {
 		logger.Infof("Merging result from %q", result.Metadata)
 		if familiesutils.ShouldStripInputPath(result.ScanInput.StripPathFromResult, i.conf.StripInputPaths) {
 			result.ScanResult = stripPathFromResult(result.ScanResult, result.ScanInput.Input)
 		}
-		infoFinderResults.Merge(result.ScanResult)
+		infos.Merge(result.Metadata, result.ScanResult)
 	}
 
 	logger.Info("InfoFinder Done...")
 
-	return infoFinderResults, nil
+	return infos, nil
 }
 
 // stripPathFromResult strip input path from results wherever it is found.
-func stripPathFromResult(result *types.ScannerResult, path string) *types.ScannerResult {
-	for i := range result.Infos {
-		result.Infos[i].Path = familiesutils.TrimMountPath(result.Infos[i].Path, path)
+func stripPathFromResult(infos []types.Info, path string) []types.Info {
+	for i := range infos {
+		infos[i].Path = familiesutils.TrimMountPath(infos[i].Path, path)
 	}
-	return result
+	return infos
 }

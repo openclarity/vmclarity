@@ -18,9 +18,11 @@ package types
 import (
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	plugintypes "github.com/openclarity/vmclarity/plugins/sdk-go/types"
+	"github.com/openclarity/vmclarity/scanner/common"
 )
 
 type Result struct {
+	Metadata      common.ScanMetadata           `json:"Metadata"`
 	Findings      []apitypes.FindingInfo        `json:"Findings"`
 	PluginOutputs map[string]plugintypes.Result `json:"PluginOutputs"`
 }
@@ -35,11 +37,13 @@ func (r *Result) GetFindingsCount() int {
 	return len(r.Findings)
 }
 
-func (r *Result) Merge(result *ScannerResult) {
+func (r *Result) Merge(meta common.ScanInputMetadata, result *ScannerResult) {
 	if result == nil {
 		return
 	}
 
+	r.Metadata.Merge(meta)
+
 	r.Findings = append(r.Findings, result.Findings...)
-	r.PluginOutputs[result.ScannerName] = result.Output
+	r.PluginOutputs[meta.ScannerName] = result.Output
 }

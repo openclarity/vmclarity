@@ -16,17 +16,14 @@
 package sshtopology
 
 import (
+	"context"
 	"reflect"
 	"testing"
-
-	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/scanner/families/infofinder/types"
 )
 
-var testScanner = &Scanner{
-	logger: log.NewEntry(log.StandardLogger()),
-}
+var testScanner = &Scanner{}
 
 func Test_getHomeUserDirs(t *testing.T) {
 	type args struct {
@@ -111,7 +108,7 @@ func TestScanner_getPrivateKeysPaths(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := testScanner
-			got, err := s.getPrivateKeysPaths(tt.args.rootPath, tt.args.recursive)
+			got, err := s.getPrivateKeysPaths(context.Background(), tt.args.rootPath, tt.args.recursive)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getPrivateKeysPaths() error = %v, wantErr %v", err, tt.wantErr)
 				return

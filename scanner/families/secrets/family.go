@@ -43,34 +43,35 @@ func (s Secrets) Run(ctx context.Context, _ *families.Results) (*types.Findings,
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "secrets")
 	logger.Info("Secrets Run...")
 
-	manager := scan_manager.New[types.ScannersConfig, *types.ScannerResult](s.conf.ScannersList, s.conf.ScannersConfig, logger, types.Factory)
+	// Run all scanners using scan manager
+	manager := scan_manager.New[types.ScannersConfig, []types.Finding](s.conf.ScannersList, s.conf.ScannersConfig, types.Factory)
 	results, err := manager.Scan(ctx, s.conf.Inputs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process inputs for secrets: %w", err)
 	}
 
-	secretsResults := types.NewFindings()
+	secrets := types.NewFindings()
 
-	// Merge results.
+	// Merge results
 	for _, result := range results {
 		logger.Infof("Merging result from %q", result.Metadata)
 		if familiesutils.ShouldStripInputPath(result.ScanInput.StripPathFromResult, s.conf.StripInputPaths) {
 			result.ScanResult = stripPathFromResult(result.ScanResult, result.ScanInput.Input)
 		}
-		secretsResults.Merge(result.ScanResult)
+		secrets.Merge(result.Metadata, result.ScanResult)
 	}
 
 	logger.Info("Secrets Done...")
 
-	return secretsResults, nil
+	return secrets, nil
 }
 
 // StripPathFromResult strip input path from results wherever it is found.
-func stripPathFromResult(result *types.ScannerResult, path string) *types.ScannerResult {
-	for i := range result.Findings {
-		result.Findings[i].File = familiesutils.TrimMountPath(result.Findings[i].File, path)
-		result.Findings[i].Fingerprint = familiesutils.RemoveMountPathSubStringIfNeeded(result.Findings[i].Fingerprint, path)
+func stripPathFromResult(findings []types.Finding, path string) []types.Finding {
+	for i := range findings {
+		findings[i].File = familiesutils.TrimMountPath(findings[i].File, path)
+		findings[i].Fingerprint = familiesutils.RemoveMountPathSubStringIfNeeded(findings[i].Fingerprint, path)
 	}
 
-	return result
+	return findings
 }

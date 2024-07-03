@@ -15,6 +15,8 @@
 
 package types
 
+import "github.com/openclarity/vmclarity/scanner/common"
+
 type InfoType string
 
 const (
@@ -36,7 +38,8 @@ type FlattenedInfo struct {
 }
 
 type Infos struct {
-	FlattenedInfos []FlattenedInfo `json:"Infos"`
+	Metadata       common.ScanMetadata `json:"Metadata"`
+	FlattenedInfos []FlattenedInfo     `json:"Infos"`
 }
 
 func NewInfos() *Infos {
@@ -45,14 +48,12 @@ func NewInfos() *Infos {
 	}
 }
 
-func (r *Infos) Merge(result *ScannerResult) {
-	if result == nil {
-		return
-	}
+func (r *Infos) Merge(meta common.ScanInputMetadata, infos []Info) {
+	r.Metadata.Merge(meta)
 
-	for _, info := range result.Infos {
+	for _, info := range infos {
 		r.FlattenedInfos = append(r.FlattenedInfos, FlattenedInfo{
-			ScannerName: result.ScannerName,
+			ScannerName: meta.ScannerName,
 			Info:        info,
 		})
 	}

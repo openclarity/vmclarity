@@ -15,6 +15,8 @@
 
 package types
 
+import "github.com/openclarity/vmclarity/scanner/common"
+
 type RootkitType string
 
 const (
@@ -32,6 +34,7 @@ type Rootkit struct {
 }
 
 type Rootkits struct {
+	Metadata       common.ScanMetadata
 	MergedRootkits []Rootkit
 }
 
@@ -41,10 +44,7 @@ func NewRootkits() *Rootkits {
 	}
 }
 
-func (m *Rootkits) Merge(result *ScannerResult) {
-	if result == nil {
-		return
-	}
-
-	m.MergedRootkits = append(m.MergedRootkits, result.Rootkits...)
+func (m *Rootkits) Merge(meta common.ScanInputMetadata, rootkits []Rootkit) {
+	m.Metadata.Merge(meta)
+	m.MergedRootkits = append(m.MergedRootkits, rootkits...)
 }

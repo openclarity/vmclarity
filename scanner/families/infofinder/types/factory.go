@@ -18,6 +18,6 @@ package types
 import "github.com/openclarity/vmclarity/scanner/internal/scan_manager"
 
 var (
-	Factory         = scan_manager.NewFactory[ScannersConfig, *ScannerResult]()
+	Factory         = scan_manager.NewFactory[ScannersConfig, []Info]()
 	FactoryRegister = Factory.Register
 )

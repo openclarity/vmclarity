@@ -60,15 +60,16 @@ func (s SBOM) Run(ctx context.Context, _ *families.Results) (*types.SBOM, error)
 		return nil, fmt.Errorf("failed to generate hash for source %s: %w", s.conf.Inputs[0].Input, err)
 	}
 
-	manager := scan_manager.New[types.AnalyzersConfig, *types.ScannerResult](s.conf.AnalyzersList, s.conf.AnalyzersConfig, logger, types.Factory)
+	// Run all scanners using scan manager
+	manager := scan_manager.New[types.AnalyzersConfig, *types.ScannerResult](s.conf.AnalyzersList, s.conf.AnalyzersConfig, types.Factory)
 	results, err := manager.Scan(ctx, s.conf.Inputs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process inputs for sbom: %w", err)
 	}
 
-	// Merge results.
 	mergedResults := newMergedResults(s.conf.Inputs[0].InputType, hash)
 
+	// Merge results
 	for _, result := range results {
 		logger.Infof("Merging result from %q", result.Metadata)
 		mergedResults = mergedResults.Merge(result.ScanResult)

@@ -23,56 +23,48 @@ import (
 
 func TestStripPathFromResult(t *testing.T) {
 	type args struct {
-		result types.ScannerResult
+		result []types.Rootkit
 		path   string
 	}
 	tests := []struct {
 		name string
 		args args
-		want types.ScannerResult
+		want []types.Rootkit
 	}{
 		{
 			name: "sanity",
 			args: args{
-				result: types.ScannerResult{
-					Rootkits: []types.Rootkit{
-						{
-							Message:     "rootkit found in /mnt/foo path",
-							RootkitName: "rk1",
-							RootkitType: "t1",
-						},
-						{
-							Message:     "rootkit found in /mnt/bar path",
-							RootkitName: "rk2",
-							RootkitType: "t2",
-						},
-					},
-					ScannedInput: "/mnt/foo",
-					ScannerName:  "scanner1",
-				},
-				path: "/mnt",
-			},
-			want: types.ScannerResult{
-				Rootkits: []types.Rootkit{
+				result: []types.Rootkit{
 					{
-						Message:     "rootkit found in /foo path",
+						Message:     "rootkit found in /mnt/foo path",
 						RootkitName: "rk1",
 						RootkitType: "t1",
 					},
 					{
-						Message:     "rootkit found in /bar path",
+						Message:     "rootkit found in /mnt/bar path",
 						RootkitName: "rk2",
 						RootkitType: "t2",
 					},
 				},
-				ScannedInput: "/mnt/foo",
-				ScannerName:  "scanner1",
+				path: "/mnt",
+			},
+			want: []types.Rootkit{
+				{
+					Message:     "rootkit found in /foo path",
+					RootkitName: "rk1",
+					RootkitType: "t1",
+				},
+				{
+					Message:     "rootkit found in /bar path",
+					RootkitName: "rk2",
+					RootkitType: "t2",
+				},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := stripPathFromResult(&tt.args.result, tt.args.path); !reflect.DeepEqual(got, &tt.want) {
+			if got := stripPathFromResult(tt.args.result, tt.args.path); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("StripPathFromResult() = %v, want %v", got, tt.want)
 			}
 		})

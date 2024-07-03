@@ -18,11 +18,10 @@ package chkrootkit
 import (
 	"context"
 	"fmt"
+	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
 	"os/exec"
-
-	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/scanner/families/rootkits/chkrootkit/config"
 	chkrootkitutils "github.com/openclarity/vmclarity/scanner/families/rootkits/chkrootkit/utils"
@@ -34,29 +33,29 @@ import (
 const ScannerName = "chkrootkit"
 
 type Scanner struct {
-	logger *log.Entry
 	config config.Config
 }
 
-func New(_ string, config types.ScannersConfig, logger *log.Entry) (families.Scanner[*types.ScannerResult], error) {
+func New(_ string, config types.ScannersConfig) (families.Scanner[[]types.Rootkit], error) {
 	return &Scanner{
-		logger: logger.Dup().WithField("scanner", ScannerName),
 		config: config.Chkrootkit,
 	}, nil
 }
 
-func (s *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
-	if !s.isValidInputType(sourceType) {
-		return nil, fmt.Errorf("received invalid input type for chkrootkit scanner: %v", sourceType)
+func (s *Scanner) Scan(ctx context.Context, inputType common.InputType, userInput string) ([]types.Rootkit, error) {
+	if !inputType.IsOneOf(common.DIR, common.ROOTFS, common.IMAGE, common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR) {
+		return nil, fmt.Errorf("unsupported input type=%v", inputType)
 	}
+
+	logger := log.GetLoggerFromContextOrDefault(ctx)
 
 	chkrootkitBinaryPath, err := exec.LookPath(s.config.GetBinaryPath())
 	if err != nil {
 		return nil, fmt.Errorf("failed to lookup executable %s: %w", s.config.BinaryPath, err)
 	}
-	s.logger.Debugf("found chkrootkit binary at: %s", chkrootkitBinaryPath)
+	logger.Debugf("found chkrootkit binary at: %s", chkrootkitBinaryPath)
 
-	fsPath, cleanup, err := familiesutils.ConvertInputToFilesystem(ctx, sourceType, userInput)
+	fsPath, cleanup, err := familiesutils.ConvertInputToFilesystem(ctx, inputType, userInput)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert input to filesystem: %w", err)
 	}
@@ -69,36 +68,21 @@ func (s *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInp
 
 	// nolint:gosec
 	cmd := exec.Command(chkrootkitBinaryPath, args...)
-	s.logger.Infof("running chkrootkit command: %v", cmd.String())
+	logger.Infof("running chkrootkit command: %v", cmd.String())
 	out, err := utils.RunCommand(cmd)
 	if err != nil {
 		return nil, fmt.Errorf("failed to run chkrootkit command: %w", err)
 	}
 
-	rootkits, err := chkrootkitutils.ParseChkrootkitOutput(out)
+	parsedRootkits, err := chkrootkitutils.ParseChkrootkitOutput(out)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse chkrootkit output: %w", err)
 	}
-	rootkits = filterResults(rootkits)
-	resultRootkits := toResultsRootkits(rootkits)
+	parsedRootkits = filterResults(parsedRootkits)
 
-	return &types.ScannerResult{
-		Rootkits:     resultRootkits,
-		ScannedInput: userInput,
-		ScannerName:  ScannerName,
-	}, nil
-}
+	rootkits := toResultsRootkits(parsedRootkits)
 
-func (s *Scanner) isValidInputType(sourceType common.InputType) bool {
-	switch sourceType {
-	case common.DIR, common.ROOTFS, common.IMAGE, common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR:
-		return true
-	case common.FILE, common.SBOM:
-		fallthrough
-	default:
-		s.logger.Infof("source type %v is not supported for chkrootkit, skipping.", sourceType)
-	}
-	return false
+	return rootkits, nil
 }
 
 func filterResults(rootkits []chkrootkitutils.Rootkit) []chkrootkitutils.Rootkit {

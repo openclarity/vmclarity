@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/types"
@@ -31,35 +32,32 @@ import (
 	grype_client "github.com/openclarity/grype-server/api/client/client"
 	grype_client_operations "github.com/openclarity/grype-server/api/client/client/operations"
 	grype_client_models "github.com/openclarity/grype-server/api/client/models"
-	log "github.com/sirupsen/logrus"
-
 	sbom "github.com/openclarity/vmclarity/scanner/utils/sbom"
 )
 
 type RemoteScanner struct {
-	logger  *log.Entry
 	client  *grype_client.GrypeServer
 	timeout time.Duration
 }
 
-func newRemoteScanner(config types.ScannersConfig, logger *log.Entry) families.Scanner[*types.ScannerResult] {
+func newRemoteScanner(config types.ScannersConfig) families.Scanner[*types.ScannerResult] {
 	cfg := grype_client.DefaultTransportConfig().
 		WithSchemes(config.Grype.Remote.GrypeServerSchemes).
 		WithHost(config.Grype.Remote.GrypeServerAddress)
 
 	return &RemoteScanner{
-		logger:  logger.Dup().WithField("scanner", ScannerName).WithField("scanner-mode", "remote"),
 		client:  grype_client.New(transport.New(cfg.Host, cfg.BasePath, cfg.Schemes), strfmt.Default),
 		timeout: config.Grype.Remote.GrypeServerTimeout,
 	}
 }
 
-func (s *RemoteScanner) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
+func (s *RemoteScanner) Scan(ctx context.Context, inputType common.InputType, userInput string) (*types.ScannerResult, error) {
 	// remote-grype supports only SBOM as a source input since it sends the SBOM to a centralized grype server for scanning.
-	if sourceType != common.SBOM {
-		s.logger.Infof("Ignoring non SBOM input. type=%v", sourceType)
-		return nil, nil
+	if !inputType.IsOneOf(common.SBOM) {
+		return nil, fmt.Errorf("unsupported input type=%v", inputType)
 	}
+
+	logger := log.GetLoggerFromContextOrDefault(ctx).WithField("grype-type", "remote")
 
 	sbomBytes, err := os.ReadFile(userInput)
 	if err != nil {
@@ -83,7 +81,7 @@ func (s *RemoteScanner) Scan(ctx context.Context, sourceType common.InputType, u
 		return nil, fmt.Errorf("failed to get original hash from SBOM: %w", err)
 	}
 
-	s.logger.Infof("Sending successful results")
+	logger.Infof("Sending successful results")
 	result := createResults(*doc, targetName, ScannerName, hash, metadata)
 
 	return result, nil

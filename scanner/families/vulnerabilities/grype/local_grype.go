@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
 
@@ -39,8 +40,6 @@ import (
 	"github.com/anchore/grype/grype/store"
 	"github.com/anchore/syft/syft"
 	"github.com/anchore/syft/syft/cataloging"
-	log "github.com/sirupsen/logrus"
-
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/grype/config"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/types"
 	"github.com/openclarity/vmclarity/scanner/utils/sbom"
@@ -52,21 +51,20 @@ const (
 )
 
 type LocalScanner struct {
-	logger *log.Entry
 	config config.LocalGrypeConfig
 }
 
-func newLocalScanner(config types.ScannersConfig, logger *log.Entry) families.Scanner[*types.ScannerResult] {
+func newLocalScanner(config types.ScannersConfig) families.Scanner[*types.ScannerResult] {
 	return &LocalScanner{
-		logger: logger.Dup().WithField("scanner", ScannerName).WithField("mode", "local"),
 		config: config.Grype.Local,
 	}
 }
 
-func (s *LocalScanner) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
+func (s *LocalScanner) Scan(ctx context.Context, inputType common.InputType, userInput string) (*types.ScannerResult, error) {
+	logger := log.GetLoggerFromContextOrDefault(ctx).WithField("grype-type", "local")
+
 	// TODO: make `loading DB` and `gathering packages` work in parallel
 	// https://github.com/anchore/grype/blob/7e8ee40996ba3a4defb5e887ab0177d99cd0e663/cmd/root.go#L240
-
 	dbConfig := db.Config{
 		DBRootDir:           s.config.DBRootDir,
 		ListingURL:          s.config.GetListingURL(),
@@ -75,7 +73,7 @@ func (s *LocalScanner) Scan(ctx context.Context, sourceType common.InputType, us
 		ListingFileTimeout:  s.config.GetListingFileTimeout(),
 		UpdateTimeout:       s.config.GetUpdateTimeout(),
 	}
-	s.logger.Infof("Loading DB. update=%v", s.config.UpdateDB)
+	logger.Infof("Loading DB. update=%v", s.config.UpdateDB)
 
 	vulnerabilityStore, dbStatus, _, err := grype.LoadVulnerabilityDB(dbConfig, s.config.UpdateDB)
 	if err = validateDBLoad(err, dbStatus); err != nil {
@@ -85,7 +83,7 @@ func (s *LocalScanner) Scan(ctx context.Context, sourceType common.InputType, us
 	var hash string
 	var metadata map[string]string
 	origInput := userInput
-	if sourceType == common.SBOM {
+	if inputType == common.SBOM {
 		bom, err := sbom.NewCycloneDX(userInput)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create CycloneDX SBOM: %w", err)
@@ -99,8 +97,8 @@ func (s *LocalScanner) Scan(ctx context.Context, sourceType common.InputType, us
 		}
 	}
 
-	source := sourceType.GetSource(s.config.LocalImageScan)
-	s.logger.Infof("Gathering packages for source %s", source)
+	source := inputType.GetSource(s.config.LocalImageScan)
+	logger.Infof("Gathering packages for source %s", source)
 	providerConfig := pkg.ProviderConfig{
 		SyftProviderConfig: pkg.SyftProviderConfig{
 			SBOMOptions: syft.DefaultCreateSBOMConfig().
@@ -114,7 +112,7 @@ func (s *LocalScanner) Scan(ctx context.Context, sourceType common.InputType, us
 		return nil, fmt.Errorf("failed to analyze packages: %w", err)
 	}
 
-	s.logger.Infof("Found %d packages", len(packages))
+	logger.Infof("Found %d packages", len(packages))
 
 	vulnerabilityMatcher := createVulnerabilityMatcher(vulnerabilityStore)
 	allMatches, ignoredMatches, err := vulnerabilityMatcher.FindMatches(packages, grypeContext)
@@ -123,14 +121,14 @@ func (s *LocalScanner) Scan(ctx context.Context, sourceType common.InputType, us
 		return nil, fmt.Errorf("failed to find vulnerabilities: %w", err)
 	}
 
-	s.logger.Infof("Found %d vulnerabilities", len(allMatches.Sorted()))
+	logger.Infof("Found %d vulnerabilities", len(allMatches.Sorted()))
 	id := clio.Identification{}
 	doc, err := grype_models.NewDocument(id, packages, grypeContext, *allMatches, ignoredMatches, vulnerabilityStore.MetadataProvider, nil, dbStatus)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create document: %w", err)
 	}
 
-	s.logger.Infof("Sending successful results")
+	logger.Infof("Sending successful results")
 	result := createResults(doc, origInput, ScannerName, hash, metadata)
 
 	return result, nil
