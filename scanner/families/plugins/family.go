@@ -20,30 +20,31 @@ import (
 	"fmt"
 
 	"github.com/openclarity/vmclarity/core/log"
+	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/plugins/runner"
 	"github.com/openclarity/vmclarity/scanner/families/plugins/types"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
-	"github.com/openclarity/vmclarity/scanner/internal/job_manager"
+	"github.com/openclarity/vmclarity/scanner/internal/scan_manager"
 )
 
 type Plugins struct {
 	conf types.Config
 }
 
-func New(conf types.Config) familiestypes.Family[*types.Result] {
+func New(conf types.Config) families.Family[*types.Result] {
 	return &Plugins{
 		conf: conf,
 	}
 }
 
-func (p *Plugins) GetType() familiestypes.FamilyType {
-	return familiestypes.Plugins
+func (p *Plugins) GetType() families.FamilyType {
+	return families.Plugins
 }
 
-func (p *Plugins) Run(ctx context.Context, _ *familiestypes.Results) (*types.Result, error) {
+func (p *Plugins) Run(ctx context.Context, _ *families.Results) (*types.Result, error) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "plugins")
 	logger.Info("Plugins Run...")
 
+	// Register plugins dynamically instead of registering runner itself
 	for _, n := range p.conf.ScannersList {
 		types.FactoryRegister(n, runner.New)
 	}
@@ -67,9 +68,9 @@ func (p *Plugins) Run(ctx context.Context, _ *familiestypes.Results) (*types.Res
 	// Merge results from all plugins into the same output
 	pluginsResults := types.NewResult()
 
-	for _, result := range processResults {
+	for _, result := range results {
 		logger.Infof("Merging result from %q", result.Metadata.ScannerName)
-		pluginsResults.Merge(result.Result)
+		pluginsResults.Merge(result.ScanResult)
 	}
 
 	logger.Info("Plugins Done...")

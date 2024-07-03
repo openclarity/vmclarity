@@ -19,8 +19,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
 	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 
 	"github.com/anchore/syft/syft"
@@ -36,20 +36,16 @@ import (
 
 const AnalyzerName = "syft"
 
-func init() {
-	types.FactoryRegister(AnalyzerName, New)
-}
-
 type Analyzer struct {
 	logger *log.Entry
 	config config.Config
 }
 
-func New(_ string, config types.AnalyzersConfig, logger *log.Entry) familiestypes.Scanner[*types.ScannerResult] {
+func New(_ string, config types.AnalyzersConfig, logger *log.Entry) (familiestypes.Scanner[*types.ScannerResult], error) {
 	return &Analyzer{
 		logger: logger.Dup().WithField("analyzer", AnalyzerName),
 		config: config.Syft,
-	}
+	}, nil
 }
 
 func (a *Analyzer) Scan(ctx context.Context, sourceType scannertypes.InputType, userInput string) (*types.ScannerResult, error) {
@@ -126,4 +122,8 @@ func getImageInfo(s *syftsbom.SBOM, src string) (string, *image_helper.ImageInfo
 	default:
 		return "", nil, errors.New("failed to get image hash from source metadata")
 	}
+}
+
+func init() {
+	types.FactoryRegister(AnalyzerName, New)
 }

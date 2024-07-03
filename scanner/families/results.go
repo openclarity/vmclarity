@@ -1,4 +1,4 @@
-package types
+package families
 
 import (
 	"errors"
@@ -15,7 +15,7 @@ func NewResults() *Results {
 	return &Results{}
 }
 
-func (r *Results) SetFamilyResult(result Result[any]) {
+func (r *Results) SetFamilyResult(result any) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -23,7 +23,7 @@ func (r *Results) SetFamilyResult(result Result[any]) {
 }
 
 // GetFamilyResult returns results for a specific family from the given results.
-func GetFamilyResult[familyType Result[familyType]](r *Results) (familyType, error) {
+func GetFamilyResult[familyType any](r *Results) (familyType, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 

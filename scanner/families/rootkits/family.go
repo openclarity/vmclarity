@@ -19,32 +19,32 @@ import (
 	"context"
 	"fmt"
 	"github.com/openclarity/vmclarity/core/log"
+	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/rootkits/types"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
-	"github.com/openclarity/vmclarity/scanner/internal/job_manager"
+	"github.com/openclarity/vmclarity/scanner/internal/scan_manager"
 )
 
 type Rootkits struct {
 	conf types.Config
 }
 
-func New(conf types.Config) familiestypes.Family[*types.Rootkits] {
+func New(conf types.Config) families.Family[*types.Rootkits] {
 	return &Rootkits{
 		conf: conf,
 	}
 }
 
-func (r Rootkits) GetType() familiestypes.FamilyType {
-	return familiestypes.Rootkits
+func (r Rootkits) GetType() families.FamilyType {
+	return families.Rootkits
 }
 
-func (r Rootkits) Run(ctx context.Context, _ *familiestypes.Results) (*types.Rootkits, error) {
+func (r Rootkits) Run(ctx context.Context, _ *families.Results) (*types.Rootkits, error) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "rootkits")
 	logger.Info("Rootkits Run...")
 
-	manager := job_manager.New[types.ScannersConfig, *types.ScannerResult](r.conf.ScannersList, r.conf.ScannersConfig, logger, types.Factory)
-	processResults, err := manager.Process(ctx, r.conf.Inputs)
+	manager := scan_manager.New[types.ScannersConfig, *types.ScannerResult](r.conf.ScannersList, r.conf.ScannersConfig, logger, types.Factory)
+	results, err := manager.Scan(ctx, r.conf.Inputs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process inputs for rootkits: %w", err)
 	}
@@ -52,12 +52,12 @@ func (r Rootkits) Run(ctx context.Context, _ *familiestypes.Results) (*types.Roo
 	rootkitsResults := types.NewRootkits()
 
 	// Merge results.
-	for _, result := range processResults {
-		logger.Infof("Merging result from %q", result.Result.ScannerName)
-		if familiesutils.ShouldStripInputPath(result.Input.StripPathFromResult, r.conf.StripInputPaths) {
-			result.Result = stripPathFromResult(result.Result, result.Input.Input)
+	for _, result := range results {
+		logger.Infof("Merging result from %q", result.Metadata)
+		if familiesutils.ShouldStripInputPath(result.ScanInput.StripPathFromResult, r.conf.StripInputPaths) {
+			result.ScanResult = stripPathFromResult(result.ScanResult, result.ScanInput.Input)
 		}
-		rootkitsResults.Merge(result.Result)
+		rootkitsResults.Merge(result.ScanResult)
 	}
 
 	logger.Info("Rootkits Done...")

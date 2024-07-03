@@ -19,7 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families"
 	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 
 	"github.com/anchore/clio"

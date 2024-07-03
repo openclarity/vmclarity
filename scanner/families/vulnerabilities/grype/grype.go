@@ -16,7 +16,8 @@
 package grype
 
 import (
-	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
+	"fmt"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families"
 	grypeconfig "github.com/openclarity/vmclarity/scanner/families/vulnerabilities/grype/config"
 	"strings"
 
@@ -33,21 +34,15 @@ const (
 	ScannerName = "grype"
 )
 
-func init() {
-	types.FactoryRegister(ScannerName, New)
-}
-
-func New(_ string, config types.ScannersConfig, logger *log.Entry) familiestypes.Scanner[*types.ScannerResult] {
+func New(_ string, config types.ScannersConfig, logger *log.Entry) (familiestypes.Scanner[*types.ScannerResult], error) {
 	switch config.Grype.Mode {
 	case grypeconfig.ModeLocal:
-		return newLocalScanner(config, logger)
+		return newLocalScanner(config, logger), nil
 	case grypeconfig.ModeRemote:
-		return newRemoteScanner(config, logger)
+		return newRemoteScanner(config, logger), nil
+	default:
+		return nil, fmt.Errorf("unsupported grype mode %q", config.Grype.Mode)
 	}
-
-	// We shouldn't get here since grype mode was already validated.
-	log.Fatalf("Unsupported grype mode %q.", config.Grype.Mode)
-	return nil
 }
 
 func createResults(doc grype_models.Document, userInput, scannerName, hash string, metadata map[string]string) *types.ScannerResult {
@@ -215,4 +210,8 @@ func parseLayerHex(layerID string) string {
 	}
 
 	return layerID[index+1:]
+}
+
+func init() {
+	types.FactoryRegister(ScannerName, New)
 }

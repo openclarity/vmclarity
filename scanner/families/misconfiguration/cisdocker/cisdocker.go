@@ -18,9 +18,8 @@ package cisdocker
 import (
 	"context"
 	"fmt"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/cisdocker/config"
-	types2 "github.com/openclarity/vmclarity/scanner/families/plugins/types"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
 	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 
 	dockle_run "github.com/Portshift/dockle/pkg"
@@ -31,10 +30,6 @@ import (
 )
 
 const ScannerName = "cisdocker"
-
-func init() {
-	types2.FactoryRegister(ScannerName, New)
-}
 
 type Scanner struct {
 	logger *logrus.Entry
@@ -86,4 +81,8 @@ func (a *Scanner) isValidInputType(sourceType scannertypes.InputType) bool {
 		a.logger.Infof("unknown source type %v, skipping.", sourceType)
 	}
 	return false
+}
+
+func init() {
+	types.FactoryRegister(ScannerName, New)
 }

@@ -16,7 +16,7 @@
 package assetscan
 
 import (
-	"github.com/openclarity/vmclarity/scanner/families"
+	"github.com/openclarity/vmclarity/scanner"
 	"github.com/openclarity/vmclarity/scanner/families/exploits/types"
 	types5 "github.com/openclarity/vmclarity/scanner/families/plugins/types"
 	types2 "github.com/openclarity/vmclarity/scanner/families/rootkits/types"
@@ -45,10 +45,10 @@ import (
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities"
 )
 
-type FamiliesConfigOption func(*families.Config)
+type FamiliesConfigOption func(*scanner.Config)
 
 func withSBOM(config *apitypes.SBOMConfig, opts *ScannerConfig) FamiliesConfigOption {
-	return func(c *families.Config) {
+	return func(c *scanner.Config) {
 		if !config.IsEnabled() {
 			return
 		}
@@ -73,7 +73,7 @@ func withSBOM(config *apitypes.SBOMConfig, opts *ScannerConfig) FamiliesConfigOp
 }
 
 func withVulnerabilities(config *apitypes.VulnerabilitiesConfig, opts *ScannerConfig) FamiliesConfigOption {
-	return func(c *families.Config) {
+	return func(c *scanner.Config) {
 		if !config.IsEnabled() {
 			return
 		}
@@ -122,7 +122,7 @@ func withVulnerabilities(config *apitypes.VulnerabilitiesConfig, opts *ScannerCo
 }
 
 func withSecretsConfig(config *apitypes.SecretsConfig, _ *ScannerConfig) FamiliesConfigOption {
-	return func(c *families.Config) {
+	return func(c *scanner.Config) {
 		if !config.IsEnabled() {
 			return
 		}
@@ -141,7 +141,7 @@ func withSecretsConfig(config *apitypes.SecretsConfig, _ *ScannerConfig) Familie
 }
 
 func withExploitsConfig(config *apitypes.ExploitsConfig, opts *ScannerConfig) FamiliesConfigOption {
-	return func(c *families.Config) {
+	return func(c *scanner.Config) {
 		if !config.IsEnabled() {
 			return
 		}
@@ -160,7 +160,7 @@ func withExploitsConfig(config *apitypes.ExploitsConfig, opts *ScannerConfig) Fa
 }
 
 func withMalwareConfig(config *apitypes.MalwareConfig, opts *ScannerConfig) FamiliesConfigOption {
-	return func(c *families.Config) {
+	return func(c *scanner.Config) {
 		if !config.IsEnabled() {
 			return
 		}
@@ -186,7 +186,7 @@ func withMalwareConfig(config *apitypes.MalwareConfig, opts *ScannerConfig) Fami
 }
 
 func withMisconfigurationConfig(config *apitypes.MisconfigurationsConfig, _ *ScannerConfig) FamiliesConfigOption {
-	return func(c *families.Config) {
+	return func(c *scanner.Config) {
 		if !config.IsEnabled() {
 			return
 		}
@@ -210,7 +210,7 @@ func withMisconfigurationConfig(config *apitypes.MisconfigurationsConfig, _ *Sca
 }
 
 func withInfoFinderConfig(config *apitypes.InfoFinderConfig, _ *ScannerConfig) FamiliesConfigOption {
-	return func(c *families.Config) {
+	return func(c *scanner.Config) {
 		if !config.IsEnabled() {
 			return
 		}
@@ -227,7 +227,7 @@ func withInfoFinderConfig(config *apitypes.InfoFinderConfig, _ *ScannerConfig) F
 }
 
 func withRootkitsConfig(config *apitypes.RootkitsConfig, _ *ScannerConfig) FamiliesConfigOption {
-	return func(c *families.Config) {
+	return func(c *scanner.Config) {
 		if !config.IsEnabled() {
 			return
 		}
@@ -246,7 +246,7 @@ func withRootkitsConfig(config *apitypes.RootkitsConfig, _ *ScannerConfig) Famil
 }
 
 func withPluginsConfig(config *apitypes.PluginsConfig, _ *ScannerConfig) FamiliesConfigOption {
-	return func(c *families.Config) {
+	return func(c *scanner.Config) {
 		if !config.IsEnabled() {
 			return
 		}
@@ -269,8 +269,8 @@ func withPluginsConfig(config *apitypes.PluginsConfig, _ *ScannerConfig) Familie
 	}
 }
 
-func NewFamiliesConfigFrom(config *ScannerConfig, sfc *apitypes.ScanFamiliesConfig) *families.Config {
-	c := families.NewConfig()
+func NewFamiliesConfigFrom(config *ScannerConfig, sfc *apitypes.ScanFamiliesConfig) *scanner.Config {
+	c := scanner.NewConfig()
 
 	opts := []FamiliesConfigOption{
 		withSBOM(sfc.Sbom, config),

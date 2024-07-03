@@ -18,7 +18,7 @@ package scanner
 import (
 	"context"
 	"fmt"
-	"github.com/openclarity/vmclarity/scanner/families"
+	"github.com/openclarity/vmclarity/scanner"
 	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 	"net"
 
@@ -136,7 +136,7 @@ var (
 
 func (s *Scanner) generateScanConfig(config *provider.ScanJobConfig) ([]byte, error) {
 	// Add volume mount point to family configuration
-	familiesConfig := families.Config{}
+	familiesConfig := scanner.Config{}
 	err := yaml.Unmarshal([]byte(config.ScannerCLIConfig), &familiesConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal family scan configuration: %w", err)

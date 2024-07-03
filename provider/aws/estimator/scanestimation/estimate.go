@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/types"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -28,7 +29,6 @@ import (
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/provider/common"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
 )
 
 type MarketOption string

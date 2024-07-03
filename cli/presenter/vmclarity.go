@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/openclarity/vmclarity/scanner"
 	"github.com/openclarity/vmclarity/scanner/families"
 	types2 "github.com/openclarity/vmclarity/scanner/types"
 
@@ -33,7 +34,6 @@ import (
 	"github.com/openclarity/vmclarity/scanner/families/rootkits"
 	"github.com/openclarity/vmclarity/scanner/families/sbom"
 	"github.com/openclarity/vmclarity/scanner/families/secrets"
-	"github.com/openclarity/vmclarity/scanner/families/types"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities"
 	"github.com/openclarity/vmclarity/scanner/utils"
 )
@@ -46,34 +46,34 @@ type VMClarityPresenter struct {
 	assetScanID apitypes.AssetScanID
 }
 
-func (v *VMClarityPresenter) ExportFamilyResult(ctx context.Context, res families.FamilyResult) error {
+func (v *VMClarityPresenter) ExportFamilyResult(ctx context.Context, res scanner.FamilyResult) error {
 	var err error
 
 	switch res.FamilyType {
-	case types.SBOM:
+	case families.SBOM:
 		err = v.ExportSbomResult(ctx, res)
-	case types.Vulnerabilities:
+	case families.Vulnerabilities:
 		err = v.ExportVulResult(ctx, res)
-	case types.Secrets:
+	case families.Secrets:
 		err = v.ExportSecretsResult(ctx, res)
-	case types.Exploits:
+	case families.Exploits:
 		err = v.ExportExploitsResult(ctx, res)
-	case types.Misconfiguration:
+	case families.Misconfiguration:
 		err = v.ExportMisconfigurationResult(ctx, res)
-	case types.Rootkits:
+	case families.Rootkits:
 		err = v.ExportRootkitResult(ctx, res)
-	case types.Malware:
+	case families.Malware:
 		err = v.ExportMalwareResult(ctx, res)
-	case types.InfoFinder:
+	case families.InfoFinder:
 		err = v.ExportInfoFinderResult(ctx, res)
-	case types.Plugins:
+	case families.Plugins:
 		err = v.ExportPluginsResult(ctx, res)
 	}
 
 	return err
 }
 
-func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res families.FamilyResult) error {
+func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res scanner.FamilyResult) error {
 	assetScan, err := v.client.GetAssetScan(ctx, v.assetScanID, apitypes.GetAssetScansAssetScanIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get asset scan: %w", err)
@@ -123,7 +123,7 @@ func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res families.
 	return nil
 }
 
-func (v *VMClarityPresenter) ExportVulResult(ctx context.Context, res families.FamilyResult) error {
+func (v *VMClarityPresenter) ExportVulResult(ctx context.Context, res scanner.FamilyResult) error {
 	assetScan, err := v.client.GetAssetScan(ctx, v.assetScanID, apitypes.GetAssetScansAssetScanIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get asset scan: %w", err)
@@ -173,7 +173,7 @@ func (v *VMClarityPresenter) ExportVulResult(ctx context.Context, res families.F
 	return nil
 }
 
-func (v *VMClarityPresenter) ExportSecretsResult(ctx context.Context, res families.FamilyResult) error {
+func (v *VMClarityPresenter) ExportSecretsResult(ctx context.Context, res scanner.FamilyResult) error {
 	assetScan, err := v.client.GetAssetScan(ctx, v.assetScanID, apitypes.GetAssetScansAssetScanIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get asset scan: %w", err)
@@ -245,7 +245,7 @@ func getInputScanStats(inputScans []types2.InputScanMetadata) *[]apitypes.AssetS
 	return &ret
 }
 
-func (v *VMClarityPresenter) ExportMalwareResult(ctx context.Context, res families.FamilyResult) error {
+func (v *VMClarityPresenter) ExportMalwareResult(ctx context.Context, res scanner.FamilyResult) error {
 	assetScan, err := v.client.GetAssetScan(ctx, v.assetScanID, apitypes.GetAssetScansAssetScanIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get asset scan: %w", err)
@@ -296,7 +296,7 @@ func (v *VMClarityPresenter) ExportMalwareResult(ctx context.Context, res famili
 	return nil
 }
 
-func (v *VMClarityPresenter) ExportExploitsResult(ctx context.Context, res families.FamilyResult) error {
+func (v *VMClarityPresenter) ExportExploitsResult(ctx context.Context, res scanner.FamilyResult) error {
 	assetScan, err := v.client.GetAssetScan(ctx, v.assetScanID, apitypes.GetAssetScansAssetScanIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get asset scan: %w", err)
@@ -346,7 +346,7 @@ func (v *VMClarityPresenter) ExportExploitsResult(ctx context.Context, res famil
 	return nil
 }
 
-func (v *VMClarityPresenter) ExportMisconfigurationResult(ctx context.Context, res families.FamilyResult) error {
+func (v *VMClarityPresenter) ExportMisconfigurationResult(ctx context.Context, res scanner.FamilyResult) error {
 	assetScan, err := v.client.GetAssetScan(ctx, v.assetScanID, apitypes.GetAssetScansAssetScanIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get asset scan: %w", err)
@@ -406,7 +406,7 @@ func (v *VMClarityPresenter) ExportMisconfigurationResult(ctx context.Context, r
 	return nil
 }
 
-func (v *VMClarityPresenter) ExportInfoFinderResult(ctx context.Context, res families.FamilyResult) error {
+func (v *VMClarityPresenter) ExportInfoFinderResult(ctx context.Context, res scanner.FamilyResult) error {
 	assetScan, err := v.client.GetAssetScan(ctx, v.assetScanID, apitypes.GetAssetScansAssetScanIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get asset scan: %w", err)
@@ -466,7 +466,7 @@ func (v *VMClarityPresenter) ExportInfoFinderResult(ctx context.Context, res fam
 	return nil
 }
 
-func (v *VMClarityPresenter) ExportRootkitResult(ctx context.Context, res families.FamilyResult) error {
+func (v *VMClarityPresenter) ExportRootkitResult(ctx context.Context, res scanner.FamilyResult) error {
 	assetScan, err := v.client.GetAssetScan(ctx, v.assetScanID, apitypes.GetAssetScansAssetScanIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get asset scan: %w", err)
@@ -515,7 +515,7 @@ func (v *VMClarityPresenter) ExportRootkitResult(ctx context.Context, res famili
 	return nil
 }
 
-func (v *VMClarityPresenter) ExportPluginsResult(ctx context.Context, res families.FamilyResult) error {
+func (v *VMClarityPresenter) ExportPluginsResult(ctx context.Context, res scanner.FamilyResult) error {
 	assetScan, err := v.client.GetAssetScan(ctx, v.assetScanID, apitypes.GetAssetScansAssetScanIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get asset scan: %w", err)

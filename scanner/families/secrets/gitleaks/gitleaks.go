@@ -19,7 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families"
 	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 	"os"
 	"os/exec"
@@ -39,11 +39,11 @@ type Scanner struct {
 	config config.Config
 }
 
-func New(_ string, config types.ScannersConfig, logger *log.Entry) familiestypes.Scanner[*types.ScannerResult] {
+func New(_ string, config types.ScannersConfig, logger *log.Entry) (familiestypes.Scanner[*types.ScannerResult], error) {
 	return &Scanner{
 		logger: logger.Dup().WithField("scanner", ScannerName),
 		config: config.Gitleaks,
-	}
+	}, nil
 }
 
 func (a *Scanner) Scan(ctx context.Context, sourceType scannertypes.InputType, userInput string) (*types.ScannerResult, error) {
@@ -122,4 +122,8 @@ func (a *Scanner) isValidInputType(sourceType scannertypes.InputType) bool {
 		a.logger.Infof("source type %v is not supported for gitleaks, skipping.", sourceType)
 	}
 	return false
+}
+
+func init() {
+	types.FactoryRegister(ScannerName, New)
 }

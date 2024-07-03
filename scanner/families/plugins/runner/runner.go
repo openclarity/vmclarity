@@ -43,12 +43,12 @@ type Scanner struct {
 	config config.Config
 }
 
-func New(name string, config types.ScannersConfig, logger *log.Entry) familiestypes.Scanner[*types.ScannerResult] {
+func New(name string, config types.ScannersConfig, logger *log.Entry) (familiestypes.Scanner[*types.ScannerResult], error) {
 	return &Scanner{
 		name:   name,
 		logger: logger.Dup().WithField("scanner", name),
 		config: config[name],
-	}
+	}, nil
 }
 
 func (s *Scanner) Scan(ctx context.Context, sourceType scannertypes.InputType, userInput string) (*types.ScannerResult, error) {

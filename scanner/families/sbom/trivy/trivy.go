@@ -19,8 +19,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
 	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 	"os"
 
@@ -41,20 +41,16 @@ import (
 
 const AnalyzerName = "trivy"
 
-func init() {
-	types.FactoryRegister(AnalyzerName, New)
-}
-
 type Analyzer struct {
 	logger *log.Entry
 	config config.Config
 }
 
-func New(_ string, config types.AnalyzersConfig, logger *log.Entry) familiestypes.Scanner[*types.ScannerResult] {
+func New(_ string, config types.AnalyzersConfig, logger *log.Entry) (familiestypes.Scanner[*types.ScannerResult], error) {
 	return &Analyzer{
 		logger: logger.Dup().WithField("analyzer", AnalyzerName),
 		config: config.Trivy,
-	}
+	}, nil
 }
 
 // nolint:cyclop
@@ -205,4 +201,8 @@ func getImageInfo(properties *[]cdx.Property, imageName string) (string, *image_
 	}
 
 	return hash, imageInfo, nil
+}
+
+func init() {
+	types.FactoryRegister(AnalyzerName, New)
 }

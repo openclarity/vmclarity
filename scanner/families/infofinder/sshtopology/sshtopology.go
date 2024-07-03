@@ -20,8 +20,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/infofinder/sshtopology/config"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
 	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 	"os"
 	"os/exec"
@@ -39,20 +39,16 @@ import (
 
 const ScannerName = "sshTopology"
 
-func init() {
-	types.FactoryRegister(ScannerName, New)
-}
-
 type Scanner struct {
 	logger *log.Entry
 	config config.Config
 }
 
-func New(_ string, config types.ScannersConfig, logger *log.Entry) familiestypes.Scanner[*types.ScannerResult] {
+func New(_ string, config types.ScannersConfig, logger *log.Entry) (familiestypes.Scanner[*types.ScannerResult], error) {
 	return &Scanner{
 		logger: logger.Dup().WithField("scanner", ScannerName),
 		config: config.SSHTopology,
-	}
+	}, nil
 }
 
 // nolint:cyclop,gocognit
@@ -365,4 +361,8 @@ func parseSSHKeyGenFingerprintCommandOutput(output string, infoType types.InfoTy
 		})
 	}
 	return infos
+}
+
+func init() {
+	types.FactoryRegister(ScannerName, New)
 }
