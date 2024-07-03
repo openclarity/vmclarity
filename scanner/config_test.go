@@ -13,19 +13,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package families
+package scanner
 
 import (
-	types3 "github.com/openclarity/vmclarity/scanner/families/sbom/types"
-	types4 "github.com/openclarity/vmclarity/scanner/families/secrets/types"
-	types2 "github.com/openclarity/vmclarity/scanner/types"
+	sbomtypes "github.com/openclarity/vmclarity/scanner/families/sbom/types"
+	secrettypes "github.com/openclarity/vmclarity/scanner/families/secrets/types"
+	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 	"reflect"
 	"testing"
 
 	"github.com/openclarity/vmclarity/core/to"
-	"github.com/openclarity/vmclarity/scanner/families/malware"
-	"github.com/openclarity/vmclarity/scanner/families/types"
-	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities"
+	malware "github.com/openclarity/vmclarity/scanner/families/malware/types"
+	vulnerabilities "github.com/openclarity/vmclarity/scanner/families/vulnerabilities/types"
 )
 
 func Test_SetMountPointsForFamiliesInput(t *testing.T) {
@@ -43,7 +42,7 @@ func Test_SetMountPointsForFamiliesInput(t *testing.T) {
 			args: args{
 				mountPoints: []string{"/mnt/snapshot1"},
 				familiesConfig: &Config{
-					SBOM: types3.Config{
+					SBOM: sbomtypes.Config{
 						Enabled: true,
 						Inputs:  nil,
 					},
@@ -52,7 +51,7 @@ func Test_SetMountPointsForFamiliesInput(t *testing.T) {
 						Inputs:        nil,
 						InputFromSbom: false,
 					},
-					Secrets: types4.Config{
+					Secrets: secrettypes.Config{
 						Enabled: true,
 						Inputs:  nil,
 					},
@@ -63,12 +62,12 @@ func Test_SetMountPointsForFamiliesInput(t *testing.T) {
 				},
 			},
 			want: &Config{
-				SBOM: types3.Config{
+				SBOM: sbomtypes.Config{
 					Enabled: true,
-					Inputs: []types.Input{
+					Inputs: []scannertypes.ScanInput{
 						{
 							Input:     "/mnt/snapshot1",
-							InputType: string(types2.ROOTFS),
+							InputType: scannertypes.ROOTFS,
 						},
 					},
 				},
@@ -76,23 +75,23 @@ func Test_SetMountPointsForFamiliesInput(t *testing.T) {
 					Enabled:       true,
 					InputFromSbom: true,
 				},
-				Secrets: types4.Config{
+				Secrets: secrettypes.Config{
 					Enabled: true,
-					Inputs: []types.Input{
+					Inputs: []scannertypes.ScanInput{
 						{
 							StripPathFromResult: to.Ptr(true),
 							Input:               "/mnt/snapshot1",
-							InputType:           string(types2.ROOTFS),
+							InputType:           scannertypes.ROOTFS,
 						},
 					},
 				},
 				Malware: malware.Config{
 					Enabled: true,
-					Inputs: []types.Input{
+					Inputs: []scannertypes.ScanInput{
 						{
 							StripPathFromResult: to.Ptr(true),
 							Input:               "/mnt/snapshot1",
-							InputType:           string(types2.ROOTFS),
+							InputType:           scannertypes.ROOTFS,
 						},
 					},
 				},
@@ -113,10 +112,10 @@ func Test_SetMountPointsForFamiliesInput(t *testing.T) {
 			want: &Config{
 				Vulnerabilities: vulnerabilities.Config{
 					Enabled: true,
-					Inputs: []types.Input{
+					Inputs: []scannertypes.ScanInput{
 						{
 							Input:     "/mnt/snapshot1",
-							InputType: string(types2.ROOTFS),
+							InputType: scannertypes.ROOTFS,
 						},
 					},
 					InputFromSbom: false,
@@ -126,7 +125,9 @@ func Test_SetMountPointsForFamiliesInput(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := AddInputs(tt.args.mountPoints, tt.args.familiesConfig); !reflect.DeepEqual(got, tt.want) {
+			tt.args.familiesConfig.AddInputs(scannertypes.ROOTFS, tt.args.mountPoints)
+			got := tt.args.familiesConfig
+			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("AddInputs() = %v, want %v", got, tt.want)
 			}
 		})

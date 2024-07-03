@@ -17,9 +17,9 @@ package presenter
 
 import (
 	"context"
-	"github.com/openclarity/vmclarity/scanner/families"
+	"github.com/openclarity/vmclarity/scanner"
 )
 
 type Presenter interface {
-	ExportFamilyResult(ctx context.Context, res families.FamilyResult) error
+	ExportFamilyResult(ctx context.Context, res scanner.FamilyResult) error
 }

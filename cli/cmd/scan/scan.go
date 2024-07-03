@@ -19,7 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/openclarity/vmclarity/scanner/families"
+	"github.com/openclarity/vmclarity/scanner"
 	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 	"os"
 	"time"
@@ -121,7 +121,7 @@ var ScanCmd = &cobra.Command{
 		}
 
 		logutil.Logger.Infof("Running scanners...")
-		runErrors := families.New(config).Run(abortCtx, cli)
+		runErrors := scanner.New(config).Run(abortCtx, cli)
 
 		if len(runErrors) > 0 {
 			logutil.Logger.Errorf("Errors when running families: %+v", runErrors)
@@ -159,7 +159,7 @@ func init() {
 }
 
 // loadConfig reads in config file and ENV variables if set.
-func loadConfig(cfgFile string) *families.Config {
+func loadConfig(cfgFile string) *scanner.Config {
 	logutil.Logger.Infof("Initializing configuration...")
 	if cfgFile != "" {
 		// Use config file from the flag.
@@ -183,7 +183,7 @@ func loadConfig(cfgFile string) *families.Config {
 	cobra.CheckErr(err)
 
 	// Load config
-	config := &families.Config{}
+	config := &scanner.Config{}
 	err = viper.Unmarshal(config)
 	cobra.CheckErr(err)
 
@@ -196,7 +196,7 @@ func loadConfig(cfgFile string) *families.Config {
 	return config
 }
 
-func newCli(config *families.Config, server, assetScanID, output string) (*cli.CLI, error) {
+func newCli(config *scanner.Config, server, assetScanID, output string) (*cli.CLI, error) {
 	var manager state.Manager
 	var presenters []presenter.Presenter
 	var err error

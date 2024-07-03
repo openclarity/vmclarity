@@ -16,7 +16,7 @@
 package presenter
 
 import (
-	"github.com/openclarity/vmclarity/scanner/families"
+	"github.com/openclarity/vmclarity/scanner"
 	"io"
 )
 
@@ -24,7 +24,7 @@ type ConsolePresenter struct {
 	*DefaultPresenter
 }
 
-func NewConsolePresenter(output io.Writer, FamiliesConfig *families.Config) *ConsolePresenter {
+func NewConsolePresenter(output io.Writer, FamiliesConfig *scanner.Config) *ConsolePresenter {
 	return &ConsolePresenter{
 		DefaultPresenter: &DefaultPresenter{
 			Writer:         &ConsoleWriter{Output: output},

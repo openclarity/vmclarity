@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/openclarity/vmclarity/scanner"
 	"github.com/openclarity/vmclarity/scanner/families"
 	"io"
 	"os"
@@ -248,7 +249,7 @@ func (s *Scanner) createScanNetwork(ctx context.Context) (string, error) {
 // copyScanConfigToContainer copies scan configuration as a file to the scan container.
 func (s *Scanner) copyScanConfigToContainer(ctx context.Context, containerID string, t *provider.ScanJobConfig) error {
 	// Add volume mount point to family configuration
-	familiesConfig := families.Config{}
+	familiesConfig := scanner.Config{}
 	err := yaml.Unmarshal([]byte(t.ScannerCLIConfig), &familiesConfig)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal family scan configuration: %w", err)

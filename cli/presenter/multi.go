@@ -18,14 +18,14 @@ package presenter
 import (
 	"context"
 	"fmt"
-	"github.com/openclarity/vmclarity/scanner/families"
+	"github.com/openclarity/vmclarity/scanner"
 )
 
 type MultiPresenter struct {
 	Presenters []Presenter
 }
 
-func (m *MultiPresenter) ExportFamilyResult(ctx context.Context, res families.FamilyResult) error {
+func (m *MultiPresenter) ExportFamilyResult(ctx context.Context, res scanner.FamilyResult) error {
 	for _, p := range m.Presenters {
 		if err := p.ExportFamilyResult(ctx, res); err != nil {
 			return fmt.Errorf("failed to export result: %w", err)

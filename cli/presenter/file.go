@@ -16,14 +16,14 @@
 package presenter
 
 import (
-	"github.com/openclarity/vmclarity/scanner/families"
+	"github.com/openclarity/vmclarity/scanner"
 )
 
 type FilePresenter struct {
 	*DefaultPresenter
 }
 
-func NewFilePresenter(path string, FamiliesConfig *families.Config) *FilePresenter {
+func NewFilePresenter(path string, FamiliesConfig *scanner.Config) *FilePresenter {
 	return &FilePresenter{
 		DefaultPresenter: &DefaultPresenter{
 			Writer:         &FileWriter{Path: path},

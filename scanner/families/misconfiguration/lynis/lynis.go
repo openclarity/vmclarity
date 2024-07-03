@@ -18,9 +18,8 @@ package lynis
 import (
 	"context"
 	"fmt"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/lynis/config"
-	types2 "github.com/openclarity/vmclarity/scanner/families/plugins/types"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
 	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 	"os"
 	"os/exec"
@@ -36,10 +35,6 @@ import (
 )
 
 const ScannerName = "lynis"
-
-func init() {
-	types2.FactoryRegister(ScannerName, New)
-}
 
 type Scanner struct {
 	logger *log.Entry
@@ -147,4 +142,8 @@ func (a *Scanner) isValidInputType(sourceType scannertypes.InputType) bool {
 		a.logger.Infof("unknown source type %v, skipping.", sourceType)
 	}
 	return false
+}
+
+func init() {
+	types.FactoryRegister(ScannerName, New)
 }

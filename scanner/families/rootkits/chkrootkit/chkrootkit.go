@@ -18,7 +18,7 @@ package chkrootkit
 import (
 	"context"
 	"fmt"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families"
 	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 	"os/exec"
 
@@ -33,20 +33,16 @@ import (
 
 const ScannerName = "chkrootkit"
 
-func init() {
-	types.FactoryRegister(ScannerName, New)
-}
-
 type Scanner struct {
 	logger *log.Entry
 	config config.Config
 }
 
-func New(_ string, config types.ScannersConfig, logger *log.Entry) familiestypes.Scanner[*types.ScannerResult] {
+func New(_ string, config types.ScannersConfig, logger *log.Entry) (familiestypes.Scanner[*types.ScannerResult], error) {
 	return &Scanner{
 		logger: logger.Dup().WithField("scanner", ScannerName),
 		config: config.Chkrootkit,
-	}
+	}, nil
 }
 
 func (s *Scanner) Scan(ctx context.Context, sourceType scannertypes.InputType, userInput string) (*types.ScannerResult, error) {
@@ -136,4 +132,8 @@ func toResultsRootkits(rootkits []chkrootkitutils.Rootkit) []types.Rootkit {
 	}
 
 	return ret
+}
+
+func init() {
+	types.FactoryRegister(ScannerName, New)
 }

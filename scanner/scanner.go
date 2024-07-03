@@ -15,12 +15,13 @@
 
 // TODO(ramizpolic): improve runner usage and workflow clarity
 
-package families
+package scanner
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/workflow"
 	workflowtypes "github.com/openclarity/vmclarity/workflow/types"
 
@@ -40,13 +41,13 @@ import (
 )
 
 type FamilyResult struct {
-	FamilyType types.FamilyType
+	FamilyType families.FamilyType
 	Result     any
 	Err        error
 }
 
 type FamilyNotifier interface {
-	FamilyStarted(context.Context, types.FamilyType) error
+	FamilyStarted(context.Context, families.FamilyType) error
 	FamilyFinished(ctx context.Context, res FamilyResult) error
 }
 
@@ -202,7 +203,7 @@ func (m *Manager) Run(ctx context.Context, notifier FamilyNotifier) []error {
 
 // withFamilyRunner returns a function that will handle workflow execution for
 // the given family using provided runner.
-func withFamilyRunner(family types.Family) func(context.Context, runner) error {
+func withFamilyRunner(family families.Family) func(context.Context, runner) error {
 	return func(ctx context.Context, runner runner) error {
 		// NOTE(ramizpolic): We do not return errors at all as returning an error in
 		// workflow function will cancel the whole execution. This is problematic as
@@ -219,7 +220,7 @@ type runner struct {
 	ErrCh    chan<- error
 }
 
-func (r *runner) Run(ctx context.Context, family types.Family) {
+func (r *runner) Run(ctx context.Context, family families.Family) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx)
 
 	// Notify about start, return preemptively if it fails
@@ -258,7 +259,7 @@ func (r *runner) Run(ctx context.Context, family types.Family) {
 }
 
 type runnerFamilyRunError struct {
-	Family types.FamilyType
+	Family families.FamilyType
 	Err    error
 }
 

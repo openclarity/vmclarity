@@ -17,7 +17,7 @@ package fake
 
 import (
 	"context"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families"
 	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 
 	log "github.com/sirupsen/logrus"
@@ -27,18 +27,14 @@ import (
 
 const ScannerName = "fake"
 
-func init() {
-	types.FactoryRegister(ScannerName, New)
-}
-
 type Scanner struct {
 	logger *log.Entry
 }
 
-func New(_ string, _ types.ScannersConfig, logger *log.Entry) familiestypes.Scanner[*types.ScannerResult] {
+func New(_ string, _ types.ScannersConfig, logger *log.Entry) (familiestypes.Scanner[*types.ScannerResult], error) {
 	return &Scanner{
 		logger: logger.Dup().WithField("scanner", ScannerName),
-	}
+	}, nil
 }
 
 func (a *Scanner) Scan(_ context.Context, _ scannertypes.InputType, _ string) (*types.ScannerResult, error) {
@@ -95,4 +91,8 @@ func createFakeMisconfigurationReport() []types.Misconfiguration {
 			Remediation: "fix the thing number 4",
 		},
 	}
+}
+
+func init() {
+	types.FactoryRegister(ScannerName, New)
 }

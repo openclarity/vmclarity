@@ -17,7 +17,7 @@ package state
 
 import (
 	_ "embed"
-	"github.com/openclarity/vmclarity/scanner/families"
+	"github.com/openclarity/vmclarity/scanner"
 	types2 "github.com/openclarity/vmclarity/scanner/families/sbom/types"
 	"testing"
 
@@ -36,7 +36,7 @@ var effectiveScanConfigJSON string
 func Test_appendEffectiveScanConfigAnnotation(t *testing.T) {
 	type args struct {
 		annotations *apitypes.Annotations
-		config      *families.Config
+		config      *scanner.Config
 	}
 	tests := []struct {
 		name    string
@@ -48,7 +48,7 @@ func Test_appendEffectiveScanConfigAnnotation(t *testing.T) {
 			name: "annotations is nil",
 			args: args{
 				annotations: nil,
-				config: &families.Config{
+				config: &scanner.Config{
 					SBOM: types2.Config{
 						Enabled:       true,
 						AnalyzersList: []string{"syft"},
@@ -77,7 +77,7 @@ func Test_appendEffectiveScanConfigAnnotation(t *testing.T) {
 			name: "annotations is empty list",
 			args: args{
 				annotations: &apitypes.Annotations{},
-				config: &families.Config{
+				config: &scanner.Config{
 					SBOM: types2.Config{
 						Enabled:       true,
 						AnalyzersList: []string{"syft"},
@@ -111,7 +111,7 @@ func Test_appendEffectiveScanConfigAnnotation(t *testing.T) {
 						Value: to.Ptr("test"),
 					},
 				},
-				config: &families.Config{
+				config: &scanner.Config{
 					SBOM: types2.Config{
 						Enabled:       true,
 						AnalyzersList: []string{"syft"},
@@ -149,7 +149,7 @@ func Test_appendEffectiveScanConfigAnnotation(t *testing.T) {
 						Value: to.Ptr("test"),
 					},
 				},
-				config: &families.Config{
+				config: &scanner.Config{
 					SBOM: types2.Config{
 						Enabled:       true,
 						AnalyzersList: []string{"syft"},

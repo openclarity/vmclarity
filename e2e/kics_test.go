@@ -17,6 +17,7 @@ package e2e
 
 import (
 	"context"
+	"github.com/openclarity/vmclarity/scanner"
 	"github.com/openclarity/vmclarity/scanner/families"
 	types3 "github.com/openclarity/vmclarity/scanner/families/plugins/types"
 	types2 "github.com/openclarity/vmclarity/scanner/types"
@@ -35,12 +36,12 @@ import (
 const scannerPluginName = "kics"
 
 type Notifier struct {
-	Results []families.FamilyResult
+	Results []scanner.FamilyResult
 }
 
-func (n *Notifier) FamilyStarted(context.Context, types.FamilyType) error { return nil }
+func (n *Notifier) FamilyStarted(context.Context, families.FamilyType) error { return nil }
 
-func (n *Notifier) FamilyFinished(_ context.Context, res families.FamilyResult) error {
+func (n *Notifier) FamilyFinished(_ context.Context, res scanner.FamilyResult) error {
 	n.Results = append(n.Results, res)
 
 	return nil
@@ -57,7 +58,7 @@ var _ = ginkgo.Describe("Running KICS scan", func() {
 			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			notifier := &Notifier{}
 
-			errs := families.New(&families.Config{
+			errs := scanner.New(&scanner.Config{
 				Plugins: types3.Config{
 					Enabled:      true,
 					ScannersList: []string{scannerPluginName},

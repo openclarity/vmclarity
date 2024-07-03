@@ -13,11 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package families
+package scanner
 
 import (
 	"context"
 	"errors"
+	"github.com/openclarity/vmclarity/scanner/families"
 	types2 "github.com/openclarity/vmclarity/scanner/types"
 	"testing"
 	"time"
@@ -30,7 +31,7 @@ type familyNotifierSpy struct {
 	Results []FamilyResult
 }
 
-func (n *familyNotifierSpy) FamilyStarted(context.Context, types.FamilyType) error {
+func (n *familyNotifierSpy) FamilyStarted(context.Context, families.FamilyType) error {
 	return nil
 }
 

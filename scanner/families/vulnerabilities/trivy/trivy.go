@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families"
 	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 	"net/http"
 	"net/url"
@@ -53,11 +53,7 @@ type Scanner struct {
 	config config.Config
 }
 
-func init() {
-	types.FactoryRegister(ScannerName, New)
-}
-
-func New(_ string, config types.ScannersConfig, logger *log.Entry) familiestypes.Scanner[*types.ScannerResult] {
+func New(_ string, config types.ScannersConfig, logger *log.Entry) (familiestypes.Scanner[*types.ScannerResult], error) {
 	logger = logger.Dup().WithField("scanner", ScannerName)
 
 	// Set up the logger for trivy
@@ -67,7 +63,7 @@ func New(_ string, config types.ScannersConfig, logger *log.Entry) familiestypes
 	return &Scanner{
 		logger: logger,
 		config: config.Trivy,
-	}
+	}, nil
 }
 
 // nolint:cyclop
@@ -236,7 +232,7 @@ func (a *Scanner) createResult(trivyJSON []byte, hash string, metadata map[strin
 			Hash:     hash,
 			Metadata: metadata,
 		},
-		ScannerInfo: types.ScannerInfo{
+		Scanner: types.ScannerInfo{
 			Name: ScannerName,
 		},
 	}, nil
@@ -385,4 +381,8 @@ func getAllTrivySeverities() ([]trivyDBTypes.Severity, error) {
 		severities = append(severities, sev)
 	}
 	return severities, nil
+}
+
+func init() {
+	types.FactoryRegister(ScannerName, New)
 }

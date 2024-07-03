@@ -19,45 +19,45 @@ import (
 	"context"
 	"fmt"
 	"github.com/openclarity/vmclarity/core/log"
+	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
 	types2 "github.com/openclarity/vmclarity/scanner/families/plugins/types"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
-	"github.com/openclarity/vmclarity/scanner/internal/job_manager"
+	"github.com/openclarity/vmclarity/scanner/internal/scan_manager"
 )
 
 type Misconfiguration struct {
 	conf types.Config
 }
 
-func New(conf types.Config) familiestypes.Family[*types.Misconfigurations] {
+func New(conf types.Config) families.Family[*types.Misconfigurations] {
 	return &Misconfiguration{
 		conf: conf,
 	}
 }
 
-func (m Misconfiguration) GetType() familiestypes.FamilyType {
-	return familiestypes.Misconfiguration
+func (m Misconfiguration) GetType() families.FamilyType {
+	return families.Misconfiguration
 }
 
-func (m Misconfiguration) Run(ctx context.Context, _ *familiestypes.Results) (*types.Misconfigurations, error) {
+func (m Misconfiguration) Run(ctx context.Context, _ *families.Results) (*types.Misconfigurations, error) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "misconfiguration")
 	logger.Info("Misconfiguration Run...")
 
-	manager := job_manager.New[types.ScannersConfig, *types.ScannerResult](m.conf.ScannersList, m.conf.ScannersConfig, logger, types2.Factory)
-	processResults, err := manager.Process(ctx, m.conf.Inputs)
+	manager := scan_manager.New[types.ScannersConfig, *types.ScannerResult](m.conf.ScannersList, m.conf.ScannersConfig, logger, types2.Factory)
+	results, err := manager.Scan(ctx, m.conf.Inputs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process inputs for misconfigurations: %w", err)
 	}
 
 	misConfigResults := types.NewMisconfigurations()
 
-	for _, result := range processResults {
-		logger.Infof("Merging result from %q", result.Result.ScannerName)
-		if familiesutils.ShouldStripInputPath(result.Input.StripPathFromResult, m.conf.StripInputPaths) {
-			result.Result = stripPathFromResult(result.Result, result.Input.Input)
+	for _, result := range results {
+		logger.Infof("Merging result from %q", result.Metadata)
+		if familiesutils.ShouldStripInputPath(result.ScanInput.StripPathFromResult, m.conf.StripInputPaths) {
+			result.ScanResult = stripPathFromResult(result.ScanResult, result.ScanInput.Input)
 		}
-		misConfigResults.Merge(result.Result)
+		misConfigResults.Merge(result.ScanResult)
 	}
 
 	logger.Info("Misconfiguration Done...")

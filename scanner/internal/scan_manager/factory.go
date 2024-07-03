@@ -13,24 +13,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package job_manager // nolint:revive,stylecheck
+package scan_manager // nolint:revive,stylecheck
 
 import (
 	"fmt"
-	"github.com/openclarity/vmclarity/scanner/families/types"
+	"github.com/openclarity/vmclarity/scanner/families"
 
 	"github.com/sirupsen/logrus"
 )
 
-type CreateScannerFunc[CT any, RT types.Result[RT]] func(string, CT, *logrus.Entry) types.Scanner[RT]
+type CreateScannerFunc[ConfigType, ScannerResultType any] func(string, ConfigType, *logrus.Entry) (families.Scanner[ScannerResultType], error)
 
-type Factory[CT any, RT types.Result[RT]] struct {
-	scanners map[string]CreateScannerFunc[CT, RT]
+type Factory[ConfigType, ScannerResultType any] struct {
+	scanners map[string]CreateScannerFunc[ConfigType, ScannerResultType]
 }
 
-func NewFactory[CT any, RT types.Result[RT]]() *Factory[CT, RT] {
-	return &Factory[CT, RT]{
-		scanners: make(map[string]CreateScannerFunc[CT, RT]),
+func NewFactory[ConfigType, ScannerResultType any]() *Factory[ConfigType, ScannerResultType] {
+	return &Factory[ConfigType, ScannerResultType]{
+		scanners: make(map[string]CreateScannerFunc[ConfigType, ScannerResultType]),
 	}
 }
 
@@ -46,11 +46,11 @@ func (f *Factory[CT, RT]) Register(name string, createJobFunc CreateScannerFunc[
 	f.scanners[name] = createJobFunc
 }
 
-func (f *Factory[CT, RT]) CreateJob(name string, config CT, logger *logrus.Entry) (types.Scanner[RT], error) {
+func (f *Factory[CT, RT]) CreateJob(name string, config CT, logger *logrus.Entry) (families.Scanner[RT], error) {
 	createFunc, ok := f.scanners[name]
 	if !ok {
 		return nil, fmt.Errorf("%v not a registered job", name)
 	}
 
-	return createFunc(name, config, logger), nil
+	return createFunc(name, config, logger)
 }

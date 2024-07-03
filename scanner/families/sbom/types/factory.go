@@ -15,9 +15,9 @@
 
 package types
 
-import "github.com/openclarity/vmclarity/scanner/internal/job_manager"
+import "github.com/openclarity/vmclarity/scanner/internal/scan_manager"
 
 var (
-	Factory         = job_manager.NewFactory[AnalyzersConfig, *ScannerResult]()
+	Factory         = scan_manager.NewFactory[AnalyzersConfig, *ScannerResult]()
 	FactoryRegister = Factory.Register
 )
