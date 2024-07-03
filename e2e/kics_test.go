@@ -18,6 +18,7 @@ package e2e
 import (
 	"context"
 	"github.com/openclarity/vmclarity/scanner/families"
+	types3 "github.com/openclarity/vmclarity/scanner/families/plugins/types"
 	types2 "github.com/openclarity/vmclarity/scanner/types"
 	"path/filepath"
 	"reflect"
@@ -57,7 +58,7 @@ var _ = ginkgo.Describe("Running KICS scan", func() {
 			notifier := &Notifier{}
 
 			errs := families.New(&families.Config{
-				Plugins: plugins.Config{
+				Plugins: types3.Config{
 					Enabled:      true,
 					ScannersList: []string{scannerPluginName},
 					Inputs: []types.Input{

@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/openclarity/vmclarity/scanner/families"
+	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 	"os"
 	"time"
 
@@ -111,7 +112,7 @@ var ScanCmd = &cobra.Command{
 				}
 				return err
 			}
-			families.SetMountPointsForFamiliesInput(mountPoints, config)
+			config.AddInputs(scannertypes.ROOTFS, mountPoints)
 		}
 
 		err = cli.MarkInProgress(ctx, config)

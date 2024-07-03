@@ -253,7 +253,7 @@ func (s *Scanner) copyScanConfigToContainer(ctx context.Context, containerID str
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal family scan configuration: %w", err)
 	}
-	families.SetMountPointsForFamiliesInput([]string{mountPointPath}, &familiesConfig)
+	families.AddInputs([]string{mountPointPath}, &familiesConfig)
 	familiesConfigByte, err := yaml.Marshal(familiesConfig)
 	if err != nil {
 		return fmt.Errorf("failed to marshal family scan configuration: %w", err)

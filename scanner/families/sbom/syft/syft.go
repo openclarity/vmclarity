@@ -20,8 +20,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
-	job_manager2 "github.com/openclarity/vmclarity/scanner/internal/job_manager"
-	types2 "github.com/openclarity/vmclarity/scanner/types"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
+	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 
 	"github.com/anchore/syft/syft"
 	"github.com/anchore/syft/syft/cataloging"
@@ -36,27 +36,26 @@ import (
 
 const AnalyzerName = "syft"
 
-type Analyzer struct {
-	name       string
-	logger     *log.Entry
-	config     config.Config
-	resultChan chan job_manager2.Result
+func init() {
+	types.FactoryRegister(AnalyzerName, New)
 }
 
-func New(_ string, c job_manager2.IsConfig, logger *log.Entry, resultChan chan job_manager2.Result) job_manager2.Job {
-	conf := c.(*types.AnalyzersConfig) // nolint:forcetypeassert
+type Analyzer struct {
+	logger *log.Entry
+	config config.Config
+}
+
+func New(_ string, config types.AnalyzersConfig, logger *log.Entry) familiestypes.Scanner[*types.ScannerResult] {
 	return &Analyzer{
-		name:       AnalyzerName,
-		logger:     logger.Dup().WithField("analyzer", AnalyzerName),
-		config:     conf.Syft,
-		resultChan: resultChan,
+		logger: logger.Dup().WithField("analyzer", AnalyzerName),
+		config: config.Syft,
 	}
 }
 
-func (a *Analyzer) Run(ctx context.Context, sourceType types2.InputType, userInput string) error {
+func (a *Analyzer) Scan(ctx context.Context, sourceType scannertypes.InputType, userInput string) (*types.ScannerResult, error) {
 	src := sourceType.GetSource(a.config.LocalImageScan)
 
-	a.logger.Infof("Called %s analyzer on source %s", a.name, src)
+	a.logger.Infof("Called %s analyzer on source %s", AnalyzerName, src)
 	// TODO platform can be defined
 	// https://github.com/anchore/syft/blob/b20310eaf847c259beb4fe5128c842bd8aa4d4fc/cmd/syft/cli/options/packages.go#L48
 	source, err := syft.GetSource(
@@ -68,57 +67,44 @@ func (a *Analyzer) Run(ctx context.Context, sourceType types2.InputType, userInp
 			WithExcludeConfig(a.config.GetExcludePaths()),
 	)
 	if err != nil {
-		return fmt.Errorf("failed to create source analyzer=%s: %w", a.name, err)
+		return nil, fmt.Errorf("failed to create source analyzer=%s: %w", AnalyzerName, err)
 	}
 
-	go func(ctx context.Context) {
-		res := &types.ScannerResult{}
+	sbomConfig := syft.DefaultCreateSBOMConfig().
+		WithSearchConfig(cataloging.DefaultSearchConfig().WithScope(a.config.GetScope()))
 
-		sbomConfig := syft.DefaultCreateSBOMConfig().
-			WithSearchConfig(cataloging.DefaultSearchConfig().WithScope(a.config.GetScope()))
+	sbom, err := syft.CreateSBOM(ctx, source, sbomConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to write results: %w", err)
+	}
 
-		sbom, err := syft.CreateSBOM(ctx, source, sbomConfig)
+	cdxBom := cyclonedxhelpers.ToFormatModel(*sbom)
+	result := types.CreateScannerResult(cdxBom, AnalyzerName, userInput, sourceType)
+
+	// Syft uses ManifestDigest to fill version information in the case of an image.
+	// We need RepoDigest/ImageID as well which is not set by Syft if we're using cycloneDX output.
+	// Get the RepoDigest/ImageID from image metadata and use it as SourceHash in the Result
+	// that will be added to the component hash of metadata during the merge.
+	switch sourceType {
+	case scannertypes.IMAGE, scannertypes.DOCKERARCHIVE, scannertypes.OCIDIR, scannertypes.OCIARCHIVE:
+		hash, imageInfo, err := getImageInfo(sbom, userInput)
 		if err != nil {
-			a.setError(res, fmt.Errorf("failed to write results: %w", err))
-			return
+			return nil, fmt.Errorf("failed to get image hash from sbom: %w", err)
 		}
 
-		cdxBom := cyclonedxhelpers.ToFormatModel(*sbom)
-		res = types.CreateScannerResult(cdxBom, a.name, userInput, sourceType)
+		// sync image details to result
+		result.AppInfo.SourceHash = hash
+		result.AppInfo.SourceMetadata = imageInfo.ToMetadata()
 
-		// Syft uses ManifestDigest to fill version information in the case of an image.
-		// We need RepoDigest/ImageID as well which is not set by Syft if we're using cycloneDX output.
-		// Get the RepoDigest/ImageID from image metadata and use it as SourceHash in the Result
-		// that will be added to the component hash of metadata during the merge.
-		switch sourceType {
-		case types2.IMAGE, types2.DOCKERARCHIVE, types2.OCIDIR, types2.OCIARCHIVE:
-			hash, imageInfo, err := getImageInfo(sbom, userInput)
-			if err != nil {
-				a.setError(res, fmt.Errorf("failed to get image hash from sbom: %w", err))
-				return
-			}
+	case scannertypes.SBOM, scannertypes.DIR, scannertypes.ROOTFS, scannertypes.FILE:
+		// ignore
+	default:
+		// ignore
+	}
 
-			// sync image details to result
-			res.AppInfo.SourceHash = hash
-			res.AppInfo.SourceMetadata = imageInfo.ToMetadata()
+	a.logger.Infof("Sending successful results")
 
-		case types2.SBOM, types2.DIR, types2.ROOTFS, types2.FILE:
-			// ignore
-		default:
-			// ignore
-		}
-
-		a.logger.Infof("Sending successful results")
-		a.resultChan <- res
-	}(ctx)
-
-	return nil
-}
-
-func (a *Analyzer) setError(res *types.ScannerResult, err error) {
-	res.Error = err
-	a.logger.Error(res.Error)
-	a.resultChan <- res
+	return result, nil
 }
 
 func getImageInfo(s *syftsbom.SBOM, src string) (string, *image_helper.ImageInfo, error) {

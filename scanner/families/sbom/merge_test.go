@@ -29,7 +29,7 @@ import (
 
 func TestMergedResults_createComponentListFromMap(t *testing.T) {
 	type fields struct {
-		MergedComponentByKey map[componentKey]*MergedComponent
+		MergedComponentByKey map[componentKey]*mergedComponent
 		Source               types2.InputType
 		SrcMetaData          *cdx.Metadata
 	}
@@ -41,7 +41,7 @@ func TestMergedResults_createComponentListFromMap(t *testing.T) {
 		{
 			name: "create list from map",
 			fields: fields{
-				MergedComponentByKey: map[componentKey]*MergedComponent{
+				MergedComponentByKey: map[componentKey]*mergedComponent{
 					"1": {
 						Component: cdx.Component{
 							Name: "1",
@@ -66,7 +66,7 @@ func TestMergedResults_createComponentListFromMap(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := &MergedResults{
+			m := &mergedResults{
 				MergedComponentByKey: tt.fields.MergedComponentByKey,
 				Source:               tt.fields.Source,
 				SrcMetaData:          tt.fields.SrcMetaData,
@@ -97,14 +97,14 @@ func TestMergedComponent_appendAnalyzerInfo(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		want   *MergedComponent
+		want   *mergedComponent
 	}{
 		{
 			name: "append empty analyzer info",
 			args: args{
 				info: "syft",
 			},
-			want: &MergedComponent{
+			want: &mergedComponent{
 				Component: cdx.Component{
 					Properties: &[]cdx.Property{
 						{
@@ -132,7 +132,7 @@ func TestMergedComponent_appendAnalyzerInfo(t *testing.T) {
 			args: args{
 				info: "gomod",
 			},
-			want: &MergedComponent{
+			want: &mergedComponent{
 				Component: cdx.Component{
 					Properties: &[]cdx.Property{
 						{
@@ -151,7 +151,7 @@ func TestMergedComponent_appendAnalyzerInfo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mc := &MergedComponent{
+			mc := &mergedComponent{
 				Component:    tt.fields.Component,
 				AnalyzerInfo: tt.fields.AnalyzerInfo,
 			}
@@ -211,8 +211,8 @@ var additionalComponent = cdx.Component{
 	},
 }
 
-func createExpectedMergedComponent() *MergedComponent {
-	expectedComponent := &MergedComponent{
+func createExpectedMergedComponent() *mergedComponent {
+	expectedComponent := &mergedComponent{
 		Component: otherComponent,
 	}
 	expectedComponent.Component.Properties = &[]cdx.Property{
@@ -228,8 +228,8 @@ func createExpectedMergedComponent() *MergedComponent {
 	return expectedComponent
 }
 
-func createAdditionalMergedComponent() *MergedComponent {
-	expectedComponent := &MergedComponent{
+func createAdditionalMergedComponent() *mergedComponent {
+	expectedComponent := &mergedComponent{
 		Component: additionalComponent,
 	}
 	expectedComponent.appendAnalyzerInfo("gomod")
@@ -239,14 +239,14 @@ func createAdditionalMergedComponent() *MergedComponent {
 
 func Test_handleComponentWithExistingKey(t *testing.T) {
 	type args struct {
-		mergedComponent *MergedComponent
+		mergedComponent *mergedComponent
 		otherComponent  cdx.Component
 		analyzerInfo    string
 	}
 	tests := []struct {
 		name string
 		args args
-		want *MergedComponent
+		want *mergedComponent
 	}{
 		{
 			name: "update missing fileds",
@@ -274,7 +274,7 @@ func TestMergedResults_Merge(t *testing.T) {
 	}
 
 	type fields struct {
-		MergedComponentByKey map[componentKey]*MergedComponent
+		MergedComponentByKey map[componentKey]*mergedComponent
 		Source               types2.InputType
 		SrcMetaData          *cdx.Metadata
 		SourceHash           string
@@ -286,12 +286,12 @@ func TestMergedResults_Merge(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		want   *MergedResults
+		want   *mergedResults
 	}{
 		{
 			name: "add and merge components",
 			fields: fields{
-				MergedComponentByKey: map[componentKey]*MergedComponent{
+				MergedComponentByKey: map[componentKey]*mergedComponent{
 					createComponentKey(existingComponent): newMergedComponent(existingComponent, "syft"),
 				},
 			},
@@ -301,8 +301,8 @@ func TestMergedResults_Merge(t *testing.T) {
 					AnalyzerInfo: "gomod",
 				},
 			},
-			want: &MergedResults{
-				MergedComponentByKey: map[componentKey]*MergedComponent{
+			want: &mergedResults{
+				MergedComponentByKey: map[componentKey]*mergedComponent{
 					createComponentKey(existingComponent):   createExpectedMergedComponent(),
 					createComponentKey(additionalComponent): createAdditionalMergedComponent(),
 				},
@@ -311,7 +311,7 @@ func TestMergedResults_Merge(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := &MergedResults{
+			m := &mergedResults{
 				MergedComponentByKey: tt.fields.MergedComponentByKey,
 				Source:               tt.fields.Source,
 				SrcMetaData:          tt.fields.SrcMetaData,
@@ -370,7 +370,7 @@ func Test_checkMainComponentName(t *testing.T) {
 
 func TestMergedResults_addSourceHash(t *testing.T) {
 	type fields struct {
-		MergedComponentByKey map[componentKey]*MergedComponent
+		MergedComponentByKey map[componentKey]*mergedComponent
 		Source               types2.InputType
 		SourceHash           string
 		SrcMetaData          *cdx.Metadata
@@ -382,7 +382,7 @@ func TestMergedResults_addSourceHash(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		want   *MergedResults
+		want   *mergedResults
 	}{
 		{
 			name: "sourceHash and hashes are empty",
@@ -394,7 +394,7 @@ func TestMergedResults_addSourceHash(t *testing.T) {
 			args: args{
 				sourceHash: "",
 			},
-			want: &MergedResults{
+			want: &mergedResults{
 				SrcMetaData: &cdx.Metadata{
 					Component: &cdx.Component{},
 				},
@@ -417,7 +417,7 @@ func TestMergedResults_addSourceHash(t *testing.T) {
 			args: args{
 				sourceHash: "",
 			},
-			want: &MergedResults{
+			want: &mergedResults{
 				SrcMetaData: &cdx.Metadata{
 					Component: &cdx.Component{
 						Hashes: &[]cdx.Hash{
@@ -442,7 +442,7 @@ func TestMergedResults_addSourceHash(t *testing.T) {
 			args: args{
 				sourceHash: "2222",
 			},
-			want: &MergedResults{
+			want: &mergedResults{
 				SrcMetaData: &cdx.Metadata{
 					Component: &cdx.Component{
 						Hashes: &[]cdx.Hash{
@@ -467,7 +467,7 @@ func TestMergedResults_addSourceHash(t *testing.T) {
 			args: args{
 				sourceHash: "2222",
 			},
-			want: &MergedResults{
+			want: &mergedResults{
 				SrcMetaData: &cdx.Metadata{
 					Component: &cdx.Component{
 						Hashes: &[]cdx.Hash{
@@ -497,7 +497,7 @@ func TestMergedResults_addSourceHash(t *testing.T) {
 			args: args{
 				sourceHash: "2222",
 			},
-			want: &MergedResults{
+			want: &mergedResults{
 				SrcMetaData: &cdx.Metadata{
 					Component: &cdx.Component{
 						Hashes: &[]cdx.Hash{
@@ -513,7 +513,7 @@ func TestMergedResults_addSourceHash(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mr := &MergedResults{
+			mr := &mergedResults{
 				MergedComponentByKey: tt.fields.MergedComponentByKey,
 				Source:               tt.fields.Source,
 				SourceHash:           tt.fields.SourceHash,
@@ -527,8 +527,8 @@ func TestMergedResults_addSourceHash(t *testing.T) {
 }
 
 func TestMergedResults_getRealBomRefFromPreviousBomRef(t *testing.T) {
-	mergedResults := &MergedResults{
-		MergedComponentByKey: map[componentKey]*MergedComponent{
+	mergedResults := &mergedResults{
+		MergedComponentByKey: map[componentKey]*mergedComponent{
 			"1": {
 				Component: cdx.Component{
 					Name:   "1",
@@ -598,8 +598,8 @@ func TestMergedResults_getRealBomRefFromPreviousBomRef(t *testing.T) {
 }
 
 func TestMergedResults_normalizeDependencies(t *testing.T) {
-	mergedResults := &MergedResults{
-		MergedComponentByKey: map[componentKey]*MergedComponent{
+	mergedResults := &mergedResults{
+		MergedComponentByKey: map[componentKey]*mergedComponent{
 			"1": {
 				Component: cdx.Component{
 					Name:   "1",

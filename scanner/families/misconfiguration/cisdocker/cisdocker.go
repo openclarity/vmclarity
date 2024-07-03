@@ -19,6 +19,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/cisdocker/config"
+	types2 "github.com/openclarity/vmclarity/scanner/families/plugins/types"
 	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
 	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 
@@ -32,7 +33,7 @@ import (
 const ScannerName = "cisdocker"
 
 func init() {
-	types.FactoryRegister(ScannerName, New)
+	types2.FactoryRegister(ScannerName, New)
 }
 
 type Scanner struct {

@@ -18,30 +18,24 @@ package types
 import (
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	plugintypes "github.com/openclarity/vmclarity/plugins/sdk-go/types"
-	"github.com/openclarity/vmclarity/scanner/families/types"
-	"time"
 )
 
-var _ types.FamilyResult = &FamilyResult{}
-
-type FamilyResult struct {
-	Metadata      types.Metadata                `json:"Metadata"`
+type Result struct {
 	Findings      []apitypes.FindingInfo        `json:"Findings"`
 	PluginOutputs map[string]plugintypes.Result `json:"PluginOutputs"`
 }
 
-func NewFamilyResult() *FamilyResult {
-	return &FamilyResult{
-		Metadata: types.Metadata{
-			Timestamp: time.Now(),
-			Scanners:  []string{},
-		},
+func NewResult() *Result {
+	return &Result{
 		PluginOutputs: make(map[string]plugintypes.Result),
 	}
 }
 
-func (r *FamilyResult) GetTotal() int {
+func (r *Result) GetFindingsCount() int {
 	return len(r.Findings)
 }
 
-func (*FamilyResult) IsResult() {}
+func (r *Result) Merge(result *ScannerResult) {
+	r.Findings = append(r.Findings, result.Findings...)
+	r.PluginOutputs[result.ScannerName] = result.Output
+}

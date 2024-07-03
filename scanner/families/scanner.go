@@ -40,8 +40,8 @@ import (
 )
 
 type FamilyResult struct {
-	Result     types.FamilyResult
 	FamilyType types.FamilyType
+	Result     any
 	Err        error
 }
 

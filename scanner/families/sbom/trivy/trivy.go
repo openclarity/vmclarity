@@ -20,8 +20,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
-	job_manager2 "github.com/openclarity/vmclarity/scanner/internal/job_manager"
-	types2 "github.com/openclarity/vmclarity/scanner/types"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
+	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 	"os"
 
 	trivyftypes "github.com/aquasecurity/trivy/pkg/fanal/types"
@@ -41,153 +41,133 @@ import (
 
 const AnalyzerName = "trivy"
 
-type Analyzer struct {
-	name       string
-	logger     *log.Entry
-	config     config.Config
-	resultChan chan job_manager2.Result
+func init() {
+	types.FactoryRegister(AnalyzerName, New)
 }
 
-func New(_ string, c job_manager2.IsConfig, logger *log.Entry, resultChan chan job_manager2.Result) job_manager2.Job {
-	conf := c.(*types.AnalyzersConfig) // nolint:forcetypeassert
+type Analyzer struct {
+	logger *log.Entry
+	config config.Config
+}
+
+func New(_ string, config types.AnalyzersConfig, logger *log.Entry) familiestypes.Scanner[*types.ScannerResult] {
 	return &Analyzer{
-		name:       AnalyzerName,
-		logger:     logger.Dup().WithField("analyzer", AnalyzerName),
-		config:     conf.Trivy,
-		resultChan: resultChan,
+		logger: logger.Dup().WithField("analyzer", AnalyzerName),
+		config: config.Trivy,
 	}
 }
 
 // nolint:cyclop
-func (a *Analyzer) Run(ctx context.Context, sourceType types2.InputType, userInput string) error {
-	a.logger.Infof("Called %s analyzer on source %v %v", a.name, sourceType, userInput)
+func (a *Analyzer) Scan(ctx context.Context, sourceType scannertypes.InputType, userInput string) (*types.ScannerResult, error) {
+	a.logger.Infof("Called %s analyzer on source %v %v", AnalyzerName, sourceType, userInput)
 
 	tempFile, err := os.CreateTemp(a.config.TempDir, "trivy.sbom.*.json")
 	if err != nil {
-		return fmt.Errorf("failed to create temp file: %w", err)
+		return nil, fmt.Errorf("failed to create temp file: %w", err)
 	}
+	defer os.Remove(tempFile.Name())
 
 	dbOptions, err := trivy.GetTrivyDBOptions()
 	if err != nil {
-		return fmt.Errorf("unable to get db options: %w", err)
+		return nil, fmt.Errorf("unable to get db options: %w", err)
 	}
 
-	go func(ctx context.Context) {
-		defer os.Remove(tempFile.Name())
+	// Skip this analyser for input types we don't support
+	switch sourceType {
+	case scannertypes.IMAGE, scannertypes.ROOTFS, scannertypes.DIR, scannertypes.FILE, scannertypes.DOCKERARCHIVE, scannertypes.OCIARCHIVE, scannertypes.OCIDIR:
+		// These are all supported for SBOM analysing so continue
+	case scannertypes.SBOM:
+		fallthrough
+	default:
+		return nil, fmt.Errorf("skipping analyze unsupported source type: %s", sourceType)
+	}
 
-		res := &types.ScannerResult{}
+	cacheDir := trivyFsutils.CacheDir()
+	if a.config.CacheDir != "" {
+		cacheDir = a.config.CacheDir
+	}
 
-		// Skip this analyser for input types we don't support
-		switch sourceType {
-		case types2.IMAGE, types2.ROOTFS, types2.DIR, types2.FILE, types2.DOCKERARCHIVE, types2.OCIARCHIVE, types2.OCIDIR:
-			// These are all supported for SBOM analysing so continue
-		case types2.SBOM:
-			fallthrough
-		default:
-			a.logger.Infof("Skipping analyze unsupported source type: %s", sourceType)
-			a.resultChan <- res
-			return
-		}
+	trivyOptions := trivyFlag.Options{
+		GlobalOptions: trivyFlag.GlobalOptions{
+			Timeout:  a.config.GetTimeout(),
+			CacheDir: cacheDir,
+		},
+		ScanOptions: trivyFlag.ScanOptions{
+			Target:   userInput,
+			Scanners: []trivyTypes.Scanner{}, // Disable all security checks for SBOM only scan
+		},
+		ReportOptions: trivyFlag.ReportOptions{
+			Format:       trivyTypes.FormatCycloneDX, // Cyclonedx format for SBOM so that we don't need to convert
+			ReportFormat: "all",                      // Full report not just summary
+			Output:       tempFile.Name(),            // Save the output to our temp file instead of Stdout
+			ListAllPkgs:  true,                       // By default, Trivy only includes packages with vulnerabilities, for full SBOM set true.
+		},
+		DBOptions: dbOptions,
+		VulnerabilityOptions: trivyFlag.VulnerabilityOptions{
+			VulnType: trivyTypes.VulnTypes, // Trivy disables analyzers for language packages if VulnTypeLibrary not in VulnType list
+		},
+		ImageOptions: trivyFlag.ImageOptions{
+			ImageSources: trivyftypes.AllImageSources,
+		},
+	}
 
-		cacheDir := trivyFsutils.CacheDir()
-		if a.config.CacheDir != "" {
-			cacheDir = a.config.CacheDir
-		}
+	// Convert the source to the trivy source type
+	trivySourceType, err := trivy.SourceToTrivySource(sourceType)
+	if err != nil {
+		return nil, fmt.Errorf("failed to configure trivy: %w", err)
+	}
 
-		trivyOptions := trivyFlag.Options{
-			GlobalOptions: trivyFlag.GlobalOptions{
-				Timeout:  a.config.GetTimeout(),
-				CacheDir: cacheDir,
-			},
-			ScanOptions: trivyFlag.ScanOptions{
-				Target:   userInput,
-				Scanners: []trivyTypes.Scanner{}, // Disable all security checks for SBOM only scan
-			},
-			ReportOptions: trivyFlag.ReportOptions{
-				Format:       trivyTypes.FormatCycloneDX, // Cyclonedx format for SBOM so that we don't need to convert
-				ReportFormat: "all",                      // Full report not just summary
-				Output:       tempFile.Name(),            // Save the output to our temp file instead of Stdout
-				ListAllPkgs:  true,                       // By default, Trivy only includes packages with vulnerabilities, for full SBOM set true.
-			},
-			DBOptions: dbOptions,
-			VulnerabilityOptions: trivyFlag.VulnerabilityOptions{
-				VulnType: trivyTypes.VulnTypes, // Trivy disables analyzers for language packages if VulnTypeLibrary not in VulnType list
-			},
-			ImageOptions: trivyFlag.ImageOptions{
-				ImageSources: trivyftypes.AllImageSources,
-			},
-		}
+	// Configure Trivy image options according to the source type and user input.
+	trivyOptions, cleanup, err := trivy.SetTrivyImageOptions(sourceType, userInput, trivyOptions)
+	defer cleanup(a.logger)
+	if err != nil {
+		return nil, fmt.Errorf("failed to configure trivy image options: %w", err)
+	}
 
-		// Convert the source to the trivy source type
-		trivySourceType, err := trivy.SourceToTrivySource(sourceType)
+	// Ensure we're configured for private registry if required
+	trivyOptions = trivy.SetTrivyRegistryConfigs(a.config.Registry, trivyOptions)
+
+	err = artifact.Run(ctx, trivyOptions, trivySourceType)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate SBOM: %w", err)
+	}
+
+	// Decode the BOM
+	bom := new(cdx.BOM)
+	decoder := cdx.NewBOMDecoder(tempFile, cdx.BOMFileFormatJSON)
+	if err = decoder.Decode(bom); err != nil {
+		return nil, fmt.Errorf("unable to decode BOM data: %w", err)
+	}
+
+	result := types.CreateScannerResult(bom, AnalyzerName, userInput, sourceType)
+
+	// Trivy doesn't include the version information in the
+	// component of CycloneDX, but it does include the RepoDigest and the ImageID as
+	// a property of the component.
+	//
+	// Get the RepoDigest/ImageID from image metadata and use it as
+	// SourceHash in the Result that will be added to the component
+	// hash of metadata during the merge.
+	switch sourceType {
+	case scannertypes.IMAGE, scannertypes.DOCKERARCHIVE, scannertypes.OCIDIR, scannertypes.OCIARCHIVE:
+		hash, imageInfo, err := getImageInfo(bom.Metadata.Component.Properties, userInput)
 		if err != nil {
-			a.setError(res, fmt.Errorf("failed to configure trivy: %w", err))
-			return
+			return nil, fmt.Errorf("failed to get image hash from sbom: %w", err)
 		}
 
-		// Configure Trivy image options according to the source type and user input.
-		trivyOptions, cleanup, err := trivy.SetTrivyImageOptions(sourceType, userInput, trivyOptions)
-		defer cleanup(a.logger)
-		if err != nil {
-			a.setError(res, fmt.Errorf("failed to configure trivy image options: %w", err))
-			return
-		}
+		// sync image details to result
+		result.AppInfo.SourceHash = hash
+		result.AppInfo.SourceMetadata = imageInfo.ToMetadata()
 
-		// Ensure we're configured for private registry if required
-		trivyOptions = trivy.SetTrivyRegistryConfigs(a.config.Registry, trivyOptions)
+	case scannertypes.SBOM, scannertypes.DIR, scannertypes.ROOTFS, scannertypes.FILE:
+		// ignore
+	default:
+		// ignore
+	}
 
-		err = artifact.Run(ctx, trivyOptions, trivySourceType)
-		if err != nil {
-			a.setError(res, fmt.Errorf("failed to generate SBOM: %w", err))
-			return
-		}
+	a.logger.Infof("Sending successful results")
 
-		// Decode the BOM
-		bom := new(cdx.BOM)
-		decoder := cdx.NewBOMDecoder(tempFile, cdx.BOMFileFormatJSON)
-		if err = decoder.Decode(bom); err != nil {
-			a.setError(res, fmt.Errorf("unable to decode BOM data: %w", err))
-			return
-		}
-
-		res = types.CreateScannerResult(bom, a.name, userInput, sourceType)
-
-		// Trivy doesn't include the version information in the
-		// component of CycloneDX, but it does include the RepoDigest and the ImageID as
-		// a property of the component.
-		//
-		// Get the RepoDigest/ImageID from image metadata and use it as
-		// SourceHash in the Result that will be added to the component
-		// hash of metadata during the merge.
-		switch sourceType {
-		case types2.IMAGE, types2.DOCKERARCHIVE, types2.OCIDIR, types2.OCIARCHIVE:
-			hash, imageInfo, err := getImageInfo(bom.Metadata.Component.Properties, userInput)
-			if err != nil {
-				a.setError(res, fmt.Errorf("failed to get image hash from sbom: %w", err))
-				return
-			}
-
-			// sync image details to result
-			res.AppInfo.SourceHash = hash
-			res.AppInfo.SourceMetadata = imageInfo.ToMetadata()
-
-		case types2.SBOM, types2.DIR, types2.ROOTFS, types2.FILE:
-			// ignore
-		default:
-			// ignore
-		}
-
-		a.logger.Infof("Sending successful results")
-		a.resultChan <- res
-	}(ctx)
-
-	return nil
-}
-
-func (a *Analyzer) setError(res *types.ScannerResult, err error) {
-	res.Error = err
-	a.logger.Error(res.Error)
-	a.resultChan <- res
+	return result, nil
 }
 
 func getImageInfo(properties *[]cdx.Property, imageName string) (string, *image_helper.ImageInfo, error) {

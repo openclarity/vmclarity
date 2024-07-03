@@ -18,36 +18,24 @@ package types
 import (
 	"fmt"
 	cdx "github.com/CycloneDX/cyclonedx-go"
-	"github.com/openclarity/vmclarity/scanner/families/types"
 	"github.com/openclarity/vmclarity/scanner/utils/converter"
-	"time"
 )
 
-var _ types.FamilyResult = &FamilyResult{}
-
-type FamilyResult struct {
-	Metadata types.Metadata
-	SBOM     *cdx.BOM
+type SBOM struct {
+	Data *cdx.BOM
 }
 
-func NewFamilyResult() *FamilyResult {
-	return &FamilyResult{
-		Metadata: types.Metadata{
-			Timestamp: time.Now(),
-			Scanners:  []string{},
-		},
-	}
+func NewSBOM() *SBOM {
+	return &SBOM{}
 }
 
-func (*FamilyResult) IsResult() {}
-
-func (r *FamilyResult) EncodeToBytes(outputFormat string) ([]byte, error) {
+func (r *SBOM) EncodeToBytes(outputFormat string) ([]byte, error) {
 	f, err := converter.StringToSbomFormat(outputFormat)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse output format: %w", err)
 	}
 
-	bomBytes, err := converter.CycloneDxToBytes(r.SBOM, f)
+	bomBytes, err := converter.CycloneDxToBytes(r.Data, f)
 	if err != nil {
 		return nil, fmt.Errorf("unable to encode results to bytes: %w", err)
 	}

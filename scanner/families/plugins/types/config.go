@@ -13,17 +13,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package plugins
+package types
 
 import (
-	"github.com/openclarity/vmclarity/scanner/families/plugins/types"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
+	runnerconfig "github.com/openclarity/vmclarity/scanner/families/plugins/runner/config"
+	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 )
 
 type Config struct {
-	Enabled        bool                  `yaml:"enabled" mapstructure:"enabled"`
-	ScannersList   []string              `yaml:"scanners_list" mapstructure:"scanners_list"`
-	Inputs         []familiestypes.Input `yaml:"inputs" mapstructure:"inputs"`
-	ScannersConfig *types.ScannersConfig `yaml:"scanners_config" mapstructure:"scanners_config"`
-	BinaryMode     *bool                 `yaml:"binary_mode,omitempty" mapstructure:"binary_mode,omitempty"`
+	Enabled        bool                     `yaml:"enabled" mapstructure:"enabled"`
+	ScannersList   []string                 `yaml:"scanners_list" mapstructure:"scanners_list"`
+	Inputs         []scannertypes.ScanInput `yaml:"inputs" mapstructure:"inputs"`
+	ScannersConfig ScannersConfig           `yaml:"scanners_config" mapstructure:"scanners_config"`
 }
+
+type ScannersConfig map[string]runnerconfig.Config

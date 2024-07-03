@@ -15,23 +15,8 @@
 
 package types
 
-import (
-	gitleaksconfig "github.com/openclarity/vmclarity/scanner/families/secrets/gitleaks/config"
-)
-
-type ScannersConfig struct {
-	Gitleaks gitleaksconfig.Config `yaml:"gitleaks" mapstructure:"gitleaks"`
-}
-
-func (ScannersConfig) IsConfig() {}
-
 type ScannerResult struct {
-	Findings    []Findings
+	Findings    []Finding
 	Source      string
 	ScannerName string
-	Error       error
-}
-
-func (r ScannerResult) GetError() error {
-	return r.Error
 }

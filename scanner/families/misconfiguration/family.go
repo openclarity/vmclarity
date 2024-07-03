@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
+	types2 "github.com/openclarity/vmclarity/scanner/families/plugins/types"
 	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
 	"github.com/openclarity/vmclarity/scanner/internal/job_manager"
@@ -43,7 +44,7 @@ func (m Misconfiguration) Run(ctx context.Context, _ *familiestypes.Results) (*t
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "misconfiguration")
 	logger.Info("Misconfiguration Run...")
 
-	manager := job_manager.New[types.ScannersConfig, *types.ScannerResult](m.conf.ScannersList, m.conf.ScannersConfig, logger, types.Factory)
+	manager := job_manager.New[types.ScannersConfig, *types.ScannerResult](m.conf.ScannersList, m.conf.ScannersConfig, logger, types2.Factory)
 	processResults, err := manager.Process(ctx, m.conf.Inputs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process inputs for misconfigurations: %w", err)

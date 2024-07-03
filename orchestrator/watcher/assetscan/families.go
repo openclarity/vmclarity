@@ -18,7 +18,10 @@ package assetscan
 import (
 	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/exploits/types"
+	types5 "github.com/openclarity/vmclarity/scanner/families/plugins/types"
 	types2 "github.com/openclarity/vmclarity/scanner/families/rootkits/types"
+	types3 "github.com/openclarity/vmclarity/scanner/families/sbom/types"
+	types4 "github.com/openclarity/vmclarity/scanner/families/secrets/types"
 	"time"
 
 	"github.com/anchore/syft/syft/source"
@@ -33,13 +36,10 @@ import (
 	malwarecommon "github.com/openclarity/vmclarity/scanner/families/malware/common"
 	yaraconfig "github.com/openclarity/vmclarity/scanner/families/malware/yara/config"
 	misconfiguration "github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
-	"github.com/openclarity/vmclarity/scanner/families/plugins"
 	pluginscommon "github.com/openclarity/vmclarity/scanner/families/plugins/common"
 	pluginsrunnerconfig "github.com/openclarity/vmclarity/scanner/families/plugins/runner/config"
 	chkrootkitConfig "github.com/openclarity/vmclarity/scanner/families/rootkits/chkrootkit/config"
 	rootkitsCommon "github.com/openclarity/vmclarity/scanner/families/rootkits/common"
-	"github.com/openclarity/vmclarity/scanner/families/sbom"
-	"github.com/openclarity/vmclarity/scanner/families/secrets"
 	secretscommon "github.com/openclarity/vmclarity/scanner/families/secrets/common"
 	gitleaksconfig "github.com/openclarity/vmclarity/scanner/families/secrets/gitleaks/config"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities"
@@ -53,7 +53,7 @@ func withSBOM(config *apitypes.SBOMConfig, opts *ScannerConfig) FamiliesConfigOp
 			return
 		}
 
-		c.SBOM = sbom.Config{
+		c.SBOM = types3.Config{
 			Enabled:       true,
 			AnalyzersList: config.GetAnalyzersList(),
 			Inputs:        nil, // rootfs directory will be determined by the CLI after mount.
@@ -127,7 +127,7 @@ func withSecretsConfig(config *apitypes.SecretsConfig, _ *ScannerConfig) Familie
 			return
 		}
 
-		c.Secrets = secrets.Config{
+		c.Secrets = types4.Config{
 			Enabled:      true,
 			ScannersList: config.GetScannersList(),
 			Inputs:       nil, // rootfs directory will be determined by the CLI after mount.
@@ -259,7 +259,7 @@ func withPluginsConfig(config *apitypes.PluginsConfig, _ *ScannerConfig) Familie
 			}
 		}
 
-		c.Plugins = plugins.Config{
+		c.Plugins = types5.Config{
 			Enabled:        true,
 			ScannersList:   *config.ScannersList,
 			Inputs:         nil, // rootfs directory will be determined by the CLI after mount.

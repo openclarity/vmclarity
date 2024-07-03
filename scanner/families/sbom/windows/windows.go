@@ -19,74 +19,60 @@ import (
 	"context"
 	"fmt"
 	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
-	job_manager2 "github.com/openclarity/vmclarity/scanner/internal/job_manager"
-	types2 "github.com/openclarity/vmclarity/scanner/types"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
+	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 
 	log "github.com/sirupsen/logrus"
 )
 
 const AnalyzerName = "windows"
 
-type Analyzer struct {
-	name       string
-	logger     *log.Entry
-	resultChan chan job_manager2.Result
+func init() {
+	types.FactoryRegister(AnalyzerName, New)
 }
 
-func New(_ string, _ job_manager2.IsConfig, logger *log.Entry, resultChan chan job_manager2.Result) job_manager2.Job {
+type Analyzer struct {
+	logger *log.Entry
+}
+
+func New(_ string, _ types.AnalyzersConfig, logger *log.Entry) familiestypes.Scanner[*types.ScannerResult] {
 	return &Analyzer{
-		name:       AnalyzerName,
-		logger:     logger.Dup().WithField("analyzer", AnalyzerName),
-		resultChan: resultChan,
+		logger: logger.Dup().WithField("analyzer", AnalyzerName),
 	}
 }
 
 // nolint:cyclop
-func (a *Analyzer) Run(ctx context.Context, sourceType types2.InputType, userInput string) error {
-	a.logger.Infof("Called %s analyzer on source %v %v", a.name, sourceType, userInput)
+func (a *Analyzer) Scan(ctx context.Context, sourceType scannertypes.InputType, userInput string) (*types.ScannerResult, error) {
+	a.logger.Infof("Called %s analyzer on source %v %v", AnalyzerName, sourceType, userInput)
 
-	go func() {
-		res := &types.ScannerResult{}
+	// Create Windows registry based on supported input types
+	var err error
+	var registry *Registry
+	switch sourceType {
+	case scannertypes.FILE: // Use file location to the registry
+		registry, err = NewRegistry(userInput, a.logger)
+	case scannertypes.ROOTFS, scannertypes.DIR: // Use mount drive as input
+		registry, err = NewRegistryForMount(userInput, a.logger)
+	case scannertypes.SBOM, scannertypes.IMAGE, scannertypes.DOCKERARCHIVE, scannertypes.OCIARCHIVE, scannertypes.OCIDIR: // Unsupported
+		fallthrough
+	default:
+		return nil, fmt.Errorf("skipping analyzing unsupported source type: %s", sourceType)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to open registry: %w", err)
+	}
+	defer registry.Close()
 
-		// Create Windows registry based on supported input types
-		var err error
-		var registry *Registry
-		switch sourceType {
-		case types2.FILE: // Use file location to the registry
-			registry, err = NewRegistry(userInput, a.logger)
-		case types2.ROOTFS, types2.DIR: // Use mount drive as input
-			registry, err = NewRegistryForMount(userInput, a.logger)
-		case types2.SBOM, types2.IMAGE, types2.DOCKERARCHIVE, types2.OCIARCHIVE, types2.OCIDIR: // Unsupported
-			fallthrough
-		default:
-			a.logger.Infof("Skipping analyzing unsupported source type: %s", sourceType)
-			a.resultChan <- res
-			return
-		}
-		if err != nil {
-			a.setError(res, fmt.Errorf("failed to open registry: %w", err))
-			return
-		}
-		defer registry.Close()
+	// Fetch BOM from registry details
+	bom, err := registry.GetBOM()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get bom from registry: %w", err)
+	}
 
-		// Fetch BOM from registry details
-		bom, err := registry.GetBOM()
-		if err != nil {
-			a.setError(res, fmt.Errorf("failed to get bom from registry: %w", err))
-			return
-		}
+	// Return sbom
+	result := types.CreateScannerResult(bom, AnalyzerName, userInput, sourceType)
 
-		// Return sbom
-		res = types.CreateScannerResult(bom, a.name, userInput, sourceType)
-		a.logger.Infof("Sending successful results")
-		a.resultChan <- res
-	}()
+	a.logger.Infof("Sending successful results")
 
-	return nil
-}
-
-func (a *Analyzer) setError(res *types.ScannerResult, err error) {
-	res.Error = err
-	a.logger.Error(res.Error)
-	a.resultChan <- res
+	return result, nil
 }

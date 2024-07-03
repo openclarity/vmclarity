@@ -16,14 +16,14 @@
 package families
 
 import (
+	types3 "github.com/openclarity/vmclarity/scanner/families/sbom/types"
+	types4 "github.com/openclarity/vmclarity/scanner/families/secrets/types"
 	types2 "github.com/openclarity/vmclarity/scanner/types"
 	"reflect"
 	"testing"
 
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/scanner/families/malware"
-	"github.com/openclarity/vmclarity/scanner/families/sbom"
-	"github.com/openclarity/vmclarity/scanner/families/secrets"
 	"github.com/openclarity/vmclarity/scanner/families/types"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities"
 )
@@ -43,7 +43,7 @@ func Test_SetMountPointsForFamiliesInput(t *testing.T) {
 			args: args{
 				mountPoints: []string{"/mnt/snapshot1"},
 				familiesConfig: &Config{
-					SBOM: sbom.Config{
+					SBOM: types3.Config{
 						Enabled: true,
 						Inputs:  nil,
 					},
@@ -52,7 +52,7 @@ func Test_SetMountPointsForFamiliesInput(t *testing.T) {
 						Inputs:        nil,
 						InputFromSbom: false,
 					},
-					Secrets: secrets.Config{
+					Secrets: types4.Config{
 						Enabled: true,
 						Inputs:  nil,
 					},
@@ -63,7 +63,7 @@ func Test_SetMountPointsForFamiliesInput(t *testing.T) {
 				},
 			},
 			want: &Config{
-				SBOM: sbom.Config{
+				SBOM: types3.Config{
 					Enabled: true,
 					Inputs: []types.Input{
 						{
@@ -76,7 +76,7 @@ func Test_SetMountPointsForFamiliesInput(t *testing.T) {
 					Enabled:       true,
 					InputFromSbom: true,
 				},
-				Secrets: secrets.Config{
+				Secrets: types4.Config{
 					Enabled: true,
 					Inputs: []types.Input{
 						{
@@ -126,8 +126,8 @@ func Test_SetMountPointsForFamiliesInput(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := SetMountPointsForFamiliesInput(tt.args.mountPoints, tt.args.familiesConfig); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("SetMountPointsForFamiliesInput() = %v, want %v", got, tt.want)
+			if got := AddInputs(tt.args.mountPoints, tt.args.familiesConfig); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("AddInputs() = %v, want %v", got, tt.want)
 			}
 		})
 	}

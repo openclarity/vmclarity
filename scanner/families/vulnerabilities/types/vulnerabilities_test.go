@@ -549,7 +549,7 @@ func TestMergedResults_Merge(t *testing.T) {
 					vul,
 					differentVulID,
 				},
-				ScannerInfo: ScannerInfo{
+				Scanner: ScannerInfo{
 					Name: "scanner1",
 				},
 			},
@@ -607,7 +607,7 @@ func TestMergedResults_Merge(t *testing.T) {
 					vul,
 					differentVulID,
 				},
-				ScannerInfo: ScannerInfo{
+				Scanner: ScannerInfo{
 					Name: "scanner2",
 				},
 			},
@@ -668,7 +668,7 @@ func TestMergedResults_Merge(t *testing.T) {
 					sameVulDifferentSeverity, // mutual vulnerability with diff
 					differentVulID,           // non mutual
 				},
-				ScannerInfo: ScannerInfo{
+				Scanner: ScannerInfo{
 					Name: "scanner2",
 				},
 			},
