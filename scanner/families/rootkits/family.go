@@ -19,7 +19,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/openclarity/vmclarity/core/log"
-	"github.com/openclarity/vmclarity/scanner/families/rootkits/job"
 	"github.com/openclarity/vmclarity/scanner/families/rootkits/types"
 	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
@@ -27,10 +26,10 @@ import (
 )
 
 type Rootkits struct {
-	conf Config
+	conf types.Config
 }
 
-func New(conf Config) familiestypes.Family {
+func New(conf types.Config) familiestypes.Family[*types.Rootkits] {
 	return &Rootkits{
 		conf: conf,
 	}
@@ -40,30 +39,25 @@ func (r Rootkits) GetType() familiestypes.FamilyType {
 	return familiestypes.Rootkits
 }
 
-func (r Rootkits) Run(ctx context.Context, _ *familiestypes.FamiliesResults) (familiestypes.FamilyResult, error) {
+func (r Rootkits) Run(ctx context.Context, _ *familiestypes.Results) (*types.Rootkits, error) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "rootkits")
 	logger.Info("Rootkits Run...")
 
-	manager := job_manager.New(r.conf.ScannersList, r.conf.ScannersConfig, logger, job.Factory)
+	manager := job_manager.New[types.ScannersConfig, *types.ScannerResult](r.conf.ScannersList, r.conf.ScannersConfig, logger, types.Factory)
 	processResults, err := manager.Process(ctx, r.conf.Inputs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process inputs for rootkits: %w", err)
 	}
 
-	rootkitsResults := types.NewFamilyResult()
+	rootkitsResults := types.NewRootkits()
 
 	// Merge results.
 	for _, result := range processResults {
-		logger.Infof("Merging result from %q", result.ScannerName)
-		data, ok := result.Result.(types.ScannerResult)
-		if !ok {
-			return nil, fmt.Errorf("received results of a wrong type: %T", result)
-		}
+		logger.Infof("Merging result from %q", result.Result.ScannerName)
 		if familiesutils.ShouldStripInputPath(result.Input.StripPathFromResult, r.conf.StripInputPaths) {
-			data = stripPathFromResult(data, result.InputPath)
+			result.Result = stripPathFromResult(result.Result, result.Input.Input)
 		}
-		rootkitsResults.MergedResults = rootkitsResults.MergedResults.Merge(data)
-		rootkitsResults.Metadata.InputScans = append(rootkitsResults.Metadata.InputScans, result.InputScanMetadata)
+		rootkitsResults.Merge(result.Result)
 	}
 
 	logger.Info("Rootkits Done...")
@@ -72,7 +66,7 @@ func (r Rootkits) Run(ctx context.Context, _ *familiestypes.FamiliesResults) (fa
 }
 
 // StripPathFromResult strip input path from results wherever it is found.
-func stripPathFromResult(result types.ScannerResult, path string) types.ScannerResult {
+func stripPathFromResult(result *types.ScannerResult, path string) *types.ScannerResult {
 	for i := range result.Rootkits {
 		result.Rootkits[i].Message = familiesutils.RemoveMountPathSubStringIfNeeded(result.Rootkits[i].Message, path)
 	}

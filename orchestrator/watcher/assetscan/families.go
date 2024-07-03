@@ -18,6 +18,7 @@ package assetscan
 import (
 	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/exploits/types"
+	types2 "github.com/openclarity/vmclarity/scanner/families/rootkits/types"
 	"time"
 
 	"github.com/anchore/syft/syft/source"
@@ -35,7 +36,6 @@ import (
 	"github.com/openclarity/vmclarity/scanner/families/plugins"
 	pluginscommon "github.com/openclarity/vmclarity/scanner/families/plugins/common"
 	pluginsrunnerconfig "github.com/openclarity/vmclarity/scanner/families/plugins/runner/config"
-	"github.com/openclarity/vmclarity/scanner/families/rootkits"
 	chkrootkitConfig "github.com/openclarity/vmclarity/scanner/families/rootkits/chkrootkit/config"
 	rootkitsCommon "github.com/openclarity/vmclarity/scanner/families/rootkits/common"
 	"github.com/openclarity/vmclarity/scanner/families/sbom"
@@ -232,7 +232,7 @@ func withRootkitsConfig(config *apitypes.RootkitsConfig, _ *ScannerConfig) Famil
 			return
 		}
 
-		c.Rootkits = rootkits.Config{
+		c.Rootkits = types2.Config{
 			Enabled:      true,
 			ScannersList: config.GetScannersList(),
 			Inputs:       nil,

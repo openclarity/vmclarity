@@ -22,7 +22,7 @@ import (
 	"github.com/openclarity/vmclarity/scanner/families/malware"
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration"
 	"github.com/openclarity/vmclarity/scanner/families/plugins"
-	"github.com/openclarity/vmclarity/scanner/families/rootkits"
+	types5 "github.com/openclarity/vmclarity/scanner/families/rootkits/types"
 	"github.com/openclarity/vmclarity/scanner/families/sbom"
 	"github.com/openclarity/vmclarity/scanner/families/secrets"
 	"github.com/openclarity/vmclarity/scanner/families/types"
@@ -37,7 +37,7 @@ type Config struct {
 	// Scanners
 	Vulnerabilities  vulnerabilities.Config  `json:"vulnerabilities" yaml:"vulnerabilities" mapstructure:"vulnerabilities"`
 	Secrets          secrets.Config          `json:"secrets" yaml:"secrets" mapstructure:"secrets"`
-	Rootkits         rootkits.Config         `json:"rootkits" yaml:"rootkits" mapstructure:"rootkits"`
+	Rootkits         types5.Config           `json:"rootkits" yaml:"rootkits" mapstructure:"rootkits"`
 	Malware          malware.Config          `json:"malware" yaml:"malware" mapstructure:"malware"`
 	Misconfiguration misconfiguration.Config `json:"misconfiguration" yaml:"misconfiguration" mapstructure:"misconfiguration"`
 	InfoFinder       types4.Config           `json:"infofinder" yaml:"infofinder" mapstructure:"infofinder"`
@@ -54,7 +54,7 @@ func NewConfig() *Config {
 		SBOM:             sbom.Config{},
 		Vulnerabilities:  vulnerabilities.Config{},
 		Secrets:          secrets.Config{},
-		Rootkits:         rootkits.Config{},
+		Rootkits:         types5.Config{},
 		Malware:          malware.Config{},
 		Misconfiguration: misconfiguration.Config{},
 		Exploits:         exploits.Config{},

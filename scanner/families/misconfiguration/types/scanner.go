@@ -15,24 +15,7 @@
 
 package types
 
-import (
-	cisdockerconfig "github.com/openclarity/vmclarity/scanner/families/misconfiguration/cisdocker/config"
-	lynisconfig "github.com/openclarity/vmclarity/scanner/families/misconfiguration/lynis/config"
-)
-
-type ScannersConfig struct {
-	Lynis     lynisconfig.Config     `yaml:"lynis" mapstructure:"lynis"`
-	CISDocker cisdockerconfig.Config `yaml:"cisdocker" mapstructure:"cisdocker"`
-}
-
-func (ScannersConfig) IsConfig() {}
-
 type ScannerResult struct {
 	ScannerName       string
 	Misconfigurations []Misconfiguration
-	Error             error
-}
-
-func (r ScannerResult) GetError() error {
-	return r.Error
 }

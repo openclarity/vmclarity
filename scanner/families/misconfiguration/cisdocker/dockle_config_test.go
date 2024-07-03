@@ -67,7 +67,7 @@ func TestCreateDockleConfig(t *testing.T) {
 				Registry: &types.Registry{
 					SkipVerifyTLS: true,
 					UseHTTP:       true,
-					Auths: []types.Auth{{
+					Auths: []types.RegistryAuth{{
 						Username: "testuser",
 						Password: "testpassword",
 					}},

@@ -31,18 +31,16 @@ type Rootkit struct {
 	RootkitType RootkitType `json:"RootkitType,omitempty"`
 }
 
-type MergedResults struct {
-	Rootkits []Rootkit
+type Rootkits struct {
+	MergedRootkits []Rootkit
 }
 
-func NewMergedResults() *MergedResults {
-	return &MergedResults{
-		Rootkits: []Rootkit{},
+func NewRootkits() *Rootkits {
+	return &Rootkits{
+		MergedRootkits: []Rootkit{},
 	}
 }
 
-func (m *MergedResults) Merge(other ScannerResult) *MergedResults {
-	m.Rootkits = append(m.Rootkits, other.Rootkits...)
-
-	return m
+func (m *Rootkits) Merge(other *ScannerResult) {
+	m.MergedRootkits = append(m.MergedRootkits, other.Rootkits...)
 }

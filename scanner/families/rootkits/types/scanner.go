@@ -15,23 +15,8 @@
 
 package types
 
-import (
-	chrootkitconfig "github.com/openclarity/vmclarity/scanner/families/rootkits/chkrootkit/config"
-)
-
-type ScannersConfig struct {
-	Chkrootkit chrootkitconfig.Config `yaml:"chkrootkit" mapstructure:"chkrootkit"`
-}
-
-func (ScannersConfig) IsConfig() {}
-
 type ScannerResult struct {
 	Rootkits     []Rootkit
 	ScannedInput string
 	ScannerName  string
-	Error        error
-}
-
-func (r ScannerResult) GetError() error {
-	return r.Error
 }
