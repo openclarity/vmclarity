@@ -19,9 +19,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/hashicorp/go-multierror"
+	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/common"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
-	"github.com/sirupsen/logrus"
 	"github.com/sourcegraph/conc/pool"
 	"time"
 )
@@ -39,21 +39,21 @@ type InputScanResultWithError[T any] struct {
 
 type Manager[CT, RT any] struct {
 	config   CT
-	logger   *logrus.Entry
 	scanners []string
 	factory  *Factory[CT, RT]
 }
 
-func New[CT, RT any](scanners []string, config CT, logger *logrus.Entry, factory *Factory[CT, RT]) *Manager[CT, RT] {
+func New[CT, RT any](scanners []string, config CT, factory *Factory[CT, RT]) *Manager[CT, RT] {
 	return &Manager[CT, RT]{
 		config:   config,
-		logger:   logger,
 		scanners: scanners,
 		factory:  factory,
 	}
 }
 
 func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) ([]InputScanResult[RT], error) {
+	logger := log.GetLoggerFromContextOrDefault(ctx)
+
 	resultCh := make(chan InputScanResultWithError[RT])
 
 	// Create processing jobs, do not cancel on error
@@ -61,23 +61,23 @@ func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) (
 
 	for _, scannerName := range m.scanners {
 		// Do not continue processing further if we cannot create a specific scanner
-		scanner, err := m.factory.CreateJob(scannerName, m.config, m.logger)
+		scanner, err := m.factory.CreateJob(scannerName, m.config)
 		if err != nil {
-			m.logger.Errorf("Failed to create scanner %s, reason=%v", scannerName, err)
+			logger.Errorf("Failed to create scanner %s, reason=%v", scannerName, err)
 			continue
 		}
 
 		// schedule each {job}, {input} input pair to parallel worker
 		for _, input := range inputs {
 			workerPool.Go(func(ctx context.Context) error {
-				m.logger.Infof("Started running scanner %s for input %s:%s...", scannerName, input.InputType, input.Input)
+				logger.Infof("Started running scanner %s for input %s:%s...", scannerName, input.InputType, input.Input)
 
 				// Run scan
 				startTime := time.Now()
 				inputScanResult, inputScanErr := scanner.Scan(ctx, input.InputType, input.Input)
 				inputSize, _ := familiesutils.GetInputSize(input) // in megabytes
 				endTime := time.Now()
-				
+
 				// Forward the result in custom format to main result channel
 				resultCh <- InputScanResultWithError[RT]{
 					InputScanResult: InputScanResult[RT]{
@@ -99,7 +99,7 @@ func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) (
 					state = "FAILURE"
 				}
 
-				m.logger.Infof("Finished running scanner %s for input %s with state=%s", scannerName, input.Input, state)
+				logger.Infof("Finished running scanner %s for input %s with state=%s", scannerName, input.Input, state)
 
 				return nil
 			})
@@ -109,7 +109,8 @@ func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) (
 	// Wait for workers to finish and close main result channel to allow proper
 	// listening. We don't return any errors from the processing loop.
 	go func() {
-		_ = workerPool.Wait()
+		err := workerPool.Wait()
+		fmt.Println(err)
 		close(resultCh)
 	}()
 
@@ -120,11 +121,11 @@ func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) (
 	for result := range resultCh {
 		if err := result.Error; err != nil {
 			scanErr := fmt.Errorf("%q scanner job failed: %w", result.Metadata, err)
-			m.logger.Warning(scanErr)
+			logger.Warning(scanErr)
 
 			resultError = multierror.Append(resultError, scanErr)
 		} else {
-			m.logger.Infof("Got result for scanner job %q", result.Metadata)
+			logger.Infof("Got result for scanner job %q", result.Metadata)
 
 			results = append(results, result.InputScanResult)
 		}

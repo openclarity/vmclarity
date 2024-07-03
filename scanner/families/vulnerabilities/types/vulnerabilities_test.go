@@ -16,6 +16,7 @@
 package types
 
 import (
+	"github.com/openclarity/vmclarity/scanner/common"
 	"reflect"
 	"testing"
 
@@ -728,7 +729,7 @@ func TestMergedResults_Merge(t *testing.T) {
 			got := &Vulnerabilities{
 				MergedVulnerabilitiesByKey: tt.fields.MergedVulnerabilities,
 			}
-			got.Merge(tt.args)
+			got.Merge(common.ScanInputMetadata{}, tt.args)
 			if tt.patchMergedVulnerabilityID != nil {
 				got.MergedVulnerabilitiesByKey = tt.patchMergedVulnerabilityID(got.MergedVulnerabilitiesByKey)
 			}

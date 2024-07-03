@@ -19,12 +19,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
 	"os"
 	"os/exec"
-
-	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/scanner/families/secrets/gitleaks/config"
 	"github.com/openclarity/vmclarity/scanner/families/secrets/types"
@@ -35,27 +34,27 @@ import (
 const ScannerName = "gitleaks"
 
 type Scanner struct {
-	logger *log.Entry
 	config config.Config
 }
 
-func New(_ string, config types.ScannersConfig, logger *log.Entry) (families.Scanner[*types.ScannerResult], error) {
+func New(_ string, config types.ScannersConfig) (families.Scanner[[]types.Finding], error) {
 	return &Scanner{
-		logger: logger.Dup().WithField("scanner", ScannerName),
 		config: config.Gitleaks,
 	}, nil
 }
 
-func (a *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
-	if !a.isValidInputType(sourceType) {
-		return nil, fmt.Errorf("received invalid input type for gitleaks scanner: %v", sourceType)
+func (a *Scanner) Scan(ctx context.Context, inputType common.InputType, userInput string) ([]types.Finding, error) {
+	if !inputType.IsOneOf(common.DIR, common.ROOTFS, common.IMAGE, common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR) {
+		return nil, fmt.Errorf("unsupported input type=%v", inputType)
 	}
+
+	logger := log.GetLoggerFromContextOrDefault(ctx)
 
 	gitleaksBinaryPath, err := exec.LookPath(a.config.GetBinaryPath())
 	if err != nil {
 		return nil, fmt.Errorf("failed to lookup executable %s: %w", a.config.BinaryPath, err)
 	}
-	a.logger.Debugf("found gitleaks binary at: %s", gitleaksBinaryPath)
+	logger.Debugf("found gitleaks binary at: %s", gitleaksBinaryPath)
 
 	file, err := os.CreateTemp("", "gitleaks")
 	if err != nil {
@@ -66,7 +65,7 @@ func (a *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInp
 	}()
 	reportPath := file.Name()
 
-	fsPath, cleanup, err := familiesutils.ConvertInputToFilesystem(ctx, sourceType, userInput)
+	fsPath, cleanup, err := familiesutils.ConvertInputToFilesystem(ctx, inputType, userInput)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert input to filesystem: %w", err)
 	}
@@ -89,7 +88,7 @@ func (a *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInp
 		"50",
 	}
 	cmd := exec.Command(gitleaksBinaryPath, args...)
-	a.logger.Infof("Running gitleaks command: %v", cmd.String())
+	logger.Infof("Running gitleaks command: %v", cmd.String())
 	_, err = utils.RunCommand(cmd)
 	if err != nil {
 		return nil, fmt.Errorf("failed to run gitleaks command: %w", err)
@@ -105,23 +104,7 @@ func (a *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInp
 		return nil, fmt.Errorf("failed to unmarshal results. out: %s. err: %w", out, err)
 	}
 
-	return &types.ScannerResult{
-		Findings:    findings,
-		Source:      userInput,
-		ScannerName: ScannerName,
-	}, nil
-}
-
-func (a *Scanner) isValidInputType(sourceType common.InputType) bool {
-	switch sourceType {
-	case common.DIR, common.ROOTFS, common.IMAGE, common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR:
-		return true
-	case common.FILE, common.SBOM:
-		fallthrough
-	default:
-		a.logger.Infof("source type %v is not supported for gitleaks, skipping.", sourceType)
-	}
-	return false
+	return findings, nil
 }
 
 func init() {

@@ -18,6 +18,7 @@ package lynis
 import (
 	"context"
 	"fmt"
+	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/lynis/config"
@@ -27,8 +28,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
 	"github.com/openclarity/vmclarity/scanner/utils"
@@ -37,30 +36,29 @@ import (
 const ScannerName = "lynis"
 
 type Scanner struct {
-	logger *log.Entry
 	config config.Config
 }
 
-func New(_ string, config types.ScannersConfig, logger *log.Entry) (families.Scanner[*types.ScannerResult], error) {
+func New(_ string, config types.ScannersConfig) (families.Scanner[[]types.Misconfiguration], error) {
 	return &Scanner{
-		logger: logger.Dup().WithField("scanner", ScannerName),
 		config: config.Lynis,
 	}, nil
 }
 
 // nolint: cyclop
-func (a *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
-	// Validate this is an input type supported by the scanner,
-	// otherwise return skipped.
-	if !a.isValidInputType(sourceType) {
-		return nil, fmt.Errorf("unsupported source type for %s: %s", ScannerName, sourceType)
+func (a *Scanner) Scan(ctx context.Context, inputType common.InputType, userInput string) ([]types.Misconfiguration, error) {
+	// Validate this is an input type supported by the scanner
+	if !inputType.IsOneOf(common.ROOTFS, common.IMAGE, common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR) {
+		return nil, fmt.Errorf("unsupported source type=%s", inputType)
 	}
+
+	logger := log.GetLoggerFromContextOrDefault(ctx)
 
 	lynisBinaryPath, err := exec.LookPath(a.config.GetBinaryPath())
 	if err != nil {
 		return nil, fmt.Errorf("failed to lookup executable %s: %w", a.config.BinaryPath, err)
 	}
-	a.logger.Debugf("found lynis binary at: %s", lynisBinaryPath)
+	logger.Debugf("found lynis binary at: %s", lynisBinaryPath)
 
 	reportDir, err := os.MkdirTemp("", "")
 	if err != nil {
@@ -69,13 +67,13 @@ func (a *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInp
 	defer func() {
 		err := os.RemoveAll(reportDir)
 		if err != nil {
-			a.logger.Warningf("failed to remove temp directory: %v", err)
+			logger.Warningf("failed to remove temp directory: %v", err)
 		}
 	}()
 
 	reportPath := path.Join(reportDir, "lynis.dat")
 
-	fsPath, cleanup, err := familiesutils.ConvertInputToFilesystem(ctx, sourceType, userInput)
+	fsPath, cleanup, err := familiesutils.ConvertInputToFilesystem(ctx, inputType, userInput)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert input to filesystem: %w", err)
 	}
@@ -101,7 +99,7 @@ func (a *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInp
 	}
 	cmd := exec.Command(lynisBinaryPath, args...) // nolint:gosec
 
-	a.logger.Infof("Running command: %v", cmd.String())
+	logger.Infof("Running command: %v", cmd.String())
 	_, err = utils.RunCommand(cmd)
 	if err != nil {
 		return nil, fmt.Errorf("failed to run command: %w", err)
@@ -115,7 +113,7 @@ func (a *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInp
 	}
 	lynisDBDir := filepath.Clean(strings.TrimSpace(string(out)))
 
-	testDB, err := NewTestDB(a.logger, lynisDBDir)
+	testDB, err := NewTestDB(logger, lynisDBDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load lynis test DB: %w", err)
 	}
@@ -126,22 +124,7 @@ func (a *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInp
 		return nil, fmt.Errorf("failed to parse report file %v: %w", reportPath, err)
 	}
 
-	return &types.ScannerResult{
-		ScannerName:       ScannerName,
-		Misconfigurations: misconfigurations,
-	}, nil
-}
-
-func (a *Scanner) isValidInputType(sourceType common.InputType) bool {
-	switch sourceType {
-	case common.ROOTFS, common.IMAGE, common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR:
-		return true
-	case common.DIR, common.FILE, common.SBOM:
-		a.logger.Infof("source type %v is not supported for lynis, skipping.", sourceType)
-	default:
-		a.logger.Infof("unknown source type %v, skipping.", sourceType)
-	}
-	return false
+	return misconfigurations, nil
 }
 
 func init() {

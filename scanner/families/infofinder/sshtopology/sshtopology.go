@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/infofinder/sshtopology/config"
@@ -30,8 +31,6 @@ import (
 	"strings"
 	"sync"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/openclarity/vmclarity/scanner/families/infofinder/types"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
 	"github.com/openclarity/vmclarity/scanner/utils"
@@ -40,37 +39,35 @@ import (
 const ScannerName = "sshTopology"
 
 type Scanner struct {
-	logger *log.Entry
 	config config.Config
 }
 
-func New(_ string, config types.ScannersConfig, logger *log.Entry) (families.Scanner[*types.ScannerResult], error) {
+func New(_ string, config types.ScannersConfig) (families.Scanner[[]types.Info], error) {
 	return &Scanner{
-		logger: logger.Dup().WithField("scanner", ScannerName),
 		config: config.SSHTopology,
 	}, nil
 }
 
 // nolint:cyclop,gocognit
-func (s *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
-	s.logger.Debugf("Running with input=%v and source type=%v", userInput, sourceType)
-	var infos []types.Info
-
-	// Validate this is an input type supported by the scanner,
-	// otherwise return skipped.
-	if !s.isValidInputType(sourceType) {
-		return nil, nil
+func (s *Scanner) Scan(ctx context.Context, inputType common.InputType, userInput string) ([]types.Info, error) {
+	// Validate this is an input type supported by the scanner
+	if !inputType.IsOneOf(common.ROOTFS, common.IMAGE, common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR) {
+		return nil, fmt.Errorf("unsupported input type=%s", inputType)
 	}
 
-	fsPath, cleanup, err := familiesutils.ConvertInputToFilesystem(ctx, sourceType, userInput)
+	logger := log.GetLoggerFromContextOrDefault(ctx)
+
+	fsPath, cleanup, err := familiesutils.ConvertInputToFilesystem(ctx, inputType, userInput)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert input to filesystem: %w", err)
 	}
 	defer cleanup()
 
-	var errs []error
 	homeUserDirs := getHomeUserDirs(fsPath)
-	s.logger.Debugf("Found home user dirs %+v", homeUserDirs)
+	logger.Debugf("Found home user dirs %+v", homeUserDirs)
+
+	var infos []types.Info
+	var errs []error
 
 	errorsChan := make(chan error)
 	fingerprintsChan := make(chan []types.Info)
@@ -96,7 +93,7 @@ func (s *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInp
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if sshDaemonKeysFingerprints, err := s.getSSHDaemonKeysFingerprints(fsPath); err != nil {
+		if sshDaemonKeysFingerprints, err := s.getSSHDaemonKeysFingerprints(ctx, fsPath); err != nil {
 			errorsChan <- fmt.Errorf("failed to get ssh daemon keys: %w", err)
 		} else {
 			fingerprintsChan <- sshDaemonKeysFingerprints
@@ -109,7 +106,7 @@ func (s *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInp
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			if sshPrivateKeysFingerprints, err := s.getSSHPrivateKeysFingerprints(dir); err != nil {
+			if sshPrivateKeysFingerprints, err := s.getSSHPrivateKeysFingerprints(ctx, dir); err != nil {
 				errorsChan <- fmt.Errorf("failed to get ssh private keys: %w", err)
 			} else {
 				fingerprintsChan <- sshPrivateKeysFingerprints
@@ -119,7 +116,7 @@ func (s *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInp
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			if sshAuthorizedKeysFingerprints, err := s.getSSHAuthorizedKeysFingerprints(dir); err != nil {
+			if sshAuthorizedKeysFingerprints, err := s.getSSHAuthorizedKeysFingerprints(ctx, dir); err != nil {
 				errorsChan <- fmt.Errorf("failed to get ssh authorized keys: %w", err)
 			} else {
 				fingerprintsChan <- sshAuthorizedKeysFingerprints
@@ -129,7 +126,7 @@ func (s *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInp
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			if sshKnownHostsFingerprints, err := s.getSSHKnownHostsFingerprints(dir); err != nil {
+			if sshKnownHostsFingerprints, err := s.getSSHKnownHostsFingerprints(ctx, dir); err != nil {
 				errorsChan <- fmt.Errorf("failed to get ssh known hosts: %w", err)
 			} else {
 				fingerprintsChan <- sshKnownHostsFingerprints
@@ -146,16 +143,15 @@ func (s *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInp
 	if len(infos) > 0 && retErr != nil {
 		// Since we have findings, we want to share what we've got and only print the errors here.
 		// Maybe we need to support to send both errors and findings in a higher level.
-		s.logger.Error(retErr)
+		logger.Error(retErr)
 	}
 
-	return &types.ScannerResult{
-		ScannerName: ScannerName,
-		Infos:       infos,
-	}, nil
+	return infos, nil
 }
 
-func (s *Scanner) getSSHDaemonKeysFingerprints(rootPath string) ([]types.Info, error) {
+func (s *Scanner) getSSHDaemonKeysFingerprints(ctx context.Context, rootPath string) ([]types.Info, error) {
+	logger := log.GetLoggerFromContextOrDefault(ctx)
+
 	sshDaemonConfigDir := path.Join(rootPath, "/etc/ssh")
 
 	// Check daemon config directory exists, some setups might not have ssh
@@ -167,71 +163,79 @@ func (s *Scanner) getSSHDaemonKeysFingerprints(rootPath string) ([]types.Info, e
 		return nil, fmt.Errorf("unexpected error checking %s exists: %w", sshDaemonConfigDir, err)
 	}
 
-	paths, err := s.getPrivateKeysPaths(sshDaemonConfigDir, false)
+	paths, err := s.getPrivateKeysPaths(ctx, sshDaemonConfigDir, false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get private keys paths: %w", err)
 	}
-	s.logger.Debugf("Found ssh daemon private keys paths %+v", paths)
+	logger.Debugf("Found ssh daemon private keys paths %+v", paths)
 
-	fingerprints, err := s.getFingerprints(paths, types.SSHDaemonKeyFingerprint)
+	fingerprints, err := s.getFingerprints(ctx, paths, types.SSHDaemonKeyFingerprint)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get ssh daemon private keys fingerprints: %w", err)
 	}
-	s.logger.Debugf("Found ssh daemon private keys fingerprints %+v", fingerprints)
+	logger.Debugf("Found ssh daemon private keys fingerprints %+v", fingerprints)
 
 	return fingerprints, nil
 }
 
-func (s *Scanner) getSSHPrivateKeysFingerprints(homeUserDir string) ([]types.Info, error) {
-	paths, err := s.getPrivateKeysPaths(homeUserDir, true)
+func (s *Scanner) getSSHPrivateKeysFingerprints(ctx context.Context, homeUserDir string) ([]types.Info, error) {
+	logger := log.GetLoggerFromContextOrDefault(ctx)
+
+	paths, err := s.getPrivateKeysPaths(ctx, homeUserDir, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get private keys paths: %w", err)
 	}
-	s.logger.Debugf("Found ssh private keys paths %+v", paths)
+	logger.Debugf("Found ssh private keys paths %+v", paths)
 
-	infos, err := s.getFingerprints(paths, types.SSHPrivateKeyFingerprint)
+	infos, err := s.getFingerprints(ctx, paths, types.SSHPrivateKeyFingerprint)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get ssh private keys fingerprints: %w", err)
 	}
-	s.logger.Debugf("Found ssh private keys fingerprints %+v", infos)
+	logger.Debugf("Found ssh private keys fingerprints %+v", infos)
 
 	return infos, nil
 }
 
-func (s *Scanner) getSSHAuthorizedKeysFingerprints(homeUserDir string) ([]types.Info, error) {
-	infos, err := s.getFingerprints([]string{path.Join(homeUserDir, ".ssh/authorized_keys")}, types.SSHAuthorizedKeyFingerprint)
+func (s *Scanner) getSSHAuthorizedKeysFingerprints(ctx context.Context, homeUserDir string) ([]types.Info, error) {
+	logger := log.GetLoggerFromContextOrDefault(ctx)
+
+	infos, err := s.getFingerprints(ctx, []string{path.Join(homeUserDir, ".ssh/authorized_keys")}, types.SSHAuthorizedKeyFingerprint)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get ssh authorized keys fingerprints: %w", err)
 	}
-	s.logger.Debugf("Found ssh authorized keys fingerprints %+v", infos)
+	logger.Debugf("Found ssh authorized keys fingerprints %+v", infos)
 
 	return infos, nil
 }
 
-func (s *Scanner) getSSHKnownHostsFingerprints(homeUserDir string) ([]types.Info, error) {
-	infos, err := s.getFingerprints([]string{path.Join(homeUserDir, ".ssh/known_hosts")}, types.SSHKnownHostFingerprint)
+func (s *Scanner) getSSHKnownHostsFingerprints(ctx context.Context, homeUserDir string) ([]types.Info, error) {
+	logger := log.GetLoggerFromContextOrDefault(ctx)
+
+	infos, err := s.getFingerprints(ctx, []string{path.Join(homeUserDir, ".ssh/known_hosts")}, types.SSHKnownHostFingerprint)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get ssh known hosts fingerprints: %w", err)
 	}
-	s.logger.Debugf("Found ssh known hosts fingerprints %+v", infos)
+	logger.Debugf("Found ssh known hosts fingerprints %+v", infos)
 
 	return infos, nil
 }
 
-func (s *Scanner) getFingerprints(paths []string, infoType types.InfoType) ([]types.Info, error) {
+func (s *Scanner) getFingerprints(ctx context.Context, paths []string, infoType types.InfoType) ([]types.Info, error) {
+	logger := log.GetLoggerFromContextOrDefault(ctx)
+
 	var infos []types.Info
 
 	for _, p := range paths {
 		_, err := os.Stat(p)
 		if os.IsNotExist(err) {
-			s.logger.Debugf("File (%v) does not exist.", p)
+			logger.Debugf("File (%v) does not exist.", p)
 			continue
 		} else if err != nil {
 			return nil, fmt.Errorf("failed to check file: %w", err)
 		}
 
 		var output []byte
-		if output, err = s.executeSSHKeyGenFingerprintCommand("sha256", p); err != nil {
+		if output, err = s.executeSSHKeyGenFingerprintCommand(ctx, "sha256", p); err != nil {
 			return nil, fmt.Errorf("failed to execute ssh-keygen command: %w", err)
 		}
 
@@ -241,7 +245,9 @@ func (s *Scanner) getFingerprints(paths []string, infoType types.InfoType) ([]ty
 	return infos, nil
 }
 
-func (s *Scanner) getPrivateKeysPaths(rootPath string, recursive bool) ([]string, error) {
+func (s *Scanner) getPrivateKeysPaths(ctx context.Context, rootPath string, recursive bool) ([]string, error) {
+	logger := log.GetLoggerFromContextOrDefault(ctx)
+
 	var paths []string
 	err := filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -257,7 +263,7 @@ func (s *Scanner) getPrivateKeysPaths(rootPath string, recursive bool) ([]string
 
 		isPrivateKeyFile, err := isPrivateKey(path)
 		if err != nil {
-			s.logger.Errorf("failed to verify if file (%v) is private key file - skipping: %v", path, err)
+			logger.Errorf("failed to verify if file (%v) is private key file - skipping: %v", path, err)
 			return nil
 		}
 
@@ -274,7 +280,9 @@ func (s *Scanner) getPrivateKeysPaths(rootPath string, recursive bool) ([]string
 	return paths, nil
 }
 
-func (s *Scanner) executeSSHKeyGenFingerprintCommand(hashAlgo string, filePath string) ([]byte, error) {
+func (s *Scanner) executeSSHKeyGenFingerprintCommand(ctx context.Context, hashAlgo string, filePath string) ([]byte, error) {
+	logger := log.GetLoggerFromContextOrDefault(ctx)
+
 	args := []string{
 		"-E",
 		hashAlgo,
@@ -283,25 +291,13 @@ func (s *Scanner) executeSSHKeyGenFingerprintCommand(hashAlgo string, filePath s
 		filePath,
 	}
 	cmd := exec.Command("ssh-keygen", args...)
-	s.logger.Infof("Running command: %v", cmd.String())
+	logger.Infof("Running command: %v", cmd.String())
 	output, err := utils.RunCommand(cmd)
 	if err != nil {
 		return nil, fmt.Errorf("failed to run command: %w", err)
 	}
 
 	return output, nil
-}
-
-func (s *Scanner) isValidInputType(sourceType common.InputType) bool {
-	switch sourceType {
-	case common.ROOTFS, common.IMAGE, common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR:
-		return true
-	case common.DIR, common.FILE, common.SBOM:
-		s.logger.Infof("Source type %v is not supported for %s, skipping.", ScannerName, sourceType)
-	default:
-		s.logger.Infof("Unknown source type %v, skipping.", sourceType)
-	}
-	return false
 }
 
 func getHomeUserDirs(rootDir string) []string {

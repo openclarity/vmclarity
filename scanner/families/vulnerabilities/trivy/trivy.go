@@ -20,8 +20,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"net/url"
 	"os"
@@ -36,7 +38,6 @@ import (
 	trivyTypes "github.com/aquasecurity/trivy/pkg/types"
 	trivyFsutils "github.com/aquasecurity/trivy/pkg/utils/fsutils"
 	sloglogrus "github.com/samber/slog-logrus/v2"
-	log "github.com/sirupsen/logrus"
 
 	utilsTrivy "github.com/openclarity/vmclarity/scanner/families/utils/trivy"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/trivy/config"
@@ -49,26 +50,28 @@ import (
 const ScannerName = "trivy"
 
 type Scanner struct {
-	logger *log.Entry
 	config config.Config
 }
 
-func New(_ string, config types.ScannersConfig, logger *log.Entry) (families.Scanner[*types.ScannerResult], error) {
-	logger = logger.Dup().WithField("scanner", ScannerName)
+func New(_ string, config types.ScannersConfig) (families.Scanner[*types.ScannerResult], error) {
+	logger := log.GetLoggerFromContextOrDefault(context.Background())
 
 	// Set up the logger for trivy
 	tlogger := trivyLog.New(sloglogrus.Option{Logger: logger.Logger}.NewLogrusHandler())
 	trivyLog.SetDefault(tlogger)
 
 	return &Scanner{
-		logger: logger,
 		config: config.Trivy,
 	}, nil
 }
 
 // nolint:cyclop
-func (a *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
-	a.logger.Infof("Called %s scanner on source %v %v", ScannerName, sourceType, userInput)
+func (a *Scanner) Scan(ctx context.Context, inputType common.InputType, userInput string) (*types.ScannerResult, error) {
+	if !inputType.IsOneOf(common.SBOM) {
+		return nil, fmt.Errorf("unsupported input type=%s", inputType)
+	}
+
+	logger := log.GetLoggerFromContextOrDefault(ctx)
 
 	tempFile, err := os.CreateTemp(a.config.CacheDir, "trivy.scan.*.json")
 	if err != nil {
@@ -76,25 +79,15 @@ func (a *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInp
 	}
 	defer os.Remove(tempFile.Name())
 
-	var hash string
-	var metadata map[string]string
-	switch sourceType {
-	case common.IMAGE, common.ROOTFS, common.DIR, common.FILE, common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR:
-	case common.SBOM:
-		var err error
-		bom, err := sbom.NewCycloneDX(userInput)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create CycloneDX SBOM: %w", err)
-		}
+	bom, err := sbom.NewCycloneDX(userInput)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create CycloneDX SBOM: %w", err)
+	}
 
-		metadata = bom.GetMetadataFromSBOM()
-		hash, err = bom.GetHashFromSBOM()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get original hash from SBOM: %w", err)
-		}
-	default:
-		a.logger.Infof("Skipping scan for unsupported source type: %s", sourceType)
-		return nil, nil
+	metadata := bom.GetMetadataFromSBOM()
+	hash, err := bom.GetHashFromSBOM()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get original hash from SBOM: %w", err)
 	}
 
 	trivyOptions, err := a.createTrivyOptions(tempFile.Name(), userInput)
@@ -103,14 +96,14 @@ func (a *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInp
 	}
 
 	// Configure Trivy image options according to the source type and user input.
-	trivyOptions, cleanup, err := utilsTrivy.SetTrivyImageOptions(sourceType, userInput, trivyOptions)
-	defer cleanup(a.logger)
+	trivyOptions, cleanup, err := utilsTrivy.SetTrivyImageOptions(inputType, userInput, trivyOptions)
+	defer cleanup(logger)
 	if err != nil {
 		return nil, fmt.Errorf("failed to configure trivy image options: %w", err)
 	}
 
 	// Convert the source to the trivy source type
-	trivySourceType, err := utilsTrivy.SourceToTrivySource(sourceType)
+	trivySourceType, err := utilsTrivy.SourceToTrivySource(inputType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to configure trivy: %w", err)
 	}
@@ -128,8 +121,7 @@ func (a *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInp
 		return nil, fmt.Errorf("failed to read scan results: %w", err)
 	}
 
-	a.logger.Infof("Sending successful results")
-	result, err := a.createResult(file, hash, metadata)
+	result, err := a.createResult(logger, file, hash, metadata)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create result: %w", err)
 	}
@@ -138,7 +130,7 @@ func (a *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInp
 }
 
 // nolint:cyclop
-func (a *Scanner) createResult(trivyJSON []byte, hash string, metadata map[string]string) (*types.ScannerResult, error) {
+func (a *Scanner) createResult(logger *logrus.Entry, trivyJSON []byte, hash string, metadata map[string]string) (*types.ScannerResult, error) {
 	if len(trivyJSON) == 0 {
 		return nil, nil
 	}
@@ -154,7 +146,7 @@ func (a *Scanner) createResult(trivyJSON []byte, hash string, metadata map[strin
 		for _, vul := range result.Vulnerabilities {
 			typ, err := getTypeFromPurl(vul.PkgIdentifier.BOMRef)
 			if err != nil {
-				a.logger.Error(err)
+				logger.Error(err)
 				typ = ""
 			}
 
@@ -206,7 +198,7 @@ func (a *Scanner) createResult(trivyJSON []byte, hash string, metadata map[strin
 		}
 	}
 
-	a.logger.Infof("Found %d vulnerabilities", len(vulnerabilities))
+	logger.Infof("Found %d vulnerabilities", len(vulnerabilities))
 
 	if hash == "" && string(report.ArtifactType) == "container_image" {
 		// empty hash indicates empty image details, recreate hash and image info from artifact
@@ -220,7 +212,7 @@ func (a *Scanner) createResult(trivyJSON []byte, hash string, metadata map[strin
 		metadata = imageInfo.ToMetadata()
 		hash, err = imageInfo.GetHashFromRepoDigestsOrImageID()
 		if err != nil {
-			log.Warningf("Failed to get image hash from repo digests or image id: %v", err)
+			logger.Warningf("Failed to get image hash from repo digests or image id: %v", err)
 		}
 	}
 

@@ -15,6 +15,8 @@
 
 package common
 
+import "fmt"
+
 type InputType string
 
 const (
@@ -35,11 +37,22 @@ func (s InputType) GetSource(localImage bool) string {
 		return getImageSource(localImage)
 	case ROOTFS, DIR:
 		return string(DIR)
-	case DOCKERARCHIVE, OCIARCHIVE, OCIDIR, FILE, SBOM:
+	case DOCKERARCHIVE, OCIARCHIVE, OCIDIR, FILE, SBOM, CSV:
 		fallthrough
 	default:
 		return string(s)
 	}
+}
+
+// IsOneOf returns true if one of provided input types matches the actual type.
+func (s InputType) IsOneOf(types ...InputType) bool {
+	for _, typ := range types {
+		if s == typ {
+			return true
+		}
+	}
+
+	return false
 }
 
 func getImageSource(local bool) string {
@@ -47,4 +60,15 @@ func getImageSource(local bool) string {
 		return "docker"
 	}
 	return "registry"
+}
+
+type ScanInput struct {
+	// StripPathFromResult overrides global StripInputPaths value
+	StripPathFromResult *bool     `json:"strip_path_from_result" yaml:"strip_path_from_result" mapstructure:"strip_path_from_result"`
+	Input               string    `json:"input" yaml:"input" mapstructure:"input"`
+	InputType           InputType `json:"input_type" yaml:"input_type" mapstructure:"input_type"`
+}
+
+func (s *ScanInput) String() string {
+	return fmt.Sprintf("%s:%s", s.InputType, s.Input)
 }

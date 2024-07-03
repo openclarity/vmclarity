@@ -22,11 +22,10 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
 	log "github.com/sirupsen/logrus"
-
-	"github.com/sirupsen/logrus"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/to"
@@ -39,25 +38,25 @@ import (
 
 type Scanner struct {
 	name   string
-	logger *logrus.Entry
 	config config.Config
 }
 
-func New(name string, config types.ScannersConfig, logger *log.Entry) (families.Scanner[*types.ScannerResult], error) {
+func New(name string, config types.ScannersConfig) (families.Scanner[*types.ScannerResult], error) {
 	return &Scanner{
 		name:   name,
-		logger: logger.Dup().WithField("scanner", name),
 		config: config[name],
 	}, nil
 }
 
-func (s *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
+func (s *Scanner) Scan(ctx context.Context, inputType common.InputType, userInput string) (*types.ScannerResult, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	if !s.isValidInputType(sourceType) {
-		return nil, fmt.Errorf("received invalid input type for plugin scanner: %v", sourceType)
+	if !inputType.IsOneOf(common.ROOTFS) {
+		return nil, fmt.Errorf("unsupported input type=%v", inputType)
 	}
+
+	logger := log.GetLoggerFromContextOrDefault(ctx)
 
 	rr, err := runner.New(ctx, runnertypes.PluginConfig{
 		Name:          s.name,
@@ -71,13 +70,13 @@ func (s *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInp
 
 	finishRunner := func(ctx context.Context) {
 		if err := rr.Stop(ctx); err != nil {
-			s.logger.WithError(err).Errorf("failed to stop runner")
+			logger.WithError(err).Errorf("failed to stop runner")
 		}
 
 		// TODO: add short wait before removing to respect container shutdown procedure
 
 		if err := rr.Remove(ctx); err != nil {
-			s.logger.WithError(err).Errorf("failed to remove runner")
+			logger.WithError(err).Errorf("failed to remove runner")
 		}
 	} //nolint:errcheck
 
@@ -100,7 +99,7 @@ func (s *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInp
 
 	// Stream logs
 	go func() {
-		logger := s.logger.WithField("metadata", map[string]interface{}{
+		logger := logger.WithField("metadata", map[string]interface{}{
 			"name":       to.ValueOrZero(metadata.Name),
 			"version":    to.ValueOrZero(metadata.Version),
 			"apiVersion": to.ValueOrZero(metadata.ApiVersion),
@@ -137,23 +136,9 @@ func (s *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInp
 	finishRunner(ctx)
 
 	return &types.ScannerResult{
-		Findings:     findings,
-		Output:       pluginResult,
-		ScannedInput: userInput,
-		ScannerName:  s.name,
+		Findings: findings,
+		Output:   pluginResult,
 	}, nil
-}
-
-func (s *Scanner) isValidInputType(sourceType common.InputType) bool {
-	switch sourceType {
-	case common.ROOTFS:
-		return true
-	case common.DIR, common.IMAGE, common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR, common.FILE, common.SBOM:
-		fallthrough
-	default:
-		s.logger.Infof("source type %v is not supported for plugin, skipping.", sourceType)
-	}
-	return false
 }
 
 func (s *Scanner) parseResults(ctx context.Context, runner runnertypes.PluginRunner) ([]apitypes.FindingInfo, plugintypes.Result, error) {

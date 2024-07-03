@@ -18,6 +18,7 @@ package types
 import (
 	"fmt"
 	apitypes "github.com/openclarity/vmclarity/api/types"
+	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/utils/image_helper"
 	log "github.com/sirupsen/logrus"
 )
@@ -30,6 +31,7 @@ type Source struct {
 }
 
 type Vulnerabilities struct {
+	Metadata                   common.ScanMetadata
 	MergedVulnerabilitiesByKey map[VulnerabilityKey][]MergedVulnerability
 	Source                     Source
 }
@@ -80,10 +82,12 @@ func (m *Vulnerabilities) ToSlice() [][]MergedVulnerability {
 	return ret
 }
 
-func (m *Vulnerabilities) Merge(result *ScannerResult) {
+func (m *Vulnerabilities) Merge(meta common.ScanInputMetadata, result *ScannerResult) {
 	if result == nil {
 		return
 	}
+
+	m.Metadata.Merge(meta)
 
 	otherVulnerabilityByKey := toVulnerabilityByKey(result.Vulnerabilities)
 

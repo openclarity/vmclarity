@@ -19,15 +19,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
 	"os"
 
-	trivyftypes "github.com/aquasecurity/trivy/pkg/fanal/types"
-	log "github.com/sirupsen/logrus"
-
 	cdx "github.com/CycloneDX/cyclonedx-go"
+	trivyftypes "github.com/aquasecurity/trivy/pkg/fanal/types"
 
 	"github.com/aquasecurity/trivy/pkg/commands/artifact"
 	trivyFlag "github.com/aquasecurity/trivy/pkg/flag"
@@ -42,20 +41,18 @@ import (
 const AnalyzerName = "trivy"
 
 type Analyzer struct {
-	logger *log.Entry
 	config config.Config
 }
 
-func New(_ string, config types.AnalyzersConfig, logger *log.Entry) (families.Scanner[*types.ScannerResult], error) {
+func New(_ string, config types.AnalyzersConfig) (families.Scanner[*types.ScannerResult], error) {
 	return &Analyzer{
-		logger: logger.Dup().WithField("analyzer", AnalyzerName),
 		config: config.Trivy,
 	}, nil
 }
 
 // nolint:cyclop
 func (a *Analyzer) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
-	a.logger.Infof("Called %s analyzer on source %v %v", AnalyzerName, sourceType, userInput)
+	logger := log.GetLoggerFromContextOrDefault(ctx)
 
 	tempFile, err := os.CreateTemp(a.config.TempDir, "trivy.sbom.*.json")
 	if err != nil {
@@ -115,7 +112,7 @@ func (a *Analyzer) Scan(ctx context.Context, sourceType common.InputType, userIn
 
 	// Configure Trivy image options according to the source type and user input.
 	trivyOptions, cleanup, err := trivy.SetTrivyImageOptions(sourceType, userInput, trivyOptions)
-	defer cleanup(a.logger)
+	defer cleanup(logger)
 	if err != nil {
 		return nil, fmt.Errorf("failed to configure trivy image options: %w", err)
 	}
@@ -160,8 +157,6 @@ func (a *Analyzer) Scan(ctx context.Context, sourceType common.InputType, userIn
 	default:
 		// ignore
 	}
-
-	a.logger.Infof("Sending successful results")
 
 	return result, nil
 }

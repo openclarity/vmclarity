@@ -44,7 +44,7 @@ func (p *Plugins) Run(ctx context.Context, _ *families.Results) (*types.Result, 
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "plugins")
 	logger.Info("Plugins Run...")
 
-	// Register plugins dynamically instead of registering runner itself
+	// Register plugins dynamically instead of registering the runner itself
 	for _, n := range p.conf.ScannersList {
 		types.FactoryRegister(n, runner.New)
 	}
@@ -65,12 +65,12 @@ func (p *Plugins) Run(ctx context.Context, _ *families.Results) (*types.Result, 
 		return nil, fmt.Errorf("failed to process inputs for plugins: %w", err)
 	}
 
-	// Merge results from all plugins into the same output
 	pluginsResults := types.NewResult()
 
+	// Merge results
 	for _, result := range results {
 		logger.Infof("Merging result from %q", result.Metadata.ScannerName)
-		pluginsResults.Merge(result.ScanResult)
+		pluginsResults.Merge(result.Metadata, result.ScanResult)
 	}
 
 	logger.Info("Plugins Done...")

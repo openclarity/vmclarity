@@ -43,33 +43,34 @@ func (r Rootkits) Run(ctx context.Context, _ *families.Results) (*types.Rootkits
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "rootkits")
 	logger.Info("Rootkits Run...")
 
-	manager := scan_manager.New[types.ScannersConfig, *types.ScannerResult](r.conf.ScannersList, r.conf.ScannersConfig, logger, types.Factory)
+	// Run all scanners using scan manager
+	manager := scan_manager.New[types.ScannersConfig, []types.Rootkit](r.conf.ScannersList, r.conf.ScannersConfig, types.Factory)
 	results, err := manager.Scan(ctx, r.conf.Inputs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process inputs for rootkits: %w", err)
 	}
 
-	rootkitsResults := types.NewRootkits()
+	rootkits := types.NewRootkits()
 
-	// Merge results.
+	// Merge results
 	for _, result := range results {
 		logger.Infof("Merging result from %q", result.Metadata)
 		if familiesutils.ShouldStripInputPath(result.ScanInput.StripPathFromResult, r.conf.StripInputPaths) {
 			result.ScanResult = stripPathFromResult(result.ScanResult, result.ScanInput.Input)
 		}
-		rootkitsResults.Merge(result.ScanResult)
+		rootkits.Merge(result.Metadata, result.ScanResult)
 	}
 
 	logger.Info("Rootkits Done...")
 
-	return rootkitsResults, nil
+	return rootkits, nil
 }
 
 // StripPathFromResult strip input path from results wherever it is found.
-func stripPathFromResult(result *types.ScannerResult, path string) *types.ScannerResult {
-	for i := range result.Rootkits {
-		result.Rootkits[i].Message = familiesutils.RemoveMountPathSubStringIfNeeded(result.Rootkits[i].Message, path)
+func stripPathFromResult(rootkits []types.Rootkit, path string) []types.Rootkit {
+	for i := range rootkits {
+		rootkits[i].Message = familiesutils.RemoveMountPathSubStringIfNeeded(rootkits[i].Message, path)
 	}
 
-	return result
+	return rootkits
 }

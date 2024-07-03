@@ -18,41 +18,39 @@ package cisdocker
 import (
 	"context"
 	"fmt"
+	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/cisdocker/config"
 
 	dockle_run "github.com/Portshift/dockle/pkg"
-	"github.com/sirupsen/logrus"
-
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
-	log "github.com/sirupsen/logrus"
 )
 
 const ScannerName = "cisdocker"
 
 type Scanner struct {
-	logger *logrus.Entry
 	config config.Config
 }
 
-func New(_ string, config types.ScannersConfig, logger *log.Entry) (families.Scanner[*types.ScannerResult], error) {
+func New(_ string, config types.ScannersConfig) (families.Scanner[[]types.Misconfiguration], error) {
 	return &Scanner{
-		logger: logger.Dup().WithField("scanner", ScannerName),
 		config: config.CISDocker,
 	}, nil
 }
 
-func (a *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
+func (a *Scanner) Scan(ctx context.Context, inputType common.InputType, userInput string) ([]types.Misconfiguration, error) {
 	// Validate this is an input type supported by the scanner,
 	// otherwise return skipped.
-	if !a.isValidInputType(sourceType) {
-		return nil, fmt.Errorf("unsupported source type for %s: %s", ScannerName, sourceType)
+	if !inputType.IsOneOf(common.IMAGE, common.DOCKERARCHIVE, common.ROOTFS, common.DIR) {
+		return nil, fmt.Errorf("unsupported source type=%s", inputType)
 	}
 
-	a.logger.Infof("Running %s scan on %s...", ScannerName, userInput)
+	logger := log.GetLoggerFromContextOrDefault(ctx)
 
-	dockleCfg := createDockleConfig(a.logger, sourceType, userInput, a.config)
+	logger.Infof("Running %s scan on %s...", ScannerName, userInput)
+
+	dockleCfg := createDockleConfig(logger, inputType, userInput, a.config)
 	ctx, cancel := context.WithTimeout(ctx, dockleCfg.Timeout)
 	defer cancel()
 
@@ -61,26 +59,11 @@ func (a *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInp
 		return nil, fmt.Errorf("failed to run dockle: %w", err)
 	}
 
-	a.logger.Infof("Successfully scanned %s %s", sourceType, userInput)
+	logger.Infof("Successfully scanned %s %s", inputType, userInput)
 
-	misconfigurations := parseDockleReport(sourceType, userInput, assessmentMap)
+	misconfigurations := parseDockleReport(inputType, userInput, assessmentMap)
 
-	return &types.ScannerResult{
-		ScannerName:       ScannerName,
-		Misconfigurations: misconfigurations,
-	}, nil
-}
-
-func (a *Scanner) isValidInputType(sourceType common.InputType) bool {
-	switch sourceType {
-	case common.IMAGE, common.DOCKERARCHIVE, common.ROOTFS, common.DIR:
-		return true
-	case common.FILE, common.SBOM, common.OCIARCHIVE, common.OCIDIR:
-		a.logger.Infof("source type %v is not supported for CIS Docker Benchmark scanner, skipping.", sourceType)
-	default:
-		a.logger.Infof("unknown source type %v, skipping.", sourceType)
-	}
-	return false
+	return misconfigurations, nil
 }
 
 func init() {

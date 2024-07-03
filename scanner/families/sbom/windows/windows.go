@@ -18,41 +18,33 @@ package windows
 import (
 	"context"
 	"fmt"
+	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
-
-	log "github.com/sirupsen/logrus"
 )
 
 const AnalyzerName = "windows"
 
-type Analyzer struct {
-	logger *log.Entry
-}
+type Analyzer struct{}
 
-func New(_ string, _ types.AnalyzersConfig, logger *log.Entry) (families.Scanner[*types.ScannerResult], error) {
-	return &Analyzer{
-		logger: logger.Dup().WithField("analyzer", AnalyzerName),
-	}, nil
+func New(_ string, _ types.AnalyzersConfig) (families.Scanner[*types.ScannerResult], error) {
+	return &Analyzer{}, nil
 }
 
 // nolint:cyclop
-func (a *Analyzer) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
-	a.logger.Infof("Called %s analyzer on source %v %v", AnalyzerName, sourceType, userInput)
+func (a *Analyzer) Scan(ctx context.Context, inputType common.InputType, userInput string) (*types.ScannerResult, error) {
+	logger := log.GetLoggerFromContextOrDefault(ctx)
 
 	// Create Windows registry based on supported input types
 	var err error
 	var registry *Registry
-	switch sourceType {
-	case common.FILE: // Use file location to the registry
-		registry, err = NewRegistry(userInput, a.logger)
-	case common.ROOTFS, common.DIR: // Use mount drive as input
-		registry, err = NewRegistryForMount(userInput, a.logger)
-	case common.SBOM, common.IMAGE, common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR: // Unsupported
-		fallthrough
-	default:
-		return nil, fmt.Errorf("skipping analyzing unsupported source type: %s", sourceType)
+	if inputType.IsOneOf(common.FILE) { // Use file location to the registry
+		registry, err = NewRegistry(userInput, logger)
+	} else if inputType.IsOneOf(common.ROOTFS, common.DIR) { // Use mount drive as input
+		registry, err = NewRegistryForMount(userInput, logger)
+	} else {
+		return nil, fmt.Errorf("skipping analyzing unsupported source type: %s", inputType)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to open registry: %w", err)
@@ -66,9 +58,7 @@ func (a *Analyzer) Scan(ctx context.Context, sourceType common.InputType, userIn
 	}
 
 	// Return sbom
-	result := types.CreateScannerResult(bom, AnalyzerName, userInput, sourceType)
-
-	a.logger.Infof("Sending successful results")
+	result := types.CreateScannerResult(bom, AnalyzerName, userInput, inputType)
 
 	return result, nil
 }

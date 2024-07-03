@@ -22,7 +22,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type CreateScannerFunc[ConfigType, ScannerResultType any] func(string, ConfigType, *logrus.Entry) (families.Scanner[ScannerResultType], error)
+type CreateScannerFunc[ConfigType, ScannerResultType any] func(string, ConfigType) (families.Scanner[ScannerResultType], error)
 
 type Factory[ConfigType, ScannerResultType any] struct {
 	scanners map[string]CreateScannerFunc[ConfigType, ScannerResultType]
@@ -46,11 +46,11 @@ func (f *Factory[CT, RT]) Register(name string, createJobFunc CreateScannerFunc[
 	f.scanners[name] = createJobFunc
 }
 
-func (f *Factory[CT, RT]) CreateJob(name string, config CT, logger *logrus.Entry) (families.Scanner[RT], error) {
+func (f *Factory[CT, RT]) CreateJob(name string, config CT) (families.Scanner[RT], error) {
 	createFunc, ok := f.scanners[name]
 	if !ok {
 		return nil, fmt.Errorf("%v not a registered job", name)
 	}
 
-	return createFunc(name, config, logger)
+	return createFunc(name, config)
 }

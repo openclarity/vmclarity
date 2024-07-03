@@ -21,8 +21,6 @@ import (
 )
 
 type ScannerResult struct {
-	Findings     []types.FindingInfo
-	Output       plugintypes.Result
-	ScannedInput string
-	ScannerName  string
+	Findings []types.FindingInfo
+	Output   plugintypes.Result
 }
