@@ -46,6 +46,10 @@ func NewInfos() *Infos {
 }
 
 func (r *Infos) Merge(result *ScannerResult) {
+	if result == nil {
+		return
+	}
+
 	for _, info := range result.Infos {
 		r.FlattenedInfos = append(r.FlattenedInfos, FlattenedInfo{
 			ScannerName: result.ScannerName,

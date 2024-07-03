@@ -20,7 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/openclarity/vmclarity/scanner"
-	scannertypes "github.com/openclarity/vmclarity/scanner/types"
+	scannertypes "github.com/openclarity/vmclarity/scanner/common"
 	"os"
 	"time"
 

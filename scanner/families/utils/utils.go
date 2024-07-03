@@ -22,10 +22,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	types2 "github.com/openclarity/vmclarity/scanner/types"
-
 	"github.com/openclarity/vmclarity/core/log"
-	"github.com/openclarity/vmclarity/scanner/families/types"
+	"github.com/openclarity/vmclarity/scanner/common"
+	"github.com/openclarity/vmclarity/scanner/utils/containerrootfs"
 	"github.com/openclarity/vmclarity/utils/fsutils/containerrootfs"
 )
 
@@ -58,9 +57,9 @@ func ShouldStripInputPath(inputShouldStrip *bool, familyShouldStrip bool) bool {
 	return *inputShouldStrip
 }
 
-func GetInputSize(input types.Input) (int64, error) {
+func GetInputSize(input common.ScanInput) (int64, error) {
 	switch input.InputType {
-	case string(types2.ROOTFS), string(types2.DIR), string(types2.FILE):
+	case common.ROOTFS, common.DIR, common.FILE:
 		// check if already exists in cache
 		sizeFromCache, ok := InputSizesCache[input.Input]
 		if ok {
@@ -115,11 +114,11 @@ func DirSizeMB(path string) (int64, error) {
 // pass it down from the family manager to the scanners.
 var ContainerRootfsCache *containerrootfs.Cache
 
-func ConvertInputToFilesystem(ctx context.Context, sourceType types2.InputType, userInput string) (string, func(), error) {
+func ConvertInputToFilesystem(ctx context.Context, sourceType common.InputType, userInput string) (string, func(), error) {
 	switch sourceType {
-	case types2.DIR, types2.ROOTFS:
+	case common.DIR, common.ROOTFS:
 		return userInput, func() {}, nil
-	case types2.IMAGE, types2.DOCKERARCHIVE, types2.OCIARCHIVE, types2.OCIDIR:
+	case common.IMAGE, common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR:
 		// TODO(sambetts) Remove this when we're able to pass the
 		// context all the way from the family manager.
 		ctx := containerrootfs.SetCacheForContext(ctx, ContainerRootfsCache)
@@ -134,7 +133,7 @@ func ConvertInputToFilesystem(ctx context.Context, sourceType types2.InputType, 
 			}
 		}
 		return rootfs.Dir(), cleanup, nil
-	case types2.SBOM, types2.FILE:
+	case common.SBOM, common.FILE:
 		fallthrough
 	default:
 		return "", func() {}, fmt.Errorf("unable to convert %s to filesystem", sourceType)

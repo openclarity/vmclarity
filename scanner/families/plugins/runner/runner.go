@@ -22,8 +22,8 @@ import (
 	"fmt"
 	"io"
 
-	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
-	scannertypes "github.com/openclarity/vmclarity/scanner/types"
+	"github.com/openclarity/vmclarity/scanner/common"
+	"github.com/openclarity/vmclarity/scanner/families"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/sirupsen/logrus"
@@ -43,7 +43,7 @@ type Scanner struct {
 	config config.Config
 }
 
-func New(name string, config types.ScannersConfig, logger *log.Entry) (familiestypes.Scanner[*types.ScannerResult], error) {
+func New(name string, config types.ScannersConfig, logger *log.Entry) (families.Scanner[*types.ScannerResult], error) {
 	return &Scanner{
 		name:   name,
 		logger: logger.Dup().WithField("scanner", name),
@@ -51,7 +51,7 @@ func New(name string, config types.ScannersConfig, logger *log.Entry) (familiest
 	}, nil
 }
 
-func (s *Scanner) Scan(ctx context.Context, sourceType scannertypes.InputType, userInput string) (*types.ScannerResult, error) {
+func (s *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -144,11 +144,11 @@ func (s *Scanner) Scan(ctx context.Context, sourceType scannertypes.InputType, u
 	}, nil
 }
 
-func (s *Scanner) isValidInputType(sourceType scannertypes.InputType) bool {
+func (s *Scanner) isValidInputType(sourceType common.InputType) bool {
 	switch sourceType {
-	case scannertypes.ROOTFS:
+	case common.ROOTFS:
 		return true
-	case scannertypes.DIR, scannertypes.IMAGE, scannertypes.DOCKERARCHIVE, scannertypes.OCIARCHIVE, scannertypes.OCIDIR, scannertypes.FILE, scannertypes.SBOM:
+	case common.DIR, common.IMAGE, common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR, common.FILE, common.SBOM:
 		fallthrough
 	default:
 		s.logger.Infof("source type %v is not supported for plugin, skipping.", sourceType)

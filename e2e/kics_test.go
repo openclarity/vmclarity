@@ -18,9 +18,9 @@ package e2e
 import (
 	"context"
 	"github.com/openclarity/vmclarity/scanner"
+	scannercommon "github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
-	types3 "github.com/openclarity/vmclarity/scanner/families/plugins/types"
-	types2 "github.com/openclarity/vmclarity/scanner/types"
+	plugintypes "github.com/openclarity/vmclarity/scanner/families/plugins/types"
 	"path/filepath"
 	"reflect"
 
@@ -28,9 +28,7 @@ import (
 	"github.com/onsi/gomega"
 
 	"github.com/openclarity/vmclarity/scanner/families/plugins"
-	"github.com/openclarity/vmclarity/scanner/families/plugins/common"
 	"github.com/openclarity/vmclarity/scanner/families/plugins/runner/config"
-	"github.com/openclarity/vmclarity/scanner/families/types"
 )
 
 const scannerPluginName = "kics"
@@ -59,16 +57,16 @@ var _ = ginkgo.Describe("Running KICS scan", func() {
 			notifier := &Notifier{}
 
 			errs := scanner.New(&scanner.Config{
-				Plugins: types3.Config{
+				Plugins: plugintypes.Config{
 					Enabled:      true,
 					ScannersList: []string{scannerPluginName},
-					Inputs: []types.Input{
+					Inputs: []scannercommon.ScanInput{
 						{
 							Input:     input,
-							InputType: string(types2.ROOTFS),
+							InputType: scannercommon.ROOTFS,
 						},
 					},
-					ScannersConfig: &common.ScannersConfig{
+					ScannersConfig: plugintypes.ScannersConfig{
 						scannerPluginName: config.Config{
 							Name:          scannerPluginName,
 							ImageName:     cfg.TestEnvConfig.Images.PluginKics,

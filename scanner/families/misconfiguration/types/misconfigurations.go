@@ -61,6 +61,10 @@ func NewMisconfigurations() *Misconfigurations {
 }
 
 func (m *Misconfigurations) Merge(result *ScannerResult) {
+	if result == nil {
+		return
+	}
+
 	for _, misconfiguration := range result.Misconfigurations {
 		m.FlattenedMisconfiguration = append(m.FlattenedMisconfiguration, FlattenedMisconfiguration{
 			ScannerName:      result.ScannerName,

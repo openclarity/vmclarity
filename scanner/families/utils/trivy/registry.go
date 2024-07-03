@@ -16,13 +16,13 @@
 package trivy
 
 import (
-	"github.com/openclarity/vmclarity/scanner/types"
+	"github.com/openclarity/vmclarity/scanner/common"
 	"os"
 
 	trivyFlag "github.com/aquasecurity/trivy/pkg/flag"
 )
 
-func SetTrivyRegistryConfigs(registry *types.Registry, trivyOptions trivyFlag.Options) trivyFlag.Options {
+func SetTrivyRegistryConfigs(registry *common.Registry, trivyOptions trivyFlag.Options) trivyFlag.Options {
 	if registry.UseHTTP {
 		os.Setenv("TRIVY_NON_SSL", "true")
 	}

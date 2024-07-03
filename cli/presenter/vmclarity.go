@@ -20,8 +20,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/openclarity/vmclarity/scanner"
+	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
-	types2 "github.com/openclarity/vmclarity/scanner/types"
 
 	apiclient "github.com/openclarity/vmclarity/api/client"
 	apitypes "github.com/openclarity/vmclarity/api/types"
@@ -223,7 +223,7 @@ func (v *VMClarityPresenter) ExportSecretsResult(ctx context.Context, res scanne
 	return nil
 }
 
-func getInputScanStats(inputScans []types2.InputScanMetadata) *[]apitypes.AssetScanInputScanStats {
+func getInputScanStats(inputScans []common.InputScanMetadata) *[]apitypes.AssetScanInputScanStats {
 	if len(inputScans) == 0 {
 		return nil
 	}

@@ -20,9 +20,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families"
+	"github.com/openclarity/vmclarity/scanner/common"
+	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/infofinder/sshtopology/config"
-	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 	"os"
 	"os/exec"
 	"path"
@@ -44,7 +44,7 @@ type Scanner struct {
 	config config.Config
 }
 
-func New(_ string, config types.ScannersConfig, logger *log.Entry) (familiestypes.Scanner[*types.ScannerResult], error) {
+func New(_ string, config types.ScannersConfig, logger *log.Entry) (families.Scanner[*types.ScannerResult], error) {
 	return &Scanner{
 		logger: logger.Dup().WithField("scanner", ScannerName),
 		config: config.SSHTopology,
@@ -52,7 +52,7 @@ func New(_ string, config types.ScannersConfig, logger *log.Entry) (familiestype
 }
 
 // nolint:cyclop,gocognit
-func (s *Scanner) Scan(ctx context.Context, sourceType scannertypes.InputType, userInput string) (*types.ScannerResult, error) {
+func (s *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
 	s.logger.Debugf("Running with input=%v and source type=%v", userInput, sourceType)
 	var infos []types.Info
 
@@ -292,11 +292,11 @@ func (s *Scanner) executeSSHKeyGenFingerprintCommand(hashAlgo string, filePath s
 	return output, nil
 }
 
-func (s *Scanner) isValidInputType(sourceType scannertypes.InputType) bool {
+func (s *Scanner) isValidInputType(sourceType common.InputType) bool {
 	switch sourceType {
-	case scannertypes.ROOTFS, scannertypes.IMAGE, scannertypes.DOCKERARCHIVE, scannertypes.OCIARCHIVE, scannertypes.OCIDIR:
+	case common.ROOTFS, common.IMAGE, common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR:
 		return true
-	case scannertypes.DIR, scannertypes.FILE, scannertypes.SBOM:
+	case common.DIR, common.FILE, common.SBOM:
 		s.logger.Infof("Source type %v is not supported for %s, skipping.", ScannerName, sourceType)
 	default:
 		s.logger.Infof("Unknown source type %v, skipping.", sourceType)

@@ -16,7 +16,6 @@
 package presenter
 
 import (
-	"github.com/openclarity/vmclarity/scanner/types"
 	"reflect"
 	"testing"
 	"time"
@@ -30,7 +29,7 @@ func Test_getInputScanStats(t *testing.T) {
 	startTime := timeNow.Add(-5 * time.Second)
 	startTime2 := timeNow.Add(-10 * time.Second)
 	type args struct {
-		inputScans []types.InputScanMetadata
+		inputScans []common.InputScanMetadata
 	}
 	tests := []struct {
 		name string
@@ -40,14 +39,14 @@ func Test_getInputScanStats(t *testing.T) {
 		{
 			name: "no input scans",
 			args: args{
-				inputScans: []types.InputScanMetadata{},
+				inputScans: []common.InputScanMetadata{},
 			},
 			want: nil,
 		},
 		{
 			name: "one input scans",
 			args: args{
-				inputScans: []types.InputScanMetadata{
+				inputScans: []common.InputScanMetadata{
 					{
 						InputType:     "rootfs",
 						InputPath:     "/mnt/snap",
@@ -72,7 +71,7 @@ func Test_getInputScanStats(t *testing.T) {
 		{
 			name: "two input scans",
 			args: args{
-				inputScans: []types.InputScanMetadata{
+				inputScans: []common.InputScanMetadata{
 					{
 						InputType:     "rootfs",
 						InputPath:     "/mnt/snap",

@@ -18,8 +18,8 @@ package chkrootkit
 import (
 	"context"
 	"fmt"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families"
-	scannertypes "github.com/openclarity/vmclarity/scanner/types"
+	"github.com/openclarity/vmclarity/scanner/common"
+	"github.com/openclarity/vmclarity/scanner/families"
 	"os/exec"
 
 	log "github.com/sirupsen/logrus"
@@ -38,14 +38,14 @@ type Scanner struct {
 	config config.Config
 }
 
-func New(_ string, config types.ScannersConfig, logger *log.Entry) (familiestypes.Scanner[*types.ScannerResult], error) {
+func New(_ string, config types.ScannersConfig, logger *log.Entry) (families.Scanner[*types.ScannerResult], error) {
 	return &Scanner{
 		logger: logger.Dup().WithField("scanner", ScannerName),
 		config: config.Chkrootkit,
 	}, nil
 }
 
-func (s *Scanner) Scan(ctx context.Context, sourceType scannertypes.InputType, userInput string) (*types.ScannerResult, error) {
+func (s *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
 	if !s.isValidInputType(sourceType) {
 		return nil, fmt.Errorf("received invalid input type for chkrootkit scanner: %v", sourceType)
 	}
@@ -89,11 +89,11 @@ func (s *Scanner) Scan(ctx context.Context, sourceType scannertypes.InputType, u
 	}, nil
 }
 
-func (s *Scanner) isValidInputType(sourceType scannertypes.InputType) bool {
+func (s *Scanner) isValidInputType(sourceType common.InputType) bool {
 	switch sourceType {
-	case scannertypes.DIR, scannertypes.ROOTFS, scannertypes.IMAGE, scannertypes.DOCKERARCHIVE, scannertypes.OCIARCHIVE, scannertypes.OCIDIR:
+	case common.DIR, common.ROOTFS, common.IMAGE, common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR:
 		return true
-	case scannertypes.FILE, scannertypes.SBOM:
+	case common.FILE, common.SBOM:
 		fallthrough
 	default:
 		s.logger.Infof("source type %v is not supported for chkrootkit, skipping.", sourceType)

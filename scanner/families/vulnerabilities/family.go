@@ -19,10 +19,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/types"
 	"github.com/openclarity/vmclarity/scanner/internal/scan_manager"
-	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 	"os"
 
 	"github.com/openclarity/vmclarity/core/log"
@@ -69,9 +69,9 @@ func (v Vulnerabilities) Run(ctx context.Context, res *families.Results) (*types
 			return nil, fmt.Errorf("failed to write sbom to file: %w", err)
 		}
 
-		v.conf.Inputs = append(v.conf.Inputs, scannertypes.ScanInput{
+		v.conf.Inputs = append(v.conf.Inputs, common.ScanInput{
 			Input:     sbomTempFilePath,
-			InputType: scannertypes.SBOM,
+			InputType: common.SBOM,
 		})
 	}
 

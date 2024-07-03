@@ -18,9 +18,9 @@ package windows
 import (
 	"context"
 	"fmt"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families"
+	"github.com/openclarity/vmclarity/scanner/common"
+	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
-	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -31,25 +31,25 @@ type Analyzer struct {
 	logger *log.Entry
 }
 
-func New(_ string, _ types.AnalyzersConfig, logger *log.Entry) (familiestypes.Scanner[*types.ScannerResult], error) {
+func New(_ string, _ types.AnalyzersConfig, logger *log.Entry) (families.Scanner[*types.ScannerResult], error) {
 	return &Analyzer{
 		logger: logger.Dup().WithField("analyzer", AnalyzerName),
 	}, nil
 }
 
 // nolint:cyclop
-func (a *Analyzer) Scan(ctx context.Context, sourceType scannertypes.InputType, userInput string) (*types.ScannerResult, error) {
+func (a *Analyzer) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
 	a.logger.Infof("Called %s analyzer on source %v %v", AnalyzerName, sourceType, userInput)
 
 	// Create Windows registry based on supported input types
 	var err error
 	var registry *Registry
 	switch sourceType {
-	case scannertypes.FILE: // Use file location to the registry
+	case common.FILE: // Use file location to the registry
 		registry, err = NewRegistry(userInput, a.logger)
-	case scannertypes.ROOTFS, scannertypes.DIR: // Use mount drive as input
+	case common.ROOTFS, common.DIR: // Use mount drive as input
 		registry, err = NewRegistryForMount(userInput, a.logger)
-	case scannertypes.SBOM, scannertypes.IMAGE, scannertypes.DOCKERARCHIVE, scannertypes.OCIARCHIVE, scannertypes.OCIDIR: // Unsupported
+	case common.SBOM, common.IMAGE, common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR: // Unsupported
 		fallthrough
 	default:
 		return nil, fmt.Errorf("skipping analyzing unsupported source type: %s", sourceType)

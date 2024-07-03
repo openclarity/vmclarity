@@ -21,10 +21,10 @@ import (
 	"fmt"
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/core/version"
+	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
 	"github.com/openclarity/vmclarity/scanner/internal/scan_manager"
-	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 	"github.com/openclarity/vmclarity/scanner/utils"
 	"github.com/openclarity/vmclarity/scanner/utils/converter"
 )
@@ -80,7 +80,7 @@ func (s SBOM) Run(ctx context.Context, _ *families.Results) (*types.SBOM, error)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get CDX SBOM from path=%s: %w", with.SbomPath, err)
 		}
-		results := types.CreateScannerResult(cdxBOMBytes, name, with.SbomPath, scannertypes.SBOM)
+		results := types.CreateScannerResult(cdxBOMBytes, name, with.SbomPath, common.SBOM)
 		logger.Infof("Merging result from %q", with.SbomPath)
 		mergedResults = mergedResults.Merge(results)
 	}

@@ -16,17 +16,17 @@
 package types
 
 import (
+	"github.com/openclarity/vmclarity/scanner/common"
 	syft "github.com/openclarity/vmclarity/scanner/families/sbom/syft/config"
 	trivy "github.com/openclarity/vmclarity/scanner/families/sbom/trivy/config"
-	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 )
 
 type Config struct {
-	Enabled         bool                     `yaml:"enabled" mapstructure:"enabled"`
-	AnalyzersList   []string                 `yaml:"analyzers_list" mapstructure:"analyzers_list"`
-	Inputs          []scannertypes.ScanInput `yaml:"inputs" mapstructure:"inputs"`
-	MergeWith       []MergeWith              `yaml:"merge_with" mapstructure:"merge_with"`
-	AnalyzersConfig AnalyzersConfig          `yaml:"analyzers_config" mapstructure:"analyzers_config"`
+	Enabled         bool               `yaml:"enabled" mapstructure:"enabled"`
+	AnalyzersList   []string           `yaml:"analyzers_list" mapstructure:"analyzers_list"`
+	Inputs          []common.ScanInput `yaml:"inputs" mapstructure:"inputs"`
+	MergeWith       []MergeWith        `yaml:"merge_with" mapstructure:"merge_with"`
+	AnalyzersConfig AnalyzersConfig    `yaml:"analyzers_config" mapstructure:"analyzers_config"`
 }
 
 type AnalyzersConfig struct {

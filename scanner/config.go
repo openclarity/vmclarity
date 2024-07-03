@@ -17,6 +17,7 @@ package scanner
 
 import (
 	"github.com/openclarity/vmclarity/core/to"
+	"github.com/openclarity/vmclarity/scanner/common"
 	exploittypes "github.com/openclarity/vmclarity/scanner/families/exploits/types"
 	infofindertypes "github.com/openclarity/vmclarity/scanner/families/infofinder/types"
 	malwaretypes "github.com/openclarity/vmclarity/scanner/families/malware/types"
@@ -26,7 +27,6 @@ import (
 	sbomtypes "github.com/openclarity/vmclarity/scanner/families/sbom/types"
 	secrettypes "github.com/openclarity/vmclarity/scanner/families/secrets/types"
 	vulnerabilitytypes "github.com/openclarity/vmclarity/scanner/families/vulnerabilities/types"
-	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 )
 
 type Config struct {
@@ -62,10 +62,10 @@ func NewConfig() *Config {
 	}
 }
 
-func (c *Config) AddInputs(inputType scannertypes.InputType, inputs []string) {
+func (c *Config) AddInputs(inputType common.InputType, inputs []string) {
 	for _, mountDir := range inputs {
 		if c.SBOM.Enabled {
-			c.SBOM.Inputs = append(c.SBOM.Inputs, scannertypes.ScanInput{
+			c.SBOM.Inputs = append(c.SBOM.Inputs, common.ScanInput{
 				Input:     mountDir,
 				InputType: inputType,
 			})
@@ -75,7 +75,7 @@ func (c *Config) AddInputs(inputType scannertypes.InputType, inputs []string) {
 			if c.SBOM.Enabled {
 				c.Vulnerabilities.InputFromSbom = true
 			} else {
-				c.Vulnerabilities.Inputs = append(c.Vulnerabilities.Inputs, scannertypes.ScanInput{
+				c.Vulnerabilities.Inputs = append(c.Vulnerabilities.Inputs, common.ScanInput{
 					Input:     mountDir,
 					InputType: inputType,
 				})
@@ -83,7 +83,7 @@ func (c *Config) AddInputs(inputType scannertypes.InputType, inputs []string) {
 		}
 
 		if c.Secrets.Enabled {
-			c.Secrets.Inputs = append(c.Secrets.Inputs, scannertypes.ScanInput{
+			c.Secrets.Inputs = append(c.Secrets.Inputs, common.ScanInput{
 				StripPathFromResult: to.Ptr(true),
 				Input:               mountDir,
 				InputType:           inputType,
@@ -91,7 +91,7 @@ func (c *Config) AddInputs(inputType scannertypes.InputType, inputs []string) {
 		}
 
 		if c.Malware.Enabled {
-			c.Malware.Inputs = append(c.Malware.Inputs, scannertypes.ScanInput{
+			c.Malware.Inputs = append(c.Malware.Inputs, common.ScanInput{
 				StripPathFromResult: to.Ptr(true),
 				Input:               mountDir,
 				InputType:           inputType,
@@ -99,7 +99,7 @@ func (c *Config) AddInputs(inputType scannertypes.InputType, inputs []string) {
 		}
 
 		if c.Rootkits.Enabled {
-			c.Rootkits.Inputs = append(c.Rootkits.Inputs, scannertypes.ScanInput{
+			c.Rootkits.Inputs = append(c.Rootkits.Inputs, common.ScanInput{
 				StripPathFromResult: to.Ptr(true),
 				Input:               mountDir,
 				InputType:           inputType,
@@ -109,7 +109,7 @@ func (c *Config) AddInputs(inputType scannertypes.InputType, inputs []string) {
 		if c.Misconfiguration.Enabled {
 			c.Misconfiguration.Inputs = append(
 				c.Misconfiguration.Inputs,
-				scannertypes.ScanInput{
+				common.ScanInput{
 					StripPathFromResult: to.Ptr(true),
 					Input:               mountDir,
 					InputType:           inputType,
@@ -120,7 +120,7 @@ func (c *Config) AddInputs(inputType scannertypes.InputType, inputs []string) {
 		if c.InfoFinder.Enabled {
 			c.InfoFinder.Inputs = append(
 				c.InfoFinder.Inputs,
-				scannertypes.ScanInput{
+				common.ScanInput{
 					StripPathFromResult: to.Ptr(true),
 					Input:               mountDir,
 					InputType:           inputType,
@@ -129,7 +129,7 @@ func (c *Config) AddInputs(inputType scannertypes.InputType, inputs []string) {
 		}
 
 		if c.Plugins.Enabled {
-			c.Plugins.Inputs = append(c.Plugins.Inputs, scannertypes.ScanInput{
+			c.Plugins.Inputs = append(c.Plugins.Inputs, common.ScanInput{
 				Input:     mountDir,
 				InputType: inputType,
 			})

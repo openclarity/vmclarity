@@ -71,7 +71,7 @@ func TestCreateResults(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := CreateResults(tt.args.doc, tt.args.userInput, tt.args.scannerName, tt.args.hash, nil)
+			got := createResults(tt.args.doc, tt.args.userInput, tt.args.scannerName, tt.args.hash, nil)
 			got.Source.Metadata = nil // ignore metadata
 			// gotB, _ := json.Marshal(got)
 			// assert.NilError(t, os.WriteFile("./test_data/nginx.results.json", gotB, 0666))

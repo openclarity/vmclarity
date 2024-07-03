@@ -61,6 +61,10 @@ func NewFindings() *Findings {
 }
 
 func (f *Findings) Merge(result *ScannerResult) {
+	if result == nil {
+		return
+	}
+
 	f.MergedFindings = append(f.MergedFindings, result.Findings...)
 	f.Scanners = append(f.Scanners, result.ScannerName)
 }

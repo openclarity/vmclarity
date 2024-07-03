@@ -35,7 +35,7 @@ func TestStripPathFromResult(t *testing.T) {
 			name: "sanity",
 			args: args{
 				result: types.ScannerResult{
-					Findings: []types.Findings{
+					Findings: []types.Finding{
 						{
 							Description: "description",
 							File:        "/mnt/file1",
@@ -61,7 +61,7 @@ func TestStripPathFromResult(t *testing.T) {
 				path: "/mnt",
 			},
 			want: types.ScannerResult{
-				Findings: []types.Findings{
+				Findings: []types.Finding{
 					{
 						Description: "description",
 						File:        "/file1",
@@ -88,7 +88,7 @@ func TestStripPathFromResult(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := stripPathFromResult(tt.args.result, tt.args.path); !reflect.DeepEqual(got, tt.want) {
+			if got := stripPathFromResult(&tt.args.result, tt.args.path); !reflect.DeepEqual(got, &tt.want) {
 				t.Errorf("StripPathFromResult() = %v, want %v", got, tt.want)
 			}
 		})

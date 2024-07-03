@@ -20,8 +20,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families"
-	scannertypes "github.com/openclarity/vmclarity/scanner/types"
+	"github.com/openclarity/vmclarity/scanner/common"
+	"github.com/openclarity/vmclarity/scanner/families"
 	"net/http"
 	"net/url"
 	"os"
@@ -53,7 +53,7 @@ type Scanner struct {
 	config config.Config
 }
 
-func New(_ string, config types.ScannersConfig, logger *log.Entry) (familiestypes.Scanner[*types.ScannerResult], error) {
+func New(_ string, config types.ScannersConfig, logger *log.Entry) (families.Scanner[*types.ScannerResult], error) {
 	logger = logger.Dup().WithField("scanner", ScannerName)
 
 	// Set up the logger for trivy
@@ -67,7 +67,7 @@ func New(_ string, config types.ScannersConfig, logger *log.Entry) (familiestype
 }
 
 // nolint:cyclop
-func (a *Scanner) Scan(ctx context.Context, sourceType scannertypes.InputType, userInput string) (*types.ScannerResult, error) {
+func (a *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
 	a.logger.Infof("Called %s scanner on source %v %v", ScannerName, sourceType, userInput)
 
 	tempFile, err := os.CreateTemp(a.config.CacheDir, "trivy.scan.*.json")
@@ -79,8 +79,8 @@ func (a *Scanner) Scan(ctx context.Context, sourceType scannertypes.InputType, u
 	var hash string
 	var metadata map[string]string
 	switch sourceType {
-	case scannertypes.IMAGE, scannertypes.ROOTFS, scannertypes.DIR, scannertypes.FILE, scannertypes.DOCKERARCHIVE, scannertypes.OCIARCHIVE, scannertypes.OCIDIR:
-	case scannertypes.SBOM:
+	case common.IMAGE, common.ROOTFS, common.DIR, common.FILE, common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR:
+	case common.SBOM:
 		var err error
 		bom, err := sbom.NewCycloneDX(userInput)
 		if err != nil {

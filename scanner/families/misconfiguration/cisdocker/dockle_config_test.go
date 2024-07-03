@@ -16,8 +16,8 @@
 package cisdocker
 
 import (
+	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/cisdocker/config"
-	"github.com/openclarity/vmclarity/scanner/types"
 	"testing"
 	"time"
 
@@ -64,10 +64,10 @@ func TestCreateDockleConfig(t *testing.T) {
 			logger: logEntryInfo,
 			config: config.Config{
 				Timeout: 1 * time.Minute,
-				Registry: &types.Registry{
+				Registry: &common.Registry{
 					SkipVerifyTLS: true,
 					UseHTTP:       true,
-					Auths: []types.RegistryAuth{{
+					Auths: []common.RegistryAuth{{
 						Username: "testuser",
 						Password: "testpassword",
 					}},
@@ -88,7 +88,7 @@ func TestCreateDockleConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := createDockleConfig(tt.logger, types.IMAGE, tt.input, tt.config)
+			got := createDockleConfig(tt.logger, common.IMAGE, tt.input, tt.config)
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("NewReportParser() mismatch (-want +got):\n%s", diff)
 			}

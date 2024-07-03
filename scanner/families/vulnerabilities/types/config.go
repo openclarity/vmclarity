@@ -16,17 +16,17 @@
 package types
 
 import (
+	"github.com/openclarity/vmclarity/scanner/common"
 	grypeconfig "github.com/openclarity/vmclarity/scanner/families/vulnerabilities/grype/config"
 	trivyconfig "github.com/openclarity/vmclarity/scanner/families/vulnerabilities/trivy/config"
-	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 )
 
 type Config struct {
-	Enabled        bool                     `yaml:"enabled" mapstructure:"enabled"`
-	ScannersList   []string                 `yaml:"scanners_list" mapstructure:"scanners_list"`
-	Inputs         []scannertypes.ScanInput `yaml:"inputs" mapstructure:"inputs"`
-	InputFromSbom  bool                     `yaml:"input_from_sbom" mapstructure:"input_from_sbom"`
-	ScannersConfig ScannersConfig           `yaml:"scanners_config" mapstructure:"scanners_config"`
+	Enabled        bool               `yaml:"enabled" mapstructure:"enabled"`
+	ScannersList   []string           `yaml:"scanners_list" mapstructure:"scanners_list"`
+	Inputs         []common.ScanInput `yaml:"inputs" mapstructure:"inputs"`
+	InputFromSbom  bool               `yaml:"input_from_sbom" mapstructure:"input_from_sbom"`
+	ScannersConfig ScannersConfig     `yaml:"scanners_config" mapstructure:"scanners_config"`
 }
 
 type ScannersConfig struct {

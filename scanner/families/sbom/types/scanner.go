@@ -17,12 +17,12 @@ package types
 
 import (
 	cdx "github.com/CycloneDX/cyclonedx-go"
-	"github.com/openclarity/vmclarity/scanner/types"
+	"github.com/openclarity/vmclarity/scanner/common"
 )
 
 type AppInfo struct {
 	SourceMetadata map[string]string
-	SourceType     types.InputType
+	SourceType     common.InputType
 	SourcePath     string
 	SourceHash     string
 }
@@ -34,7 +34,7 @@ type ScannerResult struct {
 	Error        error
 }
 
-func CreateScannerResult(sbomBytes *cdx.BOM, analyzerName, userInput string, srcType types.InputType) *ScannerResult {
+func CreateScannerResult(sbomBytes *cdx.BOM, analyzerName, userInput string, srcType common.InputType) *ScannerResult {
 	return &ScannerResult{
 		Sbom:         sbomBytes,
 		AnalyzerInfo: analyzerName,

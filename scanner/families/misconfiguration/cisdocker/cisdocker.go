@@ -18,9 +18,9 @@ package cisdocker
 import (
 	"context"
 	"fmt"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families"
+	"github.com/openclarity/vmclarity/scanner/common"
+	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/cisdocker/config"
-	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 
 	dockle_run "github.com/Portshift/dockle/pkg"
 	"github.com/sirupsen/logrus"
@@ -36,14 +36,14 @@ type Scanner struct {
 	config config.Config
 }
 
-func New(_ string, config types.ScannersConfig, logger *log.Entry) familiestypes.Scanner[*types.ScannerResult] {
+func New(_ string, config types.ScannersConfig, logger *log.Entry) (families.Scanner[*types.ScannerResult], error) {
 	return &Scanner{
 		logger: logger.Dup().WithField("scanner", ScannerName),
 		config: config.CISDocker,
-	}
+	}, nil
 }
 
-func (a *Scanner) Scan(ctx context.Context, sourceType scannertypes.InputType, userInput string) (*types.ScannerResult, error) {
+func (a *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
 	// Validate this is an input type supported by the scanner,
 	// otherwise return skipped.
 	if !a.isValidInputType(sourceType) {
@@ -71,11 +71,11 @@ func (a *Scanner) Scan(ctx context.Context, sourceType scannertypes.InputType, u
 	}, nil
 }
 
-func (a *Scanner) isValidInputType(sourceType scannertypes.InputType) bool {
+func (a *Scanner) isValidInputType(sourceType common.InputType) bool {
 	switch sourceType {
-	case scannertypes.IMAGE, scannertypes.DOCKERARCHIVE, scannertypes.ROOTFS, scannertypes.DIR:
+	case common.IMAGE, common.DOCKERARCHIVE, common.ROOTFS, common.DIR:
 		return true
-	case scannertypes.FILE, scannertypes.SBOM, scannertypes.OCIARCHIVE, scannertypes.OCIDIR:
+	case common.FILE, common.SBOM, common.OCIARCHIVE, common.OCIDIR:
 		a.logger.Infof("source type %v is not supported for CIS Docker Benchmark scanner, skipping.", sourceType)
 	default:
 		a.logger.Infof("unknown source type %v, skipping.", sourceType)

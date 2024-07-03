@@ -16,9 +16,9 @@
 package scanner
 
 import (
+	"github.com/openclarity/vmclarity/scanner/common"
 	sbomtypes "github.com/openclarity/vmclarity/scanner/families/sbom/types"
 	secrettypes "github.com/openclarity/vmclarity/scanner/families/secrets/types"
-	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 	"reflect"
 	"testing"
 
@@ -64,10 +64,10 @@ func Test_SetMountPointsForFamiliesInput(t *testing.T) {
 			want: &Config{
 				SBOM: sbomtypes.Config{
 					Enabled: true,
-					Inputs: []scannertypes.ScanInput{
+					Inputs: []common.ScanInput{
 						{
 							Input:     "/mnt/snapshot1",
-							InputType: scannertypes.ROOTFS,
+							InputType: common.ROOTFS,
 						},
 					},
 				},
@@ -77,21 +77,21 @@ func Test_SetMountPointsForFamiliesInput(t *testing.T) {
 				},
 				Secrets: secrettypes.Config{
 					Enabled: true,
-					Inputs: []scannertypes.ScanInput{
+					Inputs: []common.ScanInput{
 						{
 							StripPathFromResult: to.Ptr(true),
 							Input:               "/mnt/snapshot1",
-							InputType:           scannertypes.ROOTFS,
+							InputType:           common.ROOTFS,
 						},
 					},
 				},
 				Malware: malware.Config{
 					Enabled: true,
-					Inputs: []scannertypes.ScanInput{
+					Inputs: []common.ScanInput{
 						{
 							StripPathFromResult: to.Ptr(true),
 							Input:               "/mnt/snapshot1",
-							InputType:           scannertypes.ROOTFS,
+							InputType:           common.ROOTFS,
 						},
 					},
 				},
@@ -112,10 +112,10 @@ func Test_SetMountPointsForFamiliesInput(t *testing.T) {
 			want: &Config{
 				Vulnerabilities: vulnerabilities.Config{
 					Enabled: true,
-					Inputs: []scannertypes.ScanInput{
+					Inputs: []common.ScanInput{
 						{
 							Input:     "/mnt/snapshot1",
-							InputType: scannertypes.ROOTFS,
+							InputType: common.ROOTFS,
 						},
 					},
 					InputFromSbom: false,
@@ -125,7 +125,7 @@ func Test_SetMountPointsForFamiliesInput(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.args.familiesConfig.AddInputs(scannertypes.ROOTFS, tt.args.mountPoints)
+			tt.args.familiesConfig.AddInputs(common.ROOTFS, tt.args.mountPoints)
 			got := tt.args.familiesConfig
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("AddInputs() = %v, want %v", got, tt.want)
