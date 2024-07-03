@@ -16,7 +16,7 @@
 package config
 
 import (
-	"github.com/openclarity/vmclarity/scanner/families/types"
+	"github.com/openclarity/vmclarity/scanner/types"
 	"time"
 )
 

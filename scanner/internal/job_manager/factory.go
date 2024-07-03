@@ -17,37 +17,40 @@ package job_manager // nolint:revive,stylecheck
 
 import (
 	"fmt"
+	"github.com/openclarity/vmclarity/scanner/families/types"
 
 	"github.com/sirupsen/logrus"
 )
 
-type Factory struct {
-	createJobFuncs map[string]CreateJobFunc // scanner name to CreateJobFunc
+type CreateScannerFunc[CT any, RT types.Result[RT]] func(string, CT, *logrus.Entry) types.Scanner[RT]
+
+type Factory[CT any, RT types.Result[RT]] struct {
+	scanners map[string]CreateScannerFunc[CT, RT]
 }
 
-func NewJobFactory() *Factory {
-	return &Factory{createJobFuncs: make(map[string]CreateJobFunc)}
+func NewFactory[CT any, RT types.Result[RT]]() *Factory[CT, RT] {
+	return &Factory[CT, RT]{
+		scanners: make(map[string]CreateScannerFunc[CT, RT]),
+	}
 }
 
-type CreateJobFunc func(name string, conf IsConfig, logger *logrus.Entry, resultChan chan Result) Job
-
-func (f *Factory) Register(name string, createJobFunc CreateJobFunc) {
-	if f.createJobFuncs == nil {
-		f.createJobFuncs = make(map[string]CreateJobFunc)
+func (f *Factory[CT, RT]) Register(name string, createJobFunc CreateScannerFunc[CT, RT]) {
+	if f.scanners == nil {
+		f.scanners = make(map[string]CreateScannerFunc[CT, RT])
 	}
 
-	if _, ok := f.createJobFuncs[name]; ok {
+	if _, ok := f.scanners[name]; ok {
 		logrus.Fatalf("%q already registered", name)
 	}
 
-	f.createJobFuncs[name] = createJobFunc
+	f.scanners[name] = createJobFunc
 }
 
-func (f *Factory) CreateJob(name string, conf IsConfig, logger *logrus.Entry, resultChan chan Result) (Job, error) {
-	createFunc, ok := f.createJobFuncs[name]
+func (f *Factory[CT, RT]) CreateJob(name string, config CT, logger *logrus.Entry) (types.Scanner[RT], error) {
+	createFunc, ok := f.scanners[name]
 	if !ok {
 		return nil, fmt.Errorf("%v not a registered job", name)
 	}
 
-	return createFunc(name, conf, logger, resultChan), nil
+	return createFunc(name, config, logger), nil
 }

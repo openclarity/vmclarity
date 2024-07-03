@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/openclarity/vmclarity/scanner/families"
 	"os"
 	"time"
 
@@ -36,7 +37,6 @@ import (
 
 	apiclient "github.com/openclarity/vmclarity/api/client"
 	"github.com/openclarity/vmclarity/core/log"
-	"github.com/openclarity/vmclarity/scanner/families"
 )
 
 const (

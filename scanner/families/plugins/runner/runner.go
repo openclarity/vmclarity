@@ -20,6 +20,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	job_manager2 "github.com/openclarity/vmclarity/scanner/internal/job_manager"
+	types2 "github.com/openclarity/vmclarity/scanner/types"
 	"io"
 
 	"github.com/sirupsen/logrus"
@@ -31,18 +33,16 @@ import (
 	plugintypes "github.com/openclarity/vmclarity/plugins/sdk-go/types"
 	"github.com/openclarity/vmclarity/scanner/families/plugins/runner/config"
 	"github.com/openclarity/vmclarity/scanner/families/plugins/types"
-	"github.com/openclarity/vmclarity/scanner/job_manager"
-	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
 type Scanner struct {
 	name       string
 	logger     *logrus.Entry
 	config     config.Config
-	resultChan chan job_manager.Result
+	resultChan chan job_manager2.Result
 }
 
-func New(name string, c job_manager.IsConfig, logger *logrus.Entry, resultChan chan job_manager.Result) job_manager.Job {
+func New(name string, c job_manager2.IsConfig, logger *logrus.Entry, resultChan chan job_manager2.Result) job_manager2.Job {
 	conf := *c.(*types.ScannersConfig) // nolint:forcetypeassert
 	return &Scanner{
 		name:       name,
@@ -52,7 +52,7 @@ func New(name string, c job_manager.IsConfig, logger *logrus.Entry, resultChan c
 	}
 }
 
-func (s *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInput string) error {
+func (s *Scanner) Run(ctx context.Context, sourceType types2.InputType, userInput string) error {
 	go func(ctx context.Context) {
 		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
@@ -161,11 +161,11 @@ func (s *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInpu
 	return nil
 }
 
-func (s *Scanner) isValidInputType(sourceType utils.SourceType) bool {
+func (s *Scanner) isValidInputType(sourceType types2.InputType) bool {
 	switch sourceType {
-	case utils.ROOTFS:
+	case types2.ROOTFS:
 		return true
-	case utils.DIR, utils.IMAGE, utils.DOCKERARCHIVE, utils.OCIARCHIVE, utils.OCIDIR, utils.FILE, utils.SBOM:
+	case types2.DIR, types2.IMAGE, types2.DOCKERARCHIVE, types2.OCIARCHIVE, types2.OCIDIR, types2.FILE, types2.SBOM:
 		fallthrough
 	default:
 		s.logger.Infof("source type %v is not supported for plugin, skipping.", sourceType)

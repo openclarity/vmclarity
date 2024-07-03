@@ -23,7 +23,7 @@ import (
 	"github.com/openclarity/vmclarity/scanner/families/secrets/types"
 	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
-	"github.com/openclarity/vmclarity/scanner/job_manager"
+	"github.com/openclarity/vmclarity/scanner/internal/job_manager"
 )
 
 type Secrets struct {

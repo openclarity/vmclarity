@@ -22,9 +22,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	types2 "github.com/openclarity/vmclarity/scanner/types"
+
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/families/types"
-	"github.com/openclarity/vmclarity/scanner/utils"
 	"github.com/openclarity/vmclarity/utils/fsutils/containerrootfs"
 )
 
@@ -59,7 +60,7 @@ func ShouldStripInputPath(inputShouldStrip *bool, familyShouldStrip bool) bool {
 
 func GetInputSize(input types.Input) (int64, error) {
 	switch input.InputType {
-	case string(utils.ROOTFS), string(utils.DIR), string(utils.FILE):
+	case string(types2.ROOTFS), string(types2.DIR), string(types2.FILE):
 		// check if already exists in cache
 		sizeFromCache, ok := InputSizesCache[input.Input]
 		if ok {
@@ -114,15 +115,15 @@ func DirSizeMB(path string) (int64, error) {
 // pass it down from the family manager to the scanners.
 var ContainerRootfsCache *containerrootfs.Cache
 
-func ConvertInputToFilesystem(ctx context.Context, sourceType utils.SourceType, userInput string) (string, func(), error) {
+func ConvertInputToFilesystem(ctx context.Context, sourceType types2.InputType, userInput string) (string, func(), error) {
 	switch sourceType {
-	case utils.DIR, utils.ROOTFS:
+	case types2.DIR, types2.ROOTFS:
 		return userInput, func() {}, nil
-	case utils.IMAGE, utils.DOCKERARCHIVE, utils.OCIARCHIVE, utils.OCIDIR:
+	case types2.IMAGE, types2.DOCKERARCHIVE, types2.OCIARCHIVE, types2.OCIDIR:
 		// TODO(sambetts) Remove this when we're able to pass the
 		// context all the way from the family manager.
 		ctx := containerrootfs.SetCacheForContext(ctx, ContainerRootfsCache)
-		rootfs, err := containerrootfs.ToTempDirectory(ctx, utils.CreateSource(sourceType, false)+":"+userInput)
+		rootfs, err := containerrootfs.ToTempDirectory(ctx, sourceType.GetSource(false)+":"+userInput)
 		if err != nil {
 			return "", func() {}, fmt.Errorf("failed to expand container to rootfs directory: %w", err)
 		}
@@ -133,7 +134,7 @@ func ConvertInputToFilesystem(ctx context.Context, sourceType utils.SourceType, 
 			}
 		}
 		return rootfs.Dir(), cleanup, nil
-	case utils.SBOM, utils.FILE:
+	case types2.SBOM, types2.FILE:
 		fallthrough
 	default:
 		return "", func() {}, fmt.Errorf("unable to convert %s to filesystem", sourceType)

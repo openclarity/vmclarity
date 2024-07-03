@@ -19,14 +19,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/job"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/types"
+	"github.com/openclarity/vmclarity/scanner/internal/job_manager"
+	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 	"os"
 
 	"github.com/openclarity/vmclarity/core/log"
 	sbomtypes "github.com/openclarity/vmclarity/scanner/families/sbom/types"
 	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
-	"github.com/openclarity/vmclarity/scanner/job_manager"
 )
 
 const (
@@ -34,19 +34,20 @@ const (
 )
 
 type Vulnerabilities struct {
-	conf Config
+	conf types.Config
 }
 
-func New(conf Config) familiestypes.Family {
+func New(conf types.Config) familiestypes.Family[*types.Vulnerabilities] {
 	return &Vulnerabilities{
 		conf: conf,
 	}
 }
+
 func (v Vulnerabilities) GetType() familiestypes.FamilyType {
 	return familiestypes.Vulnerabilities
 }
 
-func (v Vulnerabilities) Run(ctx context.Context, res *familiestypes.FamiliesResults) (familiestypes.FamilyResult, error) {
+func (v Vulnerabilities) Run(ctx context.Context, res *familiestypes.Results) (*types.Vulnerabilities, error) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "vulnerabilities")
 	logger.Info("Vulnerabilities Run...")
 
@@ -68,9 +69,9 @@ func (v Vulnerabilities) Run(ctx context.Context, res *familiestypes.FamiliesRes
 			return nil, fmt.Errorf("failed to write sbom to file: %w", err)
 		}
 
-		v.conf.Inputs = append(v.conf.Inputs, familiestypes.Input{
+		v.conf.Inputs = append(v.conf.Inputs, scannertypes.ScanInput{
 			Input:     sbomTempFilePath,
-			InputType: "sbom",
+			InputType: scannertypes.SBOM,
 		})
 	}
 
@@ -78,24 +79,18 @@ func (v Vulnerabilities) Run(ctx context.Context, res *familiestypes.FamiliesRes
 		return nil, errors.New("inputs list is empty")
 	}
 
-	manager := job_manager.New(v.conf.ScannersList, v.conf.ScannersConfig, logger, job.Factory)
+	manager := job_manager.New[types.ScannersConfig, *types.ScannerResult](v.conf.ScannersList, v.conf.ScannersConfig, logger, types.Factory)
 	processResults, err := manager.Process(ctx, v.conf.Inputs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process inputs for vulnerabilities: %w", err)
 	}
 
-	mergedResults := types.NewMergedResults()
-	vulResults := types.NewFamilyResult()
+	vulResults := types.NewVulnerabilities()
 
 	// Merge results.
 	for _, result := range processResults {
-		logger.Infof("Merging result from %q", result.ScannerName)
-		data, ok := result.Result.(*types.ScannerResult)
-		if !ok {
-			return nil, fmt.Errorf("received results of a wrong type: %T", result)
-		}
-		mergedResults = mergedResults.Merge(data)
-		vulResults.Metadata.InputScans = append(vulResults.Metadata.InputScans, result.InputScanMetadata)
+		logger.Infof("Merging result from %q", result.Result.ScannerInfo)
+		vulResults.Merge(result.Result)
 	}
 
 	// TODO:
@@ -105,8 +100,6 @@ func (v Vulnerabilities) Run(ctx context.Context, res *familiestypes.FamiliesRes
 	//	Name: config.ImageIDToScan,
 	//	Hash: config.ImageHashToScan,
 	// })
-
-	vulResults.MergedResults = mergedResults
 
 	logger.Info("Vulnerabilities Done...")
 

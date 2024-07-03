@@ -19,7 +19,7 @@ import (
 	"github.com/openclarity/vmclarity/scanner/families/sbom/syft"
 	"github.com/openclarity/vmclarity/scanner/families/sbom/trivy"
 	"github.com/openclarity/vmclarity/scanner/families/sbom/windows"
-	"github.com/openclarity/vmclarity/scanner/job_manager"
+	"github.com/openclarity/vmclarity/scanner/internal/job_manager"
 )
 
 var Factory = job_manager.NewJobFactory()

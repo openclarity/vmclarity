@@ -16,13 +16,13 @@
 package presenter
 
 import (
+	"github.com/openclarity/vmclarity/scanner/types"
 	"reflect"
 	"testing"
 	"time"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/to"
-	"github.com/openclarity/vmclarity/scanner/families/types"
 )
 
 func Test_getInputScanStats(t *testing.T) {

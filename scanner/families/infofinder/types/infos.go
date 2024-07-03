@@ -30,7 +30,26 @@ type Info struct {
 	Data string   `json:"data"`
 }
 
-type FlattenedInfos struct {
+type FlattenedInfo struct {
 	Info
 	ScannerName string `json:"ScannerName"`
+}
+
+type Infos struct {
+	FlattenedInfos []FlattenedInfo `json:"Infos"`
+}
+
+func NewInfos() *Infos {
+	return &Infos{
+		FlattenedInfos: []FlattenedInfo{},
+	}
+}
+
+func (r *Infos) Merge(result *ScannerResult) {
+	for _, info := range result.Infos {
+		r.FlattenedInfos = append(r.FlattenedInfos, FlattenedInfo{
+			ScannerName: result.ScannerName,
+			Info:        info,
+		})
+	}
 }

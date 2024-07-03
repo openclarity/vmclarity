@@ -15,7 +15,9 @@
 
 package presenter
 
-import "github.com/openclarity/vmclarity/scanner/families"
+import (
+	"github.com/openclarity/vmclarity/scanner/families"
+)
 
 type FilePresenter struct {
 	*DefaultPresenter

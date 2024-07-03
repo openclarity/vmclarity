@@ -18,12 +18,12 @@ package families
 import (
 	"context"
 	"errors"
+	types2 "github.com/openclarity/vmclarity/scanner/types"
 	"testing"
 	"time"
 
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration"
 	"github.com/openclarity/vmclarity/scanner/families/types"
-	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
 type familyNotifierSpy struct {
@@ -48,7 +48,7 @@ func TestManagerRunTimeout(t *testing.T) {
 			Inputs: []types.Input{
 				{
 					Input:     "./",
-					InputType: string(utils.ROOTFS),
+					InputType: string(types2.ROOTFS),
 				},
 			},
 		},

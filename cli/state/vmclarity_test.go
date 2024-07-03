@@ -17,6 +17,7 @@ package state
 
 import (
 	_ "embed"
+	"github.com/openclarity/vmclarity/scanner/families"
 	"testing"
 
 	. "github.com/onsi/gomega"
@@ -25,7 +26,6 @@ import (
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/scanner/config"
-	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/sbom"
 	"github.com/openclarity/vmclarity/scanner/families/types"
 )

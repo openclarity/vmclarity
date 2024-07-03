@@ -17,17 +17,16 @@ package config
 
 import (
 	"github.com/anchore/stereoscope/pkg/image"
-	"github.com/openclarity/vmclarity/scanner/families/types"
-	"time"
-
 	"github.com/anchore/syft/syft/source"
+	"github.com/openclarity/vmclarity/scanner/types"
+	"time"
 )
 
 const (
-	DefaultGrypeListingURL         = "https://toolbox-data.anchore.io/grype/databases/listing.json"
-	DefaultGrypeListingFileTimeout = 60 * time.Second
-	DefaultGrypeUpdateTimeout      = 60 * time.Second
-	DefaultGrypeMaxDatabaseAge     = 120 * time.Hour
+	DefaultListingURL         = "https://toolbox-data.anchore.io/grype/databases/listing.json"
+	DefaultListingFileTimeout = 60 * time.Second
+	DefaultUpdateTimeout      = 60 * time.Second
+	DefaultMaxDatabaseAge     = 120 * time.Hour
 )
 
 type LocalGrypeConfig struct {
@@ -37,9 +36,45 @@ type LocalGrypeConfig struct {
 	MaxAllowedBuiltAge time.Duration   `yaml:"max_allowed_built_age" mapstructure:"max_allowed_built_age"` // Period of time after which the database is considered stale.
 	ListingFileTimeout time.Duration   `yaml:"listing_file_timeout" mapstructure:"listing_file_timeout"`   // Timeout of grype's HTTP client used for downloading the listing file.
 	UpdateTimeout      time.Duration   `yaml:"update_timeout" mapstructure:"update_timeout"`               // Timeout of grype's HTTP client used for downloading the database.
-	Scope              source.Scope    `yaml:"scope" mapstructure:"scope"`                                 // indicates "how" or from "which perspectives" the source object should be cataloged from.
+	Scope              string          `yaml:"scope" mapstructure:"scope"`                                 // indicates "how" or from "which perspectives" the source object should be cataloged from.
 	Registry           *types.Registry `yaml:"registry" mapstructure:"registry"`
 	LocalImageScan     bool            `yaml:"local_image_scan" mapstructure:"local_image_scan"`
+}
+
+func (c *LocalGrypeConfig) GetScope() source.Scope {
+	return source.ParseScope(c.Scope)
+}
+
+func (c *LocalGrypeConfig) GetListingURL() string {
+	if c.ListingURL != "" {
+		return c.ListingURL
+	}
+
+	return DefaultListingURL
+}
+
+func (c *LocalGrypeConfig) GetListingFileTimeout() time.Duration {
+	if c.ListingFileTimeout > 0 {
+		return c.ListingFileTimeout
+	}
+
+	return DefaultListingFileTimeout
+}
+
+func (c *LocalGrypeConfig) GetUpdateTimeout() time.Duration {
+	if c.UpdateTimeout > 0 {
+		return c.UpdateTimeout
+	}
+
+	return DefaultUpdateTimeout
+}
+
+func (c *LocalGrypeConfig) GetMaxDatabaseAge() time.Duration {
+	if c.MaxAllowedBuiltAge > 0 {
+		return c.MaxAllowedBuiltAge
+	}
+
+	return DefaultMaxDatabaseAge
 }
 
 func (c *LocalGrypeConfig) GetRegistryOptions() *image.RegistryOptions {

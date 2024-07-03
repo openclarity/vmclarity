@@ -15,22 +15,7 @@
 
 package types
 
-import (
-	sshtopologyconfig "github.com/openclarity/vmclarity/scanner/families/infofinder/sshtopology/config"
-)
-
-type ScannersConfig struct {
-	SSHTopology sshtopologyconfig.Config `yaml:"ssh_topology" mapstructure:"ssh_topology"`
-}
-
-func (ScannersConfig) IsConfig() {}
-
 type ScannerResult struct {
 	ScannerName string
 	Infos       []Info
-	Error       error
-}
-
-func (r *ScannerResult) GetError() error {
-	return r.Error
 }

@@ -18,6 +18,7 @@ package scanner
 import (
 	"context"
 	"fmt"
+	"github.com/openclarity/vmclarity/scanner/families"
 	"net"
 
 	"gopkg.in/yaml.v3"
@@ -32,7 +33,6 @@ import (
 	discoveryclient "github.com/openclarity/vmclarity/containerruntimediscovery/client"
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/provider"
-	"github.com/openclarity/vmclarity/scanner/families"
 )
 
 var _ provider.Scanner = &Scanner{}

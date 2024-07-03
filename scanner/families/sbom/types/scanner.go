@@ -19,7 +19,7 @@ import (
 	cdx "github.com/CycloneDX/cyclonedx-go"
 	syft "github.com/openclarity/vmclarity/scanner/families/sbom/syft/config"
 	trivy "github.com/openclarity/vmclarity/scanner/families/sbom/trivy/config"
-	"github.com/openclarity/vmclarity/scanner/utils"
+	"github.com/openclarity/vmclarity/scanner/types"
 )
 
 type AnalyzersConfig struct {
@@ -36,7 +36,7 @@ type ScannerResult struct {
 	Error        error
 }
 
-func CreateScannerResult(sbomBytes *cdx.BOM, analyzerName, userInput string, srcType utils.SourceType) *ScannerResult {
+func CreateScannerResult(sbomBytes *cdx.BOM, analyzerName, userInput string, srcType types.InputType) *ScannerResult {
 	return &ScannerResult{
 		Sbom:         sbomBytes,
 		AnalyzerInfo: analyzerName,
@@ -54,7 +54,7 @@ func (r *ScannerResult) GetError() error {
 
 type AppInfo struct {
 	SourceMetadata map[string]string
-	SourceType     utils.SourceType
+	SourceType     types.InputType
 	SourcePath     string
 	SourceHash     string
 }

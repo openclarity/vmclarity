@@ -1,4 +1,4 @@
-// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2024 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,17 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package job
+package types
 
-import (
-	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/grype"
-	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/trivy"
-	"github.com/openclarity/vmclarity/scanner/job_manager"
+import "github.com/openclarity/vmclarity/scanner/internal/job_manager"
+
+var (
+	Factory         = job_manager.NewFactory[ScannersConfig, *ScannerResult]()
+	FactoryRegister = Factory.Register
 )
-
-var Factory = job_manager.NewJobFactory()
-
-func init() {
-	Factory.Register(grype.ScannerName, grype.New)
-	Factory.Register(trivy.ScannerName, trivy.New)
-}

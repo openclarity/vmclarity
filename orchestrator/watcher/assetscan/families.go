@@ -16,14 +16,14 @@
 package assetscan
 
 import (
+	"github.com/openclarity/vmclarity/scanner/families"
+	"github.com/openclarity/vmclarity/scanner/families/exploits/types"
 	"time"
 
 	"github.com/anchore/syft/syft/source"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	cliconfig "github.com/openclarity/vmclarity/scanner/config"
-	"github.com/openclarity/vmclarity/scanner/families"
-	"github.com/openclarity/vmclarity/scanner/families/exploits"
 	exploitsCommon "github.com/openclarity/vmclarity/scanner/families/exploits/common"
 	exploitdbConfig "github.com/openclarity/vmclarity/scanner/families/exploits/exploitdb/config"
 	infofinderTypes "github.com/openclarity/vmclarity/scanner/families/infofinder/types"
@@ -146,7 +146,7 @@ func withExploitsConfig(config *apitypes.ExploitsConfig, opts *ScannerConfig) Fa
 			return
 		}
 
-		c.Exploits = exploits.Config{
+		c.Exploits = types.Config{
 			Enabled:       true,
 			ScannersList:  config.GetScannersList(),
 			InputFromVuln: true,

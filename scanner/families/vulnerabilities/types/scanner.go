@@ -1,4 +1,4 @@
-// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2024 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,25 +15,12 @@
 
 package types
 
-import (
-	grypeconfig "github.com/openclarity/vmclarity/scanner/families/vulnerabilities/grype/config"
-	trivyconfig "github.com/openclarity/vmclarity/scanner/families/vulnerabilities/trivy/config"
-)
-
-type ScannersConfig struct {
-	Grype grypeconfig.Config `yaml:"grype" mapstructure:"grype"`
-	Trivy trivyconfig.Config `yaml:"trivy" mapstructure:"trivy"`
+type ScannerInfo struct {
+	Name string `json:"name"`
 }
-
-func (ScannersConfig) IsConfig() {}
 
 type ScannerResult struct {
-	Matches     Matches `json:"matches"`
-	ScannerInfo Info    `json:"scanner"`
-	Source      Source  `json:"source"`
-	Error       error   `json:"-"`
-}
-
-func (r *ScannerResult) GetError() error {
-	return r.Error
+	Vulnerabilities []Vulnerability `json:"vulnerabilities"`
+	Source          Source          `json:"source"`
+	Scanner         ScannerInfo     `json:"scanner"`
 }

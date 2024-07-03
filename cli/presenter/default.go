@@ -20,8 +20,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-
 	"github.com/openclarity/vmclarity/scanner/families"
+
 	"github.com/openclarity/vmclarity/scanner/families/exploits"
 	"github.com/openclarity/vmclarity/scanner/families/infofinder"
 	"github.com/openclarity/vmclarity/scanner/families/malware"

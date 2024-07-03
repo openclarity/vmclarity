@@ -17,12 +17,12 @@ package fake
 
 import (
 	"context"
+	job_manager2 "github.com/openclarity/vmclarity/scanner/internal/job_manager"
+	"github.com/openclarity/vmclarity/scanner/types"
 
 	log "github.com/sirupsen/logrus"
 
 	misconfigurationTypes "github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
-	"github.com/openclarity/vmclarity/scanner/job_manager"
-	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
 const ScannerName = "fake"
@@ -30,10 +30,10 @@ const ScannerName = "fake"
 type Scanner struct {
 	name       string
 	logger     *log.Entry
-	resultChan chan job_manager.Result
+	resultChan chan job_manager2.Result
 }
 
-func New(_ string, _ job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.Result) job_manager.Job {
+func New(_ string, _ job_manager2.IsConfig, logger *log.Entry, resultChan chan job_manager2.Result) job_manager2.Job {
 	return &Scanner{
 		name:       ScannerName,
 		logger:     logger.Dup().WithField("scanner", ScannerName),
@@ -41,7 +41,7 @@ func New(_ string, _ job_manager.IsConfig, logger *log.Entry, resultChan chan jo
 	}
 }
 
-func (a *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInput string) error {
+func (a *Scanner) Run(ctx context.Context, sourceType types.InputType, userInput string) error {
 	go func() {
 		retResults := misconfigurationTypes.ScannerResult{
 			ScannerName:       ScannerName,

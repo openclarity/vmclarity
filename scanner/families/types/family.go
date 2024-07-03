@@ -17,8 +17,7 @@ package types
 
 import (
 	"context"
-	"errors"
-	"sync"
+	"github.com/openclarity/vmclarity/scanner/types"
 )
 
 type FamilyType string
@@ -35,44 +34,14 @@ const (
 	Plugins          FamilyType = "plugins"
 )
 
-type FamilyResult interface {
-	IsResult()
-}
-
-type Family interface {
+// Family defines interface required to fully run a family.
+type Family[T any] interface {
 	GetType() FamilyType
-	Run(context.Context, *FamiliesResults) (FamilyResult, error)
+	Run(context.Context, *Results) (T, error)
 }
 
-// FamiliesResults stores results from all families. Safe for concurrent usage.
-type FamiliesResults struct {
-	mu      sync.RWMutex
-	results []FamilyResult
-}
-
-func NewFamiliesResults() *FamiliesResults {
-	return &FamiliesResults{}
-}
-
-func (r *FamiliesResults) SetFamilyResult(result FamilyResult) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	r.results = append(r.results, result)
-}
-
-// GetFamilyResult returns results for a specific family from the given results.
-func GetFamilyResult[familyType FamilyResult](r *FamiliesResults) (familyType, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
-	for _, result := range r.results {
-		res, ok := result.(familyType)
-		if ok {
-			return res, nil
-		}
-	}
-
-	var res familyType
-	return res, errors.New("missing result")
+// Scanner defines implementation of a family scanner. It should be
+// concurrently-safe as Scan can be called concurrently.
+type Scanner[T any] interface {
+	Scan(ctx context.Context, sourceType types.InputType, source string) (T, error)
 }

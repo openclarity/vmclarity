@@ -18,24 +18,22 @@ package sbom
 import (
 	"fmt"
 	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
+	types2 "github.com/openclarity/vmclarity/scanner/types"
+	"github.com/openclarity/vmclarity/scanner/utils/converter"
 	"sort"
 	"strings"
 	"time"
 
-	"github.com/openclarity/vmclarity/scanner/utils"
-
 	cdx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
-
-	"github.com/openclarity/vmclarity/scanner/converter"
 )
 
 type componentKey string // Unique identification of a package (name and version)
 
 type MergedResults struct {
 	MergedComponentByKey map[componentKey]*MergedComponent
-	Source               utils.SourceType
+	Source               types2.InputType
 	SourceHash           string
 	SrcMetaData          *cdx.Metadata
 	SrcMetaDataBomRefs   []string
@@ -48,7 +46,7 @@ type MergedComponent struct {
 	BomRefs      []string
 }
 
-func NewMergedResults(sourceType utils.SourceType, hash string) *MergedResults {
+func NewMergedResults(sourceType types2.InputType, hash string) *MergedResults {
 	return &MergedResults{
 		MergedComponentByKey: map[componentKey]*MergedComponent{},
 		Source:               sourceType,
@@ -396,7 +394,7 @@ func (m *MergedResults) getRealBomRefFromPreviousBomRef(bomRef string) string {
 }
 
 // toBomDescriptor returns metadata tailored for the current time and tool details.
-func toBomDescriptor(name, version string, source utils.SourceType, srcMetadata *cdx.Metadata, hash string) *cdx.Metadata {
+func toBomDescriptor(name, version string, source types2.InputType, srcMetadata *cdx.Metadata, hash string) *cdx.Metadata {
 	return &cdx.Metadata{
 		Timestamp: time.Now().Format(time.RFC3339),
 		Tools: &cdx.ToolsChoice{
@@ -412,16 +410,16 @@ func toBomDescriptor(name, version string, source utils.SourceType, srcMetadata 
 	}
 }
 
-func toBomDescriptorComponent(sourceType utils.SourceType, srcMetadata *cdx.Metadata, hash string) *cdx.Component {
+func toBomDescriptorComponent(sourceType types2.InputType, srcMetadata *cdx.Metadata, hash string) *cdx.Component {
 	if srcMetadata.Component == nil {
 		return nil
 	}
 	metaDataComponent := srcMetadata.Component
 
 	switch sourceType {
-	case utils.IMAGE, utils.DOCKERARCHIVE, utils.OCIARCHIVE, utils.OCIDIR:
+	case types2.IMAGE, types2.DOCKERARCHIVE, types2.OCIARCHIVE, types2.OCIDIR:
 		metaDataComponent.Type = cdx.ComponentTypeContainer
-	case utils.DIR, utils.FILE, utils.ROOTFS:
+	case types2.DIR, types2.FILE, types2.ROOTFS:
 		metaDataComponent.Type = cdx.ComponentTypeFile
 		metaDataComponent.Hashes = &[]cdx.Hash{
 			{
@@ -429,7 +427,7 @@ func toBomDescriptorComponent(sourceType utils.SourceType, srcMetadata *cdx.Meta
 				Value:     hash,
 			},
 		}
-	case utils.SBOM:
+	case types2.SBOM:
 	}
 
 	return metaDataComponent

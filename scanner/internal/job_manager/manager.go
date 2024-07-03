@@ -21,21 +21,28 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/openclarity/vmclarity/scanner/families/types"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
-	"github.com/openclarity/vmclarity/scanner/utils"
+	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 	"github.com/sirupsen/logrus"
 	"github.com/sourcegraph/conc/pool"
 	"time"
 )
 
-type Manager struct {
-	jobNames   []string
-	config     IsConfig
-	logger     *logrus.Entry
-	jobFactory *Factory
+type ScanResult[RT types.Result[RT]] struct {
+	Metadata scannertypes.ScanInputMetadata
+	Input    scannertypes.ScanInput
+	Result   RT
+	Error    error
 }
 
-func New(jobNames []string, config IsConfig, logger *logrus.Entry, factory *Factory) *Manager {
-	return &Manager{
+type Manager[CT any, RT types.Result[RT]] struct {
+	jobNames   []string
+	config     CT
+	logger     *logrus.Entry
+	jobFactory *Factory[CT, RT]
+}
+
+func New[CT any, RT types.Result[RT]](jobNames []string, config CT, logger *logrus.Entry, factory *Factory[CT, RT]) *Manager[CT, RT] {
+	return &Manager[CT, RT]{
 		jobNames:   jobNames,
 		config:     config,
 		logger:     logger,
@@ -43,20 +50,13 @@ func New(jobNames []string, config IsConfig, logger *logrus.Entry, factory *Fact
 	}
 }
 
-type ProcessResult struct {
-	types.InputScanMetadata
-	Result Result
-	Input  types.Input
-}
-
-func (m *Manager) Process(ctx context.Context, inputs []types.Input) ([]ProcessResult, error) {
-	mainResultCh := make(chan ProcessResult)
+func (m *Manager[CT, RT]) Process(ctx context.Context, inputs []scannertypes.ScanInput) ([]ScanResult[RT], error) {
+	mainResultCh := make(chan ScanResult[RT])
 	workerPool := pool.New().WithContext(ctx).WithFirstError().WithCancelOnError()
 
 	// Create processing jobs
 	for _, jobName := range m.jobNames {
-		jobResultCh := make(chan Result)
-		job, err := m.jobFactory.CreateJob(jobName, m.config, m.logger, jobResultCh)
+		job, err := m.jobFactory.CreateJob(jobName, m.config, m.logger)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create job %s: %w", jobName, err)
 		}
@@ -68,17 +68,13 @@ func (m *Manager) Process(ctx context.Context, inputs []types.Input) ([]ProcessR
 
 				// Process
 				startTime := time.Now()
-				err := job.Run(ctx, utils.SourceType(input.InputType), input.Input)
-				if err != nil {
-					return fmt.Errorf("failed to run job %s for input %s: %w", jobName, input.Input, err)
-				}
+				scanResult, scanErr := job.Scan(ctx, input.InputType, input.Input)
 				inputSize, _ := familiesutils.GetInputSize(input) // in megabytes
 
 				// Wait for job to finish by waiting for the result. Once done, forward the
 				// result formatted to main result channel
-				jobResult := <-jobResultCh
-				mainResultCh <- ProcessResult{
-					InputScanMetadata: types.CreateInputScanMetadata(
+				mainResultCh <- ScanResult[RT]{
+					Metadata: scannertypes.NewScanInputMetadata(
 						jobName,
 						startTime,
 						time.Now(),
@@ -86,7 +82,8 @@ func (m *Manager) Process(ctx context.Context, inputs []types.Input) ([]ProcessR
 						input,
 					),
 					Input:  input,
-					Result: jobResult,
+					Result: scanResult,
+					Error:  scanErr,
 				}
 
 				m.logger.Infof("Finished running job %s for input %s", jobName, input.Input)
@@ -107,14 +104,14 @@ func (m *Manager) Process(ctx context.Context, inputs []types.Input) ([]ProcessR
 	// Read results from the main channel
 	var resultError error
 	var totalSuccessfulResultsCount int
-	results := make([]ProcessResult, 0, len(m.jobNames))
+	results := make([]ScanResult[RT], 0, len(m.jobNames))
 	for processResult := range mainResultCh {
-		if err := processResult.Result.GetError(); err != nil {
-			errStr := fmt.Errorf("%q scanner job failed: %w", processResult.ScannerName, err)
+		if err := processResult.Error; err != nil {
+			errStr := fmt.Errorf("%q scanner job failed: %w", processResult.Metadata, err)
 			m.logger.Warning(errStr)
 			resultError = multierror.Append(resultError, errStr)
 		} else {
-			m.logger.Infof("Got result for scanner job %q", processResult.ScannerName)
+			m.logger.Infof("Got result for scanner job %q", processResult.Metadata)
 			results = append(results, processResult)
 			totalSuccessfulResultsCount++
 		}

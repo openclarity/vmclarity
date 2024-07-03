@@ -21,12 +21,13 @@ import (
 	"fmt"
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/core/version"
-	"github.com/openclarity/vmclarity/scanner/converter"
 	"github.com/openclarity/vmclarity/scanner/families/sbom/job"
 	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
 	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
-	"github.com/openclarity/vmclarity/scanner/job_manager"
+	"github.com/openclarity/vmclarity/scanner/internal/job_manager"
+	types2 "github.com/openclarity/vmclarity/scanner/types"
 	"github.com/openclarity/vmclarity/scanner/utils"
+	"github.com/openclarity/vmclarity/scanner/utils/converter"
 )
 
 type SBOM struct {
@@ -55,7 +56,7 @@ func (s SBOM) Run(ctx context.Context, _ *familiestypes.FamiliesResults) (famili
 	// TODO: move the logic from cli utils to shared utils
 	// TODO: now that we support multiple inputs,
 	//  we need to change the fact the MergedResults assumes it is only for 1 input?
-	hash, err := utils.GenerateHash(utils.SourceType(s.conf.Inputs[0].InputType), s.conf.Inputs[0].Input)
+	hash, err := utils.GenerateHash(types2.InputType(s.conf.Inputs[0].InputType), s.conf.Inputs[0].Input)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate hash for source %s: %w", s.conf.Inputs[0].Input, err)
 	}
@@ -66,7 +67,7 @@ func (s SBOM) Run(ctx context.Context, _ *familiestypes.FamiliesResults) (famili
 		return nil, fmt.Errorf("failed to process inputs for sbom: %w", err)
 	}
 
-	mergedResults := NewMergedResults(utils.SourceType(s.conf.Inputs[0].InputType), hash)
+	mergedResults := NewMergedResults(types2.InputType(s.conf.Inputs[0].InputType), hash)
 
 	sbomResults := types.NewFamilyResult()
 
@@ -87,7 +88,7 @@ func (s SBOM) Run(ctx context.Context, _ *familiestypes.FamiliesResults) (famili
 		if err != nil {
 			return nil, fmt.Errorf("failed to get CDX SBOM from path=%s: %w", with.SbomPath, err)
 		}
-		results := types.CreateScannerResult(cdxBOMBytes, name, with.SbomPath, utils.SBOM)
+		results := types.CreateScannerResult(cdxBOMBytes, name, with.SbomPath, types2.SBOM)
 		logger.Infof("Merging result from %q", with.SbomPath)
 		mergedResults = mergedResults.Merge(results)
 	}
