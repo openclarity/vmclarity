@@ -17,7 +17,7 @@ package families
 
 import (
 	"context"
-	"github.com/openclarity/vmclarity/scanner/types"
+	"github.com/openclarity/vmclarity/scanner/common"
 )
 
 type FamilyType string
@@ -43,5 +43,5 @@ type Family[T any] interface {
 // Scanner defines implementation of a family scanner. It should be
 // concurrently-safe as Scan can be called concurrently.
 type Scanner[T any] interface {
-	Scan(ctx context.Context, sourceType types.InputType, source string) (T, error)
+	Scan(ctx context.Context, sourceType common.InputType, source string) (T, error)
 }

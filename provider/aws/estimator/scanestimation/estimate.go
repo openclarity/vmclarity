@@ -19,12 +19,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families"
-	"github.com/openclarity/vmclarity/scanner/types"
-
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/pricing"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/to"
@@ -300,7 +298,7 @@ func findMatchingStatsForInputTypeRootFS(stats *[]apitypes.AssetScanInputScanSta
 		return apitypes.AssetScanInputScanStats{}, false
 	}
 	for i, scanStats := range *stats {
-		if *scanStats.Type == string(types.ROOTFS) {
+		if *scanStats.Type == string(common.ROOTFS) {
 			ret := *stats
 			return ret[i], true
 		}

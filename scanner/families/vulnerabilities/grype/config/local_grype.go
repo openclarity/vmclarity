@@ -18,7 +18,7 @@ package config
 import (
 	"github.com/anchore/stereoscope/pkg/image"
 	"github.com/anchore/syft/syft/source"
-	"github.com/openclarity/vmclarity/scanner/types"
+	"github.com/openclarity/vmclarity/scanner/common"
 	"time"
 )
 
@@ -30,15 +30,15 @@ const (
 )
 
 type LocalGrypeConfig struct {
-	UpdateDB           bool            `yaml:"update_db" mapstructure:"update_db"`
-	DBRootDir          string          `yaml:"db_root_dir" mapstructure:"db_root_dir"`                     // Location to write the vulnerability database cache.
-	ListingURL         string          `yaml:"listing_url" mapstructure:"listing_url"`                     // URL of the vulnerability database.
-	MaxAllowedBuiltAge time.Duration   `yaml:"max_allowed_built_age" mapstructure:"max_allowed_built_age"` // Period of time after which the database is considered stale.
-	ListingFileTimeout time.Duration   `yaml:"listing_file_timeout" mapstructure:"listing_file_timeout"`   // Timeout of grype's HTTP client used for downloading the listing file.
-	UpdateTimeout      time.Duration   `yaml:"update_timeout" mapstructure:"update_timeout"`               // Timeout of grype's HTTP client used for downloading the database.
-	Scope              string          `yaml:"scope" mapstructure:"scope"`                                 // indicates "how" or from "which perspectives" the source object should be cataloged from.
-	Registry           *types.Registry `yaml:"registry" mapstructure:"registry"`
-	LocalImageScan     bool            `yaml:"local_image_scan" mapstructure:"local_image_scan"`
+	UpdateDB           bool             `yaml:"update_db" mapstructure:"update_db"`
+	DBRootDir          string           `yaml:"db_root_dir" mapstructure:"db_root_dir"`                     // Location to write the vulnerability database cache.
+	ListingURL         string           `yaml:"listing_url" mapstructure:"listing_url"`                     // URL of the vulnerability database.
+	MaxAllowedBuiltAge time.Duration    `yaml:"max_allowed_built_age" mapstructure:"max_allowed_built_age"` // Period of time after which the database is considered stale.
+	ListingFileTimeout time.Duration    `yaml:"listing_file_timeout" mapstructure:"listing_file_timeout"`   // Timeout of grype's HTTP client used for downloading the listing file.
+	UpdateTimeout      time.Duration    `yaml:"update_timeout" mapstructure:"update_timeout"`               // Timeout of grype's HTTP client used for downloading the database.
+	Scope              string           `yaml:"scope" mapstructure:"scope"`                                 // indicates "how" or from "which perspectives" the source object should be cataloged from.
+	Registry           *common.Registry `yaml:"registry" mapstructure:"registry"`
+	LocalImageScan     bool             `yaml:"local_image_scan" mapstructure:"local_image_scan"`
 }
 
 func (c *LocalGrypeConfig) GetScope() source.Scope {

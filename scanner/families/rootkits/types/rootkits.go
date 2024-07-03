@@ -41,6 +41,10 @@ func NewRootkits() *Rootkits {
 	}
 }
 
-func (m *Rootkits) Merge(other *ScannerResult) {
-	m.MergedRootkits = append(m.MergedRootkits, other.Rootkits...)
+func (m *Rootkits) Merge(result *ScannerResult) {
+	if result == nil {
+		return
+	}
+
+	m.MergedRootkits = append(m.MergedRootkits, result.Rootkits...)
 }

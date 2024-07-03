@@ -36,6 +36,10 @@ func (r *Result) GetFindingsCount() int {
 }
 
 func (r *Result) Merge(result *ScannerResult) {
+	if result == nil {
+		return
+	}
+
 	r.Findings = append(r.Findings, result.Findings...)
 	r.PluginOutputs[result.ScannerName] = result.Output
 }

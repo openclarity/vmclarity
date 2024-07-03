@@ -17,7 +17,6 @@ package scanestimation
 
 import (
 	"context"
-	"github.com/openclarity/vmclarity/scanner/types"
 	"reflect"
 	"testing"
 	"time"
@@ -81,7 +80,7 @@ func Test_getScanSize(t *testing.T) {
 						{
 							Path: to.Ptr("/"),
 							Size: to.Ptr(int64(10)),
-							Type: to.Ptr(string(types.ROOTFS)),
+							Type: to.Ptr(string(common.ROOTFS)),
 						},
 					},
 				},
@@ -100,14 +99,14 @@ func Test_getScanSize(t *testing.T) {
 						{
 							Path: to.Ptr("/dir"),
 							Size: to.Ptr(int64(3)),
-							Type: to.Ptr(string(types.DIR)),
+							Type: to.Ptr(string(common.DIR)),
 						},
 					},
 					Malware: &[]apitypes.AssetScanInputScanStats{
 						{
 							Path: to.Ptr("/"),
 							Size: to.Ptr(int64(10)),
-							Type: to.Ptr(string(types.ROOTFS)),
+							Type: to.Ptr(string(common.ROOTFS)),
 						},
 					},
 				},
@@ -168,7 +167,7 @@ func Test_getScanDuration(t *testing.T) {
 								EndTime:   &timeNow,
 								StartTime: to.Ptr(timeNow.Add(-50 * time.Second)),
 							},
-							Type: to.Ptr(string(types.ROOTFS)),
+							Type: to.Ptr(string(common.ROOTFS)),
 						},
 					},
 					Secrets: &[]apitypes.AssetScanInputScanStats{
@@ -178,7 +177,7 @@ func Test_getScanDuration(t *testing.T) {
 								EndTime:   &timeNow,
 								StartTime: to.Ptr(timeNow.Add(-360 * time.Second)),
 							},
-							Type: to.Ptr(string(types.ROOTFS)),
+							Type: to.Ptr(string(common.ROOTFS)),
 						},
 					},
 				},
@@ -263,7 +262,7 @@ func TestScanEstimator_EstimateAssetScan(t *testing.T) {
 									EndTime:   &timeNow,
 									StartTime: to.Ptr(timeNow.Add(-50 * time.Second)),
 								},
-								Type: to.Ptr(string(types.ROOTFS)),
+								Type: to.Ptr(string(common.ROOTFS)),
 							},
 						},
 						Secrets: &[]apitypes.AssetScanInputScanStats{
@@ -273,7 +272,7 @@ func TestScanEstimator_EstimateAssetScan(t *testing.T) {
 									EndTime:   &timeNow,
 									StartTime: to.Ptr(timeNow.Add(-360 * time.Second)),
 								},
-								Type: to.Ptr(string(types.ROOTFS)),
+								Type: to.Ptr(string(common.ROOTFS)),
 							},
 						},
 					},

@@ -16,16 +16,16 @@
 package types
 
 import (
+	"github.com/openclarity/vmclarity/scanner/common"
 	chrootkitconfig "github.com/openclarity/vmclarity/scanner/families/rootkits/chkrootkit/config"
-	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 )
 
 type Config struct {
-	Enabled         bool                     `yaml:"enabled" mapstructure:"enabled"`
-	ScannersList    []string                 `yaml:"scanners_list" mapstructure:"scanners_list"`
-	StripInputPaths bool                     `yaml:"strip_input_paths" mapstructure:"strip_input_paths"`
-	Inputs          []scannertypes.ScanInput `yaml:"inputs" mapstructure:"inputs"`
-	ScannersConfig  ScannersConfig           `yaml:"scanners_config" mapstructure:"scanners_config"`
+	Enabled         bool               `yaml:"enabled" mapstructure:"enabled"`
+	ScannersList    []string           `yaml:"scanners_list" mapstructure:"scanners_list"`
+	StripInputPaths bool               `yaml:"strip_input_paths" mapstructure:"strip_input_paths"`
+	Inputs          []common.ScanInput `yaml:"inputs" mapstructure:"inputs"`
+	ScannersConfig  ScannersConfig     `yaml:"scanners_config" mapstructure:"scanners_config"`
 }
 
 type ScannersConfig struct {

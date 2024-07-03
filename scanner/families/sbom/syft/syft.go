@@ -19,9 +19,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families"
+	"github.com/openclarity/vmclarity/scanner/common"
+	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
-	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 
 	"github.com/anchore/syft/syft"
 	"github.com/anchore/syft/syft/cataloging"
@@ -41,14 +41,14 @@ type Analyzer struct {
 	config config.Config
 }
 
-func New(_ string, config types.AnalyzersConfig, logger *log.Entry) (familiestypes.Scanner[*types.ScannerResult], error) {
+func New(_ string, config types.AnalyzersConfig, logger *log.Entry) (families.Scanner[*types.ScannerResult], error) {
 	return &Analyzer{
 		logger: logger.Dup().WithField("analyzer", AnalyzerName),
 		config: config.Syft,
 	}, nil
 }
 
-func (a *Analyzer) Scan(ctx context.Context, sourceType scannertypes.InputType, userInput string) (*types.ScannerResult, error) {
+func (a *Analyzer) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
 	src := sourceType.GetSource(a.config.LocalImageScan)
 
 	a.logger.Infof("Called %s analyzer on source %s", AnalyzerName, src)
@@ -82,7 +82,7 @@ func (a *Analyzer) Scan(ctx context.Context, sourceType scannertypes.InputType, 
 	// Get the RepoDigest/ImageID from image metadata and use it as SourceHash in the Result
 	// that will be added to the component hash of metadata during the merge.
 	switch sourceType {
-	case scannertypes.IMAGE, scannertypes.DOCKERARCHIVE, scannertypes.OCIDIR, scannertypes.OCIARCHIVE:
+	case common.IMAGE, common.DOCKERARCHIVE, common.OCIDIR, common.OCIARCHIVE:
 		hash, imageInfo, err := getImageInfo(sbom, userInput)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get image hash from sbom: %w", err)
@@ -92,7 +92,7 @@ func (a *Analyzer) Scan(ctx context.Context, sourceType scannertypes.InputType, 
 		result.AppInfo.SourceHash = hash
 		result.AppInfo.SourceMetadata = imageInfo.ToMetadata()
 
-	case scannertypes.SBOM, scannertypes.DIR, scannertypes.ROOTFS, scannertypes.FILE:
+	case common.SBOM, common.DIR, common.ROOTFS, common.FILE:
 		// ignore
 	default:
 		// ignore

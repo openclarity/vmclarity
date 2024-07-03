@@ -80,12 +80,12 @@ func (m *Vulnerabilities) ToSlice() [][]MergedVulnerability {
 	return ret
 }
 
-func (m *Vulnerabilities) Merge(other *ScannerResult) {
-	if other == nil {
+func (m *Vulnerabilities) Merge(result *ScannerResult) {
+	if result == nil {
 		return
 	}
 
-	otherVulnerabilityByKey := toVulnerabilityByKey(other.Vulnerabilities)
+	otherVulnerabilityByKey := toVulnerabilityByKey(result.Vulnerabilities)
 
 	// go over other vulnerabilities list
 	// 1. merge mutual vulnerabilities
@@ -94,16 +94,16 @@ func (m *Vulnerabilities) Merge(other *ScannerResult) {
 		// look for other vulnerability key in the current merged vulnerabilities list
 		if mergedVulnerabilities, ok := m.MergedVulnerabilitiesByKey[key]; !ok {
 			// add non mutual vulnerability
-			log.Debugf("Adding new vulnerability results from %v. key=%v", other.Scanner, key)
-			m.MergedVulnerabilitiesByKey[key] = []MergedVulnerability{*NewMergedVulnerability(otherVulnerability, other.Scanner)}
+			log.Debugf("Adding new vulnerability results from %v. key=%v", result.Scanner, key)
+			m.MergedVulnerabilitiesByKey[key] = []MergedVulnerability{*NewMergedVulnerability(otherVulnerability, result.Scanner)}
 		} else {
-			m.MergedVulnerabilitiesByKey[key] = handleVulnerabilityWithExistingKey(mergedVulnerabilities, otherVulnerability, other.Scanner)
+			m.MergedVulnerabilitiesByKey[key] = handleVulnerabilityWithExistingKey(mergedVulnerabilities, otherVulnerability, result.Scanner)
 		}
 	}
 
 	// TODO: what should we do with other.Source
 	// Set Source only once
 	if m.Source.Type == "" {
-		m.Source = other.Source
+		m.Source = result.Source
 	}
 }

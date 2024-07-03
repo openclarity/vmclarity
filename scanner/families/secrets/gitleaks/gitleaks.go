@@ -19,8 +19,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families"
-	scannertypes "github.com/openclarity/vmclarity/scanner/types"
+	"github.com/openclarity/vmclarity/scanner/common"
+	"github.com/openclarity/vmclarity/scanner/families"
 	"os"
 	"os/exec"
 
@@ -39,14 +39,14 @@ type Scanner struct {
 	config config.Config
 }
 
-func New(_ string, config types.ScannersConfig, logger *log.Entry) (familiestypes.Scanner[*types.ScannerResult], error) {
+func New(_ string, config types.ScannersConfig, logger *log.Entry) (families.Scanner[*types.ScannerResult], error) {
 	return &Scanner{
 		logger: logger.Dup().WithField("scanner", ScannerName),
 		config: config.Gitleaks,
 	}, nil
 }
 
-func (a *Scanner) Scan(ctx context.Context, sourceType scannertypes.InputType, userInput string) (*types.ScannerResult, error) {
+func (a *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
 	if !a.isValidInputType(sourceType) {
 		return nil, fmt.Errorf("received invalid input type for gitleaks scanner: %v", sourceType)
 	}
@@ -112,11 +112,11 @@ func (a *Scanner) Scan(ctx context.Context, sourceType scannertypes.InputType, u
 	}, nil
 }
 
-func (a *Scanner) isValidInputType(sourceType scannertypes.InputType) bool {
+func (a *Scanner) isValidInputType(sourceType common.InputType) bool {
 	switch sourceType {
-	case scannertypes.DIR, scannertypes.ROOTFS, scannertypes.IMAGE, scannertypes.DOCKERARCHIVE, scannertypes.OCIARCHIVE, scannertypes.OCIDIR:
+	case common.DIR, common.ROOTFS, common.IMAGE, common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR:
 		return true
-	case scannertypes.FILE, scannertypes.SBOM:
+	case common.FILE, common.SBOM:
 		fallthrough
 	default:
 		a.logger.Infof("source type %v is not supported for gitleaks, skipping.", sourceType)

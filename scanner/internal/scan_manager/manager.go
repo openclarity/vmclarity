@@ -19,16 +19,16 @@ import (
 	"context"
 	"fmt"
 	"github.com/hashicorp/go-multierror"
+	"github.com/openclarity/vmclarity/scanner/common"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
-	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 	"github.com/sirupsen/logrus"
 	"github.com/sourcegraph/conc/pool"
 	"time"
 )
 
 type InputScanResult[T any] struct {
-	Metadata   scannertypes.ScanInputMetadata
-	ScanInput  scannertypes.ScanInput
+	Metadata   common.ScanInputMetadata
+	ScanInput  common.ScanInput
 	ScanResult T
 }
 
@@ -53,7 +53,7 @@ func New[CT, RT any](scanners []string, config CT, logger *logrus.Entry, factory
 	}
 }
 
-func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []scannertypes.ScanInput) ([]InputScanResult[RT], error) {
+func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) ([]InputScanResult[RT], error) {
 	resultCh := make(chan InputScanResultWithError[RT])
 
 	// Create processing jobs, do not cancel on error
@@ -77,16 +77,11 @@ func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []scannertypes.ScanIn
 				inputScanResult, inputScanErr := scanner.Scan(ctx, input.InputType, input.Input)
 				inputSize, _ := familiesutils.GetInputSize(input) // in megabytes
 				endTime := time.Now()
-
-				// Skip doing anything in case the scanner returned nil result and nil error
-				if inputScanResult == nil && inputScanErr == nil {
-					return nil
-				}
-
+				
 				// Forward the result in custom format to main result channel
 				resultCh <- InputScanResultWithError[RT]{
 					InputScanResult: InputScanResult[RT]{
-						Metadata: scannertypes.NewScanInputMetadata(
+						Metadata: common.NewScanInputMetadata(
 							scannerName,
 							startTime,
 							endTime,

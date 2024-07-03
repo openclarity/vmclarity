@@ -19,8 +19,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families"
-	scannertypes "github.com/openclarity/vmclarity/scanner/types"
+	"github.com/openclarity/vmclarity/scanner/common"
+	"github.com/openclarity/vmclarity/scanner/families"
 
 	"github.com/anchore/clio"
 	"github.com/anchore/grype/grype"
@@ -56,14 +56,14 @@ type LocalScanner struct {
 	config config.LocalGrypeConfig
 }
 
-func newLocalScanner(config types.ScannersConfig, logger *log.Entry) familiestypes.Scanner[*types.ScannerResult] {
+func newLocalScanner(config types.ScannersConfig, logger *log.Entry) families.Scanner[*types.ScannerResult] {
 	return &LocalScanner{
 		logger: logger.Dup().WithField("scanner", ScannerName).WithField("mode", "local"),
 		config: config.Grype.Local,
 	}
 }
 
-func (s *LocalScanner) Scan(ctx context.Context, sourceType scannertypes.InputType, userInput string) (*types.ScannerResult, error) {
+func (s *LocalScanner) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
 	// TODO: make `loading DB` and `gathering packages` work in parallel
 	// https://github.com/anchore/grype/blob/7e8ee40996ba3a4defb5e887ab0177d99cd0e663/cmd/root.go#L240
 
@@ -85,7 +85,7 @@ func (s *LocalScanner) Scan(ctx context.Context, sourceType scannertypes.InputTy
 	var hash string
 	var metadata map[string]string
 	origInput := userInput
-	if sourceType == scannertypes.SBOM {
+	if sourceType == common.SBOM {
 		bom, err := sbom.NewCycloneDX(userInput)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create CycloneDX SBOM: %w", err)

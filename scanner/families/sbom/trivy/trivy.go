@@ -19,9 +19,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families"
+	"github.com/openclarity/vmclarity/scanner/common"
+	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
-	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 	"os"
 
 	trivyftypes "github.com/aquasecurity/trivy/pkg/fanal/types"
@@ -46,7 +46,7 @@ type Analyzer struct {
 	config config.Config
 }
 
-func New(_ string, config types.AnalyzersConfig, logger *log.Entry) (familiestypes.Scanner[*types.ScannerResult], error) {
+func New(_ string, config types.AnalyzersConfig, logger *log.Entry) (families.Scanner[*types.ScannerResult], error) {
 	return &Analyzer{
 		logger: logger.Dup().WithField("analyzer", AnalyzerName),
 		config: config.Trivy,
@@ -54,7 +54,7 @@ func New(_ string, config types.AnalyzersConfig, logger *log.Entry) (familiestyp
 }
 
 // nolint:cyclop
-func (a *Analyzer) Scan(ctx context.Context, sourceType scannertypes.InputType, userInput string) (*types.ScannerResult, error) {
+func (a *Analyzer) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
 	a.logger.Infof("Called %s analyzer on source %v %v", AnalyzerName, sourceType, userInput)
 
 	tempFile, err := os.CreateTemp(a.config.TempDir, "trivy.sbom.*.json")
@@ -70,9 +70,9 @@ func (a *Analyzer) Scan(ctx context.Context, sourceType scannertypes.InputType, 
 
 	// Skip this analyser for input types we don't support
 	switch sourceType {
-	case scannertypes.IMAGE, scannertypes.ROOTFS, scannertypes.DIR, scannertypes.FILE, scannertypes.DOCKERARCHIVE, scannertypes.OCIARCHIVE, scannertypes.OCIDIR:
+	case common.IMAGE, common.ROOTFS, common.DIR, common.FILE, common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR:
 		// These are all supported for SBOM analysing so continue
-	case scannertypes.SBOM:
+	case common.SBOM:
 		fallthrough
 	default:
 		return nil, fmt.Errorf("skipping analyze unsupported source type: %s", sourceType)
@@ -145,7 +145,7 @@ func (a *Analyzer) Scan(ctx context.Context, sourceType scannertypes.InputType, 
 	// SourceHash in the Result that will be added to the component
 	// hash of metadata during the merge.
 	switch sourceType {
-	case scannertypes.IMAGE, scannertypes.DOCKERARCHIVE, scannertypes.OCIDIR, scannertypes.OCIARCHIVE:
+	case common.IMAGE, common.DOCKERARCHIVE, common.OCIDIR, common.OCIARCHIVE:
 		hash, imageInfo, err := getImageInfo(bom.Metadata.Component.Properties, userInput)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get image hash from sbom: %w", err)
@@ -155,7 +155,7 @@ func (a *Analyzer) Scan(ctx context.Context, sourceType scannertypes.InputType, 
 		result.AppInfo.SourceHash = hash
 		result.AppInfo.SourceMetadata = imageInfo.ToMetadata()
 
-	case scannertypes.SBOM, scannertypes.DIR, scannertypes.ROOTFS, scannertypes.FILE:
+	case common.SBOM, common.DIR, common.ROOTFS, common.FILE:
 		// ignore
 	default:
 		// ignore

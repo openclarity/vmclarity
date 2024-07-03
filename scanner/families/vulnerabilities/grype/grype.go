@@ -17,7 +17,7 @@ package grype
 
 import (
 	"fmt"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families"
+	"github.com/openclarity/vmclarity/scanner/families"
 	grypeconfig "github.com/openclarity/vmclarity/scanner/families/vulnerabilities/grype/config"
 	"strings"
 
@@ -34,7 +34,7 @@ const (
 	ScannerName = "grype"
 )
 
-func New(_ string, config types.ScannersConfig, logger *log.Entry) (familiestypes.Scanner[*types.ScannerResult], error) {
+func New(_ string, config types.ScannersConfig, logger *log.Entry) (families.Scanner[*types.ScannerResult], error) {
 	switch config.Grype.Mode {
 	case grypeconfig.ModeLocal:
 		return newLocalScanner(config, logger), nil

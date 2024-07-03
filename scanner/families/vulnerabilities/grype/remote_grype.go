@@ -19,9 +19,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families"
+	"github.com/openclarity/vmclarity/scanner/common"
+	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/types"
-	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 	"os"
 	"time"
 
@@ -42,7 +42,7 @@ type RemoteScanner struct {
 	timeout time.Duration
 }
 
-func newRemoteScanner(config types.ScannersConfig, logger *log.Entry) familiestypes.Scanner[*types.ScannerResult] {
+func newRemoteScanner(config types.ScannersConfig, logger *log.Entry) families.Scanner[*types.ScannerResult] {
 	cfg := grype_client.DefaultTransportConfig().
 		WithSchemes(config.Grype.Remote.GrypeServerSchemes).
 		WithHost(config.Grype.Remote.GrypeServerAddress)
@@ -54,9 +54,9 @@ func newRemoteScanner(config types.ScannersConfig, logger *log.Entry) familiesty
 	}
 }
 
-func (s *RemoteScanner) Scan(ctx context.Context, sourceType scannertypes.InputType, userInput string) (*types.ScannerResult, error) {
+func (s *RemoteScanner) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
 	// remote-grype supports only SBOM as a source input since it sends the SBOM to a centralized grype server for scanning.
-	if sourceType != scannertypes.SBOM {
+	if sourceType != common.SBOM {
 		s.logger.Infof("Ignoring non SBOM input. type=%v", sourceType)
 		return nil, nil
 	}

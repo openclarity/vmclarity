@@ -16,11 +16,11 @@
 package config
 
 import (
-	familiestypes "github.com/openclarity/vmclarity/scanner/types"
+	"github.com/openclarity/vmclarity/scanner/common"
 	"time"
 )
 
 type Config struct {
-	Timeout  time.Duration           `yaml:"timeout" mapstructure:"timeout"`
-	Registry *familiestypes.Registry `yaml:"registry" mapstructure:"registry"`
+	Timeout  time.Duration    `yaml:"timeout" mapstructure:"timeout"`
+	Registry *common.Registry `yaml:"registry" mapstructure:"registry"`
 }

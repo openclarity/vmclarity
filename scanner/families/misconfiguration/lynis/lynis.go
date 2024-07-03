@@ -18,9 +18,9 @@ package lynis
 import (
 	"context"
 	"fmt"
-	familiestypes "github.com/openclarity/vmclarity/scanner/families"
+	"github.com/openclarity/vmclarity/scanner/common"
+	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/lynis/config"
-	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 	"os"
 	"os/exec"
 	"path"
@@ -41,15 +41,15 @@ type Scanner struct {
 	config config.Config
 }
 
-func New(_ string, config types.ScannersConfig, logger *log.Entry) familiestypes.Scanner[*types.ScannerResult] {
+func New(_ string, config types.ScannersConfig, logger *log.Entry) (families.Scanner[*types.ScannerResult], error) {
 	return &Scanner{
 		logger: logger.Dup().WithField("scanner", ScannerName),
 		config: config.Lynis,
-	}
+	}, nil
 }
 
 // nolint: cyclop
-func (a *Scanner) Scan(ctx context.Context, sourceType scannertypes.InputType, userInput string) (*types.ScannerResult, error) {
+func (a *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
 	// Validate this is an input type supported by the scanner,
 	// otherwise return skipped.
 	if !a.isValidInputType(sourceType) {
@@ -132,11 +132,11 @@ func (a *Scanner) Scan(ctx context.Context, sourceType scannertypes.InputType, u
 	}, nil
 }
 
-func (a *Scanner) isValidInputType(sourceType scannertypes.InputType) bool {
+func (a *Scanner) isValidInputType(sourceType common.InputType) bool {
 	switch sourceType {
-	case scannertypes.ROOTFS, scannertypes.IMAGE, scannertypes.DOCKERARCHIVE, scannertypes.OCIARCHIVE, scannertypes.OCIDIR:
+	case common.ROOTFS, common.IMAGE, common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR:
 		return true
-	case scannertypes.DIR, scannertypes.FILE, scannertypes.SBOM:
+	case common.DIR, common.FILE, common.SBOM:
 		a.logger.Infof("source type %v is not supported for lynis, skipping.", sourceType)
 	default:
 		a.logger.Infof("unknown source type %v, skipping.", sourceType)

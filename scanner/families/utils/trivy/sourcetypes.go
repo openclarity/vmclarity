@@ -17,7 +17,7 @@ package trivy
 
 import (
 	"fmt"
-	types2 "github.com/openclarity/vmclarity/scanner/types"
+	"github.com/openclarity/vmclarity/scanner/common"
 	"os"
 
 	stereoscopeFile "github.com/anchore/stereoscope/pkg/file"
@@ -27,17 +27,17 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func SourceToTrivySource(sourceType types2.InputType) (artifact.TargetKind, error) {
+func SourceToTrivySource(sourceType common.InputType) (artifact.TargetKind, error) {
 	switch sourceType {
-	case types2.IMAGE:
+	case common.IMAGE:
 		return artifact.TargetContainerImage, nil
-	case types2.DOCKERARCHIVE, types2.OCIARCHIVE, types2.OCIDIR:
+	case common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR:
 		return artifact.TargetImageArchive, nil
-	case types2.ROOTFS:
+	case common.ROOTFS:
 		return artifact.TargetRootfs, nil
-	case types2.DIR, types2.FILE:
+	case common.DIR, common.FILE:
 		return artifact.TargetFilesystem, nil
-	case types2.SBOM:
+	case common.SBOM:
 		return artifact.TargetSBOM, nil
 	}
 	return artifact.TargetKind("Unknown"), fmt.Errorf("unable to convert source type %v to trivy type", sourceType)
@@ -68,7 +68,7 @@ func UntarToTempDirectory(tar string) (string, CleanupFunc, error) {
 	return tmpDir, cleanup, nil
 }
 
-func SetTrivyImageOptions(sourceType types2.InputType, userInput string, trivyOptions trivyFlag.Options) (trivyFlag.Options, CleanupFunc, error) {
+func SetTrivyImageOptions(sourceType common.InputType, userInput string, trivyOptions trivyFlag.Options) (trivyFlag.Options, CleanupFunc, error) {
 	trivyOptions.ImageOptions = trivyFlag.ImageOptions{
 		ImageSources: types.AllImageSources,
 	}
@@ -77,12 +77,12 @@ func SetTrivyImageOptions(sourceType types2.InputType, userInput string, trivyOp
 	switch sourceType {
 	// Docker Archive and OCI directories are natively supported by Trivy
 	// just needs to set the ImageOptions Input to the tar/directory.
-	case types2.DOCKERARCHIVE, types2.OCIDIR:
+	case common.DOCKERARCHIVE, common.OCIDIR:
 		trivyOptions.ImageOptions.Input = userInput
 
 	// OCI Archive isn't natively supported, so we'll convert it to an OCI
 	// directory first and then configure trivy as above.
-	case types2.OCIARCHIVE:
+	case common.OCIARCHIVE:
 		var err error
 		var tmpDir string
 		tmpDir, cleanup, err = UntarToTempDirectory(userInput)
@@ -91,7 +91,7 @@ func SetTrivyImageOptions(sourceType types2.InputType, userInput string, trivyOp
 		}
 		trivyOptions.ImageOptions.Input = tmpDir
 
-	case types2.IMAGE, types2.ROOTFS, types2.DIR, types2.FILE, types2.SBOM:
+	case common.IMAGE, common.ROOTFS, common.DIR, common.FILE, common.SBOM:
 		// Nothing to do here, setting the target in ScanOptions is
 		// enough.
 	}
