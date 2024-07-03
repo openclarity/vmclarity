@@ -17,45 +17,39 @@ package fake
 
 import (
 	"context"
-	job_manager2 "github.com/openclarity/vmclarity/scanner/internal/job_manager"
-	"github.com/openclarity/vmclarity/scanner/types"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
+	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 
 	log "github.com/sirupsen/logrus"
 
-	misconfigurationTypes "github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
+	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
 )
 
 const ScannerName = "fake"
 
-type Scanner struct {
-	name       string
-	logger     *log.Entry
-	resultChan chan job_manager2.Result
+func init() {
+	types.FactoryRegister(ScannerName, New)
 }
 
-func New(_ string, _ job_manager2.IsConfig, logger *log.Entry, resultChan chan job_manager2.Result) job_manager2.Job {
+type Scanner struct {
+	logger *log.Entry
+}
+
+func New(_ string, _ types.ScannersConfig, logger *log.Entry) familiestypes.Scanner[*types.ScannerResult] {
 	return &Scanner{
-		name:       ScannerName,
-		logger:     logger.Dup().WithField("scanner", ScannerName),
-		resultChan: resultChan,
+		logger: logger.Dup().WithField("scanner", ScannerName),
 	}
 }
 
-func (a *Scanner) Run(ctx context.Context, sourceType types.InputType, userInput string) error {
-	go func() {
-		retResults := misconfigurationTypes.ScannerResult{
-			ScannerName:       ScannerName,
-			Misconfigurations: createFakeMisconfigurationReport(),
-		}
-
-		a.sendResults(retResults, nil)
-	}()
-
-	return nil
+func (a *Scanner) Scan(_ context.Context, _ scannertypes.InputType, _ string) (*types.ScannerResult, error) {
+	return &types.ScannerResult{
+		ScannerName:       ScannerName,
+		Misconfigurations: createFakeMisconfigurationReport(),
+	}, nil
 }
 
-func createFakeMisconfigurationReport() []misconfigurationTypes.Misconfiguration {
-	return []misconfigurationTypes.Misconfiguration{
+func createFakeMisconfigurationReport() []types.Misconfiguration {
+	return []types.Misconfiguration{
 		{
 			Location: "/fake",
 
@@ -64,7 +58,7 @@ func createFakeMisconfigurationReport() []misconfigurationTypes.Misconfiguration
 			Description: "Fake test number 1",
 
 			Message:     "Fake test number 1 failed",
-			Severity:    misconfigurationTypes.HighSeverity,
+			Severity:    types.HighSeverity,
 			Remediation: "fix the thing number 1",
 		},
 		{
@@ -75,7 +69,7 @@ func createFakeMisconfigurationReport() []misconfigurationTypes.Misconfiguration
 			Description: "Fake test number 2",
 
 			Message:     "Fake test number 2 failed",
-			Severity:    misconfigurationTypes.LowSeverity,
+			Severity:    types.LowSeverity,
 			Remediation: "fix the thing number 2",
 		},
 		{
@@ -86,7 +80,7 @@ func createFakeMisconfigurationReport() []misconfigurationTypes.Misconfiguration
 			Description: "Fake test number 3",
 
 			Message:     "Fake test number 3 failed",
-			Severity:    misconfigurationTypes.MediumSeverity,
+			Severity:    types.MediumSeverity,
 			Remediation: "fix the thing number 3",
 		},
 		{
@@ -97,20 +91,8 @@ func createFakeMisconfigurationReport() []misconfigurationTypes.Misconfiguration
 			Description: "Fake test number 4",
 
 			Message:     "Fake test number 4 failed",
-			Severity:    misconfigurationTypes.HighSeverity,
+			Severity:    types.HighSeverity,
 			Remediation: "fix the thing number 4",
 		},
-	}
-}
-
-func (a *Scanner) sendResults(results misconfigurationTypes.ScannerResult, err error) {
-	if err != nil {
-		a.logger.Error(err)
-		results.Error = err
-	}
-	select {
-	case a.resultChan <- results:
-	default:
-		a.logger.Error("Failed to send results on channel")
 	}
 }

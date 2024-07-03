@@ -49,3 +49,22 @@ type FlattenedMisconfiguration struct {
 	Misconfiguration
 	ScannerName string `json:"ScannerName"`
 }
+
+type Misconfigurations struct {
+	FlattenedMisconfiguration []FlattenedMisconfiguration `json:"Misconfigurations"`
+}
+
+func NewMisconfigurations() *Misconfigurations {
+	return &Misconfigurations{
+		FlattenedMisconfiguration: []FlattenedMisconfiguration{},
+	}
+}
+
+func (m *Misconfigurations) Merge(result *ScannerResult) {
+	for _, misconfiguration := range result.Misconfigurations {
+		m.FlattenedMisconfiguration = append(m.FlattenedMisconfiguration, FlattenedMisconfiguration{
+			ScannerName:      result.ScannerName,
+			Misconfiguration: misconfiguration,
+		})
+	}
+}

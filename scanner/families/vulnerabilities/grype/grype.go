@@ -87,7 +87,7 @@ func createResults(doc grype_models.Document, userInput, scannerName, hash strin
 	return &types.ScannerResult{
 		Vulnerabilities: vulnerabilities,
 		Source:          getSource(doc, userInput, hash, metadata),
-		ScannerInfo: types.ScannerInfo{
+		Scanner: types.ScannerInfo{
 			Name: scannerName,
 		},
 	}

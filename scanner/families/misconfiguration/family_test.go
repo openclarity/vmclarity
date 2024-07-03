@@ -87,7 +87,7 @@ func TestStripPathFromResult(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := stripPathFromResult(tt.args.result, tt.args.path); !reflect.DeepEqual(got, tt.want) {
+			if got := stripPathFromResult(&tt.args.result, tt.args.path); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("StripPathFromResult() = %v, want %v", got, tt.want)
 			}
 		})

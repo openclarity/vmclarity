@@ -19,8 +19,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/lynis/config"
-	job_manager2 "github.com/openclarity/vmclarity/scanner/internal/job_manager"
-	types2 "github.com/openclarity/vmclarity/scanner/types"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
+	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 	"os"
 	"os/exec"
 	"path"
@@ -34,150 +34,116 @@ import (
 	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
-const (
-	ScannerName = "lynis"
-	LynisBinary = "lynis"
-)
+const ScannerName = "lynis"
 
-type Scanner struct {
-	name       string
-	logger     *log.Entry
-	config     config.Config
-	resultChan chan job_manager2.Result
+func init() {
+	types.FactoryRegister(ScannerName, New)
 }
 
-func New(_ string, c job_manager2.IsConfig, logger *log.Entry, resultChan chan job_manager2.Result) job_manager2.Job {
-	conf := c.(types.ScannersConfig) // nolint:forcetypeassert
+type Scanner struct {
+	logger *log.Entry
+	config config.Config
+}
+
+func New(_ string, config types.ScannersConfig, logger *log.Entry) familiestypes.Scanner[*types.ScannerResult] {
 	return &Scanner{
-		name:       ScannerName,
-		logger:     logger.Dup().WithField("scanner", ScannerName),
-		config:     conf.Lynis,
-		resultChan: resultChan,
+		logger: logger.Dup().WithField("scanner", ScannerName),
+		config: config.Lynis,
 	}
 }
 
 // nolint: cyclop
-func (a *Scanner) Run(ctx context.Context, sourceType types2.InputType, userInput string) error {
-	go func(ctx context.Context) {
-		retResults := types.ScannerResult{
-			ScannerName: ScannerName,
-		}
+func (a *Scanner) Scan(ctx context.Context, sourceType scannertypes.InputType, userInput string) (*types.ScannerResult, error) {
+	// Validate this is an input type supported by the scanner,
+	// otherwise return skipped.
+	if !a.isValidInputType(sourceType) {
+		return nil, fmt.Errorf("unsupported source type for %s: %s", ScannerName, sourceType)
+	}
 
-		// Validate this is an input type supported by the scanner,
-		// otherwise return skipped.
-		if !a.isValidInputType(sourceType) {
-			a.sendResults(retResults, nil)
-			return
-		}
+	lynisBinaryPath, err := exec.LookPath(a.config.GetBinaryPath())
+	if err != nil {
+		return nil, fmt.Errorf("failed to lookup executable %s: %w", a.config.BinaryPath, err)
+	}
+	a.logger.Debugf("found lynis binary at: %s", lynisBinaryPath)
 
-		// Locate lynis binary
-		if a.config.BinaryPath == "" {
-			a.config.BinaryPath = LynisBinary
-		}
-
-		lynisBinaryPath, err := exec.LookPath(a.config.BinaryPath)
+	reportDir, err := os.MkdirTemp("", "")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create temp directory: %w", err)
+	}
+	defer func() {
+		err := os.RemoveAll(reportDir)
 		if err != nil {
-			a.sendResults(retResults, fmt.Errorf("failed to lookup executable %s: %w", a.config.BinaryPath, err))
-			return
+			a.logger.Warningf("failed to remove temp directory: %v", err)
 		}
-		a.logger.Debugf("found lynis binary at: %s", lynisBinaryPath)
+	}()
 
-		reportDir, err := os.MkdirTemp("", "")
-		if err != nil {
-			a.sendResults(retResults, fmt.Errorf("failed to create temp directory: %w", err))
-			return
-		}
-		defer func() {
-			err := os.RemoveAll(reportDir)
-			if err != nil {
-				a.logger.Warningf("failed to remove temp directory: %v", err)
-			}
-		}()
+	reportPath := path.Join(reportDir, "lynis.dat")
 
-		reportPath := path.Join(reportDir, "lynis.dat")
+	fsPath, cleanup, err := familiesutils.ConvertInputToFilesystem(ctx, sourceType, userInput)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert input to filesystem: %w", err)
+	}
+	defer cleanup()
 
-		fsPath, cleanup, err := familiesutils.ConvertInputToFilesystem(ctx, sourceType, userInput)
-		if err != nil {
-			a.sendResults(retResults, fmt.Errorf("failed to convert input to filesystem: %w", err))
-			return
-		}
-		defer cleanup()
+	// Build command:
+	// lynis audit system \
+	//     --report-file <reportDir>/report.dat \
+	//     --no-log \
+	//     --forensics \
+	//     --rootdir <source>
+	args := []string{
+		"audit",
+		"system",
+		"--report-file",
+		reportPath,
+		"--no-log",
+		"--forensics",
+		"--tests",
+		strings.Join(testsToRun, ","),
+		"--rootdir",
+		fsPath,
+	}
+	cmd := exec.Command(lynisBinaryPath, args...) // nolint:gosec
 
-		// Build command:
-		// lynis audit system \
-		//     --report-file <reportDir>/report.dat \
-		//     --no-log \
-		//     --forensics \
-		//     --rootdir <source>
-		args := []string{
-			"audit",
-			"system",
-			"--report-file",
-			reportPath,
-			"--no-log",
-			"--forensics",
-			"--tests",
-			strings.Join(testsToRun, ","),
-			"--rootdir",
-			fsPath,
-		}
-		cmd := exec.Command(lynisBinaryPath, args...) // nolint:gosec
+	a.logger.Infof("Running command: %v", cmd.String())
+	_, err = utils.RunCommand(cmd)
+	if err != nil {
+		return nil, fmt.Errorf("failed to run command: %w", err)
+	}
 
-		a.logger.Infof("Running command: %v", cmd.String())
-		_, err = utils.RunCommand(cmd)
-		if err != nil {
-			a.sendResults(retResults, fmt.Errorf("failed to run command: %w", err))
-			return
-		}
+	// Get Lynis DB directory
+	cmd = exec.Command(lynisBinaryPath, []string{"show", "dbdir"}...) // nolint:gosec
+	out, err := utils.RunCommand(cmd)
+	if err != nil {
+		return nil, fmt.Errorf("failed to run command: %w", err)
+	}
+	lynisDBDir := filepath.Clean(strings.TrimSpace(string(out)))
 
-		// Get Lynis DB directory
-		cmd = exec.Command(lynisBinaryPath, []string{"show", "dbdir"}...) // nolint:gosec
-		out, err := utils.RunCommand(cmd)
-		if err != nil {
-			a.sendResults(retResults, fmt.Errorf("failed to run command: %w", err))
-			return
-		}
-		lynisDBDir := filepath.Clean(strings.TrimSpace(string(out)))
+	testDB, err := NewTestDB(a.logger, lynisDBDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load lynis test DB: %w", err)
+	}
 
-		testDB, err := NewTestDB(a.logger, lynisDBDir)
-		if err != nil {
-			a.sendResults(retResults, fmt.Errorf("failed to load lynis test DB: %w", err))
-			return
-		}
+	reportParser := NewReportParser(testDB)
+	misconfigurations, err := reportParser.ParseLynisReport(userInput, reportPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse report file %v: %w", reportPath, err)
+	}
 
-		reportParser := NewReportParser(testDB)
-		retResults.Misconfigurations, err = reportParser.ParseLynisReport(userInput, reportPath)
-		if err != nil {
-			a.sendResults(retResults, fmt.Errorf("failed to parse report file %v: %w", reportPath, err))
-			return
-		}
-
-		a.sendResults(retResults, nil)
-	}(ctx)
-
-	return nil
+	return &types.ScannerResult{
+		ScannerName:       ScannerName,
+		Misconfigurations: misconfigurations,
+	}, nil
 }
 
-func (a *Scanner) isValidInputType(sourceType types2.InputType) bool {
+func (a *Scanner) isValidInputType(sourceType scannertypes.InputType) bool {
 	switch sourceType {
-	case types2.ROOTFS, types2.IMAGE, types2.DOCKERARCHIVE, types2.OCIARCHIVE, types2.OCIDIR:
+	case scannertypes.ROOTFS, scannertypes.IMAGE, scannertypes.DOCKERARCHIVE, scannertypes.OCIARCHIVE, scannertypes.OCIDIR:
 		return true
-	case types2.DIR, types2.FILE, types2.SBOM:
+	case scannertypes.DIR, scannertypes.FILE, scannertypes.SBOM:
 		a.logger.Infof("source type %v is not supported for lynis, skipping.", sourceType)
 	default:
 		a.logger.Infof("unknown source type %v, skipping.", sourceType)
 	}
 	return false
-}
-
-func (a *Scanner) sendResults(results types.ScannerResult, err error) {
-	if err != nil {
-		a.logger.Error(err)
-		results.Error = err
-	}
-	select {
-	case a.resultChan <- results:
-	default:
-		a.logger.Error("Failed to send results on channel")
-	}
 }
