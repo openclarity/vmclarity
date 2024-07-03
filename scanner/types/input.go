@@ -13,35 +13,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package utils
+package types
 
-type SourceType string
+type InputType string
 
 const (
-	SBOM          SourceType = "sbom"
-	IMAGE         SourceType = "image"
-	DOCKERARCHIVE SourceType = "docker-archive"
-	OCIARCHIVE    SourceType = "oci-archive"
-	OCIDIR        SourceType = "oci-dir"
-	DIR           SourceType = "dir"
-	ROOTFS        SourceType = "rootfs"
-	FILE          SourceType = "file"
+	SBOM          InputType = "sbom"
+	IMAGE         InputType = "image"
+	DOCKERARCHIVE InputType = "docker-archive"
+	OCIARCHIVE    InputType = "oci-archive"
+	OCIDIR        InputType = "oci-dir"
+	DIR           InputType = "dir"
+	ROOTFS        InputType = "rootfs"
+	FILE          InputType = "file"
+	CSV           InputType = "csv"
 )
 
-func CreateSource(sourceType SourceType, localImage bool) string {
-	switch sourceType {
+func (s InputType) GetSource(localImage bool) string {
+	switch s {
 	case IMAGE:
-		return setImageSource(localImage)
+		return getImageSource(localImage)
 	case ROOTFS, DIR:
 		return string(DIR)
 	case DOCKERARCHIVE, OCIARCHIVE, OCIDIR, FILE, SBOM:
 		fallthrough
 	default:
-		return string(sourceType)
+		return string(s)
 	}
 }
 
-func setImageSource(local bool) string {
+func getImageSource(local bool) string {
 	if local {
 		return "docker"
 	}

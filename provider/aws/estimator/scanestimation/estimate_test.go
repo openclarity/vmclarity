@@ -17,6 +17,7 @@ package scanestimation
 
 import (
 	"context"
+	"github.com/openclarity/vmclarity/scanner/types"
 	"reflect"
 	"testing"
 	"time"
@@ -26,7 +27,6 @@ import (
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/to"
-	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
 type FakePriceFetcher struct{}
@@ -81,7 +81,7 @@ func Test_getScanSize(t *testing.T) {
 						{
 							Path: to.Ptr("/"),
 							Size: to.Ptr(int64(10)),
-							Type: to.Ptr(string(utils.ROOTFS)),
+							Type: to.Ptr(string(types.ROOTFS)),
 						},
 					},
 				},
@@ -100,14 +100,14 @@ func Test_getScanSize(t *testing.T) {
 						{
 							Path: to.Ptr("/dir"),
 							Size: to.Ptr(int64(3)),
-							Type: to.Ptr(string(utils.DIR)),
+							Type: to.Ptr(string(types.DIR)),
 						},
 					},
 					Malware: &[]apitypes.AssetScanInputScanStats{
 						{
 							Path: to.Ptr("/"),
 							Size: to.Ptr(int64(10)),
-							Type: to.Ptr(string(utils.ROOTFS)),
+							Type: to.Ptr(string(types.ROOTFS)),
 						},
 					},
 				},
@@ -168,7 +168,7 @@ func Test_getScanDuration(t *testing.T) {
 								EndTime:   &timeNow,
 								StartTime: to.Ptr(timeNow.Add(-50 * time.Second)),
 							},
-							Type: to.Ptr(string(utils.ROOTFS)),
+							Type: to.Ptr(string(types.ROOTFS)),
 						},
 					},
 					Secrets: &[]apitypes.AssetScanInputScanStats{
@@ -178,7 +178,7 @@ func Test_getScanDuration(t *testing.T) {
 								EndTime:   &timeNow,
 								StartTime: to.Ptr(timeNow.Add(-360 * time.Second)),
 							},
-							Type: to.Ptr(string(utils.ROOTFS)),
+							Type: to.Ptr(string(types.ROOTFS)),
 						},
 					},
 				},
@@ -263,7 +263,7 @@ func TestScanEstimator_EstimateAssetScan(t *testing.T) {
 									EndTime:   &timeNow,
 									StartTime: to.Ptr(timeNow.Add(-50 * time.Second)),
 								},
-								Type: to.Ptr(string(utils.ROOTFS)),
+								Type: to.Ptr(string(types.ROOTFS)),
 							},
 						},
 						Secrets: &[]apitypes.AssetScanInputScanStats{
@@ -273,7 +273,7 @@ func TestScanEstimator_EstimateAssetScan(t *testing.T) {
 									EndTime:   &timeNow,
 									StartTime: to.Ptr(timeNow.Add(-360 * time.Second)),
 								},
-								Type: to.Ptr(string(utils.ROOTFS)),
+								Type: to.Ptr(string(types.ROOTFS)),
 							},
 						},
 					},

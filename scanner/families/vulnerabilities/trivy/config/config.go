@@ -16,18 +16,17 @@
 package config
 
 import (
-	"github.com/openclarity/vmclarity/scanner/families/types"
+	"github.com/openclarity/vmclarity/scanner/types"
 	"time"
 )
 
 type Config struct {
-	Timeout        int             `yaml:"timeout" mapstructure:"timeout"`
-	ServerAddr     string          `yaml:"server_addr" mapstructure:"server_addr"`
-	ServerToken    string          `yaml:"server_token" mapstructure:"server_token"`
-	CacheDir       string          `yaml:"cache_dir" mapstructure:"cache_dir"`
-	TempDir        string          `yaml:"temp_dir" mapstructure:"temp_dir"`
-	Registry       *types.Registry `yaml:"registry" mapstructure:"registry"`
-	LocalImageScan bool            `yaml:"local_image_scan" mapstructure:"local_image_scan"`
+	Timeout     int             `yaml:"timeout" mapstructure:"timeout"`
+	ServerAddr  string          `yaml:"server_addr" mapstructure:"server_addr"`
+	ServerToken string          `yaml:"server_token" mapstructure:"server_token"`
+	CacheDir    string          `yaml:"cache_dir" mapstructure:"cache_dir"`
+	TempDir     string          `yaml:"temp_dir" mapstructure:"temp_dir"`
+	Registry    *types.Registry `yaml:"registry" mapstructure:"registry"`
 }
 
 func (c *Config) GetTimeout() time.Duration {

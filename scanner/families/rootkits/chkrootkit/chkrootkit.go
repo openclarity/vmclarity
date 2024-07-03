@@ -18,6 +18,8 @@ package chkrootkit
 import (
 	"context"
 	"fmt"
+	job_manager2 "github.com/openclarity/vmclarity/scanner/internal/job_manager"
+	types2 "github.com/openclarity/vmclarity/scanner/types"
 	"os/exec"
 
 	log "github.com/sirupsen/logrus"
@@ -26,7 +28,6 @@ import (
 	chkrootkitutils "github.com/openclarity/vmclarity/scanner/families/rootkits/chkrootkit/utils"
 	"github.com/openclarity/vmclarity/scanner/families/rootkits/types"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
-	"github.com/openclarity/vmclarity/scanner/job_manager"
 	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
@@ -39,10 +40,10 @@ type Scanner struct {
 	name       string
 	logger     *log.Entry
 	config     config.Config
-	resultChan chan job_manager.Result
+	resultChan chan job_manager2.Result
 }
 
-func (s *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInput string) error {
+func (s *Scanner) Run(ctx context.Context, sourceType types2.InputType, userInput string) error {
 	go func(ctx context.Context) {
 		retResults := types.ScannerResult{
 			ScannedInput: userInput,
@@ -136,7 +137,7 @@ func toResultsRootkits(rootkits []chkrootkitutils.Rootkit) []types.Rootkit {
 	return ret
 }
 
-func New(_ string, c job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.Result) job_manager.Job {
+func New(_ string, c job_manager2.IsConfig, logger *log.Entry, resultChan chan job_manager2.Result) job_manager2.Job {
 	conf := c.(*types.ScannersConfig) // nolint:forcetypeassert
 	return &Scanner{
 		name:       ScannerName,
@@ -146,11 +147,11 @@ func New(_ string, c job_manager.IsConfig, logger *log.Entry, resultChan chan jo
 	}
 }
 
-func (s *Scanner) isValidInputType(sourceType utils.SourceType) bool {
+func (s *Scanner) isValidInputType(sourceType types2.InputType) bool {
 	switch sourceType {
-	case utils.DIR, utils.ROOTFS, utils.IMAGE, utils.DOCKERARCHIVE, utils.OCIARCHIVE, utils.OCIDIR:
+	case types2.DIR, types2.ROOTFS, types2.IMAGE, types2.DOCKERARCHIVE, types2.OCIARCHIVE, types2.OCIDIR:
 		return true
-	case utils.FILE, utils.SBOM:
+	case types2.FILE, types2.SBOM:
 		fallthrough
 	default:
 		s.logger.Infof("source type %v is not supported for chkrootkit, skipping.", sourceType)

@@ -17,6 +17,7 @@ package sbom
 
 import (
 	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
+	types2 "github.com/openclarity/vmclarity/scanner/types"
 	"reflect"
 	"sort"
 	"testing"
@@ -24,14 +25,12 @@ import (
 	cdx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-
-	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
 func TestMergedResults_createComponentListFromMap(t *testing.T) {
 	type fields struct {
 		MergedComponentByKey map[componentKey]*MergedComponent
-		Source               utils.SourceType
+		Source               types2.InputType
 		SrcMetaData          *cdx.Metadata
 	}
 	tests := []struct {
@@ -276,7 +275,7 @@ func TestMergedResults_Merge(t *testing.T) {
 
 	type fields struct {
 		MergedComponentByKey map[componentKey]*MergedComponent
-		Source               utils.SourceType
+		Source               types2.InputType
 		SrcMetaData          *cdx.Metadata
 		SourceHash           string
 	}
@@ -372,7 +371,7 @@ func Test_checkMainComponentName(t *testing.T) {
 func TestMergedResults_addSourceHash(t *testing.T) {
 	type fields struct {
 		MergedComponentByKey map[componentKey]*MergedComponent
-		Source               utils.SourceType
+		Source               types2.InputType
 		SourceHash           string
 		SrcMetaData          *cdx.Metadata
 	}

@@ -16,7 +16,7 @@
 package trivy
 
 import (
-	"github.com/openclarity/vmclarity/scanner/families/types"
+	"github.com/openclarity/vmclarity/scanner/types"
 	"os"
 
 	trivyFlag "github.com/aquasecurity/trivy/pkg/flag"

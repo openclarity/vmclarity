@@ -16,6 +16,7 @@
 package families
 
 import (
+	types2 "github.com/openclarity/vmclarity/scanner/types"
 	"reflect"
 	"testing"
 
@@ -25,7 +26,6 @@ import (
 	"github.com/openclarity/vmclarity/scanner/families/secrets"
 	"github.com/openclarity/vmclarity/scanner/families/types"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities"
-	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
 func Test_SetMountPointsForFamiliesInput(t *testing.T) {
@@ -68,7 +68,7 @@ func Test_SetMountPointsForFamiliesInput(t *testing.T) {
 					Inputs: []types.Input{
 						{
 							Input:     "/mnt/snapshot1",
-							InputType: string(utils.ROOTFS),
+							InputType: string(types2.ROOTFS),
 						},
 					},
 				},
@@ -82,7 +82,7 @@ func Test_SetMountPointsForFamiliesInput(t *testing.T) {
 						{
 							StripPathFromResult: to.Ptr(true),
 							Input:               "/mnt/snapshot1",
-							InputType:           string(utils.ROOTFS),
+							InputType:           string(types2.ROOTFS),
 						},
 					},
 				},
@@ -92,7 +92,7 @@ func Test_SetMountPointsForFamiliesInput(t *testing.T) {
 						{
 							StripPathFromResult: to.Ptr(true),
 							Input:               "/mnt/snapshot1",
-							InputType:           string(utils.ROOTFS),
+							InputType:           string(types2.ROOTFS),
 						},
 					},
 				},
@@ -116,7 +116,7 @@ func Test_SetMountPointsForFamiliesInput(t *testing.T) {
 					Inputs: []types.Input{
 						{
 							Input:     "/mnt/snapshot1",
-							InputType: string(utils.ROOTFS),
+							InputType: string(types2.ROOTFS),
 						},
 					},
 					InputFromSbom: false,

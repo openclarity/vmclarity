@@ -20,8 +20,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
-
-	"github.com/openclarity/vmclarity/scanner/utils"
+	job_manager2 "github.com/openclarity/vmclarity/scanner/internal/job_manager"
+	types2 "github.com/openclarity/vmclarity/scanner/types"
 
 	"github.com/anchore/syft/syft"
 	"github.com/anchore/syft/syft/cataloging"
@@ -31,7 +31,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/scanner/families/sbom/syft/config"
-	"github.com/openclarity/vmclarity/scanner/job_manager"
 	"github.com/openclarity/vmclarity/scanner/utils/image_helper"
 )
 
@@ -41,10 +40,10 @@ type Analyzer struct {
 	name       string
 	logger     *log.Entry
 	config     config.Config
-	resultChan chan job_manager.Result
+	resultChan chan job_manager2.Result
 }
 
-func New(_ string, c job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.Result) job_manager.Job {
+func New(_ string, c job_manager2.IsConfig, logger *log.Entry, resultChan chan job_manager2.Result) job_manager2.Job {
 	conf := c.(*types.AnalyzersConfig) // nolint:forcetypeassert
 	return &Analyzer{
 		name:       AnalyzerName,
@@ -54,8 +53,8 @@ func New(_ string, c job_manager.IsConfig, logger *log.Entry, resultChan chan jo
 	}
 }
 
-func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInput string) error {
-	src := utils.CreateSource(sourceType, a.config.LocalImageScan)
+func (a *Analyzer) Run(ctx context.Context, sourceType types2.InputType, userInput string) error {
+	src := sourceType.GetSource(a.config.LocalImageScan)
 
 	a.logger.Infof("Called %s analyzer on source %s", a.name, src)
 	// TODO platform can be defined
@@ -92,7 +91,7 @@ func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInp
 		// Get the RepoDigest/ImageID from image metadata and use it as SourceHash in the Result
 		// that will be added to the component hash of metadata during the merge.
 		switch sourceType {
-		case utils.IMAGE, utils.DOCKERARCHIVE, utils.OCIDIR, utils.OCIARCHIVE:
+		case types2.IMAGE, types2.DOCKERARCHIVE, types2.OCIDIR, types2.OCIARCHIVE:
 			hash, imageInfo, err := getImageInfo(sbom, userInput)
 			if err != nil {
 				a.setError(res, fmt.Errorf("failed to get image hash from sbom: %w", err))
@@ -103,7 +102,7 @@ func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInp
 			res.AppInfo.SourceHash = hash
 			res.AppInfo.SourceMetadata = imageInfo.ToMetadata()
 
-		case utils.SBOM, utils.DIR, utils.ROOTFS, utils.FILE:
+		case types2.SBOM, types2.DIR, types2.ROOTFS, types2.FILE:
 			// ignore
 		default:
 			// ignore

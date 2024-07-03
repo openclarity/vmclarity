@@ -15,13 +15,15 @@
 
 package types
 
-type Info struct {
-	Name string `json:"name"`
+type Registry struct {
+	SkipVerifyTLS bool           `yaml:"skip-verify-tls" json:"skip-verify-tls" mapstructure:"skip-verify-tls"`
+	UseHTTP       bool           `yaml:"use-http" json:"use-http" mapstructure:"use-http"`
+	Auths         []RegistryAuth `yaml:"auths" json:"auths" mapstructure:"auths"`
 }
 
-type Source struct {
-	Metadata map[string]string `json:"metadata"`
-	Type     string            `json:"type"`
-	Name     string            `json:"name"` // path in the case of the Type=dir or file, and userInput in the case of Type=image
-	Hash     string            `json:"hash"`
+type RegistryAuth struct {
+	Authority string `yaml:"authority" json:"authority" mapstructure:"authority"`
+	Username  string `yaml:"-" json:"-" mapstructure:"username"`
+	Password  string `yaml:"-" json:"-" mapstructure:"password"`
+	Token     string `yaml:"-" json:"-" mapstructure:"token"`
 }

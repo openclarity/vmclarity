@@ -17,18 +17,18 @@ package e2e
 
 import (
 	"context"
+	"github.com/openclarity/vmclarity/scanner/families"
+	types2 "github.com/openclarity/vmclarity/scanner/types"
 	"path/filepath"
 	"reflect"
 
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 
-	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/plugins"
 	"github.com/openclarity/vmclarity/scanner/families/plugins/common"
 	"github.com/openclarity/vmclarity/scanner/families/plugins/runner/config"
 	"github.com/openclarity/vmclarity/scanner/families/types"
-	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
 const scannerPluginName = "kics"
@@ -63,7 +63,7 @@ var _ = ginkgo.Describe("Running KICS scan", func() {
 					Inputs: []types.Input{
 						{
 							Input:     input,
-							InputType: string(utils.ROOTFS),
+							InputType: string(types2.ROOTFS),
 						},
 					},
 					ScannersConfig: &common.ScannersConfig{

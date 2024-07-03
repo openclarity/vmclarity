@@ -16,7 +16,8 @@
 package grype
 
 import (
-	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/grype/config"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
+	grypeconfig "github.com/openclarity/vmclarity/scanner/families/vulnerabilities/grype/config"
 	"strings"
 
 	grype_models "github.com/anchore/grype/grype/presenter/models"
@@ -25,7 +26,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/types"
-	"github.com/openclarity/vmclarity/scanner/job_manager"
 	"github.com/openclarity/vmclarity/scanner/utils/image_helper"
 )
 
@@ -33,71 +33,63 @@ const (
 	ScannerName = "grype"
 )
 
-func New(_ string, c job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.Result) job_manager.Job {
-	conf := c.(*types.ScannersConfig) // nolint:forcetypeassert
-	switch conf.Grype.Mode {
-	case config.ModeLocal:
-		return newLocalScanner(conf, logger, resultChan)
-	case config.ModeRemote:
-		return newRemoteScanner(conf, logger, resultChan)
+func init() {
+	types.FactoryRegister(ScannerName, New)
+}
+
+func New(_ string, config types.ScannersConfig, logger *log.Entry) familiestypes.Scanner[*types.ScannerResult] {
+	switch config.Grype.Mode {
+	case grypeconfig.ModeLocal:
+		return newLocalScanner(config, logger)
+	case grypeconfig.ModeRemote:
+		return newRemoteScanner(config, logger)
 	}
 
 	// We shouldn't get here since grype mode was already validated.
-	log.Fatalf("Unsupported grype mode %q.", conf.Grype.Mode)
+	log.Fatalf("Unsupported grype mode %q.", config.Grype.Mode)
 	return nil
 }
 
-func ReportError(resultChan chan job_manager.Result, err error, logger *log.Entry) {
-	res := &types.ScannerResult{
-		Error: err,
-	}
-
-	logger.Error(res.Error)
-	resultChan <- res
-}
-
-func CreateResults(doc grype_models.Document, userInput, scannerName, hash string, metadata map[string]string) *types.ScannerResult {
+func createResults(doc grype_models.Document, userInput, scannerName, hash string, metadata map[string]string) *types.ScannerResult {
 	distro := getDistro(doc)
 
-	matches := make(types.Matches, len(doc.Matches))
+	vulnerabilities := make([]types.Vulnerability, len(doc.Matches))
 	for i := range doc.Matches {
 		match := doc.Matches[i]
 
 		layerID, path := getLayerIDAndPath(match.Artifact.Locations)
 
-		matches[i] = types.Match{
-			Vulnerability: types.Vulnerability{
-				ID:          match.Vulnerability.ID,
-				Description: getDescription(match),
-				Links:       match.Vulnerability.URLs,
-				Distro:      distro,
-				CVSS:        getCVSS(match),
-				Fix: types.Fix{
-					Versions: match.Vulnerability.Fix.Versions,
-					State:    match.Vulnerability.Fix.State,
-				},
-				Severity: strings.ToUpper(match.Vulnerability.Severity),
-				Package: types.Package{
-					Name:     match.Artifact.Name,
-					Version:  match.Artifact.Version,
-					Type:     string(match.Artifact.Type),
-					Language: string(match.Artifact.Language),
-					Licenses: match.Artifact.Licenses,
-					CPEs:     match.Artifact.CPEs,
-					PURL:     match.Artifact.PURL,
-				},
-				LayerID: layerID,
-				Path:    path,
+		vulnerabilities[i] = types.Vulnerability{
+			ID:          match.Vulnerability.ID,
+			Description: getDescription(match),
+			Links:       match.Vulnerability.URLs,
+			Distro:      distro,
+			CVSS:        getCVSS(match),
+			Fix: types.Fix{
+				Versions: match.Vulnerability.Fix.Versions,
+				State:    match.Vulnerability.Fix.State,
 			},
+			Severity: strings.ToUpper(match.Vulnerability.Severity),
+			Package: types.Package{
+				Name:     match.Artifact.Name,
+				Version:  match.Artifact.Version,
+				Type:     string(match.Artifact.Type),
+				Language: string(match.Artifact.Language),
+				Licenses: match.Artifact.Licenses,
+				CPEs:     match.Artifact.CPEs,
+				PURL:     match.Artifact.PURL,
+			},
+			LayerID: layerID,
+			Path:    path,
 		}
 	}
 
 	return &types.ScannerResult{
-		Matches: matches,
-		ScannerInfo: types.Info{
+		Vulnerabilities: vulnerabilities,
+		Source:          getSource(doc, userInput, hash, metadata),
+		ScannerInfo: types.ScannerInfo{
 			Name: scannerName,
 		},
-		Source: getSource(doc, userInput, hash, metadata),
 	}
 }
 

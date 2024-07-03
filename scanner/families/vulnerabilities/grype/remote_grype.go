@@ -19,11 +19,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/types"
+	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 	"os"
 	"time"
-
-	"github.com/openclarity/vmclarity/scanner/utils"
 
 	grype_models "github.com/anchore/grype/grype/presenter/models"
 	transport "github.com/go-openapi/runtime/client"
@@ -33,77 +33,60 @@ import (
 	grype_client_models "github.com/openclarity/grype-server/api/client/models"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/openclarity/vmclarity/scanner/job_manager"
 	sbom "github.com/openclarity/vmclarity/scanner/utils/sbom"
 )
 
 type RemoteScanner struct {
-	logger     *log.Entry
-	resultChan chan job_manager.Result
-	client     *grype_client.GrypeServer
-	timeout    time.Duration
+	logger  *log.Entry
+	client  *grype_client.GrypeServer
+	timeout time.Duration
 }
 
-func newRemoteScanner(conf *types.ScannersConfig, logger *log.Entry, resultChan chan job_manager.Result) job_manager.Job {
+func newRemoteScanner(config types.ScannersConfig, logger *log.Entry) familiestypes.Scanner[*types.ScannerResult] {
 	cfg := grype_client.DefaultTransportConfig().
-		WithSchemes(conf.Grype.Remote.GrypeServerSchemes).
-		WithHost(conf.Grype.Remote.GrypeServerAddress)
+		WithSchemes(config.Grype.Remote.GrypeServerSchemes).
+		WithHost(config.Grype.Remote.GrypeServerAddress)
 
 	return &RemoteScanner{
-		logger:     logger.Dup().WithField("scanner", ScannerName).WithField("scanner-mode", "remote"),
-		resultChan: resultChan,
-		client:     grype_client.New(transport.New(cfg.Host, cfg.BasePath, cfg.Schemes), strfmt.Default),
-		timeout:    conf.Grype.Remote.GrypeServerTimeout,
+		logger:  logger.Dup().WithField("scanner", ScannerName).WithField("scanner-mode", "remote"),
+		client:  grype_client.New(transport.New(cfg.Host, cfg.BasePath, cfg.Schemes), strfmt.Default),
+		timeout: config.Grype.Remote.GrypeServerTimeout,
 	}
 }
 
-func (s *RemoteScanner) Run(ctx context.Context, sourceType utils.SourceType, userInput string) error {
+func (s *RemoteScanner) Scan(ctx context.Context, sourceType scannertypes.InputType, userInput string) (*types.ScannerResult, error) {
 	// remote-grype supports only SBOM as a source input since it sends the SBOM to a centralized grype server for scanning.
-	if sourceType != utils.SBOM {
+	if sourceType != scannertypes.SBOM {
 		s.logger.Infof("Ignoring non SBOM input. type=%v", sourceType)
-		s.resultChan <- &types.ScannerResult{
-			Matches: nil, // empty results
-			ScannerInfo: types.Info{
-				Name: ScannerName,
-			},
-		}
-		return nil
+		return nil, nil
 	}
 
-	go s.run(userInput)
-
-	return nil
-}
-
-func (s *RemoteScanner) run(sbomInputFilePath string) {
-	sbomBytes, err := os.ReadFile(sbomInputFilePath)
+	sbomBytes, err := os.ReadFile(userInput)
 	if err != nil {
-		ReportError(s.resultChan, fmt.Errorf("failed to read input file: %w", err), s.logger)
-		return
+		return nil, fmt.Errorf("failed to read input file: %w", err)
 	}
 
 	doc, err := s.scanSbomWithGrypeServer(sbomBytes)
 	if err != nil {
-		ReportError(s.resultChan, fmt.Errorf("failed to scan sbom with grype server: %w", err), s.logger)
-		return
+		return nil, fmt.Errorf("failed to scan sbom with grype server: %w", err)
 	}
 
-	bom, err := sbom.NewCycloneDX(sbomInputFilePath)
+	bom, err := sbom.NewCycloneDX(userInput)
 	if err != nil {
-		ReportError(s.resultChan, fmt.Errorf("failed to create CycloneDX SBOM: %w", err), s.logger)
-		return
+		return nil, fmt.Errorf("failed to create CycloneDX SBOM: %w", err)
 	}
 
-	userInput := bom.GetTargetNameFromSBOM()
+	targetName := bom.GetTargetNameFromSBOM()
 	metadata := bom.GetMetadataFromSBOM()
 	hash, err := bom.GetHashFromSBOM()
 	if err != nil {
-		ReportError(s.resultChan, fmt.Errorf("failed to get original hash from SBOM: %w", err), s.logger)
-		return
+		return nil, fmt.Errorf("failed to get original hash from SBOM: %w", err)
 	}
 
 	s.logger.Infof("Sending successful results")
-	s.resultChan <- CreateResults(*doc, userInput, ScannerName, hash, metadata)
+	result := createResults(*doc, targetName, ScannerName, hash, metadata)
+
+	return result, nil
 }
 
 func (s *RemoteScanner) scanSbomWithGrypeServer(sbom []byte) (*grype_models.Document, error) {

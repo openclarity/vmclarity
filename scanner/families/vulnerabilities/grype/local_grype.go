@@ -19,6 +19,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
+	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 
 	"github.com/anchore/clio"
 	"github.com/anchore/grype/grype"
@@ -39,11 +41,8 @@ import (
 	"github.com/anchore/syft/syft/cataloging"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/openclarity/vmclarity/scanner/utils"
-
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/grype/config"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/types"
-	"github.com/openclarity/vmclarity/scanner/job_manager"
 	"github.com/openclarity/vmclarity/scanner/utils/sbom"
 )
 
@@ -53,79 +52,66 @@ const (
 )
 
 type LocalScanner struct {
-	logger     *log.Entry
-	config     config.LocalGrypeConfig
-	resultChan chan job_manager.Result
+	logger *log.Entry
+	config config.LocalGrypeConfig
 }
 
-func newLocalScanner(conf *types.ScannersConfig, logger *log.Entry, resultChan chan job_manager.Result) job_manager.Job {
+func newLocalScanner(config types.ScannersConfig, logger *log.Entry) familiestypes.Scanner[*types.ScannerResult] {
 	return &LocalScanner{
-		logger:     logger.Dup().WithField("scanner", ScannerName).WithField("mode", "local"),
-		config:     conf.Grype.Local,
-		resultChan: resultChan,
+		logger: logger.Dup().WithField("scanner", ScannerName).WithField("mode", "local"),
+		config: config.Grype.Local,
 	}
 }
 
-func (s *LocalScanner) Run(ctx context.Context, sourceType utils.SourceType, userInput string) error {
-	go s.run(sourceType, userInput)
-
-	return nil
-}
-
-func (s *LocalScanner) run(sourceType utils.SourceType, userInput string) {
+func (s *LocalScanner) Scan(ctx context.Context, sourceType scannertypes.InputType, userInput string) (*types.ScannerResult, error) {
 	// TODO: make `loading DB` and `gathering packages` work in parallel
 	// https://github.com/anchore/grype/blob/7e8ee40996ba3a4defb5e887ab0177d99cd0e663/cmd/root.go#L240
 
 	dbConfig := db.Config{
 		DBRootDir:           s.config.DBRootDir,
-		ListingURL:          s.config.ListingURL,
+		ListingURL:          s.config.GetListingURL(),
 		ValidateByHashOnGet: false,
-		MaxAllowedBuiltAge:  s.config.MaxAllowedBuiltAge,
-		ListingFileTimeout:  s.config.ListingFileTimeout,
-		UpdateTimeout:       s.config.UpdateTimeout,
+		MaxAllowedBuiltAge:  s.config.GetMaxDatabaseAge(),
+		ListingFileTimeout:  s.config.GetListingFileTimeout(),
+		UpdateTimeout:       s.config.GetUpdateTimeout(),
 	}
 	s.logger.Infof("Loading DB. update=%v", s.config.UpdateDB)
 
 	vulnerabilityStore, dbStatus, _, err := grype.LoadVulnerabilityDB(dbConfig, s.config.UpdateDB)
-
 	if err = validateDBLoad(err, dbStatus); err != nil {
-		ReportError(s.resultChan, fmt.Errorf("failed to load vulnerability DB: %w", err), s.logger)
-		return
+		return nil, fmt.Errorf("failed to load vulnerability DB: %w", err)
 	}
 
 	var hash string
 	var metadata map[string]string
 	origInput := userInput
-	if sourceType == utils.SBOM {
+	if sourceType == scannertypes.SBOM {
 		bom, err := sbom.NewCycloneDX(userInput)
 		if err != nil {
-			ReportError(s.resultChan, fmt.Errorf("failed to create CycloneDX SBOM: %w", err), s.logger)
-			return
+			return nil, fmt.Errorf("failed to create CycloneDX SBOM: %w", err)
 		}
 
 		origInput = bom.GetTargetNameFromSBOM()
 		metadata = bom.GetMetadataFromSBOM()
 		hash, err = bom.GetHashFromSBOM()
 		if err != nil {
-			ReportError(s.resultChan, fmt.Errorf("failed to get original hash from SBOM: %w", err), s.logger)
-			return
+			return nil, fmt.Errorf("failed to get original hash from SBOM: %w", err)
 		}
 	}
 
-	source := utils.CreateSource(sourceType, s.config.LocalImageScan)
+	source := sourceType.GetSource(s.config.LocalImageScan)
 	s.logger.Infof("Gathering packages for source %s", source)
 	providerConfig := pkg.ProviderConfig{
 		SyftProviderConfig: pkg.SyftProviderConfig{
 			SBOMOptions: syft.DefaultCreateSBOMConfig().
-				WithSearchConfig(cataloging.DefaultSearchConfig().WithScope(s.config.Scope)),
+				WithSearchConfig(cataloging.DefaultSearchConfig().WithScope(s.config.GetScope())),
 			RegistryOptions: s.config.GetRegistryOptions(),
 		},
 	}
 
 	packages, grypeContext, _, err := pkg.Provide(source+":"+userInput, providerConfig)
 	if err != nil {
-		ReportError(s.resultChan, fmt.Errorf("failed to analyze packages: %w", err), s.logger)
-		return
+		return nil, fmt.Errorf("failed to analyze packages: %w", err)
 	}
 
 	s.logger.Infof("Found %d packages", len(packages))
@@ -134,20 +120,20 @@ func (s *LocalScanner) run(sourceType utils.SourceType, userInput string) {
 	allMatches, ignoredMatches, err := vulnerabilityMatcher.FindMatches(packages, grypeContext)
 	// We can ignore ErrAboveSeverityThreshold since we are not setting the FailSeverity on the matcher.
 	if err != nil && !errors.Is(err, grypeerr.ErrAboveSeverityThreshold) {
-		ReportError(s.resultChan, fmt.Errorf("failed to find vulnerabilities: %w", err), s.logger)
-		return
+		return nil, fmt.Errorf("failed to find vulnerabilities: %w", err)
 	}
 
 	s.logger.Infof("Found %d vulnerabilities", len(allMatches.Sorted()))
 	id := clio.Identification{}
 	doc, err := grype_models.NewDocument(id, packages, grypeContext, *allMatches, ignoredMatches, vulnerabilityStore.MetadataProvider, nil, dbStatus)
 	if err != nil {
-		ReportError(s.resultChan, fmt.Errorf("failed to create document: %w", err), s.logger)
-		return
+		return nil, fmt.Errorf("failed to create document: %w", err)
 	}
 
 	s.logger.Infof("Sending successful results")
-	s.resultChan <- CreateResults(doc, origInput, ScannerName, hash, metadata)
+	result := createResults(doc, origInput, ScannerName, hash, metadata)
+
+	return result, nil
 }
 
 func createVulnerabilityMatcher(store *store.Store) *grype.VulnerabilityMatcher {

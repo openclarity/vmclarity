@@ -19,13 +19,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/cisdocker/config"
+	job_manager2 "github.com/openclarity/vmclarity/scanner/internal/job_manager"
+	types2 "github.com/openclarity/vmclarity/scanner/types"
 
 	dockle_run "github.com/Portshift/dockle/pkg"
 	"github.com/sirupsen/logrus"
 
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
-	"github.com/openclarity/vmclarity/scanner/job_manager"
-	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
 const (
@@ -36,10 +36,10 @@ type Scanner struct {
 	name       string
 	logger     *logrus.Entry
 	config     config.Config
-	resultChan chan job_manager.Result
+	resultChan chan job_manager2.Result
 }
 
-func New(_ string, c job_manager.IsConfig, logger *logrus.Entry, resultChan chan job_manager.Result) job_manager.Job {
+func New(_ string, c job_manager2.IsConfig, logger *logrus.Entry, resultChan chan job_manager2.Result) job_manager2.Job {
 	conf := c.(types.ScannersConfig) // nolint:forcetypeassert
 	return &Scanner{
 		name:       ScannerName,
@@ -49,7 +49,7 @@ func New(_ string, c job_manager.IsConfig, logger *logrus.Entry, resultChan chan
 	}
 }
 
-func (a *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInput string) error {
+func (a *Scanner) Run(ctx context.Context, sourceType types2.InputType, userInput string) error {
 	go func(ctx context.Context) {
 		retResults := types.ScannerResult{
 			ScannerName: ScannerName,
@@ -83,11 +83,11 @@ func (a *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInpu
 	return nil
 }
 
-func (a *Scanner) isValidInputType(sourceType utils.SourceType) bool {
+func (a *Scanner) isValidInputType(sourceType types2.InputType) bool {
 	switch sourceType {
-	case utils.IMAGE, utils.DOCKERARCHIVE, utils.ROOTFS, utils.DIR:
+	case types2.IMAGE, types2.DOCKERARCHIVE, types2.ROOTFS, types2.DIR:
 		return true
-	case utils.FILE, utils.SBOM, utils.OCIARCHIVE, utils.OCIDIR:
+	case types2.FILE, types2.SBOM, types2.OCIARCHIVE, types2.OCIDIR:
 		a.logger.Infof("source type %v is not supported for CIS Docker Benchmark scanner, skipping.", sourceType)
 	default:
 		a.logger.Infof("unknown source type %v, skipping.", sourceType)

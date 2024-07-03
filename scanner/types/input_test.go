@@ -13,46 +13,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package utils
+package types
 
 import (
 	"testing"
 )
 
-func Test_setImageSource(t *testing.T) {
+func TestSource(t *testing.T) {
 	type args struct {
-		local bool
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		{
-			name: "local image source",
-			args: args{
-				local: true,
-			},
-			want: "docker",
-		},
-		{
-			name: "remote image source",
-			args: args{},
-			want: "registry",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := setImageSource(tt.args.local); got != tt.want {
-				t.Errorf("SetSource() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestCreateSource(t *testing.T) {
-	type args struct {
-		sourceType SourceType
+		sourceType InputType
 		localImage bool
 	}
 	tests := []struct {
@@ -93,7 +62,7 @@ func TestCreateSource(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := CreateSource(tt.args.sourceType, tt.args.localImage); got != tt.want {
+			if got := tt.args.sourceType.GetSource(tt.args.localImage); got != tt.want {
 				t.Errorf("CreateSource() = %v, want %v", got, tt.want)
 			}
 		})

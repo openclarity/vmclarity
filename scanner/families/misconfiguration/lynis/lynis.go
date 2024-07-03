@@ -19,6 +19,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/lynis/config"
+	job_manager2 "github.com/openclarity/vmclarity/scanner/internal/job_manager"
+	types2 "github.com/openclarity/vmclarity/scanner/types"
 	"os"
 	"os/exec"
 	"path"
@@ -29,7 +31,6 @@ import (
 
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
-	"github.com/openclarity/vmclarity/scanner/job_manager"
 	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
@@ -42,10 +43,10 @@ type Scanner struct {
 	name       string
 	logger     *log.Entry
 	config     config.Config
-	resultChan chan job_manager.Result
+	resultChan chan job_manager2.Result
 }
 
-func New(_ string, c job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.Result) job_manager.Job {
+func New(_ string, c job_manager2.IsConfig, logger *log.Entry, resultChan chan job_manager2.Result) job_manager2.Job {
 	conf := c.(types.ScannersConfig) // nolint:forcetypeassert
 	return &Scanner{
 		name:       ScannerName,
@@ -56,7 +57,7 @@ func New(_ string, c job_manager.IsConfig, logger *log.Entry, resultChan chan jo
 }
 
 // nolint: cyclop
-func (a *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInput string) error {
+func (a *Scanner) Run(ctx context.Context, sourceType types2.InputType, userInput string) error {
 	go func(ctx context.Context) {
 		retResults := types.ScannerResult{
 			ScannerName: ScannerName,
@@ -157,11 +158,11 @@ func (a *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInpu
 	return nil
 }
 
-func (a *Scanner) isValidInputType(sourceType utils.SourceType) bool {
+func (a *Scanner) isValidInputType(sourceType types2.InputType) bool {
 	switch sourceType {
-	case utils.ROOTFS, utils.IMAGE, utils.DOCKERARCHIVE, utils.OCIARCHIVE, utils.OCIDIR:
+	case types2.ROOTFS, types2.IMAGE, types2.DOCKERARCHIVE, types2.OCIARCHIVE, types2.OCIDIR:
 		return true
-	case utils.DIR, utils.FILE, utils.SBOM:
+	case types2.DIR, types2.FILE, types2.SBOM:
 		a.logger.Infof("source type %v is not supported for lynis, skipping.", sourceType)
 	default:
 		a.logger.Infof("unknown source type %v, skipping.", sourceType)

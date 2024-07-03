@@ -19,7 +19,7 @@ import (
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/cisdocker"
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/fake"
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/lynis"
-	"github.com/openclarity/vmclarity/scanner/job_manager"
+	"github.com/openclarity/vmclarity/scanner/internal/job_manager"
 )
 
 var Factory = job_manager.NewJobFactory()

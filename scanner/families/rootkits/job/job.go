@@ -17,7 +17,7 @@ package job
 
 import (
 	"github.com/openclarity/vmclarity/scanner/families/rootkits/chkrootkit"
-	"github.com/openclarity/vmclarity/scanner/job_manager"
+	"github.com/openclarity/vmclarity/scanner/internal/job_manager"
 )
 
 var Factory = job_manager.NewJobFactory()

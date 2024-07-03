@@ -20,13 +20,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
+	scannertypes "github.com/openclarity/vmclarity/scanner/types"
 	"net/http"
 	"net/url"
 	"os"
 	"sort"
 	"strings"
-
-	"github.com/openclarity/vmclarity/scanner/utils"
 
 	trivyDBTypes "github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy/pkg/commands/artifact"
@@ -41,7 +41,6 @@ import (
 	utilsTrivy "github.com/openclarity/vmclarity/scanner/families/utils/trivy"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/trivy/config"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/types"
-	"github.com/openclarity/vmclarity/scanner/job_manager"
 	"github.com/openclarity/vmclarity/scanner/utils/image_helper"
 	"github.com/openclarity/vmclarity/scanner/utils/sbom"
 	utilsVul "github.com/openclarity/vmclarity/scanner/utils/vulnerability"
@@ -49,9 +48,16 @@ import (
 
 const ScannerName = "trivy"
 
-func New(_ string, c job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.Result) job_manager.Job {
-	conf := c.(*types.ScannersConfig) // nolint:forcetypeassert
+type Scanner struct {
+	logger *log.Entry
+	config config.Config
+}
 
+func init() {
+	types.FactoryRegister(ScannerName, New)
+}
+
+func New(_ string, config types.ScannersConfig, logger *log.Entry) familiestypes.Scanner[*types.ScannerResult] {
 	logger = logger.Dup().WithField("scanner", ScannerName)
 
 	// Set up the logger for trivy
@@ -59,33 +65,181 @@ func New(_ string, c job_manager.IsConfig, logger *log.Entry, resultChan chan jo
 	trivyLog.SetDefault(tlogger)
 
 	return &Scanner{
-		logger:     logger,
-		config:     conf.Trivy,
-		resultChan: resultChan,
+		logger: logger,
+		config: config.Trivy,
 	}
 }
 
-type Scanner struct {
-	logger     *log.Entry
-	config     config.Config
-	resultChan chan job_manager.Result
-	localImage bool
-}
+// nolint:cyclop
+func (a *Scanner) Scan(ctx context.Context, sourceType scannertypes.InputType, userInput string) (*types.ScannerResult, error) {
+	a.logger.Infof("Called %s scanner on source %v %v", ScannerName, sourceType, userInput)
 
-func getAllTrivySeverities() ([]trivyDBTypes.Severity, error) {
-	// Build a list of CVE severities for the trivy scanner to
-	// report.  trivyDBTypes.SeverityNames contains all the
-	// severities that trivy supports and we want them all in our
-	// report at the moment.
-	severities := []trivyDBTypes.Severity{}
-	for _, name := range trivyDBTypes.SeverityNames {
-		sev, err := trivyDBTypes.NewSeverity(strings.ToUpper(name))
+	tempFile, err := os.CreateTemp(a.config.CacheDir, "trivy.scan.*.json")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create temp file: %w", err)
+	}
+	defer os.Remove(tempFile.Name())
+
+	var hash string
+	var metadata map[string]string
+	switch sourceType {
+	case scannertypes.IMAGE, scannertypes.ROOTFS, scannertypes.DIR, scannertypes.FILE, scannertypes.DOCKERARCHIVE, scannertypes.OCIARCHIVE, scannertypes.OCIDIR:
+	case scannertypes.SBOM:
+		var err error
+		bom, err := sbom.NewCycloneDX(userInput)
 		if err != nil {
-			return nil, fmt.Errorf("unable to get trivy severity %s: %w", name, err)
+			return nil, fmt.Errorf("failed to create CycloneDX SBOM: %w", err)
 		}
-		severities = append(severities, sev)
+
+		metadata = bom.GetMetadataFromSBOM()
+		hash, err = bom.GetHashFromSBOM()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get original hash from SBOM: %w", err)
+		}
+	default:
+		a.logger.Infof("Skipping scan for unsupported source type: %s", sourceType)
+		return nil, nil
 	}
-	return severities, nil
+
+	trivyOptions, err := a.createTrivyOptions(tempFile.Name(), userInput)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create trivy options: %w", err)
+	}
+
+	// Configure Trivy image options according to the source type and user input.
+	trivyOptions, cleanup, err := utilsTrivy.SetTrivyImageOptions(sourceType, userInput, trivyOptions)
+	defer cleanup(a.logger)
+	if err != nil {
+		return nil, fmt.Errorf("failed to configure trivy image options: %w", err)
+	}
+
+	// Convert the source to the trivy source type
+	trivySourceType, err := utilsTrivy.SourceToTrivySource(sourceType)
+	if err != nil {
+		return nil, fmt.Errorf("failed to configure trivy: %w", err)
+	}
+
+	// Ensure we're configured for private registry if required
+	trivyOptions = utilsTrivy.SetTrivyRegistryConfigs(a.config.Registry, trivyOptions)
+
+	err = artifact.Run(ctx, trivyOptions, trivySourceType)
+	if err != nil {
+		return nil, fmt.Errorf("failed to scan for vulnerabilities: %w", err)
+	}
+
+	file, err := os.ReadFile(tempFile.Name())
+	if err != nil {
+		return nil, fmt.Errorf("failed to read scan results: %w", err)
+	}
+
+	a.logger.Infof("Sending successful results")
+	result, err := a.createResult(file, hash, metadata)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create result: %w", err)
+	}
+
+	return result, nil
+}
+
+// nolint:cyclop
+func (a *Scanner) createResult(trivyJSON []byte, hash string, metadata map[string]string) (*types.ScannerResult, error) {
+	if len(trivyJSON) == 0 {
+		return nil, nil
+	}
+
+	var report trivyTypes.Report
+	err := json.Unmarshal(trivyJSON, &report)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal trivy json: %w", err)
+	}
+
+	vulnerabilities := []types.Vulnerability{}
+	for _, result := range report.Results {
+		for _, vul := range result.Vulnerabilities {
+			typ, err := getTypeFromPurl(vul.PkgIdentifier.BOMRef)
+			if err != nil {
+				a.logger.Error(err)
+				typ = ""
+			}
+
+			cvsses := getCVSSesFromVul(vul.CVSS)
+
+			fix := types.Fix{}
+			if vul.FixedVersion != "" {
+				fix.Versions = []string{
+					vul.FixedVersion,
+				}
+			}
+
+			distro := types.Distro{}
+			if report.Metadata.OS != nil {
+				// Trivy calls the distro name (ubuntu, debian, alpine) the family
+				distro.Name = string(report.Metadata.OS.Family)
+				// Trivy calls the version (11, hardy heron, 22.04) the name
+				distro.Version = report.Metadata.OS.Name
+			}
+
+			links := make([]string, 0, len(vul.Vulnerability.References))
+			links = append(links, vul.Vulnerability.References...)
+			vulnerability := types.Vulnerability{
+				ID:          vul.VulnerabilityID,
+				Description: vul.Description,
+				Links:       links,
+				Distro:      distro,
+				CVSS:        cvsses,
+				Fix:         fix,
+				Severity:    strings.ToUpper(vul.Severity),
+				Package: types.Package{
+					Name:    vul.PkgName,
+					Version: vul.InstalledVersion,
+					PURL:    vul.PkgIdentifier.BOMRef,
+					Type:    typ,
+					// TODO(sambetts) Trivy doesn't pass
+					// through this info from the SBOM so
+					// we might need to fill this out
+					// ourselves.
+					Language: "",
+					Licenses: nil,
+					CPEs:     nil,
+				},
+				LayerID: vul.Layer.Digest,
+				Path:    vul.PkgPath,
+			}
+
+			vulnerabilities = append(vulnerabilities, vulnerability)
+		}
+	}
+
+	a.logger.Infof("Found %d vulnerabilities", len(vulnerabilities))
+
+	if hash == "" && string(report.ArtifactType) == "container_image" {
+		// empty hash indicates empty image details, recreate hash and image info from artifact
+		imageInfo := image_helper.ImageInfo{
+			Name:    report.ArtifactName,
+			ID:      report.Metadata.ImageID,
+			Tags:    report.Metadata.RepoTags,
+			Digests: report.Metadata.RepoDigests,
+		}
+
+		metadata = imageInfo.ToMetadata()
+		hash, err = imageInfo.GetHashFromRepoDigestsOrImageID()
+		if err != nil {
+			log.Warningf("Failed to get image hash from repo digests or image id: %v", err)
+		}
+	}
+
+	return &types.ScannerResult{
+		Vulnerabilities: vulnerabilities,
+		Source: types.Source{
+			Name:     report.ArtifactName,
+			Type:     string(report.ArtifactType),
+			Hash:     hash,
+			Metadata: metadata,
+		},
+		ScannerInfo: types.ScannerInfo{
+			Name: ScannerName,
+		},
+	}, nil
 }
 
 func (a *Scanner) createTrivyOptions(output string, userInput string) (trivyFlag.Options, error) {
@@ -152,84 +306,6 @@ func (a *Scanner) createTrivyOptions(output string, userInput string) (trivyFlag
 	return trivyOptions, nil
 }
 
-// nolint:cyclop
-func (a *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInput string) error {
-	a.logger.Infof("Called %s scanner on source %v %v", ScannerName, sourceType, userInput)
-
-	tempFile, err := os.CreateTemp(a.config.CacheDir, "trivy.scan.*.json")
-	if err != nil {
-		return fmt.Errorf("failed to create temp file: %w", err)
-	}
-
-	go func(ctx context.Context) {
-		defer os.Remove(tempFile.Name())
-
-		var hash string
-		var metadata map[string]string
-		switch sourceType {
-		case utils.IMAGE, utils.ROOTFS, utils.DIR, utils.FILE, utils.DOCKERARCHIVE, utils.OCIARCHIVE, utils.OCIDIR:
-		case utils.SBOM:
-			var err error
-			bom, err := sbom.NewCycloneDX(userInput)
-			if err != nil {
-				a.setError(fmt.Errorf("failed to create CycloneDX SBOM: %w", err))
-				return
-			}
-			metadata = bom.GetMetadataFromSBOM()
-			hash, err = bom.GetHashFromSBOM()
-			if err != nil {
-				a.setError(fmt.Errorf("failed to get original hash from SBOM: %w", err))
-				return
-			}
-		default:
-			a.logger.Infof("Skipping scan for unsupported source type: %s", sourceType)
-			a.resultChan <- a.CreateResult(nil, hash, metadata)
-			return
-		}
-
-		trivyOptions, err := a.createTrivyOptions(tempFile.Name(), userInput)
-		if err != nil {
-			a.setError(fmt.Errorf("unable to create trivy options: %w", err))
-			return
-		}
-
-		// Configure Trivy image options according to the source type and user input.
-		trivyOptions, cleanup, err := utilsTrivy.SetTrivyImageOptions(sourceType, userInput, trivyOptions)
-		defer cleanup(a.logger)
-		if err != nil {
-			a.setError(fmt.Errorf("failed to configure trivy image options: %w", err))
-			return
-		}
-
-		// Convert the source to the trivy source type
-		trivySourceType, err := utilsTrivy.SourceToTrivySource(sourceType)
-		if err != nil {
-			a.setError(fmt.Errorf("failed to configure trivy: %w", err))
-			return
-		}
-
-		// Ensure we're configured for private registry if required
-		trivyOptions = utilsTrivy.SetTrivyRegistryConfigs(a.config.Registry, trivyOptions)
-
-		err = artifact.Run(ctx, trivyOptions, trivySourceType)
-		if err != nil {
-			a.setError(fmt.Errorf("failed to scan for vulnerabilities: %w", err))
-			return
-		}
-
-		file, err := os.ReadFile(tempFile.Name())
-		if err != nil {
-			a.setError(fmt.Errorf("failed to read scan results: %w", err))
-			return
-		}
-
-		a.logger.Infof("Sending successful results")
-		a.resultChan <- a.CreateResult(file, hash, metadata)
-	}(ctx)
-
-	return nil
-}
-
 func getCVSSesFromVul(vCvss trivyDBTypes.VendorCVSS) []types.CVSS {
 	// TODO(sambetts) Work out how to include all the
 	// CVSS's by vendor ID in our report, for now only
@@ -281,116 +357,6 @@ func getCVSSesFromVul(vCvss trivyDBTypes.VendorCVSS) []types.CVSS {
 	return cvsses
 }
 
-// nolint:cyclop
-func (a *Scanner) CreateResult(trivyJSON []byte, hash string, metadata map[string]string) *types.ScannerResult {
-	result := &types.ScannerResult{
-		Matches: nil, // empty results,
-		ScannerInfo: types.Info{
-			Name: ScannerName,
-		},
-	}
-
-	if len(trivyJSON) == 0 {
-		return result
-	}
-
-	var report trivyTypes.Report
-	err := json.Unmarshal(trivyJSON, &report)
-	if err != nil {
-		a.logger.Error(err)
-		result.Error = err
-		return result
-	}
-
-	matches := []types.Match{}
-	for _, result := range report.Results {
-		for _, vul := range result.Vulnerabilities {
-			typ, err := getTypeFromPurl(vul.PkgIdentifier.BOMRef)
-			if err != nil {
-				a.logger.Error(err)
-				typ = ""
-			}
-
-			cvsses := getCVSSesFromVul(vul.CVSS)
-
-			fix := types.Fix{}
-			if vul.FixedVersion != "" {
-				fix.Versions = []string{
-					vul.FixedVersion,
-				}
-			}
-
-			distro := types.Distro{}
-			if report.Metadata.OS != nil {
-				// Trivy calls the distro name (ubuntu, debian, alpine) the family
-				distro.Name = string(report.Metadata.OS.Family)
-				// Trivy calls the version (11, hardy heron, 22.04) the name
-				distro.Version = report.Metadata.OS.Name
-			}
-
-			links := make([]string, 0, len(vul.Vulnerability.References))
-			links = append(links, vul.Vulnerability.References...)
-			kbVul := types.Vulnerability{
-				ID:          vul.VulnerabilityID,
-				Description: vul.Description,
-				Links:       links,
-				Distro:      distro,
-				CVSS:        cvsses,
-				Fix:         fix,
-				Severity:    strings.ToUpper(vul.Severity),
-				Package: types.Package{
-					Name:    vul.PkgName,
-					Version: vul.InstalledVersion,
-					PURL:    vul.PkgIdentifier.BOMRef,
-					Type:    typ,
-					// TODO(sambetts) Trivy doesn't pass
-					// through this info from the SBOM so
-					// we might need to fill this out
-					// ourselves.
-					Language: "",
-					Licenses: nil,
-					CPEs:     nil,
-				},
-				LayerID: vul.Layer.Digest,
-				Path:    vul.PkgPath,
-			}
-
-			matches = append(matches, types.Match{
-				Vulnerability: kbVul,
-			})
-		}
-	}
-
-	a.logger.Infof("Found %d vulnerabilities", len(matches))
-
-	if hash == "" && string(report.ArtifactType) == "container_image" {
-		// empty hash indicates empty image details, recreate hash and image info from artifact
-		imageInfo := image_helper.ImageInfo{
-			Name:    report.ArtifactName,
-			ID:      report.Metadata.ImageID,
-			Tags:    report.Metadata.RepoTags,
-			Digests: report.Metadata.RepoDigests,
-		}
-
-		metadata = imageInfo.ToMetadata()
-		hash, err = imageInfo.GetHashFromRepoDigestsOrImageID()
-		if err != nil {
-			log.Warningf("Failed to get image hash from repo digests or image id: %v", err)
-		}
-	}
-
-	source := types.Source{
-		Name:     report.ArtifactName,
-		Type:     string(report.ArtifactType),
-		Hash:     hash,
-		Metadata: metadata,
-	}
-
-	result.Matches = matches
-	result.Source = source
-	return result
-}
-
 func getTypeFromPurl(purl string) (string, error) {
 	u, err := url.Parse(purl)
 	if err != nil {
@@ -405,13 +371,18 @@ func getTypeFromPurl(purl string) (string, error) {
 	return typ, nil
 }
 
-func (a *Scanner) setError(err error) {
-	a.logger.Error(err)
-	a.resultChan <- &types.ScannerResult{
-		Matches: nil, // empty results,
-		ScannerInfo: types.Info{
-			Name: ScannerName,
-		},
-		Error: err,
+func getAllTrivySeverities() ([]trivyDBTypes.Severity, error) {
+	// Build a list of CVE severities for the trivy scanner to
+	// report.  trivyDBTypes.SeverityNames contains all the
+	// severities that trivy supports and we want them all in our
+	// report at the moment.
+	severities := []trivyDBTypes.Severity{}
+	for _, name := range trivyDBTypes.SeverityNames {
+		sev, err := trivyDBTypes.NewSeverity(strings.ToUpper(name))
+		if err != nil {
+			return nil, fmt.Errorf("unable to get trivy severity %s: %w", name, err)
+		}
+		severities = append(severities, sev)
 	}
+	return severities, nil
 }

@@ -17,8 +17,8 @@ package families
 
 import (
 	"github.com/openclarity/vmclarity/core/to"
-	"github.com/openclarity/vmclarity/scanner/families/exploits"
-	"github.com/openclarity/vmclarity/scanner/families/infofinder"
+	types3 "github.com/openclarity/vmclarity/scanner/families/exploits/types"
+	types4 "github.com/openclarity/vmclarity/scanner/families/infofinder/types"
 	"github.com/openclarity/vmclarity/scanner/families/malware"
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration"
 	"github.com/openclarity/vmclarity/scanner/families/plugins"
@@ -27,7 +27,7 @@ import (
 	"github.com/openclarity/vmclarity/scanner/families/secrets"
 	"github.com/openclarity/vmclarity/scanner/families/types"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities"
-	"github.com/openclarity/vmclarity/scanner/utils"
+	types2 "github.com/openclarity/vmclarity/scanner/types"
 )
 
 type Config struct {
@@ -40,10 +40,10 @@ type Config struct {
 	Rootkits         rootkits.Config         `json:"rootkits" yaml:"rootkits" mapstructure:"rootkits"`
 	Malware          malware.Config          `json:"malware" yaml:"malware" mapstructure:"malware"`
 	Misconfiguration misconfiguration.Config `json:"misconfiguration" yaml:"misconfiguration" mapstructure:"misconfiguration"`
-	InfoFinder       infofinder.Config       `json:"infofinder" yaml:"infofinder" mapstructure:"infofinder"`
+	InfoFinder       types4.Config           `json:"infofinder" yaml:"infofinder" mapstructure:"infofinder"`
 
 	// Enrichers
-	Exploits exploits.Config `json:"exploits" yaml:"exploits" mapstructure:"exploits"`
+	Exploits types3.Config `json:"exploits" yaml:"exploits" mapstructure:"exploits"`
 
 	// Plugins
 	Plugins plugins.Config `json:"plugins" yaml:"plugins" mapstructure:"plugins"`
@@ -68,7 +68,7 @@ func SetMountPointsForFamiliesInput(mountPoints []string, familiesConfig *Config
 		if familiesConfig.SBOM.Enabled {
 			familiesConfig.SBOM.Inputs = append(familiesConfig.SBOM.Inputs, types.Input{
 				Input:     mountDir,
-				InputType: string(utils.ROOTFS),
+				InputType: string(types2.ROOTFS),
 			})
 		}
 
@@ -78,7 +78,7 @@ func SetMountPointsForFamiliesInput(mountPoints []string, familiesConfig *Config
 			} else {
 				familiesConfig.Vulnerabilities.Inputs = append(familiesConfig.Vulnerabilities.Inputs, types.Input{
 					Input:     mountDir,
-					InputType: string(utils.ROOTFS),
+					InputType: string(types2.ROOTFS),
 				})
 			}
 		}
@@ -87,7 +87,7 @@ func SetMountPointsForFamiliesInput(mountPoints []string, familiesConfig *Config
 			familiesConfig.Secrets.Inputs = append(familiesConfig.Secrets.Inputs, types.Input{
 				StripPathFromResult: to.Ptr(true),
 				Input:               mountDir,
-				InputType:           string(utils.ROOTFS),
+				InputType:           string(types2.ROOTFS),
 			})
 		}
 
@@ -95,7 +95,7 @@ func SetMountPointsForFamiliesInput(mountPoints []string, familiesConfig *Config
 			familiesConfig.Malware.Inputs = append(familiesConfig.Malware.Inputs, types.Input{
 				StripPathFromResult: to.Ptr(true),
 				Input:               mountDir,
-				InputType:           string(utils.ROOTFS),
+				InputType:           string(types2.ROOTFS),
 			})
 		}
 
@@ -103,7 +103,7 @@ func SetMountPointsForFamiliesInput(mountPoints []string, familiesConfig *Config
 			familiesConfig.Rootkits.Inputs = append(familiesConfig.Rootkits.Inputs, types.Input{
 				StripPathFromResult: to.Ptr(true),
 				Input:               mountDir,
-				InputType:           string(utils.ROOTFS),
+				InputType:           string(types2.ROOTFS),
 			})
 		}
 
@@ -113,7 +113,7 @@ func SetMountPointsForFamiliesInput(mountPoints []string, familiesConfig *Config
 				types.Input{
 					StripPathFromResult: to.Ptr(true),
 					Input:               mountDir,
-					InputType:           string(utils.ROOTFS),
+					InputType:           string(types2.ROOTFS),
 				},
 			)
 		}
@@ -124,7 +124,7 @@ func SetMountPointsForFamiliesInput(mountPoints []string, familiesConfig *Config
 				types.Input{
 					StripPathFromResult: to.Ptr(true),
 					Input:               mountDir,
-					InputType:           string(utils.ROOTFS),
+					InputType:           string(types2.ROOTFS),
 				},
 			)
 		}
@@ -132,7 +132,7 @@ func SetMountPointsForFamiliesInput(mountPoints []string, familiesConfig *Config
 		if familiesConfig.Plugins.Enabled {
 			familiesConfig.Plugins.Inputs = append(familiesConfig.Plugins.Inputs, types.Input{
 				Input:     mountDir,
-				InputType: string(utils.ROOTFS),
+				InputType: string(types2.ROOTFS),
 			})
 		}
 	}
@@ -146,7 +146,7 @@ func SetOciArchiveForFamiliesInput(archives []string, familiesConfig *Config) *C
 		if familiesConfig.SBOM.Enabled {
 			familiesConfig.SBOM.Inputs = append(familiesConfig.SBOM.Inputs, types.Input{
 				Input:     archive,
-				InputType: string(utils.OCIARCHIVE),
+				InputType: string(types2.OCIARCHIVE),
 			})
 		}
 
@@ -156,7 +156,7 @@ func SetOciArchiveForFamiliesInput(archives []string, familiesConfig *Config) *C
 			} else {
 				familiesConfig.Vulnerabilities.Inputs = append(familiesConfig.Vulnerabilities.Inputs, types.Input{
 					Input:     archive,
-					InputType: string(utils.OCIARCHIVE),
+					InputType: string(types2.OCIARCHIVE),
 				})
 			}
 		}
@@ -165,7 +165,7 @@ func SetOciArchiveForFamiliesInput(archives []string, familiesConfig *Config) *C
 			familiesConfig.Secrets.Inputs = append(familiesConfig.Secrets.Inputs, types.Input{
 				StripPathFromResult: to.Ptr(true),
 				Input:               archive,
-				InputType:           string(utils.OCIARCHIVE),
+				InputType:           string(types2.OCIARCHIVE),
 			})
 		}
 
@@ -173,7 +173,7 @@ func SetOciArchiveForFamiliesInput(archives []string, familiesConfig *Config) *C
 			familiesConfig.Malware.Inputs = append(familiesConfig.Malware.Inputs, types.Input{
 				StripPathFromResult: to.Ptr(true),
 				Input:               archive,
-				InputType:           string(utils.OCIARCHIVE),
+				InputType:           string(types2.OCIARCHIVE),
 			})
 		}
 
@@ -181,7 +181,7 @@ func SetOciArchiveForFamiliesInput(archives []string, familiesConfig *Config) *C
 			familiesConfig.Rootkits.Inputs = append(familiesConfig.Rootkits.Inputs, types.Input{
 				StripPathFromResult: to.Ptr(true),
 				Input:               archive,
-				InputType:           string(utils.OCIARCHIVE),
+				InputType:           string(types2.OCIARCHIVE),
 			})
 		}
 
@@ -191,7 +191,7 @@ func SetOciArchiveForFamiliesInput(archives []string, familiesConfig *Config) *C
 				types.Input{
 					StripPathFromResult: to.Ptr(true),
 					Input:               archive,
-					InputType:           string(utils.OCIARCHIVE),
+					InputType:           string(types2.OCIARCHIVE),
 				},
 			)
 		}
@@ -202,10 +202,11 @@ func SetOciArchiveForFamiliesInput(archives []string, familiesConfig *Config) *C
 				types.Input{
 					StripPathFromResult: to.Ptr(true),
 					Input:               archive,
-					InputType:           string(utils.OCIARCHIVE),
+					InputType:           string(types2.OCIARCHIVE),
 				},
 			)
 		}
 	}
+
 	return familiesConfig
 }

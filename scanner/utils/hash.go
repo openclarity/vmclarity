@@ -19,6 +19,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"github.com/openclarity/vmclarity/scanner/types"
 	"io"
 	"os"
 	"path/filepath"
@@ -28,22 +29,22 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func GenerateHash(inputType SourceType, source string) (string, error) {
+func GenerateHash(inputType types.InputType, source string) (string, error) {
 	absPath, err := filepath.Abs(source)
 	if err != nil {
 		return "", fmt.Errorf("failed to get absolute path of the source %s: %w", source, err)
 	}
 	switch inputType {
-	case IMAGE, DOCKERARCHIVE, OCIARCHIVE, OCIDIR:
+	case types.IMAGE, types.DOCKERARCHIVE, types.OCIARCHIVE, types.OCIDIR:
 		log.Infof("Skip generating hash in the case of image")
 		return "", nil
-	case DIR, ROOTFS:
+	case types.DIR, types.ROOTFS:
 		hash, err := hashDir(absPath)
 		if err != nil {
 			return "", fmt.Errorf("failed to create hash for directory %s: %w", absPath, err)
 		}
 		return hash, nil
-	case FILE:
+	case types.FILE:
 		input, err := os.Open(absPath)
 		if err != nil {
 			return "", fmt.Errorf("failed to open file %s for generating hash: %w", absPath, err)
@@ -54,7 +55,7 @@ func GenerateHash(inputType SourceType, source string) (string, error) {
 			return "", fmt.Errorf("failed to create hash for file %s: %w", absPath, err)
 		}
 		return fmt.Sprintf("%x", hash.Sum(nil)), nil // nolint:perfsprint
-	case SBOM:
+	case types.SBOM:
 		log.Infof("Skip generating hash in the case of sbom")
 		return "", nil
 	default:

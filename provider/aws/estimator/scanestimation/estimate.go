@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/openclarity/vmclarity/scanner/types"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -28,7 +29,6 @@ import (
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/provider/common"
 	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
-	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
 type MarketOption string
@@ -300,7 +300,7 @@ func findMatchingStatsForInputTypeRootFS(stats *[]apitypes.AssetScanInputScanSta
 		return apitypes.AssetScanInputScanStats{}, false
 	}
 	for i, scanStats := range *stats {
-		if *scanStats.Type == string(utils.ROOTFS) {
+		if *scanStats.Type == string(types.ROOTFS) {
 			ret := *stats
 			return ret[i], true
 		}

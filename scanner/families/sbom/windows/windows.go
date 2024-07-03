@@ -19,11 +19,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
+	job_manager2 "github.com/openclarity/vmclarity/scanner/internal/job_manager"
+	types2 "github.com/openclarity/vmclarity/scanner/types"
 
 	log "github.com/sirupsen/logrus"
-
-	"github.com/openclarity/vmclarity/scanner/job_manager"
-	"github.com/openclarity/vmclarity/scanner/utils"
 )
 
 const AnalyzerName = "windows"
@@ -31,10 +30,10 @@ const AnalyzerName = "windows"
 type Analyzer struct {
 	name       string
 	logger     *log.Entry
-	resultChan chan job_manager.Result
+	resultChan chan job_manager2.Result
 }
 
-func New(_ string, _ job_manager.IsConfig, logger *log.Entry, resultChan chan job_manager.Result) job_manager.Job {
+func New(_ string, _ job_manager2.IsConfig, logger *log.Entry, resultChan chan job_manager2.Result) job_manager2.Job {
 	return &Analyzer{
 		name:       AnalyzerName,
 		logger:     logger.Dup().WithField("analyzer", AnalyzerName),
@@ -43,7 +42,7 @@ func New(_ string, _ job_manager.IsConfig, logger *log.Entry, resultChan chan jo
 }
 
 // nolint:cyclop
-func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInput string) error {
+func (a *Analyzer) Run(ctx context.Context, sourceType types2.InputType, userInput string) error {
 	a.logger.Infof("Called %s analyzer on source %v %v", a.name, sourceType, userInput)
 
 	go func() {
@@ -53,11 +52,11 @@ func (a *Analyzer) Run(ctx context.Context, sourceType utils.SourceType, userInp
 		var err error
 		var registry *Registry
 		switch sourceType {
-		case utils.FILE: // Use file location to the registry
+		case types2.FILE: // Use file location to the registry
 			registry, err = NewRegistry(userInput, a.logger)
-		case utils.ROOTFS, utils.DIR: // Use mount drive as input
+		case types2.ROOTFS, types2.DIR: // Use mount drive as input
 			registry, err = NewRegistryForMount(userInput, a.logger)
-		case utils.SBOM, utils.IMAGE, utils.DOCKERARCHIVE, utils.OCIARCHIVE, utils.OCIDIR: // Unsupported
+		case types2.SBOM, types2.IMAGE, types2.DOCKERARCHIVE, types2.OCIARCHIVE, types2.OCIDIR: // Unsupported
 			fallthrough
 		default:
 			a.logger.Infof("Skipping analyzing unsupported source type: %s", sourceType)

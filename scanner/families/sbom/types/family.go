@@ -18,8 +18,8 @@ package types
 import (
 	"fmt"
 	cdx "github.com/CycloneDX/cyclonedx-go"
-	"github.com/openclarity/vmclarity/scanner/converter"
 	"github.com/openclarity/vmclarity/scanner/families/types"
+	"github.com/openclarity/vmclarity/scanner/utils/converter"
 	"time"
 )
 

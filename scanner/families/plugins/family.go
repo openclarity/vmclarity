@@ -18,6 +18,7 @@ package plugins
 import (
 	"context"
 	"fmt"
+
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/core/to"
@@ -25,7 +26,7 @@ import (
 	"github.com/openclarity/vmclarity/scanner/families/plugins/runner"
 	"github.com/openclarity/vmclarity/scanner/families/plugins/types"
 	familiestypes "github.com/openclarity/vmclarity/scanner/families/types"
-	"github.com/openclarity/vmclarity/scanner/job_manager"
+	job_manager2 "github.com/openclarity/vmclarity/scanner/internal/job_manager"
 )
 
 type Plugins struct {
@@ -46,7 +47,7 @@ func (p *Plugins) Run(ctx context.Context, res *familiestypes.FamiliesResults) (
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "plugins")
 	logger.Info("Plugins Run...")
 
-	factory := job_manager.NewJobFactory()
+	factory := job_manager2.NewJobFactory()
 	for _, n := range p.conf.ScannersList {
 		factory.Register(n, runner.New)
 	}
