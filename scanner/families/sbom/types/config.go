@@ -27,7 +27,7 @@ type Config struct {
 	Inputs          []common.ScanInput `yaml:"inputs" mapstructure:"inputs"`
 	MergeWith       []MergeWith        `yaml:"merge_with" mapstructure:"merge_with"`
 	Registry        *common.Registry   `yaml:"registry" mapstructure:"registry"`
-	LocalImageScan  *bool              `yaml:"local_image_scan" mapstructure:"local_image_scan"`
+	LocalImageScan  bool               `yaml:"local_image_scan" mapstructure:"local_image_scan"`
 	AnalyzersConfig AnalyzersConfig    `yaml:"analyzers_config" mapstructure:"analyzers_config"`
 }
 

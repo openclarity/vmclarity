@@ -62,7 +62,7 @@ func New(_ string, config types.Config) (families.Scanner[*types.ScannerResult],
 
 	// Override configs from parent
 	trivyConfig := config.ScannersConfig.Trivy
-	if config.Registry != nil {
+	if trivyConfig.Registry == nil {
 		trivyConfig.SetRegistry(config.Registry)
 	}
 
