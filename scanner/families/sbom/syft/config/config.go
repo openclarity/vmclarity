@@ -22,10 +22,18 @@ import (
 )
 
 type Config struct {
-	Scope          string          `yaml:"scope" mapstructure:"scope"`
-	ExcludePaths   []string        `yaml:"exclude_paths" mapstructure:"exclude_paths"`
-	Registry       common.Registry `yaml:"registry" mapstructure:"registry"`
-	LocalImageScan bool            `yaml:"local_image_scan" mapstructure:"local_image_scan"`
+	Scope          string           `yaml:"scope" mapstructure:"scope"`
+	ExcludePaths   []string         `yaml:"exclude_paths" mapstructure:"exclude_paths"`
+	Registry       *common.Registry `yaml:"registry" mapstructure:"registry"`
+	LocalImageScan bool             `yaml:"local_image_scan" mapstructure:"local_image_scan"`
+}
+
+func (c *Config) SetRegistry(registry *common.Registry) {
+	c.Registry = registry
+}
+
+func (c *Config) SetLocalImageScan(localScan bool) {
+	c.LocalImageScan = localScan
 }
 
 func (c *Config) GetScope() source.Scope {
@@ -39,6 +47,10 @@ func (c *Config) GetExcludePaths() source.ExcludeConfig {
 }
 
 func (c *Config) GetRegistryOptions() *image.RegistryOptions {
+	if c.Registry == nil {
+		return nil
+	}
+
 	credentials := make([]image.RegistryCredentials, len(c.Registry.Auths))
 
 	for i, cred := range c.Registry.Auths {

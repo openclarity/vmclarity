@@ -41,6 +41,14 @@ type LocalGrypeConfig struct {
 	LocalImageScan     bool             `yaml:"local_image_scan" mapstructure:"local_image_scan"`
 }
 
+func (c *LocalGrypeConfig) SetRegistry(registry *common.Registry) {
+	c.Registry = registry
+}
+
+func (c *LocalGrypeConfig) SetLocalImageScan(localScan bool) {
+	c.LocalImageScan = localScan
+}
+
 func (c *LocalGrypeConfig) GetScope() source.Scope {
 	return source.ParseScope(c.Scope)
 }

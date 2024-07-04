@@ -53,15 +53,21 @@ type Scanner struct {
 	config config.Config
 }
 
-func New(_ string, config types.ScannersConfig) (families.Scanner[*types.ScannerResult], error) {
+func New(_ string, config types.Config) (families.Scanner[*types.ScannerResult], error) {
 	logger := log.GetLoggerFromContextOrDefault(context.Background())
 
 	// Set up the logger for trivy
 	tlogger := trivyLog.New(sloglogrus.Option{Logger: logger.Logger}.NewLogrusHandler())
 	trivyLog.SetDefault(tlogger)
 
+	// Override configs from parent
+	trivyConfig := config.ScannersConfig.Trivy
+	if config.Registry != nil {
+		trivyConfig.SetRegistry(config.Registry)
+	}
+
 	return &Scanner{
-		config: config.Trivy,
+		config: trivyConfig,
 	}, nil
 }
 

@@ -38,9 +38,20 @@ type Analyzer struct {
 	config config.Config
 }
 
-func New(_ string, config types.AnalyzersConfig) (families.Scanner[*types.ScannerResult], error) {
+func New(_ string, config types.Config) (families.Scanner[*types.ScannerResult], error) {
+	syftConfig := config.AnalyzersConfig.Syft
+
+	// Override from parent config
+	if config.Registry != nil {
+		syftConfig.SetRegistry(config.Registry)
+	}
+
+	if config.LocalImageScan != nil {
+		syftConfig.SetLocalImageScan(*config.LocalImageScan)
+	}
+
 	return &Analyzer{
-		config: config.Syft,
+		config: syftConfig,
 	}, nil
 }
 

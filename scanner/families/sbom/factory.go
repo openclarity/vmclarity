@@ -23,7 +23,9 @@ import (
 	"github.com/openclarity/vmclarity/scanner/internal/scan_manager"
 )
 
-var Factory = scan_manager.NewFactory[types.AnalyzersConfig, *types.ScannerResult]()
+// Pass parent config that contain shared fields for override
+
+var Factory = scan_manager.NewFactory[types.Config, *types.ScannerResult]()
 
 func init() {
 	Factory.Register(syft.AnalyzerName, syft.New)

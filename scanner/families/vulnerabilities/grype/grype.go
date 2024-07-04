@@ -34,14 +34,14 @@ const (
 	ScannerName = "grype"
 )
 
-func New(_ string, config types.ScannersConfig) (families.Scanner[*types.ScannerResult], error) {
-	switch config.Grype.Mode {
+func New(_ string, config types.Config) (families.Scanner[*types.ScannerResult], error) {
+	switch mode := config.ScannersConfig.Grype.Mode; mode {
 	case grypeconfig.ModeLocal:
 		return newLocalScanner(config), nil
 	case grypeconfig.ModeRemote:
 		return newRemoteScanner(config), nil
 	default:
-		return nil, fmt.Errorf("unsupported grype mode %q", config.Grype.Mode)
+		return nil, fmt.Errorf("unsupported grype mode %q", mode)
 	}
 }
 
