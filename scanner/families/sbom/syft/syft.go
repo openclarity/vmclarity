@@ -41,13 +41,12 @@ type Analyzer struct {
 func New(_ string, config types.Config) (families.Scanner[*types.ScannerResult], error) {
 	syftConfig := config.AnalyzersConfig.Syft
 
-	// Override from parent config
-	if config.Registry != nil {
+	// Override from parent config if unset
+	if syftConfig.Registry == nil {
 		syftConfig.SetRegistry(config.Registry)
 	}
-
-	if config.LocalImageScan != nil {
-		syftConfig.SetLocalImageScan(*config.LocalImageScan)
+	if !syftConfig.LocalImageScan {
+		syftConfig.SetLocalImageScan(config.LocalImageScan)
 	}
 
 	return &Analyzer{

@@ -47,13 +47,12 @@ type Analyzer struct {
 func New(_ string, config types.Config) (families.Scanner[*types.ScannerResult], error) {
 	trivyConfig := config.AnalyzersConfig.Trivy
 
-	// Override from parent config
-	if config.Registry != nil {
+	// Override from parent config if unset
+	if trivyConfig.Registry == nil {
 		trivyConfig.SetRegistry(config.Registry)
 	}
-
-	if config.LocalImageScan != nil {
-		trivyConfig.SetLocalImageScan(*config.LocalImageScan)
+	if !trivyConfig.LocalImageScan {
+		trivyConfig.SetLocalImageScan(config.LocalImageScan)
 	}
 
 	return &Analyzer{
