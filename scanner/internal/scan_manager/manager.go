@@ -54,29 +54,42 @@ func New[CT, RT any](scanners []string, config CT, factory *Factory[CT, RT]) *Ma
 func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) ([]InputScanResult[RT], error) {
 	logger := log.GetLoggerFromContextOrDefault(ctx)
 
-	resultCh := make(chan InputScanResultWithError[RT])
-
 	// Create processing jobs, do not cancel on error
+	resultCh := make(chan InputScanResultWithError[RT])
 	workerPool := pool.New().WithContext(ctx)
 
 	for _, scannerName := range m.scanners {
 		// Do not continue processing further if we cannot create a specific scanner
 		scanner, err := m.factory.CreateJob(scannerName, m.config)
 		if err != nil {
-			logger.Errorf("Failed to create scanner %s, reason=%v", scannerName, err)
+			logger.WithError(err).Errorf("Failed to create scanner %s", scannerName)
 			continue
 		}
 
 		// schedule each {job}, {input} input pair to parallel worker
 		for _, input := range inputs {
 			workerPool.Go(func(ctx context.Context) error {
-				logger.Infof("Started running scanner %s for input %s:%s...", scannerName, input.InputType, input.Input)
+				// Set logger for family scanner and override context
+				logger := logger.WithFields(map[string]interface{}{
+					"scanner": scannerName,
+					"input":   input,
+				})
+				ctx = log.SetLoggerForContext(ctx, logger)
 
 				// Run scan
+				logger.Infof("Started scanning input=%s...", input)
+
 				startTime := time.Now()
 				inputScanResult, inputScanErr := scanner.Scan(ctx, input.InputType, input.Input)
 				inputSize, _ := familiesutils.GetInputSize(input) // in megabytes
 				endTime := time.Now()
+
+				// Log scan result success
+				if inputScanErr != nil {
+					logger.WithError(inputScanErr).Warnf("Scanning input=%s finished with error", input)
+				} else {
+					logger.Infof("Successfully scanned input=%s", input)
+				}
 
 				// Forward the result in custom format to main result channel
 				resultCh <- InputScanResultWithError[RT]{
@@ -93,13 +106,6 @@ func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) (
 					},
 					Error: inputScanErr,
 				}
-
-				state := "SUCCESS"
-				if inputScanErr != nil {
-					state = "FAILURE"
-				}
-
-				logger.Infof("Finished running scanner %s for input %s with state=%s", scannerName, input.Input, state)
 
 				return nil
 			})
