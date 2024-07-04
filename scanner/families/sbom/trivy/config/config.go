@@ -28,6 +28,14 @@ type Config struct {
 	LocalImageScan bool             `yaml:"local_image_scan" mapstructure:"local_image_scan"`
 }
 
+func (c *Config) SetRegistry(registry *common.Registry) {
+	c.Registry = registry
+}
+
+func (c *Config) SetLocalImageScan(localScan bool) {
+	c.LocalImageScan = localScan
+}
+
 func (c *Config) GetTimeout() time.Duration {
 	return time.Duration(c.Timeout) * time.Second
 }

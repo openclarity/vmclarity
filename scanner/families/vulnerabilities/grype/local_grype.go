@@ -54,9 +54,20 @@ type LocalScanner struct {
 	config config.LocalGrypeConfig
 }
 
-func newLocalScanner(config types.ScannersConfig) families.Scanner[*types.ScannerResult] {
+func newLocalScanner(config types.Config) families.Scanner[*types.ScannerResult] {
+	grypeConfig := config.ScannersConfig.Grype.Local
+
+	// Override config from parent
+	if config.Registry != nil {
+		grypeConfig.SetRegistry(config.Registry)
+	}
+
+	if config.LocalImageScan != nil {
+		grypeConfig.SetLocalImageScan(*config.LocalImageScan)
+	}
+
 	return &LocalScanner{
-		config: config.Grype.Local,
+		config: grypeConfig,
 	}
 }
 

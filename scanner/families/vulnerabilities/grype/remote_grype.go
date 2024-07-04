@@ -40,14 +40,15 @@ type RemoteScanner struct {
 	timeout time.Duration
 }
 
-func newRemoteScanner(config types.ScannersConfig) families.Scanner[*types.ScannerResult] {
+func newRemoteScanner(config types.Config) families.Scanner[*types.ScannerResult] {
+	grypeConfig := config.ScannersConfig.Grype.Remote
 	cfg := grype_client.DefaultTransportConfig().
-		WithSchemes(config.Grype.Remote.GrypeServerSchemes).
-		WithHost(config.Grype.Remote.GrypeServerAddress)
+		WithSchemes(grypeConfig.GrypeServerSchemes).
+		WithHost(grypeConfig.GrypeServerAddress)
 
 	return &RemoteScanner{
 		client:  grype_client.New(transport.New(cfg.Host, cfg.BasePath, cfg.Schemes), strfmt.Default),
-		timeout: config.Grype.Remote.GrypeServerTimeout,
+		timeout: grypeConfig.GrypeServerTimeout,
 	}
 }
 

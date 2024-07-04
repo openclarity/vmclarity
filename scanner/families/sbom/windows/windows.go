@@ -28,7 +28,7 @@ const AnalyzerName = "windows"
 
 type Analyzer struct{}
 
-func New(_ string, _ types.AnalyzersConfig) (families.Scanner[*types.ScannerResult], error) {
+func New(_ string, _ types.Config) (families.Scanner[*types.ScannerResult], error) {
 	return &Analyzer{}, nil
 }
 

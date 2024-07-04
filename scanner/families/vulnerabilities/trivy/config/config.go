@@ -29,6 +29,10 @@ type Config struct {
 	Registry    *common.Registry `yaml:"registry" mapstructure:"registry"`
 }
 
+func (c *Config) SetRegistry(registry *common.Registry) {
+	c.Registry = registry
+}
+
 func (c *Config) GetTimeout() time.Duration {
 	return time.Duration(c.Timeout) * time.Second
 }
