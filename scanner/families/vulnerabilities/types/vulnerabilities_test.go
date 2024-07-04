@@ -733,7 +733,10 @@ func TestMergedResults_Merge(t *testing.T) {
 			if tt.patchMergedVulnerabilityID != nil {
 				got.MergedVulnerabilitiesByKey = tt.patchMergedVulnerabilityID(got.MergedVulnerabilitiesByKey)
 			}
-			assert.DeepEqual(t, got, tt.want, cmpopts.IgnoreTypes(VulnerabilityDiff{}.ASCIIDiff))
+			assert.DeepEqual(t, got, tt.want, cmpopts.IgnoreTypes(
+				common.ScanMetadata{},
+				VulnerabilityDiff{}.ASCIIDiff,
+			))
 		})
 	}
 }

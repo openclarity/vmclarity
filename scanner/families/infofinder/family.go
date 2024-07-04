@@ -44,7 +44,7 @@ func (i InfoFinder) Run(ctx context.Context, _ *families.Results) (*types.Infos,
 	logger.Info("InfoFinder Run...")
 
 	// Run all scanners using scan manager
-	manager := scan_manager.New[types.ScannersConfig, []types.Info](i.conf.ScannersList, i.conf.ScannersConfig, types.Factory)
+	manager := scan_manager.New(i.conf.ScannersList, i.conf.ScannersConfig, Factory)
 	results, err := manager.Scan(ctx, i.conf.Inputs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process inputs for infofinders: %w", err)

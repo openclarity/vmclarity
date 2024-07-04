@@ -114,7 +114,3 @@ func getImageInfo(s *syftsbom.SBOM, src string) (string, *image_helper.ImageInfo
 		return "", nil, errors.New("failed to get image hash from source metadata")
 	}
 }
-
-func init() {
-	types.FactoryRegister(AnalyzerName, New)
-}

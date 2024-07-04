@@ -1,4 +1,4 @@
-// Copyright © 2024 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,11 +13,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package types
+package vulnerabilities
 
-import "github.com/openclarity/vmclarity/scanner/internal/scan_manager"
-
-var (
-	Factory         = scan_manager.NewFactory[ScannersConfig, *ScannerResult]()
-	FactoryRegister = Factory.Register
+import (
+	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/grype"
+	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/trivy"
+	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/types"
+	"github.com/openclarity/vmclarity/scanner/internal/scan_manager"
 )
+
+var Factory = scan_manager.NewFactory[types.ScannersConfig, *types.ScannerResult]()
+
+func init() {
+	Factory.Register(grype.ScannerName, grype.New)
+	Factory.Register(trivy.ScannerName, trivy.New)
+}

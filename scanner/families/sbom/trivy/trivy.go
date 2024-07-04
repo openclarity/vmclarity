@@ -197,7 +197,3 @@ func getImageInfo(properties *[]cdx.Property, imageName string) (string, *image_
 
 	return hash, imageInfo, nil
 }
-
-func init() {
-	types.FactoryRegister(AnalyzerName, New)
-}

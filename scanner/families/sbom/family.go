@@ -61,7 +61,7 @@ func (s SBOM) Run(ctx context.Context, _ *families.Results) (*types.SBOM, error)
 	}
 
 	// Run all scanners using scan manager
-	manager := scan_manager.New[types.AnalyzersConfig, *types.ScannerResult](s.conf.AnalyzersList, s.conf.AnalyzersConfig, types.Factory)
+	manager := scan_manager.New(s.conf.AnalyzersList, s.conf.AnalyzersConfig, Factory)
 	results, err := manager.Scan(ctx, s.conf.Inputs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process inputs for sbom: %w", err)

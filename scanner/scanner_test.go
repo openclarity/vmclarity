@@ -59,10 +59,17 @@ func TestManagerRun(t *testing.T) {
 		t.Fatalf("expected manager to run successfully, got %v", errs)
 	}
 
-	for _, res := range notifier.Results {
-		if res.Err == nil {
-			t.Fatalf("expected FamilyResult(%s) error, got nil", res.FamilyType)
-		}
+	if len(notifier.Results) != 1 {
+		t.Fatalf("expected 1 result")
+	}
+
+	result := notifier.Results[0]
+	if err := result.Err; err != nil {
+		t.Fatalf("expected FamilyResult(%s) nil error, got %v", result.FamilyType, err)
+	}
+
+	if _, ok := result.Result.(*misconfigurationtypes.Misconfigurations); !ok {
+		t.Fatalf("expected Misconfigurations results, got %T", result.Result)
 	}
 }
 

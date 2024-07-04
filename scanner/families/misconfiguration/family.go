@@ -44,7 +44,7 @@ func (m Misconfiguration) Run(ctx context.Context, _ *families.Results) (*types.
 	logger.Info("Misconfiguration Run...")
 
 	// Run all scanners using scan manager
-	manager := scan_manager.New[types.ScannersConfig, []types.Misconfiguration](m.conf.ScannersList, m.conf.ScannersConfig, types.Factory)
+	manager := scan_manager.New(m.conf.ScannersList, m.conf.ScannersConfig, Factory)
 	results, err := manager.Scan(ctx, m.conf.Inputs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process inputs for misconfigurations: %w", err)

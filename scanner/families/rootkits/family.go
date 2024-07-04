@@ -44,7 +44,7 @@ func (r Rootkits) Run(ctx context.Context, _ *families.Results) (*types.Rootkits
 	logger.Info("Rootkits Run...")
 
 	// Run all scanners using scan manager
-	manager := scan_manager.New[types.ScannersConfig, []types.Rootkit](r.conf.ScannersList, r.conf.ScannersConfig, types.Factory)
+	manager := scan_manager.New(r.conf.ScannersList, r.conf.ScannersConfig, Factory)
 	results, err := manager.Scan(ctx, r.conf.Inputs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process inputs for rootkits: %w", err)
