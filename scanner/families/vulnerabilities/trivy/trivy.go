@@ -374,7 +374,3 @@ func getAllTrivySeverities() ([]trivyDBTypes.Severity, error) {
 	}
 	return severities, nil
 }
-
-func init() {
-	types.FactoryRegister(ScannerName, New)
-}

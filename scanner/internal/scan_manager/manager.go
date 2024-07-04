@@ -109,8 +109,7 @@ func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) (
 	// Wait for workers to finish and close main result channel to allow proper
 	// listening. We don't return any errors from the processing loop.
 	go func() {
-		err := workerPool.Wait()
-		fmt.Println(err)
+		_ = workerPool.Wait()
 		close(resultCh)
 	}()
 
@@ -120,12 +119,12 @@ func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) (
 
 	for result := range resultCh {
 		if err := result.Error; err != nil {
-			scanErr := fmt.Errorf("%q scanner job failed: %w", result.Metadata, err)
+			scanErr := fmt.Errorf("%s scanner job failed: %w", result.Metadata, err)
 			logger.Warning(scanErr)
 
 			resultError = multierror.Append(resultError, scanErr)
 		} else {
-			logger.Infof("Got result for scanner job %q", result.Metadata)
+			logger.Infof("Got result for scanner job %s", result.Metadata)
 
 			results = append(results, result.InputScanResult)
 		}

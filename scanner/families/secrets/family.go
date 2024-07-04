@@ -44,7 +44,7 @@ func (s Secrets) Run(ctx context.Context, _ *families.Results) (*types.Findings,
 	logger.Info("Secrets Run...")
 
 	// Run all scanners using scan manager
-	manager := scan_manager.New[types.ScannersConfig, []types.Finding](s.conf.ScannersList, s.conf.ScannersConfig, types.Factory)
+	manager := scan_manager.New(s.conf.ScannersList, s.conf.ScannersConfig, Factory)
 	results, err := manager.Scan(ctx, s.conf.Inputs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process inputs for secrets: %w", err)

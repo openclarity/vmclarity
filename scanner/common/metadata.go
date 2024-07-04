@@ -16,6 +16,7 @@
 package common
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -37,6 +38,10 @@ func NewScanInputMetadata(scannerName string, startTime, endTime time.Time, inpu
 		StartTime:   startTime,
 		EndTime:     endTime,
 	}
+}
+
+func (m ScanInputMetadata) String() string {
+	return fmt.Sprintf("{Scanner=%s, Input=%s:%s, InputSize=%d}", m.ScannerName, m.InputType, m.InputPath, m.InputSize)
 }
 
 type ScanMetadata struct {

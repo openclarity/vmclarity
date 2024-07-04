@@ -85,7 +85,3 @@ func createFakeMisconfigurationReport() []types.Misconfiguration {
 		},
 	}
 }
-
-func init() {
-	types.FactoryRegister(ScannerName, New)
-}

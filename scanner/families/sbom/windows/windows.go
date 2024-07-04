@@ -62,7 +62,3 @@ func (a *Analyzer) Scan(ctx context.Context, inputType common.InputType, userInp
 
 	return result, nil
 }
-
-func init() {
-	types.FactoryRegister(AnalyzerName, New)
-}

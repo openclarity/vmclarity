@@ -1,4 +1,4 @@
-// Copyright © 2024 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,11 +13,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package types
+package rootkits
 
-import "github.com/openclarity/vmclarity/scanner/internal/scan_manager"
-
-var (
-	Factory         = scan_manager.NewFactory[ScannersConfig, []Info]()
-	FactoryRegister = Factory.Register
+import (
+	"github.com/openclarity/vmclarity/scanner/families/rootkits/chkrootkit"
+	"github.com/openclarity/vmclarity/scanner/families/rootkits/types"
+	"github.com/openclarity/vmclarity/scanner/internal/scan_manager"
 )
+
+var Factory = scan_manager.NewFactory[types.ScannersConfig, []types.Rootkit]()
+
+func init() {
+	Factory.Register(chkrootkit.ScannerName, chkrootkit.New)
+}

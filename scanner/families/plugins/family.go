@@ -44,9 +44,10 @@ func (p *Plugins) Run(ctx context.Context, _ *families.Results) (*types.Result, 
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "plugins")
 	logger.Info("Plugins Run...")
 
-	// Register plugins dynamically instead of registering the runner itself
-	for _, n := range p.conf.ScannersList {
-		types.FactoryRegister(n, runner.New)
+	// Register plugins dynamically instead of creating a public factory
+	factory := scan_manager.NewFactory[types.ScannersConfig, *types.ScannerResult]()
+	for _, scannerName := range p.conf.ScannersList {
+		factory.Register(scannerName, runner.New)
 	}
 
 	// Top level BinaryMode overrides the individual scanner BinaryMode if set

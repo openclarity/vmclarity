@@ -211,7 +211,3 @@ func parseLayerHex(layerID string) string {
 
 	return layerID[index+1:]
 }
-
-func init() {
-	types.FactoryRegister(ScannerName, New)
-}

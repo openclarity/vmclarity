@@ -117,7 +117,3 @@ func toResultsRootkits(rootkits []chkrootkitutils.Rootkit) []types.Rootkit {
 
 	return ret
 }
-
-func init() {
-	types.FactoryRegister(ScannerName, New)
-}

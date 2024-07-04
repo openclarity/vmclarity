@@ -69,6 +69,6 @@ type ScanInput struct {
 	InputType           InputType `json:"input_type" yaml:"input_type" mapstructure:"input_type"`
 }
 
-func (s *ScanInput) String() string {
+func (s ScanInput) String() string {
 	return fmt.Sprintf("%s:%s", s.InputType, s.Input)
 }

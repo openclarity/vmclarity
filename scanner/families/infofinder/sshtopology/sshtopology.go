@@ -358,7 +358,3 @@ func parseSSHKeyGenFingerprintCommandOutput(output string, infoType types.InfoTy
 	}
 	return infos
 }
-
-func init() {
-	types.FactoryRegister(ScannerName, New)
-}

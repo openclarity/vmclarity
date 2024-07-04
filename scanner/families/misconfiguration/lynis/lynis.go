@@ -126,7 +126,3 @@ func (a *Scanner) Scan(ctx context.Context, inputType common.InputType, userInpu
 
 	return misconfigurations, nil
 }
-
-func init() {
-	types.FactoryRegister(ScannerName, New)
-}
