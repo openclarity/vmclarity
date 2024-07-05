@@ -2,68 +2,88 @@ sbom:
   enabled: false
   analyzers_list:
     - "syft"
-    - "gomod"
-#    - "windows"
+    - "trivy"
+    - "windows"
   inputs:
     - input: "node:slim"
       input_type: "image"
-#    - input: "/mnt"
-#      input_type: "rootfs"
-#    - input: "nginx:1.10"
-#      input_type: "image"
-#  merge_with:
-#    - sbom_path: "nginx.11.cdx.json"
+    # - input: "/mnt"
+    #   input_type: "rootfs"
+    # - input: "nginx:1.10"
+    #   input_type: "image"
+  # merge_with:
+  #  - sbom_path: "nginx.11.cdx.json"
   analyzers_config:
-    analyzer:
-      output_format: "cyclonedx-json"
+    syft:
       scope: "Squashed"
       exclude_paths:
-        - "/dev"
-        - "/proc"
-      trivy_config:
-        timeout: 300
-    registry:
-      skip-verify-tls: false
-      use-http: false
-      auths:
-        authority: "authority"
-        username: "username"
-        password: "password"
-        token: "token"
+        - "./dev"
+        - "./proc"
+      ## Overrides parent sbom configs
+      # local_image_scan: ...
+      # registry: ...
+    trivy:
+      timeout: 300 # timeout in seconds
+      cache_dir: /tmp/.trivy/cache
+      temp_dir: /tmp/.trivy/
+      ## Overrides parent sbom configs
+      # local_image_scan: ...
+      # registry: ...
+  local_image_scan: true
+  registry:
+    skip-verify-tls: false
+    use-http: false
+    auths:
+      authority: "authority"
+      username: "username"
+      password: "password"
+      token: "token"
 
 vulnerabilities:
   enabled: false
   scanners_list:
     - "grype"
+    - "trivy"
   inputs:
-#    - input: "nginx:1.12"
-#      input_type: "image"
-#    - input: "nginx:1.13"
-#      input_type: "image"
+    - input: "nginx:1.12"
+      input_type: "image"
+    # - input: "nginx:1.13"
+    #   input_type: "image"
   input_from_sbom: true
   scanners_config:
-    scanner:
-      grype_config:
-        mode: "LOCAL"
-        local_grype_config:
-          update_db: true
-          db_root_dir: "/tmp/"
-          listing_url: "https://toolbox-data.anchore.io/grype/databases/listing.json"
-          max_allowed_built_age: "120h"
-          listing_file_timeout: "60s"
-          update_timeout: "60s"
-          scope: "squashed"
-        remote_grype_config:
-          grype_server_address: ""
-          grype_server_timeout: "2m"
-    registry:
-      skip-verify-tls: false
-      use-http: false
-      auths:
-        authority: "authority"
-        username: "username"
-        password: "password"
-        token: "token"
+    grype:
+      mode: "LOCAL"
+      local_grype_config:
+        update_db: true
+        db_root_dir: "/tmp/"
+        listing_url: "https://toolbox-data.anchore.io/grype/databases/listing.json"
+        max_allowed_built_age: "120h"
+        listing_file_timeout: "60s"
+        update_timeout: "60s"
+        scope: "squashed"
+        ## Overrides parent sbom configs
+        # local_image_scan: ...
+        # registry: ...
+      remote_grype_config:
+        grype_server_address: ""
+        grype_server_timeout: "2m"
+    trivy:
+      timeout: 300 # timeout in seconds
+      cache_dir: /tmp/.trivy/cache
+      temp_dir: /tmp/.trivy/
+      server_addr: "trivy.example.com"
+      server_token: "token"
+      ## Overrides parent sbom configs
+      # registry: ...
+  local_image_scan: true
+  registry:
+    skip-verify-tls: false
+    use-http: false
+    auths:
+      authority: "authority"
+      username: "username"
+      password: "password"
+      token: "token"
 
 secrets:
   enabled: false
@@ -89,12 +109,25 @@ exploits:
 misconfiguration:
   enabled: false
   scanners_list:
+    - "cisdocker"
+    - "lynis"
     - "fake"
   inputs:
     - input: "./"
       input_type: "rootfs"
-  scanners_config: {}
-
+  scanners_config:
+    cisdocker:
+      timeout: "60s"
+      registry:
+        skip-verify-tls: false
+        use-http: false
+        auths:
+          authority: "authority"
+          username: "username"
+          password: "password"
+          token: "token"
+      lynis:
+        binary_path: "/usr/local/bin/lynis"
 
 infofinder:
   enabled: true
@@ -109,25 +142,39 @@ malware:
   enabled: true
   scanners_list:
     - "clam"
+    - "yara"
+    - "mycustomscanner"
   inputs:
+    - input: "/tmp"
+      input_type: "rootfs"
+    - input: "/usr"
+      input_type: "rootfs"
+    - input: "/"
+      input_type: "rootfs"
     - input: "/"
       input_type: "rootfs"
   scanners_config:
     clam:
-      freshclam_binary_path: freshclam
-      # freshclam_config_path: /path/to/freshclam.conf
-      # alternative_freshclam_mirror_url: "database.clamav.net"
-
-      clamscan_binary_path: clamscan
-      #clamscan_exclude_files:
-      #  - "^.*\.log$"
-      #clamscan_exclude_dirs:
-      #  - "^/sys"
-
+      freshclam_binary_path: "/usr/local/bin/freshclam"
+      freshclam_config_path: "/path/to/freshclam.conf"
+      alternative_freshclam_mirror_url: "database.clamav.net"
+      clamscan_binary_path: "/usr/local/bin/clamscan"
+      clamscan_exclude_files:
+        - "^.*\.log$"
+      clamscan_exclude_dirs:
+        - "^/sys"
       clam_daemon_mode: false
-      clam_daemon_binary_path: clamd
-      # clam_daemon_config_path: /path/to/clamd.conf
-      clam_daemon_client_binary_path: clamdscan
+      clam_daemon_binary_path: "/usr/local/bin/clamd"
+      clam_daemon_config_path: "/path/to/clamd.conf"
+      clam_daemon_client_binary_path: "/usr/local/bin/clamdscan"
+    yara:
+      yara_binary_path: "/usr/local/bin/yara"
+      compiled_rule_url: ""
+      rule_sources:
+        - name: ""
+          url: ""
+      yarac_binary_path: "/usr/local/bin/yarac"
+      cache_dir: "/tmp/.yara"
 
 rootkits:
   enabled: true
@@ -138,7 +185,7 @@ rootkits:
       input_type: "rootfs"
   scanners_config:
     chkrootkit:
-      binary_path: chkrootkit
+      binary_path: "/usr/local/bin/chkrootkit"
 
 plugins:
   enabled: false
