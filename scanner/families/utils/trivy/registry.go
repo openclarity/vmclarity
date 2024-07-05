@@ -24,12 +24,18 @@ import (
 )
 
 func SetTrivyRegistryConfigs(registry *common.Registry, trivyOptions trivyFlag.Options) trivyFlag.Options {
+	if registry == nil {
+		return trivyOptions
+	}
+
 	if registry.UseHTTP {
 		os.Setenv("TRIVY_NON_SSL", "true")
 	}
+
 	if registry.SkipVerifyTLS {
 		trivyOptions.GlobalOptions.Insecure = true
 	}
+
 	if len(registry.Auths) >= 1 {
 		// Trivy only supports one auth right now so use the
 		// first entry
@@ -44,5 +50,6 @@ func SetTrivyRegistryConfigs(registry *common.Registry, trivyOptions trivyFlag.O
 			os.Setenv("TRIVY_REGISTRY_TOKEN", auth.Token)
 		}
 	}
+
 	return trivyOptions
 }
