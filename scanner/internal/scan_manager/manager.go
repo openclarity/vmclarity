@@ -40,8 +40,7 @@ type InputScanResultWithError[T any] struct {
 	Error error
 }
 
-// Manager defines a scanner manager that allows parallelized scan of inputs. It
-// is used to perform scans for a single family.
+// Manager allows parallelized scan of inputs for a single family scanner factory.
 type Manager[CT, RT any] struct {
 	config   CT
 	scanners []string
@@ -129,7 +128,7 @@ func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) (
 	}()
 
 	// Read from the main channel and handle all the forwarded results and errors
-	var resultError error
+	var resultErrs error
 	var results []InputScanResult[RT]
 
 	for result := range resultCh {
@@ -140,7 +139,7 @@ func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) (
 			scanErr := fmt.Errorf("%s scanner job failed: %w", result.Metadata, err)
 			logger.Warning(scanErr)
 
-			resultError = multierror.Append(resultError, scanErr)
+			resultErrs = multierror.Append(resultErrs, scanErr)
 		} else {
 			logger.Infof("Got result for scanner job %s", result.Metadata)
 
@@ -151,7 +150,7 @@ func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) (
 	// Return error if all jobs failed to return results.
 	// TODO: should it be configurable? allow the user to decide failure threshold?
 	if len(results) == 0 {
-		return nil, resultError // nolint:wrapcheck
+		return nil, resultErrs // nolint:wrapcheck
 	}
 
 	return results, nil
