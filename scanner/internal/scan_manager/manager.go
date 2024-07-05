@@ -86,7 +86,7 @@ func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) (
 				time.Sleep(time.Duration(rand.Int63n(int64(20 * time.Millisecond)))) // nolint:mnd,gosec,wrapcheck
 
 				// Run scan
-				logger.Infof("Started scanning input=%s...", input)
+				logger.Infof("Scanning input = '%s' started...", input)
 
 				startTime := time.Now()
 				inputScanResult, inputScanErr := scanner.Scan(ctx, input.InputType, input.Input)
@@ -95,9 +95,9 @@ func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) (
 
 				// Log scan result details
 				if inputScanErr != nil {
-					logger.WithError(inputScanErr).Warnf("Scanning input=%s finished with error", input)
+					logger.WithError(inputScanErr).Warnf("Scanning input = '%s' finished with error", input)
 				} else {
-					logger.Infof("Successfully scanned input=%s", input)
+					logger.Infof("Scanning input = '%s' finished successfully", input)
 				}
 
 				// Forward the result in custom format with error to the main result channel so
