@@ -58,6 +58,9 @@ func New[CT, RT any](scanners []string, config CT, factory *Factory[CT, RT]) *Ma
 }
 
 func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) ([]InputScanResult[RT], error) {
+	var resultErr error
+	var results []InputScanResult[RT]
+
 	logger := log.GetLoggerFromContextOrDefault(ctx)
 
 	// Create processing jobs, do not cancel on error
@@ -65,10 +68,14 @@ func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) (
 	workerPool := pool.New().WithContext(ctx).WithMaxGoroutines(runtime.NumCPU())
 
 	for _, scannerName := range m.scanners {
-		// Do not continue processing further if we cannot create a specific scanner
-		scanner, err := m.factory.createScanner(scannerName, m.config)
+		// Create new ctx with logger that contains scanner name
+		ctx := log.SetLoggerForContext(ctx, logger.WithField("scanner", scannerName))
+
+		// Create scanner, skip scheduling tasks if we cannot create the scanner.
+		scanner, err := m.factory.createScanner(ctx, scannerName, m.config)
 		if err != nil {
 			logger.WithError(err).Errorf("Failed to create scanner %s", scannerName)
+			resultErr = multierror.Append(resultErr, err)
 			continue
 		}
 
@@ -130,9 +137,6 @@ func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) (
 	}()
 
 	// Read from the main channel and handle all the forwarded results and errors
-	var resultErrs error
-	var results []InputScanResult[RT]
-
 	for result := range resultCh {
 		// NOTE(ramizpolic): We don't check for nil results. A scan is considered
 		// successful if the family scanner returned a result with nil error, unrelated
@@ -141,7 +145,7 @@ func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) (
 			scanErr := fmt.Errorf("%s scanner job failed: %w", result.Metadata, err)
 			logger.Warning(scanErr)
 
-			resultErrs = multierror.Append(resultErrs, scanErr)
+			resultErr = multierror.Append(resultErr, scanErr)
 		} else {
 			logger.Infof("Got result for scanner job %s", result.Metadata)
 
@@ -152,7 +156,7 @@ func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) (
 	// Return error if all jobs failed to return results.
 	// TODO: should it be configurable? allow the user to decide failure threshold?
 	if len(results) == 0 {
-		return nil, resultErrs // nolint:wrapcheck
+		return nil, resultErr // nolint:wrapcheck
 	}
 
 	return results, nil

@@ -20,7 +20,6 @@ import (
 
 	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
-
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
 )
 
@@ -28,7 +27,7 @@ const ScannerName = "fake"
 
 type Scanner struct{}
 
-func New(_ string, _ types.ScannersConfig) (families.Scanner[[]types.Misconfiguration], error) {
+func New(_ context.Context, _ string, _ types.ScannersConfig) (families.Scanner[[]types.Misconfiguration], error) {
 	return &Scanner{}, nil
 }
 

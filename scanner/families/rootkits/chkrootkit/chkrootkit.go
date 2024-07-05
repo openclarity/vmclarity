@@ -23,7 +23,6 @@ import (
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
-
 	"github.com/openclarity/vmclarity/scanner/families/rootkits/chkrootkit/config"
 	chkrootkitutils "github.com/openclarity/vmclarity/scanner/families/rootkits/chkrootkit/utils"
 	"github.com/openclarity/vmclarity/scanner/families/rootkits/types"
@@ -37,7 +36,7 @@ type Scanner struct {
 	config config.Config
 }
 
-func New(_ string, config types.ScannersConfig) (families.Scanner[[]types.Rootkit], error) {
+func New(_ context.Context, _ string, config types.ScannersConfig) (families.Scanner[[]types.Rootkit], error) {
 	return &Scanner{
 		config: config.Chkrootkit,
 	}, nil

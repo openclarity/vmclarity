@@ -38,7 +38,7 @@ type Scanner struct {
 	config config.Config
 }
 
-func New(_ string, config types.ScannersConfig) (families.Scanner[[]types.Finding], error) {
+func New(_ context.Context, _ string, config types.ScannersConfig) (families.Scanner[[]types.Finding], error) {
 	return &Scanner{
 		config: config.Gitleaks,
 	}, nil
