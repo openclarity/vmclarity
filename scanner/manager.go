@@ -49,7 +49,7 @@ type FamilyNotifier interface {
 
 type Manager struct {
 	config *Config
-	tasks  []workflowtypes.Task[familyRunParams]
+	tasks  []workflowtypes.Task[workflowParams]
 }
 
 func New(config *Config) *Manager {
@@ -59,9 +59,7 @@ func New(config *Config) *Manager {
 
 	// Analyzers
 	if config.SBOM.Enabled {
-		manager.tasks = append(manager.tasks, newWorkflowTask(
-			sbom.New(config.SBOM), "sbom", nil,
-		))
+		manager.tasks = append(manager.tasks, newWorkflowTaskFor("sbom", sbom.New(config.SBOM)))
 	}
 
 	// Scanners
@@ -72,39 +70,25 @@ func New(config *Config) *Manager {
 			deps = append(deps, "sbom")
 		}
 
-		manager.tasks = append(manager.tasks, newWorkflowTask(
-			vulnerabilities.New(config.Vulnerabilities), "vulnerabilities", deps,
-		))
+		manager.tasks = append(manager.tasks, newWorkflowTaskFor("vulnerabilities", vulnerabilities.New(config.Vulnerabilities), deps...))
 	}
 	if config.Secrets.Enabled {
-		manager.tasks = append(manager.tasks, newWorkflowTask(
-			secrets.New(config.Secrets), "secrets", nil,
-		))
+		manager.tasks = append(manager.tasks, newWorkflowTaskFor("secrets", secrets.New(config.Secrets)))
 	}
 	if config.Rootkits.Enabled {
-		manager.tasks = append(manager.tasks, newWorkflowTask(
-			rootkits.New(config.Rootkits), "rootkits", nil,
-		))
+		manager.tasks = append(manager.tasks, newWorkflowTaskFor("rootkits", rootkits.New(config.Rootkits)))
 	}
 	if config.Malware.Enabled {
-		manager.tasks = append(manager.tasks, newWorkflowTask(
-			malware.New(config.Malware), "malware", nil,
-		))
+		manager.tasks = append(manager.tasks, newWorkflowTaskFor("malware", malware.New(config.Malware)))
 	}
 	if config.Misconfiguration.Enabled {
-		manager.tasks = append(manager.tasks, newWorkflowTask(
-			misconfiguration.New(config.Misconfiguration), "misconfiguration", nil,
-		))
+		manager.tasks = append(manager.tasks, newWorkflowTaskFor("misconfiguration", misconfiguration.New(config.Misconfiguration)))
 	}
 	if config.InfoFinder.Enabled {
-		manager.tasks = append(manager.tasks, newWorkflowTask(
-			infofinder.New(config.InfoFinder), "infofinder", nil,
-		))
+		manager.tasks = append(manager.tasks, newWorkflowTaskFor("infofinder", infofinder.New(config.InfoFinder)))
 	}
 	if config.Plugins.Enabled {
-		manager.tasks = append(manager.tasks, newWorkflowTask(
-			plugins.New(config.Plugins), "plugins", nil,
-		))
+		manager.tasks = append(manager.tasks, newWorkflowTaskFor("plugins", plugins.New(config.Plugins)))
 	}
 
 	// Enrichers.
@@ -115,18 +99,13 @@ func New(config *Config) *Manager {
 			deps = append(deps, "vulnerabilities")
 		}
 
-		manager.tasks = append(manager.tasks, newWorkflowTask(
-			exploits.New(config.Exploits), "exploits", deps,
-		))
+		manager.tasks = append(manager.tasks, newWorkflowTaskFor("exploits", exploits.New(config.Exploits), deps...))
 	}
 
 	return manager
 }
 
 func (m *Manager) Run(ctx context.Context, notifier FamilyNotifier) []error {
-	var oneOrMoreFamilyFailed bool
-	var errs []error
-
 	logger := log.GetLoggerFromContextOrDiscard(ctx)
 
 	// Register container cache
@@ -138,7 +117,7 @@ func (m *Manager) Run(ctx context.Context, notifier FamilyNotifier) []error {
 		}
 	}()
 
-	// Define channel to use to listen for processing errors
+	// Define channel to use to listen for all processing errors
 	errCh := make(chan error)
 
 	// Run task processor in the background
@@ -147,24 +126,25 @@ func (m *Manager) Run(ctx context.Context, notifier FamilyNotifier) []error {
 		defer close(errCh)
 
 		// Create families processor
-		processor, err := workflow.New[familyRunParams, workflowtypes.Task[familyRunParams]](m.tasks)
+		processor, err := workflow.New[workflowParams, workflowtypes.Task[workflowParams]](m.tasks)
 		if err != nil {
 			errCh <- fmt.Errorf("failed to create families processor: %w", err)
 			return
 		}
 
-		params := familyRunParams{
+		// Run families processor and wait until all family workflow tasks have completed
+		err = processor.Run(ctx, workflowParams{
 			Notifier: notifier,
 			Results:  families.NewResults(),
 			ErrCh:    errCh,
-		}
-
-		// Run families processor
-		if err := processor.Run(ctx, params); err != nil {
+		})
+		if err != nil {
 			errCh <- fmt.Errorf("failed to run families processor: %w", err)
-			return
 		}
 	}()
+
+	var oneOrMoreFamilyFailed bool
+	var errs []error
 
 	// Listen for processing errors
 	for err := range errCh {
@@ -172,8 +152,8 @@ func (m *Manager) Run(ctx context.Context, notifier FamilyNotifier) []error {
 			continue
 		}
 
-		// Check if family run failed, otherwise add the error to slice
-		var familyErr *runnerFamilyRunError
+		// Check if family run failed, otherwise add the error to the slice
+		var familyErr *familyFailedError
 		if errors.As(err, &familyErr) {
 			oneOrMoreFamilyFailed = true
 		} else {
@@ -188,75 +168,25 @@ func (m *Manager) Run(ctx context.Context, notifier FamilyNotifier) []error {
 	return errs
 }
 
-type familyRunParams struct {
+// workflowParams defines parameters for familyRunner workflow tasks
+type workflowParams struct {
 	Notifier FamilyNotifier
 	Results  *families.Results
 	ErrCh    chan<- error
 }
 
-type familyRunner[T any] struct {
-	family families.Family[T]
-}
-
-func newFamilyRunner[T any](family families.Family[T]) *familyRunner[T] {
-	return &familyRunner[T]{
-		family: family,
-	}
-}
-
-func (r *familyRunner[T]) Run(ctx context.Context, params familyRunParams) {
-	logger := log.GetLoggerFromContextOrDiscard(ctx)
-
-	// Notify about start, return preemptively if it fails
-	if err := params.Notifier.FamilyStarted(ctx, r.family.GetType()); err != nil {
-		params.ErrCh <- fmt.Errorf("family started notification failed: %w", err)
-		return
-	}
-
-	// Run family
-	result, err := r.family.Run(ctx, params.Results)
-	familyResult := FamilyResult{
-		Result:     result,
-		FamilyType: r.family.GetType(),
-		Err:        err,
-	}
-
-	// Handle family result depending on returned data
-	logger.Debugf("Received result from family %q: %v", r.family.GetType(), familyResult)
-	if err != nil {
-		logger.Errorf("Received error result from family %q: %v", r.family.GetType(), err)
-
-		// Submit run error so that we can check if the errors on channel are from
-		// notifiers or from the actual family run
-		params.ErrCh <- &runnerFamilyRunError{
-			Family: r.family.GetType(),
-			Err:    err,
-		}
-	} else {
-		params.Results.SetFamilyResult(result)
-	}
-
-	// Notify about finish
-	if err := params.Notifier.FamilyFinished(ctx, familyResult); err != nil {
-		params.ErrCh <- fmt.Errorf("family finished notification failed: %w", err)
-	}
-}
-
-type runnerFamilyRunError struct {
-	Family families.FamilyType
-	Err    error
-}
-
-func (e *runnerFamilyRunError) Error() string {
-	return fmt.Sprintf("family %s finished with error: %v", e.Family, e.Err)
-}
-
-func newWorkflowTask[T any](family families.Family[T], name string, deps []string) workflowtypes.Task[familyRunParams] {
-	return workflowtypes.Task[familyRunParams]{
+// newWorkflowTaskFor returns a wrapped familyRunner as a workflow task
+func newWorkflowTaskFor[T any](name string, family families.Family[T], deps ...string) workflowtypes.Task[workflowParams] {
+	return workflowtypes.Task[workflowParams]{
 		Name: name,
 		Deps: deps,
-		Fn: func(ctx context.Context, params familyRunParams) error {
-			newFamilyRunner(family).Run(ctx, params)
+		Fn: func(ctx context.Context, params workflowParams) error {
+			// Execute family using family runner and forward collected errors
+			errs := newFamilyRunner(family).Run(ctx, params.Notifier, params.Results)
+			for _, err := range errs {
+				params.ErrCh <- err
+			}
+
 			return nil
 		},
 	}
