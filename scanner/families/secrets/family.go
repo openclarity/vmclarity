@@ -29,7 +29,7 @@ type Secrets struct {
 	conf types.Config
 }
 
-func New(conf types.Config) families.Family[*types.Findings] {
+func New(conf types.Config) families.Family[*types.Result] {
 	return &Secrets{
 		conf: conf,
 	}
@@ -39,7 +39,7 @@ func (s Secrets) GetType() families.FamilyType {
 	return families.Secrets
 }
 
-func (s Secrets) Run(ctx context.Context, _ *families.Results) (*types.Findings, error) {
+func (s Secrets) Run(ctx context.Context, _ *families.Results) (*types.Result, error) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "secrets")
 	logger.Info("Secrets Run...")
 
@@ -50,7 +50,7 @@ func (s Secrets) Run(ctx context.Context, _ *families.Results) (*types.Findings,
 		return nil, fmt.Errorf("failed to process inputs for secrets: %w", err)
 	}
 
-	secrets := types.NewFindings()
+	secrets := types.NewResult()
 
 	// Merge results
 	for _, result := range results {

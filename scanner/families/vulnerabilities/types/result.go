@@ -18,7 +18,7 @@ package types
 import (
 	"fmt"
 	apitypes "github.com/openclarity/vmclarity/api/types"
-	"github.com/openclarity/vmclarity/scanner/common"
+	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/utils/image_helper"
 	log "github.com/sirupsen/logrus"
 )
@@ -30,37 +30,37 @@ type Source struct {
 	Hash     string            `json:"hash"`
 }
 
-type Vulnerabilities struct {
-	Metadata                   common.ScanMetadata
-	MergedVulnerabilitiesByKey map[VulnerabilityKey][]MergedVulnerability
-	Source                     Source
+type Result struct {
+	Metadata                   families.ScanMetadata                      `json:"Metadata"`
+	Source                     Source                                     `json:"Source"`
+	MergedVulnerabilitiesByKey map[VulnerabilityKey][]MergedVulnerability `json:"MergedVulnerabilitiesByKey"`
 }
 
-func NewVulnerabilities() *Vulnerabilities {
-	return &Vulnerabilities{
+func NewResult() *Result {
+	return &Result{
 		MergedVulnerabilitiesByKey: make(map[VulnerabilityKey][]MergedVulnerability),
 	}
 }
 
-func (m *Vulnerabilities) SetHash(hash string) {
-	m.Source.Hash = hash
+func (r *Result) SetHash(hash string) {
+	r.Source.Hash = hash
 }
 
-func (m *Vulnerabilities) SetName(name string) {
-	m.Source.Name = name
+func (r *Result) SetName(name string) {
+	r.Source.Name = name
 }
 
-func (m *Vulnerabilities) SetType(srcType string) {
-	m.Source.Type = srcType
+func (r *Result) SetType(srcType string) {
+	r.Source.Type = srcType
 }
 
-func (m *Vulnerabilities) SetSource(src Source) {
-	m.Source = src
+func (r *Result) SetSource(src Source) {
+	r.Source = src
 }
 
-func (m *Vulnerabilities) GetSourceImageInfo() (*apitypes.ContainerImageInfo, error) {
+func (r *Result) GetSourceImageInfo() (*apitypes.ContainerImageInfo, error) {
 	sourceImage := image_helper.ImageInfo{}
-	if err := sourceImage.FromMetadata(m.Source.Metadata); err != nil {
+	if err := sourceImage.FromMetadata(r.Source.Metadata); err != nil {
 		return nil, fmt.Errorf("failed to load source image from metadata: %w", err)
 	}
 
@@ -73,21 +73,22 @@ func (m *Vulnerabilities) GetSourceImageInfo() (*apitypes.ContainerImageInfo, er
 }
 
 // ToSlice returns MergedResults in a slice format and not by key.
-func (m *Vulnerabilities) ToSlice() [][]MergedVulnerability {
+func (r *Result) ToSlice() [][]MergedVulnerability {
 	ret := make([][]MergedVulnerability, 0)
-	for _, vulnerabilities := range m.MergedVulnerabilitiesByKey {
+	for _, vulnerabilities := range r.MergedVulnerabilitiesByKey {
 		ret = append(ret, vulnerabilities)
 	}
 
 	return ret
 }
 
-func (m *Vulnerabilities) Merge(meta common.ScanInputMetadata, result *ScannerResult) {
+func (r *Result) Merge(meta families.ScanInputMetadata, result *ScannerResult) {
+	r.Metadata.Merge(meta)
+
+	// Skip further merge if scanner result is empty
 	if result == nil {
 		return
 	}
-
-	m.Metadata.Merge(meta)
 
 	otherVulnerabilityByKey := toVulnerabilityByKey(result.Vulnerabilities)
 
@@ -96,18 +97,18 @@ func (m *Vulnerabilities) Merge(meta common.ScanInputMetadata, result *ScannerRe
 	// 2. add non mutual vulnerabilities
 	for key, otherVulnerability := range otherVulnerabilityByKey {
 		// look for other vulnerability key in the current merged vulnerabilities list
-		if mergedVulnerabilities, ok := m.MergedVulnerabilitiesByKey[key]; !ok {
+		if mergedVulnerabilities, ok := r.MergedVulnerabilitiesByKey[key]; !ok {
 			// add non mutual vulnerability
 			log.Debugf("Adding new vulnerability results from %v. key=%v", result.Scanner, key)
-			m.MergedVulnerabilitiesByKey[key] = []MergedVulnerability{*NewMergedVulnerability(otherVulnerability, result.Scanner)}
+			r.MergedVulnerabilitiesByKey[key] = []MergedVulnerability{*NewMergedVulnerability(otherVulnerability, result.Scanner)}
 		} else {
-			m.MergedVulnerabilitiesByKey[key] = handleVulnerabilityWithExistingKey(mergedVulnerabilities, otherVulnerability, result.Scanner)
+			r.MergedVulnerabilitiesByKey[key] = handleVulnerabilityWithExistingKey(mergedVulnerabilities, otherVulnerability, result.Scanner)
 		}
 	}
 
 	// TODO: what should we do with other.Source
 	// Set Source only once
-	if m.Source.Type == "" {
-		m.Source = result.Source
+	if r.Source.Type == "" {
+		r.Source = result.Source
 	}
 }

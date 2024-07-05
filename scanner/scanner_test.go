@@ -68,7 +68,7 @@ func TestManagerRun(t *testing.T) {
 		t.Fatalf("expected FamilyResult(%s) nil error, got %v", result.FamilyType, err)
 	}
 
-	if _, ok := result.Result.(*misconfigurationtypes.Misconfigurations); !ok {
+	if _, ok := result.Result.(*misconfigurationtypes.Result); !ok {
 		t.Fatalf("expected Misconfigurations results, got %T", result.Result)
 	}
 }

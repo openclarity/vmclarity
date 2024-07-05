@@ -15,8 +15,6 @@
 
 package types
 
-import "github.com/openclarity/vmclarity/scanner/common"
-
 type RootkitType string
 
 const (
@@ -31,20 +29,4 @@ type Rootkit struct {
 	Message     string      `json:"message,omitempty"`
 	RootkitName string      `json:"RootkitName,omitempty"`
 	RootkitType RootkitType `json:"RootkitType,omitempty"`
-}
-
-type Rootkits struct {
-	Metadata       common.ScanMetadata
-	MergedRootkits []Rootkit
-}
-
-func NewRootkits() *Rootkits {
-	return &Rootkits{
-		MergedRootkits: []Rootkit{},
-	}
-}
-
-func (m *Rootkits) Merge(meta common.ScanInputMetadata, rootkits []Rootkit) {
-	m.Metadata.Merge(meta)
-	m.MergedRootkits = append(m.MergedRootkits, rootkits...)
 }

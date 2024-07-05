@@ -34,7 +34,7 @@ func NewFactory[ConfigType, ScannerResultType any]() *Factory[ConfigType, Scanne
 	}
 }
 
-func (f *Factory[CT, RT]) Register(name string, createJobFunc CreateScannerFunc[CT, RT]) {
+func (f *Factory[CT, RT]) Register(name string, createScannerFunc CreateScannerFunc[CT, RT]) {
 	if f.scanners == nil {
 		f.scanners = make(map[string]CreateScannerFunc[CT, RT])
 	}
@@ -43,13 +43,13 @@ func (f *Factory[CT, RT]) Register(name string, createJobFunc CreateScannerFunc[
 		logrus.Fatalf("%q already registered", name)
 	}
 
-	f.scanners[name] = createJobFunc
+	f.scanners[name] = createScannerFunc
 }
 
-func (f *Factory[CT, RT]) CreateJob(name string, config CT) (families.Scanner[RT], error) {
+func (f *Factory[CT, RT]) createScanner(name string, config CT) (families.Scanner[RT], error) {
 	createFunc, ok := f.scanners[name]
 	if !ok {
-		return nil, fmt.Errorf("%v not a registered job", name)
+		return nil, fmt.Errorf("%v not a registered scanner", name)
 	}
 
 	return createFunc(name, config)

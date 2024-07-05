@@ -21,13 +21,16 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/common"
+	"github.com/openclarity/vmclarity/scanner/families"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
 	"github.com/sourcegraph/conc/pool"
+	"math/rand"
+	"runtime"
 	"time"
 )
 
 type InputScanResult[T any] struct {
-	Metadata   common.ScanInputMetadata
+	Metadata   families.ScanInputMetadata
 	ScanInput  common.ScanInput
 	ScanResult T
 }
@@ -37,6 +40,8 @@ type InputScanResultWithError[T any] struct {
 	Error error
 }
 
+// Manager defines a scanner manager that allows parallelized scan of inputs. It
+// is used to perform scans for a single family.
 type Manager[CT, RT any] struct {
 	config   CT
 	scanners []string
@@ -56,25 +61,28 @@ func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) (
 
 	// Create processing jobs, do not cancel on error
 	resultCh := make(chan InputScanResultWithError[RT])
-	workerPool := pool.New().WithContext(ctx)
+	workerPool := pool.New().WithContext(ctx).WithMaxGoroutines(runtime.NumCPU())
 
 	for _, scannerName := range m.scanners {
 		// Do not continue processing further if we cannot create a specific scanner
-		scanner, err := m.factory.CreateJob(scannerName, m.config)
+		scanner, err := m.factory.createScanner(scannerName, m.config)
 		if err != nil {
 			logger.WithError(err).Errorf("Failed to create scanner %s", scannerName)
 			continue
 		}
 
-		// schedule each {job}, {input} input pair to parallel worker
+		// Schedule each ({scanner}, {input}) pair to parallel worker
 		for _, input := range inputs {
 			workerPool.Go(func(ctx context.Context) error {
-				// Set logger for family scanner and override context
+				// Set logger for a given family scanner and input pair
 				logger := logger.WithFields(map[string]interface{}{
 					"scanner": scannerName,
 					"input":   input,
 				})
 				ctx = log.SetLoggerForContext(ctx, logger)
+
+				// Fuzzy start processing to prevent spike requests for each input
+				time.Sleep(time.Duration(rand.Int63n(int64(20 * time.Millisecond))))
 
 				// Run scan
 				logger.Infof("Started scanning input=%s...", input)
@@ -84,17 +92,18 @@ func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) (
 				inputSize, _ := familiesutils.GetInputSize(input) // in megabytes
 				endTime := time.Now()
 
-				// Log scan result success
+				// Log scan result details
 				if inputScanErr != nil {
 					logger.WithError(inputScanErr).Warnf("Scanning input=%s finished with error", input)
 				} else {
 					logger.Infof("Successfully scanned input=%s", input)
 				}
 
-				// Forward the result in custom format to main result channel
+				// Forward the result in custom format with error to the main result channel so
+				// that we can handle the results in the main loop
 				resultCh <- InputScanResultWithError[RT]{
 					InputScanResult: InputScanResult[RT]{
-						Metadata: common.NewScanInputMetadata(
+						Metadata: families.NewScanInputMetadata(
 							scannerName,
 							startTime,
 							endTime,
@@ -119,11 +128,14 @@ func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) (
 		close(resultCh)
 	}()
 
-	// Read results from the main channel
+	// Read from the main channel and handle all the forwarded results and errors
 	var resultError error
 	var results []InputScanResult[RT]
 
 	for result := range resultCh {
+		// NOTE(ramizpolic): We don't check for nil results. A scan is considered
+		// successful if the family scanner returned a result with nil error, unrelated
+		// of the actual result.
 		if err := result.Error; err != nil {
 			scanErr := fmt.Errorf("%s scanner job failed: %w", result.Metadata, err)
 			logger.Warning(scanErr)

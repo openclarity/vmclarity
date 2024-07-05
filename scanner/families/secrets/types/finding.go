@@ -15,8 +15,6 @@
 
 package types
 
-import "github.com/openclarity/vmclarity/scanner/common"
-
 type Finding struct {
 	Description string `json:"Description"`
 	StartLine   int    `json:"StartLine"`
@@ -51,20 +49,4 @@ type Finding struct {
 
 	// unique identifier
 	Fingerprint string `json:"Fingerprint"`
-}
-
-type Findings struct {
-	Metadata       common.ScanMetadata
-	MergedFindings []Finding
-	Scanners       []string
-}
-
-func NewFindings() *Findings {
-	return &Findings{}
-}
-
-func (f *Findings) Merge(meta common.ScanInputMetadata, findings []Finding) {
-	f.Metadata.Merge(meta)
-	f.MergedFindings = append(f.MergedFindings, findings...)
-	f.Scanners = append(f.Scanners, meta.ScannerName)
 }

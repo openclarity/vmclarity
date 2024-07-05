@@ -29,12 +29,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func GenerateHash(inputType common.InputType, source string) (string, error) {
+func GenerateHash(sourceType common.InputType, source string) (string, error) {
 	absPath, err := filepath.Abs(source)
 	if err != nil {
 		return "", fmt.Errorf("failed to get absolute path of the source %s: %w", source, err)
 	}
-	switch inputType {
+	switch sourceType {
 	case common.IMAGE, common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR:
 		log.Infof("Skip generating hash in the case of image")
 		return "", nil
@@ -59,7 +59,7 @@ func GenerateHash(inputType common.InputType, source string) (string, error) {
 		log.Infof("Skip generating hash in the case of sbom")
 		return "", nil
 	default:
-		return "", fmt.Errorf("unsupported input type %s", inputType)
+		return "", fmt.Errorf("unsupported input type %s", sourceType)
 	}
 }
 

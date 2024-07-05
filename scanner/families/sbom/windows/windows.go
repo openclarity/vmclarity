@@ -33,18 +33,18 @@ func New(_ string, _ types.Config) (families.Scanner[*types.ScannerResult], erro
 }
 
 // nolint:cyclop
-func (a *Analyzer) Scan(ctx context.Context, inputType common.InputType, userInput string) (*types.ScannerResult, error) {
+func (a *Analyzer) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
 	logger := log.GetLoggerFromContextOrDefault(ctx)
 
 	// Create Windows registry based on supported input types
 	var err error
 	var registry *Registry
-	if inputType.IsOneOf(common.FILE) { // Use file location to the registry
+	if sourceType.IsOneOf(common.FILE) { // Use file location to the registry
 		registry, err = NewRegistry(userInput, logger)
-	} else if inputType.IsOneOf(common.ROOTFS, common.DIR) { // Use mount drive as input
+	} else if sourceType.IsOneOf(common.ROOTFS, common.DIR) { // Use mount drive as input
 		registry, err = NewRegistryForMount(userInput, logger)
 	} else {
-		return nil, fmt.Errorf("skipping analyzing unsupported source type: %s", inputType)
+		return nil, fmt.Errorf("skipping analyzing unsupported source type: %s", sourceType)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to open registry: %w", err)
@@ -58,7 +58,7 @@ func (a *Analyzer) Scan(ctx context.Context, inputType common.InputType, userInp
 	}
 
 	// Return sbom
-	result := types.CreateScannerResult(bom, AnalyzerName, userInput, inputType)
+	result := types.CreateScannerResult(bom, AnalyzerName, userInput, sourceType)
 
 	return result, nil
 }

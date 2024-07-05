@@ -37,7 +37,7 @@ type Vulnerabilities struct {
 	conf types.Config
 }
 
-func New(conf types.Config) families.Family[*types.Vulnerabilities] {
+func New(conf types.Config) families.Family[*types.Result] {
 	return &Vulnerabilities{
 		conf: conf,
 	}
@@ -47,14 +47,14 @@ func (v Vulnerabilities) GetType() families.FamilyType {
 	return families.Vulnerabilities
 }
 
-func (v Vulnerabilities) Run(ctx context.Context, res *families.Results) (*types.Vulnerabilities, error) {
+func (v Vulnerabilities) Run(ctx context.Context, res *families.Results) (*types.Result, error) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "vulnerabilities")
 	logger.Info("Vulnerabilities Run...")
 
 	if v.conf.InputFromSbom {
 		logger.Infof("Using input from SBOM results")
 
-		sbomResults, err := families.GetFamilyResult[*sbomtypes.SBOM](res)
+		sbomResults, err := families.GetFamilyResult[*sbomtypes.Result](res)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get sbom results: %w", err)
 		}
@@ -86,7 +86,7 @@ func (v Vulnerabilities) Run(ctx context.Context, res *families.Results) (*types
 		return nil, fmt.Errorf("failed to process inputs for vulnerabilities: %w", err)
 	}
 
-	vulnerabilities := types.NewVulnerabilities()
+	vulnerabilities := types.NewResult()
 
 	// Merge results
 	for _, result := range results {

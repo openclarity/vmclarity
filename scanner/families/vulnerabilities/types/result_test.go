@@ -16,7 +16,7 @@
 package types
 
 import (
-	"github.com/openclarity/vmclarity/scanner/common"
+	"github.com/openclarity/vmclarity/scanner/families"
 	"reflect"
 	"testing"
 
@@ -537,13 +537,13 @@ func TestMergedResults_Merge(t *testing.T) {
 		name                       string
 		fields                     fields
 		args                       *ScannerResult
-		want                       *Vulnerabilities
+		want                       *Result
 		patchMergedVulnerabilityID func(map[VulnerabilityKey][]MergedVulnerability) map[VulnerabilityKey][]MergedVulnerability
 	}{
 		{
 			name: "all are non mutual vulnerabilities",
 			fields: fields{
-				MergedVulnerabilities: NewVulnerabilities().MergedVulnerabilitiesByKey,
+				MergedVulnerabilities: NewResult().MergedVulnerabilitiesByKey,
 			},
 			args: &ScannerResult{
 				Vulnerabilities: []Vulnerability{
@@ -554,7 +554,7 @@ func TestMergedResults_Merge(t *testing.T) {
 					Name: "scanner1",
 				},
 			},
-			want: &Vulnerabilities{
+			want: &Result{
 				MergedVulnerabilitiesByKey: map[VulnerabilityKey][]MergedVulnerability{
 					NewVulnerabilityKey(vul): {
 						{
@@ -612,7 +612,7 @@ func TestMergedResults_Merge(t *testing.T) {
 					Name: "scanner2",
 				},
 			},
-			want: &Vulnerabilities{
+			want: &Result{
 				MergedVulnerabilitiesByKey: map[VulnerabilityKey][]MergedVulnerability{
 					NewVulnerabilityKey(vul): {
 						{
@@ -673,7 +673,7 @@ func TestMergedResults_Merge(t *testing.T) {
 					Name: "scanner2",
 				},
 			},
-			want: &Vulnerabilities{
+			want: &Result{
 				MergedVulnerabilitiesByKey: map[VulnerabilityKey][]MergedVulnerability{
 					NewVulnerabilityKey(vul): {
 						{
@@ -726,15 +726,15 @@ func TestMergedResults_Merge(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := &Vulnerabilities{
+			got := &Result{
 				MergedVulnerabilitiesByKey: tt.fields.MergedVulnerabilities,
 			}
-			got.Merge(common.ScanInputMetadata{}, tt.args)
+			got.Merge(families.ScanInputMetadata{}, tt.args)
 			if tt.patchMergedVulnerabilityID != nil {
 				got.MergedVulnerabilitiesByKey = tt.patchMergedVulnerabilityID(got.MergedVulnerabilitiesByKey)
 			}
 			assert.DeepEqual(t, got, tt.want, cmpopts.IgnoreTypes(
-				common.ScanMetadata{},
+				families.ScanMetadata{},
 				VulnerabilityDiff{}.ASCIIDiff,
 			))
 		})

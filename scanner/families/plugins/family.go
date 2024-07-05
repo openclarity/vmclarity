@@ -44,7 +44,9 @@ func (p *Plugins) Run(ctx context.Context, _ *families.Results) (*types.Result, 
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "plugins")
 	logger.Info("Plugins Run...")
 
-	// Register plugins dynamically instead of creating a public factory
+	// Register plugins dynamically instead of creating a public factory. Users that
+	// want to run their own plugin scanners can do so through the config unlike for
+	// other families where they actually need the factory to run a custom family scanner.
 	factory := scan_manager.NewFactory[types.ScannersConfig, *types.ScannerResult]()
 	for _, scannerName := range p.conf.ScannersList {
 		factory.Register(scannerName, runner.New)

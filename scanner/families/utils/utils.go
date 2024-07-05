@@ -133,7 +133,7 @@ func ConvertInputToFilesystem(ctx context.Context, sourceType common.InputType, 
 			}
 		}
 		return rootfs.Dir(), cleanup, nil
-	case common.SBOM, common.FILE:
+	case common.SBOM, common.FILE, common.CSV:
 		fallthrough
 	default:
 		return "", func() {}, fmt.Errorf("unable to convert %s to filesystem", sourceType)
