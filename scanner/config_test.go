@@ -16,11 +16,12 @@
 package scanner
 
 import (
+	"reflect"
+	"testing"
+
 	"github.com/openclarity/vmclarity/scanner/common"
 	sbomtypes "github.com/openclarity/vmclarity/scanner/families/sbom/types"
 	secrettypes "github.com/openclarity/vmclarity/scanner/families/secrets/types"
-	"reflect"
-	"testing"
 
 	"github.com/openclarity/vmclarity/core/to"
 	malware "github.com/openclarity/vmclarity/scanner/families/malware/types"

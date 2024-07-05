@@ -18,6 +18,7 @@ package presenter
 import (
 	"context"
 	"fmt"
+
 	"github.com/openclarity/vmclarity/scanner/families"
 )
 

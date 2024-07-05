@@ -17,7 +17,6 @@ package grype
 
 import (
 	"encoding/json"
-	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/types"
 	"os"
 	"reflect"
 	"testing"
@@ -26,6 +25,8 @@ import (
 	syft_source "github.com/anchore/syft/syft/source"
 	"github.com/jinzhu/copier"
 	"gotest.tools/assert"
+
+	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/types"
 )
 
 func TestCreateResults(t *testing.T) {

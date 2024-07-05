@@ -177,7 +177,7 @@ func (r *Registry) GetUpdates() ([]string, error) {
 		}
 	}
 
-	return to.Keys(updates), nil
+	return to.SortedKeys(updates), nil
 }
 
 // GetUsersApps returns installed apps from the registry for all users. This

@@ -19,8 +19,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/openclarity/vmclarity/scanner"
-	scannertypes "github.com/openclarity/vmclarity/scanner/common"
 	"os"
 	"time"
 
@@ -29,15 +27,14 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	cli "github.com/openclarity/vmclarity/cli"
-	"github.com/openclarity/vmclarity/cli/cmd/logutil"
-
-	"github.com/openclarity/vmclarity/cli/state"
-
-	"github.com/openclarity/vmclarity/cli/presenter"
-
 	apiclient "github.com/openclarity/vmclarity/api/client"
+	"github.com/openclarity/vmclarity/cli"
+	"github.com/openclarity/vmclarity/cli/cmd/logutil"
+	"github.com/openclarity/vmclarity/cli/presenter"
+	"github.com/openclarity/vmclarity/cli/state"
 	"github.com/openclarity/vmclarity/core/log"
+	"github.com/openclarity/vmclarity/scanner"
+	scannercommon "github.com/openclarity/vmclarity/scanner/common"
 )
 
 const (
@@ -112,7 +109,7 @@ var ScanCmd = &cobra.Command{
 				}
 				return err
 			}
-			config.AddInputs(scannertypes.ROOTFS, mountPoints)
+			config.AddInputs(scannercommon.ROOTFS, mountPoints)
 		}
 
 		err = cli.MarkInProgress(ctx, config)

@@ -16,8 +16,6 @@
 package sbom
 
 import (
-	"github.com/openclarity/vmclarity/scanner/common"
-	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
 	"reflect"
 	"sort"
 	"testing"
@@ -25,6 +23,9 @@ import (
 	cdx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+
+	"github.com/openclarity/vmclarity/scanner/common"
+	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
 )
 
 func TestMergedResults_createComponentListFromMap(t *testing.T) {

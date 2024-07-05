@@ -19,7 +19,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	errorutils "github.com/openclarity/vmclarity/utils/errors"
 	"time"
 
 	apiclient "github.com/openclarity/vmclarity/api/client"
@@ -28,6 +27,7 @@ import (
 	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/orchestrator/common"
 	"github.com/openclarity/vmclarity/provider"
+	errorutils "github.com/openclarity/vmclarity/utils/errors"
 )
 
 type (

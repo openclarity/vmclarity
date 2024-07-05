@@ -19,11 +19,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"os/exec"
+
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
-	"os"
-	"os/exec"
 
 	"github.com/openclarity/vmclarity/scanner/families/secrets/gitleaks/config"
 	"github.com/openclarity/vmclarity/scanner/families/secrets/types"

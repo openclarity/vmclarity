@@ -18,11 +18,12 @@ package scanner
 import (
 	"context"
 	"fmt"
+
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/families"
 )
 
-// familyRunner handles a specific family execution operations
+// familyRunner handles a specific family execution operations.
 type familyRunner[T any] struct {
 	family families.Family[T]
 }
@@ -79,7 +80,7 @@ func newFamilyRunner[T any](family families.Family[T]) *familyRunner[T] {
 	return &familyRunner[T]{family: family}
 }
 
-// familyFailedError defines families.Family run fail error
+// familyFailedError defines families.Family run fail error.
 type familyFailedError struct {
 	FamilyType families.FamilyType
 	Err        error

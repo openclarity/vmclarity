@@ -18,9 +18,10 @@ package scanner
 import (
 	"context"
 	"fmt"
-	"github.com/openclarity/vmclarity/scanner"
-	scannertypes "github.com/openclarity/vmclarity/scanner/common"
 	"net"
+
+	"github.com/openclarity/vmclarity/scanner"
+	scannercommon "github.com/openclarity/vmclarity/scanner/common"
 
 	"gopkg.in/yaml.v3"
 	batchv1 "k8s.io/api/batch/v1"
@@ -142,7 +143,7 @@ func (s *Scanner) generateScanConfig(config *provider.ScanJobConfig) ([]byte, er
 		return nil, fmt.Errorf("failed to unmarshal family scan configuration: %w", err)
 	}
 
-	scannerConfig.AddInputs(scannertypes.OCIARCHIVE, []string{archiveLocation})
+	scannerConfig.AddInputs(scannercommon.OCIARCHIVE, []string{archiveLocation})
 	familiesConfigByte, err := yaml.Marshal(scannerConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal family scan configuration: %w", err)

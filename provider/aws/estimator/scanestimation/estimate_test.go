@@ -17,7 +17,6 @@ package scanestimation
 
 import (
 	"context"
-	scannercommon "github.com/openclarity/vmclarity/scanner/common"
 	"reflect"
 	"testing"
 	"time"
@@ -27,6 +26,7 @@ import (
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/to"
+	scannercommon "github.com/openclarity/vmclarity/scanner/common"
 )
 
 type FakePriceFetcher struct{}

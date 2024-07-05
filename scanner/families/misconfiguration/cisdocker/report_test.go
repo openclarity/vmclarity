@@ -16,12 +16,12 @@
 package cisdocker
 
 import (
-	"github.com/openclarity/vmclarity/scanner/common"
 	"testing"
 
 	dockle_types "github.com/Portshift/dockle/pkg/types"
 	"github.com/google/go-cmp/cmp"
 
+	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
 )
 

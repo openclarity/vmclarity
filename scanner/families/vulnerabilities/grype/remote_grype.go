@@ -19,12 +19,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/types"
-	"os"
-	"time"
 
 	grype_models "github.com/anchore/grype/grype/presenter/models"
 	transport "github.com/go-openapi/runtime/client"
@@ -32,6 +33,7 @@ import (
 	grype_client "github.com/openclarity/grype-server/api/client/client"
 	grype_client_operations "github.com/openclarity/grype-server/api/client/client/operations"
 	grype_client_models "github.com/openclarity/grype-server/api/client/models"
+
 	sbom "github.com/openclarity/vmclarity/scanner/utils/sbom"
 )
 

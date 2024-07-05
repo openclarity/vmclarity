@@ -16,13 +16,14 @@
 package types
 
 import (
-	"github.com/openclarity/vmclarity/scanner/families"
 	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/yudai/gojsondiff/formatter"
 	"gotest.tools/assert"
+
+	"github.com/openclarity/vmclarity/scanner/families"
 )
 
 func Test_handleVulnerabilityWithExistingKey(t *testing.T) {

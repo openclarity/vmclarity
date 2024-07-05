@@ -19,11 +19,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+
 	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/types"
 	"github.com/openclarity/vmclarity/scanner/internal/scan_manager"
-	"os"
 
 	"github.com/openclarity/vmclarity/core/log"
 	sbomtypes "github.com/openclarity/vmclarity/scanner/families/sbom/types"

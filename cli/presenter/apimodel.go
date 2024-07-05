@@ -28,7 +28,6 @@ import (
 	malware "github.com/openclarity/vmclarity/scanner/families/malware/types"
 	misconfiguration "github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
 	rootkits "github.com/openclarity/vmclarity/scanner/families/rootkits/types"
-	rootkitsTypes "github.com/openclarity/vmclarity/scanner/families/rootkits/types"
 	sbom "github.com/openclarity/vmclarity/scanner/families/sbom/types"
 	secrets "github.com/openclarity/vmclarity/scanner/families/secrets/types"
 	vulnerabilities "github.com/openclarity/vmclarity/scanner/families/vulnerabilities/types"
@@ -139,6 +138,7 @@ func ConvertVulnCvssToAPIModel(cvss []vulnerabilities.CVSS) *[]apitypes.Vulnerab
 	if cvss == nil {
 		return nil
 	}
+
 	// nolint:prealloc
 	var ret []apitypes.VulnerabilityCvss
 	for _, c := range cvss {
@@ -146,10 +146,12 @@ func ConvertVulnCvssToAPIModel(cvss []vulnerabilities.CVSS) *[]apitypes.Vulnerab
 		if c.Metrics.ExploitabilityScore != nil {
 			exploitabilityScore = to.Ptr[float32](float32(*c.Metrics.ExploitabilityScore))
 		}
+
 		var impactScore *float32
 		if c.Metrics.ImpactScore != nil {
 			impactScore = to.Ptr[float32](float32(*c.Metrics.ImpactScore))
 		}
+
 		ret = append(ret, apitypes.VulnerabilityCvss{
 			Metrics: &apitypes.VulnerabilityCvssMetrics{
 				BaseScore:           to.Ptr(float32(c.Metrics.BaseScore)),
@@ -173,7 +175,6 @@ func ConvertMalwareResultToMalwareAndMetadata(result *malware.Result) ([]apitype
 	}
 
 	for _, item := range result.Malwares {
-		item := item // Prevent loop variable pointer export
 		malwareList = append(malwareList, apitypes.Malware{
 			MalwareName: to.PtrOrNil(item.MalwareName),
 			MalwareType: to.PtrOrNil(item.MalwareType),
@@ -183,11 +184,13 @@ func ConvertMalwareResultToMalwareAndMetadata(result *malware.Result) ([]apitype
 	}
 
 	for name, summary := range result.ScansSummary {
-		scannerName, summary := name, summary // Prevent loop variable pointer export
+		if summary == nil {
+			summary = &malware.ScanSummary{}
+		}
 
-		var scannerSummary *apitypes.ScannerSummary
-		if summary != nil {
-			scannerSummary = &apitypes.ScannerSummary{
+		metadata = append(metadata, apitypes.ScannerMetadata{
+			ScannerName: &name,
+			ScannerSummary: &apitypes.ScannerSummary{
 				DataRead:           &summary.DataRead,
 				DataScanned:        &summary.DataScanned,
 				EngineVersion:      &summary.EngineVersion,
@@ -197,12 +200,7 @@ func ConvertMalwareResultToMalwareAndMetadata(result *malware.Result) ([]apitype
 				ScannedFiles:       &summary.ScannedFiles,
 				SuspectedFiles:     &summary.SuspectedFiles,
 				TimeTaken:          &summary.TimeTaken,
-			}
-		}
-
-		metadata = append(metadata, apitypes.ScannerMetadata{
-			ScannerName:    &scannerName,
-			ScannerSummary: scannerSummary,
+			},
 		})
 	}
 
@@ -217,7 +215,6 @@ func ConvertSecretsResultToSecrets(result *secrets.Result) []apitypes.Secret {
 	}
 
 	for _, finding := range result.Findings {
-		finding := finding
 		secretsSlice = append(secretsSlice, apitypes.Secret{
 			Description: &finding.Description,
 			EndLine:     &finding.EndLine,
@@ -240,7 +237,6 @@ func ConvertExploitsResultToExploits(result *exploits.Result) []apitypes.Exploit
 	}
 
 	for _, exploit := range result.Exploits {
-		exploit := exploit
 		retExploits = append(retExploits, apitypes.Exploit{
 			CveID:       &exploit.CveID,
 			Description: &exploit.Description,
@@ -271,21 +267,16 @@ func MisconfigurationSeverityToAPIMisconfigurationSeverity(sev misconfiguration.
 
 func ConvertMisconfigurationResultToMisconfigurationsAndScanners(result *misconfiguration.Result) ([]apitypes.Misconfiguration, []string, error) {
 	misconfigurations := []apitypes.Misconfiguration{}
-	scanners := []string{}
+	scanners := map[string]interface{}{}
 
 	if result == nil || result.Misconfigurations == nil {
-		return misconfigurations, scanners, nil
+		return misconfigurations, to.SortedKeys(scanners), nil
 	}
 
 	for _, misconfig := range result.Misconfigurations {
-		// create a separate variable for the loop because we need
-		// pointers for the API model and we can't safely take pointers
-		// to a loop variable.
-		misconfig := misconfig
-
 		severity, err := MisconfigurationSeverityToAPIMisconfigurationSeverity(misconfig.Severity)
 		if err != nil {
-			return misconfigurations, scanners, fmt.Errorf("unable to convert scanner result severity to API severity: %w", err)
+			return misconfigurations, to.SortedKeys(scanners), fmt.Errorf("unable to convert scanner result severity to API severity: %w", err)
 		}
 
 		misconfigurations = append(misconfigurations, apitypes.Misconfiguration{
@@ -298,30 +289,33 @@ func ConvertMisconfigurationResultToMisconfigurationsAndScanners(result *misconf
 			Message:     &misconfig.Message,
 			Remediation: &misconfig.Remediation,
 		})
+
+		scanners[misconfig.ScannerName] = nil
 	}
 
-	return misconfigurations, scanners, nil
+	return misconfigurations, to.SortedKeys(scanners), nil
 }
 
 func ConvertInfoFinderResultToInfosAndScanners(result *infofinder.Result) ([]apitypes.InfoFinderInfo, []string, error) {
 	infos := []apitypes.InfoFinderInfo{}
-	scanners := []string{}
+	scanners := map[string]interface{}{}
 
 	if result == nil || result.Infos == nil {
-		return infos, scanners, nil
+		return infos, to.SortedKeys(scanners), nil
 	}
 
 	for _, info := range result.Infos {
-		info := info
 		infos = append(infos, apitypes.InfoFinderInfo{
 			Data:        &info.Data,
 			Path:        &info.Path,
 			ScannerName: &info.ScannerName,
 			Type:        convertInfoTypeToAPIModel(info.Type),
 		})
+
+		scanners[info.ScannerName] = nil
 	}
 
-	return infos, result.Metadata.GetScanners(), nil
+	return infos, to.SortedKeys(scanners), nil
 }
 
 func convertInfoTypeToAPIModel(infoType infofinder.InfoType) *apitypes.InfoType {
@@ -348,7 +342,6 @@ func ConvertRootkitsResultToRootkits(result *rootkits.Result) []apitypes.Rootkit
 	}
 
 	for _, rootkit := range result.Rootkits {
-		rootkit := rootkit
 		rootkitsList = append(rootkitsList, apitypes.Rootkit{
 			Message:     &rootkit.Message,
 			RootkitName: &rootkit.RootkitName,
@@ -359,17 +352,17 @@ func ConvertRootkitsResultToRootkits(result *rootkits.Result) []apitypes.Rootkit
 	return rootkitsList
 }
 
-func ConvertRootkitTypeToAPIModel(rootkitType rootkitsTypes.RootkitType) *apitypes.RootkitType {
+func ConvertRootkitTypeToAPIModel(rootkitType rootkits.RootkitType) *apitypes.RootkitType {
 	switch rootkitType {
-	case rootkitsTypes.APPLICATION:
+	case rootkits.APPLICATION:
 		return to.Ptr(apitypes.RootkitTypeAPPLICATION)
-	case rootkitsTypes.FIRMWARE:
+	case rootkits.FIRMWARE:
 		return to.Ptr(apitypes.RootkitTypeFIRMWARE)
-	case rootkitsTypes.KERNEL:
+	case rootkits.KERNEL:
 		return to.Ptr(apitypes.RootkitTypeKERNEL)
-	case rootkitsTypes.MEMORY:
+	case rootkits.MEMORY:
 		return to.Ptr(apitypes.RootkitTypeMEMORY)
-	case rootkitsTypes.UNKNOWN:
+	case rootkits.UNKNOWN:
 		return to.Ptr(apitypes.RootkitTypeUNKNOWN)
 	default:
 		log.Errorf("Can't convert rootkit type %q, treating as %v", rootkitType, apitypes.RootkitTypeUNKNOWN)

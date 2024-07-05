@@ -17,6 +17,7 @@ package fake
 
 import (
 	"context"
+
 	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
 

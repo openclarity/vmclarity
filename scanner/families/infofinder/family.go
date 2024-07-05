@@ -18,6 +18,7 @@ package infofinder
 import (
 	"context"
 	"fmt"
+
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/infofinder/types"

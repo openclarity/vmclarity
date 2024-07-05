@@ -17,10 +17,12 @@ package types
 
 import (
 	"fmt"
+
+	log "github.com/sirupsen/logrus"
+
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/utils/image_helper"
-	log "github.com/sirupsen/logrus"
 )
 
 type Source struct {

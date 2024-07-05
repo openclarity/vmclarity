@@ -16,11 +16,12 @@
 package presenter
 
 import (
+	"reflect"
+	"testing"
+
 	cdx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"reflect"
-	"testing"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/to"
@@ -878,7 +879,7 @@ func Test_ConvertMisconfigurationResultToMisconfigurations(t *testing.T) {
 						Id:          to.Ptr(misconfiguration3.ID),
 					},
 				},
-				[]string{"foo", "bar"},
+				[]string{"bar", "foo"},
 			},
 		},
 	}

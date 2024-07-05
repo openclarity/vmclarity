@@ -20,10 +20,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/openclarity/vmclarity/core/log"
-	"github.com/openclarity/vmclarity/scanner/common"
-	"github.com/openclarity/vmclarity/scanner/families"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"net/url"
 	"os"
@@ -38,7 +34,11 @@ import (
 	trivyTypes "github.com/aquasecurity/trivy/pkg/types"
 	trivyFsutils "github.com/aquasecurity/trivy/pkg/utils/fsutils"
 	sloglogrus "github.com/samber/slog-logrus/v2"
+	"github.com/sirupsen/logrus"
 
+	"github.com/openclarity/vmclarity/core/log"
+	"github.com/openclarity/vmclarity/scanner/common"
+	"github.com/openclarity/vmclarity/scanner/families"
 	utilsTrivy "github.com/openclarity/vmclarity/scanner/families/utils/trivy"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/trivy/config"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/types"
@@ -138,7 +138,7 @@ func (a *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInp
 // nolint:cyclop
 func (a *Scanner) createResult(logger *logrus.Entry, trivyJSON []byte, hash string, metadata map[string]string) (*types.ScannerResult, error) {
 	if len(trivyJSON) == 0 {
-		return nil, nil
+		return nil, errors.New("cannot produce result for empty trivy JSON")
 	}
 
 	var report trivyTypes.Report

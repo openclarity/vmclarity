@@ -17,6 +17,7 @@ package types
 
 import (
 	cdx "github.com/CycloneDX/cyclonedx-go"
+
 	"github.com/openclarity/vmclarity/scanner/common"
 )
 

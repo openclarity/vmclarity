@@ -16,8 +16,6 @@
 package cisdocker
 
 import (
-	"github.com/openclarity/vmclarity/scanner/common"
-	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/cisdocker/config"
 	"testing"
 	"time"
 
@@ -25,6 +23,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
 	logrusTest "github.com/sirupsen/logrus/hooks/test"
+
+	"github.com/openclarity/vmclarity/scanner/common"
+	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/cisdocker/config"
 )
 
 func TestCreateDockleConfig(t *testing.T) {

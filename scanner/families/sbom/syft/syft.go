@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
@@ -28,6 +29,7 @@ import (
 	"github.com/anchore/syft/syft/format/common/cyclonedxhelpers"
 	syftsbom "github.com/anchore/syft/syft/sbom"
 	syftsrc "github.com/anchore/syft/syft/source"
+
 	"github.com/openclarity/vmclarity/scanner/families/sbom/syft/config"
 	"github.com/openclarity/vmclarity/scanner/utils/image_helper"
 )
