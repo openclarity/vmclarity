@@ -12,13 +12,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-#  verification:
-#    name: Verification
-#    uses: ./.github/workflows/reusable-verification.yml
-#    secrets: inherit
+  verification:
+    name: Verification
+    uses: ./.github/workflows/reusable-verification.yml
+    secrets: inherit
 
   build:
-    # needs: verification
+    needs: verification
     name: Build
     uses: ./.github/workflows/build-and-upload-components.yml
     with:

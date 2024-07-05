@@ -19,7 +19,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/openclarity/vmclarity/scanner"
 	"github.com/openclarity/vmclarity/scanner/families"
 
 	apiclient "github.com/openclarity/vmclarity/api/client"
@@ -45,7 +44,7 @@ type VMClarityPresenter struct {
 	assetScanID apitypes.AssetScanID
 }
 
-func (v *VMClarityPresenter) ExportFamilyResult(ctx context.Context, res scanner.FamilyResult) error {
+func (v *VMClarityPresenter) ExportFamilyResult(ctx context.Context, res families.FamilyResult) error {
 	var err error
 
 	switch res.FamilyType {
@@ -72,7 +71,7 @@ func (v *VMClarityPresenter) ExportFamilyResult(ctx context.Context, res scanner
 	return err
 }
 
-func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res scanner.FamilyResult) error {
+func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res families.FamilyResult) error {
 	assetScan, err := v.client.GetAssetScan(ctx, v.assetScanID, apitypes.GetAssetScansAssetScanIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get asset scan: %w", err)
@@ -122,7 +121,7 @@ func (v *VMClarityPresenter) ExportSbomResult(ctx context.Context, res scanner.F
 	return nil
 }
 
-func (v *VMClarityPresenter) ExportVulResult(ctx context.Context, res scanner.FamilyResult) error {
+func (v *VMClarityPresenter) ExportVulResult(ctx context.Context, res families.FamilyResult) error {
 	assetScan, err := v.client.GetAssetScan(ctx, v.assetScanID, apitypes.GetAssetScansAssetScanIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get asset scan: %w", err)
@@ -172,7 +171,7 @@ func (v *VMClarityPresenter) ExportVulResult(ctx context.Context, res scanner.Fa
 	return nil
 }
 
-func (v *VMClarityPresenter) ExportSecretsResult(ctx context.Context, res scanner.FamilyResult) error {
+func (v *VMClarityPresenter) ExportSecretsResult(ctx context.Context, res families.FamilyResult) error {
 	assetScan, err := v.client.GetAssetScan(ctx, v.assetScanID, apitypes.GetAssetScansAssetScanIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get asset scan: %w", err)
@@ -244,7 +243,7 @@ func getInputScanStats(metadata families.ScanMetadata) *[]apitypes.AssetScanInpu
 	return &ret
 }
 
-func (v *VMClarityPresenter) ExportMalwareResult(ctx context.Context, res scanner.FamilyResult) error {
+func (v *VMClarityPresenter) ExportMalwareResult(ctx context.Context, res families.FamilyResult) error {
 	assetScan, err := v.client.GetAssetScan(ctx, v.assetScanID, apitypes.GetAssetScansAssetScanIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get asset scan: %w", err)
@@ -295,7 +294,7 @@ func (v *VMClarityPresenter) ExportMalwareResult(ctx context.Context, res scanne
 	return nil
 }
 
-func (v *VMClarityPresenter) ExportExploitsResult(ctx context.Context, res scanner.FamilyResult) error {
+func (v *VMClarityPresenter) ExportExploitsResult(ctx context.Context, res families.FamilyResult) error {
 	assetScan, err := v.client.GetAssetScan(ctx, v.assetScanID, apitypes.GetAssetScansAssetScanIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get asset scan: %w", err)
@@ -345,7 +344,7 @@ func (v *VMClarityPresenter) ExportExploitsResult(ctx context.Context, res scann
 	return nil
 }
 
-func (v *VMClarityPresenter) ExportMisconfigurationResult(ctx context.Context, res scanner.FamilyResult) error {
+func (v *VMClarityPresenter) ExportMisconfigurationResult(ctx context.Context, res families.FamilyResult) error {
 	assetScan, err := v.client.GetAssetScan(ctx, v.assetScanID, apitypes.GetAssetScansAssetScanIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get asset scan: %w", err)
@@ -405,7 +404,7 @@ func (v *VMClarityPresenter) ExportMisconfigurationResult(ctx context.Context, r
 	return nil
 }
 
-func (v *VMClarityPresenter) ExportInfoFinderResult(ctx context.Context, res scanner.FamilyResult) error {
+func (v *VMClarityPresenter) ExportInfoFinderResult(ctx context.Context, res families.FamilyResult) error {
 	assetScan, err := v.client.GetAssetScan(ctx, v.assetScanID, apitypes.GetAssetScansAssetScanIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get asset scan: %w", err)
@@ -465,7 +464,7 @@ func (v *VMClarityPresenter) ExportInfoFinderResult(ctx context.Context, res sca
 	return nil
 }
 
-func (v *VMClarityPresenter) ExportRootkitResult(ctx context.Context, res scanner.FamilyResult) error {
+func (v *VMClarityPresenter) ExportRootkitResult(ctx context.Context, res families.FamilyResult) error {
 	assetScan, err := v.client.GetAssetScan(ctx, v.assetScanID, apitypes.GetAssetScansAssetScanIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get asset scan: %w", err)
@@ -514,7 +513,7 @@ func (v *VMClarityPresenter) ExportRootkitResult(ctx context.Context, res scanne
 	return nil
 }
 
-func (v *VMClarityPresenter) ExportPluginsResult(ctx context.Context, res scanner.FamilyResult) error {
+func (v *VMClarityPresenter) ExportPluginsResult(ctx context.Context, res families.FamilyResult) error {
 	assetScan, err := v.client.GetAssetScan(ctx, v.assetScanID, apitypes.GetAssetScansAssetScanIDParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get asset scan: %w", err)

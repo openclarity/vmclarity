@@ -34,12 +34,12 @@ import (
 const scannerPluginName = "kics"
 
 type Notifier struct {
-	Results []scanner.FamilyResult
+	Results []families.FamilyResult
 }
 
 func (n *Notifier) FamilyStarted(context.Context, families.FamilyType) error { return nil }
 
-func (n *Notifier) FamilyFinished(_ context.Context, res scanner.FamilyResult) error {
+func (n *Notifier) FamilyFinished(_ context.Context, res families.FamilyResult) error {
 	n.Results = append(n.Results, res)
 
 	return nil

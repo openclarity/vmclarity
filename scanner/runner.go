@@ -27,7 +27,7 @@ type familyRunner[T any] struct {
 	family families.Family[T]
 }
 
-func (r *familyRunner[T]) Run(ctx context.Context, notifier FamilyNotifier, results *families.Results) []error {
+func (r *familyRunner[T]) Run(ctx context.Context, notifier families.FamilyNotifier, results *families.Results) []error {
 	var errs []error
 
 	// Inject family data into logger
@@ -43,7 +43,7 @@ func (r *familyRunner[T]) Run(ctx context.Context, notifier FamilyNotifier, resu
 
 	// Run family
 	result, err := r.family.Run(ctx, results)
-	familyResult := FamilyResult{
+	familyResult := families.FamilyResult{
 		Result:     result,
 		FamilyType: r.family.GetType(),
 		Err:        err,
