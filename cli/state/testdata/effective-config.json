@@ -97,10 +97,10 @@
     "Inputs": null,
     "ScannersConfig": {
       "Clam": {
+        "ScanWithoutDaemon": false,
         "ClamScanBinaryPath": "",
         "ClamScanExcludeFiles": null,
         "ClamScanExcludeDirs": null,
-        "ClamDaemonMode": false,
         "ClamDaemonClientBinaryPath": "",
         "ClamDaemonBinaryPath": "",
         "ClamDaemonConfigPath": "",
