@@ -20,18 +20,23 @@ import (
 )
 
 type Result struct {
-	Metadata          families.ScanMetadata `json:"Metadata"`
-	Misconfigurations []Misconfiguration    `json:"Misconfigurations"`
+	Metadata          families.ScanMetadata       `json:"Metadata"`
+	Misconfigurations []FlattenedMisconfiguration `json:"Misconfigurations"`
 }
 
 func NewResult() *Result {
 	return &Result{
-		Misconfigurations: []Misconfiguration{},
+		Misconfigurations: []FlattenedMisconfiguration{},
 	}
 }
 
-func (r *Result) Merge(meta families.ScanInputMetadata, items []Misconfiguration) {
+func (r *Result) Merge(meta families.ScanInputMetadata, misconfigurations []Misconfiguration) {
 	r.Metadata.Merge(meta)
 
-	r.Misconfigurations = append(r.Misconfigurations, items...)
+	for i := range misconfigurations {
+		r.Misconfigurations = append(r.Misconfigurations, FlattenedMisconfiguration{
+			Misconfiguration: misconfigurations[i],
+			ScannerName:      meta.ScannerName,
+		})
+	}
 }

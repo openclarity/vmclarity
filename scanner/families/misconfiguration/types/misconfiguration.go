@@ -44,3 +44,8 @@ type Misconfiguration struct {
 	Message     string   `json:"Message"`
 	Remediation string   `json:"Remediation"`
 }
+
+type FlattenedMisconfiguration struct {
+	Misconfiguration
+	ScannerName string `json:"ScannerName"`
+}

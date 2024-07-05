@@ -21,17 +21,22 @@ import (
 
 type Result struct {
 	Metadata families.ScanMetadata `json:"Metadata"`
-	Infos    []Info                `json:"Infos"`
+	Infos    []FlattenedInfo       `json:"Infos"`
 }
 
 func NewResult() *Result {
 	return &Result{
-		Infos: []Info{},
+		Infos: []FlattenedInfo{},
 	}
 }
 
 func (r *Result) Merge(meta families.ScanInputMetadata, infos []Info) {
 	r.Metadata.Merge(meta)
 
-	r.Infos = append(r.Infos, infos...)
+	for i := range infos {
+		r.Infos = append(r.Infos, FlattenedInfo{
+			Info:        infos[i],
+			ScannerName: meta.ScannerName,
+		})
+	}
 }

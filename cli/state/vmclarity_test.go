@@ -18,7 +18,6 @@ package state
 import (
 	_ "embed"
 	"github.com/openclarity/vmclarity/scanner"
-	types2 "github.com/openclarity/vmclarity/scanner/families/sbom/types"
 	"testing"
 
 	. "github.com/onsi/gomega"
@@ -26,8 +25,8 @@ import (
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/to"
-	"github.com/openclarity/vmclarity/scanner/config"
-	"github.com/openclarity/vmclarity/scanner/families/types"
+	"github.com/openclarity/vmclarity/scanner/common"
+	sbom "github.com/openclarity/vmclarity/scanner/families/sbom/types"
 )
 
 //go:embed testdata/effective-config.json
@@ -49,18 +48,13 @@ func Test_appendEffectiveScanConfigAnnotation(t *testing.T) {
 			args: args{
 				annotations: nil,
 				config: &scanner.Config{
-					SBOM: types2.Config{
+					SBOM: sbom.Config{
 						Enabled:       true,
 						AnalyzersList: []string{"syft"},
-						Inputs: []types.Input{
+						Inputs: []common.ScanInput{
 							{
 								Input:     "test",
 								InputType: "dir",
-							},
-						},
-						AnalyzersConfig: &config.Config{
-							Analyzer: &config.Analyzer{
-								AnalyzerList: []string{"syft"},
 							},
 						},
 					},
@@ -78,18 +72,13 @@ func Test_appendEffectiveScanConfigAnnotation(t *testing.T) {
 			args: args{
 				annotations: &apitypes.Annotations{},
 				config: &scanner.Config{
-					SBOM: types2.Config{
+					SBOM: sbom.Config{
 						Enabled:       true,
 						AnalyzersList: []string{"syft"},
-						Inputs: []types.Input{
+						Inputs: []common.ScanInput{
 							{
 								Input:     "test",
 								InputType: "dir",
-							},
-						},
-						AnalyzersConfig: &config.Config{
-							Analyzer: &config.Analyzer{
-								AnalyzerList: []string{"syft"},
 							},
 						},
 					},
@@ -112,18 +101,13 @@ func Test_appendEffectiveScanConfigAnnotation(t *testing.T) {
 					},
 				},
 				config: &scanner.Config{
-					SBOM: types2.Config{
+					SBOM: sbom.Config{
 						Enabled:       true,
 						AnalyzersList: []string{"syft"},
-						Inputs: []types.Input{
+						Inputs: []common.ScanInput{
 							{
 								Input:     "test",
 								InputType: "dir",
-							},
-						},
-						AnalyzersConfig: &config.Config{
-							Analyzer: &config.Analyzer{
-								AnalyzerList: []string{"syft"},
 							},
 						},
 					},
@@ -150,18 +134,13 @@ func Test_appendEffectiveScanConfigAnnotation(t *testing.T) {
 					},
 				},
 				config: &scanner.Config{
-					SBOM: types2.Config{
+					SBOM: sbom.Config{
 						Enabled:       true,
 						AnalyzersList: []string{"syft"},
-						Inputs: []types.Input{
+						Inputs: []common.ScanInput{
 							{
 								Input:     "test",
 								InputType: "dir",
-							},
-						},
-						AnalyzersConfig: &config.Config{
-							Analyzer: &config.Analyzer{
-								AnalyzerList: []string{"syft"},
 							},
 						},
 					},

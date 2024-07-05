@@ -18,19 +18,20 @@ package types
 import (
 	"fmt"
 	cdx "github.com/CycloneDX/cyclonedx-go"
+	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/utils/converter"
 )
 
 type Result struct {
-	SBOM *cdx.BOM `json:"sbom"`
+	Metadata families.ScanMetadata `json:"Metadata"`
+	SBOM     *cdx.BOM              `json:"sbom"`
 }
 
-func NewResult() *Result {
-	return &Result{}
-}
-
-func (r *Result) SetSBOM(sbom *cdx.BOM) {
-	r.SBOM = sbom
+func NewResult(metadata families.ScanMetadata, sbom *cdx.BOM) *Result {
+	return &Result{
+		Metadata: metadata,
+		SBOM:     sbom,
+	}
 }
 
 func (r *Result) EncodeToBytes(outputFormat string) ([]byte, error) {
