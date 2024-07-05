@@ -72,9 +72,9 @@ func New(_ string, config types.Config) (families.Scanner[*types.ScannerResult],
 }
 
 // nolint:cyclop
-func (a *Scanner) Scan(ctx context.Context, inputType common.InputType, userInput string) (*types.ScannerResult, error) {
-	if !inputType.IsOneOf(common.SBOM) {
-		return nil, fmt.Errorf("unsupported input type=%s", inputType)
+func (a *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
+	if !sourceType.IsOneOf(common.SBOM) {
+		return nil, fmt.Errorf("unsupported input type=%s", sourceType)
 	}
 
 	logger := log.GetLoggerFromContextOrDefault(ctx)
@@ -102,14 +102,14 @@ func (a *Scanner) Scan(ctx context.Context, inputType common.InputType, userInpu
 	}
 
 	// Configure Trivy image options according to the source type and user input.
-	trivyOptions, cleanup, err := utilsTrivy.SetTrivyImageOptions(inputType, userInput, trivyOptions)
+	trivyOptions, cleanup, err := utilsTrivy.SetTrivyImageOptions(sourceType, userInput, trivyOptions)
 	defer cleanup(logger)
 	if err != nil {
 		return nil, fmt.Errorf("failed to configure trivy image options: %w", err)
 	}
 
 	// Convert the source to the trivy source type
-	trivySourceType, err := utilsTrivy.SourceToTrivySource(inputType)
+	trivySourceType, err := utilsTrivy.SourceToTrivySource(sourceType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to configure trivy: %w", err)
 	}

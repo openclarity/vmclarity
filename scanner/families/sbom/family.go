@@ -33,7 +33,7 @@ type SBOM struct {
 	conf types.Config
 }
 
-func New(conf types.Config) families.Family[*types.SBOM] {
+func New(conf types.Config) families.Family[*types.Result] {
 	return &SBOM{
 		conf: conf,
 	}
@@ -44,7 +44,7 @@ func (s SBOM) GetType() families.FamilyType {
 }
 
 // nolint:cyclop
-func (s SBOM) Run(ctx context.Context, _ *families.Results) (*types.SBOM, error) {
+func (s SBOM) Run(ctx context.Context, _ *families.Results) (*types.Result, error) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "sbom")
 	logger.Info("SBOM Run...")
 
@@ -99,8 +99,8 @@ func (s SBOM) Run(ctx context.Context, _ *families.Results) (*types.SBOM, error)
 	}
 
 	// Create result from merged data
-	sbomResults := types.NewSBOM()
-	sbomResults.Data = cdxBom
+	sbomResults := types.NewResult()
+	sbomResults.SetSBOM(cdxBom)
 
 	logger.Info("SBOM Done...")
 

@@ -43,9 +43,9 @@ func New(_ string, config types.ScannersConfig) (families.Scanner[[]types.Findin
 	}, nil
 }
 
-func (a *Scanner) Scan(ctx context.Context, inputType common.InputType, userInput string) ([]types.Finding, error) {
-	if !inputType.IsOneOf(common.DIR, common.ROOTFS, common.IMAGE, common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR) {
-		return nil, fmt.Errorf("unsupported input type=%v", inputType)
+func (a *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInput string) ([]types.Finding, error) {
+	if !sourceType.IsOneOf(common.DIR, common.ROOTFS, common.IMAGE, common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR) {
+		return nil, fmt.Errorf("unsupported input type=%v", sourceType)
 	}
 
 	logger := log.GetLoggerFromContextOrDefault(ctx)
@@ -65,7 +65,7 @@ func (a *Scanner) Scan(ctx context.Context, inputType common.InputType, userInpu
 	}()
 	reportPath := file.Name()
 
-	fsPath, cleanup, err := familiesutils.ConvertInputToFilesystem(ctx, inputType, userInput)
+	fsPath, cleanup, err := familiesutils.ConvertInputToFilesystem(ctx, sourceType, userInput)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert input to filesystem: %w", err)
 	}

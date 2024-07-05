@@ -76,13 +76,8 @@ func (a *Analyzer) Scan(ctx context.Context, sourceType common.InputType, userIn
 	}
 
 	// Skip this analyser for input types we don't support
-	switch sourceType {
-	case common.IMAGE, common.ROOTFS, common.DIR, common.FILE, common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR:
-		// These are all supported for SBOM analysing so continue
-	case common.SBOM:
-		fallthrough
-	default:
-		return nil, fmt.Errorf("skipping analyze unsupported source type: %s", sourceType)
+	if !sourceType.IsOneOf(common.IMAGE, common.ROOTFS, common.DIR, common.FILE, common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR) {
+		return nil, fmt.Errorf("unsupported input type=%s", sourceType)
 	}
 
 	cacheDir := trivyFsutils.CacheDir()
@@ -162,7 +157,7 @@ func (a *Analyzer) Scan(ctx context.Context, sourceType common.InputType, userIn
 		result.AppInfo.SourceHash = hash
 		result.AppInfo.SourceMetadata = imageInfo.ToMetadata()
 
-	case common.SBOM, common.DIR, common.ROOTFS, common.FILE:
+	case common.SBOM, common.DIR, common.ROOTFS, common.FILE, common.CSV:
 		// ignore
 	default:
 		// ignore

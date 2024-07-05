@@ -432,7 +432,7 @@ func toBomDescriptorComponent(sourceType common.InputType, srcMetadata *cdx.Meta
 				Value:     hash,
 			},
 		}
-	case common.SBOM:
+	case common.SBOM, common.CSV:
 	}
 
 	return metaDataComponent

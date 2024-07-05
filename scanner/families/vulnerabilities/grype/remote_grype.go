@@ -52,10 +52,10 @@ func newRemoteScanner(config types.Config) families.Scanner[*types.ScannerResult
 	}
 }
 
-func (s *RemoteScanner) Scan(ctx context.Context, inputType common.InputType, userInput string) (*types.ScannerResult, error) {
+func (s *RemoteScanner) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
 	// remote-grype supports only SBOM as a source input since it sends the SBOM to a centralized grype server for scanning.
-	if !inputType.IsOneOf(common.SBOM) {
-		return nil, fmt.Errorf("unsupported input type=%v", inputType)
+	if !sourceType.IsOneOf(common.SBOM) {
+		return nil, fmt.Errorf("unsupported input type=%v", sourceType)
 	}
 
 	logger := log.GetLoggerFromContextOrDefault(ctx).WithField("grype-type", "remote")

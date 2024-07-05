@@ -28,7 +28,7 @@ const (
 	DefaultCISDockerTimeout = 2 * time.Minute
 )
 
-func createDockleConfig(logger *logrus.Entry, sourceType common.InputType, name string, config config.Config) *dockle_config.Config {
+func createDockleConfig(logger *logrus.Entry, inputType common.InputType, name string, config config.Config) *dockle_config.Config {
 	dockleConfig := &dockle_config.Config{
 		Debug:      logger.Logger.Level == logrus.DebugLevel,
 		Timeout:    DefaultCISDockerTimeout,
@@ -52,7 +52,7 @@ func createDockleConfig(logger *logrus.Entry, sourceType common.InputType, name 
 	}
 
 	// nolint:exhaustive
-	switch sourceType {
+	switch inputType {
 	case common.DOCKERARCHIVE:
 		dockleConfig.FilePath = name
 	case common.ROOTFS, common.DIR:

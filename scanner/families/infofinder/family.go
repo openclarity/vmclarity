@@ -29,7 +29,7 @@ type InfoFinder struct {
 	conf types.Config
 }
 
-func New(conf types.Config) families.Family[*types.Infos] {
+func New(conf types.Config) families.Family[*types.Result] {
 	return &InfoFinder{
 		conf: conf,
 	}
@@ -39,7 +39,7 @@ func (i InfoFinder) GetType() families.FamilyType {
 	return families.InfoFinder
 }
 
-func (i InfoFinder) Run(ctx context.Context, _ *families.Results) (*types.Infos, error) {
+func (i InfoFinder) Run(ctx context.Context, _ *families.Results) (*types.Result, error) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "info finder")
 	logger.Info("InfoFinder Run...")
 
@@ -50,7 +50,7 @@ func (i InfoFinder) Run(ctx context.Context, _ *families.Results) (*types.Infos,
 		return nil, fmt.Errorf("failed to process inputs for infofinders: %w", err)
 	}
 
-	infos := types.NewInfos()
+	infos := types.NewResult()
 
 	// Merge results
 	for _, result := range results {

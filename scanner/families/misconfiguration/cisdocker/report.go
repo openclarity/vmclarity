@@ -30,11 +30,11 @@ var scanDirIgnoreIDs = map[string]struct{}{
 	dockle_types.UseContentTrust: {},
 }
 
-func parseDockleReport(sourceType common.InputType, imageName string, assessmentMap dockle_types.AssessmentMap) []types.Misconfiguration {
+func parseDockleReport(inputType common.InputType, imageName string, assessmentMap dockle_types.AssessmentMap) []types.Misconfiguration {
 	ret := make([]types.Misconfiguration, 0, len(assessmentMap))
 
 	for _, codeInfo := range assessmentMap {
-		if sourceType == common.ROOTFS || sourceType == common.DIR {
+		if inputType.IsOneOf(common.ROOTFS, common.DIR) {
 			if _, ok := scanDirIgnoreIDs[codeInfo.Code]; ok {
 				continue
 			}

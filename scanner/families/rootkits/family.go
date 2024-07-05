@@ -29,7 +29,7 @@ type Rootkits struct {
 	conf types.Config
 }
 
-func New(conf types.Config) families.Family[*types.Rootkits] {
+func New(conf types.Config) families.Family[*types.Result] {
 	return &Rootkits{
 		conf: conf,
 	}
@@ -39,7 +39,7 @@ func (r Rootkits) GetType() families.FamilyType {
 	return families.Rootkits
 }
 
-func (r Rootkits) Run(ctx context.Context, _ *families.Results) (*types.Rootkits, error) {
+func (r Rootkits) Run(ctx context.Context, _ *families.Results) (*types.Result, error) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "rootkits")
 	logger.Info("Rootkits Run...")
 
@@ -50,7 +50,7 @@ func (r Rootkits) Run(ctx context.Context, _ *families.Results) (*types.Rootkits
 		return nil, fmt.Errorf("failed to process inputs for rootkits: %w", err)
 	}
 
-	rootkits := types.NewRootkits()
+	rootkits := types.NewResult()
 
 	// Merge results
 	for _, result := range results {

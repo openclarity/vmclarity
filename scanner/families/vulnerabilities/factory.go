@@ -22,8 +22,7 @@ import (
 	"github.com/openclarity/vmclarity/scanner/internal/scan_manager"
 )
 
-// Pass parent config that contain shared fields for override
-
+// Factory receives parent config that contains shared fields to enable override
 var Factory = scan_manager.NewFactory[types.Config, *types.ScannerResult]()
 
 func init() {

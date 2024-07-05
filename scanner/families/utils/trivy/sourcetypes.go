@@ -40,7 +40,7 @@ func SourceToTrivySource(sourceType common.InputType) (artifact.TargetKind, erro
 	case common.SBOM:
 		return artifact.TargetSBOM, nil
 	}
-	return artifact.TargetKind("Unknown"), fmt.Errorf("unable to convert source type %v to trivy type", sourceType)
+	return "Unknown", fmt.Errorf("unable to convert source type %v to trivy type", sourceType)
 }
 
 type CleanupFunc func(log *log.Entry)
@@ -91,7 +91,7 @@ func SetTrivyImageOptions(sourceType common.InputType, userInput string, trivyOp
 		}
 		trivyOptions.ImageOptions.Input = tmpDir
 
-	case common.IMAGE, common.ROOTFS, common.DIR, common.FILE, common.SBOM:
+	case common.IMAGE, common.ROOTFS, common.DIR, common.FILE, common.SBOM, common.CSV:
 		// Nothing to do here, setting the target in ScanOptions is
 		// enough.
 	}

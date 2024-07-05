@@ -15,8 +15,6 @@
 
 package types
 
-import "github.com/openclarity/vmclarity/scanner/common"
-
 type Severity string
 
 const (
@@ -45,31 +43,4 @@ type Misconfiguration struct {
 	Severity    Severity `json:"Severity"`
 	Message     string   `json:"Message"`
 	Remediation string   `json:"Remediation"`
-}
-
-type FlattenedMisconfiguration struct {
-	Misconfiguration
-	ScannerName string `json:"ScannerName"`
-}
-
-type Misconfigurations struct {
-	Metadata                  common.ScanMetadata
-	FlattenedMisconfiguration []FlattenedMisconfiguration `json:"Misconfigurations"`
-}
-
-func NewMisconfigurations() *Misconfigurations {
-	return &Misconfigurations{
-		FlattenedMisconfiguration: []FlattenedMisconfiguration{},
-	}
-}
-
-func (m *Misconfigurations) Merge(meta common.ScanInputMetadata, items []Misconfiguration) {
-	m.Metadata.Merge(meta)
-
-	for _, misconfiguration := range items {
-		m.FlattenedMisconfiguration = append(m.FlattenedMisconfiguration, FlattenedMisconfiguration{
-			ScannerName:      meta.ScannerName,
-			Misconfiguration: misconfiguration,
-		})
-	}
 }

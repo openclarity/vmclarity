@@ -54,14 +54,14 @@ func New(_ string, config types.Config) (families.Scanner[*types.ScannerResult],
 	}, nil
 }
 
-func (a *Analyzer) Scan(ctx context.Context, inputType common.InputType, userInput string) (*types.ScannerResult, error) {
+func (a *Analyzer) Scan(ctx context.Context, sourceType common.InputType, userInput string) (*types.ScannerResult, error) {
 	// TODO platform can be defined
 	// https://github.com/anchore/syft/blob/b20310eaf847c259beb4fe5128c842bd8aa4d4fc/cmd/syft/cli/options/packages.go#L48
 	source, err := syft.GetSource(
 		ctx,
 		userInput,
 		syft.DefaultGetSourceConfig().
-			WithSources(inputType.GetSource(a.config.LocalImageScan)).
+			WithSources(sourceType.GetSource(a.config.LocalImageScan)).
 			WithRegistryOptions(a.config.GetRegistryOptions()).
 			WithExcludeConfig(a.config.GetExcludePaths()),
 	)
@@ -78,13 +78,13 @@ func (a *Analyzer) Scan(ctx context.Context, inputType common.InputType, userInp
 	}
 
 	cdxBom := cyclonedxhelpers.ToFormatModel(*sbom)
-	result := types.CreateScannerResult(cdxBom, AnalyzerName, userInput, inputType)
+	result := types.CreateScannerResult(cdxBom, AnalyzerName, userInput, sourceType)
 
 	// Syft uses ManifestDigest to fill version information in the case of an image.
 	// We need RepoDigest/ImageID as well which is not set by Syft if we're using cycloneDX output.
 	// Get the RepoDigest/ImageID from image metadata and use it as SourceHash in the Result
 	// that will be added to the component hash of metadata during the merge.
-	switch inputType {
+	switch sourceType {
 	case common.IMAGE, common.DOCKERARCHIVE, common.OCIDIR, common.OCIARCHIVE:
 		hash, imageInfo, err := getImageInfo(sbom, userInput)
 		if err != nil {
@@ -95,7 +95,7 @@ func (a *Analyzer) Scan(ctx context.Context, inputType common.InputType, userInp
 		result.AppInfo.SourceHash = hash
 		result.AppInfo.SourceMetadata = imageInfo.ToMetadata()
 
-	case common.SBOM, common.DIR, common.ROOTFS, common.FILE:
+	case common.SBOM, common.DIR, common.ROOTFS, common.FILE, common.CSV:
 		// ignore
 	default:
 		// ignore

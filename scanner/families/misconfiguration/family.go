@@ -29,7 +29,7 @@ type Misconfiguration struct {
 	conf types.Config
 }
 
-func New(conf types.Config) families.Family[*types.Misconfigurations] {
+func New(conf types.Config) families.Family[*types.Result] {
 	return &Misconfiguration{
 		conf: conf,
 	}
@@ -39,7 +39,7 @@ func (m Misconfiguration) GetType() families.FamilyType {
 	return families.Misconfiguration
 }
 
-func (m Misconfiguration) Run(ctx context.Context, _ *families.Results) (*types.Misconfigurations, error) {
+func (m Misconfiguration) Run(ctx context.Context, _ *families.Results) (*types.Result, error) {
 	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "misconfiguration")
 	logger.Info("Misconfiguration Run...")
 
@@ -50,7 +50,7 @@ func (m Misconfiguration) Run(ctx context.Context, _ *families.Results) (*types.
 		return nil, fmt.Errorf("failed to process inputs for misconfigurations: %w", err)
 	}
 
-	misconfigurations := types.NewMisconfigurations()
+	misconfigurations := types.NewResult()
 
 	// Merge results
 	for _, result := range results {

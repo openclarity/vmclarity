@@ -16,29 +16,22 @@
 package types
 
 import (
-	"fmt"
-	cdx "github.com/CycloneDX/cyclonedx-go"
-	"github.com/openclarity/vmclarity/scanner/utils/converter"
+	"github.com/openclarity/vmclarity/scanner/families"
 )
 
-type SBOM struct {
-	Data *cdx.BOM
+type Result struct {
+	Metadata families.ScanMetadata `json:"Metadata"`
+	Rootkits []Rootkit             `json:"Rootkits"`
 }
 
-func NewSBOM() *SBOM {
-	return &SBOM{}
+func NewResult() *Result {
+	return &Result{
+		Rootkits: []Rootkit{},
+	}
 }
 
-func (r *SBOM) EncodeToBytes(outputFormat string) ([]byte, error) {
-	f, err := converter.StringToSbomFormat(outputFormat)
-	if err != nil {
-		return nil, fmt.Errorf("unable to parse output format: %w", err)
-	}
+func (r *Result) Merge(meta families.ScanInputMetadata, rootkits []Rootkit) {
+	r.Metadata.Merge(meta)
 
-	bomBytes, err := converter.CycloneDxToBytes(r.Data, f)
-	if err != nil {
-		return nil, fmt.Errorf("unable to encode results to bytes: %w", err)
-	}
-
-	return bomBytes, nil
+	r.Rootkits = append(r.Rootkits, rootkits...)
 }
