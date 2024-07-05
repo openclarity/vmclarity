@@ -21,20 +21,18 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/openclarity/vmclarity/core/log"
-	"github.com/openclarity/vmclarity/scanner/common"
-	"github.com/openclarity/vmclarity/scanner/families"
-	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
-
 	cdx "github.com/CycloneDX/cyclonedx-go"
-	trivyftypes "github.com/aquasecurity/trivy/pkg/fanal/types"
-
 	"github.com/aquasecurity/trivy/pkg/commands/artifact"
+	trivyfTypes "github.com/aquasecurity/trivy/pkg/fanal/types"
 	trivyFlag "github.com/aquasecurity/trivy/pkg/flag"
 	trivyTypes "github.com/aquasecurity/trivy/pkg/types"
 	trivyFsutils "github.com/aquasecurity/trivy/pkg/utils/fsutils"
 
+	"github.com/openclarity/vmclarity/core/log"
+	"github.com/openclarity/vmclarity/scanner/common"
+	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/sbom/trivy/config"
+	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
 	"github.com/openclarity/vmclarity/scanner/families/utils/trivy"
 	"github.com/openclarity/vmclarity/scanner/utils/image_helper"
 )
@@ -45,7 +43,7 @@ type Analyzer struct {
 	config config.Config
 }
 
-func New(_ string, config types.Config) (families.Scanner[*types.ScannerResult], error) {
+func New(_ context.Context, _ string, config types.Config) (families.Scanner[*types.ScannerResult], error) {
 	trivyConfig := config.AnalyzersConfig.Trivy
 
 	// Override from parent config if unset
@@ -106,7 +104,7 @@ func (a *Analyzer) Scan(ctx context.Context, sourceType common.InputType, userIn
 			VulnType: trivyTypes.VulnTypes, // Trivy disables analyzers for language packages if VulnTypeLibrary not in VulnType list
 		},
 		ImageOptions: trivyFlag.ImageOptions{
-			ImageSources: trivyftypes.AllImageSources,
+			ImageSources: trivyfTypes.AllImageSources,
 		},
 	}
 

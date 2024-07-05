@@ -20,17 +20,16 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/openclarity/vmclarity/scanner/common"
-	"github.com/openclarity/vmclarity/scanner/families"
-	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
-
 	"github.com/anchore/syft/syft"
 	"github.com/anchore/syft/syft/cataloging"
 	"github.com/anchore/syft/syft/format/common/cyclonedxhelpers"
 	syftsbom "github.com/anchore/syft/syft/sbom"
 	syftsrc "github.com/anchore/syft/syft/source"
 
+	"github.com/openclarity/vmclarity/scanner/common"
+	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/sbom/syft/config"
+	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
 	"github.com/openclarity/vmclarity/scanner/utils/image_helper"
 )
 
@@ -40,7 +39,7 @@ type Analyzer struct {
 	config config.Config
 }
 
-func New(_ string, config types.Config) (families.Scanner[*types.ScannerResult], error) {
+func New(_ context.Context, _ string, config types.Config) (families.Scanner[*types.ScannerResult], error) {
 	syftConfig := config.AnalyzersConfig.Syft
 
 	// Override from parent config if unset

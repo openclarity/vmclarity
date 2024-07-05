@@ -16,6 +16,7 @@
 package scan_manager // nolint:revive,stylecheck
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/openclarity/vmclarity/scanner/families"
@@ -23,7 +24,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type CreateScannerFunc[ConfigType, ScannerResultType any] func(string, ConfigType) (families.Scanner[ScannerResultType], error)
+type CreateScannerFunc[ConfigType, ScannerResultType any] func(context.Context, string, ConfigType) (families.Scanner[ScannerResultType], error)
 
 type Factory[ConfigType, ScannerResultType any] struct {
 	scanners map[string]CreateScannerFunc[ConfigType, ScannerResultType]
@@ -47,11 +48,11 @@ func (f *Factory[CT, RT]) Register(name string, createScannerFunc CreateScannerF
 	f.scanners[name] = createScannerFunc
 }
 
-func (f *Factory[CT, RT]) createScanner(name string, config CT) (families.Scanner[RT], error) {
+func (f *Factory[CT, RT]) createScanner(ctx context.Context, name string, config CT) (families.Scanner[RT], error) {
 	createFunc, ok := f.scanners[name]
 	if !ok {
 		return nil, fmt.Errorf("%v not a registered scanner", name)
 	}
 
-	return createFunc(name, config)
+	return createFunc(ctx, name, config)
 }

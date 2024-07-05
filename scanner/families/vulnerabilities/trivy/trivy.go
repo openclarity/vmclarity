@@ -53,8 +53,8 @@ type Scanner struct {
 	config config.Config
 }
 
-func New(_ string, config types.Config) (families.Scanner[*types.ScannerResult], error) {
-	logger := log.GetLoggerFromContextOrDefault(context.Background())
+func New(ctx context.Context, _ string, config types.Config) (families.Scanner[*types.ScannerResult], error) {
+	logger := log.GetLoggerFromContextOrDefault(ctx)
 
 	// Set up the logger for trivy
 	tlogger := trivyLog.New(sloglogrus.Option{Logger: logger.Logger}.NewLogrusHandler())

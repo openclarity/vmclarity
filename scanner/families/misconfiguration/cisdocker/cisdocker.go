@@ -19,13 +19,12 @@ import (
 	"context"
 	"fmt"
 
+	dockle_run "github.com/Portshift/dockle/pkg"
+
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/cisdocker/config"
-
-	dockle_run "github.com/Portshift/dockle/pkg"
-
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
 )
 
@@ -35,7 +34,7 @@ type Scanner struct {
 	config config.Config
 }
 
-func New(_ string, config types.ScannersConfig) (families.Scanner[[]types.Misconfiguration], error) {
+func New(_ context.Context, _ string, config types.ScannersConfig) (families.Scanner[[]types.Misconfiguration], error) {
 	return &Scanner{
 		config: config.CISDocker,
 	}, nil

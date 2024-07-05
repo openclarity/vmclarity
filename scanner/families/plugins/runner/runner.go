@@ -40,7 +40,7 @@ type Scanner struct {
 	config config.Config
 }
 
-func New(name string, config types.ScannersConfig) (families.Scanner[*types.ScannerResult], error) {
+func New(_ context.Context, name string, config types.ScannersConfig) (families.Scanner[*types.ScannerResult], error) {
 	return &Scanner{
 		name:   name,
 		config: config[name],

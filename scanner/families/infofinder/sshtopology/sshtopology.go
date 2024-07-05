@@ -42,7 +42,7 @@ type Scanner struct {
 	config config.Config
 }
 
-func New(_ string, config types.ScannersConfig) (families.Scanner[[]types.Info], error) {
+func New(_ context.Context, _ string, config types.ScannersConfig) (families.Scanner[[]types.Info], error) {
 	return &Scanner{
 		config: config.SSHTopology,
 	}, nil
