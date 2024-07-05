@@ -29,3 +29,8 @@ type Info struct {
 	Path string   `json:"path"`
 	Data string   `json:"data"`
 }
+
+type FlattenedInfo struct {
+	Info
+	ScannerName string `json:"scannerName"`
+}

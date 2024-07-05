@@ -67,11 +67,14 @@ func (s SBOM) Run(ctx context.Context, _ *families.Results) (*types.Result, erro
 		return nil, fmt.Errorf("failed to process inputs for sbom: %w", err)
 	}
 
+	metadata := families.ScanMetadata{}
 	mergedResults := newMergedResults(s.conf.Inputs[0].InputType, hash)
 
 	// Merge results
 	for _, result := range results {
 		logger.Infof("Merging result from %q", result.Metadata)
+
+		metadata.Merge(result.Metadata)
 		mergedResults = mergedResults.Merge(result.ScanResult)
 	}
 
@@ -83,6 +86,12 @@ func (s SBOM) Run(ctx context.Context, _ *families.Results) (*types.Result, erro
 		}
 		results := types.CreateScannerResult(cdxBOMBytes, name, with.SbomPath, common.SBOM)
 		logger.Infof("Merging result from %q", with.SbomPath)
+
+		metadata.Merge(families.ScanInputMetadata{
+			ScannerName: name,
+			InputType:   common.SBOM,
+			InputPath:   with.SbomPath,
+		})
 		mergedResults = mergedResults.Merge(results)
 	}
 
@@ -99,8 +108,7 @@ func (s SBOM) Run(ctx context.Context, _ *families.Results) (*types.Result, erro
 	}
 
 	// Create result from merged data
-	sbomResults := types.NewResult()
-	sbomResults.SetSBOM(cdxBom)
+	sbomResults := types.NewResult(metadata, cdxBom)
 
 	logger.Info("SBOM Done...")
 
