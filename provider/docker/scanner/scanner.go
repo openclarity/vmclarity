@@ -19,11 +19,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/openclarity/vmclarity/scanner"
-	scannercommon "github.com/openclarity/vmclarity/scanner/common"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/openclarity/vmclarity/scanner"
+	scannercommon "github.com/openclarity/vmclarity/scanner/common"
 
 	"github.com/docker/docker/api/types"
 	containertypes "github.com/docker/docker/api/types/container"

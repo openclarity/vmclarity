@@ -17,6 +17,7 @@ package scan_manager // nolint:revive,stylecheck
 
 import (
 	"fmt"
+
 	"github.com/openclarity/vmclarity/scanner/families"
 
 	"github.com/sirupsen/logrus"

@@ -18,15 +18,17 @@ package scan_manager // nolint:revive,stylecheck
 import (
 	"context"
 	"fmt"
+	"math/rand"
+	"runtime"
+	"time"
+
 	"github.com/hashicorp/go-multierror"
+	"github.com/sourcegraph/conc/pool"
+
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
 	familiesutils "github.com/openclarity/vmclarity/scanner/families/utils"
-	"github.com/sourcegraph/conc/pool"
-	"math/rand"
-	"runtime"
-	"time"
 )
 
 type InputScanResult[T any] struct {
@@ -81,7 +83,7 @@ func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) (
 				ctx = log.SetLoggerForContext(ctx, logger)
 
 				// Fuzzy start processing to prevent spike requests for each input
-				time.Sleep(time.Duration(rand.Int63n(int64(20 * time.Millisecond))))
+				time.Sleep(time.Duration(rand.Int63n(int64(20 * time.Millisecond)))) // nolint:mnd,gosec,wrapcheck
 
 				// Run scan
 				logger.Infof("Started scanning input=%s...", input)

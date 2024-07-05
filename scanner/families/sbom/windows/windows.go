@@ -18,6 +18,7 @@ package windows
 import (
 	"context"
 	"fmt"
+
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"

@@ -19,12 +19,13 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	"github.com/openclarity/vmclarity/scanner/common"
 	"io"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/openclarity/vmclarity/scanner/common"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -44,7 +45,7 @@ func GenerateHash(sourceType common.InputType, source string) (string, error) {
 			return "", fmt.Errorf("failed to create hash for directory %s: %w", absPath, err)
 		}
 		return hash, nil
-	case common.FILE:
+	case common.FILE, common.CSV:
 		input, err := os.Open(absPath)
 		if err != nil {
 			return "", fmt.Errorf("failed to open file %s for generating hash: %w", absPath, err)

@@ -19,6 +19,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"sync"
+
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/exploits"
@@ -157,19 +160,36 @@ func (m *Scanner) Run(ctx context.Context, notifier families.FamilyNotifier) []e
 	return errs
 }
 
-// workflowParams defines parameters for familyRunner workflow tasks
+// workflowParams defines parameters for familyRunner workflow tasks.
 type workflowParams struct {
 	Notifier families.FamilyNotifier
 	Results  *families.Results
 	ErrCh    chan<- error
 }
 
-// newWorkflowTaskFor returns a wrapped familyRunner as a workflow task
+// NOTE(ramizpolic): This is an experimental usage to track changes between
+// sequential and parallel execution of the family runners.
+//
+// FIXME(ramizpolic): Remove this once all the changes regarding speed and
+// stability have been tested.
+
+var (
+	syncMu      sync.Mutex
+	_, syncMode = os.LookupEnv("VMCLARITY_SCANNER_RUN_SYNC")
+)
+
+// newWorkflowTaskFor returns a wrapped familyRunner as a workflow task.
 func newWorkflowTaskFor[T any](name string, family families.Family[T], deps ...string) workflowtypes.Task[workflowParams] {
 	return workflowtypes.Task[workflowParams]{
 		Name: name,
 		Deps: deps,
 		Fn: func(ctx context.Context, params workflowParams) error {
+			// FIXME(ramizpolic): Remove once not needed
+			if syncMode {
+				syncMu.Lock()
+				defer syncMu.Unlock()
+			}
+
 			// Execute family using family runner and forward collected errors
 			errs := newFamilyRunner(family).Run(ctx, params.Notifier, params.Results)
 			for _, err := range errs {

@@ -16,9 +16,10 @@
 package rootkits
 
 import (
-	"github.com/openclarity/vmclarity/scanner/families/rootkits/types"
 	"reflect"
 	"testing"
+
+	"github.com/openclarity/vmclarity/scanner/families/rootkits/types"
 )
 
 func TestStripPathFromResult(t *testing.T) {

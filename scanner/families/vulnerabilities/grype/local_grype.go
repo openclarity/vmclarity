@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
@@ -40,6 +41,7 @@ import (
 	"github.com/anchore/grype/grype/store"
 	"github.com/anchore/syft/syft"
 	"github.com/anchore/syft/syft/cataloging"
+
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/grype/config"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities/types"
 	"github.com/openclarity/vmclarity/scanner/utils/sbom"

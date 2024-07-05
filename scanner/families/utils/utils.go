@@ -73,6 +73,8 @@ func GetInputSize(input common.ScanInput) (int64, error) {
 		}
 		InputSizesCache[input.Input] = size
 		return size, nil
+	case common.SBOM, common.IMAGE, common.DOCKERARCHIVE, common.OCIARCHIVE, common.OCIDIR, common.CSV:
+		fallthrough
 	default:
 		// currently other input types are not supported for size benchmarking.
 		return 0, nil

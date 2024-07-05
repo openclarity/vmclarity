@@ -17,9 +17,10 @@ package grype
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/openclarity/vmclarity/scanner/families"
 	grypeconfig "github.com/openclarity/vmclarity/scanner/families/vulnerabilities/grype/config"
-	"strings"
 
 	grype_models "github.com/anchore/grype/grype/presenter/models"
 	"github.com/anchore/syft/syft/file"

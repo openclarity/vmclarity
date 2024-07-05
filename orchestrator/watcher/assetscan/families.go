@@ -16,33 +16,35 @@
 package assetscan
 
 import (
-	"github.com/openclarity/vmclarity/scanner"
-	"github.com/openclarity/vmclarity/scanner/families/exploits/types"
-	types5 "github.com/openclarity/vmclarity/scanner/families/plugins/types"
-	types2 "github.com/openclarity/vmclarity/scanner/families/rootkits/types"
-	types3 "github.com/openclarity/vmclarity/scanner/families/sbom/types"
-	types4 "github.com/openclarity/vmclarity/scanner/families/secrets/types"
 	"time"
 
 	"github.com/anchore/syft/syft/source"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
-	cliconfig "github.com/openclarity/vmclarity/scanner/config"
-	exploitsCommon "github.com/openclarity/vmclarity/scanner/families/exploits/common"
-	exploitdbConfig "github.com/openclarity/vmclarity/scanner/families/exploits/exploitdb/config"
-	infofinderTypes "github.com/openclarity/vmclarity/scanner/families/infofinder/types"
-	"github.com/openclarity/vmclarity/scanner/families/malware"
+	"github.com/openclarity/vmclarity/scanner"
+	scannercommon "github.com/openclarity/vmclarity/scanner/common"
+	exploitdbconfig "github.com/openclarity/vmclarity/scanner/families/exploits/exploitdb/config"
+	exploits "github.com/openclarity/vmclarity/scanner/families/exploits/types"
+	sshtopologyconfig "github.com/openclarity/vmclarity/scanner/families/infofinder/sshtopology/config"
+	infofinder "github.com/openclarity/vmclarity/scanner/families/infofinder/types"
 	clamconfig "github.com/openclarity/vmclarity/scanner/families/malware/clam/config"
-	malwarecommon "github.com/openclarity/vmclarity/scanner/families/malware/common"
+	malware "github.com/openclarity/vmclarity/scanner/families/malware/types"
 	yaraconfig "github.com/openclarity/vmclarity/scanner/families/malware/yara/config"
-	misconfiguration "github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
-	pluginscommon "github.com/openclarity/vmclarity/scanner/families/plugins/common"
+	cisdockerconfig "github.com/openclarity/vmclarity/scanner/families/misconfiguration/cisdocker/config"
+	lynisconfig "github.com/openclarity/vmclarity/scanner/families/misconfiguration/lynis/config"
+	misconfigurations "github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
 	pluginsrunnerconfig "github.com/openclarity/vmclarity/scanner/families/plugins/runner/config"
-	chkrootkitConfig "github.com/openclarity/vmclarity/scanner/families/rootkits/chkrootkit/config"
-	rootkitsCommon "github.com/openclarity/vmclarity/scanner/families/rootkits/common"
-	secretscommon "github.com/openclarity/vmclarity/scanner/families/secrets/common"
+	plugins "github.com/openclarity/vmclarity/scanner/families/plugins/types"
+	chrootkitconfig "github.com/openclarity/vmclarity/scanner/families/rootkits/chkrootkit/config"
+	rootkits "github.com/openclarity/vmclarity/scanner/families/rootkits/types"
+	syftconfig "github.com/openclarity/vmclarity/scanner/families/sbom/syft/config"
+	trivyconfigsbom "github.com/openclarity/vmclarity/scanner/families/sbom/trivy/config"
+	sbom "github.com/openclarity/vmclarity/scanner/families/sbom/types"
 	gitleaksconfig "github.com/openclarity/vmclarity/scanner/families/secrets/gitleaks/config"
-	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities"
+	secrets "github.com/openclarity/vmclarity/scanner/families/secrets/types"
+	grypeconfig "github.com/openclarity/vmclarity/scanner/families/vulnerabilities/grype/config"
+	trivyconfig "github.com/openclarity/vmclarity/scanner/families/vulnerabilities/trivy/config"
+	vulnerabilities "github.com/openclarity/vmclarity/scanner/families/vulnerabilities/types"
 )
 
 type FamiliesConfigOption func(*scanner.Config)
@@ -53,19 +55,18 @@ func withSBOM(config *apitypes.SBOMConfig, opts *ScannerConfig) FamiliesConfigOp
 			return
 		}
 
-		c.SBOM = types3.Config{
+		c.SBOM = sbom.Config{
 			Enabled:       true,
 			AnalyzersList: config.GetAnalyzersList(),
 			Inputs:        nil, // rootfs directory will be determined by the CLI after mount.
-			AnalyzersConfig: &cliconfig.Config{
-				// TODO(sambetts) The user needs to be able to provide this configuration
-				Registry: &cliconfig.Registry{},
-				Analyzer: &cliconfig.Analyzer{
-					Scope:        "squashed", // TODO(sambetts) This should be a default in the scanner/cli config
-					OutputFormat: "cyclonedx",
-					TrivyConfig: cliconfig.AnalyzerTrivyConfig{
-						Timeout: int(opts.TrivyScanTimeout / time.Second), // NOTE(chrisgacsal): Timeout is expected to be in seconds.
-					},
+			Registry:      &scannercommon.Registry{},
+			OutputFormat:  sbom.DefaultOutputFormat,
+			AnalyzersConfig: sbom.AnalyzersConfig{
+				Trivy: trivyconfigsbom.Config{
+					Timeout: int(opts.TrivyScanTimeout / time.Second),
+				},
+				Syft: syftconfig.Config{
+					Scope: "squashed",
 				},
 			},
 		}
@@ -78,26 +79,26 @@ func withVulnerabilities(config *apitypes.VulnerabilitiesConfig, opts *ScannerCo
 			return
 		}
 
-		var grypeConfig cliconfig.GrypeConfig
+		var grypeConfig grypeconfig.Config
 		if opts.GrypeServerAddress != "" {
-			grypeConfig = cliconfig.GrypeConfig{
-				Mode: cliconfig.ModeRemote,
-				RemoteGrypeConfig: cliconfig.RemoteGrypeConfig{
+			grypeConfig = grypeconfig.Config{
+				Mode: grypeconfig.ModeRemote,
+				Remote: grypeconfig.RemoteGrypeConfig{
 					GrypeServerAddress: opts.GrypeServerAddress,
 					GrypeServerTimeout: opts.GrypeServerTimeout,
 				},
 			}
 		} else {
-			grypeConfig = cliconfig.GrypeConfig{
-				Mode: cliconfig.ModeLocal,
-				LocalGrypeConfig: cliconfig.LocalGrypeConfig{
+			grypeConfig = grypeconfig.Config{
+				Mode: grypeconfig.ModeLocal,
+				Local: grypeconfig.LocalGrypeConfig{
 					UpdateDB:           true,
 					DBRootDir:          "/tmp/",
-					ListingURL:         cliconfig.DefaultGrypeListingURL,
-					MaxAllowedBuiltAge: cliconfig.DefaultGrypeMaxDatabaseAge,
-					ListingFileTimeout: cliconfig.DefaultGrypeListingFileTimeout,
-					UpdateTimeout:      cliconfig.DefaultGrypeUpdateTimeout,
-					Scope:              source.SquashedScope,
+					ListingURL:         grypeconfig.DefaultListingURL,
+					MaxAllowedBuiltAge: grypeconfig.DefaultMaxDatabaseAge,
+					ListingFileTimeout: grypeconfig.DefaultListingFileTimeout,
+					UpdateTimeout:      grypeconfig.DefaultUpdateTimeout,
+					Scope:              string(source.SquashedScope),
 				},
 			}
 		}
@@ -106,15 +107,12 @@ func withVulnerabilities(config *apitypes.VulnerabilitiesConfig, opts *ScannerCo
 			Enabled:       true,
 			ScannersList:  config.GetScannersList(),
 			InputFromSbom: false, // will be determined by the CLI.
-			ScannersConfig: &cliconfig.Config{
+			ScannersConfig: vulnerabilities.ScannersConfig{
 				// TODO(sambetts) The user needs to be able to provide this configuration
-				Registry: &cliconfig.Registry{},
-				Scanner: &cliconfig.Scanner{
-					GrypeConfig: grypeConfig,
-					TrivyConfig: cliconfig.ScannerTrivyConfig{
-						Timeout:    int(opts.TrivyScanTimeout / time.Second), // NOTE(chrisgacsal): Timeout is expected to be in seconds.
-						ServerAddr: opts.TrivyServerAddress,
-					},
+				Grype: grypeConfig,
+				Trivy: trivyconfig.Config{
+					Timeout:    int(opts.TrivyScanTimeout / time.Second), // NOTE(chrisgacsal): Timeout is expected to be in seconds.
+					ServerAddr: opts.TrivyServerAddress,
 				},
 			},
 		}
@@ -127,14 +125,12 @@ func withSecretsConfig(config *apitypes.SecretsConfig, _ *ScannerConfig) Familie
 			return
 		}
 
-		c.Secrets = types4.Config{
+		c.Secrets = secrets.Config{
 			Enabled:      true,
 			ScannersList: config.GetScannersList(),
 			Inputs:       nil, // rootfs directory will be determined by the CLI after mount.
-			ScannersConfig: &secretscommon.ScannersConfig{
-				Gitleaks: gitleaksconfig.Config{
-					BinaryPath: "",
-				},
+			ScannersConfig: secrets.ScannersConfig{
+				Gitleaks: gitleaksconfig.Config{},
 			},
 		}
 	}
@@ -146,12 +142,12 @@ func withExploitsConfig(config *apitypes.ExploitsConfig, opts *ScannerConfig) Fa
 			return
 		}
 
-		c.Exploits = types.Config{
+		c.Exploits = exploits.Config{
 			Enabled:       true,
 			ScannersList:  config.GetScannersList(),
 			InputFromVuln: true,
-			ScannersConfig: &exploitsCommon.ScannersConfig{
-				ExploitDB: exploitdbConfig.Config{
+			ScannersConfig: exploits.ScannersConfig{
+				ExploitDB: exploitdbconfig.Config{
 					BaseURL: opts.ExploitsDBAddress,
 				},
 			},
@@ -169,14 +165,11 @@ func withMalwareConfig(config *apitypes.MalwareConfig, opts *ScannerConfig) Fami
 			Enabled:      true,
 			ScannersList: config.GetScannersList(),
 			Inputs:       nil, // rootfs directory will be determined by the CLI after mount.
-			ScannersConfig: &malwarecommon.ScannersConfig{
+			ScannersConfig: malware.ScannersConfig{
 				Clam: clamconfig.Config{
-					ClamScanBinaryPath:            "",
-					FreshclamBinaryPath:           "",
 					AlternativeFreshclamMirrorURL: opts.AlternativeFreshclamMirrorURL,
 				},
 				Yara: yaraconfig.Config{
-					YaraBinaryPath:    "",
 					CompiledRuleURL:   opts.YaraRuleServerAddress,
 					DirectoriesToScan: config.GetYaraDirectoriesToScan(),
 				},
@@ -191,19 +184,13 @@ func withMisconfigurationConfig(config *apitypes.MisconfigurationsConfig, _ *Sca
 			return
 		}
 
-		c.Misconfiguration = misconfiguration.Config{
+		c.Misconfiguration = misconfigurations.Config{
 			Enabled:      true,
 			ScannersList: config.GetScannersList(),
 			Inputs:       nil, // rootfs directory will be determined by the CLI after mount.
-			ScannersConfig: misconfiguration.ScannersConfig{
-				// TODO(sambetts) Add scanner configurations here as we add them like Lynis
-				Lynis: misconfiguration.LynisConfig{
-					BinaryPath: "",
-				},
-				CISDocker: misconfiguration.CISDockerConfig{
-					Timeout:  0,
-					Registry: &cliconfig.Registry{},
-				},
+			ScannersConfig: misconfigurations.ScannersConfig{
+				Lynis:     lynisconfig.Config{},
+				CISDocker: cisdockerconfig.Config{},
 			},
 		}
 	}
@@ -215,12 +202,12 @@ func withInfoFinderConfig(config *apitypes.InfoFinderConfig, _ *ScannerConfig) F
 			return
 		}
 
-		c.InfoFinder = infofinderTypes.Config{
+		c.InfoFinder = infofinder.Config{
 			Enabled:      true,
 			ScannersList: config.GetScannersList(),
 			Inputs:       nil, // rootfs directory will be determined by the CLI after mount.
-			ScannersConfig: infofinderTypes.ScannersConfig{
-				SSHTopology: infofinderTypes.SSHTopologyConfig{},
+			ScannersConfig: infofinder.ScannersConfig{
+				SSHTopology: sshtopologyconfig.Config{},
 			},
 		}
 	}
@@ -232,14 +219,12 @@ func withRootkitsConfig(config *apitypes.RootkitsConfig, _ *ScannerConfig) Famil
 			return
 		}
 
-		c.Rootkits = types2.Config{
+		c.Rootkits = rootkits.Config{
 			Enabled:      true,
 			ScannersList: config.GetScannersList(),
 			Inputs:       nil,
-			ScannersConfig: &rootkitsCommon.ScannersConfig{
-				Chkrootkit: chkrootkitConfig.Config{
-					BinaryPath: "",
-				},
+			ScannersConfig: rootkits.ScannersConfig{
+				Chkrootkit: chrootkitconfig.Config{},
 			},
 		}
 	}
@@ -251,7 +236,7 @@ func withPluginsConfig(config *apitypes.PluginsConfig, _ *ScannerConfig) Familie
 			return
 		}
 
-		scannersConfig := pluginscommon.ScannersConfig{}
+		scannersConfig := plugins.ScannersConfig{}
 		for k, v := range *config.ScannersConfig {
 			scannersConfig[k] = pluginsrunnerconfig.Config{
 				ImageName:     *v.ImageName,
@@ -259,12 +244,12 @@ func withPluginsConfig(config *apitypes.PluginsConfig, _ *ScannerConfig) Familie
 			}
 		}
 
-		c.Plugins = types5.Config{
+		c.Plugins = plugins.Config{
 			Enabled:        true,
 			ScannersList:   *config.ScannersList,
 			Inputs:         nil, // rootfs directory will be determined by the CLI after mount.
-			ScannersConfig: &scannersConfig,
 			BinaryMode:     config.BinaryMode,
+			ScannersConfig: scannersConfig,
 		}
 	}
 }

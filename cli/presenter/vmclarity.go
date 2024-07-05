@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/openclarity/vmclarity/scanner/families"
 
 	apiclient "github.com/openclarity/vmclarity/api/client"

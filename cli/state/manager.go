@@ -17,6 +17,7 @@ package state
 
 import (
 	"context"
+
 	"github.com/openclarity/vmclarity/scanner"
 	"github.com/openclarity/vmclarity/scanner/families"
 )

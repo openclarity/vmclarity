@@ -18,9 +18,9 @@ package families
 import (
 	"context"
 	"fmt"
-	"github.com/openclarity/vmclarity/core/to"
-	"github.com/openclarity/vmclarity/scanner/common"
 	"time"
+
+	"github.com/openclarity/vmclarity/scanner/common"
 )
 
 type FamilyType string
@@ -105,13 +105,4 @@ func (s *ScanMetadata) Merge(meta ScanInputMetadata) {
 	if s.EndTime.IsZero() || s.EndTime.Before(meta.EndTime) {
 		s.EndTime = meta.EndTime
 	}
-}
-
-func (s *ScanMetadata) GetScanners() []string {
-	scanners := make(map[string]interface{})
-	for _, meta := range s.Inputs {
-		scanners[meta.ScannerName] = nil
-	}
-
-	return to.Keys(scanners)
 }

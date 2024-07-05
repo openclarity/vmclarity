@@ -17,17 +17,19 @@ package e2e
 
 import (
 	"context"
+	"path/filepath"
+
+	"path/filepath"
+	"reflect"
+
 	"github.com/openclarity/vmclarity/scanner"
 	scannercommon "github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
 	plugintypes "github.com/openclarity/vmclarity/scanner/families/plugins/types"
-	"path/filepath"
-	"reflect"
 
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 
-	"github.com/openclarity/vmclarity/scanner/families/plugins"
 	"github.com/openclarity/vmclarity/scanner/families/plugins/runner/config"
 )
 
@@ -83,7 +85,7 @@ var _ = ginkgo.Describe("Running KICS scan", func() {
 					return false
 				}
 
-				results := notifier.Results[0].Result.(*plugins.Results)                             // nolint:forcetypeassert
+				results := notifier.Results[0].Result.(*plugintypes.Result)                          // nolint:forcetypeassert
 				rawData := results.PluginOutputs[scannerPluginName].RawJSON.(map[string]interface{}) // nolint:forcetypeassert
 
 				if rawData["total_counter"] != float64(23) {

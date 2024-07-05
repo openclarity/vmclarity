@@ -16,8 +16,9 @@
 package presenter
 
 import (
-	"github.com/openclarity/vmclarity/scanner"
 	"io"
+
+	"github.com/openclarity/vmclarity/scanner"
 )
 
 type ConsolePresenter struct {

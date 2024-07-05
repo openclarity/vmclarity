@@ -16,9 +16,10 @@
 package cisdocker
 
 import (
+	"time"
+
 	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families/misconfiguration/cisdocker/config"
-	"time"
 
 	dockle_config "github.com/Portshift/dockle/config"
 	"github.com/sirupsen/logrus"

@@ -18,10 +18,11 @@ package chkrootkit
 import (
 	"context"
 	"fmt"
+	"os/exec"
+
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
-	"os/exec"
 
 	"github.com/openclarity/vmclarity/scanner/families/rootkits/chkrootkit/config"
 	chkrootkitutils "github.com/openclarity/vmclarity/scanner/families/rootkits/chkrootkit/utils"

@@ -16,9 +16,10 @@
 package secrets
 
 import (
-	"github.com/openclarity/vmclarity/scanner/families/secrets/types"
 	"reflect"
 	"testing"
+
+	"github.com/openclarity/vmclarity/scanner/families/secrets/types"
 )
 
 func TestStripPathFromResult(t *testing.T) {

@@ -19,11 +19,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/common"
 	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/sbom/types"
-	"os"
 
 	cdx "github.com/CycloneDX/cyclonedx-go"
 	trivyftypes "github.com/aquasecurity/trivy/pkg/fanal/types"

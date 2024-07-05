@@ -17,8 +17,9 @@ package trivy
 
 import (
 	"fmt"
-	"github.com/openclarity/vmclarity/scanner/common"
 	"os"
+
+	"github.com/openclarity/vmclarity/scanner/common"
 
 	stereoscopeFile "github.com/anchore/stereoscope/pkg/file"
 	"github.com/aquasecurity/trivy/pkg/commands/artifact"
@@ -35,7 +36,7 @@ func SourceToTrivySource(sourceType common.InputType) (artifact.TargetKind, erro
 		return artifact.TargetImageArchive, nil
 	case common.ROOTFS:
 		return artifact.TargetRootfs, nil
-	case common.DIR, common.FILE:
+	case common.DIR, common.FILE, common.CSV:
 		return artifact.TargetFilesystem, nil
 	case common.SBOM:
 		return artifact.TargetSBOM, nil
