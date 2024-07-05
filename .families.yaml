@@ -156,6 +156,7 @@ malware:
       input_type: "rootfs"
   scanners_config:
     clam:
+      scan_without_daemon: "true" # scan using native (clamscan) command instead of daemon (clamdscan)
       freshclam_binary_path: "/usr/local/bin/freshclam"
       freshclam_config_path: "/path/to/freshclam.conf"
       alternative_freshclam_mirror_url: "database.clamav.net"
@@ -164,7 +165,6 @@ malware:
         - "^.*\.log$"
       clamscan_exclude_dirs:
         - "^/sys"
-      clam_daemon_mode: false
       clam_daemon_binary_path: "/usr/local/bin/clamd"
       clam_daemon_config_path: "/path/to/clamd.conf"
       clam_daemon_client_binary_path: "/usr/local/bin/clamdscan"
