@@ -36,24 +36,13 @@ import (
 	workflowtypes "github.com/openclarity/vmclarity/workflow/types"
 )
 
-type FamilyResult struct {
-	FamilyType families.FamilyType
-	Result     any
-	Err        error
-}
-
-type FamilyNotifier interface {
-	FamilyStarted(context.Context, families.FamilyType) error
-	FamilyFinished(ctx context.Context, res FamilyResult) error
-}
-
-type Manager struct {
+type Scanner struct {
 	config *Config
 	tasks  []workflowtypes.Task[workflowParams]
 }
 
-func New(config *Config) *Manager {
-	manager := &Manager{
+func New(config *Config) *Scanner {
+	manager := &Scanner{
 		config: config,
 	}
 
@@ -105,7 +94,7 @@ func New(config *Config) *Manager {
 	return manager
 }
 
-func (m *Manager) Run(ctx context.Context, notifier FamilyNotifier) []error {
+func (m *Scanner) Run(ctx context.Context, notifier families.FamilyNotifier) []error {
 	logger := log.GetLoggerFromContextOrDiscard(ctx)
 
 	// Register container cache
@@ -170,7 +159,7 @@ func (m *Manager) Run(ctx context.Context, notifier FamilyNotifier) []error {
 
 // workflowParams defines parameters for familyRunner workflow tasks
 type workflowParams struct {
-	Notifier FamilyNotifier
+	Notifier families.FamilyNotifier
 	Results  *families.Results
 	ErrCh    chan<- error
 }

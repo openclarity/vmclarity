@@ -38,7 +38,7 @@ type DefaultPresenter struct {
 	FamiliesConfig *scanner.Config
 }
 
-func (p *DefaultPresenter) ExportFamilyResult(ctx context.Context, res scanner.FamilyResult) error {
+func (p *DefaultPresenter) ExportFamilyResult(ctx context.Context, res families.FamilyResult) error {
 	var err error
 
 	switch res.FamilyType {
@@ -65,7 +65,7 @@ func (p *DefaultPresenter) ExportFamilyResult(ctx context.Context, res scanner.F
 	return err
 }
 
-func (p *DefaultPresenter) ExportSbomResult(_ context.Context, res scanner.FamilyResult) error {
+func (p *DefaultPresenter) ExportSbomResult(_ context.Context, res families.FamilyResult) error {
 	sbomResults, ok := res.Result.(*sbom.Result)
 	if !ok {
 		return errors.New("failed to convert to sbom results")
@@ -84,7 +84,7 @@ func (p *DefaultPresenter) ExportSbomResult(_ context.Context, res scanner.Famil
 	return nil
 }
 
-func (p *DefaultPresenter) ExportVulResult(_ context.Context, res scanner.FamilyResult) error {
+func (p *DefaultPresenter) ExportVulResult(_ context.Context, res families.FamilyResult) error {
 	vulnerabilitiesResults, ok := res.Result.(*vulnerabilities.Result)
 	if !ok {
 		return errors.New("failed to convert to vulnerabilities results")
@@ -101,7 +101,7 @@ func (p *DefaultPresenter) ExportVulResult(_ context.Context, res scanner.Family
 	return nil
 }
 
-func (p *DefaultPresenter) ExportSecretsResult(_ context.Context, res scanner.FamilyResult) error {
+func (p *DefaultPresenter) ExportSecretsResult(_ context.Context, res families.FamilyResult) error {
 	secretsResults, ok := res.Result.(*secrets.Result)
 	if !ok {
 		return errors.New("failed to convert to secrets results")
@@ -118,7 +118,7 @@ func (p *DefaultPresenter) ExportSecretsResult(_ context.Context, res scanner.Fa
 	return nil
 }
 
-func (p *DefaultPresenter) ExportMalwareResult(_ context.Context, res scanner.FamilyResult) error {
+func (p *DefaultPresenter) ExportMalwareResult(_ context.Context, res families.FamilyResult) error {
 	malwareResults, ok := res.Result.(*malware.Result)
 	if !ok {
 		return errors.New("failed to convert to malware results")
@@ -135,7 +135,7 @@ func (p *DefaultPresenter) ExportMalwareResult(_ context.Context, res scanner.Fa
 	return nil
 }
 
-func (p *DefaultPresenter) ExportExploitsResult(_ context.Context, res scanner.FamilyResult) error {
+func (p *DefaultPresenter) ExportExploitsResult(_ context.Context, res families.FamilyResult) error {
 	exploitsResults, ok := res.Result.(*exploits.Result)
 	if !ok {
 		return errors.New("failed to convert to exploits results")
@@ -152,12 +152,12 @@ func (p *DefaultPresenter) ExportExploitsResult(_ context.Context, res scanner.F
 	return nil
 }
 
-func (p *DefaultPresenter) ExportMisconfigurationResult(context.Context, scanner.FamilyResult) error {
+func (p *DefaultPresenter) ExportMisconfigurationResult(context.Context, families.FamilyResult) error {
 	// TODO: implement
 	return nil
 }
 
-func (p *DefaultPresenter) ExportRootkitResult(_ context.Context, res scanner.FamilyResult) error {
+func (p *DefaultPresenter) ExportRootkitResult(_ context.Context, res families.FamilyResult) error {
 	rootkitsResults, ok := res.Result.(*rootkits.Result)
 	if !ok {
 		return errors.New("failed to convert to rootkits results")
@@ -174,7 +174,7 @@ func (p *DefaultPresenter) ExportRootkitResult(_ context.Context, res scanner.Fa
 	return nil
 }
 
-func (p *DefaultPresenter) ExportInfoFinderResult(_ context.Context, res scanner.FamilyResult) error {
+func (p *DefaultPresenter) ExportInfoFinderResult(_ context.Context, res families.FamilyResult) error {
 	if res.Result == nil {
 		return nil
 	}
@@ -196,7 +196,7 @@ func (p *DefaultPresenter) ExportInfoFinderResult(_ context.Context, res scanner
 	return nil
 }
 
-func (p *DefaultPresenter) ExportPluginsFinderResult(_ context.Context, res scanner.FamilyResult) error {
+func (p *DefaultPresenter) ExportPluginsFinderResult(_ context.Context, res families.FamilyResult) error {
 	if res.Result == nil {
 		return nil
 	}

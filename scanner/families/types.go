@@ -49,6 +49,20 @@ type Scanner[T any] interface {
 	Scan(ctx context.Context, sourceType common.InputType, userInput string) (T, error)
 }
 
+// FamilyResult defines an object that FamilyNotifier receives on successful
+// Family.Run.
+type FamilyResult struct {
+	FamilyType FamilyType
+	Result     any
+	Err        error
+}
+
+// FamilyNotifier is used to subscribe to family scanning progress.
+type FamilyNotifier interface {
+	FamilyStarted(context.Context, FamilyType) error
+	FamilyFinished(ctx context.Context, res FamilyResult) error
+}
+
 // ScanInputMetadata is metadata about a single input scan for a specific Family.
 type ScanInputMetadata struct {
 	ScannerName string           `json:"scanner_name" yaml:"scanner_name" mapstructure:"scanner_name"`

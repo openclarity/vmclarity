@@ -136,14 +136,14 @@ var (
 
 func (s *Scanner) generateScanConfig(config *provider.ScanJobConfig) ([]byte, error) {
 	// Add volume mount point to family configuration
-	familiesConfig := scanner.Config{}
-	err := yaml.Unmarshal([]byte(config.ScannerCLIConfig), &familiesConfig)
+	scannerConfig := scanner.Config{}
+	err := yaml.Unmarshal([]byte(config.ScannerCLIConfig), &scannerConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal family scan configuration: %w", err)
 	}
 
-	familiesConfig.AddInputs(scannertypes.OCIARCHIVE, []string{archiveLocation})
-	familiesConfigByte, err := yaml.Marshal(familiesConfig)
+	scannerConfig.AddInputs(scannertypes.OCIARCHIVE, []string{archiveLocation})
+	familiesConfigByte, err := yaml.Marshal(scannerConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal family scan configuration: %w", err)
 	}

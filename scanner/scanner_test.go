@@ -26,14 +26,14 @@ import (
 )
 
 type familyNotifierSpy struct {
-	Results []FamilyResult
+	Results []families.FamilyResult
 }
 
 func (n *familyNotifierSpy) FamilyStarted(context.Context, families.FamilyType) error {
 	return nil
 }
 
-func (n *familyNotifierSpy) FamilyFinished(_ context.Context, res FamilyResult) error {
+func (n *familyNotifierSpy) FamilyFinished(_ context.Context, res families.FamilyResult) error {
 	n.Results = append(n.Results, res)
 
 	return nil

@@ -61,7 +61,7 @@ func (c *CLI) FamilyStarted(ctx context.Context, famType families.FamilyType) er
 	return c.Manager.MarkFamilyScanInProgress(ctx, famType)
 }
 
-func (c *CLI) FamilyFinished(ctx context.Context, res scanner.FamilyResult) error {
+func (c *CLI) FamilyFinished(ctx context.Context, res families.FamilyResult) error {
 	return c.Presenter.ExportFamilyResult(ctx, res)
 }
 
