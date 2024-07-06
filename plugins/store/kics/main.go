@@ -22,28 +22,18 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"path/filepath"
-	"strconv"
 	"sync"
 	"time"
 
 	"github.com/openclarity/vmclarity/plugins/sdk-go/plugin"
+	"github.com/openclarity/vmclarity/plugins/store/kics/formatter"
 
-	"github.com/Checkmarx/kics/pkg/model"
 	"github.com/Checkmarx/kics/pkg/printer"
 	"github.com/Checkmarx/kics/pkg/progress"
 	"github.com/Checkmarx/kics/pkg/scan"
 
 	"github.com/openclarity/vmclarity/plugins/sdk-go/types"
 )
-
-var mapKICSSeverity = map[model.Severity]types.MisconfigurationSeverity{
-	model.SeverityHigh:   types.MisconfigurationSeverityHigh,
-	model.SeverityMedium: types.MisconfigurationSeverityMedium,
-	model.SeverityLow:    types.MisconfigurationSeverityLow,
-	model.SeverityInfo:   types.MisconfigurationSeverityInfo,
-	model.SeverityTrace:  types.MisconfigurationSeverityInfo,
-}
 
 //nolint:containedctx
 type Scanner struct {
@@ -63,10 +53,10 @@ type ScannerConfig struct {
 }
 
 func (s *Scanner) Metadata() *types.Metadata {
-	return &types.Metadata{
+	return types.Ptr(types.Metadata{
 		Name:    types.Ptr("KICS"),
 		Version: types.Ptr("v1.7.13"),
-	}
+	})
 }
 
 func (s *Scanner) GetStatus() *types.Status {
@@ -94,10 +84,6 @@ func (s *Scanner) Start(config types.Config) {
 			s.SetStatus(types.NewScannerStatus(types.StateFailed, types.Ptr(fmt.Errorf("failed to parse config file: %w", err).Error())))
 			return
 		}
-
-		// Ensure JSON format is always included,
-		// since it's the only format that can be consumed by VMClarity
-		clientConfig.ReportFormats = ensureJSONFormat(clientConfig.ReportFormats)
 
 		// Used to store the raw outputs of a KICS scan
 		rawOutputDir := os.TempDir()
@@ -158,26 +144,31 @@ func (s *Scanner) Stop(_ types.Stop) {
 }
 
 //nolint:mnd
-func (s *Scanner) createConfig(input *string) (*ScannerConfig, error) {
-	config := ScannerConfig{
+func (s *Scanner) createConfig(scannerConfig *string) (*ScannerConfig, error) {
+	config := types.Ptr(ScannerConfig{
 		PreviewLines:     3,
+		ReportFormats:    []string{"json"},
 		Platform:         []string{"Ansible", "CloudFormation", "Common", "Crossplane", "Dockerfile", "DockerCompose", "Knative", "Kubernetes", "OpenAPI", "Terraform", "AzureResourceManager", "GRPC", "GoogleDeploymentManager", "Buildah", "Pulumi", "ServerlessFW", "CICD"},
 		MaxFileSizeFlag:  100,
 		DisableSecrets:   true,
 		QueryExecTimeout: 60,
 		Silent:           true,
 		Minimal:          true,
+	})
+
+	if scannerConfig == nil || *scannerConfig == "" {
+		return config, nil
 	}
 
-	if input == nil || *input == "" {
-		return &config, nil
-	}
-
-	if err := json.Unmarshal([]byte(*input), &config); err != nil {
+	if err := json.Unmarshal([]byte(*scannerConfig), config); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal JSON config: %w", err)
 	}
 
-	return &config, nil
+	// Ensure JSON format is always included,
+	// since it's the only format that can be consumed by VMClarity
+	config.ReportFormats = ensureJSONFormat(config.ReportFormats)
+
+	return config, nil
 }
 
 func (s *Scanner) formatOutput(rawOutputDir, outputFile string, reportFormats []string) error {
@@ -193,41 +184,29 @@ func (s *Scanner) formatOutput(rawOutputDir, outputFile string, reportFormats []
 
 			switch format {
 			case "json":
-				var summaryJSON model.Summary
-				err := decodeFile(filepath.Join(rawOutputDir, "kics.json"), &summaryJSON)
+				summaryJSON, err := formatter.FormatJSONOutput(rawOutputDir)
 				if err != nil {
-					errCh <- fmt.Errorf("failed to decode kics.json: %w", err)
+					errCh <- fmt.Errorf("failed to format JSON output: %w", err)
 				}
 
-				var misconfigurations []types.Misconfiguration
-				for _, q := range summaryJSON.Queries {
-					for _, file := range q.Files {
-						misconfigurations = append(misconfigurations, types.Misconfiguration{
-							Id:          types.Ptr(file.SimilarityID),
-							Location:    types.Ptr(file.FileName + "#" + strconv.Itoa(file.Line)),
-							Category:    types.Ptr(q.Category + ":" + string(file.IssueType)),
-							Message:     types.Ptr(file.KeyActualValue),
-							Description: types.Ptr(q.Description),
-							Remediation: types.Ptr(file.KeyExpectedValue),
-							Severity:    types.Ptr(mapKICSSeverity[q.Severity]),
-						})
-					}
+				misconfigurations, err := formatter.FormatVMClarityOutput(summaryJSON)
+				if err != nil {
+					errCh <- fmt.Errorf("failed to format VMClarity output: %w", err)
 				}
 
 				resultMutex.Lock()
-				result.Vmclarity.Misconfigurations = &misconfigurations
 				result.RawJSON = summaryJSON
+				result.Vmclarity.Misconfigurations = misconfigurations
 				resultMutex.Unlock()
 
 			case "sarif":
-				var summarySarif interface{}
-				err := decodeFile(filepath.Join(rawOutputDir, "kics.sarif"), &summarySarif)
+				summarySarif, err := formatter.FormatSarifOutput(rawOutputDir)
 				if err != nil {
-					errCh <- fmt.Errorf("failed to decode kics.sarif: %w", err)
+					errCh <- fmt.Errorf("failed to format Sarif output: %w", err)
 				}
 
 				resultMutex.Lock()
-				result.RawSarif = &summarySarif
+				result.RawSarif = summarySarif
 				resultMutex.Unlock()
 
 			default:
@@ -251,21 +230,6 @@ func (s *Scanner) formatOutput(rawOutputDir, outputFile string, reportFormats []
 
 	if err := result.Export(outputFile); err != nil {
 		return fmt.Errorf("failed to save KICS result: %w", err)
-	}
-
-	return nil
-}
-
-func decodeFile(filePath string, target interface{}) error {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return fmt.Errorf("failed to open file: %w", err)
-	}
-	defer file.Close()
-
-	err = json.NewDecoder(file).Decode(target)
-	if err != nil {
-		return fmt.Errorf("failed to decode file: %w", err)
 	}
 
 	return nil
