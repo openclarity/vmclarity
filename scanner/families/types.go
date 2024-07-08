@@ -85,7 +85,7 @@ func NewScanInputMetadata(scannerName string, startTime, endTime time.Time, inpu
 }
 
 func (m ScanInputMetadata) String() string {
-	return fmt.Sprintf("{Scanner=%s, Input=%s:%s, InputSize=%d}", m.ScannerName, m.InputType, m.InputPath, m.InputSize)
+	return fmt.Sprintf("{Scanner=%s Input=%s:%s InputSize=%d MB}", m.ScannerName, m.InputType, m.InputPath, m.InputSize)
 }
 
 // ScanMetadata is metadata about multiple input scans for a specific Family.
