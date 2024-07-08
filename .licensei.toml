@@ -36,7 +36,7 @@ ignored = [
     "github.com/rcrowley/go-metrics", # Custom License - https://github.com/rcrowley/go-metrics/blob/master/LICENSE"
     "github.com/csaf-poc/csaf_distribution/v3", # MIT - https://github.com/csaf-poc/csaf_distribution/blob/main/LICENSES/MIT.txt
     "github.com/saintfish/chardet", # Custom License - https://github.com/saintfish/chardet/blob/master/LICENSE
-    "github.com/davecgh/go-spew", # Custom License - https://github.com/davecgh/go-spew/blob/master/LICENSE
+    "github.com/davecgh/go-spew", # ISC - https://github.com/davecgh/go-spew/blob/master/LICENSE
 ]
 
 [header]
