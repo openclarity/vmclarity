@@ -185,6 +185,12 @@ VENDORMODULES = $(addprefix vendor-, $(GOMODULES))
 $(VENDORMODULES):
 	go -C $(@:vendor-%=%) mod vendor
 
+BENCHMARK_COMMAND = go -C $(ROOT_DIR)/e2e/benchmark test -tags benchmark -failfast -test.v -test.paniconexit0 -ginkgo.timeout 2h -timeout 2h -ginkgo.v .
+
+.PHONY: benchmark-test
+benchmark-test: ## Run benchmark tests
+	$(E2E_ENV) $(BENCHMARK_COMMAND)
+
 .PHONY: gomod-vendor
 gomod-vendor: $(VENDORMODULES) # Make vendored copy of dependencies for all modules
 
