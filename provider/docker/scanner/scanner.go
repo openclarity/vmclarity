@@ -23,9 +23,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/openclarity/vmclarity/scanner"
-	scannercommon "github.com/openclarity/vmclarity/scanner/common"
-
 	"github.com/docker/docker/api/types"
 	containertypes "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
@@ -40,6 +37,8 @@ import (
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/provider"
+	"github.com/openclarity/vmclarity/scanner"
+	scannercommon "github.com/openclarity/vmclarity/scanner/common"
 )
 
 // mountPointPath defines the location in the container where assets will be mounted.
@@ -249,21 +248,21 @@ func (s *Scanner) createScanNetwork(ctx context.Context) (string, error) {
 
 // copyScanConfigToContainer copies scan configuration as a file to the scan container.
 func (s *Scanner) copyScanConfigToContainer(ctx context.Context, containerID string, t *provider.ScanJobConfig) error {
-	// Add volume mount point to family configuration
+	// Add volume mount point to scanner configuration
 	scannerConfig := scanner.Config{}
 	err := yaml.Unmarshal([]byte(t.ScannerCLIConfig), &scannerConfig)
 	if err != nil {
-		return fmt.Errorf("failed to unmarshal family scan configuration: %w", err)
+		return fmt.Errorf("failed to unmarshal scan configuration: %w", err)
 	}
 	scannerConfig.AddInputs(scannercommon.ROOTFS, []string{mountPointPath})
-	familiesConfigByte, err := yaml.Marshal(scannerConfig)
+	configByte, err := yaml.Marshal(scannerConfig)
 	if err != nil {
-		return fmt.Errorf("failed to marshal family scan configuration: %w", err)
+		return fmt.Errorf("failed to marshal scan configuration: %w", err)
 	}
 
 	// Write scan config file to temp dir
 	src := filepath.Join(os.TempDir(), getScanConfigFileName(t))
-	err = os.WriteFile(src, familiesConfigByte, 0o400) // nolint:mnd
+	err = os.WriteFile(src, configByte, 0o400) // nolint:mnd
 	if err != nil {
 		return fmt.Errorf("failed write scan config file: %w", err)
 	}

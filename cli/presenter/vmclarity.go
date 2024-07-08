@@ -20,11 +20,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/openclarity/vmclarity/scanner/families"
-
 	apiclient "github.com/openclarity/vmclarity/api/client"
 	apitypes "github.com/openclarity/vmclarity/api/types"
 	"github.com/openclarity/vmclarity/core/to"
+	"github.com/openclarity/vmclarity/scanner/families"
 	exploits "github.com/openclarity/vmclarity/scanner/families/exploits/types"
 	infofinder "github.com/openclarity/vmclarity/scanner/families/infofinder/types"
 	malware "github.com/openclarity/vmclarity/scanner/families/malware/types"

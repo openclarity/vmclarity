@@ -25,11 +25,11 @@ type ConsolePresenter struct {
 	*DefaultPresenter
 }
 
-func NewConsolePresenter(output io.Writer, FamiliesConfig *scanner.Config) *ConsolePresenter {
+func NewConsolePresenter(output io.Writer, config *scanner.Config) *ConsolePresenter {
 	return &ConsolePresenter{
 		DefaultPresenter: &DefaultPresenter{
-			Writer:         &ConsoleWriter{Output: output},
-			FamiliesConfig: FamiliesConfig,
+			Writer: &ConsoleWriter{Output: output},
+			Config: config,
 		},
 	}
 }

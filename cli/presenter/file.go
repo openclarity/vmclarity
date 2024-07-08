@@ -23,11 +23,11 @@ type FilePresenter struct {
 	*DefaultPresenter
 }
 
-func NewFilePresenter(path string, FamiliesConfig *scanner.Config) *FilePresenter {
+func NewFilePresenter(path string, config *scanner.Config) *FilePresenter {
 	return &FilePresenter{
 		DefaultPresenter: &DefaultPresenter{
-			Writer:         &FileWriter{Path: path},
-			FamiliesConfig: FamiliesConfig,
+			Writer: &FileWriter{Path: path},
+			Config: config,
 		},
 	}
 }

@@ -46,7 +46,7 @@ const (
 var ScanCmd = &cobra.Command{
 	Use:   "scan",
 	Short: "Scan",
-	Long:  `Run scanner families`,
+	Long:  `Run scanner`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		logutil.Logger.Infof("Running...")
 
@@ -121,7 +121,7 @@ var ScanCmd = &cobra.Command{
 		runErrors := scanner.New(config).Run(abortCtx, cli)
 
 		if len(runErrors) > 0 {
-			logutil.Logger.Errorf("Errors when running families: %+v", runErrors)
+			logutil.Logger.Errorf("Errors when running scanners: %+v", runErrors)
 			err := cli.MarkFailed(ctx, errors.Join(runErrors...).Error())
 			if err != nil {
 				return fmt.Errorf("failed to inform the server %v that scan failed: %w", server, err)
@@ -199,7 +199,7 @@ func newCli(config *scanner.Config, server, assetScanID, output string) (*cli.CL
 	var err error
 
 	if config == nil {
-		return nil, errors.New("families config must not be nil")
+		return nil, errors.New("scanner config must not be nil")
 	}
 
 	if server != "" {
@@ -241,5 +241,5 @@ func newCli(config *scanner.Config, server, assetScanID, output string) (*cli.CL
 		p = &presenter.MultiPresenter{Presenters: presenters}
 	}
 
-	return &cli.CLI{Manager: manager, Presenter: p, FamiliesConfig: config}, nil
+	return &cli.CLI{Manager: manager, Presenter: p, Config: config}, nil
 }

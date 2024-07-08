@@ -21,6 +21,7 @@ import (
 	"github.com/anchore/syft/syft/source"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
+	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/scanner"
 	scannercommon "github.com/openclarity/vmclarity/scanner/common"
 	exploitdbconfig "github.com/openclarity/vmclarity/scanner/families/exploits/exploitdb/config"
@@ -47,9 +48,9 @@ import (
 	vulnerabilities "github.com/openclarity/vmclarity/scanner/families/vulnerabilities/types"
 )
 
-type FamiliesConfigOption func(*scanner.Config)
+type ScannerConfigOption func(*scanner.Config)
 
-func withSBOM(config *apitypes.SBOMConfig, opts *ScannerConfig) FamiliesConfigOption {
+func withSBOM(config *apitypes.SBOMConfig, opts *ScannerConfig) ScannerConfigOption {
 	return func(c *scanner.Config) {
 		if !config.IsEnabled() {
 			return
@@ -73,7 +74,7 @@ func withSBOM(config *apitypes.SBOMConfig, opts *ScannerConfig) FamiliesConfigOp
 	}
 }
 
-func withVulnerabilities(config *apitypes.VulnerabilitiesConfig, opts *ScannerConfig) FamiliesConfigOption {
+func withVulnerabilities(config *apitypes.VulnerabilitiesConfig, opts *ScannerConfig) ScannerConfigOption {
 	return func(c *scanner.Config) {
 		if !config.IsEnabled() {
 			return
@@ -119,7 +120,7 @@ func withVulnerabilities(config *apitypes.VulnerabilitiesConfig, opts *ScannerCo
 	}
 }
 
-func withSecretsConfig(config *apitypes.SecretsConfig, _ *ScannerConfig) FamiliesConfigOption {
+func withSecretsConfig(config *apitypes.SecretsConfig, _ *ScannerConfig) ScannerConfigOption {
 	return func(c *scanner.Config) {
 		if !config.IsEnabled() {
 			return
@@ -136,7 +137,7 @@ func withSecretsConfig(config *apitypes.SecretsConfig, _ *ScannerConfig) Familie
 	}
 }
 
-func withExploitsConfig(config *apitypes.ExploitsConfig, opts *ScannerConfig) FamiliesConfigOption {
+func withExploitsConfig(config *apitypes.ExploitsConfig, opts *ScannerConfig) ScannerConfigOption {
 	return func(c *scanner.Config) {
 		if !config.IsEnabled() {
 			return
@@ -155,7 +156,7 @@ func withExploitsConfig(config *apitypes.ExploitsConfig, opts *ScannerConfig) Fa
 	}
 }
 
-func withMalwareConfig(config *apitypes.MalwareConfig, opts *ScannerConfig) FamiliesConfigOption {
+func withMalwareConfig(config *apitypes.MalwareConfig, opts *ScannerConfig) ScannerConfigOption {
 	return func(c *scanner.Config) {
 		if !config.IsEnabled() {
 			return
@@ -183,7 +184,7 @@ func withMalwareConfig(config *apitypes.MalwareConfig, opts *ScannerConfig) Fami
 	}
 }
 
-func withMisconfigurationConfig(config *apitypes.MisconfigurationsConfig, _ *ScannerConfig) FamiliesConfigOption {
+func withMisconfigurationConfig(config *apitypes.MisconfigurationsConfig, _ *ScannerConfig) ScannerConfigOption {
 	return func(c *scanner.Config) {
 		if !config.IsEnabled() {
 			return
@@ -201,7 +202,7 @@ func withMisconfigurationConfig(config *apitypes.MisconfigurationsConfig, _ *Sca
 	}
 }
 
-func withInfoFinderConfig(config *apitypes.InfoFinderConfig, _ *ScannerConfig) FamiliesConfigOption {
+func withInfoFinderConfig(config *apitypes.InfoFinderConfig, _ *ScannerConfig) ScannerConfigOption {
 	return func(c *scanner.Config) {
 		if !config.IsEnabled() {
 			return
@@ -218,7 +219,7 @@ func withInfoFinderConfig(config *apitypes.InfoFinderConfig, _ *ScannerConfig) F
 	}
 }
 
-func withRootkitsConfig(config *apitypes.RootkitsConfig, _ *ScannerConfig) FamiliesConfigOption {
+func withRootkitsConfig(config *apitypes.RootkitsConfig, _ *ScannerConfig) ScannerConfigOption {
 	return func(c *scanner.Config) {
 		if !config.IsEnabled() {
 			return
@@ -235,7 +236,7 @@ func withRootkitsConfig(config *apitypes.RootkitsConfig, _ *ScannerConfig) Famil
 	}
 }
 
-func withPluginsConfig(config *apitypes.PluginsConfig, _ *ScannerConfig) FamiliesConfigOption {
+func withPluginsConfig(config *apitypes.PluginsConfig, _ *ScannerConfig) ScannerConfigOption {
 	return func(c *scanner.Config) {
 		if !config.IsEnabled() {
 			return
@@ -253,16 +254,16 @@ func withPluginsConfig(config *apitypes.PluginsConfig, _ *ScannerConfig) Familie
 			Enabled:        true,
 			ScannersList:   *config.ScannersList,
 			Inputs:         nil, // rootfs directory will be determined by the CLI after mount.
-			BinaryMode:     config.BinaryMode,
+			BinaryMode:     to.ValueOrZero(config.BinaryMode),
 			ScannersConfig: scannersConfig,
 		}
 	}
 }
 
-func NewFamiliesConfigFrom(config *ScannerConfig, sfc *apitypes.ScanFamiliesConfig) *scanner.Config {
+func NewScannerConfigFrom(config *ScannerConfig, sfc *apitypes.ScanFamiliesConfig) *scanner.Config {
 	c := scanner.NewConfig()
 
-	opts := []FamiliesConfigOption{
+	opts := []ScannerConfigOption{
 		withSBOM(sfc.Sbom, config),
 		withVulnerabilities(sfc.Vulnerabilities, config),
 		withSecretsConfig(sfc.Secrets, config),
