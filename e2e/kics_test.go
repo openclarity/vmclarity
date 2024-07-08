@@ -18,19 +18,16 @@ package e2e
 import (
 	"context"
 	"path/filepath"
-
-	"path/filepath"
 	"reflect"
-
-	"github.com/openclarity/vmclarity/scanner"
-	scannercommon "github.com/openclarity/vmclarity/scanner/common"
-	"github.com/openclarity/vmclarity/scanner/families"
-	plugintypes "github.com/openclarity/vmclarity/scanner/families/plugins/types"
 
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 
+	"github.com/openclarity/vmclarity/scanner"
+	scannercommon "github.com/openclarity/vmclarity/scanner/common"
+	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/families/plugins/runner/config"
+	plugintypes "github.com/openclarity/vmclarity/scanner/families/plugins/types"
 )
 
 const scannerPluginName = "kics"
@@ -113,17 +110,17 @@ var _ = ginkgo.Describe("Running a KICS scan", func() {
 			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			notifier := &Notifier{}
 
-			errs := families.New(&families.Config{
-				Plugins: plugins.Config{
+			errs := scanner.New(&scanner.Config{
+				Plugins: plugintypes.Config{
 					Enabled:      true,
 					ScannersList: []string{scannerPluginName},
-					Inputs: []types.Input{
+					Inputs: []scannercommon.ScanInput{
 						{
 							Input:     input,
-							InputType: string(utils.ROOTFS),
+							InputType: scannercommon.ROOTFS,
 						},
 					},
-					ScannersConfig: &common.ScannersConfig{
+					ScannersConfig: plugintypes.ScannersConfig{
 						scannerPluginName: config.Config{
 							Name:          scannerPluginName,
 							ImageName:     cfg.TestEnvConfig.Images.PluginKics,
@@ -136,7 +133,7 @@ var _ = ginkgo.Describe("Running a KICS scan", func() {
 			gomega.Expect(errs).To(gomega.BeEmpty())
 
 			gomega.Eventually(func() bool {
-				results := notifier.Results[0].Result.(*plugins.Results).PluginOutputs[scannerPluginName] // nolint:forcetypeassert
+				results := notifier.Results[0].Result.(*plugintypes.Result).PluginOutputs[scannerPluginName] // nolint:forcetypeassert
 
 				isEmptyFuncs := []func() bool{
 					func() bool { return isEmpty(results.RawJSON) },

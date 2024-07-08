@@ -24,7 +24,6 @@ import (
 
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/common"
-	"github.com/openclarity/vmclarity/scanner/utils/containerrootfs"
 	"github.com/openclarity/vmclarity/utils/fsutils/containerrootfs"
 )
 

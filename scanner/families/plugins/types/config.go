@@ -25,6 +25,7 @@ type Config struct {
 	ScannersList   []string           `yaml:"scanners_list" mapstructure:"scanners_list"`
 	Inputs         []common.ScanInput `yaml:"inputs" mapstructure:"inputs"`
 	ScannersConfig ScannersConfig     `yaml:"scanners_config" mapstructure:"scanners_config"`
+	BinaryMode     bool               `json:"binary_mode" mapstructure:"binary_mode"`
 }
 
 type ScannersConfig map[string]runnerconfig.Config
