@@ -19,19 +19,18 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/openclarity/vmclarity/scanner/common"
-	sbomtypes "github.com/openclarity/vmclarity/scanner/families/sbom/types"
-	secrettypes "github.com/openclarity/vmclarity/scanner/families/secrets/types"
-
 	"github.com/openclarity/vmclarity/core/to"
+	"github.com/openclarity/vmclarity/scanner/common"
 	malware "github.com/openclarity/vmclarity/scanner/families/malware/types"
+	sbom "github.com/openclarity/vmclarity/scanner/families/sbom/types"
+	secrets "github.com/openclarity/vmclarity/scanner/families/secrets/types"
 	vulnerabilities "github.com/openclarity/vmclarity/scanner/families/vulnerabilities/types"
 )
 
-func Test_SetMountPointsForFamiliesInput(t *testing.T) {
+func Test_ConfigAddInput(t *testing.T) {
 	type args struct {
-		mountPoints    []string
-		familiesConfig *Config
+		mountPoints []string
+		config      *Config
 	}
 	tests := []struct {
 		name string
@@ -42,8 +41,8 @@ func Test_SetMountPointsForFamiliesInput(t *testing.T) {
 			name: "sbom, vuls, secrets and malware are enabled",
 			args: args{
 				mountPoints: []string{"/mnt/snapshot1"},
-				familiesConfig: &Config{
-					SBOM: sbomtypes.Config{
+				config: &Config{
+					SBOM: sbom.Config{
 						Enabled: true,
 						Inputs:  nil,
 					},
@@ -52,7 +51,7 @@ func Test_SetMountPointsForFamiliesInput(t *testing.T) {
 						Inputs:        nil,
 						InputFromSbom: false,
 					},
-					Secrets: secrettypes.Config{
+					Secrets: secrets.Config{
 						Enabled: true,
 						Inputs:  nil,
 					},
@@ -63,7 +62,7 @@ func Test_SetMountPointsForFamiliesInput(t *testing.T) {
 				},
 			},
 			want: &Config{
-				SBOM: sbomtypes.Config{
+				SBOM: sbom.Config{
 					Enabled: true,
 					Inputs: []common.ScanInput{
 						{
@@ -76,7 +75,7 @@ func Test_SetMountPointsForFamiliesInput(t *testing.T) {
 					Enabled:       true,
 					InputFromSbom: true,
 				},
-				Secrets: secrettypes.Config{
+				Secrets: secrets.Config{
 					Enabled: true,
 					Inputs: []common.ScanInput{
 						{
@@ -102,7 +101,7 @@ func Test_SetMountPointsForFamiliesInput(t *testing.T) {
 			name: "only vuls enabled",
 			args: args{
 				mountPoints: []string{"/mnt/snapshot1"},
-				familiesConfig: &Config{
+				config: &Config{
 					Vulnerabilities: vulnerabilities.Config{
 						Enabled:       true,
 						Inputs:        nil,
@@ -126,8 +125,8 @@ func Test_SetMountPointsForFamiliesInput(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.args.familiesConfig.AddInputs(common.ROOTFS, tt.args.mountPoints)
-			got := tt.args.familiesConfig
+			tt.args.config.AddInputs(common.ROOTFS, tt.args.mountPoints)
+			got := tt.args.config
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("AddInputs() = %v, want %v", got, tt.want)
 			}

@@ -54,7 +54,7 @@ type CLI struct {
 	state.Manager
 	presenter.Presenter
 
-	FamiliesConfig *scanner.Config
+	Config *scanner.Config
 }
 
 func (c *CLI) FamilyStarted(ctx context.Context, famType families.FamilyType) error {

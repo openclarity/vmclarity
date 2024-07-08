@@ -36,7 +36,7 @@ import (
 type DefaultPresenter struct {
 	Writer
 
-	FamiliesConfig *scanner.Config
+	Config *scanner.Config
 }
 
 func (p *DefaultPresenter) ExportFamilyResult(ctx context.Context, res families.FamilyResult) error {
@@ -72,7 +72,7 @@ func (p *DefaultPresenter) ExportSbomResult(_ context.Context, res families.Fami
 		return errors.New("failed to convert to sbom results")
 	}
 
-	outputFormat := p.FamiliesConfig.SBOM.GetOutputFormat()
+	outputFormat := p.Config.SBOM.GetOutputFormat()
 	sbomBytes, err := sbomResults.EncodeToBytes(outputFormat)
 	if err != nil {
 		return fmt.Errorf("failed to encode sbom results to bytes: %w", err)
