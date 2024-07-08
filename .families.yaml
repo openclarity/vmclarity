@@ -51,6 +51,15 @@ vulnerabilities:
     # - input: "nginx:1.13"
     #   input_type: "image"
   input_from_sbom: true
+  local_image_scan: true
+  registry:
+    skip-verify-tls: false
+    use-http: false
+    auths:
+      authority: "authority"
+      username: "username"
+      password: "password"
+      token: "token"
   scanners_config:
     grype:
       mode: "LOCAL"
@@ -76,23 +85,14 @@ vulnerabilities:
       server_token: "token"
       ## Overrides parent sbom configs
       # registry: ...
-  local_image_scan: true
-  registry:
-    skip-verify-tls: false
-    use-http: false
-    auths:
-      authority: "authority"
-      username: "username"
-      password: "password"
-      token: "token"
 
 secrets:
   enabled: false
   scanners_list:
     - "gitleaks"
   inputs:
-    - input: "./"
-      input_type: "dir"
+    - input: "/"
+      input_type: "rootfs"
   scanners_config:
     gitleaks:
       binary_path: "/usr/local/bin/gitleaks"
@@ -101,7 +101,9 @@ exploits:
   enabled: false
   scanners_list:
     - "exploitdb"
-  inputs: []
+  inputs:
+    - input: "CVE-2024-5535,CVE-2023-3446"
+      input_type: "csv"
   input_from_vuln: true
   scanners_config:
     exploit_db:
@@ -114,7 +116,7 @@ misconfiguration:
     - "lynis"
     - "fake"
   inputs:
-    - input: "./"
+    - input: "/"
       input_type: "rootfs"
   scanners_config:
     cisdocker:
@@ -131,7 +133,7 @@ misconfiguration:
         binary_path: "/usr/local/bin/lynis"
 
 infofinder:
-  enabled: true
+  enabled: false
   scanners_list:
     - "sshTopology"
   inputs:
@@ -140,25 +142,18 @@ infofinder:
   scanners_config: {}
 
 malware:
-  enabled: true
+  enabled: false
   scanners_list:
     - "clam"
     - "yara"
-    - "mycustomscanner"
   inputs:
-    - input: "/tmp"
-      input_type: "rootfs"
-    - input: "/usr"
-      input_type: "rootfs"
-    - input: "/"
-      input_type: "rootfs"
     - input: "/"
       input_type: "rootfs"
   scanners_config:
     clam:
-      scan_without_daemon: "true" # scan using native (clamscan) command instead of daemon (clamdscan)
+      scan_without_daemon: true # scan using native (clamscan) command instead of daemon (clamdscan)
       freshclam_binary_path: "/usr/local/bin/freshclam"
-      freshclam_config_path: "/path/to/freshclam.conf"
+      freshclam_config_path: "/etc/clamav/freshclam.conf"
       alternative_freshclam_mirror_url: "database.clamav.net"
       clamscan_binary_path: "/usr/local/bin/clamscan"
       clamscan_exclude_files:
@@ -166,7 +161,7 @@ malware:
       clamscan_exclude_dirs:
         - "^/sys"
       clam_daemon_binary_path: "/usr/local/bin/clamd"
-      clam_daemon_config_path: "/path/to/clamd.conf"
+      clam_daemon_config_path: "/etc/clamav/clamd.conf"
       clam_daemon_client_binary_path: "/usr/local/bin/clamdscan"
     yara:
       yara_binary_path: "/usr/local/bin/yara"
@@ -178,7 +173,7 @@ malware:
       cache_dir: "/tmp/.yara"
 
 rootkits:
-  enabled: true
+  enabled: false
   scanners_list:
     - "chkrootkit"
   inputs:
@@ -193,8 +188,8 @@ plugins:
   binary_mode: false
   scanners_list:
     - "kics"
-  inputs:
-    - input: "/tmp"
+  inputs: 
+    - input: "/"
       input_type: "rootfs"
   scanners_config:
     kics:

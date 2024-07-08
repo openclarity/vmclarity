@@ -167,8 +167,6 @@ func withMalwareConfig(config *apitypes.MalwareConfig, opts *ScannerConfig) Fami
 			Inputs:       nil, // rootfs directory will be determined by the CLI after mount.
 			ScannersConfig: malware.ScannersConfig{
 				Clam: clamconfig.Config{
-					// TODO(ramizpolic): Remove if the e2e tests are failing here
-					ScanWithoutDaemon:             true,
 					AlternativeFreshclamMirrorURL: opts.AlternativeFreshclamMirrorURL,
 				},
 				Yara: yaraconfig.Config{
