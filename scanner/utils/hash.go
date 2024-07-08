@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
@@ -82,14 +83,14 @@ func hashDir(dir string) (string, error) {
 func dirFiles(dir string) ([]string, error) {
 	var files []string
 	dir = filepath.Clean(dir)
-	err := filepath.Walk(dir, func(file string, info os.FileInfo, err error) error {
+	err := filepath.WalkDir(dir, func(file string, info fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 		if info.IsDir() {
 			return nil
 		}
-		if !info.Mode().IsRegular() {
+		if !info.Type().IsRegular() {
 			return nil
 		}
 		rel := file

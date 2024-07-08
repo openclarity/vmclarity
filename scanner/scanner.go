@@ -174,8 +174,8 @@ type workflowParams struct {
 // stability have been tested.
 
 var (
-	syncMu      sync.Mutex
-	_, syncMode = os.LookupEnv("VMCLARITY_SCANNER_RUN_SYNC")
+	syncMu       sync.Mutex
+	_, asyncMode = os.LookupEnv("VMCLARITY_FAMILIES_RUN_ASYNC")
 )
 
 // newWorkflowTaskFor returns a wrapped familyRunner as a workflow task.
@@ -185,7 +185,7 @@ func newWorkflowTaskFor[T any](name string, family families.Family[T], deps ...s
 		Deps: deps,
 		Fn: func(ctx context.Context, params workflowParams) error {
 			// FIXME(ramizpolic): Remove once not needed
-			if syncMode {
+			if !asyncMode {
 				syncMu.Lock()
 				defer syncMu.Unlock()
 			}

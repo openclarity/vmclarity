@@ -56,6 +56,8 @@ func (s SBOM) Run(ctx context.Context, _ *families.Results) (*types.Result, erro
 	// TODO: move the logic from cli utils to shared utils
 	// TODO: now that we support multiple inputs,
 	//  we need to change the fact the mergedResults assumes it is only for 1 input?
+	logger.Infof("Generating hash for input: %s", s.conf.Inputs[0].Input)
+
 	hash, err := utils.GenerateHash(s.conf.Inputs[0].InputType, s.conf.Inputs[0].Input)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate hash for source %s: %w", s.conf.Inputs[0].Input, err)
@@ -95,6 +97,8 @@ func (s SBOM) Run(ctx context.Context, _ *families.Results) (*types.Result, erro
 		})
 		mergedResults = mergedResults.Merge(results)
 	}
+
+	logger.Info("Converting SBOM results...")
 
 	// TODO(sambetts) Expose CreateMergedSBOM as well as
 	// CreateMergedSBOMBytes so that we don't need to re-convert it
