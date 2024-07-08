@@ -107,7 +107,7 @@ jobs:
             make e2e-k8s
           elif [[ "${{ inputs.platform }}" == "docker" ]]; then
             make e2e-docker
-          elif "${{ inputs.benchmark }}" == true ]]; then
+          elif [[ "${{ inputs.benchmark }}" == true ]]; then
             make benchmark-test
           else
             echo "Invalid platform"
