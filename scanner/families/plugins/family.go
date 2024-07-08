@@ -53,17 +53,16 @@ func (p *Plugins) Run(ctx context.Context, _ *families.Results) (*types.Result, 
 	}
 
 	// Top level BinaryMode overrides the individual scanner BinaryMode if set
-	if p.conf.BinaryMode != nil {
-		for name := range *p.conf.ScannersConfig {
-			// for _, config := range *p.conf.ScannersConfig {
-			config := (*p.conf.ScannersConfig)[name]
-			config.BinaryMode = *p.conf.BinaryMode
-			(*p.conf.ScannersConfig)[name] = config
+	if p.conf.BinaryMode {
+		for name := range p.conf.ScannersConfig {
+			config := p.conf.ScannersConfig[name]
+			config.BinaryMode = p.conf.BinaryMode
+			p.conf.ScannersConfig[name] = config
 		}
 	}
 
-	manager := job_manager.New(p.conf.ScannersList, p.conf.ScannersConfig, logger, factory)
-	processResults, err := manager.Process(ctx, p.conf.Inputs)
+	manager := scan_manager.New(p.conf.ScannersList, p.conf.ScannersConfig, factory)
+	results, err := manager.Scan(ctx, p.conf.Inputs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process inputs for plugins: %w", err)
 	}
