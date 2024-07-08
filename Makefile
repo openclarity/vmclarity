@@ -11,9 +11,9 @@ SHELL = /usr/bin/env bash -o pipefail
 ####
 
 VERSION ?= $(shell git rev-parse --short HEAD)
-DOCKER_REGISTRY ?= ghcr.io/openclarity
+DOCKER_REGISTRY = ghcr.io/openclarity
 DOCKER_PUSH ?= false
-DOCKER_TAG ?= $(VERSION)
+DOCKER_TAG = latest
 VMCLARITY_TOOLS_BASE ?=
 GO_VERSION ?= $(shell cat $(ROOT_DIR)/.go-version)
 GO_BUILD_TAGS ?=
@@ -184,6 +184,12 @@ VENDORMODULES = $(addprefix vendor-, $(GOMODULES))
 
 $(VENDORMODULES):
 	go -C $(@:vendor-%=%) mod vendor
+
+BENCHMARK_COMMAND =  go -C $(ROOT_DIR)/e2e test -v -bench -failfast -test.v -test.paniconexit0 -ginkgo.timeout 2h -timeout 2h -ginkgo.v .
+
+.PHONY: benchmark-test
+benchmark-test: ## Run benchmark tests
+	$(E2E_ENV) $(BENCHMARK_COMMAND)
 
 .PHONY: gomod-vendor
 gomod-vendor: $(VENDORMODULES) # Make vendored copy of dependencies for all modules

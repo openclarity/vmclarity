@@ -14,8 +14,10 @@ require (
 	github.com/openclarity/vmclarity/testenv v0.7.1
 	github.com/openclarity/vmclarity/uibackend/client v0.7.1
 	github.com/openclarity/vmclarity/uibackend/types v0.7.1
+	github.com/openclarity/vmclarity/utils v0.7.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.18.2
+	github.com/fbiville/markdown-table-formatter v0.3.0
 )
 
 require (
@@ -358,7 +360,6 @@ require (
 	github.com/openclarity/vmclarity/installation v0.7.1 // indirect
 	github.com/openclarity/vmclarity/plugins/runner v0.7.1 // indirect
 	github.com/openclarity/vmclarity/plugins/sdk-go v0.7.1 // indirect
-	github.com/openclarity/vmclarity/utils v0.7.1 // indirect
 	github.com/openclarity/vmclarity/workflow v0.7.1 // indirect
 	github.com/openclarity/yara-rule-server v0.3.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
