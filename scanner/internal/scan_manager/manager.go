@@ -19,7 +19,6 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"runtime"
 	"time"
 
 	"github.com/hashicorp/go-multierror"
@@ -65,7 +64,7 @@ func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) (
 
 	// Create processing jobs, do not cancel on error
 	resultCh := make(chan InputScanResultWithError[RT])
-	workerPool := pool.New().WithContext(ctx).WithMaxGoroutines(runtime.NumCPU())
+	workerPool := pool.New().WithContext(ctx)
 
 	for _, scannerName := range m.scanners {
 		// Create new ctx with logger that contains scanner name
