@@ -53,15 +53,20 @@ func (s SBOM) Run(ctx context.Context, _ *families.Results) (*types.Result, erro
 		return nil, errors.New("inputs list is empty")
 	}
 
-	// TODO: move the logic from cli utils to shared utils
-	// TODO: now that we support multiple inputs,
-	//  we need to change the fact the mergedResults assumes it is only for 1 input?
-	logger.Infof("Generating hash for input: %s", s.conf.Inputs[0].Input)
+	// Calculate hash in a separate goroutine as it might take a while. In the
+	// meantime, run actual SBOM scanning.
+	hashCh := make(chan string, 1)
+	hashErrCh := make(chan error, 1)
+	go func() {
+		// TODO: move the logic from cli utils to shared utils
+		// TODO: now that we support multiple inputs,
+		//  we need to change the fact the mergedResults assumes it is only for 1 input?
+		logger.Infof("Generating hash for input %s", s.conf.Inputs[0].Input)
 
-	hash, err := utils.GenerateHash(s.conf.Inputs[0].InputType, s.conf.Inputs[0].Input)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate hash for source %s: %w", s.conf.Inputs[0].Input, err)
-	}
+		hash, err := utils.GenerateHash(s.conf.Inputs[0].InputType, s.conf.Inputs[0].Input)
+		hashCh <- hash
+		hashErrCh <- err
+	}()
 
 	// Run all scanners using scan manager
 	manager := scan_manager.New(s.conf.AnalyzersList, s.conf, Factory)
@@ -70,6 +75,13 @@ func (s SBOM) Run(ctx context.Context, _ *families.Results) (*types.Result, erro
 		return nil, fmt.Errorf("failed to process inputs for sbom: %w", err)
 	}
 
+	// Get hash
+	hash := <-hashCh
+	if err := <-hashErrCh; err != nil {
+		return nil, fmt.Errorf("failed to generate hash for source %s: %w", s.conf.Inputs[0].Input, err)
+	}
+
+	// Create result
 	metadata := families.ScanMetadata{}
 	mergedResults := newMergedResults(s.conf.Inputs[0].InputType, hash)
 
