@@ -16,7 +16,7 @@ on:
         required: false
         type: string
         description: 'Suffix to append to the image name'
-        default: ""
+        default: ''
       bake-group:
         required: false
         type: string
@@ -33,6 +33,7 @@ on:
         required: true
         type: string
         description: 'Image tag to use.'
+        default: latest
       registry_name:
         required: false
         type: string
@@ -42,7 +43,7 @@ on:
         required: false
         type: string
         description: 'Suffix to append to the image name'
-        default: ""
+        default: '-dev'
       bake-group:
         required: false
         type: string
