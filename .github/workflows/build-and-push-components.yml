@@ -3,6 +3,11 @@ name: Build and Push Components
 on:
   workflow_call:
     inputs:
+      git_ref:
+        required: false
+        type: string
+        description: 'The branch, tag or SHA to build.'
+        default: ''
       image_tag:
         required: true
         type: string
