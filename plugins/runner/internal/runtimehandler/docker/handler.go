@@ -87,6 +87,7 @@ func (h *containerRuntimeHandler) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to get mounts: %w", err)
 	}
 
+	init := true
 	// Create scanner container
 	container, err := h.client.ContainerCreate(
 		ctx,
@@ -107,6 +108,7 @@ func (h *containerRuntimeHandler) Start(ctx context.Context) error {
 				},
 			},
 			Mounts: []mount.Mount{*scanDirMount},
+			Init:   &init,
 		},
 		nil,
 		nil,
