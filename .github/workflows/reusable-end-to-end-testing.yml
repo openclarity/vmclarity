@@ -11,11 +11,6 @@ on:
         required: true
         type: string
         description: 'Platform used to run end-to-end tests. Supported values are `docker` and `kubernetes`.'
-      benchmark:
-        required: false
-        type: boolean
-        description: 'Whether to run benchmark tests.'
-        default: false
       registry_name:
         required: false
         type: string
@@ -107,14 +102,6 @@ jobs:
             make e2e-k8s
           elif [[ "${{ inputs.platform }}" == "docker" ]]; then
             make e2e-docker
-          elif [[ "${{ inputs.benchmark }}" == true ]]; then
-            make benchmark-test
           else
             echo "Invalid platform"
           fi
-
-      - name: Write benchmark results to summary
-        if: inputs.benchmark == true
-        run: |
-          echo "🚀 Benchmark Test Results 🚀" >> "$GITHUB_STEP_SUMMARY"
-          cat "/tmp/scanner-benchmark.md" >> "$GITHUB_STEP_SUMMARY"

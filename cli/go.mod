@@ -4,6 +4,7 @@ go 1.22.4
 
 require (
 	github.com/CycloneDX/cyclonedx-go v0.8.0
+	github.com/fbiville/markdown-table-formatter v0.3.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/google/go-cmp v0.6.0
 	github.com/google/uuid v1.6.0

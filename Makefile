@@ -185,12 +185,6 @@ VENDORMODULES = $(addprefix vendor-, $(GOMODULES))
 $(VENDORMODULES):
 	go -C $(@:vendor-%=%) mod vendor
 
-BENCHMARK_COMMAND =  go -C $(ROOT_DIR)/e2e test -v -bench -failfast -test.v -test.paniconexit0 -ginkgo.timeout 2h -timeout 2h -ginkgo.v .
-
-.PHONY: benchmark-test
-benchmark-test: ## Run benchmark tests
-	$(E2E_ENV) $(BENCHMARK_COMMAND)
-
 .PHONY: gomod-vendor
 gomod-vendor: $(VENDORMODULES) # Make vendored copy of dependencies for all modules
 
@@ -245,6 +239,16 @@ $(TESTGOMODULES):
 
 .PHONY: test
 test: $(TESTGOMODULES) ## Run Go unit tests
+
+BENCHMARKTEST_OPTS := -failfast -timeout 30m
+BENCHMARKTEST_OPTS += $(BUILD_OPTS)
+ifeq ($(CI),true)
+	BENCHMARKTEST_OPTS += -v
+endif
+
+.PHONY: test-benchmark
+test-benchmark: ## Run benchmark tests
+	CGO_ENABLED=1 go -C $(ROOT_DIR)/cli/test/benchmark test $(BENCHMARKTEST_OPTS) .
 
 GOVET_OPTS := $(BUILD_OPTS)
 VETGOMODULES = $(addprefix vet-, $(GOMODULES))

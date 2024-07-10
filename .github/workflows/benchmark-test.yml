@@ -1,0 +1,47 @@
+name: Benchmark Test
+
+on:
+  workflow_call:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    container: ghcr.io/openclarity/vmclarity-tools-base:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7    
+
+      - name: Set up Go
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
+        with:
+          cache: false
+          go-version-file: '.go-version'
+
+      - name: Setup Go caching
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ github.ref_name }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ github.ref_name }}-
+            ${{ runner.os }}-go-${{ github.event.repository.default_branch }}-
+
+      # Install bash, make, gcc, musl-dev, and linux-headers since they're not included in the base image
+      - name: Install dependencies
+        run: apk update && apk add bash make gcc musl-dev linux-headers
+
+      # Add the directory to Git's safe directory list
+      - name: Configure Git safe directory
+        run: git config --global --add safe.directory /__w/vmclarity/vmclarity
+
+      - name: Run benchmark test
+        run: make test-benchmark
+        env:
+          DOCKER_CONTENT_TRUST: 1
+
+      - name: Write benchmark results to summary
+        run: |
+          cat "/tmp/scanner-benchmark.md"
+          cat "/tmp/scanner-benchmark.md" >> "$GITHUB_STEP_SUMMARY"
