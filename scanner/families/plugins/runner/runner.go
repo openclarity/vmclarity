@@ -80,26 +80,25 @@ func (s *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInpu
 			return
 		}
 
-		finishRunner := func(ctx context.Context) {
-			if err := rr.Stop(ctx); err != nil {
+		shutdownRunner := func(ctx context.Context) {
+			shutdownContext := context.WithoutCancel(ctx)
+			if err := rr.Stop(shutdownContext); err != nil {
 				s.logger.WithError(err).Errorf("failed to stop runner")
 			}
 
-			// TODO: add short wait before removing to respect container shutdown procedure
-
-			if err := rr.Remove(ctx); err != nil {
+			if err := rr.Remove(shutdownContext); err != nil {
 				s.logger.WithError(err).Errorf("failed to remove runner")
 			}
 		} //nolint:errcheck
 
 		if err := rr.Start(ctx); err != nil {
-			finishRunner(ctx)
+			shutdownRunner(ctx)
 			s.sendResults(retResults, fmt.Errorf("failed to start plugin runner: %w", err))
 			return
 		}
 
 		if err := rr.WaitReady(ctx); err != nil {
-			finishRunner(ctx)
+			shutdownRunner(ctx)
 			s.sendResults(retResults, fmt.Errorf("failed to wait for plugin scanner to be ready: %w", err))
 			return
 		}
@@ -107,7 +106,7 @@ func (s *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInpu
 		// Get plugin metadata
 		metadata, err := rr.Metadata(ctx)
 		if err != nil {
-			finishRunner(ctx)
+			shutdownRunner(ctx)
 			s.sendResults(retResults, fmt.Errorf("failed to get plugin scanner metadata: %w", err))
 			return
 		}
@@ -133,25 +132,25 @@ func (s *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInpu
 		}()
 
 		if err := rr.Run(ctx); err != nil {
-			finishRunner(ctx)
+			shutdownRunner(ctx)
 			s.sendResults(retResults, fmt.Errorf("failed to run plugin scanner: %w", err))
 			return
 		}
 
 		if err := rr.WaitDone(ctx); err != nil {
-			finishRunner(ctx)
+			shutdownRunner(ctx)
 			s.sendResults(retResults, fmt.Errorf("failed to wait for plugin scanner to finish: %w", err))
 			return
 		}
 
 		findings, pluginResult, err := s.parseResults(ctx, rr)
 		if err != nil {
-			finishRunner(ctx)
+			shutdownRunner(ctx)
 			s.sendResults(retResults, fmt.Errorf("failed to parse plugin scanner results: %w", err))
 			return
 		}
 
-		finishRunner(ctx)
+		shutdownRunner(ctx)
 
 		retResults.Findings = findings
 		retResults.Output = pluginResult
