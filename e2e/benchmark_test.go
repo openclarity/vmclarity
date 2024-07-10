@@ -19,12 +19,13 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"sync"
-	"testing"
 	"time"
 
 	"github.com/fbiville/markdown-table-formatter/pkg/markdown"
+	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 
 	"github.com/openclarity/vmclarity/scanner"
@@ -34,18 +35,20 @@ import (
 	infofinder "github.com/openclarity/vmclarity/scanner/families/infofinder/types"
 	malware "github.com/openclarity/vmclarity/scanner/families/malware/types"
 	misconfigurations "github.com/openclarity/vmclarity/scanner/families/misconfiguration/types"
+	"github.com/openclarity/vmclarity/scanner/families/plugins/runner/config"
 	plugins "github.com/openclarity/vmclarity/scanner/families/plugins/types"
 	rootkits "github.com/openclarity/vmclarity/scanner/families/rootkits/types"
-	sbom "github.com/openclarity/vmclarity/scanner/families/sbom/types"
 	secrets "github.com/openclarity/vmclarity/scanner/families/secrets/types"
 	vulnerabilities "github.com/openclarity/vmclarity/scanner/families/vulnerabilities/types"
 	"github.com/openclarity/vmclarity/utils/fsutils/containerrootfs"
 )
 
 const (
-	rootfsPath              = "/tmp/bench-test"
-	testImage               = "./testdata/alpine-3.18.2.tar"
-	defaultMarkDownFilePath = "scanner-benchmark.md"
+	rootfsPath          = "/tmp/bench-test"
+	testImageSourcePath = "./testdata/alpine-3.18.2.tar"
+	alpineImage         = "alpine:3.18.2"
+	markDownFilePath    = "/tmp/scanner-benchmark.md"
+	markdownHeader      = "# 🚀 Benchmark results\n\n"
 )
 
 type BenchmarkNotifier struct {
@@ -63,6 +66,7 @@ func (n *BenchmarkNotifier) FamilyStarted(_ context.Context, famType families.Fa
 	return nil
 }
 
+// nolint:cyclop
 func (n *BenchmarkNotifier) FamilyFinished(_ context.Context, res families.FamilyResult) error {
 	n.mu.Lock()
 	defer n.mu.Unlock()
@@ -70,138 +74,234 @@ func (n *BenchmarkNotifier) FamilyFinished(_ context.Context, res families.Famil
 
 	switch res.FamilyType {
 	case families.SBOM:
-		// familyResult := res.Result.(*sbom.Result).SBOM.Vulnerabilities
-		// n.findingsCount[res.FamilyType] = len(familyResult)
+		// if res.Result.(*sbom.Result) != nil {
+		// 	familyResult := res.Result.(*sbom.Result).SBOM.Vulnerabilities
+		// 	n.findingsCount[res.FamilyType] = len(*familyResult)
+		// } else {
+		// 	n.findingsCount[res.FamilyType] = 0
+		// }
 
 	case families.Vulnerabilities:
-		familyResult := res.Result.(*vulnerabilities.Result).MergedVulnerabilitiesByKey
-		n.findingsCount[res.FamilyType] = len(familyResult)
+		if res.Result.(*vulnerabilities.Result) != nil { // nolint:forcetypeassert
+			familyResult := res.Result.(*vulnerabilities.Result).MergedVulnerabilitiesByKey // nolint:forcetypeassert
+			n.findingsCount[res.FamilyType] = len(familyResult)
+		} else {
+			n.findingsCount[res.FamilyType] = 0
+		}
 
 	case families.Secrets:
-		familyResult := res.Result.(*secrets.Result).Findings
-		n.findingsCount[res.FamilyType] = len(familyResult)
+		if res.Result.(*secrets.Result) != nil { // nolint:forcetypeassert
+			familyResult := res.Result.(*secrets.Result).Findings // nolint:forcetypeassert
+			n.findingsCount[res.FamilyType] = len(familyResult)
+		} else {
+			n.findingsCount[res.FamilyType] = 0
+		}
 
 	case families.Exploits:
-		familyResult := res.Result.(*exploits.Result).Exploits
-		n.findingsCount[res.FamilyType] = len(familyResult)
+		if res.Result.(*exploits.Result) != nil { // nolint:forcetypeassert
+			familyResult := res.Result.(*exploits.Result).Exploits // nolint:forcetypeassert
+			n.findingsCount[res.FamilyType] = len(familyResult)
+		} else {
+			n.findingsCount[res.FamilyType] = 0
+		}
 
 	case families.Misconfiguration:
-		familyResult := res.Result.(*misconfigurations.Result).Misconfigurations
-		n.findingsCount[res.FamilyType] = len(familyResult)
+		if res.Result.(*misconfigurations.Result) != nil { // nolint:forcetypeassert
+			familyResult := res.Result.(*misconfigurations.Result).Misconfigurations // nolint:forcetypeassert
+			n.findingsCount[res.FamilyType] = len(familyResult)
+		} else {
+			n.findingsCount[res.FamilyType] = 0
+		}
 
 	case families.Rootkits:
-		familyResult := res.Result.(*rootkits.Result).Rootkits
-		n.findingsCount[res.FamilyType] = len(familyResult)
+		if res.Result.(*rootkits.Result) != nil { // nolint:forcetypeassert
+			familyResult := res.Result.(*rootkits.Result).Rootkits // nolint:forcetypeassert
+			n.findingsCount[res.FamilyType] = len(familyResult)
+		} else {
+			n.findingsCount[res.FamilyType] = 0
+		}
 
 	case families.Malware:
-		familyResult := res.Result.(*malware.Result).Malwares
-		n.findingsCount[res.FamilyType] = len(familyResult)
+		if res.Result.(*malware.Result) != nil { // nolint:forcetypeassert
+			familyResult := res.Result.(*malware.Result).Malwares // nolint:forcetypeassert
+			n.findingsCount[res.FamilyType] = len(familyResult)
+		} else {
+			n.findingsCount[res.FamilyType] = 0
+		}
 
 	case families.InfoFinder:
-		familyResult := res.Result.(*infofinder.Result).Infos
-		n.findingsCount[res.FamilyType] = len(familyResult)
+		if res.Result.(*infofinder.Result) != nil { // nolint:forcetypeassert
+			familyResult := res.Result.(*infofinder.Result).Infos // nolint:forcetypeassert
+			n.findingsCount[res.FamilyType] = len(familyResult)
+		} else {
+			n.findingsCount[res.FamilyType] = 0
+		}
 
 	case families.Plugins:
-		familyResult := res.Result.(*plugins.Result).Findings
-		n.findingsCount[res.FamilyType] = len(familyResult)
+		if res.Result.(*plugins.Result) != nil { // nolint:forcetypeassert
+			familyResult := res.Result.(*plugins.Result).Findings // nolint:forcetypeassert
+			n.findingsCount[res.FamilyType] = len(familyResult)
+		} else {
+			n.findingsCount[res.FamilyType] = 0
+		}
 	}
 
 	return nil
 }
 
+var _ = ginkgo.Describe("Running a Benchmark test", func() {
+	ginkgo.Context("which scans an alpine image", func() {
+		ginkgo.It("should finish successfully", func(ctx ginkgo.SpecContext) {
+			fmt.Println("Starting benchmark test")
+			scannerConfig := &scanner.Config{
+				// SBOM: sbom.Config{
+				// 	Enabled: true,
+				// 	AnalyzersList: []string{
+				// 		"syft",
+				// 		"trivy",
+				// 		"windows",
+				// 	},
+				// },
+				// Vulnerabilities: vulnerabilities.Config{
+				// 	Enabled: true,
+				// 	ScannersList: []string{
+				// 		"grype",
+				// 		"trivy",
+				// 	},
+				// },
+				// Secrets: secrets.Config{
+				// 	Enabled: true,
+				// 	ScannersList: []string{
+				// 		"gitleaks",
+				// 	},
+				// },
+				// Exploits: exploits.Config{
+				// 	Enabled: true,
+				// 	ScannersList: []string{
+				// 		"exploitdb",
+				// 	},
+				// },
+				// Misconfiguration: misconfigurations.Config{
+				// 	Enabled: true,
+				// 	ScannersList: []string{
+				// 		"lynis",
+				// 		"cisdocker",
+				// 		"fake",
+				// 	},
+				// },
+				// Rootkits: rootkits.Config{
+				// 	Enabled: true,
+				// 	ScannersList: []string{
+				// 		"chkrootkit",
+				// 	},
+				// },
+				// Malware: malware.Config{
+				// 	Enabled: true,
+				// 	ScannersList: []string{
+				// 		"clam",
+				// 		"yara",
+				// 	},
+				// },
+				// InfoFinder: infofinder.Config{
+				// 	Enabled: true,
+				// 	ScannersList: []string{
+				// 		"sshTopology",
+				// 	},
+				// },
+				Plugins: plugins.Config{
+					Enabled:      true,
+					ScannersList: []string{scannerPluginNameKICS},
+					ScannersConfig: plugins.ScannersConfig{
+						scannerPluginNameKICS: config.Config{
+							Name:          scannerPluginNameKICS,
+							ImageName:     cfg.TestEnvConfig.Images.PluginKics,
+							InputDir:      "",
+							ScannerConfig: "",
+						},
+					},
+				},
+			}
+
+			image, cleanup, err := containerrootfs.GetImageWithCleanup(ctx, testImageSourcePath)
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			defer cleanup()
+
+			err = containerrootfs.ToDirectory(ctx, image, rootfsPath)
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+
+			scannerConfig.AddInputs(scannercommon.ROOTFS, []string{rootfsPath})
+			scannerConfig.AddInputs(scannercommon.IMAGE, []string{alpineImage})
+
+			input, err := filepath.Abs("./testdata")
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			scannerConfig.AddInputs(scannercommon.ROOTFS, []string{input})
+
+			notifier := &BenchmarkNotifier{
+				started:       make(map[families.FamilyType]time.Time),
+				finished:      make(map[families.FamilyType]time.Time),
+				findingsCount: make(map[families.FamilyType]int),
+			}
+
+			errs := scanner.New(scannerConfig).Run(ctx, notifier)
+			gomega.Expect(errs).To(gomega.BeEmpty())
+
+			mdTable, err := notifier.GenerateMarkdownTable()
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+
+			err = writeMarkdownTableToFile(mdTable)
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+		})
+	})
+})
+
 func (n *BenchmarkNotifier) GenerateMarkdownTable() (string, error) {
 	rows := [][]string{}
+
+	earliestStartTime := time.Now().UTC()
+	totalFindings := 0
 	for famType, startTime := range n.started {
+		if startTime.Before(earliestStartTime) {
+			earliestStartTime = startTime
+		}
+
 		row := []string{
 			string(famType),
-			n.started[famType].String(),
-			n.finished[famType].String(),
+			n.started[famType].Format(time.DateTime),
+			n.finished[famType].Format(time.DateTime),
 			strconv.Itoa(n.findingsCount[famType]),
-			n.finished[famType].Sub(startTime).String(),
+			n.finished[famType].Sub(startTime).Round(time.Second).String(),
 		}
 		rows = append(rows, row)
+
+		totalFindings += n.findingsCount[famType]
+	}
+
+	latestFinishTime := time.Time{}
+	for _, endTime := range n.finished {
+		if endTime.After(latestFinishTime) {
+			latestFinishTime = endTime
+		}
 	}
 
 	mdTable, err := markdown.NewTableFormatterBuilder().
 		WithPrettyPrint().
-		Build("Family", "Start time", "End time", "Findings", "Total time").
+		Build("Family/Scanner", "Start time", "End time", "Findings", "Total time").
 		Format(rows)
 	if err != nil {
 		return "", fmt.Errorf("failed to format markdown table: %w", err)
 	}
 
-	return mdTable, nil
+	footer := fmt.Sprintf(
+		"\n\nFull scan summary\nTotal time: %s\nTotal findings: %d\n",
+		latestFinishTime.Sub(earliestStartTime).Round(time.Second).String(),
+		totalFindings,
+	)
+
+	return mdTable + footer, nil
 }
 
-func Test_Benchmark(t *testing.T) {
-	g := gomega.NewWithT(t)
-
-	fmt.Println("Starting benchmark test")
-	scannerConfig := &scanner.Config{
-		SBOM: sbom.Config{
-			Enabled: true,
-			AnalyzersList: []string{
-				"syft",
-				"trivy",
-				"windows",
-			},
-		},
-		Vulnerabilities: vulnerabilities.Config{
-			Enabled: true,
-		},
-		Secrets: secrets.Config{
-			Enabled: true,
-		},
-		Exploits: exploits.Config{
-			Enabled: true,
-		},
-		Misconfiguration: misconfigurations.Config{
-			Enabled: true,
-		},
-		Rootkits: rootkits.Config{
-			Enabled: true,
-		},
-		Malware: malware.Config{
-			Enabled: true,
-		},
-		InfoFinder: infofinder.Config{
-			Enabled: true,
-		},
-		Plugins: plugins.Config{
-			Enabled: true,
-		},
-	}
-
-	ctx := context.Background()
-	image, cleanup, err := containerrootfs.GetImageWithCleanup(ctx, testImage)
-	g.Expect(err).NotTo(gomega.HaveOccurred())
-	defer cleanup()
-
-	err = containerrootfs.ToDirectory(ctx, image, rootfsPath)
-	g.Expect(err).NotTo(gomega.HaveOccurred())
-
-	scannerConfig.AddInputs(scannercommon.ROOTFS, []string{rootfsPath})
-	scannerConfig.AddInputs(scannercommon.IMAGE, []string{testImage})
-
-	notifier := &BenchmarkNotifier{
-		started:       make(map[families.FamilyType]time.Time),
-		finished:      make(map[families.FamilyType]time.Time),
-		findingsCount: make(map[families.FamilyType]int),
-	}
-
-	errs := scanner.New(scannerConfig).Run(ctx, notifier)
-	g.Expect(errs).To(gomega.BeEmpty())
-
-	mdTable, err := notifier.GenerateMarkdownTable()
-	g.Expect(err).NotTo(gomega.HaveOccurred())
-
-	err = writeMarkdownFile(mdTable)
-	g.Expect(err).NotTo(gomega.HaveOccurred())
-
-}
-
-func writeMarkdownFile(mdTable string) error {
-	err := os.WriteFile(defaultMarkDownFilePath, []byte(mdTable), 0644)
+func writeMarkdownTableToFile(mdTable string) error {
+	err := os.WriteFile(markDownFilePath, []byte(markdownHeader+mdTable), 0o600)
 	if err != nil {
 		return fmt.Errorf("failed to write markdown file: %w", err)
 	}

@@ -30,7 +30,7 @@ import (
 	plugintypes "github.com/openclarity/vmclarity/scanner/families/plugins/types"
 )
 
-const scannerPluginName = "kics"
+const scannerPluginNameKICS = "kics"
 
 type Notifier struct {
 	Results []families.FamilyResult
@@ -58,7 +58,7 @@ var _ = ginkgo.Describe("Running KICS scan", func() {
 			errs := scanner.New(&scanner.Config{
 				Plugins: plugintypes.Config{
 					Enabled:      true,
-					ScannersList: []string{scannerPluginName},
+					ScannersList: []string{scannerPluginNameKICS},
 					Inputs: []scannercommon.ScanInput{
 						{
 							Input:     input,
@@ -66,8 +66,8 @@ var _ = ginkgo.Describe("Running KICS scan", func() {
 						},
 					},
 					ScannersConfig: plugintypes.ScannersConfig{
-						scannerPluginName: config.Config{
-							Name:          scannerPluginName,
+						scannerPluginNameKICS: config.Config{
+							Name:          scannerPluginNameKICS,
 							ImageName:     cfg.TestEnvConfig.Images.PluginKics,
 							InputDir:      "",
 							ScannerConfig: "",
@@ -82,8 +82,8 @@ var _ = ginkgo.Describe("Running KICS scan", func() {
 					return false
 				}
 
-				results := notifier.Results[0].Result.(*plugintypes.Result)                          // nolint:forcetypeassert
-				rawData := results.PluginOutputs[scannerPluginName].RawJSON.(map[string]interface{}) // nolint:forcetypeassert
+				results := notifier.Results[0].Result.(*plugintypes.Result)                              // nolint:forcetypeassert
+				rawData := results.PluginOutputs[scannerPluginNameKICS].RawJSON.(map[string]interface{}) // nolint:forcetypeassert
 
 				if rawData["total_counter"] != float64(23) {
 					return false
@@ -113,7 +113,7 @@ var _ = ginkgo.Describe("Running a KICS scan", func() {
 			errs := scanner.New(&scanner.Config{
 				Plugins: plugintypes.Config{
 					Enabled:      true,
-					ScannersList: []string{scannerPluginName},
+					ScannersList: []string{scannerPluginNameKICS},
 					Inputs: []scannercommon.ScanInput{
 						{
 							Input:     input,
@@ -121,8 +121,8 @@ var _ = ginkgo.Describe("Running a KICS scan", func() {
 						},
 					},
 					ScannersConfig: plugintypes.ScannersConfig{
-						scannerPluginName: config.Config{
-							Name:          scannerPluginName,
+						scannerPluginNameKICS: config.Config{
+							Name:          scannerPluginNameKICS,
 							ImageName:     cfg.TestEnvConfig.Images.PluginKics,
 							InputDir:      "",
 							ScannerConfig: "{\"report-formats\": [\"sarif\"]}",
@@ -133,7 +133,7 @@ var _ = ginkgo.Describe("Running a KICS scan", func() {
 			gomega.Expect(errs).To(gomega.BeEmpty())
 
 			gomega.Eventually(func() bool {
-				results := notifier.Results[0].Result.(*plugintypes.Result).PluginOutputs[scannerPluginName] // nolint:forcetypeassert
+				results := notifier.Results[0].Result.(*plugintypes.Result).PluginOutputs[scannerPluginNameKICS] // nolint:forcetypeassert
 
 				isEmptyFuncs := []func() bool{
 					func() bool { return isEmpty(results.RawJSON) },
