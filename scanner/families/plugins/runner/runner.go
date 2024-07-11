@@ -71,19 +71,14 @@ func (s *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInpu
 	}
 
 	shutdownRunner := func(ctx context.Context) {
-		fmt.Println("1")
 		shutdownContext := context.WithoutCancel(ctx)
 		if err := rr.Stop(shutdownContext); err != nil {
 			s.logger.WithError(err).Errorf("failed to stop runner")
 		}
 
-		fmt.Println("2")
-
 		if err := rr.Remove(shutdownContext); err != nil {
 			s.logger.WithError(err).Errorf("failed to remove runner")
 		}
-
-		fmt.Println("3")
 	} //nolint:errcheck
 
 	type result struct {
