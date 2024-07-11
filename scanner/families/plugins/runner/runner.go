@@ -19,6 +19,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 
@@ -52,6 +53,7 @@ func New(name string, c job_manager.IsConfig, logger *logrus.Entry, resultChan c
 	}
 }
 
+//nolint:cyclop
 func (s *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInput string) error {
 	if !s.isValidInputType(sourceType) {
 		return fmt.Errorf("received invalid input type for plugin scanner: %v", sourceType)
@@ -174,7 +176,7 @@ func (s *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInpu
 	select {
 	case <-ctx.Done():
 		shutdownRunner(ctx)
-		return fmt.Errorf("plugin context cancelled")
+		return errors.New("plugin context cancelled")
 	case r := <-resChan:
 		shutdownRunner(ctx)
 		s.sendResults(r.Result, r.Err)
