@@ -53,61 +53,77 @@ func New(name string, c job_manager.IsConfig, logger *logrus.Entry, resultChan c
 }
 
 func (s *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInput string) error {
+	if !s.isValidInputType(sourceType) {
+		return fmt.Errorf("received invalid input type for plugin scanner: %v", sourceType)
+	}
+
+	rr, err := runner.New(ctx, types.PluginConfig{
+		Name:          s.name,
+		ImageName:     s.config.ImageName,
+		InputDir:      userInput,
+		ScannerConfig: s.config.ScannerConfig,
+		BinaryMode:    s.config.BinaryMode,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create plugin runner: %w", err)
+	}
+
+	shutdownRunner := func(ctx context.Context) {
+		fmt.Println("1")
+		shutdownContext := context.WithoutCancel(ctx)
+		if err := rr.Stop(shutdownContext); err != nil {
+			s.logger.WithError(err).Errorf("failed to stop runner")
+		}
+
+		fmt.Println("2")
+
+		if err := rr.Remove(shutdownContext); err != nil {
+			s.logger.WithError(err).Errorf("failed to remove runner")
+		}
+
+		fmt.Println("3")
+	} //nolint:errcheck
+
+	type result struct {
+		Result common.Results
+		Err    error
+	}
+
+	resChan := make(chan result)
+
 	go func(ctx context.Context) {
-		ctx, cancel := context.WithCancel(ctx)
-		defer cancel()
-
-		retResults := common.Results{
-			ScannedInput: userInput,
-			ScannerName:  s.name,
-		}
-
-		if !s.isValidInputType(sourceType) {
-			retResults.Error = fmt.Errorf("received invalid input type for plugin scanner: %v", sourceType)
-			s.sendResults(retResults, nil)
-			return
-		}
-
-		rr, err := runner.New(ctx, types.PluginConfig{
-			Name:          s.name,
-			ImageName:     s.config.ImageName,
-			InputDir:      userInput,
-			ScannerConfig: s.config.ScannerConfig,
-			BinaryMode:    s.config.BinaryMode,
-		})
-		if err != nil {
-			s.sendResults(retResults, fmt.Errorf("failed to create plugin runner: %w", err))
-			return
-		}
-
-		shutdownRunner := func(ctx context.Context) {
-			shutdownContext := context.WithoutCancel(ctx)
-			if err := rr.Stop(shutdownContext); err != nil {
-				s.logger.WithError(err).Errorf("failed to stop runner")
+		defer func() {
+			if e := recover(); e != nil {
+				shutdownRunner(ctx)
+				panic(e)
 			}
+		}()
 
-			if err := rr.Remove(shutdownContext); err != nil {
-				s.logger.WithError(err).Errorf("failed to remove runner")
-			}
-		} //nolint:errcheck
+		res := result{
+			Result: common.Results{
+				ScannedInput: userInput,
+				ScannerName:  s.name,
+			},
+			Err: nil,
+		}
 
 		if err := rr.Start(ctx); err != nil {
-			shutdownRunner(ctx)
-			s.sendResults(retResults, fmt.Errorf("failed to start plugin runner: %w", err))
+			res.Err = fmt.Errorf("failed to start plugin runner: %w", err)
+			resChan <- res
 			return
 		}
 
 		if err := rr.WaitReady(ctx); err != nil {
-			shutdownRunner(ctx)
-			s.sendResults(retResults, fmt.Errorf("failed to wait for plugin scanner to be ready: %w", err))
+			res.Err = fmt.Errorf("failed to wait for plugin scanner to be ready: %w", err)
+			resChan <- res
 			return
 		}
 
 		// Get plugin metadata
 		metadata, err := rr.Metadata(ctx)
 		if err != nil {
-			shutdownRunner(ctx)
-			s.sendResults(retResults, fmt.Errorf("failed to get plugin scanner metadata: %w", err))
+			res.Err = fmt.Errorf("failed to get plugin scanner metadata: %w", err)
+			resChan <- res
 			return
 		}
 
@@ -132,30 +148,37 @@ func (s *Scanner) Run(ctx context.Context, sourceType utils.SourceType, userInpu
 		}()
 
 		if err := rr.Run(ctx); err != nil {
-			shutdownRunner(ctx)
-			s.sendResults(retResults, fmt.Errorf("failed to run plugin scanner: %w", err))
+			res.Err = fmt.Errorf("failed to run plugin scanner: %w", err)
+			resChan <- res
 			return
 		}
 
 		if err := rr.WaitDone(ctx); err != nil {
-			shutdownRunner(ctx)
-			s.sendResults(retResults, fmt.Errorf("failed to wait for plugin scanner to finish: %w", err))
+			res.Err = fmt.Errorf("failed to wait for plugin scanner to finish: %w", err)
+			resChan <- res
 			return
 		}
 
 		findings, pluginResult, err := s.parseResults(ctx, rr)
 		if err != nil {
-			shutdownRunner(ctx)
-			s.sendResults(retResults, fmt.Errorf("failed to parse plugin scanner results: %w", err))
+			res.Err = fmt.Errorf("failed to parse plugin scanner results: %w", err)
+			resChan <- res
 			return
 		}
 
-		shutdownRunner(ctx)
-
-		retResults.Findings = findings
-		retResults.Output = pluginResult
-		s.sendResults(retResults, nil)
+		res.Result.Findings = findings
+		res.Result.Output = pluginResult
+		resChan <- res
 	}(ctx)
+
+	select {
+	case <-ctx.Done():
+		shutdownRunner(ctx)
+		return fmt.Errorf("plugin context cancelled")
+	case r := <-resChan:
+		shutdownRunner(ctx)
+		s.sendResults(r.Result, r.Err)
+	}
 
 	return nil
 }
