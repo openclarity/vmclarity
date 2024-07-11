@@ -34,6 +34,7 @@ import (
 	"github.com/openclarity/vmclarity/scanner/families/secrets"
 	"github.com/openclarity/vmclarity/scanner/families/utils"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities"
+	"github.com/openclarity/vmclarity/scanner/internal/family_runner"
 	"github.com/openclarity/vmclarity/utils/fsutils/containerrootfs"
 	"github.com/openclarity/vmclarity/workflow"
 	workflowtypes "github.com/openclarity/vmclarity/workflow/types"
@@ -45,13 +46,17 @@ type Scanner struct {
 }
 
 func New(config *Config) *Scanner {
+	if config == nil {
+		config = &Config{}
+	}
+
 	manager := &Scanner{
 		config: config,
 	}
 
 	// Analyzers
 	if config.SBOM.Enabled {
-		manager.tasks = append(manager.tasks, newWorkflowTaskFor("sbom", sbom.New(config.SBOM)))
+		manager.tasks = append(manager.tasks, newFamilyTask("sbom", sbom.New(config.SBOM)))
 	}
 
 	// Scanners
@@ -62,25 +67,25 @@ func New(config *Config) *Scanner {
 			deps = append(deps, "sbom")
 		}
 
-		manager.tasks = append(manager.tasks, newWorkflowTaskFor("vulnerabilities", vulnerabilities.New(config.Vulnerabilities), deps...))
+		manager.tasks = append(manager.tasks, newFamilyTask("vulnerabilities", vulnerabilities.New(config.Vulnerabilities), deps...))
 	}
 	if config.Secrets.Enabled {
-		manager.tasks = append(manager.tasks, newWorkflowTaskFor("secrets", secrets.New(config.Secrets)))
+		manager.tasks = append(manager.tasks, newFamilyTask("secrets", secrets.New(config.Secrets)))
 	}
 	if config.Rootkits.Enabled {
-		manager.tasks = append(manager.tasks, newWorkflowTaskFor("rootkits", rootkits.New(config.Rootkits)))
+		manager.tasks = append(manager.tasks, newFamilyTask("rootkits", rootkits.New(config.Rootkits)))
 	}
 	if config.Malware.Enabled {
-		manager.tasks = append(manager.tasks, newWorkflowTaskFor("malware", malware.New(config.Malware)))
+		manager.tasks = append(manager.tasks, newFamilyTask("malware", malware.New(config.Malware)))
 	}
 	if config.Misconfiguration.Enabled {
-		manager.tasks = append(manager.tasks, newWorkflowTaskFor("misconfiguration", misconfiguration.New(config.Misconfiguration)))
+		manager.tasks = append(manager.tasks, newFamilyTask("misconfiguration", misconfiguration.New(config.Misconfiguration)))
 	}
 	if config.InfoFinder.Enabled {
-		manager.tasks = append(manager.tasks, newWorkflowTaskFor("infofinder", infofinder.New(config.InfoFinder)))
+		manager.tasks = append(manager.tasks, newFamilyTask("infofinder", infofinder.New(config.InfoFinder)))
 	}
 	if config.Plugins.Enabled {
-		manager.tasks = append(manager.tasks, newWorkflowTaskFor("plugins", plugins.New(config.Plugins)))
+		manager.tasks = append(manager.tasks, newFamilyTask("plugins", plugins.New(config.Plugins)))
 	}
 
 	// Enrichers.
@@ -91,7 +96,7 @@ func New(config *Config) *Scanner {
 			deps = append(deps, "vulnerabilities")
 		}
 
-		manager.tasks = append(manager.tasks, newWorkflowTaskFor("exploits", exploits.New(config.Exploits), deps...))
+		manager.tasks = append(manager.tasks, newFamilyTask("exploits", exploits.New(config.Exploits), deps...))
 	}
 
 	return manager
@@ -105,16 +110,16 @@ func (m *Scanner) Run(ctx context.Context, notifier families.FamilyNotifier) []e
 	defer func() {
 		err := utils.ContainerRootfsCache.CleanupAll()
 		if err != nil {
-			logger.WithError(err).Errorf("failed to cleanup all cached container rootfs files")
+			logger.WithError(err).Errorf("Failed to cleanup all cached container rootfs files")
 		}
 	}()
 
-	// Define channel to use to listen for all processing errors
+	// Create an error channel to send/receive all processing errors on
 	errCh := make(chan error)
 
-	// Run task processor in the background
+	// Run task processor in the background so that we can properly subscribe and
+	// listen for errors.
 	go func() {
-		// Close error channel to allow listener to exit properly
 		defer close(errCh)
 
 		// Create families processor
@@ -124,7 +129,8 @@ func (m *Scanner) Run(ctx context.Context, notifier families.FamilyNotifier) []e
 			return
 		}
 
-		// Run families processor and wait until all family workflow tasks have completed
+		// Run families processor and wait until all family workflow tasks have
+		// completed. Same workflow parameters are passed to all family runners.
 		err = processor.Run(ctx, workflowParams{
 			Notifier: notifier,
 			Results:  families.NewResults(),
@@ -132,29 +138,38 @@ func (m *Scanner) Run(ctx context.Context, notifier families.FamilyNotifier) []e
 		})
 		if err != nil {
 			errCh <- fmt.Errorf("failed to run families processor: %w", err)
+			return
 		}
 	}()
 
-	var oneOrMoreFamilyFailed bool
 	var errs []error
+	var familiesErrs = make(map[families.FamilyType][]error)
 
-	// Listen for processing errors
+	// Listen for all processing errors
 	for err := range errCh {
 		if err == nil {
 			continue
 		}
 
-		// Check if family run failed, otherwise add the error to the slice
-		var familyErr *familyFailedError
-		if errors.As(err, &familyErr) {
-			oneOrMoreFamilyFailed = true
+		// If the received processing error is due to a family failure, collect it only
+		// for logging purposes. Otherwise, collect the received error as it might be due
+		// to some internal error that we need to know more about.
+		var ferr *family_runner.FamilyFailedError
+		if errors.As(err, &ferr) {
+			familiesErrs[ferr.Family] = append(familiesErrs[ferr.Family], ferr.Err)
 		} else {
 			errs = append(errs, err)
 		}
 	}
 
-	if oneOrMoreFamilyFailed {
+	if len(familiesErrs) > 0 {
+		// Mark the whole scan failed in case one of the families failed
 		errs = append(errs, errors.New("at least one family failed to run"))
+
+		// Log family errors
+		for family, familyErrs := range familiesErrs {
+			logger.WithError(errors.Join(familyErrs...)).Errorf("Family %s failed with %d errors", family, len(familyErrs))
+		}
 	}
 
 	return errs
@@ -167,31 +182,30 @@ type workflowParams struct {
 	ErrCh    chan<- error
 }
 
-// NOTE(ramizpolic): This is an experimental usage to track changes between
-// sequential and parallel execution of the family runners.
-//
-// FIXME(ramizpolic): Remove this once all the changes regarding speed and
-// stability have been tested.
+// FIXME(ramizpolic): This is an experimental feature available to track changes
+// between sequential and parallel execution of the families logic. Remove this
+// once all the changes regarding speed and stability have been tested and
+// verified.
 
 var (
-	syncMu       sync.Mutex
-	_, asyncMode = os.LookupEnv("VMCLARITY_FAMILIES_RUN_ASYNC")
+	familiesTaskMutex    sync.Mutex
+	_, familiesAsyncMode = os.LookupEnv("VMCLARITY_FAMILIES_RUN_ASYNC")
 )
 
-// newWorkflowTaskFor returns a wrapped familyRunner as a workflow task.
-func newWorkflowTaskFor[T any](name string, family families.Family[T], deps ...string) workflowtypes.Task[workflowParams] {
+// newFamilyTask returns a workflow task that runs a specific family.
+func newFamilyTask[T any](name string, family families.Family[T], deps ...string) workflowtypes.Task[workflowParams] {
 	return workflowtypes.Task[workflowParams]{
 		Name: name,
 		Deps: deps,
 		Fn: func(ctx context.Context, params workflowParams) error {
-			// FIXME(ramizpolic): Remove once not needed
-			if !asyncMode {
-				syncMu.Lock()
-				defer syncMu.Unlock()
+			// FIXME(ramizpolic): Remove once fully tested
+			if !familiesAsyncMode {
+				familiesTaskMutex.Lock()
+				defer familiesTaskMutex.Unlock()
 			}
 
-			// Execute family using family runner and forward collected errors
-			errs := newFamilyRunner(family).Run(ctx, params.Notifier, params.Results)
+			// Execute family and forward collected errors
+			errs := family_runner.New(family).Run(ctx, params.Notifier, params.Results)
 			for _, err := range errs {
 				params.ErrCh <- err
 			}

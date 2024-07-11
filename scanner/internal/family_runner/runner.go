@@ -1,4 +1,4 @@
-// Copyright © 2023 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2024 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package scanner
+package family_runner
 
 import (
 	"context"
@@ -23,21 +23,27 @@ import (
 	"github.com/openclarity/vmclarity/scanner/families"
 )
 
-// familyRunner handles a specific family execution operations.
-type familyRunner[T any] struct {
+// Runner handles a specific family execution.
+type Runner[T any] struct {
 	family families.Family[T]
 }
 
-func (r *familyRunner[T]) Run(ctx context.Context, notifier families.FamilyNotifier, results *families.Results) []error {
+func New[T any](family families.Family[T]) *Runner[T] {
+	return &Runner[T]{family: family}
+}
+
+func (r *Runner[T]) Run(ctx context.Context, notifier families.FamilyNotifier, results *families.Results) []error {
 	var errs []error
 
-	// Inject family data into logger
-	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", r.family.GetType())
-	ctx = log.SetLoggerForContext(ctx, logger)
+	// Override context with family params
+	familyType := r.family.GetType()
+	ctx, logger := log.NewContextLoggerOrDefault(ctx, map[string]interface{}{
+		"family": familyType,
+	})
 
 	// Notify about start, return preemptively if it fails since we won't be able to
-	// collect scan results anyway.
-	if err := notifier.FamilyStarted(ctx, r.family.GetType()); err != nil {
+	// collect family results anyway.
+	if err := notifier.FamilyStarted(ctx, familyType); err != nil {
 		errs = append(errs, fmt.Errorf("family started notification failed: %w", err))
 		return errs
 	}
@@ -46,7 +52,7 @@ func (r *familyRunner[T]) Run(ctx context.Context, notifier families.FamilyNotif
 	result, err := r.family.Run(ctx, results)
 	familyResult := families.FamilyResult{
 		Result:     result,
-		FamilyType: r.family.GetType(),
+		FamilyType: familyType,
 		Err:        err,
 	}
 
@@ -57,9 +63,9 @@ func (r *familyRunner[T]) Run(ctx context.Context, notifier families.FamilyNotif
 
 		// Submit run error so that we can check if the error are from the notifier or
 		// from the actual family run
-		errs = append(errs, &familyFailedError{
-			FamilyType: r.family.GetType(),
-			Err:        err,
+		errs = append(errs, &FamilyFailedError{
+			Family: familyType,
+			Err:    err,
 		})
 	} else {
 		logger.Info("Family finished with success")
@@ -76,16 +82,12 @@ func (r *familyRunner[T]) Run(ctx context.Context, notifier families.FamilyNotif
 	return errs
 }
 
-func newFamilyRunner[T any](family families.Family[T]) *familyRunner[T] {
-	return &familyRunner[T]{family: family}
+// FamilyFailedError defines families.Family run fail error.
+type FamilyFailedError struct {
+	Family families.FamilyType
+	Err    error
 }
 
-// familyFailedError defines families.Family run fail error.
-type familyFailedError struct {
-	FamilyType families.FamilyType
-	Err        error
-}
-
-func (e *familyFailedError) Error() string {
-	return fmt.Sprintf("family %s failed with %v", e.FamilyType, e.Err)
+func (e *FamilyFailedError) Error() string {
+	return fmt.Sprintf("family %s failed with %v", e.Family, e.Err)
 }

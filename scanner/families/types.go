@@ -58,9 +58,10 @@ type FamilyResult struct {
 }
 
 // FamilyNotifier is used to subscribe to family scanning progress.
+// Implementation should be concurrently-safe.
 type FamilyNotifier interface {
 	FamilyStarted(context.Context, FamilyType) error
-	FamilyFinished(ctx context.Context, res FamilyResult) error
+	FamilyFinished(context.Context, FamilyResult) error
 }
 
 // ScanInputMetadata is metadata about a single input scan for a specific Family.
@@ -85,7 +86,7 @@ func NewScanInputMetadata(scannerName string, startTime, endTime time.Time, inpu
 }
 
 func (m ScanInputMetadata) String() string {
-	return fmt.Sprintf("{Scanner=%s Input=%s:%s InputSize=%d MB}", m.ScannerName, m.InputType, m.InputPath, m.InputSize)
+	return fmt.Sprintf("Scanner=%s Input=%s:%s InputSize=%d MB", m.ScannerName, m.InputType, m.InputPath, m.InputSize)
 }
 
 // ScanMetadata is metadata about multiple input scans for a specific Family.
