@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/families/exploits"
@@ -35,6 +36,10 @@ import (
 	"github.com/openclarity/vmclarity/scanner/families/utils"
 	"github.com/openclarity/vmclarity/scanner/families/vulnerabilities"
 	"github.com/openclarity/vmclarity/utils/fsutils/containerrootfs"
+)
+
+const (
+	shutdownGracePeriod = 2 * time.Second
 )
 
 type Manager struct {
@@ -102,6 +107,7 @@ type FamilyNotifier interface {
 
 func (m *Manager) Run(ctx context.Context, notifier FamilyNotifier) []error {
 	var oneOrMoreFamilyFailed bool
+	var executionCancelled bool
 	var errs []error
 	familyResults := results.New()
 
@@ -137,6 +143,9 @@ func (m *Manager) Run(ctx context.Context, notifier FamilyNotifier) []error {
 				<-result
 				close(result)
 			}()
+
+			executionCancelled = true
+
 			oneOrMoreFamilyFailed = true
 			if err := notifier.FamilyFinished(ctx, FamilyResult{
 				Result:     nil,
@@ -158,6 +167,10 @@ func (m *Manager) Run(ctx context.Context, notifier FamilyNotifier) []error {
 			}
 			close(result)
 		}
+	}
+
+	if executionCancelled {
+		time.Sleep(shutdownGracePeriod)
 	}
 
 	if oneOrMoreFamilyFailed {
