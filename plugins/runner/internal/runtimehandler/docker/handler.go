@@ -29,6 +29,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/openclarity/vmclarity/core/to"
 	"github.com/openclarity/vmclarity/plugins/runner/internal/runtimehandler"
 	"github.com/openclarity/vmclarity/plugins/runner/types"
 
@@ -87,7 +88,6 @@ func (h *containerRuntimeHandler) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to get mounts: %w", err)
 	}
 
-	init := true
 	// Create scanner container
 	container, err := h.client.ContainerCreate(
 		ctx,
@@ -108,7 +108,7 @@ func (h *containerRuntimeHandler) Start(ctx context.Context) error {
 				},
 			},
 			Mounts: []mount.Mount{*scanDirMount},
-			Init:   &init,
+			Init:   to.Ptr(true),
 		},
 		nil,
 		nil,
