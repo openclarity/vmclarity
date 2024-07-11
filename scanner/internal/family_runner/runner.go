@@ -40,11 +40,12 @@ func (r *Runner[T]) Run(ctx context.Context, notifier families.FamilyNotifier, r
 	ctx, logger := log.NewContextLoggerOrDefault(ctx, map[string]interface{}{
 		"family": familyType,
 	})
+	logger.Infof("Running family %q in progress...", familyType)
 
 	// Notify about start, return preemptively if it fails since we won't be able to
 	// collect family results anyway.
 	if err := notifier.FamilyStarted(ctx, familyType); err != nil {
-		errs = append(errs, fmt.Errorf("family started notification failed: %w", err))
+		errs = append(errs, fmt.Errorf("family %q started notification failed: %w", familyType, err))
 		return errs
 	}
 
@@ -57,9 +58,9 @@ func (r *Runner[T]) Run(ctx context.Context, notifier families.FamilyNotifier, r
 	}
 
 	// Handle family result depending on returned data
-	logger.Debugf("Received result from family: %v", familyResult)
+	logger.Debugf("Received result from family %q: %v", familyType, familyResult)
 	if err != nil {
-		logger.WithError(err).Errorf("Family finished with error")
+		logger.WithError(err).Errorf("Family %q finished with error", familyType)
 
 		// Submit run error so that we can check if the error are from the notifier or
 		// from the actual family run
@@ -68,7 +69,7 @@ func (r *Runner[T]) Run(ctx context.Context, notifier families.FamilyNotifier, r
 			Err:    err,
 		})
 	} else {
-		logger.Info("Family finished with success")
+		logger.Infof("Family %q finished with success", familyType)
 
 		// Set result in shared object for the family
 		results.SetFamilyResult(result)
@@ -76,7 +77,7 @@ func (r *Runner[T]) Run(ctx context.Context, notifier families.FamilyNotifier, r
 
 	// Notify about finish
 	if err := notifier.FamilyFinished(ctx, familyResult); err != nil {
-		errs = append(errs, fmt.Errorf("family finished notification failed: %w", err))
+		errs = append(errs, fmt.Errorf("family %q finished notification failed: %w", familyType, err))
 	}
 
 	return errs
@@ -89,5 +90,5 @@ type FamilyFailedError struct {
 }
 
 func (e *FamilyFailedError) Error() string {
-	return fmt.Sprintf("family %s failed with %v", e.Family, e.Err)
+	return fmt.Sprintf("family %q failed with %v", e.Family, e.Err)
 }

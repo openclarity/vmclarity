@@ -41,8 +41,7 @@ func (i InfoFinder) GetType() families.FamilyType {
 }
 
 func (i InfoFinder) Run(ctx context.Context, _ *families.Results) (*types.Result, error) {
-	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "info finder")
-	logger.Info("InfoFinder Run...")
+	logger := log.GetLoggerFromContextOrDiscard(ctx)
 
 	// Run all scanners using scan manager
 	manager := scan_manager.New(i.conf.ScannersList, i.conf.ScannersConfig, Factory)
@@ -56,13 +55,12 @@ func (i InfoFinder) Run(ctx context.Context, _ *families.Results) (*types.Result
 	// Merge results
 	for _, result := range results {
 		logger.Infof("Merging result from %q", result.Metadata)
+
 		if familiesutils.ShouldStripInputPath(result.ScanInput.StripPathFromResult, i.conf.StripInputPaths) {
 			result.ScanResult = stripPathFromResult(result.ScanResult, result.ScanInput.Input)
 		}
 		infos.Merge(result.Metadata, result.ScanResult)
 	}
-
-	logger.Info("InfoFinder Done...")
 
 	return infos, nil
 }

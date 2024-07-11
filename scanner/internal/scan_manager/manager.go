@@ -52,6 +52,9 @@ func New[CT, RT any](scanners []string, config CT, factory *Factory[CT, RT]) *Ma
 }
 
 func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) ([]InputScanResult[RT], error) {
+	logger := log.GetLoggerFromContextOrDefault(ctx)
+	logger.WithField("inputs", inputs).Infof("Scanning inputs in progress...")
+
 	// Validate request
 	if len(inputs) == 0 {
 		return nil, errors.New("no inputs to scan")
@@ -92,7 +95,7 @@ func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) (
 		}
 	}
 
-	// Wait for workers to finish and collect results and errs
+	// Start workers and collect results and errs
 	results, err := workerPool.Wait()
 	if err != nil {
 		scanErrs = append(scanErrs, err)
@@ -104,6 +107,8 @@ func (m *Manager[CT, RT]) Scan(ctx context.Context, inputs []common.ScanInput) (
 		return nil, errors.Join(scanErrs...) // nolint:wrapcheck
 	}
 
+	logger.Infof("Scanning inputs finished with success")
+
 	return results, nil
 }
 
@@ -113,8 +118,7 @@ func (m *Manager[CT, RT]) scanInput(ctx context.Context, scannerName string, sca
 		"scanner": scannerName,
 		"input":   input,
 	})
-
-	logger.Infof("Scanner %s started for input %s", scannerName, input)
+	logger.Infof("Scan job %q for input %s in progress...", scannerName, input)
 
 	// Fuzzy start processing to prevent spike requests for each input
 	time.Sleep(time.Duration(rand.Int63n(int64(20 * time.Millisecond)))) // nolint:mnd,gosec,wrapcheck
@@ -131,13 +135,13 @@ func (m *Manager[CT, RT]) scanInput(ctx context.Context, scannerName string, sca
 	// Log and handle scan result
 	if scanErr != nil {
 		logger.WithError(scanErr).WithField("metadata", metadata).
-			Warnf("Scanner %s failed to scan input %s", scannerName, input)
+			Warnf("Scan job %q for input %s failed", scannerName, input)
 
-		return InputScanResult[RT]{}, fmt.Errorf("scanner %s failed for input %s, reason: %w", scannerName, input, scanErr)
+		return InputScanResult[RT]{}, fmt.Errorf("scan job %q for input %s failed, reason: %w", scannerName, input, scanErr)
 	}
 
 	logger.WithField("metadata", metadata).
-		Infof("Scanner %s successfully scanned input %s", scannerName, input)
+		Infof("Scan job %q for input %s succeeded", scannerName, input)
 
 	return InputScanResult[RT]{
 		Metadata:   metadata,

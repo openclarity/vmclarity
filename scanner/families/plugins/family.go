@@ -41,8 +41,7 @@ func (p *Plugins) GetType() families.FamilyType {
 }
 
 func (p *Plugins) Run(ctx context.Context, _ *families.Results) (*types.Result, error) {
-	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "plugins")
-	logger.Info("Plugins Run...")
+	logger := log.GetLoggerFromContextOrDiscard(ctx)
 
 	// Register plugins dynamically instead of creating a public factory. Users that
 	// want to run their own plugin scanners can do so through the config unlike for
@@ -74,8 +73,6 @@ func (p *Plugins) Run(ctx context.Context, _ *families.Results) (*types.Result, 
 		logger.Infof("Merging result from %q", result.Metadata.ScannerName)
 		pluginsResults.Merge(result.Metadata, result.ScanResult)
 	}
-
-	logger.Info("Plugins Done...")
 
 	return pluginsResults, nil
 }

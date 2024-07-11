@@ -46,8 +46,7 @@ func (s SBOM) GetType() families.FamilyType {
 
 // nolint:cyclop
 func (s SBOM) Run(ctx context.Context, _ *families.Results) (*types.Result, error) {
-	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "sbom")
-	logger.Info("SBOM Run...")
+	logger := log.GetLoggerFromContextOrDiscard(ctx)
 
 	if len(s.conf.Inputs) == 0 {
 		return nil, errors.New("inputs list is empty")
@@ -126,8 +125,6 @@ func (s SBOM) Run(ctx context.Context, _ *families.Results) (*types.Result, erro
 
 	// Create result from merged data
 	sbomResults := types.NewResult(metadata, cdxBom)
-
-	logger.Info("SBOM Done...")
 
 	return sbomResults, nil
 }

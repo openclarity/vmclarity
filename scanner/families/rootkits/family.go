@@ -41,8 +41,7 @@ func (r Rootkits) GetType() families.FamilyType {
 }
 
 func (r Rootkits) Run(ctx context.Context, _ *families.Results) (*types.Result, error) {
-	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "rootkits")
-	logger.Info("Rootkits Run...")
+	logger := log.GetLoggerFromContextOrDiscard(ctx)
 
 	// Run all scanners using scan manager
 	manager := scan_manager.New(r.conf.ScannersList, r.conf.ScannersConfig, Factory)
@@ -56,13 +55,12 @@ func (r Rootkits) Run(ctx context.Context, _ *families.Results) (*types.Result, 
 	// Merge results
 	for _, result := range results {
 		logger.Infof("Merging result from %q", result.Metadata)
+
 		if familiesutils.ShouldStripInputPath(result.ScanInput.StripPathFromResult, r.conf.StripInputPaths) {
 			result.ScanResult = stripPathFromResult(result.ScanResult, result.ScanInput.Input)
 		}
 		rootkits.Merge(result.Metadata, result.ScanResult)
 	}
-
-	logger.Info("Rootkits Done...")
 
 	return rootkits, nil
 }

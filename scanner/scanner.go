@@ -114,7 +114,7 @@ func (m *Scanner) Run(ctx context.Context, notifier families.FamilyNotifier) []e
 		}
 	}()
 
-	// Create an error channel to send/receive all processing errors on
+	// Create an error channel to send/receive all processing errors to/on
 	errCh := make(chan error)
 
 	// Run task processor in the background so that we can properly subscribe and
@@ -143,7 +143,7 @@ func (m *Scanner) Run(ctx context.Context, notifier families.FamilyNotifier) []e
 	}()
 
 	var errs []error
-	var familiesErrs = make(map[families.FamilyType][]error)
+	var oneOrMoreFamiliesFailed bool
 
 	// Listen for all processing errors
 	for err := range errCh {
@@ -151,25 +151,20 @@ func (m *Scanner) Run(ctx context.Context, notifier families.FamilyNotifier) []e
 			continue
 		}
 
-		// If the received processing error is due to a family failure, collect it only
-		// for logging purposes. Otherwise, collect the received error as it might be due
-		// to some internal error that we need to know more about.
+		// If the received processing error is due to a family failure, skip it as we
+		// have already logged it. Otherwise, collect the error as it might be due to
+		// some internal error that we need to know more about.
 		var ferr *family_runner.FamilyFailedError
 		if errors.As(err, &ferr) {
-			familiesErrs[ferr.Family] = append(familiesErrs[ferr.Family], ferr.Err)
+			oneOrMoreFamiliesFailed = true
 		} else {
 			errs = append(errs, err)
 		}
 	}
 
-	if len(familiesErrs) > 0 {
-		// Mark the whole scan failed in case one of the families failed
+	// Mark the whole scan failed in case one of the families failed
+	if oneOrMoreFamiliesFailed {
 		errs = append(errs, errors.New("at least one family failed to run"))
-
-		// Log family errors
-		for family, familyErrs := range familiesErrs {
-			logger.WithError(errors.Join(familyErrs...)).Errorf("Family %s failed with %d errors", family, len(familyErrs))
-		}
 	}
 
 	return errs

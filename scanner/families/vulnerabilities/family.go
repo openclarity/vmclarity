@@ -49,8 +49,7 @@ func (v Vulnerabilities) GetType() families.FamilyType {
 }
 
 func (v Vulnerabilities) Run(ctx context.Context, res *families.Results) (*types.Result, error) {
-	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "vulnerabilities")
-	logger.Info("Vulnerabilities Run...")
+	logger := log.GetLoggerFromContextOrDiscard(ctx)
 
 	if v.conf.InputFromSbom {
 		logger.Infof("Using input from SBOM results")
@@ -102,8 +101,6 @@ func (v Vulnerabilities) Run(ctx context.Context, res *families.Results) (*types
 	//	Name: config.ImageIDToScan,
 	//	Hash: config.ImageHashToScan,
 	// })
-
-	logger.Info("Vulnerabilities Done...")
 
 	return vulnerabilities, nil
 }

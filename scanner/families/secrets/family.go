@@ -41,8 +41,7 @@ func (s Secrets) GetType() families.FamilyType {
 }
 
 func (s Secrets) Run(ctx context.Context, _ *families.Results) (*types.Result, error) {
-	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "secrets")
-	logger.Info("Secrets Run...")
+	logger := log.GetLoggerFromContextOrDiscard(ctx)
 
 	// Run all scanners using scan manager
 	manager := scan_manager.New(s.conf.ScannersList, s.conf.ScannersConfig, Factory)
@@ -56,13 +55,12 @@ func (s Secrets) Run(ctx context.Context, _ *families.Results) (*types.Result, e
 	// Merge results
 	for _, result := range results {
 		logger.Infof("Merging result from %q", result.Metadata)
+
 		if familiesutils.ShouldStripInputPath(result.ScanInput.StripPathFromResult, s.conf.StripInputPaths) {
 			result.ScanResult = stripPathFromResult(result.ScanResult, result.ScanInput.Input)
 		}
 		secrets.Merge(result.Metadata, result.ScanResult)
 	}
-
-	logger.Info("Secrets Done...")
 
 	return secrets, nil
 }

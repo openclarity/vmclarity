@@ -41,8 +41,7 @@ func (m Misconfiguration) GetType() families.FamilyType {
 }
 
 func (m Misconfiguration) Run(ctx context.Context, _ *families.Results) (*types.Result, error) {
-	logger := log.GetLoggerFromContextOrDiscard(ctx).WithField("family", "misconfiguration")
-	logger.Info("Misconfiguration Run...")
+	logger := log.GetLoggerFromContextOrDiscard(ctx)
 
 	// Run all scanners using scan manager
 	manager := scan_manager.New(m.conf.ScannersList, m.conf.ScannersConfig, Factory)
@@ -56,13 +55,12 @@ func (m Misconfiguration) Run(ctx context.Context, _ *families.Results) (*types.
 	// Merge results
 	for _, result := range results {
 		logger.Infof("Merging result from %q", result.Metadata)
+
 		if familiesutils.ShouldStripInputPath(result.ScanInput.StripPathFromResult, m.conf.StripInputPaths) {
 			result.ScanResult = stripPathFromResult(result.ScanResult, result.ScanInput.Input)
 		}
 		misconfigurations.Merge(result.Metadata, result.ScanResult)
 	}
-
-	logger.Info("Misconfiguration Done...")
 
 	return misconfigurations, nil
 }
