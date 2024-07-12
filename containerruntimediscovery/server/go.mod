@@ -10,6 +10,7 @@ require (
 require (
 	github.com/containerd/containerd v1.7.19
 	github.com/containerd/nerdctl v1.7.6
+	github.com/containerd/platforms v0.2.1
 	github.com/containers/image/v5 v5.31.1
 	github.com/docker/docker v26.1.4+incompatible
 	github.com/labstack/echo/v4 v4.12.0
@@ -34,7 +35,6 @@ require (
 	github.com/containerd/fifo v1.1.0 // indirect
 	github.com/containerd/imgcrypt v1.1.9 // indirect
 	github.com/containerd/log v0.1.0 // indirect
-	github.com/containerd/platforms v0.2.1 // indirect
 	github.com/containerd/stargz-snapshotter v0.15.1 // indirect
 	github.com/containerd/ttrpc v1.2.5 // indirect
 	github.com/containerd/typeurl v1.0.3-0.20220422153119-7f6e6d160d67 // indirect
