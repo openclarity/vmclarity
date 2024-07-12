@@ -235,8 +235,7 @@ func (s *Scanner) createScanNetwork(ctx context.Context) (string, error) {
 		ctx,
 		s.NetworkName,
 		types.NetworkCreate{
-			CheckDuplicate: true,
-			Driver:         "bridge",
+			Driver: "bridge",
 		},
 	)
 	if err != nil {
