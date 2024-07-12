@@ -171,6 +171,11 @@ func (s *Scanner) Scan(ctx context.Context, inputType common.InputType, userInpu
 		return nil, errors.New("plugin context cancelled")
 	case r := <-resChan:
 		shutdownRunner(ctx)
+
+		if r.Err != nil {
+			return nil, fmt.Errorf("error during plugin execution: %w", r.Err)
+		}
+
 		return &types.ScannerResult{
 			Findings: r.Result.Findings,
 			Output:   r.Result.Output,
