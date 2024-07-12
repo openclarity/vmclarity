@@ -47,6 +47,7 @@ func New(_ context.Context, name string, config types.ScannersConfig) (families.
 	}, nil
 }
 
+//nolint:cyclop
 func (s *Scanner) Scan(ctx context.Context, inputType common.InputType, userInput string) (*types.ScannerResult, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
