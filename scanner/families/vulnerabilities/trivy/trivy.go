@@ -29,10 +29,10 @@ import (
 	trivyDBTypes "github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy/pkg/commands/artifact"
 	trivyfTypes "github.com/aquasecurity/trivy/pkg/fanal/types"
+	trivyFsutils "github.com/aquasecurity/trivy/pkg/fanal/utils"
 	trivyFlag "github.com/aquasecurity/trivy/pkg/flag"
 	trivyLog "github.com/aquasecurity/trivy/pkg/log"
 	trivyTypes "github.com/aquasecurity/trivy/pkg/types"
-	trivyFsutils "github.com/aquasecurity/trivy/pkg/utils/fsutils"
 	sloglogrus "github.com/samber/slog-logrus/v2"
 	"github.com/sirupsen/logrus"
 

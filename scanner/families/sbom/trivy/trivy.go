@@ -24,9 +24,9 @@ import (
 	cdx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/aquasecurity/trivy/pkg/commands/artifact"
 	trivyfTypes "github.com/aquasecurity/trivy/pkg/fanal/types"
+	trivyFsutils "github.com/aquasecurity/trivy/pkg/fanal/utils"
 	trivyFlag "github.com/aquasecurity/trivy/pkg/flag"
 	trivyTypes "github.com/aquasecurity/trivy/pkg/types"
-	trivyFsutils "github.com/aquasecurity/trivy/pkg/utils/fsutils"
 
 	"github.com/openclarity/vmclarity/core/log"
 	"github.com/openclarity/vmclarity/scanner/common"
