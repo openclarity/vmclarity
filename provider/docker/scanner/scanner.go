@@ -234,10 +234,7 @@ func (s *Scanner) createScanNetwork(ctx context.Context) (string, error) {
 	networkResp, err := s.DockerClient.NetworkCreate(
 		ctx,
 		s.NetworkName,
-		types.NetworkCreate{
-			CheckDuplicate: true,
-			Driver:         "bridge",
-		},
+		network.CreateOptions{Driver: "bridge"},
 	)
 	if err != nil {
 		return "", fmt.Errorf("failed to create scan network: %w", err)
