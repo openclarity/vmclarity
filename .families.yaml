@@ -157,7 +157,7 @@ malware:
       alternative_freshclam_mirror_url: "database.clamav.net"
       clamscan_binary_path: "/usr/local/bin/clamscan"
       clamscan_exclude_files:
-        - "^.*\.log$"
+        - "^.*\\.log$"
       clamscan_exclude_dirs:
         - "^/sys"
       use_clam_daemon: false # scan using daemon (clamdscan) command instead of native (clamscan)
