@@ -48,7 +48,7 @@ const (
 	testImageSourcePath = "./testdata/alpine-3.18.2.tar"
 	alpineImage         = "alpine:3.18.2"
 	markDownFilePath    = "/tmp/scanner-benchmark.md"
-	markdownHeader      = "# 🚀 Benchmark results\n\n"
+	tableHeader         = "# 🚀 Benchmark results"
 )
 
 type BenchmarkNotifier struct {
@@ -56,6 +56,7 @@ type BenchmarkNotifier struct {
 	started       map[families.FamilyType]time.Time
 	finished      map[families.FamilyType]time.Time
 	findingsCount map[families.FamilyType]int
+	scannerName   map[families.FamilyType]string
 }
 
 func (n *BenchmarkNotifier) FamilyStarted(_ context.Context, famType families.FamilyType) error {
@@ -74,9 +75,10 @@ func (n *BenchmarkNotifier) FamilyFinished(_ context.Context, res families.Famil
 
 	switch res.FamilyType {
 	case families.SBOM:
-		// if res.Result.(*sbom.Result) != nil {
-		// 	familyResult := res.Result.(*sbom.Result).SBOM.Vulnerabilities
+		// if res.Result.(*sbom.Result) != nil { // nolint:forcetypeassert
+		// 	familyResult := res.Result.(*sbom.Result).SBOM.Vulnerabilities // nolint:forcetypeassert
 		// 	n.findingsCount[res.FamilyType] = len(*familyResult)
+		// n.scannerName[res.FamilyType] = res.Result.(*sbom.Result).Metadata.Inputs[0].ScannerName // nolint:forcetypeassert
 		// } else {
 		// 	n.findingsCount[res.FamilyType] = 0
 		// }
@@ -85,6 +87,7 @@ func (n *BenchmarkNotifier) FamilyFinished(_ context.Context, res families.Famil
 		if res.Result.(*vulnerabilities.Result) != nil { // nolint:forcetypeassert
 			familyResult := res.Result.(*vulnerabilities.Result).MergedVulnerabilitiesByKey // nolint:forcetypeassert
 			n.findingsCount[res.FamilyType] = len(familyResult)
+			n.scannerName[res.FamilyType] = res.Result.(*vulnerabilities.Result).Metadata.Inputs[0].ScannerName // nolint:forcetypeassert
 		} else {
 			n.findingsCount[res.FamilyType] = 0
 		}
@@ -93,6 +96,7 @@ func (n *BenchmarkNotifier) FamilyFinished(_ context.Context, res families.Famil
 		if res.Result.(*secrets.Result) != nil { // nolint:forcetypeassert
 			familyResult := res.Result.(*secrets.Result).Findings // nolint:forcetypeassert
 			n.findingsCount[res.FamilyType] = len(familyResult)
+			n.scannerName[res.FamilyType] = res.Result.(*secrets.Result).Metadata.Inputs[0].ScannerName // nolint:forcetypeassert
 		} else {
 			n.findingsCount[res.FamilyType] = 0
 		}
@@ -101,6 +105,7 @@ func (n *BenchmarkNotifier) FamilyFinished(_ context.Context, res families.Famil
 		if res.Result.(*exploits.Result) != nil { // nolint:forcetypeassert
 			familyResult := res.Result.(*exploits.Result).Exploits // nolint:forcetypeassert
 			n.findingsCount[res.FamilyType] = len(familyResult)
+			n.scannerName[res.FamilyType] = res.Result.(*exploits.Result).Metadata.Inputs[0].ScannerName // nolint:forcetypeassert
 		} else {
 			n.findingsCount[res.FamilyType] = 0
 		}
@@ -109,6 +114,7 @@ func (n *BenchmarkNotifier) FamilyFinished(_ context.Context, res families.Famil
 		if res.Result.(*misconfigurations.Result) != nil { // nolint:forcetypeassert
 			familyResult := res.Result.(*misconfigurations.Result).Misconfigurations // nolint:forcetypeassert
 			n.findingsCount[res.FamilyType] = len(familyResult)
+			n.scannerName[res.FamilyType] = res.Result.(*misconfigurations.Result).Metadata.Inputs[0].ScannerName // nolint:forcetypeassert
 		} else {
 			n.findingsCount[res.FamilyType] = 0
 		}
@@ -117,6 +123,7 @@ func (n *BenchmarkNotifier) FamilyFinished(_ context.Context, res families.Famil
 		if res.Result.(*rootkits.Result) != nil { // nolint:forcetypeassert
 			familyResult := res.Result.(*rootkits.Result).Rootkits // nolint:forcetypeassert
 			n.findingsCount[res.FamilyType] = len(familyResult)
+			n.scannerName[res.FamilyType] = res.Result.(*rootkits.Result).Metadata.Inputs[0].ScannerName // nolint:forcetypeassert
 		} else {
 			n.findingsCount[res.FamilyType] = 0
 		}
@@ -125,6 +132,7 @@ func (n *BenchmarkNotifier) FamilyFinished(_ context.Context, res families.Famil
 		if res.Result.(*malware.Result) != nil { // nolint:forcetypeassert
 			familyResult := res.Result.(*malware.Result).Malwares // nolint:forcetypeassert
 			n.findingsCount[res.FamilyType] = len(familyResult)
+			n.scannerName[res.FamilyType] = res.Result.(*malware.Result).Metadata.Inputs[0].ScannerName // nolint:forcetypeassert
 		} else {
 			n.findingsCount[res.FamilyType] = 0
 		}
@@ -133,6 +141,7 @@ func (n *BenchmarkNotifier) FamilyFinished(_ context.Context, res families.Famil
 		if res.Result.(*infofinder.Result) != nil { // nolint:forcetypeassert
 			familyResult := res.Result.(*infofinder.Result).Infos // nolint:forcetypeassert
 			n.findingsCount[res.FamilyType] = len(familyResult)
+			n.scannerName[res.FamilyType] = res.Result.(*infofinder.Result).Metadata.Inputs[0].ScannerName // nolint:forcetypeassert
 		} else {
 			n.findingsCount[res.FamilyType] = 0
 		}
@@ -141,6 +150,7 @@ func (n *BenchmarkNotifier) FamilyFinished(_ context.Context, res families.Famil
 		if res.Result.(*plugins.Result) != nil { // nolint:forcetypeassert
 			familyResult := res.Result.(*plugins.Result).Findings // nolint:forcetypeassert
 			n.findingsCount[res.FamilyType] = len(familyResult)
+			n.scannerName[res.FamilyType] = res.Result.(*plugins.Result).Metadata.Inputs[0].ScannerName // nolint:forcetypeassert
 		} else {
 			n.findingsCount[res.FamilyType] = 0
 		}
@@ -240,6 +250,7 @@ var _ = ginkgo.Describe("Running a Benchmark test", func() {
 				started:       make(map[families.FamilyType]time.Time),
 				finished:      make(map[families.FamilyType]time.Time),
 				findingsCount: make(map[families.FamilyType]int),
+				scannerName:   make(map[families.FamilyType]string),
 			}
 
 			errs := scanner.New(scannerConfig).Run(ctx, notifier)
@@ -265,7 +276,7 @@ func (n *BenchmarkNotifier) GenerateMarkdownTable() (string, error) {
 		}
 
 		row := []string{
-			string(famType),
+			fmt.Sprintf("%s (%s)", famType, n.scannerName[famType]),
 			n.started[famType].Format(time.DateTime),
 			n.finished[famType].Format(time.DateTime),
 			strconv.Itoa(n.findingsCount[famType]),
@@ -283,25 +294,27 @@ func (n *BenchmarkNotifier) GenerateMarkdownTable() (string, error) {
 		}
 	}
 
-	mdTable, err := markdown.NewTableFormatterBuilder().
+	tableBody, err := markdown.NewTableFormatterBuilder().
 		WithPrettyPrint().
 		Build("Family/Scanner", "Start time", "End time", "Findings", "Total time").
 		Format(rows)
 	if err != nil {
-		return "", fmt.Errorf("failed to format markdown table: %w", err)
+		return "", fmt.Errorf("failed to format markdown table body: %w", err)
 	}
 
-	footer := fmt.Sprintf(
-		"\n\nFull scan summary\nTotal time: %s\nTotal findings: %d\n",
-		latestFinishTime.Sub(earliestStartTime).Round(time.Second).String(),
-		totalFindings,
-	)
+	tableFooter, err := markdown.NewTableFormatterBuilder().
+		WithPrettyPrint().
+		Build("Total time:", latestFinishTime.Sub(earliestStartTime).Round(time.Second).String()).
+		Format([][]string{{"Total findings:", strconv.Itoa(totalFindings)}})
+	if err != nil {
+		return "", fmt.Errorf("failed to format markdown table footer: %w", err)
+	}
 
-	return mdTable + footer, nil
+	return tableHeader + "\n\n" + tableBody + "\n## 🕒 Full scan summary\n\n" + tableFooter, nil
 }
 
 func writeMarkdownTableToFile(mdTable string) error {
-	err := os.WriteFile(markDownFilePath, []byte(markdownHeader+mdTable), 0o600)
+	err := os.WriteFile(markDownFilePath, []byte(mdTable), 0o600)
 	if err != nil {
 		return fmt.Errorf("failed to write markdown file: %w", err)
 	}
