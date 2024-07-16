@@ -28,6 +28,6 @@ type Config struct {
 	BinaryMode bool `yaml:"binary_mode,omitempty" mapstructure:"binary_mode,omitempty"`
 	// BinaryArtifactsPath is the location of the extracted container images
 	BinaryArtifactsPath string `yaml:"binary_artifacts_path" mapstructure:"binary_artifacts_path"`
-	// BinaryArtifactsClean is a flag to indicate that the the downloaded and extracted container image needs to be cleaned up after the plugin execution
+	// BinaryArtifactsClean is a flag to indicate that the downloaded and extracted container image needs to be cleaned up after the plugin execution
 	BinaryArtifactsClean bool `yaml:"binary_artifacts_clean" mapstructure:"binary_artifacts_clean"`
 }
