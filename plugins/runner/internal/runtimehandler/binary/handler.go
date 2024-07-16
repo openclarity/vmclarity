@@ -239,7 +239,7 @@ func (h *binaryRuntimeHandler) Remove(ctx context.Context) error {
 	if err := syscall.Unmount(h.inputDirMountPoint, 0); err != nil {
 		removeErr = multierror.Append(removeErr, fmt.Errorf("failed to kill plugin process: %w", err))
 	} else {
-		if h.config.BinaryArtifactsClean == true {
+		if h.config.BinaryArtifactsClean {
 			// Call the cleanup function for the image only after the input directory is unmounted, or else it will also remove
 			// the root filesystem mounted under input
 			h.imageCleanup()
