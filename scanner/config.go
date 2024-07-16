@@ -103,8 +103,7 @@ func (c *Config) AddInputs(inputType common.InputType, inputs []string) {
 				StripPathFromResult: to.Ptr(true),
 				Input:               mountDir,
 				InputType:           inputType,
-			},
-			)
+			})
 		}
 
 		if c.InfoFinder.Enabled {
@@ -112,8 +111,7 @@ func (c *Config) AddInputs(inputType common.InputType, inputs []string) {
 				StripPathFromResult: to.Ptr(true),
 				Input:               mountDir,
 				InputType:           inputType,
-			},
-			)
+			})
 		}
 
 		if c.Malware.Enabled {
