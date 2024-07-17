@@ -123,7 +123,7 @@ jobs:
             sh -c "
               apk update && \
               apk add bash make gcc musl-dev linux-headers && \
-              git config --global --add safe.directory /__w/vmclarity/vmclarity && \
+              git config --global --add safe.directory /workspace && \
               make test-benchmark && \
               cat /tmp/scanner-benchmark.md >> $GITHUB_STEP_SUMMARY
             "
