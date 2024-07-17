@@ -22,7 +22,9 @@
     }
   ],
   "dependencyDashboardAutoclose": true,
-  "dependencyDashboardLabels": ["dependencies"],
+  "dependencyDashboardLabels": [
+    "dependencies"
+  ],
   "dependencyDashboardOSVVulnerabilitySummary": "all",
   "enabled": true,
   "enabledManagers": [
@@ -36,7 +38,9 @@
     "helmv3"
   ],
   "forkProcessing": "disabled",
-  "labels": ["dependencies"],
+  "labels": [
+    "dependencies"
+  ],
   "ignoreDeps": [
     "github.com/openclarity/vmclarity/api/server",
     "github.com/openclarity/vmclarity/api/client",
@@ -63,7 +67,9 @@
   "osvVulnerabilityAlerts": true,
   "packageRules": [
     {
-      "matchCategories": ["golang"],
+      "matchCategories": [
+        "golang"
+      ],
       "addLabels": [
         "go"
       ],
@@ -72,7 +78,9 @@
       ]
     },
     {
-      "matchCategories": ["kubernetes"],
+      "matchCategories": [
+        "kubernetes"
+      ],
       "addLabels": [
         "kubernetes"
       ],
@@ -264,6 +272,8 @@
   "timezone": "Etc/UTC",
   "vulnerabilityAlerts": {
     "enabled": true,
-    "labels": ["security"]
+    "labels": [
+      "security"
+    ]
   }
 }
