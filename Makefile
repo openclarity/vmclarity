@@ -167,7 +167,7 @@ endif
 .PHONY: e2e
 e2e: e2e-docker e2e-k8s ## Run end-to-end test suite
 
-E2E_COMMAND = go -C $(ROOT_DIR)/e2e test -v -failfast -test.v -test.paniconexit0 -ginkgo.timeout 2h -timeout 2h -ginkgo.v .
+E2E_COMMAND = go -C $(ROOT_DIR)/e2e test -v -failfast -test.v -test.paniconexit0 -ginkgo.timeout 2h -timeout 2h -ginkgo.v --ginkgo.skip-file benchmark_test.go .
 
 .PHONY: e2e-docker
 e2e-docker: $(E2E_TARGETS) ## Run end-to-end test suite on Docker
@@ -179,6 +179,12 @@ E2E_ENV_K8S += VMCLARITY_E2E_PLATFORM=kubernetes
 .PHONY: e2e-k8s
 e2e-k8s: $(E2E_TARGETS) ## Run end-to-end test suite on Kubernetes
 	$(E2E_ENV_K8S) $(E2E_COMMAND)
+
+BENCHMARK_COMMAND = go -C $(ROOT_DIR)/e2e test -v -failfast -test.v -test.paniconexit0 -ginkgo.timeout 1h -timeout 1h -ginkgo.v --ginkgo.focus-file benchmark_test.go .
+
+.PHONY: test-benchmark
+test-benchmark: ## Run benchmark tests
+	${E2E_ENV} ${BENCHMARK_COMMAND}
 
 VENDORMODULES = $(addprefix vendor-, $(GOMODULES))
 
@@ -239,16 +245,6 @@ $(TESTGOMODULES):
 
 .PHONY: test
 test: $(TESTGOMODULES) ## Run Go unit tests
-
-BENCHMARKTEST_OPTS := -failfast -timeout 30m
-BENCHMARKTEST_OPTS += $(BUILD_OPTS)
-ifeq ($(CI),true)
-	BENCHMARKTEST_OPTS += -v
-endif
-
-.PHONY: test-benchmark
-test-benchmark: ## Run benchmark tests
-	CGO_ENABLED=1 go -C $(ROOT_DIR)/cli/test/benchmark test $(BENCHMARKTEST_OPTS) .
 
 GOVET_OPTS := $(BUILD_OPTS)
 VETGOMODULES = $(addprefix vet-, $(GOMODULES))

@@ -12,17 +12,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  verification:
-    name: Verification
-    uses: ./.github/workflows/reusable-verification.yml
-    secrets: inherit
-
-  benchmark-test:
-    name: Benchmark Test
-    uses: ./.github/workflows/benchmark-test.yml
+  # verification:
+  #   name: Verification
+  #   uses: ./.github/workflows/reusable-verification.yml
+  #   secrets: inherit
 
   build:
-    needs: verification
+    # needs: verification
     name: Build
     uses: ./.github/workflows/build-and-upload-components.yml
     with:
@@ -43,6 +39,15 @@ jobs:
     with:
       image_tag: ${{ format('pr{0}-{1}', github.event.pull_request.number, github.sha) }}
       platform: kubernetes
+
+  benchmark-test:
+    needs: build
+    name: Benchmark Test
+    uses: ./.github/workflows/reusable-end-to-end-testing.yml
+    with:
+      image_tag: ${{ format('pr{0}-{1}', github.event.pull_request.number, github.sha) }}
+      platform: docker
+      benchmark: true
 
   success:
     # https://github.com/actions/runner/issues/2566

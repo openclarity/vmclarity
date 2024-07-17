@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package benchmark
+package e2e
 
 import (
 	"context"
@@ -21,10 +21,10 @@ import (
 	"os"
 	"strconv"
 	"sync"
-	"testing"
 	"time"
 
 	"github.com/fbiville/markdown-table-formatter/pkg/markdown"
+	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 
 	"github.com/openclarity/vmclarity/scanner"
@@ -169,145 +169,140 @@ func (n *BenchmarkNotifier) FamilyFinished(_ context.Context, res families.Famil
 	return nil
 }
 
-func Test_Benchmark(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping benchmark test in short mode")
-	}
-
-	t.Run("Benchmark test", func(t *testing.T) {
-		g := gomega.NewGomegaWithT(t)
-		ctx := context.Background()
-
-		scannerConfig := &scanner.Config{
-			SBOM: sbom.Config{
-				Enabled: true,
-				AnalyzersList: []string{
-					"syft",
-					"trivy",
-					"windows",
-					"gomod",
+var _ = ginkgo.Describe("Running a benchmark test", func() {
+	ginkgo.Context("that runs all scanners", func() {
+		ginkgo.It("should finish successfully", func(ctx ginkgo.SpecContext) {
+			scannerConfig := &scanner.Config{
+				SBOM: sbom.Config{
+					Enabled: true,
+					AnalyzersList: []string{
+						"syft",
+						"trivy",
+						"windows",
+						"gomod",
+					},
 				},
-			},
-			Vulnerabilities: vulnerabilities.Config{
-				Enabled: true,
-				ScannersList: []string{
-					"grype",
-					"trivy",
-				},
-				ScannersConfig: vulnerabilities.ScannersConfig{
-					Grype: grypeconfig.Config{
-						Mode: grypeconfig.ModeLocal,
-						Local: grypeconfig.LocalGrypeConfig{
-							UpdateDB:      true,
-							UpdateTimeout: 5 * time.Minute,
+				Vulnerabilities: vulnerabilities.Config{
+					Enabled: true,
+					ScannersList: []string{
+						"grype",
+						"trivy",
+					},
+					ScannersConfig: vulnerabilities.ScannersConfig{
+						Grype: grypeconfig.Config{
+							Mode: grypeconfig.ModeLocal,
+							Local: grypeconfig.LocalGrypeConfig{
+								UpdateDB:      true,
+								UpdateTimeout: 5 * time.Minute,
+							},
+						},
+						Trivy: trivyconfig.Config{
+							Timeout: 300,
 						},
 					},
-					Trivy: trivyconfig.Config{
-						Timeout: 300,
+				},
+				Secrets: secrets.Config{
+					Enabled: true,
+					ScannersList: []string{
+						"gitleaks",
 					},
 				},
-			},
-			Secrets: secrets.Config{
-				Enabled: true,
-				ScannersList: []string{
-					"gitleaks",
-				},
-			},
-			// TODO: enable exploits once it has been added to base tools
-			// Exploits: exploits.Config{
-			// 	Enabled: true,
-			// 	Inputs: []scannercommon.ScanInput{
-			// 		{
-			// 			Input:     "CVE-2006-2896,CVE-2007-2007",
-			// 			InputType: scannercommon.CSV,
-			// 		},
-			// 	},
-			// 	ScannersList: []string{
-			// 		"exploitdb",
-			// 	},
-			// 	ScannersConfig: exploits.ScannersConfig{
-			// 		ExploitDB: exploitsconfig.Config{
-			// 			BaseURL: "http://127.0.0.1:1326",
-			// 		},
-			// 	},
-			// },
-			Misconfiguration: misconfigurations.Config{
-				Enabled: true,
-				ScannersList: []string{
-					"cisdocker",
-					"lynis",
-					"fake",
-				},
-			},
-			Rootkits: rootkits.Config{
-				Enabled: true,
-				ScannersList: []string{
-					"chkrootkit",
-				},
-			},
-			Malware: malware.Config{
-				Enabled: true,
-				ScannersList: []string{
-					"clam",
-					"yara",
-				},
-				ScannersConfig: malware.ScannersConfig{
-					Yara: yaraconfig.Config{
-						CompiledRuleURL: "https://raw.githubusercontent.com/Yara-Rules/rules/master/malware/APT_APT1.yar",
+				// TODO: enable exploits once it has been added to base tools
+				// Exploits: exploits.Config{
+				// 	Enabled: true,
+				// 	Inputs: []scannercommon.ScanInput{
+				// 		{
+				// 			Input:     "CVE-2006-2896,CVE-2007-2007",
+				// 			InputType: scannercommon.CSV,
+				// 		},
+				// 	},
+				// 	ScannersList: []string{
+				// 		"exploitdb",
+				// 	},
+				// 	ScannersConfig: exploits.ScannersConfig{
+				// 		ExploitDB: exploitsconfig.Config{
+				// 			BaseURL: "http://127.0.0.1:1326",
+				// 		},
+				// 	},
+				// },
+				Misconfiguration: misconfigurations.Config{
+					Enabled: true,
+					ScannersList: []string{
+						"cisdocker",
+						"lynis",
+						"fake",
 					},
 				},
-			},
-			InfoFinder: infofinder.Config{
-				Enabled: true,
-				ScannersList: []string{
-					"sshTopology",
+				Rootkits: rootkits.Config{
+					Enabled: true,
+					ScannersList: []string{
+						"chkrootkit",
+					},
 				},
-			},
-			// TODO: enable plugins once the issues with the runner are fixed
-			// Plugins: plugins.Config{
-			// 	Enabled: true,
-			// 	ScannersList: []string{
-			// 		"kics",
-			// 	},
-			// 	Inputs: []scannercommon.ScanInput{
-			// 		{
-			// 			Input:     "../../../e2e/testdata",
-			// 			InputType: scannercommon.ROOTFS,
-			// 		},
-			// 	},
-			// 	ScannersConfig: plugins.ScannersConfig{
-			// 		"kics": pluginsconfig.Config{
-			// 			Name:      "kics",
-			// 			ImageName: "ghcr.io/openclarity/vmclarity-plugin-kics:latest",
-			// 		},
-			// 	},
-			// },
-		}
+				Malware: malware.Config{
+					Enabled: true,
+					ScannersList: []string{
+						"clam",
+						"yara",
+					},
+					ScannersConfig: malware.ScannersConfig{
+						Yara: yaraconfig.Config{
+							CompiledRuleURL: "https://raw.githubusercontent.com/Yara-Rules/rules/master/malware/APT_APT1.yar",
+						},
+					},
+				},
+				InfoFinder: infofinder.Config{
+					Enabled: true,
+					ScannersList: []string{
+						"sshTopology",
+					},
+				},
+				// TODO: enable plugins once the issues with the runner are fixed
+				// Plugins: plugins.Config{
+				// 	Enabled: true,
+				// 	ScannersList: []string{
+				// 		"kics",
+				// 	},
+				// 	Inputs: []scannercommon.ScanInput{
+				// 		{
+				// 			Input:     "../../../e2e/testdata",
+				// 			InputType: scannercommon.ROOTFS,
+				// 		},
+				// 	},
+				// 	ScannersConfig: plugins.ScannersConfig{
+				// 		"kics": pluginsconfig.Config{
+				// 			Name:      "kics",
+				// 			ImageName: "ghcr.io/openclarity/vmclarity-plugin-kics:latest",
+				// 		},
+				// 	},
+				// },
+			}
 
-		image, cleanup, err := containerrootfs.GetImageWithCleanup(ctx, testImageSourcePath)
-		g.Expect(err).NotTo(gomega.HaveOccurred())
-		defer cleanup()
+			image, cleanup, err := containerrootfs.GetImageWithCleanup(ctx, testImageSourcePath)
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			defer cleanup()
 
-		err = containerrootfs.ToDirectory(ctx, image, rootfsPath)
-		g.Expect(err).NotTo(gomega.HaveOccurred())
+			err = containerrootfs.ToDirectory(ctx, image, rootfsPath)
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-		scannerConfig.AddInputs(scannercommon.ROOTFS, []string{rootfsPath})
+			scannerConfig.AddInputs(scannercommon.ROOTFS, []string{rootfsPath})
 
-		notifier := &BenchmarkNotifier{
-			families: make(map[families.FamilyType]BenchmarkInfo),
-			scanners: make(map[families.FamilyType][]BenchmarkInfo),
-		}
+			notifier := &BenchmarkNotifier{
+				families: make(map[families.FamilyType]BenchmarkInfo),
+				scanners: make(map[families.FamilyType][]BenchmarkInfo),
+			}
 
-		errs := scanner.New(scannerConfig).Run(ctx, notifier)
-		g.Expect(errs).To(gomega.BeEmpty())
+			errs := scanner.New(scannerConfig).Run(ctx, notifier)
+			gomega.Expect(errs).To(gomega.BeEmpty())
 
-		mdTable, err := notifier.GenerateMarkdownTable()
-		g.Expect(err).NotTo(gomega.HaveOccurred())
+			mdTable, err := notifier.GenerateMarkdownTable()
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-		err = writeMarkdownTableToFile(mdTable)
-		g.Expect(err).NotTo(gomega.HaveOccurred())
+			err = writeMarkdownTableToFile(mdTable)
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+		})
 	})
-}
+})
 
 func (n *BenchmarkNotifier) GenerateMarkdownTable() (string, error) {
 	rows := [][]string{}

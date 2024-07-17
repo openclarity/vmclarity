@@ -16,6 +16,11 @@ on:
         type: string
         description: 'Name of the registry.'
         default: openclarity.io
+      benchmark:
+        required: false
+        type: boolean
+        description: 'Whether to run benchmark tests.'
+        default: false
 
 jobs:
   run:
@@ -88,6 +93,7 @@ jobs:
           docker images
 
       - name: Run end to end tests
+        if: inputs.benchmark == false
         env:
           VMCLARITY_E2E_APISERVER_IMAGE: ${{ inputs.registry_name }}/vmclarity-apiserver:${{ inputs.image_tag }}
           VMCLARITY_E2E_ORCHESTRATOR_IMAGE: ${{ inputs.registry_name }}/vmclarity-orchestrator:${{ inputs.image_tag }}
@@ -105,3 +111,19 @@ jobs:
           else
             echo "Invalid platform"
           fi
+
+      - name: Run benchmark test
+        if: inputs.benchmark == true
+        run: |
+          docker run --rm \
+            -v $(pwd):/workspace \
+            -w /workspace \
+            -e DOCKER_CONTENT_TRUST=1 \
+            ghcr.io/openclarity/vmclarity-tools-base:latest \
+            sh -c "
+              apk update && \
+              apk add bash make gcc musl-dev linux-headers && \
+              git config --global --add safe.directory /__w/vmclarity/vmclarity && \
+              make test-benchmark && \
+              cat /tmp/scanner-benchmark.md >> $GITHUB_STEP_SUMMARY
+            "
