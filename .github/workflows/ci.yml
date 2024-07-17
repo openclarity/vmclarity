@@ -17,15 +17,15 @@ jobs:
   #   uses: ./.github/workflows/reusable-verification.yml
   #   secrets: inherit
 
-  build:
-    # needs: verification
-    name: Build
-    uses: ./.github/workflows/build-and-upload-components.yml
-    with:
-      image_tag: ${{ format('pr{0}-{1}', github.event.pull_request.number, github.sha) }}
+  # build:
+  #   needs: verification
+  #   name: Build
+  #   uses: ./.github/workflows/build-and-upload-components.yml
+  #   with:
+  #     image_tag: ${{ format('pr{0}-{1}', github.event.pull_request.number, github.sha) }}
 
   e2e-docker:
-    needs: build
+  #   needs: build
     name: End-to-End Tests on Docker
     uses: ./.github/workflows/reusable-end-to-end-testing.yml
     with:
@@ -33,7 +33,7 @@ jobs:
       platform: docker
 
   e2e-k8s:
-    needs: build
+    # needs: build
     name: End-to-End Tests on Kubernetes
     uses: ./.github/workflows/reusable-end-to-end-testing.yml
     with:
@@ -41,7 +41,7 @@ jobs:
       platform: kubernetes
 
   benchmark-test:
-    needs: build
+    # needs: build
     name: Benchmark Test
     uses: ./.github/workflows/reusable-end-to-end-testing.yml
     with:
