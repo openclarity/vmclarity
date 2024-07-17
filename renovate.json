@@ -36,7 +36,8 @@
     "github-actions",
     "gomod",
     "helm-values",
-    "helmv3"
+    "helmv3",
+    "python"
   ],
   "forkProcessing": "disabled",
   "labels": [
@@ -170,6 +171,20 @@
       ],
       "description": [
         "Group Go dependency patch updates in single PR."
+      ]
+    },
+    {
+      "groupName": "Python",
+      "groupSlug": "python",
+      "matchCategories": [
+        "python"
+      ],
+      "addLabels": [
+        "python"
+      ],
+      "description": [
+        "Add python label to PRs which bumps python dependencies.",
+        "Group Python dependency updates in single PR."
       ]
     },
     {
