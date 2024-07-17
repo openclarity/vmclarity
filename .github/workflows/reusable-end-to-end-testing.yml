@@ -117,6 +117,7 @@ jobs:
         run: |
           docker run --rm \
             -v $(pwd):/workspace \
+            -v /var/run/docker.sock:/var/run/docker.sock \
             -w /workspace \
             -e DOCKER_CONTENT_TRUST=1 \
             ghcr.io/openclarity/vmclarity-tools-base:latest \
