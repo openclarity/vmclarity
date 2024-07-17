@@ -215,6 +215,8 @@
       ]
     },
     {
+      "groupName": "Github Actions",
+      "groupSlug": "github-actions",
       "matchDatasources": [
         "github-tags"
       ],
@@ -222,7 +224,8 @@
         "ci"
       ],
       "description": [
-        "Add ci label to PRs which are related to Github Actions."
+        "Add ci label to PRs which are related to Github Actions.",
+        "Group CI dependency updates in single PR."
       ]
     },
     {
