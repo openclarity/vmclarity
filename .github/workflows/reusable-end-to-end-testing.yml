@@ -85,12 +85,12 @@ jobs:
           path: tmp/artifacts
           merge-multiple: true
 
-      - name: Load images to local Docker registry
-        run: |
-          for image_archive in tmp/artifacts/*.tar; do
-            docker load --input "$image_archive"
-          done
-          docker images
+      # - name: Load images to local Docker registry
+      #   run: |
+      #     for image_archive in tmp/artifacts/*.tar; do
+      #       docker load --input "$image_archive"
+      #     done
+      #     docker images
 
       - name: Run end to end tests
         if: inputs.benchmark == false
