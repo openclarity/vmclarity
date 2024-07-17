@@ -122,7 +122,7 @@ jobs:
             ghcr.io/openclarity/vmclarity-tools-base:latest \
             sh -c "
               apk update && \
-              apk add go bash make gcc musl-dev linux-headers && \
+              apk add go bash make gcc musl-dev linux-headers btrfs-progs-dev && \
               git config --global --add safe.directory /workspace && \
               make test-benchmark && \
               cat /tmp/scanner-benchmark.md >> $GITHUB_STEP_SUMMARY
