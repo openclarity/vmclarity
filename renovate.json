@@ -79,6 +79,100 @@
       ]
     },
     {
+      "groupName": "Docker",
+      "groupSlug": "docker",
+      "matchDatasources": [
+        "go"
+      ],
+      "matchPackagePrefixes": [
+        "github.com/docker",
+        "github.com/compose-spec"
+      ],
+      "description": [
+        "Group Docker dependency updates in single PR."
+      ]
+    },
+    {
+      "groupName": "gorm.io",
+      "groupSlug": "gorm",
+      "matchDatasources": [
+        "go"
+      ],
+      "matchPackagePrefixes": [
+        "gorm.io/gorm",
+        "gorm.io/driver"
+      ],
+      "description": [
+        "Group gorm.io dependency updates in single PR."
+      ]
+    },
+    {
+      "groupName": "Azure SDK",
+      "groupSlug": "azure-sdk",
+      "matchDatasources": [
+        "go"
+      ],
+      "matchPackagePrefixes": [
+        "github.com/Azure/azure-sdk-for-go"
+      ],
+      "description": [
+        "Group Azure SDK dependency updates in single PR."
+      ]
+    },
+    {
+      "groupName": "Google SDK",
+      "groupSlug": "google-sdk",
+      "matchDatasources": [
+        "go"
+      ],
+      "matchPackagePrefixes": [
+        "cloud.google.com/go"
+      ],
+      "description": [
+        "Group Google SDK dependency updates in single PR."
+      ]
+    },
+    {
+      "groupName": "Containerd",
+      "groupSlug": "containerd",
+      "matchDatasources": [
+        "go"
+      ],
+      "matchPackagePrefixes": [
+        "github.com/containerd"
+      ],
+      "description": [
+        "Group Containerd dependency updates in single PR."
+      ]
+    },
+    {
+      "groupName": "Kubernetes",
+      "groupSlug": "kubernetes",
+      "matchDatasources": [
+        "go"
+      ],
+      "matchPackagePrefixes": [
+        "k8s.io",
+        "sigs.k8s.io"
+      ],
+      "description": [
+        "Group Kubernetes dependency updates in single PR."
+      ]
+    },
+    {
+      "groupName": "Go patches",
+      "groupSlug": "go-patches",
+      "matchDatasources": [
+        "go"
+      ],
+      "matchUpdateTypes": [
+        "patch"
+      ],
+      "description": [
+        "Group Go dependency patch updates in single PR."
+      ]
+    },
+    {
       "matchCategories": [
         "kubernetes"
       ],
@@ -123,81 +217,6 @@
       ],
       "description": [
         "Add test label to PRs which are related to Github Actions."
-      ]
-    },
-    {
-      "groupName": "Docker",
-      "matchDatasources": [
-        "go"
-      ],
-      "matchPackagePrefixes": [
-        "github.com/docker",
-        "github.com/compose-spec"
-      ],
-      "description": [
-        "Group Docker dependency updates in single PR."
-      ]
-    },
-    {
-      "groupName": "gorm.io",
-      "matchDatasources": [
-        "go"
-      ],
-      "matchPackagePrefixes": [
-        "gorm.io/gorm",
-        "gorm.io/driver"
-      ],
-      "description": [
-        "Group gorm.io dependency updates in single PR."
-      ]
-    },
-    {
-      "groupName": "Azure SDK",
-      "matchDatasources": [
-        "go"
-      ],
-      "matchPackagePrefixes": [
-        "github.com/Azure/azure-sdk-for-go"
-      ],
-      "description": [
-        "Group Azure SDK dependency updates in single PR."
-      ]
-    },
-    {
-      "groupName": "Google SDK",
-      "matchDatasources": [
-        "go"
-      ],
-      "matchPackagePrefixes": [
-        "cloud.google.com/go"
-      ],
-      "description": [
-        "Group Google SDK dependency updates in single PR."
-      ]
-    },
-    {
-      "groupName": "Containerd",
-      "matchDatasources": [
-        "go"
-      ],
-      "matchPackagePrefixes": [
-        "github.com/containerd"
-      ],
-      "description": [
-        "Group Containerd dependency updates in single PR."
-      ]
-    },
-    {
-      "groupName": "Kubernetes",
-      "matchDatasources": [
-        "go"
-      ],
-      "matchPackagePrefixes": [
-        "k8s.io",
-        "sigs.k8s.io"
-      ],
-      "description": [
-        "Group Kubernetes dependency updates in single PR."
       ]
     },
     {
