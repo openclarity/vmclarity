@@ -2,7 +2,8 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended",
-    "helpers:pinGitHubActionDigestsToSemver"
+    "helpers:pinGitHubActionDigestsToSemver",
+    ":semanticCommitTypeAll(chore)"
   ],
   "configMigration": true,
   "customManagers": [
@@ -97,10 +98,8 @@
         "build"
       ],
       "extractVersion": "^v(?<version>.*)$",
-      "semanticCommitType": "build",
       "description": [
         "Add build label to PRs which are related to build tools defined in Makefiles.",
-        "Use build type for semantic commits."
       ]
     },
     {
@@ -110,10 +109,8 @@
       "addLabels": [
         "ci"
       ],
-      "semanticCommitType": "ci",
       "description": [
-        "Add ci label to PRs which are related to Github Actions.",
-        "Use ci type for semantic commits."
+        "Add ci label to PRs which are related to Github Actions."
       ]
     },
     {
@@ -124,10 +121,8 @@
       "addLabels": [
         "test"
       ],
-      "semanticCommitType": "test",
       "description": [
-        "Add test label to PRs which are related to Github Actions.",
-        "Use test type for semantic commits."
+        "Add test label to PRs which are related to Github Actions."
       ]
     },
     {
