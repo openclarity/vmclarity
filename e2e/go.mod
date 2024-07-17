@@ -3,6 +3,7 @@ module github.com/openclarity/vmclarity/e2e
 go 1.22.4
 
 require (
+	github.com/fbiville/markdown-table-formatter v0.3.0
 	github.com/go-viper/mapstructure/v2 v2.0.0
 	github.com/google/uuid v1.6.0
 	github.com/onsi/ginkgo/v2 v2.19.0
@@ -14,6 +15,7 @@ require (
 	github.com/openclarity/vmclarity/testenv v0.7.2
 	github.com/openclarity/vmclarity/uibackend/client v0.7.2
 	github.com/openclarity/vmclarity/uibackend/types v0.7.2
+	github.com/openclarity/vmclarity/utils v0.7.2
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.18.2
 )
@@ -365,7 +367,6 @@ require (
 	github.com/openclarity/vmclarity/installation v0.7.2 // indirect
 	github.com/openclarity/vmclarity/plugins/runner v0.7.2 // indirect
 	github.com/openclarity/vmclarity/plugins/sdk-go v0.7.2 // indirect
-	github.com/openclarity/vmclarity/utils v0.7.2 // indirect
 	github.com/openclarity/vmclarity/workflow v0.7.2 // indirect
 	github.com/openclarity/yara-rule-server v0.3.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
