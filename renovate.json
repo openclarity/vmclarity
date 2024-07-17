@@ -199,6 +199,8 @@
       ]
     },
     {
+      "groupName": "Makefile",
+      "groupSlug": "makefile",
       "matchFileNames": [
         "Makefile",
         "makefile.d/*.mk"
@@ -209,6 +211,7 @@
       "extractVersion": "^v(?<version>.*)$",
       "description": [
         "Add build label to PRs which are related to build tools defined in Makefiles.",
+        "Group Makefile dependency updates in single PR."
       ]
     },
     {
