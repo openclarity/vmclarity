@@ -168,7 +168,7 @@ func withMalwareConfig(config *apitypes.MalwareConfig, opts *ScannerConfig) Scan
 			Inputs:       nil, // rootfs directory will be determined by the CLI after mount.
 			ScannersConfig: malware.ScannersConfig{
 				Clam: clamconfig.Config{
-					UseNativeClamscan:             true,
+					UseNativeClamscan:             false,
 					AlternativeFreshclamMirrorURL: opts.AlternativeFreshclamMirrorURL,
 				},
 				Yara: yaraconfig.Config{
