@@ -179,9 +179,6 @@ func loadConfig(cfgFile string) *scanner.Config {
 	err := viper.ReadInConfig()
 	cobra.CheckErr(err)
 
-	// Set defaults
-	viper.SetDefault("malware.scanners_config.clam.use_clam_daemon", true)
-
 	// Load config
 	config := &scanner.Config{}
 	err = viper.Unmarshal(config)
