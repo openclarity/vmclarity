@@ -730,7 +730,7 @@ func TestMergedResults_Merge(t *testing.T) {
 			got := &Result{
 				MergedVulnerabilitiesByKey: tt.fields.MergedVulnerabilities,
 			}
-			got.Merge(families.ScanInputMetadata{}, tt.args)
+			got.Merge(families.ScanMetadata{}, tt.args)
 			if tt.patchMergedVulnerabilityID != nil {
 				got.MergedVulnerabilitiesByKey = tt.patchMergedVulnerabilityID(got.MergedVulnerabilitiesByKey)
 			}
