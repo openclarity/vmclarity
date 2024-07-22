@@ -91,6 +91,10 @@ jobs:
         working-directory: ./ui
         run: npm install
 
+      - name: Verify APIs
+        working-directory: ./ui
+        run: npx @openapitools/openapi-generator-cli generate -i ../api/openapi.yaml -g typescript-axios -o ./src/api/generated --openapi-normalizer SET_TAGS_FOR_ALL_OPERATIONS=VMClarity
+
       - name: Run ESLint
         working-directory: ./ui
         run: npm run lint
