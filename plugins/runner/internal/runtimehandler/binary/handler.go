@@ -223,7 +223,7 @@ func (h *binaryRuntimeHandler) Logs(ctx context.Context) (io.ReadCloser, error) 
 }
 
 func (h *binaryRuntimeHandler) Result(ctx context.Context) (io.ReadCloser, error) {
-	f, err := os.Open(filepath.Join(h.pluginDir, runtimehandler.RemoteScanResultFileOverride))
+	f, err := os.Open(filepath.Join(h.pluginDir, h.outputFilePath))
 	if err != nil {
 		return nil, fmt.Errorf("unable to open result file: %w", err)
 	}
