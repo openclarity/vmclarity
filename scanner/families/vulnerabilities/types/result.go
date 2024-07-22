@@ -40,6 +40,8 @@ type Result struct {
 
 func NewResult() *Result {
 	return &Result{
+		Metadata:                   families.ScanMetadata{},
+		Source:                     Source{},
 		MergedVulnerabilitiesByKey: make(map[VulnerabilityKey][]MergedVulnerability),
 	}
 }
@@ -84,9 +86,7 @@ func (r *Result) ToSlice() [][]MergedVulnerability {
 	return ret
 }
 
-func (r *Result) Merge(meta families.ScanMetadata, result *ScannerResult) {
-	r.Metadata.Merge(meta)
-
+func (r *Result) Merge(meta families.ScanInputMetadata, result *ScannerResult) {
 	// Skip further merge if scanner result is empty
 	if result == nil {
 		return
@@ -113,4 +113,8 @@ func (r *Result) Merge(meta families.ScanMetadata, result *ScannerResult) {
 	if r.Source.Type == "" {
 		r.Source = result.Source
 	}
+
+	// Update metadata
+	r.Metadata.Inputs = append(r.Metadata.Inputs, meta)
+	r.Metadata.TotalFindings = len(r.MergedVulnerabilitiesByKey)
 }
