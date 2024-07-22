@@ -44,6 +44,7 @@ type PluginRuntimeHandler interface {
 func WithOverrides(c plugintypes.Config) plugintypes.Config {
 	return plugintypes.Config{
 		InputDir:       RemoteScanInputDirOverride,
+		OutputFile:     c.OutputFile,
 		ScannerConfig:  c.ScannerConfig,
 		TimeoutSeconds: c.TimeoutSeconds,
 	}
