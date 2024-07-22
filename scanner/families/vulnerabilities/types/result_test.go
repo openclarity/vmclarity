@@ -22,8 +22,6 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/yudai/gojsondiff/formatter"
 	"gotest.tools/assert"
-
-	"github.com/openclarity/vmclarity/scanner/families"
 )
 
 func Test_handleVulnerabilityWithExistingKey(t *testing.T) {
@@ -730,14 +728,11 @@ func TestMergedResults_Merge(t *testing.T) {
 			got := &Result{
 				MergedVulnerabilitiesByKey: tt.fields.MergedVulnerabilities,
 			}
-			got.Merge(families.ScanInputMetadata{}, tt.args)
+			got.Merge(tt.args)
 			if tt.patchMergedVulnerabilityID != nil {
 				got.MergedVulnerabilitiesByKey = tt.patchMergedVulnerabilityID(got.MergedVulnerabilitiesByKey)
 			}
-			assert.DeepEqual(t, got, tt.want, cmpopts.IgnoreTypes(
-				families.ScanMetadata{},
-				VulnerabilityDiff{}.ASCIIDiff,
-			))
+			assert.DeepEqual(t, got, tt.want, cmpopts.IgnoreTypes(VulnerabilityDiff{}.ASCIIDiff))
 		})
 	}
 }

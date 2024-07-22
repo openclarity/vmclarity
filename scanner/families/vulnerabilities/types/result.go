@@ -21,7 +21,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	apitypes "github.com/openclarity/vmclarity/api/types"
-	"github.com/openclarity/vmclarity/scanner/families"
 	"github.com/openclarity/vmclarity/scanner/utils/image_helper"
 )
 
@@ -33,14 +32,12 @@ type Source struct {
 }
 
 type Result struct {
-	Metadata                   families.ScanMetadata                      `json:"Metadata"`
 	Source                     Source                                     `json:"Source"`
 	MergedVulnerabilitiesByKey map[VulnerabilityKey][]MergedVulnerability `json:"MergedVulnerabilitiesByKey"`
 }
 
 func NewResult() *Result {
 	return &Result{
-		Metadata:                   families.ScanMetadata{},
 		Source:                     Source{},
 		MergedVulnerabilitiesByKey: make(map[VulnerabilityKey][]MergedVulnerability),
 	}
@@ -76,6 +73,10 @@ func (r *Result) GetSourceImageInfo() (*apitypes.ContainerImageInfo, error) {
 	return containerImageInfo, nil
 }
 
+func (r *Result) GetTotalFindings() int {
+	return len(r.MergedVulnerabilitiesByKey)
+}
+
 // ToSlice returns MergedResults in a slice format and not by key.
 func (r *Result) ToSlice() [][]MergedVulnerability {
 	ret := make([][]MergedVulnerability, 0)
@@ -86,10 +87,7 @@ func (r *Result) ToSlice() [][]MergedVulnerability {
 	return ret
 }
 
-func (r *Result) Merge(meta families.ScanInputMetadata, result *ScannerResult) {
-	// Update metadata
-	r.Metadata.Inputs = append(r.Metadata.Inputs, meta)
-
+func (r *Result) Merge(result *ScannerResult) {
 	// Skip further merge if scanner result is empty
 	if result == nil {
 		return
@@ -116,7 +114,4 @@ func (r *Result) Merge(meta families.ScanInputMetadata, result *ScannerResult) {
 	if r.Source.Type == "" {
 		r.Source = result.Source
 	}
-
-	// Update metadata
-	r.Metadata.TotalFindings = len(r.MergedVulnerabilitiesByKey)
 }
