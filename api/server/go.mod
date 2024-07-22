@@ -6,7 +6,7 @@ require (
 	github.com/CiscoM31/godata v1.0.10
 	github.com/Portshift/go-utils v0.0.0-20220421083203-89265d8a6487
 	github.com/aptible/supercronic v0.2.30
-	github.com/deepmap/oapi-codegen/v2 v2.2.0
+	github.com/deepmap/oapi-codegen/v2 v2.3.0
 	github.com/evanphx/json-patch v5.9.0+incompatible
 	github.com/getkin/kin-openapi v0.124.0
 	github.com/go-viper/mapstructure/v2 v2.0.0

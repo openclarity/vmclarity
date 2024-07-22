@@ -3,7 +3,7 @@ module github.com/openclarity/vmclarity/plugins/runner
 go 1.22.4
 
 require (
-	github.com/deepmap/oapi-codegen/v2 v2.2.0
+	github.com/deepmap/oapi-codegen/v2 v2.3.0
 	github.com/docker/docker v26.1.4+incompatible
 	github.com/docker/go-connections v0.5.0
 	github.com/hashicorp/go-multierror v1.1.1
