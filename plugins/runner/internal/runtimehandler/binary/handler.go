@@ -30,6 +30,7 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/google/uuid"
 	multierror "github.com/hashicorp/go-multierror"
 
 	"github.com/openclarity/vmclarity/plugins/runner/internal/runtimehandler"
@@ -45,18 +46,20 @@ type binaryRuntimeHandler struct {
 	stdoutPipe io.ReadCloser
 	stderrPipe io.ReadCloser
 
+	pluginServerEndpoint string
+	outputFilePath       string
 	pluginDir            string
 	inputDirMountPoint   string
-	pluginServerEndpoint string
-	ready                bool
 	imageCleanup         func()
+	ready                bool
 
 	mu sync.Mutex
 }
 
 func New(ctx context.Context, config types.PluginConfig) (runtimehandler.PluginRuntimeHandler, error) {
 	return &binaryRuntimeHandler{
-		config: config,
+		config:         config,
+		outputFilePath: fmt.Sprintf("/tmp/%s.json", uuid.New().String()),
 	}, nil
 }
 
@@ -194,6 +197,10 @@ func (h *binaryRuntimeHandler) Ready() (bool, error) {
 
 func (h *binaryRuntimeHandler) GetPluginServerEndpoint(ctx context.Context) (string, error) {
 	return h.pluginServerEndpoint, nil
+}
+
+func (h *binaryRuntimeHandler) GetOutputFilePath(ctx context.Context) (string, error) {
+	return h.outputFilePath, nil
 }
 
 func (h *binaryRuntimeHandler) Logs(ctx context.Context) (io.ReadCloser, error) {
