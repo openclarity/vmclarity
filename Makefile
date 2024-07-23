@@ -262,7 +262,7 @@ $(TESTGOMODULES):
 	go -C $(@:test-%=%) test $(GOTEST_OPTS) ./...
 
 .PHONY: test-go
-test: $(TESTGOMODULES) ## Run Go unit tests
+test-go: $(TESTGOMODULES) ## Run Go unit tests
 
 GOVET_OPTS := $(BUILD_OPTS)
 VETGOMODULES = $(addprefix vet-, $(GOMODULES))
@@ -347,10 +347,10 @@ gen: gen-api-js gen-api-go gen-bicep gen-helm-docs ## Generating all code, manif
 .PHONY: gen-api-js
 gen-api-js: ## Generating Javascript library for API specification
 	$(info Generating API for UI code ...)
-	npx @openapitools/openapi-generator-cli generate -i ../api/openapi.yaml -g typescript-axios -o ./src/api/generated --openapi-normalizer SET_TAGS_FOR_ALL_OPERATIONS=VMClarity
+	@(cd ui && npx @openapitools/openapi-generator-cli generate -i ../api/openapi.yaml -g typescript-axios -o ./src/api/generated --openapi-normalizer SET_TAGS_FOR_ALL_OPERATIONS=VMClarity)
 
 .PHONY: gen-api-go
-gen-api: gen-apiserver-api gen-uibackend-api gen-plugin-sdk ## Generating Go API code
+gen-api-go: gen-apiserver-api gen-uibackend-api gen-plugin-sdk ## Generating Go API code
 
 .PHONY: gen-apiserver-api
 gen-apiserver-api: ## Generating Go library for API specification

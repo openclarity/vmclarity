@@ -1552,6 +1552,12 @@ export interface Finding {
      * @memberof Finding
      */
     'findingInfo'?: FindingInfo;
+    /**
+     * 
+     * @type {FindingSummary}
+     * @memberof Finding
+     */
+    'summary'?: FindingSummary;
 }
 /**
  * 
@@ -1869,6 +1875,31 @@ export interface FindingRelationship {
      * @memberof FindingRelationship
      */
     'findingInfo'?: FindingInfo;
+    /**
+     * 
+     * @type {FindingSummary}
+     * @memberof FindingRelationship
+     */
+    'summary'?: FindingSummary;
+}
+/**
+ * 
+ * @export
+ * @interface FindingSummary
+ */
+export interface FindingSummary {
+    /**
+     * 
+     * @type {string}
+     * @memberof FindingSummary
+     */
+    'updatedAt'?: string;
+    /**
+     * 
+     * @type {VulnerabilitySeveritySummary}
+     * @memberof FindingSummary
+     */
+    'totalVulnerabilities'?: VulnerabilitySeveritySummary;
 }
 /**
  * 
@@ -2500,6 +2531,24 @@ export interface PluginsConfig {
      * @memberof PluginsConfig
      */
     'enabled'?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof PluginsConfig
+     */
+    'binary_mode'?: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof PluginsConfig
+     */
+    'binary_artifacts_path'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof PluginsConfig
+     */
+    'binary_artifacts_clean'?: boolean;
     /**
      * 
      * @type {Array<string>}
@@ -3532,10 +3581,10 @@ export interface ScanFindingsSummary {
     'totalInfoFinder'?: number;
     /**
      * 
-     * @type {VulnerabilityScanSummary}
+     * @type {VulnerabilitySeveritySummary}
      * @memberof ScanFindingsSummary
      */
-    'totalVulnerabilities'?: VulnerabilityScanSummary;
+    'totalVulnerabilities'?: VulnerabilitySeveritySummary;
     /**
      * 
      * @type {number}
@@ -3739,10 +3788,10 @@ export interface ScanSummary {
     'totalInfoFinder'?: number;
     /**
      * 
-     * @type {VulnerabilityScanSummary}
+     * @type {VulnerabilitySeveritySummary}
      * @memberof ScanSummary
      */
-    'totalVulnerabilities'?: VulnerabilityScanSummary;
+    'totalVulnerabilities'?: VulnerabilitySeveritySummary;
     /**
      * 
      * @type {number}
@@ -4558,43 +4607,6 @@ export interface VulnerabilityScan {
     'vulnerabilities'?: Array<Vulnerability> | null;
 }
 /**
- * A summary of number of vulnerabilities found per severity.
- * @export
- * @interface VulnerabilityScanSummary
- */
-export interface VulnerabilityScanSummary {
-    /**
-     * 
-     * @type {number}
-     * @memberof VulnerabilityScanSummary
-     */
-    'totalCriticalVulnerabilities'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof VulnerabilityScanSummary
-     */
-    'totalHighVulnerabilities'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof VulnerabilityScanSummary
-     */
-    'totalMediumVulnerabilities'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof VulnerabilityScanSummary
-     */
-    'totalLowVulnerabilities'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof VulnerabilityScanSummary
-     */
-    'totalNegligibleVulnerabilities'?: number;
-}
-/**
  * 
  * @export
  * @enum {string}
@@ -4611,6 +4623,43 @@ export const VulnerabilitySeverity = {
 export type VulnerabilitySeverity = typeof VulnerabilitySeverity[keyof typeof VulnerabilitySeverity];
 
 
+/**
+ * A summary of number of vulnerabilities found per severity.
+ * @export
+ * @interface VulnerabilitySeveritySummary
+ */
+export interface VulnerabilitySeveritySummary {
+    /**
+     * 
+     * @type {number}
+     * @memberof VulnerabilitySeveritySummary
+     */
+    'totalCriticalVulnerabilities'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof VulnerabilitySeveritySummary
+     */
+    'totalHighVulnerabilities'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof VulnerabilitySeveritySummary
+     */
+    'totalMediumVulnerabilities'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof VulnerabilitySeveritySummary
+     */
+    'totalLowVulnerabilities'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof VulnerabilitySeveritySummary
+     */
+    'totalNegligibleVulnerabilities'?: number;
+}
 
 /**
  * VMClarityApi - axios parameter creator
