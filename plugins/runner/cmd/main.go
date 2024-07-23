@@ -62,7 +62,8 @@ func main() {
 		}
 		defer logs.Close()
 
-		for r := bufio.NewScanner(logs); r.Scan(); {
+		r := bufio.NewScanner(logs)
+		for r.Scan() {
 			fmt.Println("scanner log line: ", r.Text())
 		}
 	}()

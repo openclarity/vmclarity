@@ -141,7 +141,8 @@ func (s *Scanner) Scan(ctx context.Context, inputType common.InputType, userInpu
 			}
 			defer logs.Close()
 
-			for r := bufio.NewScanner(logs); r.Scan(); {
+			r := bufio.NewScanner(logs)
+			for r.Scan() {
 				logger.Info(r.Text())
 			}
 		}()
