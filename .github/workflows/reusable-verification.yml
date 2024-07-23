@@ -89,19 +89,21 @@ jobs:
 
       - name: Install modules
         working-directory: ./ui
-        run: npm install
+        run: make ui-install
 
       - name: Verify APIs
         working-directory: ./ui
-        run: npx @openapitools/openapi-generator-cli generate -i ../api/openapi.yaml -g typescript-axios -o ./src/api/generated --openapi-normalizer SET_TAGS_FOR_ALL_OPERATIONS=VMClarity
+        run: |
+          make gen-api-js
+          [[ -z "$(git status --porcelain)" ]] || exit 1
 
       - name: Run ESLint
         working-directory: ./ui
-        run: npm run lint
+        run: make lint-js
 
       - name: Run tests
         working-directory: ./ui
-        run: npm run test
+        run: make test-js
 
   go:
     runs-on: ubuntu-latest
@@ -148,7 +150,7 @@ jobs:
 
       - name: Verify APIs
         run: |
-          make gen-api
+          make gen-api-go
           [[ -z "$(git status --porcelain)" ]] || exit 1
 
       - name: Verify go modules
@@ -175,4 +177,4 @@ jobs:
         run: make lint-go
 
       - name: Run tests
-        run: make test
+        run: make test-go
