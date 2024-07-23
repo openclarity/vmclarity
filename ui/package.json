@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@tanstack/react-query": "^5.51.11",
     "@turingpointde/cvss.js": "^1.4.7",
     "axios": "^1.7.2",
     "classnames": "^2.3.2",

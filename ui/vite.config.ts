@@ -15,9 +15,6 @@ export default defineConfig(({ mode }) => {
             esbuildPluginBrowserslist(mode === 'production' ? browserslist.production : browserslist.development),
         ],
         build: {
-            rollupOptions: {
-                external: ['@tanstack/react-query'],
-            },
             outDir: 'build',
         },
         resolve: {
