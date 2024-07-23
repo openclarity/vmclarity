@@ -3,12 +3,15 @@
     "airbnb",
     "airbnb-typescript",
     "plugin:react/recommended",
-    "plugin:react/jsx-runtime",
     "plugin:@typescript-eslint/recommended",
     "prettier"
   ],
   "parserOptions": {
     "project": "./tsconfig.json"
+  },
+  "rules": {
+    "react/react-in-jsx-scope": "off",
+    "react/jsx-uses-react": "off"
   },
   "plugins": [
     "react",
