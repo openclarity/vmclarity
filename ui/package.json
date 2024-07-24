@@ -56,7 +56,7 @@
     "preview": "vite preview",
     "lint": "eslint ./src --ext .ts,.tsx",
     "test": "vitest",
-    "generate-api": "npx @openapitools/openapi-generator-cli generate -i ../api/openapi.yaml -g typescript-axios -o ./src/api/generated --openapi-normalizer SET_TAGS_FOR_ALL_OPERATIONS=VMClarity",
+    "generate-api": "npx @openapitools/openapi-generator-cli generate -i ../api/openapi.yaml -g typescript-axios -o ./src/api/generated-api --openapi-normalizer SET_TAGS_FOR_ALL_OPERATIONS=VMClarity && npx @openapitools/openapi-generator-cli generate -i ../uibackend/openapi.yaml -g typescript-axios -o ./src/api/generated-ui-backend --openapi-normalizer SET_TAGS_FOR_ALL_OPERATIONS=VMClarityUIBackend",
     "postinstall": "npm run generate-api"
   },
   "browserslist": {

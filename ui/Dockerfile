@@ -8,6 +8,8 @@ COPY ./ui /src/ui
 
 COPY ./api/openapi.yaml /src/api/openapi.yaml
 
+COPY ./uibackend/openapi.yaml /src/uibackend/openapi.yaml
+
 RUN apt update
 
 RUN apt install default-jre -y

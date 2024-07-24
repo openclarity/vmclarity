@@ -1,6 +1,11 @@
-import { VMClarityApi } from './generated';
-import axiosClient from './axiosClient';
+import { vmClarityApiAxiosClient, vmClarityUIBackendAxiosClient } from './axiosClient';
+import { VMClarityUIBackendApi } from './generated-ui-backend';
+import { VMClarityApi } from './generated-api';
 
-const vmClarityApi = new VMClarityApi(undefined, undefined, axiosClient);
+const vmClarityApi = new VMClarityApi(undefined, undefined, vmClarityApiAxiosClient);
+const vmClarityUIBackend = new VMClarityUIBackendApi(undefined, undefined, vmClarityUIBackendAxiosClient);
 
-export default vmClarityApi;
+export {
+    vmClarityApi,
+    vmClarityUIBackend,
+};
