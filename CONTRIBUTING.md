@@ -160,7 +160,7 @@ root of the repo.
 ### Unit tests
 
 `make test` to run both go and js unit tests.
-Altrenatively you can run them separetly with:
+Alternatively you can run them separately with:
 
 - `make test-go` can be used run all go unit tests in the repo. Alternatively you
 can use the standard go test CLI to run a specific package or test like:
