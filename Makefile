@@ -347,7 +347,7 @@ gen: gen-api-js gen-api-go gen-bicep gen-helm-docs ## Generating all code, manif
 .PHONY: gen-api-js
 gen-api-js: ## Generating Javascript library for API specification
 	$(info Generating API for UI code ...)
-	@(cd ui && npx @openapitools/openapi-generator-cli generate -i ../api/openapi.yaml -g typescript-axios -o ./src/api/generated --openapi-normalizer SET_TAGS_FOR_ALL_OPERATIONS=VMClarity)
+	@(cd ui && npm run generate-api)
 
 .PHONY: gen-api-go
 gen-api-go: gen-apiserver-api gen-uibackend-api gen-plugin-sdk ## Generating Go API code

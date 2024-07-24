@@ -90,11 +90,6 @@ jobs:
       - name: Install modules
         run: make ui-install
 
-      - name: Verify APIs
-        run: |
-          make gen-api-js
-          [[ -z "$(git status --porcelain)" ]] || exit 1
-
       - name: Run ESLint
         run: make lint-js
 

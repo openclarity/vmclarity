@@ -52,10 +52,12 @@
   },
   "scripts": {
     "start": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc  && vite build",
     "preview": "vite preview",
     "lint": "eslint ./src --ext .ts,.tsx",
-    "test": "vitest"
+    "test": "vitest",
+    "generate-api": "npx @openapitools/openapi-generator-cli generate -i ../api/openapi.yaml -g typescript-axios -o ./src/api/generated --openapi-normalizer SET_TAGS_FOR_ALL_OPERATIONS=VMClarity",
+    "postinstall": "npm run generate-api"
   },
   "browserslist": {
     "production": [

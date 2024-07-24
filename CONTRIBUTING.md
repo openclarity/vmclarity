@@ -103,10 +103,11 @@ When working only on one stack component, the component in question can be comme
 file](installation/docker/docker-compose.yml) and ran separately with `go run`, or in the case of the UI, with the
 following commands:
 
-```shell
-make ui-install
-make ui-start
-```
+`make ui-dev` to create UI development environment.
+Alternatively you can run them separately with:
+
+- `make ui-install` can be used to install the UI dependencies.
+- `make ui-start` can be used to start the UI development server.
 
 Update the [NGINX config](installation/docker/gateway.conf) accordingly if the components in question are affected to
 ensure that Docker can communicate with them if they are ran on local network.
