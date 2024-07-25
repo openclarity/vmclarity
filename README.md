@@ -86,7 +86,6 @@ These tools include:
 - Vulnerability detection
   - [Grype](https://github.com/anchore/grype)
   - [Trivy](https://github.com/aquasecurity/trivy)
-  - [KICS](https://github.com/Checkmarx/kics)
 - Exploits
   - [Go exploit db](https://github.com/vulsio/go-exploitdb)
 - Secrets
