@@ -122,7 +122,7 @@ For the deployment instructions visit this page: [Getting started](https://openc
 VMClarity can be used as a standalone command line tool to run the supported scanner tools.
 
 1. Download `vmclarity-cli` from the [GitHub releases page](https://github.com/openclarity/vmclarity/releases/).
-2. Create a configuration file. An example can be found here: [.families.yaml](https://github.com/openclarity/vmclarity/blob/main/.families.yaml)
+2. Create a configuration file, make sure to enable the scanner families you need. An example can be found here: [.families.yaml](https://github.com/openclarity/vmclarity/blob/main/.families.yaml)
 3. Execute the following command:
 
    ```bash
