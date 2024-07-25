@@ -25,6 +25,8 @@ Join [VMClarity's Slack channel](https://outshift.slack.com/messages/vmclarity) 
     - [1. VMClarity stack](#1-vmclarity-stack)
     - [2. CLI](#2-cli)
     - [3. Go module](#3-go-module)
+  - [Asset discovery](#asset-discovery)
+  - [Supported filesystems](#supported-filesystems)
 - [Architecture](#architecture)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
@@ -129,6 +131,28 @@ VMClarity can be used as a standalone command line tool to run the supported sca
 Import the `github.com/openclarity/vmclarity/scanner` package to run a scan with VMClarity’s family manager from your code.
 
 Example: [scan.go](https://github.com/openclarity/vmclarity/blob/94c46f830838416706c2deef71ecce095d706e6a/cli/cmd/scan/scan.go#L121)
+
+## Asset discovery
+
+VMClarity stack supports the automatic discovery of assets in the following providers:
+
+| Provider   | Asset types                      | Scope                 |
+|------------|----------------------------------|-----------------------|
+| Docker     | Docker containers and images     | Local Docker daemon   |
+| Kubernetes | Docker containers and images     | Cluster               |
+| AWS        | Virtual machines (EC2 instances) | Account (all regions) |
+| Azure      | Virtual machines                 | Subscription          |
+| GCP        | Virtual machines                 | Project               |
+
+## Supported filesystems
+
+The following filesystem operations are supported on different host types:
+
+| Host    | List block devices | Mount Ext2, Ext3, Ext4 | Mount XFS     | Mount NTFS    |
+|---------|--------------------|------------------------|---------------|---------------|
+| Linux   | Supported          | Supported              | Supported     | Supported     |
+| Darwin  | Supported          | Supported              | Supported     | Supported     |
+| Windows | Not supported      | Not supported          | Not supported | Not supported |
 
 # Architecture
 A high-level architecture overview is available [here](ARCHITECTURE.md).
