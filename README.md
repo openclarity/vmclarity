@@ -123,10 +123,11 @@ VMClarity can be used as a standalone command line tool to run the supported sca
 
 1. Download `vmclarity-cli` from the [GitHub releases page](https://github.com/openclarity/vmclarity/releases/).
 2. Create a configuration file. An example can be found here: [.families.yaml](https://github.com/openclarity/vmclarity/blob/main/.families.yaml)
-3. Execute the following command with your configuration file, or use our example:
+3. Execute the following command with your configuration file:
 
-```bash
-vmclarity-cli scan --config .families.yaml
+   ```bash
+   vmclarity-cli scan --config .families.yaml
+   ```
 
 ### 3. Go module
 
