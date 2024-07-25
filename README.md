@@ -21,6 +21,10 @@ Join [VMClarity's Slack channel](https://outshift.slack.com/messages/vmclarity) 
 - [Why VMClarity?](#why-vmclarity)
 - [Getting started](#getting-started)
 - [Overview](#overview)
+  - [Usage modes](#usage-modes)
+    - [1. VMClarity stack](#1-vmclarity-stack)
+    - [2. CLI](#2-cli)
+    - [3. Go module](#3-go-module)
 - [Architecture](#architecture)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
@@ -98,6 +102,33 @@ These tools include:
 
 \* Windows only\
 ** Linux and MacOS only
+
+## Usage modes
+
+VMClarity can be used multiple ways to fit different needs:
+
+### 1. VMClarity stack
+
+As a complete stack, VMClarity provides an integrated solution to
+* discover assets in your environment,
+* manage scan configurations, schedule and execute scans,
+* visualize the results on a dashboard.
+
+For the deployment instructions visit this page: [Getting started](https://openclarity.io/docs/vmclarity/getting-started/).
+
+### 2. CLI
+
+VMClarity can be used as a standalone command line tool to run the supported scanner tools.
+
+1. Download `vmclarity-cli` from the [GitHub releases page](https://github.com/openclarity/vmclarity/releases/).
+2. Create a configuration file. An example can be found here: [.families.yaml](https://github.com/openclarity/vmclarity/blob/main/.families.yaml)
+3. Execute the following command: `vmclarity-cli scan --config .families.yaml`
+
+### 3. Go module
+
+Import the `github.com/openclarity/vmclarity/scanner` package to run a scan with VMClarity’s family manager from your code.
+
+Example: [scan.go](https://github.com/openclarity/vmclarity/blob/94c46f830838416706c2deef71ecce095d706e6a/cli/cmd/scan/scan.go#L121)
 
 # Architecture
 A high-level architecture overview is available [here](ARCHITECTURE.md).
