@@ -21,6 +21,7 @@ Join [VMClarity's Slack channel](https://outshift.slack.com/messages/vmclarity) 
 - [Why VMClarity?](#why-vmclarity)
 - [Getting started](#getting-started)
 - [Overview](#overview)
+- [Architecture](#architecture)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [Code of Conduct](#code-of-conduct)
@@ -70,29 +71,36 @@ enabled/disabled on an individual basis. VMClarity normalizes, merges and
 provides a robust visualization of the results from these various tools.
 
 These tools include:
+
 - SBOM Generation and Analysis
   - [Syft](https://github.com/anchore/syft)
   - [Trivy](https://github.com/aquasecurity/trivy)
-  - [Windows Registry](cli/analyzer/windows)
+  - [Windows Registry](cli/analyzer/windows)*
   - [Cyclonedx-gomod](https://github.com/CycloneDX/cyclonedx-gomod)
 - Vulnerability detection
   - [Grype](https://github.com/anchore/grype)
   - [Trivy](https://github.com/aquasecurity/trivy)
+  - [KICS](https://github.com/Checkmarx/kics)
 - Exploits
   - [Go exploit db](https://github.com/vulsio/go-exploitdb)
 - Secrets
   - [gitleaks](https://github.com/gitleaks/gitleaks)
 - Malware
   - [ClamAV](https://github.com/Cisco-Talos/clamav)
+  - [YARA](https://github.com/virustotal/yara)
 - Misconfiguration
-  - [Lynis](https://github.com/CISOfy/lynis)
+  - [Lynis](https://github.com/CISOfy/lynis)**
   - [CIS Docker Benchmark](https://github.com/goodwithtech/dockle)
+  - [KICS](https://github.com/Checkmarx/kics)
 - Rootkits
-  - [Chkrootkit](https://github.com/Magentron/chkrootkit)
-- Security scanning plugins
-  - [Plugins](plugins)
+  - [Chkrootkit](https://github.com/Magentron/chkrootkit)**
 
-A high-level architecture overview is available [here](ARCHITECTURE.md)
+
+\* Windows only\
+** Linux and MacOS only
+
+# Architecture
+A high-level architecture overview is available [here](ARCHITECTURE.md).
 
 # Roadmap
 VMClarity project roadmap is available [here](https://github.com/orgs/openclarity/projects/5/views/5).
