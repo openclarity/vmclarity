@@ -17,7 +17,6 @@ package utils
 
 import (
 	"crypto/sha256"
-	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -25,6 +24,8 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/sourcegraph/conc/iter"
 
 	"github.com/openclarity/vmclarity/scanner/common"
 
@@ -108,24 +109,34 @@ func dirFiles(dir string) ([]string, error) {
 
 // generateHash creates hashes for all files along with filenames and generates a hash for the hashes and filenames.
 func generateHash(files []string, open func(string) (io.ReadCloser, error)) (string, error) {
-	h := sha256.New()
 	files = append([]string(nil), files...)
 	sort.Strings(files)
-	for _, file := range files {
-		if strings.Contains(file, "\n") {
-			return "", errors.New("filenames with newlines are not supported")
+
+	mapper := iter.Mapper[string, string]{
+		MaxGoroutines: len(files) / 2, //nolint:mnd
+	}
+
+	results := mapper.Map(files, func(f *string) string {
+		if strings.Contains(*f, "\n") {
+			return ""
 		}
-		r, err := open(file)
+		r, err := open(*f)
 		if err != nil {
-			return "", fmt.Errorf("failed to open file %s: %w", file, err)
+			return ""
 		}
 		hf := sha256.New()
 		_, err = io.Copy(hf, r)
 		r.Close()
 		if err != nil {
-			return "", fmt.Errorf("failed to create hash for file %s: %w", file, err)
+			return ""
 		}
-		fmt.Fprintf(h, "%x  %s\n", hf.Sum(nil), file)
+		return fmt.Sprintf("%x  %s\n", hf.Sum(nil), *f)
+	})
+
+	h := sha256.New()
+	for _, result := range results {
+		fmt.Fprintf(h, "%s", result)
 	}
+
 	return fmt.Sprintf("%x", h.Sum(nil)), nil // nolint:perfsprint
 }
