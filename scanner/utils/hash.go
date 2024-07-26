@@ -17,11 +17,13 @@ package utils
 
 import (
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 
@@ -113,25 +115,16 @@ func generateHash(files []string, open func(string) (io.ReadCloser, error)) (str
 	sort.Strings(files)
 
 	mapper := iter.Mapper[string, string]{
-		MaxGoroutines: len(files) / 2, //nolint:mnd
+		MaxGoroutines: runtime.GOMAXPROCS(0),
 	}
 
-	results := mapper.Map(files, func(f *string) string {
-		if strings.Contains(*f, "\n") {
-			return ""
-		}
-		r, err := open(*f)
-		if err != nil {
-			return ""
-		}
-		hf := sha256.New()
-		_, err = io.Copy(hf, r)
-		r.Close()
-		if err != nil {
-			return ""
-		}
-		return fmt.Sprintf("%x  %s\n", hf.Sum(nil), *f)
+	results, err := mapper.MapErr(files, func(f *string) (string, error) {
+		// Return the hash of the file
+		return processFile(f, open)
 	})
+	if err != nil {
+		return "", fmt.Errorf("failed to generate hash for files: %w", err)
+	}
 
 	h := sha256.New()
 	for _, result := range results {
@@ -139,4 +132,22 @@ func generateHash(files []string, open func(string) (io.ReadCloser, error)) (str
 	}
 
 	return fmt.Sprintf("%x", h.Sum(nil)), nil // nolint:perfsprint
+}
+
+func processFile(f *string, open func(string) (io.ReadCloser, error)) (string, error) {
+	if strings.Contains(*f, "\n") {
+		return "", errors.New("filenames with newlines are not supported")
+	}
+	r, err := open(*f)
+	if err != nil {
+		return "", fmt.Errorf("failed to open file %s: %w", *f, err)
+	}
+	hf := sha256.New()
+	_, err = io.Copy(hf, r)
+	r.Close()
+	if err != nil {
+		return "", fmt.Errorf("failed to create hash for file %s: %w", *f, err)
+	}
+
+	return fmt.Sprintf("%x  %s\n", hf.Sum(nil), *f), nil
 }
