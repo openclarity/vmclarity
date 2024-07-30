@@ -23,6 +23,7 @@ import (
 
 	dockertypes "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/network"
 	dockerclient "github.com/docker/docker/client"
 )
 
@@ -86,9 +87,8 @@ func (c *dockerClient) GetOrCreateBridgeNetwork(ctx context.Context, networkName
 	networkResp, err := c.Client.NetworkCreate(
 		ctx,
 		networkName,
-		dockertypes.NetworkCreate{
-			CheckDuplicate: true,
-			Driver:         "bridge",
+		network.CreateOptions{
+			Driver: "bridge",
 		},
 	)
 	if err != nil {
@@ -99,7 +99,7 @@ func (c *dockerClient) GetOrCreateBridgeNetwork(ctx context.Context, networkName
 }
 
 func (c *dockerClient) getNetworkIDFromName(ctx context.Context, networkName string) (string, error) {
-	networks, err := c.Client.NetworkList(ctx, dockertypes.NetworkListOptions{
+	networks, err := c.Client.NetworkList(ctx, network.ListOptions{
 		Filters: filters.NewArgs(filters.Arg("name", networkName)),
 	})
 	if err != nil {
