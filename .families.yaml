@@ -97,6 +97,7 @@ secrets:
   scanners_config:
     gitleaks:
       binary_path: "/usr/local/bin/gitleaks"
+      report_format: "json"
 
 exploits:
   enabled: false

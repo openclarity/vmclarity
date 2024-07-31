@@ -65,6 +65,7 @@ func (a *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInp
 		_ = os.Remove(file.Name())
 	}()
 	reportPath := file.Name()
+	reportFormat := a.config.GetReportFormat()
 
 	fsPath, cleanup, err := familiesutils.ConvertInputToFilesystem(ctx, sourceType, userInput)
 	if err != nil {
@@ -72,7 +73,7 @@ func (a *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInp
 	}
 	defer cleanup()
 
-	// gitleaks detect --source <source> --no-git -r <report-path> -f json --exit-code 0 --max-target-megabytes 50
+	// gitleaks detect --source <source> --no-git -r <report-path> -f <report-format> --exit-code 0 --max-target-megabytes 50
 	// nolint:gosec
 	args := []string{
 		"detect",
@@ -82,7 +83,7 @@ func (a *Scanner) Scan(ctx context.Context, sourceType common.InputType, userInp
 		"-r",
 		reportPath,
 		"-f",
-		"json",
+		reportFormat,
 		"--exit-code",
 		"0",
 		"--max-target-megabytes",

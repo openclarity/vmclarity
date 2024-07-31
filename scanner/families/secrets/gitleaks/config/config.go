@@ -16,11 +16,20 @@
 package config
 
 const (
-	DefaultGitleaksBinary = "gitleaks"
+	defaultGitleaksBinary = "gitleaks"
+	defaultReportFormat   = "json"
 )
 
+var allowedFormats = map[string]bool{
+	"json":  true,
+	"csv":   true,
+	"junit": true,
+	"sarif": true,
+}
+
 type Config struct {
-	BinaryPath string `yaml:"binary_path" mapstructure:"binary_path" json:"binary_path"`
+	BinaryPath   string `yaml:"binary_path" mapstructure:"binary_path" json:"binary_path"`
+	ReportFormat string `yaml:"report_format" mapstructure:"report_format" json:"report_format"`
 }
 
 func (c *Config) GetBinaryPath() string {
@@ -28,5 +37,13 @@ func (c *Config) GetBinaryPath() string {
 		return c.BinaryPath
 	}
 
-	return DefaultGitleaksBinary
+	return defaultGitleaksBinary
+}
+
+func (c *Config) GetReportFormat() string {
+	if c.ReportFormat != "" && allowedFormats[c.ReportFormat] {
+		return c.ReportFormat
+	}
+
+	return defaultReportFormat
 }

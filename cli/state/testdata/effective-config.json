@@ -75,7 +75,8 @@
     "inputs": null,
     "scanners_config": {
       "gitleaks": {
-        "binary_path": ""
+        "binary_path": "",
+        "report_format": ""
       }
     }
   },
