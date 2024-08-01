@@ -46,6 +46,8 @@ jobs:
   build-and-upload:
     needs: prepare-build
     runs-on: ubuntu-latest
+    env:
+      DOCKER_BUILD_RECORD_UPLOAD: false
     strategy:
       fail-fast: false
       matrix:
