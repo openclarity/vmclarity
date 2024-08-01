@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.29.47.4906",
-      "templateHash": "13927729476504818038"
+      "templateHash": "10451733083227492879"
     }
   },
   "parameters": {
@@ -90,14 +90,14 @@
     },
     "trivyServerContainerImage": {
       "type": "string",
-      "defaultValue": "docker.io/aquasec/trivy:0.52.1",
+      "defaultValue": "docker.io/aquasec/trivy:0.54.1",
       "metadata": {
         "description": "Trivy Server Container Image"
       }
     },
     "grypeServerContainerImage": {
       "type": "string",
-      "defaultValue": "ghcr.io/openclarity/grype-server:v0.7.3",
+      "defaultValue": "ghcr.io/openclarity/grype-server:v0.7.4",
       "metadata": {
         "description": "Grype Server Container Image"
       }
@@ -577,7 +577,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.29.47.4906",
-              "templateHash": "11450816723859992713"
+              "templateHash": "9792533271467892402"
             }
           },
           "parameters": {
@@ -681,14 +681,14 @@
             },
             "trivyServerContainerImage": {
               "type": "string",
-              "defaultValue": "docker.io/aquasec/trivy:0.52.1",
+              "defaultValue": "docker.io/aquasec/trivy:0.54.1",
               "metadata": {
                 "description": "Trivy Server Container Image"
               }
             },
             "grypeServerContainerImage": {
               "type": "string",
-              "defaultValue": "ghcr.io/openclarity/grype-server:v0.7.3",
+              "defaultValue": "ghcr.io/openclarity/grype-server:v0.7.4",
               "metadata": {
                 "description": "Grype Server Container Image"
               }
