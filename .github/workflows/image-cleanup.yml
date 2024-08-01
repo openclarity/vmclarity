@@ -17,8 +17,10 @@ on:
           The timezone-aware datetime you want to delete container versions that are older than.
           The parsed datetime must contain a timezone.
 
-          The `dateparser` is ued to parse the cut-off specified. See: [dateparser](https://dateparser.readthedocs.io/en/latest/)
-        default: '14 days ago UTC'
+          Examples:
+            - 14days 1min 7s
+            - 7years 4min 14us
+        default: '14days'
       dry-run:
         required: false
         type: boolean
@@ -41,12 +43,11 @@ jobs:
         uses: snok/container-retention-policy@4f22ef80902ad409ed55a99dc5133cc1250a0d03 # v3.0.0
         with:
           image-names: ${{ env.images }}
-          cut-off: 1 second ago UTC
+          cut-off: 1s
           timestamp-to-use: created_at
-          account-type: org
-          org-name: openclarity
+          account: openclarity
           token: ${{ secrets.PAT }}
-          filter-tags: ${{ format( 'pr{0}-*', github.event.pull_request.number) }}
+          image-tags: "${{ format( 'pr{0}-*', github.event.pull_request.number) }}"
           dry-run: false
 
   schedule:
@@ -58,12 +59,11 @@ jobs:
         uses: snok/container-retention-policy@4f22ef80902ad409ed55a99dc5133cc1250a0d03 # v3.0.0
         with:
           image-names: ${{ env.images }}
-          cut-off: 7 days ago UTC
+          cut-off: 7days
           timestamp-to-use: created_at
-          account-type: org
-          org-name: openclarity
+          account: openclarity
           token: ${{ secrets.PAT }}
-          filter-include-untagged: true
+          tag-selection: both
           dry-run: false
 
   dispatch:
@@ -77,8 +77,7 @@ jobs:
           image-names: ${{ env.images }}
           cut-off: ${{ inputs.cut-off }}
           timestamp-to-use: created_at
-          account-type: org
-          org-name: openclarity
+          account: openclarity
           token: ${{ secrets.PAT }}
-          filter-include-untagged: true
+          tag-selection: both
           dry-run: ${{ inputs.dry-run }}
