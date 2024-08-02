@@ -17,6 +17,7 @@ package types
 
 import (
 	"fmt"
+	"github.com/openclarity/vmclarity/scanner/families"
 
 	log "github.com/sirupsen/logrus"
 
@@ -32,6 +33,7 @@ type Source struct {
 }
 
 type Result struct {
+	Metadata                   families.FamilyMetadata                    `json:"Metadata"`
 	Source                     Source                                     `json:"Source"`
 	MergedVulnerabilitiesByKey map[VulnerabilityKey][]MergedVulnerability `json:"MergedVulnerabilitiesByKey"`
 }
@@ -87,13 +89,16 @@ func (r *Result) ToSlice() [][]MergedVulnerability {
 	return ret
 }
 
-func (r *Result) Merge(result *ScannerResult) {
+func (r *Result) Merge(scan *ScannerResult) {
 	// Skip further merge if scanner result is empty
-	if result == nil {
+	if scan == nil {
 		return
 	}
 
-	otherVulnerabilityByKey := toVulnerabilityByKey(result.Vulnerabilities)
+	// Sync metadata
+	defer r.patchMetadata(scan.Metadata)
+
+	otherVulnerabilityByKey := toVulnerabilityByKey(scan.Vulnerabilities)
 
 	// go over other vulnerabilities list
 	// 1. merge mutual vulnerabilities
@@ -102,16 +107,23 @@ func (r *Result) Merge(result *ScannerResult) {
 		// look for other vulnerability key in the current merged vulnerabilities list
 		if mergedVulnerabilities, ok := r.MergedVulnerabilitiesByKey[key]; !ok {
 			// add non mutual vulnerability
-			log.Debugf("Adding new vulnerability results from %v. key=%v", result.Scanner, key)
-			r.MergedVulnerabilitiesByKey[key] = []MergedVulnerability{*NewMergedVulnerability(otherVulnerability, result.Scanner)}
+			log.Debugf("Adding new vulnerability results from %v. key=%v", scan.Scanner, key)
+			r.MergedVulnerabilitiesByKey[key] = []MergedVulnerability{*NewMergedVulnerability(otherVulnerability, scan.Scanner)}
 		} else {
-			r.MergedVulnerabilitiesByKey[key] = handleVulnerabilityWithExistingKey(mergedVulnerabilities, otherVulnerability, result.Scanner)
+			r.MergedVulnerabilitiesByKey[key] = handleVulnerabilityWithExistingKey(mergedVulnerabilities, otherVulnerability, scan.Scanner)
 		}
 	}
 
 	// TODO: what should we do with other.Source
 	// Set Source only once
 	if r.Source.Type == "" {
-		r.Source = result.Source
+		r.Source = scan.Source
+	}
+}
+
+func (r *Result) patchMetadata(scanMeta families.ScannerMetadata) {
+	r.Metadata.Scans = append(r.Metadata.Scans, scanMeta)
+	r.Metadata.Summary = &families.FamilySummary{
+		FindingsCount: len(r.MergedVulnerabilitiesByKey),
 	}
 }
