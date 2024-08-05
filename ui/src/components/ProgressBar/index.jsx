@@ -39,7 +39,7 @@ const ProgressBar = ({
   width = "100%",
   message = null,
   messageTooltipId = null,
-  customeTitle,
+  customTitle,
 }) => {
   const totalItems = itemsCompleted + itemsLeft;
   const percent =
@@ -65,7 +65,7 @@ const ProgressBar = ({
       </div>
       {!icon ? (
         <div className="progress-bar-title">
-          {!!customeTitle ? customeTitle : `${percent}%`}
+          {!!customTitle ? customTitle : `${percent}%`}
         </div>
       ) : (
         <IconComponent
