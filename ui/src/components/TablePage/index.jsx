@@ -207,7 +207,7 @@ const TablePage = (props) => {
             setPage(filtersDispatch, { type: filterType, pageIndex })
           }
           defaultSortBy={isEmpty(tableSort) ? initialSortBy : tableSort}
-          onSortChnage={(tableSort) =>
+          onSortChange={(tableSort) =>
             setSort(filtersDispatch, { type: filterType, tableSort })
           }
           showCustomEmptyDisplay={isEmpty(tableFilters)}
