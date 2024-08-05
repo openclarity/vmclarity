@@ -61,7 +61,7 @@ const TablePage = (props) => {
   const resetSystemFilter = () =>
     resetSystemFilters(filtersDispatch, systemFilterType || filterType);
 
-  const fitlersList = [
+  const filtersList = [
     ...(!!filters ? [filters] : []),
     ...(!!tableFilters ? formatFiltersToOdataItems(tableFilters) : []),
     ...(!!systemFilter ? [systemFilter] : []),
@@ -196,8 +196,8 @@ const TablePage = (props) => {
           filters={{
             ...(!!expand ? { $expand: expand } : {}),
             ...(!!select ? { $select: select } : {}),
-            ...(fitlersList.length > 0
-              ? { $filter: fitlersList.join(" and ") }
+            ...(filtersList.length > 0
+              ? { $filter: filtersList.join(" and ") }
               : {}),
           }}
           noResultsTitle={tableTitle}

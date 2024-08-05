@@ -143,10 +143,10 @@ export const getVulnerabilitiesColumnConfigItem = (props) => {
 
 export const findingsColumnsFiltersConfig = Object.values(FINDINGS_MAPPING).map(
   ({ totalKey, title }) => {
-    const fitlerKey = `summary.${totalKey}`;
+    const filterKey = `summary.${totalKey}`;
 
     return {
-      value: fitlerKey,
+      value: filterKey,
       label: title,
       isNumber: true,
       operators: [
@@ -162,10 +162,10 @@ export const findingsColumnsFiltersConfig = Object.values(FINDINGS_MAPPING).map(
 export const vulnerabilitiesCountersColumnsFiltersConfig = Object.values(
   VULNERABILITY_SEVERITY_ITEMS,
 ).map(({ totalKey, title }) => {
-  const fitlerKey = `summary.totalVulnerabilities.${totalKey}`;
+  const filterKey = `summary.totalVulnerabilities.${totalKey}`;
 
   return {
-    value: fitlerKey,
+    value: filterKey,
     label: `${title} vulnerabilities`,
     isNumber: true,
     operators: [
