@@ -7,7 +7,7 @@ import COLORS from "utils/scss_variables.module.scss";
 
 import "./progress-bar.scss";
 
-export const STATUS_MAPPPING = {
+export const STATUS_MAPPING = {
   IN_PROGRESS: { value: "IN_PROGRESS", color: COLORS["color-main"] },
   SUCCESS: {
     value: "SUCCESS",
@@ -33,7 +33,7 @@ export const STATUS_MAPPPING = {
 };
 
 const ProgressBar = ({
-  status = STATUS_MAPPPING.IN_PROGRESS.value,
+  status = STATUS_MAPPING.IN_PROGRESS.value,
   itemsCompleted = 0,
   itemsLeft = 0,
   width = "100%",
@@ -43,13 +43,13 @@ const ProgressBar = ({
 }) => {
   const totalItems = itemsCompleted + itemsLeft;
   const percent =
-    status === STATUS_MAPPPING.IN_PROGRESS.value
+    status === STATUS_MAPPING.IN_PROGRESS.value
       ? !!totalItems
         ? Math.round((itemsCompleted / totalItems) * 100)
         : 0
       : 100;
 
-  const { icon, color, iconColor } = STATUS_MAPPPING[status];
+  const { icon, color, iconColor } = STATUS_MAPPING[status];
   const progressIconColor = iconColor || color;
   const IconComponent = !!message ? IconWithTooltip : Icon;
 
