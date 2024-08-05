@@ -24,7 +24,7 @@ import FindingsFilters from "../FindingsFilters";
 
 import COLORS from "utils/scss_variables.module.scss";
 
-import "./reskiest-regions-widget.scss";
+import "./riskiest-regions-widget.scss";
 
 const BAR_STACK_ID = 1;
 const WIDGET_FINDINGS_ITEMS = [

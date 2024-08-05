@@ -35,7 +35,7 @@ const StatusDisplay = ({ state, errors }) => (
       <StatusIndicator state={state} errors={errors} />
     </div>
     {!isEmpty(errors) && (
-      <ErrorMessageDisplay title="An error has occured">
+      <ErrorMessageDisplay title="An error has occurred">
         {errors.map((error, index) => (
           <div key={index}>{error}</div>
         ))}
