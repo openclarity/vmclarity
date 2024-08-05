@@ -1,6 +1,6 @@
 import React from "react";
 import SeverityWithCvssDisplay from "components/SeverityWithCvssDisplay";
-import { getHigestVersionCvssData, formatNumber } from "utils/utils";
+import { getHighestVersionCvssData, formatNumber } from "utils/utils";
 import {
   FINDINGS_MAPPING,
   VULNERABILITY_FINDINGS_ITEM,
@@ -22,7 +22,7 @@ const TABS_COLUMNS_MAPPING = {
         customDisplay: ({ vulnerability }) => {
           const { severity, cvss, vulnerabilityName } = vulnerability || {};
           const { score, severity: cvssSeverity } =
-            getHigestVersionCvssData(cvss);
+            getHighestVersionCvssData(cvss);
 
           return (
             <SeverityWithCvssDisplay

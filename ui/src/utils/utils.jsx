@@ -47,7 +47,7 @@ export const formatNumber = (value) =>
 export const getScanName = ({ name, startTime }) =>
   `${name} ${formatDate(startTime)}`;
 
-export const getHigestVersionCvssData = (cvssData) => {
+export const getHighestVersionCvssData = (cvssData) => {
   if (isEmpty(cvssData)) {
     return {};
   }
