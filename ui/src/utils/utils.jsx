@@ -4,7 +4,7 @@ import CVSS from "@turingpointde/cvss.js";
 import { isEmpty, orderBy } from "lodash";
 import {
   FINDINGS_MAPPING,
-  VULNERABIITY_FINDINGS_ITEM,
+  VULNERABILITY_FINDINGS_ITEM,
 } from "utils/systemConsts";
 import IconWithTooltip from "components/IconWithTooltip";
 import VulnerabilitiesDisplay, {
@@ -106,7 +106,7 @@ export const getVulnerabilitiesColumnConfigItem = (props) => {
   const { tableTitle, withAssetPrefix = false } = props;
   const prefix = withAssetPrefix ? "asset." : "";
   const { title: vulnerabilitiesTitle, icon: vulnerabilitiesIcon } =
-    VULNERABIITY_FINDINGS_ITEM;
+    VULNERABILITY_FINDINGS_ITEM;
 
   return {
     Header: (

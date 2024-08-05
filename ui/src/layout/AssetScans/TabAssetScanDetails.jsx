@@ -11,7 +11,7 @@ import { WrappingTextBoxWithEllipsis } from "components/WrappingTextBoxWithEllip
 import {
   ROUTES,
   FINDINGS_MAPPING,
-  VULNERABIITY_FINDINGS_ITEM,
+  VULNERABILITY_FINDINGS_ITEM,
 } from "utils/systemConsts";
 import { formatDate, calculateDuration } from "utils/utils";
 import { SCANS_PATHS } from "layout/Scans";
@@ -23,7 +23,7 @@ const BORDER_COLOR = COLORS["color-grey-lighter"];
 
 const STATUS_DISPLAY_ITEMS = [
   { dataKey: "sbom", title: "SBOM" },
-  VULNERABIITY_FINDINGS_ITEM,
+  VULNERABILITY_FINDINGS_ITEM,
   ...Object.values(FINDINGS_MAPPING).filter(
     ({ value }) => value !== FINDINGS_MAPPING.PACKAGES.value,
   ),
