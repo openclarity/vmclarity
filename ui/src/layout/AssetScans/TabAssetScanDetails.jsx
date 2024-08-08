@@ -111,7 +111,8 @@ const TabAssetScanDetails = ({ data }) => {
 
   const { scan, asset, status, stats } = data || {};
   const { id: assetId, assetInfo } = asset || {};
-  const { instanceID, objectType, location } = assetInfo || {};
+  const { instanceID, objectType, location, repoDigests, image } =
+    assetInfo || {};
   const { id: scanId, startTime, endTime } = scan || {};
   const { state, message } = status || {};
 
@@ -128,7 +129,9 @@ const TabAssetScanDetails = ({ data }) => {
           <TitleValueDisplayRow>
             <TitleValueDisplay title="Name">{instanceID}</TitleValueDisplay>
             <TitleValueDisplay title="Type">{objectType}</TitleValueDisplay>
-            <TitleValueDisplay title="Location">{location}</TitleValueDisplay>
+            <TitleValueDisplay title="Location">
+              {location || repoDigests?.[0] || image.repoDigests?.[0]}
+            </TitleValueDisplay>
           </TitleValueDisplayRow>
           <Title
             medium
