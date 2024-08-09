@@ -304,7 +304,7 @@ secrets.
 | ui.image.registry | string | `"ghcr.io"` | UI image registry |
 | ui.image.repository | string | `"openclarity/vmclarity-ui"` | UI image repository |
 | ui.image.tag | string | `"latest"` | UI image tag |
-| ui.podSecurityContext.enabled | bool | `false` | Pod security context enabled |
+| ui.podSecurityContext.enabled | bool | `true` | Pod security context enabled |
 | ui.podSecurityContext.fsGroup | int | `101` | Pod security context fsGroup |
 | ui.replicas | int | `1` | Number of replicas for the UI service |
 | ui.resources.limits | object | `{}` | The resources limits for the UI containers |
