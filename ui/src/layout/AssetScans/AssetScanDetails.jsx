@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import DetailsPageWrapper from "components/DetailsPageWrapper";
 import TabbedPage from "components/TabbedPage";
 import { APIS } from "utils/systemConsts";
-import { formatDate, getScanName } from "utils/utils";
+import { formatDate } from "utils/utils";
 import { Findings } from "layout/detail-displays";
 import TabAssetScanDetails from "./TabAssetScanDetails";
 
