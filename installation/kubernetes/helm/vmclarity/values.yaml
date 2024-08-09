@@ -259,7 +259,7 @@ ui:
 
   podSecurityContext:
     # -- Pod security context enabled
-    enabled: false
+    enabled: true
     # -- Pod security context fsGroup
     fsGroup: 101
 
