@@ -9,7 +9,7 @@ import TabAssetScanDetails from "./TabAssetScanDetails";
 
 const ASSET_SCAN_DETAILS_PATHS = {
   ASSET_SCAN_DETAILS: "",
-  FINDINGHS: "findings",
+  FINDINGS: "findings",
 };
 
 const DetailsContent = ({ data }) => {
@@ -30,7 +30,7 @@ const DetailsContent = ({ data }) => {
         {
           id: "findings",
           title: "Findings",
-          path: ASSET_SCAN_DETAILS_PATHS.FINDINGHS,
+          path: ASSET_SCAN_DETAILS_PATHS.FINDINGS,
           component: () => (
             <Findings
               findingsSummary={summary}
