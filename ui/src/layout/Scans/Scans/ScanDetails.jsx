@@ -11,7 +11,6 @@ import {
 import ScanActionsDisplay from "./ScanActionsDisplay";
 
 export const SCAN_DETAILS_PATHS = {
-  SCAN_DETALS: "",
   FINDINGS: "findings",
 };
 

@@ -8,7 +8,6 @@ import { Findings } from "layout/detail-displays";
 import TabAssetScanDetails from "./TabAssetScanDetails";
 
 const ASSET_SCAN_DETAILS_PATHS = {
-  ASSET_SCAN_DETAILS: "",
   FINDINGS: "findings",
 };
 
