@@ -1,0 +1,33 @@
+name: Dependency Updates
+
+on:
+  schedule:
+    # At minute 0 on every day-of-week from Monday through Friday.
+    # https://crontab.guru/#0_*_*_*_1-5
+    - cron: '0 * * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  packages: write
+
+jobs:
+  deps:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Auth OpenClarity Bot
+        id: auth_bot
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.OC_BOT_APP_ID }}
+          private-key: ${{ secrets.OC_BOT_PRIVATE_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Run Renovate
+        uses: renovatebot/github-action@v40.2.6
+        with:
+          configurationFile: renovate.json
+          token: ${{ steps.auth_bot.outputs.token }}
+        env:
+          RENOVATE_PLATFORM_COMMIT: 'true'
