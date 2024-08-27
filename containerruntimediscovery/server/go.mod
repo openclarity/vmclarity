@@ -8,7 +8,7 @@ require (
 )
 
 require (
-	github.com/containerd/containerd v1.7.19
+	github.com/containerd/containerd v1.7.21
 	github.com/containerd/nerdctl v1.7.6
 	github.com/containerd/platforms v0.2.1
 	github.com/containers/image/v5 v5.31.1
@@ -81,7 +81,8 @@ require (
 	github.com/moby/sys/mountinfo v0.7.1 // indirect
 	github.com/moby/sys/sequential v0.5.0 // indirect
 	github.com/moby/sys/signal v0.7.0 // indirect
-	github.com/moby/sys/user v0.1.0 // indirect
+	github.com/moby/sys/user v0.3.0 // indirect
+	github.com/moby/sys/userns v0.1.0 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/mr-tron/base58 v1.2.0 // indirect
