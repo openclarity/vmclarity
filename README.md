@@ -1,5 +1,5 @@
 > [!IMPORTANT]
-> This project has been deprecated and succeeded by [openclarity/openclarity](https://github.com/openclarity/openclarity).
+> VMClarity has been deprecated and succeeded by [openclarity/openclarity](https://github.com/openclarity/openclarity).
 >
 > See this [post](post) for changes and migration steps.
 > 
