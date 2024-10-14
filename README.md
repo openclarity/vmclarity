@@ -1,7 +1,7 @@
 > [!IMPORTANT]
 > VMClarity has been deprecated and succeeded by [openclarity/openclarity](https://github.com/openclarity/openclarity).
 >
-> See this [post](post) for changes and migration steps.
+> Check the [release statement](https://github.com/orgs/openclarity/discussions/882) for more information.
 > 
 > **This project does not receive updates. We encourage you to migrate.**
 
