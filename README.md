@@ -1,3 +1,10 @@
+> [!IMPORTANT]
+> VMClarity has been deprecated and succeeded by [openclarity/openclarity](https://github.com/openclarity/openclarity).
+>
+> Check the [release statement](https://github.com/orgs/openclarity/discussions/882) for more information.
+> 
+> **This project does not receive updates. We encourage you to migrate.**
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="./assets/logos/VMClarity-logo-dark-bg-horizontal@4x.png">
   <source media="(prefers-color-scheme: light)" srcset="./assets/logos/VMClarity-logo-light-bg-horizontal@4x.png">
